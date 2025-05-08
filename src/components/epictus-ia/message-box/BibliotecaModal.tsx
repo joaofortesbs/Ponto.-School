@@ -29,78 +29,18 @@ interface BibliotecaModalProps {
   onClose: () => void;
 }
 
-// Dados simulados para demonstração
-const dadosSimulados: ConteudoBiblioteca[] = [
-  {
-    id: "1",
-    titulo: "Resumo Matemática - Funções Trigonométricas",
-    tipo: "pdf",
-    tags: ["matemática", "trigonometria", "resumo"],
-    ativo: true,
-    data: "2024-07-10",
-    tamanho: "1.2 MB"
-  },
-  {
-    id: "2",
-    titulo: "Anotações de Física - Leis de Newton",
-    tipo: "documento",
-    tags: ["física", "mecânica", "leis de newton"],
-    ativo: true,
-    data: "2024-07-08",
-    tamanho: "520 KB"
-  },
-  {
-    id: "3",
-    titulo: "Mapa Mental - História do Brasil",
-    tipo: "imagem",
-    tags: ["história", "brasil", "mapa mental"],
-    ativo: false,
-    data: "2024-07-05",
-    tamanho: "3.7 MB"
-  },
-  {
-    id: "4",
-    titulo: "Podcast - Revolução Francesa",
-    tipo: "audio",
-    tags: ["história", "revolução francesa", "podcast"],
-    ativo: true,
-    data: "2024-07-01",
-    tamanho: "15.3 MB"
-  },
-  {
-    id: "5",
-    titulo: "Aula - Biologia Celular",
-    tipo: "video",
-    tags: ["biologia", "célula", "aula"],
-    ativo: true,
-    data: "2024-06-28",
-    tamanho: "87.2 MB"
-  },
-  {
-    id: "6",
-    titulo: "Artigo - Inteligência Artificial na Educação",
-    tipo: "link",
-    tags: ["tecnologia", "IA", "educação"],
-    ativo: true,
-    data: "2024-06-25",
-    url: "https://exemplo.com/artigo-ia-educacao"
-  },
-  {
-    id: "7",
-    titulo: "Notas pessoais - Redação ENEM",
-    tipo: "nota",
-    tags: ["redação", "enem", "dicas"],
-    ativo: true,
-    data: "2024-06-20"
-  },
-];
-
 const BibliotecaModal: React.FC<BibliotecaModalProps> = ({ isOpen, onClose }) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [conteudos, setConteudos] = useState<ConteudoBiblioteca[]>(dadosSimulados);
+  const [conteudos, setConteudos] = useState<ConteudoBiblioteca[]>([]);
   const [activeTab, setActiveTab] = useState("todos");
   const [permiteUsarTodos, setPermiteUsarTodos] = useState(true);
   const [showAddOptionsMenu, setShowAddOptionsMenu] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [showTagsModal, setShowTagsModal] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [newTags, setNewTags] = useState<string[]>([]);
+  const [newTagInput, setNewTagInput] = useState("");
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   // Filtrar conteúdos com base na busca e categoria selecionada
   const conteudosFiltrados = conteudos.filter(item => {
@@ -118,11 +58,144 @@ const BibliotecaModal: React.FC<BibliotecaModalProps> = ({ isOpen, onClose }) =>
     return matchesSearch && matchesTab;
   });
 
+  // Carrega os arquivos do localStorage ao iniciar
+  React.useEffect(() => {
+    const savedConteudos = localStorage.getItem('bibliotecaConteudos');
+    if (savedConteudos) {
+      try {
+        setConteudos(JSON.parse(savedConteudos));
+      } catch (e) {
+        console.error("Erro ao carregar conteúdos da biblioteca:", e);
+      }
+    }
+  }, []);
+
+  // Salva os arquivos no localStorage sempre que houver alterações
+  React.useEffect(() => {
+    if (conteudos.length > 0) {
+      localStorage.setItem('bibliotecaConteudos', JSON.stringify(conteudos));
+    }
+  }, [conteudos]);
+
   // Alternar ativação de um conteúdo
   const toggleConteudoAtivo = (id: string) => {
     setConteudos(conteudos.map(item => 
       item.id === id ? { ...item, ativo: !item.ativo } : item
     ));
+  };
+
+  // Remover um conteúdo
+  const removerConteudo = (id: string) => {
+    setConteudos(conteudos.filter(item => item.id !== id));
+  };
+
+  // Adicionar novo conteúdo
+  const adicionarConteudo = (novoConteudo: ConteudoBiblioteca) => {
+    setConteudos([...conteudos, novoConteudo]);
+  };
+
+  // Adicionar tag a um conteúdo
+  const adicionarTag = (id: string, tag: string) => {
+    setConteudos(conteudos.map(item => 
+      item.id === id ? { ...item, tags: [...item.tags, tag] } : item
+    ));
+  };
+
+  // Remover tag de um conteúdo
+  const removerTag = (id: string, tagToRemove: string) => {
+    setConteudos(conteudos.map(item => 
+      item.id === id ? { ...item, tags: item.tags.filter(tag => tag !== tagToRemove) } : item
+    ));
+  };
+
+  // Tratar upload de arquivo
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      setUploadedFile(file);
+      setShowTagsModal(true);
+    }
+  };
+
+  // Identificar tipo de arquivo
+  const identificarTipoArquivo = (filename: string): "pdf" | "documento" | "imagem" | "audio" | "video" | "link" | "nota" => {
+    const ext = filename.split('.').pop()?.toLowerCase() || '';
+    
+    if (ext === 'pdf') return 'pdf';
+    if (['doc', 'docx', 'txt', 'rtf', 'odt'].includes(ext)) return 'documento';
+    if (['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'].includes(ext)) return 'imagem';
+    if (['mp3', 'wav', 'ogg', 'aac', 'm4a'].includes(ext)) return 'audio';
+    if (['mp4', 'webm', 'mov', 'avi', 'mkv'].includes(ext)) return 'video';
+    
+    return 'documento';
+  };
+
+  // Adicionar tag para arquivo
+  const handleAddTag = () => {
+    if (newTagInput.trim() && !newTags.includes(newTagInput.trim())) {
+      setNewTags([...newTags, newTagInput.trim()]);
+      setNewTagInput("");
+    }
+  };
+
+  // Finalizar upload com tags
+  const finalizarUpload = () => {
+    if (uploadedFile) {
+      const tipo = identificarTipoArquivo(uploadedFile.name);
+      const fileSize = formatarTamanhoArquivo(uploadedFile.size);
+      
+      const novoConteudo: ConteudoBiblioteca = {
+        id: Date.now().toString(),
+        titulo: uploadedFile.name,
+        tipo: tipo,
+        tags: newTags,
+        ativo: true,
+        data: new Date().toISOString().split('T')[0],
+        tamanho: fileSize
+      };
+      
+      adicionarConteudo(novoConteudo);
+      setShowTagsModal(false);
+      setUploadedFile(null);
+      setNewTags([]);
+    }
+  };
+
+  // Adicionar link externo
+  const adicionarLink = (url: string, titulo: string, tags: string[]) => {
+    const novoConteudo: ConteudoBiblioteca = {
+      id: Date.now().toString(),
+      titulo: titulo,
+      tipo: "link",
+      tags: tags,
+      ativo: true,
+      data: new Date().toISOString().split('T')[0],
+      url: url
+    };
+    
+    adicionarConteudo(novoConteudo);
+  };
+
+  // Adicionar nota manual
+  const adicionarNota = (conteudo: string, titulo: string, tags: string[]) => {
+    const novoConteudo: ConteudoBiblioteca = {
+      id: Date.now().toString(),
+      titulo: titulo,
+      tipo: "nota",
+      tags: tags,
+      ativo: true,
+      data: new Date().toISOString().split('T')[0]
+    };
+    
+    adicionarConteudo(novoConteudo);
+  };
+
+  // Formatar tamanho do arquivo
+  const formatarTamanhoArquivo = (bytes: number): string => {
+    if (bytes < 1024) return bytes + ' B';
+    else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+    else if (bytes < 1073741824) return (bytes / 1048576).toFixed(1) + ' MB';
+    else return (bytes / 1073741824).toFixed(1) + ' GB';
   };
 
   // Obter ícone baseado no tipo de arquivo
@@ -266,6 +339,9 @@ const BibliotecaModal: React.FC<BibliotecaModalProps> = ({ isOpen, onClose }) =>
                               key={item.id} 
                               conteudo={item} 
                               toggleAtivo={() => toggleConteudoAtivo(item.id)}
+                              removerConteudo={() => removerConteudo(item.id)}
+                              adicionarTag={(tag) => adicionarTag(item.id, tag)}
+                              removerTag={(tag) => removerTag(item.id, tag)}
                             />
                           ))}
                         </div>
@@ -291,6 +367,75 @@ const BibliotecaModal: React.FC<BibliotecaModalProps> = ({ isOpen, onClose }) =>
                     </ScrollArea>
                   </div>
                 </TabsContent>
+                
+                {/* Modal para adicionar tags ao arquivo */}
+                <Dialog open={showTagsModal} onOpenChange={(open) => !open && setShowTagsModal(false)}>
+                  <DialogContent className="bg-[#131d2e] border border-white/10 text-white p-6 max-w-md">
+                    <h2 className="text-xl font-bold mb-4">Adicionar tags</h2>
+                    <p className="text-gray-400 mb-4">Adicione tags para classificar seu arquivo "{uploadedFile?.name}"</p>
+                    
+                    <div className="grid gap-4">
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {newTags.map((tag, index) => (
+                          <Badge 
+                            key={index} 
+                            className="bg-[#0D23A0]/20 text-[#8EABFF] hover:bg-[#0D23A0]/30 text-sm py-1 px-2"
+                          >
+                            {tag}
+                            <button 
+                              className="ml-2 text-[#8EABFF] hover:text-white"
+                              onClick={() => setNewTags(newTags.filter((_, i) => i !== index))}
+                            >
+                              ×
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        <Input 
+                          type="text" 
+                          placeholder="Digite uma tag e pressione Enter"
+                          value={newTagInput}
+                          onChange={(e) => setNewTagInput(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && handleAddTag()}
+                          className="bg-[#0a1321]/80 border-white/10"
+                        />
+                        <Button onClick={handleAddTag} className="bg-[#0D23A0] hover:bg-[#0D23A0]/80">
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      
+                      <div className="flex justify-between mt-4">
+                        <Button 
+                          variant="outline" 
+                          onClick={() => {
+                            setShowTagsModal(false);
+                            setUploadedFile(null);
+                            setNewTags([]);
+                          }}
+                          className="border-white/20 text-white hover:bg-white/10"
+                        >
+                          Cancelar
+                        </Button>
+                        <Button 
+                          onClick={finalizarUpload}
+                          className="bg-gradient-to-r from-[#0D23A0] to-[#5B21BD] hover:from-[#0D23A0]/90 hover:to-[#5B21BD]/90 text-white border-none"
+                        >
+                          Adicionar à Biblioteca
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+                
+                {/* Input invisível para upload de arquivo */}
+                <input 
+                  type="file" 
+                  ref={fileInputRef}
+                  className="hidden"
+                  onChange={handleFileUpload}
+                />
               </Tabs>
             </div>
 
@@ -317,13 +462,54 @@ const BibliotecaModal: React.FC<BibliotecaModalProps> = ({ isOpen, onClose }) =>
                           className="absolute bottom-full left-0 mb-2 w-64 bg-[#131d2e] border border-white/10 rounded-lg shadow-xl z-10 overflow-hidden"
                         >
                           <div className="py-1">
-                            <Button variant="ghost" className="w-full justify-start text-left px-4 py-2.5 text-white hover:bg-white/10 rounded-none">
+                            <Button 
+                              variant="ghost" 
+                              className="w-full justify-start text-left px-4 py-2.5 text-white hover:bg-white/10 rounded-none"
+                              onClick={() => {
+                                setShowAddOptionsMenu(false);
+                                if (fileInputRef.current) {
+                                  fileInputRef.current.click();
+                                }
+                              }}
+                            >
                               <Upload className="mr-2 h-4 w-4" /> Upload de arquivo
                             </Button>
-                            <Button variant="ghost" className="w-full justify-start text-left px-4 py-2.5 text-white hover:bg-white/10 rounded-none">
+                            <Button 
+                              variant="ghost" 
+                              className="w-full justify-start text-left px-4 py-2.5 text-white hover:bg-white/10 rounded-none"
+                              onClick={() => {
+                                setShowAddOptionsMenu(false);
+                                const titulo = prompt("Digite o título da nota:");
+                                if (titulo) {
+                                  const conteudo = prompt("Digite o conteúdo da nota:");
+                                  if (conteudo) {
+                                    const tagsInput = prompt("Digite as tags separadas por vírgula:");
+                                    const tags = tagsInput ? tagsInput.split(',').map(tag => tag.trim()) : [];
+                                    adicionarNota(conteudo, titulo, tags);
+                                  }
+                                }
+                              }}
+                            >
                               <Edit3 className="mr-2 h-4 w-4" /> Criar nota manual
                             </Button>
-                            <Button variant="ghost" className="w-full justify-start text-left px-4 py-2.5 text-white hover:bg-white/10 rounded-none">
+                            <Button 
+                              variant="ghost" 
+                              className="w-full justify-start text-left px-4 py-2.5 text-white hover:bg-white/10 rounded-none"
+                              onClick={() => {
+                                setShowAddOptionsMenu(false);
+                                const url = prompt("Digite a URL do link:");
+                                if (url && url.startsWith('http')) {
+                                  const titulo = prompt("Digite um título para este link:");
+                                  if (titulo) {
+                                    const tagsInput = prompt("Digite as tags separadas por vírgula:");
+                                    const tags = tagsInput ? tagsInput.split(',').map(tag => tag.trim()) : [];
+                                    adicionarLink(url, titulo, tags);
+                                  }
+                                } else if (url) {
+                                  alert("Por favor, insira uma URL válida começando com http:// ou https://");
+                                }
+                              }}
+                            >
                               <Link2 className="mr-2 h-4 w-4" /> Adicionar link externo
                             </Button>
                           </div>
@@ -372,10 +558,21 @@ const BibliotecaModal: React.FC<BibliotecaModalProps> = ({ isOpen, onClose }) =>
 interface ConteudoCardProps {
   conteudo: ConteudoBiblioteca;
   toggleAtivo: () => void;
+  removerConteudo: () => void;
+  adicionarTag: (tag: string) => void;
+  removerTag: (tag: string) => void;
 }
 
-const ConteudoCard: React.FC<ConteudoCardProps> = ({ conteudo, toggleAtivo }) => {
+const ConteudoCard: React.FC<ConteudoCardProps> = ({ 
+  conteudo, 
+  toggleAtivo, 
+  removerConteudo, 
+  adicionarTag, 
+  removerTag 
+}) => {
   const [showPreview, setShowPreview] = useState(false);
+  const [showEditTags, setShowEditTags] = useState(false);
+  const [newTag, setNewTag] = useState("");
 
   const formatarData = (dataString: string) => {
     const data = new Date(dataString);
@@ -403,6 +600,13 @@ const ConteudoCard: React.FC<ConteudoCardProps> = ({ conteudo, toggleAtivo }) =>
     }
   };
 
+  const handleAddTag = () => {
+    if (newTag.trim() && !conteudo.tags.includes(newTag.trim())) {
+      adicionarTag(newTag.trim());
+      setNewTag("");
+    }
+  };
+
   return (
     <Card className="bg-[#131d2e]/50 border border-white/10 hover:bg-[#182448]/50 transition-colors p-3">
       <div className="flex items-center justify-between">
@@ -419,12 +623,40 @@ const ConteudoCard: React.FC<ConteudoCardProps> = ({ conteudo, toggleAtivo }) =>
                   className="bg-[#0D23A0]/20 text-[#8EABFF] hover:bg-[#0D23A0]/30 text-xs py-0.5 px-1.5"
                 >
                   {tag}
+                  {showEditTags && (
+                    <button 
+                      className="ml-1 text-[#8EABFF] hover:text-white"
+                      onClick={() => removerTag(tag)}
+                    >
+                      ×
+                    </button>
+                  )}
                 </Badge>
               ))}
               <span className="text-xs text-gray-400">
                 {formatarData(conteudo.data)} {conteudo.tamanho && `• ${conteudo.tamanho}`}
               </span>
             </div>
+            
+            {showEditTags && (
+              <div className="mt-2 flex items-center gap-2">
+                <Input 
+                  type="text" 
+                  value={newTag}
+                  onChange={(e) => setNewTag(e.target.value)}
+                  placeholder="Nova tag..."
+                  className="h-7 text-xs py-0 bg-[#0a1321]/80 border-white/10"
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddTag()}
+                />
+                <Button 
+                  size="sm" 
+                  className="h-7 py-0 px-2 bg-[#0D23A0] hover:bg-[#0D23A0]/80" 
+                  onClick={handleAddTag}
+                >
+                  <Plus className="h-3 w-3" />
+                </Button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -460,16 +692,25 @@ const ConteudoCard: React.FC<ConteudoCardProps> = ({ conteudo, toggleAtivo }) =>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="bg-[#131d2e] border border-white/10 text-white">
-              <DropdownMenuItem className="hover:bg-white/10 cursor-pointer">
-                <Tag className="h-4 w-4 mr-2" /> Editar tags
+              <DropdownMenuItem 
+                className="hover:bg-white/10 cursor-pointer"
+                onClick={() => setShowEditTags(!showEditTags)}
+              >
+                <Tag className="h-4 w-4 mr-2" /> {showEditTags ? 'Concluir edição' : 'Editar tags'}
               </DropdownMenuItem>
               {conteudo.url && (
-                <DropdownMenuItem className="hover:bg-white/10 cursor-pointer">
+                <DropdownMenuItem 
+                  className="hover:bg-white/10 cursor-pointer"
+                  onClick={() => window.open(conteudo.url, '_blank')}
+                >
                   <ExternalLink className="h-4 w-4 mr-2" /> Abrir link
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator className="bg-white/10" />
-              <DropdownMenuItem className="text-red-400 hover:bg-red-500/10 hover:text-red-300 cursor-pointer">
+              <DropdownMenuItem 
+                className="text-red-400 hover:bg-red-500/10 hover:text-red-300 cursor-pointer"
+                onClick={removerConteudo}
+              >
                 <Trash2 className="h-4 w-4 mr-2" /> Remover
               </DropdownMenuItem>
             </DropdownMenuContent>
