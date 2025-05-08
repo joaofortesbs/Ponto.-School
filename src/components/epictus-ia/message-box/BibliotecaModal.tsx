@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Search, Upload, FileText, Link2, Edit3, Plus, HelpCircle, ChevronDown, MoreVertical, Eye, Trash2, Tag, FileIcon, Image as ImageIcon, Film, Headphones, BookOpen, ExternalLink } from "lucide-react";
+import { X, Search, Upload, FileText, Link2, Edit3, Plus, HelpCircle, ChevronDown, MoreVertical, Eye, Trash2, Tag, FileIcon, Image as ImageIcon, Film, Headphones, BookOpen, ExternalLink, Check } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -573,6 +573,8 @@ const ConteudoCard: React.FC<ConteudoCardProps> = ({
   const [showPreview, setShowPreview] = useState(false);
   const [showEditTags, setShowEditTags] = useState(false);
   const [newTag, setNewTag] = useState("");
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [newTitle, setNewTitle] = useState(conteudo.titulo);
 
   const formatarData = (dataString: string) => {
     const data = new Date(dataString);
@@ -607,6 +609,27 @@ const ConteudoCard: React.FC<ConteudoCardProps> = ({
     }
   };
 
+  const handleRenameFile = () => {
+    if (newTitle.trim() && newTitle !== conteudo.titulo) {
+      // Atualiza o título do arquivo através da função fornecida pelo contexto
+      window.localStorage.setItem('bibliotecaConteudos', JSON.stringify(
+        JSON.parse(window.localStorage.getItem('bibliotecaConteudos') || '[]').map(item => 
+          item.id === conteudo.id ? { ...item, titulo: newTitle } : item
+        )
+      ));
+      conteudo.titulo = newTitle;
+      setEditingTitle(false);
+    } else {
+      setNewTitle(conteudo.titulo);
+      setEditingTitle(false);
+    }
+  };
+
+  const handleCancelRename = () => {
+    setNewTitle(conteudo.titulo);
+    setEditingTitle(false);
+  };
+
   return (
     <Card className="bg-[#131d2e]/50 border border-white/10 hover:bg-[#182448]/50 transition-colors p-3">
       <div className="flex items-center justify-between">
@@ -615,7 +638,36 @@ const ConteudoCard: React.FC<ConteudoCardProps> = ({
             {getIconForType(conteudo.tipo)}
           </div>
           <div className="flex-grow min-w-0">
-            <h3 className="font-medium text-white truncate">{conteudo.titulo}</h3>
+            {editingTitle ? (
+              <div className="mb-2 flex items-center gap-2">
+                <Input 
+                  type="text" 
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  placeholder="Novo nome..."
+                  className="h-7 text-xs py-0 bg-[#0a1321]/80 border-white/10 text-white"
+                  onKeyDown={(e) => e.key === 'Enter' && handleRenameFile()}
+                  autoFocus
+                />
+                <Button 
+                  size="sm" 
+                  className="h-7 py-0 px-2 bg-[#0D23A0] hover:bg-[#0D23A0]/80" 
+                  onClick={handleRenameFile}
+                >
+                  <Check className="h-3 w-3" />
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="h-7 py-0 px-2 border-white/20 hover:bg-white/10" 
+                  onClick={handleCancelRename}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+            ) : (
+              <h3 className="font-medium text-white truncate">{conteudo.titulo}</h3>
+            )}
             <div className="flex items-center gap-2 mt-1 flex-wrap">
               {conteudo.tags.map((tag, index) => (
                 <Badge 
@@ -692,6 +744,12 @@ const ConteudoCard: React.FC<ConteudoCardProps> = ({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="bg-[#131d2e] border border-white/10 text-white">
+              <DropdownMenuItem 
+                className="hover:bg-white/10 cursor-pointer"
+                onClick={() => setEditingTitle(true)}
+              >
+                <Edit3 className="h-4 w-4 mr-2" /> Renomear
+              </DropdownMenuItem>
               <DropdownMenuItem 
                 className="hover:bg-white/10 cursor-pointer"
                 onClick={() => setShowEditTags(!showEditTags)}
