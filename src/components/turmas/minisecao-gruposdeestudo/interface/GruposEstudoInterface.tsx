@@ -86,8 +86,9 @@ const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className
   return (
     <div className={`bg-white dark:bg-[#121827] p-6 rounded-xl shadow-sm ${className}`}>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-[#001427] dark:text-white font-montserrat">
-          Grupos de Estudo
+        <h2 className="text-2xl font-bold bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] bg-clip-text text-transparent font-montserrat relative">
+          <span className="relative z-10">Grupos de Estudo Colaborativo</span>
+          <span className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] opacity-70"></span>
         </h2>
         <div className="flex gap-3">
           <div className="relative">
