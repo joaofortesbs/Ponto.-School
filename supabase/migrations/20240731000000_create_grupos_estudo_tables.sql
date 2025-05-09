@@ -1,4 +1,3 @@
-
 -- Tabela para grupos de estudo
 CREATE TABLE IF NOT EXISTS grupos_estudo (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

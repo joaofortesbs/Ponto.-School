@@ -214,29 +214,30 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
         criador_id: user.id
       });
 
-      // Inserir novo grupo no banco de dados
-      const { data: grupo, error } = await supabase
-        .from('grupos_estudo')
-        .insert({
-          nome: formData.nome,
-          descricao: formData.descricao,
-          topico: formData.topico,
-          topico_nome: formData.topicoNome,
-          topico_icon: formData.topicoIcon,
-          cor: formData.cor,
-          codigo: codigo,
-          privado: formData.privado,
-          visibilidade: formData.visibilidade,
-          criador_id: user.id
-        })
-        .select()
-        .single();
+      try {
+        // Inserir novo grupo no banco de dados
+        const { data: grupo, error } = await supabase
+          .from('grupos_estudo')
+          .insert({
+            nome: formData.nome,
+            descricao: formData.descricao,
+            topico: formData.topico,
+            topico_nome: formData.topicoNome,
+            topico_icon: formData.topicoIcon,
+            cor: formData.cor,
+            codigo: codigo,
+            privado: formData.privado,
+            visibilidade: formData.visibilidade,
+            criador_id: user.id
+          })
+          .select()
+          .single();
 
-      if (error) {
-        console.error('Erro ao criar grupo:', error);
-        alert('Erro ao criar grupo: ' + (error.message || 'Erro no servidor'));
-        return;
-      }
+        if (error) {
+          console.error('Erro ao criar grupo:', error);
+          alert('Erro ao criar grupo: ' + (error.message || 'Erro no servidor'));
+          return;
+        }
 
       if (!grupo) {
         console.error('Grupo não foi criado corretamente');
@@ -288,8 +289,8 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
 
       // Fechar o modal após criação bem-sucedida
       onClose();
-
-    } catch (error) {
+      
+      } catch (error) {
       console.error('Erro ao criar grupo:', error);
       const errorMessage = error instanceof Error ? error.message : 'Ocorreu um erro inesperado';
       alert('Erro ao criar grupo: ' + errorMessage);

@@ -200,7 +200,6 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
   // Função para processar a criação de um novo grupo
   const handleCreateGroup = (formData: any) => {
     try {
-      // Na implementação real, você salvaria no banco de dados
       console.log("Novo grupo criado:", formData);
 
       if (!formData || !formData.nome) {
@@ -209,11 +208,12 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
       }
 
       // Adicionar o novo grupo à lista
-      const novoGrupo = {
+      const novoGrupo: GrupoEstudo = {
         id: formData.id || `temp-${Date.now()}`,
         nome: formData.nome,
-        membros: 1,
+        membros: formData.amigosDetalhes ? formData.amigosDetalhes.length + 1 : 1,
         topico: formData.topico ? formData.topico.toString() : "",
+        disciplina: formData.topicoNome || "Geral",
         cor: formData.cor || "#FF6B00",
         icon: formData.topicoIcon || "📚",
         tendencia: "estável",
@@ -223,12 +223,19 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
       };
 
       setGruposEstudo(prev => [novoGrupo, ...prev]);
-      setIsCreateModalOpen(false);
+      setShowCreateGroupModal(false);
 
       // Exibir feedback de sucesso
       alert("Grupo criado com sucesso!");
+      
+      // Atualizar a visualização
+      setTimeout(() => {
+        console.log("Atualizando lista de grupos...");
+      }, 500);
+      
     } catch (error) {
       console.error("Erro ao processar criação do grupo:", error);
+      alert("Erro ao criar grupo: " + (error instanceof Error ? error.message : "Erro desconhecido"));
     }
   };
 
