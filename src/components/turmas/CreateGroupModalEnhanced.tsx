@@ -277,13 +277,13 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
         console.log("Grupo criado com sucesso:", grupo);
 
         // Verificar se a tabela existe - evita erro de tabela não encontrada
-        const { error: tableCheckError } = await supabase
+        const { error: membrosTableCheckError } = await supabase
           .from('grupos_estudo_membros')
           .select('id')
           .limit(1);
           
-        if (tableCheckError) {
-          console.error('Erro ao verificar tabela grupos_estudo_membros:', tableCheckError);
+        if (membrosTableCheckError) {
+          console.error('Erro ao verificar tabela grupos_estudo_membros:', membrosTableCheckError);
           console.log('O grupo foi criado, mas pode haver problemas ao adicionar membros');
         }
         
