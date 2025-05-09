@@ -8,6 +8,50 @@ div::-webkit-scrollbar {
 
 body::-webkit-scrollbar-track,
 .scrollbar-container::-webkit-scrollbar-track,
+
+/* Estilos específicos para o carrossel de tópicos */
+.topic-carousel-container {
+  scroll-behavior: smooth;
+}
+
+@media (max-width: 640px) {
+  /* Em telas pequenas, mostrar menos cards */
+  #topicos-container {
+    max-width: calc(32rem) !important;
+  }
+}
+
+@media (min-width: 1280px) {
+  /* Em telas grandes, manter a largura adequada */
+  #topicos-container {
+    max-width: calc(44rem) !important;
+  }
+}
+
+/* Animation para o botão de scroll */
+@keyframes pulse-arrow {
+  0% {
+    transform: translateX(0);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translateX(3px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 0.8;
+  }
+}
+
+#scroll-right-btn svg {
+  animation: pulse-arrow 2s ease-in-out infinite;
+}
+
+#scroll-left-btn svg {
+  animation: pulse-arrow 2s ease-in-out infinite reverse;
+}
+
 div::-webkit-scrollbar-track {
 
 /* Efeito de contorno brilhoso avançado */

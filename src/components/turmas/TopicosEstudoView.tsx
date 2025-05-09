@@ -453,8 +453,15 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                 {/* Container com rolagem horizontal */}
                 <div 
                   id="topicos-container"
-                  className="flex overflow-x-auto pb-4 pt-2 hide-scrollbar gap-4 scroll-smooth"
-                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                  className="flex overflow-x-auto pb-4 pt-2 hide-scrollbar gap-4 scroll-smooth snap-x"
+                  style={{ 
+                    scrollbarWidth: 'none', 
+                    msOverflowStyle: 'none',
+                    maxWidth: 'calc(44rem)', // Largura fixa para comportar 8 cards de tamanho médio
+                    margin: '0 auto',
+                    scrollSnapType: 'x mandatory',
+                    position: 'relative'
+                  }}
                   onScroll={() => checkScrollPosition()}
                 >
                   {topicosEstudo.map((topico) => (
@@ -482,7 +489,7 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                     className={`profile-3d-element bg-gradient-to-b from-[#121620]/90 to-[#0a0d14]/80 backdrop-blur-lg 
                       rounded-xl overflow-hidden cursor-pointer 
                       transition-all duration-300 relative flex flex-col transform-gpu
-                      perspective-1000 shadow-xl w-32 h-32
+                      perspective-1000 shadow-xl w-44 h-36 snap-center flex-shrink-0
                       ${selectedTopic === topico.id ? 'topic-selected' : 'border border-white/10'}
                       ${isTopicFeatured(topico) ? 'featured-topic border-[0.5px] border-[#FF6B00]/40' : ''}`}
                     style={{
@@ -612,12 +619,14 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                   onClick={() => {
                     const container = document.getElementById('topicos-container');
                     if (container) {
-                      container.scrollBy({ left: 300, behavior: 'smooth' });
+                      // Rolar para frente 4 cards (metade da visualização visível)
+                      const scrollDistance = 4 * (44 + 16); // 4 cards * (largura do card + gap)
+                      container.scrollBy({ left: scrollDistance, behavior: 'smooth' });
                       // Exibir/ocultar botões após a rolagem
                       setTimeout(() => checkScrollPosition(), 300);
                     }
                   }}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-gradient-to-l from-[#070e1a] to-transparent pl-8 pr-2 h-10 flex items-center justify-center text-white/80 hover:text-white rounded-l-lg transition-all duration-300"
+                  className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-gradient-to-l from-[#070e1a] to-transparent pl-8 pr-2 h-10 flex items-center justify-center text-white/80 hover:text-white rounded-l-lg transition-all duration-300 opacity-100 hover:bg-gradient-to-l hover:from-[#0a121f] hover:to-transparent shadow-xl"
                   aria-label="Rolar para a direita"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
