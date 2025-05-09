@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Search, Filter, Sparkles, BookOpen, Users, TrendingUp, ChevronRight, Plus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -77,34 +76,21 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
       if (container && scrollLeftBtn && scrollRightBtn) {
         const maxScrollLeft = container.scrollWidth - container.clientWidth;
 
-        // Calcular se existem mais de 8 cards no total para mostrar botão direito
-        const hasMoreThanEightCards = topicosEstudo.length > 8;
-
         // Mostra o botão esquerdo se a rolagem for maior que zero
-        if (container.scrollLeft > 10) { // Usando 10px como threshold para evitar bugs visuais
+        if (container.scrollLeft > 0) {
           scrollLeftBtn.classList.remove('opacity-0', 'pointer-events-none');
         } else {
           scrollLeftBtn.classList.add('opacity-0', 'pointer-events-none');
         }
 
         // Mostra o botão direito se ainda houver conteúdo para rolar
-        if (container.scrollLeft < maxScrollLeft - 10 && hasMoreThanEightCards) {
-          scrollRightBtn.classList.remove('opacity-0', 'pointer-events-none');
+        if (container.scrollLeft < maxScrollLeft) {
+          scrollRightBtn.classList.remove('opacity-0');
         } else {
-          scrollRightBtn.classList.add('opacity-0', 'pointer-events-none');
-        }
-
-        // Inicializa a verificação na carga da página
-        if (maxScrollLeft <= 0 || !hasMoreThanEightCards) {
-          scrollRightBtn.classList.add('opacity-0', 'pointer-events-none');
+          scrollRightBtn.classList.add('opacity-0');
         }
       }
     };
-
-    // Verificar posição na montagem do componente
-    useEffect(() => {
-      setTimeout(() => checkScrollPosition(), 500);
-    }, []);
 
   // Conteúdo condicional baseado na interface selecionada
   const renderConteudoInterface = () => {
@@ -317,203 +303,353 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
   };
 
   return (
-    <div className={`w-full space-y-8 ${className}`}>
-      <div className="bg-gradient-to-r from-gray-900 to-gray-800 dark:from-gray-800 dark:to-gray-900 rounded-xl overflow-hidden border border-white/5">
-        <div className="p-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div className={`w-full ${className}`}>
+      {/* Container principal com gradiente de fundo */}
+      <div className="rounded-2xl bg-gradient-to-br from-[#070e1a] to-[#0c121f] shadow-xl border border-white/5 overflow-hidden">
+        {/* Cabeçalho com título e subtítulo */}
+        <div className="p-5 border-b border-white/5 bg-black/20">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] flex items-center justify-center shadow-lg">
+              <div className="h-12 w-12 bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] rounded-xl flex items-center justify-center shadow-lg shadow-[#FF6B00]/20">
                 <Users className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white">
+                <h2 className="text-2xl font-bold text-white bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">
                   Grupos de Estudo
                 </h2>
-                <p className="text-white/60 text-sm">Conecte-se e aprenda com seus colegas</p>
+                <p className="text-sm text-white/60">
+                  Conecte-se e aprenda com seus colegas
+                </p>
               </div>
             </div>
-            <Button className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white">
-              Criar Grupo
+            <Button className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF6B00]/90 hover:to-[#FF8C40]/90 text-white rounded-xl shadow-lg shadow-[#FF6B00]/20">
+              <Plus className="h-4 w-4 mr-1" /> Criar Grupo
             </Button>
           </div>
         </div>
 
-        <div className="bg-gray-900/50 dark:bg-gray-800/50 backdrop-blur-sm p-4 border-t border-white/5">
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-            <div>
-              <div className="flex items-center space-x-1 mb-3 lg:mb-0">
-                <Button
-                  variant={interfaceAtiva === "meus-grupos" ? "default" : "ghost"}
-                  className={`h-9 rounded-lg ${interfaceAtiva === "meus-grupos" ? "bg-[#FF6B00] text-white" : "text-white/70"}`}
-                  onClick={() => setInterfaceAtiva("meus-grupos")}
+        <div className="p-5">
+          {/* Seletor de interface e barra de pesquisa alinhados */}
+          <div className="flex flex-col md:flex-row md:items-center gap-4">
+            {/* Seletor de interface compacto */}
+            <div className="flex bg-black/30 p-0.5 rounded-lg shadow-inner border border-white/5 min-w-[280px] max-w-[280px]">
+              <button
+                onClick={() => setInterfaceAtiva("meus-grupos")}
+                className={`flex-1 py-1.5 px-3 rounded-md text-xs font-medium transition-all flex items-center justify-center gap-1 ${
+                  interfaceAtiva === "meus-grupos"
+                    ? "bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white shadow-sm"
+                    : "text-white/70 hover:bg-white/5"
+                }`}
+              >
+                <Users className="h-3 w-3 mr-1" /> Meus Grupos
+              </button>
+              <button
+                onClick={() => setInterfaceAtiva("recomendacoes-ia")}
+                className={`flex-1 py-1.5 px-3 rounded-md text-xs font-medium transition-all flex items-center justify-center gap-1 ${
+                  interfaceAtiva === "recomendacoes-ia"
+                    ? "bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white shadow-sm"
+                    : "text-white/70 hover:bg-white/5"
+                }`}
+              >
+                <Sparkles className="h-3 w-3 mr-1" /> IA Recomenda
+              </button>
+              <button
+                onClick={() => setInterfaceAtiva("estatisticas")}
+                className={`flex-1 py-1.5 px-3 rounded-md text-xs font-medium transition-all flex items-center justify-center gap-1 ${
+                  interfaceAtiva === "estatisticas"
+                    ? "bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white shadow-sm"
+                    : "text-white/70 hover:bg-white/5"
+                }`}
+              >
+                <TrendingUp className="h-3 w-3 mr-1" /> Estatísticas
+              </button>
+            </div>
+
+            {/* Barra de pesquisa sofisticada */}
+            <div className="relative flex-1 group">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className="h-4 w-4 text-white/40 group-focus-within:text-[#FF6B00] transition-colors" />
+              </div>
+              <Input
+                type="text"
+                placeholder="Buscar por grupos ou temas específicos..."
+                className="pl-10 pr-20 py-2 bg-black/30 border-white/5 hover:border-white/10 focus:border-[#FF6B00]/50 focus:ring-[#FF6B00]/10 h-10 rounded-lg w-full text-white shadow-inner text-sm"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <div className="absolute inset-y-0 right-0 flex items-center space-x-1 pr-2">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-7 w-7 rounded-md bg-black/30 hover:bg-[#FF6B00]/20 text-white/70 hover:text-white"
+                  onClick={() => setSelectedFilter(selectedFilter === "tendencia-alta" ? null : "tendencia-alta")}
                 >
-                  Meus Grupos
+                  <TrendingUp className={`h-4 w-4 ${selectedFilter === "tendencia-alta" ? "text-[#FF6B00]" : ""}`} />
                 </Button>
-                <Button
-                  variant={interfaceAtiva === "recomendacoes-ia" ? "default" : "ghost"}
-                  className={`h-9 rounded-lg ${interfaceAtiva === "recomendacoes-ia" ? "bg-[#FF6B00] text-white" : "text-white/70"}`}
-                  onClick={() => setInterfaceAtiva("recomendacoes-ia")}
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-7 w-7 rounded-md bg-black/30 hover:bg-[#FF6B00]/20 text-white/70 hover:text-white"
+                  onClick={() => setSelectedFilter(selectedFilter === "novo-conteudo" ? null : "novo-conteudo")}
                 >
-                  IA Recomenda
+                  <Sparkles className={`h-4 w-4 ${selectedFilter === "novo-conteudo" ? "text-[#FF6B00]" : ""}`} />
                 </Button>
-                <Button
-                  variant={interfaceAtiva === "estatisticas" ? "default" : "ghost"}
-                  className={`h-9 rounded-lg ${interfaceAtiva === "estatisticas" ? "bg-[#FF6B00] text-white" : "text-white/70"}`}
-                  onClick={() => setInterfaceAtiva("estatisticas")}
-                >
-                  Estatísticas
+                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md bg-black/30 hover:bg-[#FF6B00]/20 text-white/70 hover:text-white">
+                  <Filter className="h-4 w-4" />
                 </Button>
               </div>
             </div>
-
-              <div className="w-full lg:max-w-md">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
-                  <Input
-                    placeholder="Buscar por grupos ou temas específicos..."
-                    className="bg-gray-800/50 border-white/10 text-white pl-9 focus-visible:ring-[#FF6B00]/50"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className={`h-7 w-7 rounded-full ${selectedFilter === "tendencia-alta" ? "bg-white/10 text-[#FF6B00]" : "text-white/40"}`}
-                      onClick={() => setSelectedFilter(selectedFilter === "tendencia-alta" ? null : "tendencia-alta")}
-                    >
-                      <TrendingUp className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className={`h-7 w-7 rounded-full ${selectedFilter === "novo-conteudo" ? "bg-white/10 text-[#FF6B00]" : "text-white/40"}`}
-                      onClick={() => setSelectedFilter(selectedFilter === "novo-conteudo" ? null : "novo-conteudo")}
-                    >
-                      <Sparkles className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
           </div>
-        </div>
 
-        <div className="p-6">
+          {/* Tópicos de estudo - exibido apenas quando "Meus Grupos" está selecionado */}
           {interfaceAtiva === "meus-grupos" && (
-            <div className="mb-6">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="mt-6"
+            >
               <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <div className="bg-[#FF6B00]/10 rounded-lg p-1.5">
-                    <BookOpen className="h-5 w-5 text-[#FF6B00]" />
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] rounded-lg flex items-center justify-center shadow-lg shadow-[#FF6B00]/10">
+                    <BookOpen className="h-5 w-5 text-white" />
                   </div>
-                  <h3 className="font-semibold text-white">
+                  <h3 className="text-xl font-bold text-white">
                     Tópicos de Estudo
                   </h3>
                 </div>
-                <div className="flex items-center gap-2 text-sm">
-                  {selectedTopic && (
-                    <span className="text-white/60 mr-2">
-                      {topicosEstudo.find(t => t.id === selectedTopic)?.nome} selecionado
-                    </span>
-                  )}
-                  <Button variant="link" className="text-[#FF6B00] p-0 h-auto">Ver todos <ChevronRight className="h-3 w-3 ml-1" /></Button>
-                </div>
+                <div className="flex items-center gap-2">
+                {selectedTopic && (
+                  <Badge className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white">
+                    {topicosEstudo.find(t => t.id === selectedTopic)?.nome} selecionado
+                  </Badge>
+                )}
+                <Button variant="outline" size="sm" className="text-white/80 border-white/10 hover:border-white/20 hover:bg-white/5 rounded-lg text-xs">
+                  Ver todos <ChevronRight className="h-3 w-3 ml-1" />
+                </Button>
+              </div>
               </div>
 
-              <div className="relative">
-                <Button
+              <div className="relative mt-2">
+                {/* Botão de rolagem para a esquerda */}
+                <button 
                   id="scroll-left-btn"
-                  variant="ghost"
-                  size="icon"
-                  className="absolute left-0 top-1/2 -translate-y-1/2 z-10 h-8 w-8 rounded-full bg-white/5 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-200"
                   onClick={() => {
                     const container = document.getElementById('topicos-container');
                     if (container) {
-                      container.scrollLeft -= 200;
-                      checkScrollPosition();
+                      container.scrollBy({ left: -300, behavior: 'smooth' });
+                      // Exibir/ocultar botões após a rolagem
+                      setTimeout(() => checkScrollPosition(), 300);
                     }
                   }}
+                  className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-gradient-to-r from-[#070e1a] to-transparent pr-8 pl-2 h-10 flex items-center justify-center text-white/80 hover:text-white rounded-r-lg transition-all duration-300 opacity-0 pointer-events-none"
+                  aria-label="Rolar para a esquerda"
                 >
-                  <ChevronRight className="h-4 w-4 text-white rotate-180" />
-                </Button>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+                    <path d="m15 18-6-6 6-6"/>
+                  </svg>
+                </button>
 
-                <div
+                {/* Container com rolagem horizontal */}
+                <div 
                   id="topicos-container"
-                  className="flex items-center gap-3 overflow-x-auto pb-3 pt-1 px-1 hide-scrollbar"
-                  onScroll={checkScrollPosition}
+                  className="flex overflow-x-auto pb-4 pt-2 hide-scrollbar gap-4 scroll-smooth snap-x"
+                  style={{ 
+                    scrollbarWidth: 'none', 
+                    msOverflowStyle: 'none',
+                    width: '100%',
+                    paddingLeft: '4px',
+                    paddingRight: '4px',
+                    scrollSnapType: 'x mandatory',
+                    position: 'relative'
+                  }}
+                  onScroll={() => checkScrollPosition()}
                 >
                   {topicosEstudo.map((topico) => (
                   <motion.div
                     key={topico.id}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.2, delay: topico.id * 0.03 }}
-                    whileHover={{ y: -5, transition: { duration: 0.2 } }}
-                    className={`min-w-[180px] bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl border border-white/5 p-3 cursor-pointer transition-all duration-300 
-                      ${selectedTopic === topico.id ? 'ring-2 ring-[#FF6B00]' : 'hover:border-white/20'}
-                      ${isTopicFeatured(topico) ? 'featured-topic ring-1 ring-[#FF6B00]/20' : ''}`}
+                    initial={{ rotateY: 0 }}
+                    whileHover={{ 
+                      scale: 1.05,
+                      rotateY: 15,
+                      z: 20,
+                      boxShadow: `0 20px 40px -10px rgba(0, 0, 0, 0.4), 0 10px 20px -5px rgba(0, 0, 0, 0.3), 0 0 25px ${topico.cor}40`
+                    }}
+                    animate={selectedTopic === topico.id ? {
+                      scale: 1.04,
+                      rotateY: 5,
+                      z: 20,
+                      boxShadow: `0 15px 30px -10px rgba(0, 0, 0, 0.4), 0 10px 20px -5px rgba(0, 0, 0, 0.3), 0 0 20px ${topico.cor}30`
+                    } : {}}
                     onClick={() => setSelectedTopic(selectedTopic === topico.id ? null : topico.id)}
+                    transition={{ 
+                      type: "spring", 
+                      stiffness: 300,
+                      damping: 22
+                    }}
+                    className={`profile-3d-element bg-gradient-to-b from-[#121620]/90 to-[#0a0d14]/80 backdrop-blur-lg 
+                      rounded-xl overflow-hidden cursor-pointer 
+                      transition-all duration-300 relative flex flex-col transform-gpu
+                      perspective-1000 shadow-xl w-32 h-32 snap-center flex-shrink-0
+                      ${selectedTopic === topico.id ? 'topic-selected' : 'border border-white/10'}
+                      ${isTopicFeatured(topico) ? 'featured-topic border-[0.5px] border-[#FF6B00]/40' : ''}`}
+                    style={{
+                      transformStyle: "preserve-3d",
+                    }}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="flex-shrink-0">
-                        <div 
-                          className="h-10 w-10 rounded-lg flex items-center justify-center text-white shadow-lg" 
-                          style={{ backgroundColor: topico.cor }}
-                        >
-                          <span className="text-lg">{topico.icon}</span>
-                        </div>
-                      </div>
-                    </div>
+                    <div
+                      className="w-full h-32 flex flex-col justify-end p-3 relative overflow-hidden"
+                    >
+                      {/* Fundo 3D com efeito de vidro e paralaxe */}
+                      <div 
+                        className="absolute inset-0 z-0"
+                        style={{ 
+                          background: `radial-gradient(circle at 20% 20%, ${topico.cor}25 0%, transparent 70%), 
+                                      linear-gradient(135deg, ${topico.cor}05 0%, transparent 50%)`,
+                          transform: "translateZ(-20px) scale(1.1)",
+                          filter: "blur(1px)"
+                        }}
+                      />
 
-                    <div className="mt-3">
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-medium text-white text-sm">{topico.nome}</h4>
-                        {topico.novoConteudo && (
-                          <Badge className="bg-[#FF6B00] text-white text-[10px] px-1 py-0 h-4">
-                            NOVO
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="flex items-center justify-between mt-2">
-                        <div className="flex items-center gap-1 text-white/60 text-xs">
-                          <Users className="h-3 w-3" />
-                          <span>{topico.grupos}</span>
-                        </div>
-                        {topico.tendencia === "alta" && (
-                          <div className="flex items-center gap-1 text-emerald-400 text-xs">
-                            <TrendingUp className="h-3 w-3" />
+                      {/* Efeito de profundidade avançado */}
+                      <div className="absolute top-0 left-0 w-full h-full" 
+                        style={{ 
+                          boxShadow: `inset 0 0 40px rgba(0,0,0,0.5)`,
+                          borderRadius: "inherit",
+                          background: `radial-gradient(circle at 70% 80%, rgba(255,255,255,0.03) 0%, transparent 50%)`
+                        }} 
+                      />
+
+                      {/* Partículas flutuantes sutis (somente para tópicos em destaque) */}
+                      {isTopicFeatured(topico) && (
+                        <>
+                          <div className="absolute h-1.5 w-1.5 rounded-full bg-white/20"
+                               style={{top: '30%', left: '20%', transform: 'translateZ(5px)', opacity: 0.7,
+                                       animation: 'float-particle 4s ease-in-out infinite'}}>
                           </div>
-                        )}
+                          <div className="absolute h-1 w-1 rounded-full bg-white/20"
+                               style={{top: '45%', left: '70%', transform: 'translateZ(8px)', opacity: 0.5,
+                                       animation: 'float-particle 3.5s ease-in-out infinite 0.5s'}}>
+                          </div>
+                          <div className="absolute h-0.5 w-0.5 rounded-full bg-white/20"
+                               style={{top: '65%', left: '40%', transform: 'translateZ(12px)', opacity: 0.4,
+                                       animation: 'float-particle 5s ease-in-out infinite 1s'}}>
+                          </div>
+                        </>
+                      )}
+
+                      {/* Indicador de novidade redesenhado */}
+                      {topico.novoConteudo && (
+                        <div className="absolute top-3 right-3 z-20">
+                          <div className="relative">
+                            <div className="absolute -inset-0.5 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-full opacity-75 blur-sm animate-pulse"></div>
+                            <div className="h-2 w-2 rounded-full bg-white"></div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Grafico hexagonal de fundo para elementos destacados */}
+                      {isTopicFeatured(topico) && (
+                        <div className="absolute inset-0 z-5 opacity-10"
+                             style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/200/svg'%33E%3Cpath d='M30 5.7735C32.094 5.7735 34.1627 6.456 35.7735 7.7735L52.2265 17.7735C55.5206 19.7735 57.2265 23.3726 57.2265 27.2265V47.2265C57.2265 51.0804 55.5206 54.6795 52.2265 56.6795L35.7735 66.6795C34.1627 67.997 32.094 68.6795 30 68.6795C27.906 68.6795 25.8373 67.997 24.2265 66.6795L7.7735 56.6795C4.47944 54.6795 2.7735 51.0804 2.7735 47.2265V27.2265C2.7735 23.3726 4.47944 19.7735 7.7735 17.7735L24.2265 7.7735C25.8373 6.456 27.906 5.7735 30 5.7735Z' fill='none' stroke='%23FFFFFF' stroke-width='0.3'/%3E%3C/svg%3E")`,
+                              backgroundSize: '150px 150px',
+                              backgroundPosition: 'center',
+                              mixBlendMode: 'overlay',
+                              transform: 'translateZ(-15px) scale(1.2) rotate(30deg)'
+                        }}></div>
+                      )}
+
+                      {/* Conteúdo principal com efeito 3D */}
+                      <div className="relative z-10" style={{ transform: "translateZ(25px)" }}>
+                        {/* Ícone 3D com sombra e reflexo */}
+                        <div className="profile-3d-element mb-3 relative flex items-center justify-center"
+                             style={{ transform: "translateZ(10px)" }}>
+                          <div className="absolute -inset-1 rounded-full bg-gradient-to-b from-white/10 to-transparent opacity-50"
+                               style={{ filter: 'blur(2px)', transform: 'translateZ(-2px)' }}></div>
+                          <div className="h-12 w-12 rounded-xl flex items-center justify-center relative" 
+                               style={{ 
+                                 backgroundColor: topico.cor,
+                                 boxShadow: `0 10px 15px -5px ${topico.cor}40, 0 0 8px ${topico.cor}30 inset`,
+                                 transform: 'translateZ(5px)'
+                               }}>
+                            {/* Ícones personalizados baseados no nome do tópico */}
+                            {topico.nome === "Matématica" && <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>}
+                            {topico.nome === "Lingua Portuguesa" && <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>}
+                            {topico.nome === "Física" && <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>}
+                            {topico.nome === "Química" && <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>}
+                            {topico.nome === "Biologia" && <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>}
+                            {topico.nome === "Geografia" && <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>}
+                            {topico.nome === "História" && <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>}
+                            {topico.nome === "Filosofia" && <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>}
+                            {topico.nome === "Sociologia" && <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>}
+                            {topico.nome === "Inglês" && <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"></path></svg>}
+                            {topico.nome === "Computação" && <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>}
+                            {topico.nome === "Leitura" && <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>}
+                            {topico.nome === "Projetos" && <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>}
+                            {topico.nome === "Outros" && <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16l2.879-2.879m0 0a3 3 0 104.243-4.242 3 3 0 00-4.243 4.242zM21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>}
+                          </div>
+                        </div>
+
+                        {/* Título do tópico com efeito de destaque */}
+                        <h4 className="text-white font-semibold text-sm profile-3d-text"
+                            style={{ 
+                              textShadow: "0 2px 3px rgba(0,0,0,0.5), 0 0 5px rgba(0,0,0,0.2)",
+                            }}>{topico.nome}</h4>
+
+                        {/* Estatísticas com estilo moderno */}
+                        <div className="flex items-center gap-1.5 mt-2" style={{ transform: "translateZ(8px)" }}>
+                          <div className="text-white/90 text-xs flex items-center bg-black/30 backdrop-blur-sm px-2 py-0.5 rounded-full border border-white/5">
+                            <Users className="h-3 w-3 mr-1" />
+                            {topico.grupos}
+                          </div>
+                          {topico.tendencia === "alta" && (
+                            <div className="bg-emerald-500/10 border border-emerald-500/20 backdrop-blur-sm px-2 py-0.5 rounded-full flex items-center">
+                              <TrendingUp className="h-3 w-3 text-emerald-400" />
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </motion.div>
                 ))}
                 </div>
-                
-                <Button
+
+                {/* Botão de rolagem para a direita */}
+                <button 
                   id="scroll-right-btn"
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 h-8 w-8 rounded-full bg-white/5 backdrop-blur-sm transition-opacity duration-200"
                   onClick={() => {
                     const container = document.getElementById('topicos-container');
                     if (container) {
-                      container.scrollLeft += 200;
-                      checkScrollPosition();
+                      // Rolar para frente 8 cards (uma visualização completa)
+                      const scrollDistance = 8 * (32 + 16); // 8 cards * (largura do card + gap)
+                      container.scrollBy({ left: scrollDistance, behavior: 'smooth' });
+                      // Exibir/ocultar botões após a rolagem
+                      setTimeout(() => checkScrollPosition(), 300);
                     }
                   }}
+                  className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-gradient-to-l from-[#070e1a] to-transparent pl-8 pr-2 h-10 flex items-center justify-center text-white/80 hover:text-white rounded-l-lg transition-all duration-300 opacity-100 hover:bg-gradient-to-l hover:from-[#0a121f] hover:to-transparent shadow-xl"
+                  aria-label="Rolar para a direita"
                 >
-                  <ChevronRight className="h-4 w-4 text-white" />
-                </Button>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+                    <path d="m9 18 6-6-6-6"/>
+                  </svg>
+                </button>
               </div>
-            </div>
+            </motion.div>
           )}
 
-          <div className="mt-6">
-            <div className="w-full">
+          {/* Conteúdo da interface selecionada */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={interfaceAtiva}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
               {renderConteudoInterface()}
-            </div>
-          </div>
+            </motion.div>
+          </AnimatePresence>
         </div>
       </div>
     </div>
