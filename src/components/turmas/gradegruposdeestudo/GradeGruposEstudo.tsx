@@ -71,7 +71,11 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
       const matchesFilter = !selectedFilter || 
         (selectedFilter === "tendencia-alta" && grupo.tendencia === "alta") ||
         (selectedFilter === "novo-conteudo" && grupo.novoConteudo);
-      const matchesSelectedTopic = !selectedTopic || (grupo.topico && selectedTopic.toString() === grupo.topico);
+        
+      // Melhorada lógica de filtragem por tópico
+      const matchesSelectedTopic = !selectedTopic || 
+        (grupo.topico && selectedTopic.toString() === grupo.topico);
+        
       return matchesSearch && matchesFilter && matchesSelectedTopic;
     }
   );
@@ -99,7 +103,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
       cor: formData.cor || "#FF6B00",
       membros: formData.amigos ? formData.amigos.length + 1 : 1, // Criador + amigos convidados
       dataCriacao: new Date().toISOString(),
-      topico: formData.topico || undefined,
+      topico: formData.topico || undefined, // Usado para filtragem por tópico
       disciplina: formData.topicoNome || undefined,
       icon: formData.topicoIcon || undefined,
       tendencia: Math.random() > 0.7 ? "alta" : undefined, // Simula tendência aleatória
