@@ -51,8 +51,76 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
         // const data = await response.json();
         // setGruposEstudo(data);
         
-        // Por enquanto, inicia com array vazio (dados removidos)
-        setGruposEstudo([]);
+        // Dados de exemplo - simulação para demonstrar filtragem por tópico
+        const gruposExemplo = [
+          {
+            id: "grupo-1",
+            nome: "Grupo de Matemática Avançada",
+            cor: "#FF6B00",
+            membros: 8,
+            topico: "1", // ID correspondente ao tópico Matemática
+            disciplina: "Matématica",
+            icon: "📊",
+            tendencia: "alta",
+            novoConteudo: true,
+            dataCriacao: new Date().toISOString(),
+            criador: "Ana Silva"
+          },
+          {
+            id: "grupo-2",
+            nome: "Linguagem e Literatura",
+            cor: "#9333EA",
+            membros: 12,
+            topico: "2", // ID correspondente ao tópico Língua Portuguesa
+            disciplina: "Lingua Portuguesa",
+            icon: "📝",
+            tendencia: "estável",
+            novoConteudo: false,
+            dataCriacao: new Date().toISOString(),
+            criador: "Carlos Oliveira"
+          },
+          {
+            id: "grupo-3",
+            nome: "Física Quântica",
+            cor: "#4F46E5",
+            membros: 6,
+            topico: "3", // ID correspondente ao tópico Física
+            disciplina: "Física",
+            icon: "⚛️",
+            tendencia: "alta",
+            novoConteudo: true,
+            dataCriacao: new Date().toISOString(),
+            criador: "Mariana Costa"
+          },
+          {
+            id: "grupo-4",
+            nome: "Química Orgânica",
+            cor: "#10B981",
+            membros: 5,
+            topico: "4", // ID correspondente ao tópico Química
+            disciplina: "Química",
+            icon: "🧪",
+            tendencia: "baixa",
+            novoConteudo: false,
+            dataCriacao: new Date().toISOString(),
+            criador: "João Paulo"
+          },
+          {
+            id: "grupo-5",
+            nome: "Biologia Celular",
+            cor: "#16A34A",
+            membros: 7,
+            topico: "5", // ID correspondente ao tópico Biologia
+            disciplina: "Biologia",
+            icon: "🌿",
+            tendencia: "alta",
+            novoConteudo: true,
+            dataCriacao: new Date().toISOString(),
+            criador: "Fernanda Lima"
+          }
+        ];
+        
+        setGruposEstudo(gruposExemplo);
       } catch (error) {
         console.error("Erro ao carregar grupos de estudo:", error);
       } finally {
@@ -73,8 +141,11 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
         (selectedFilter === "novo-conteudo" && grupo.novoConteudo);
         
       // Melhorada lógica de filtragem por tópico
+      const selectedTopicName = selectedTopic && topicosEstudo.find(t => t.id === selectedTopic)?.nome.toLowerCase();
+      
       const matchesSelectedTopic = !selectedTopic || 
-        (grupo.topico && selectedTopic.toString() === grupo.topico);
+        (grupo.topico && selectedTopic.toString() === grupo.topico) ||
+        (grupo.disciplina && selectedTopicName && grupo.disciplina.toLowerCase() === selectedTopicName);
         
       return matchesSearch && matchesFilter && matchesSelectedTopic;
     }
@@ -107,8 +178,10 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
       disciplina: formData.topicoNome || undefined,
       icon: formData.topicoIcon || undefined,
       tendencia: Math.random() > 0.7 ? "alta" : undefined, // Simula tendência aleatória
+      novoConteudo: Math.random() > 0.7, // Simula conteúdo novo aleatório
       privado: formData.privado,
       visibilidade: formData.visibilidade,
+      criador: "Você",
       // Outros campos baseados no formulário
     };
     

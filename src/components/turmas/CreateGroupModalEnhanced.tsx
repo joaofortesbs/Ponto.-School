@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -190,7 +189,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
     console.log("Entrando com código:", formData.codigo);
     onClose();
   };
-  
+
   const removeTopic = () => {
     setFormData(prev => ({ 
       ...prev, 
@@ -240,6 +239,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
             exit={{ opacity: 0, scale: 0.9 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
             className="bg-white dark:bg-[#1E293B] rounded-xl overflow-hidden w-[560px] shadow-xl relative"
+            style={{ minHeight: "600px" }}
           >
             <div className="sticky top-0 z-10 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-6 flex justify-between items-center">
               <div>
@@ -278,7 +278,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
                     <span>Criar Grupo</span>
                   </TabsTrigger>
                 </TabsList>
-                
+
                 <TabsContent value="codigo" className="mt-0">
                   <form onSubmit={handleCodeSubmit} className="space-y-4 min-h-[400px] flex flex-col">
                     <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-6 text-center mb-6">
@@ -292,7 +292,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
                         Digite o código de acesso fornecido pelo administrador do grupo para participar
                       </p>
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Input
                         name="codigo"
@@ -308,7 +308,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
                         O código é sensível a maiúsculas e minúsculas
                       </p>
                     </div>
-                    
+
                     <div className="flex justify-end mt-auto pt-6 space-x-3">
                       <Button 
                         type="button" 
@@ -327,7 +327,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
                     </div>
                   </form>
                 </TabsContent>
-                
+
                 <TabsContent value="criar" className="mt-0">
                   <form onSubmit={handleSubmit} className="space-y-4 min-h-[400px] flex flex-col">
                     {/* Seção Básica */}
@@ -346,7 +346,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
                           className="w-full border-gray-300 dark:border-gray-600 h-11"
                         />
                       </div>
-                      
+
                       <div>
                         <label htmlFor="descricao" className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
                           Descrição
@@ -361,16 +361,16 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
                         />
                       </div>
                     </div>
-                    
+
                     <Separator className="my-2" />
-                    
+
                     {/* Seção de Tópico */}
                     <div>
                       <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300 flex items-center">
                         <BookIcon className="h-4 w-4 mr-2 text-[#FF6B00]" />
                         <span>Tópico do Grupo</span>
                       </label>
-                      
+
                       {formData.topico ? (
                         <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/40 rounded-lg border border-gray-200 dark:border-gray-700">
                           <div className="flex items-center gap-3">
@@ -408,7 +408,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
                             </span>
                             <ChevronDown className="h-4 w-4 opacity-70" />
                           </Button>
-                          
+
                           {showTopicSelector && (
                             <div className="mt-2 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg">
                               <div className="p-3 border-b border-gray-200 dark:border-gray-700">
@@ -452,16 +452,16 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
                         </div>
                       )}
                     </div>
-                    
+
                     <Separator className="my-2" />
-                    
+
                     {/* Seção para adicionar amigos */}
                     <div>
                       <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300 flex items-center">
                         <UserPlus className="h-4 w-4 mr-2 text-[#FF6B00]" />
                         <span>Adicionar Amigos</span>
                       </label>
-                      
+
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button
@@ -531,7 +531,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
                           </ScrollArea>
                         </PopoverContent>
                       </Popover>
-                      
+
                       {selectedFriends.length > 0 && (
                         <div className="mt-2 flex flex-wrap gap-2">
                           {selectedFriends.map(friend => (
@@ -559,9 +559,9 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
                         </div>
                       )}
                     </div>
-                    
+
                     <Separator className="my-2" />
-                    
+
                     {/* Seção de Configurações Visuais */}
                     <div>
                       <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300 flex items-center">
@@ -589,9 +589,9 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
                         ))}
                       </div>
                     </div>
-                    
+
                     <Separator className="my-2" />
-                    
+
                     {/* Seção de Privacidade */}
                     <div className="space-y-4">
                       <div className="space-y-2">
@@ -599,7 +599,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
                           <Globe className="h-4 w-4 mr-2 text-[#FF6B00]" />
                           <span>Visibilidade do Grupo</span>
                         </label>
-                        
+
                         <Select value={formData.visibilidade} onValueChange={handleVisibilityChange}>
                           <SelectTrigger className="w-full">
                             <SelectValue placeholder="Selecione a visibilidade" />
@@ -609,14 +609,14 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
                             <SelectItem value="convidados">Somente convidados</SelectItem>
                           </SelectContent>
                         </Select>
-                        
+
                         <p className="text-xs text-gray-500 dark:text-gray-400">
                           {formData.visibilidade === "todos" 
                             ? "Qualquer pessoa na plataforma poderá ver e solicitar entrada no grupo" 
                             : "Apenas pessoas convidadas ou com o código de acesso poderão entrar no grupo"}
                         </p>
                       </div>
-                      
+
                       <div>
                         <div className="flex items-center">
                           <input
@@ -637,7 +637,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
                         )}
                       </div>
                     </div>
-                    
+
                     {/* Botões de Ação */}
                     <div className="flex justify-end mt-auto pt-6 space-x-3">
                       <Button 
