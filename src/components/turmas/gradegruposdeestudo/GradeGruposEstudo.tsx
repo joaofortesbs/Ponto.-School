@@ -24,18 +24,35 @@ interface GradeGruposEstudoProps {
   selectedTopic: number | null;
   topicosEstudo: any[]; // Mantido para compatibilidade
   searchQuery?: string;
+  selectedFilter?: string | null;
+  onFilterChange?: (filter: string | null) => void;
 }
 
 const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({ 
   selectedTopic, 
   topicosEstudo,
-  searchQuery = ""
+  searchQuery = "",
+  selectedFilter = null,
+  onFilterChange
 }) => {
   const [hoveredGrupo, setHoveredGrupo] = useState<string | null>(null);
-  const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
+  const [internalSelectedFilter, setInternalSelectedFilter] = useState<string | null>(selectedFilter);
   const [gruposEstudo, setGruposEstudo] = useState<GrupoEstudo[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
+  
+  // Sincronizar o filtro externo com o interno
+  useEffect(() => {
+    setInternalSelectedFilter(selectedFilter);
+  }, [selectedFilter]);
+  
+  // Função para atualizar o filtro localmente e propagar a mudança
+  const updateFilter = (filter: string | null) => {
+    setInternalSelectedFilter(filter);
+    if (onFilterChange) {
+      onFilterChange(filter);
+    }
+  };
 
   // Simulando carregamento de dados
   useEffect(() => {
@@ -43,6 +60,8 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
     const carregarGrupos = async () => {
       try {
         setLoading(true);
+        console.log("Carregando grupos com tópico selecionado:", selectedTopic);
+        
         // Simula um delay para mostrar estado de carregamento
         await new Promise(resolve => setTimeout(resolve, 500));
         
@@ -134,12 +153,15 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
   // Filtrar grupos baseado no tópico selecionado e busca
   const gruposFiltrados = gruposEstudo.filter(
     (grupo) => {
+      // Verificação de correspondência com a busca
       const matchesSearch = grupo.nome.toLowerCase().includes(searchQuery.toLowerCase()) || 
                            (grupo.disciplina?.toLowerCase().includes(searchQuery.toLowerCase()) || false);
       
-      const matchesFilter = !selectedFilter || 
-        (selectedFilter === "tendencia-alta" && grupo.tendencia === "alta") ||
-        (selectedFilter === "novo-conteudo" && grupo.novoConteudo);
+      // Verificação de correspondência com o filtro
+      const currentFilter = internalSelectedFilter;
+      const matchesFilter = !currentFilter || 
+        (currentFilter === "tendencia-alta" && grupo.tendencia === "alta") ||
+        (currentFilter === "novo-conteudo" && grupo.novoConteudo);
       
       // Lógica aprimorada de filtragem por tópico
       const selectedTopicName = selectedTopic && topicosEstudo.find(t => t.id === selectedTopic)?.nome.toLowerCase();
@@ -149,8 +171,13 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
       // 2. Verificar se o ID do tópico do grupo corresponde ao selecionado
       // 3. Verificar se o nome da disciplina do grupo corresponde ao nome do tópico selecionado
       const matchesSelectedTopic = !selectedTopic || 
-        (grupo.topico !== undefined && selectedTopic === Number(grupo.topico)) ||
+        (grupo.topico !== undefined && String(selectedTopic) === String(grupo.topico)) ||
         (grupo.disciplina && selectedTopicName && grupo.disciplina.toLowerCase() === selectedTopicName);
+      
+      // Log para depuração
+      if (selectedTopic && grupo.topico) {
+        console.log(`Comparando tópico do grupo: ${grupo.topico} (${typeof grupo.topico}) com selectedTopic: ${selectedTopic} (${typeof selectedTopic})`);
+      }
         
       return matchesSearch && matchesFilter && matchesSelectedTopic;
     }
@@ -207,14 +234,60 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
       />
       {/* Cabeçalho da grade */}
       <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center">
-          <h2 className="text-xl font-bold text-white flex items-center">
-            <Users className="h-5 w-5 mr-2 text-[#FF6B00]" />
-            Grupos de Estudo
-          </h2>
-          <Badge className="ml-3 bg-[#FF6B00]/20 text-[#FF6B00] text-xs">
-            {gruposFiltrados.length} grupos
-          </Badge>
+        <div className="flex flex-col">
+          <div className="flex items-center">
+            <h2 className="text-xl font-bold text-white flex items-center">
+              <Users className="h-5 w-5 mr-2 text-[#FF6B00]" />
+              Grupos de Estudo
+            </h2>
+            <Badge className="ml-3 bg-[#FF6B00]/20 text-[#FF6B00] text-xs">
+              {gruposFiltrados.length} grupos
+            </Badge>
+          </div>
+          
+          {/* Indicadores de filtros ativos */}
+          {(selectedTopic || internalSelectedFilter) && (
+            <div className="flex gap-2 mt-2">
+              {selectedTopic && (
+                <Badge className="bg-[#FF6B00]/30 text-white text-xs flex items-center gap-1 px-3 py-1">
+                  <BookOpen className="h-3 w-3" />
+                  Tópico: {topicosEstudo.find(t => t.id === selectedTopic)?.nome}
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // Aqui não usamos updateFilter porque esse filtro é controlado pelo componente pai
+                    }}
+                    className="ml-2 text-white/70 hover:text-white"
+                  >
+                  </button>
+                </Badge>
+              )}
+              {internalSelectedFilter && (
+                <Badge className="bg-[#FF6B00]/30 text-white text-xs flex items-center gap-1 px-3 py-1">
+                  {internalSelectedFilter === "tendencia-alta" ? (
+                    <>
+                      <TrendingUp className="h-3 w-3" />
+                      Em alta
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-3 w-3" />
+                      Novo conteúdo
+                    </>
+                  )}
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      updateFilter(null);
+                    }}
+                    className="ml-2 text-white/70 hover:text-white"
+                  >
+                    &times;
+                  </button>
+                </Badge>
+              )}
+            </div>
+          )}
         </div>
         <Button 
           onClick={abrirModalCriarGrupo}

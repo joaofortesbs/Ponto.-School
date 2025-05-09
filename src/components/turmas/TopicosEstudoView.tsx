@@ -651,9 +651,11 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                   selectedTopic={selectedTopic}
                   topicosEstudo={topicosEstudo}
                   searchQuery={searchQuery}
+                  selectedFilter={selectedFilter}
+                  onFilterChange={setSelectedFilter}
                 />
                 {/* Log para debug do tópico selecionado */}
-                {selectedTopic && console.log(`Tópico selecionado para filtragem: ID=${selectedTopic}, Nome=${topicosEstudo.find(t => t.id === selectedTopic)?.nome}`)}
+                {selectedTopic && console.log(`Tópico selecionado para filtragem: ID=${selectedTopic}, Nome=${topicosEstudo.find(t => t.id === selectedTopic)?.nome}, Filtro: ${selectedFilter}`)}
               </div>
             </motion.div>
           )}
