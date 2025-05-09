@@ -236,7 +236,8 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
 
         if (error) {
           console.error('Erro ao criar grupo:', error);
-          alert('Erro ao criar grupo: ' + (error.message || 'Erro no servidor'));
+          const errorMsg = error.message || error.details || 'Erro desconhecido';
+          alert('Erro ao criar grupo: ' + errorMsg);
           return;
         }
 
@@ -264,18 +265,23 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
 
         // Adicionar amigos selecionados como membros
         if (formData.amigos && formData.amigos.length > 0) {
-          const membros = formData.amigos.map(amigoId => ({
-            grupo_id: grupo.id,
-            user_id: amigoId,
-            tipo: 'membro'
-          }));
+          try {
+            const membros = formData.amigos.map(amigoId => ({
+              grupo_id: grupo.id,
+              user_id: amigoId,
+              tipo: 'membro'
+            }));
 
-          const { error: amigosError } = await supabase
-            .from('grupos_estudo_membros')
-            .insert(membros);
+            const { error: amigosError } = await supabase
+              .from('grupos_estudo_membros')
+              .insert(membros);
 
-          if (amigosError) {
-            console.error('Erro ao adicionar amigos:', amigosError);
+            if (amigosError) {
+              console.error('Erro ao adicionar amigos:', amigosError);
+              // Continuar mesmo com erro, pois o grupo já foi criado
+            }
+          } catch (addMembersError) {
+            console.error('Exceção ao adicionar amigos:', addMembersError);
             // Continuar mesmo com erro, pois o grupo já foi criado
           }
         }
@@ -297,7 +303,14 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
       }
     } catch (error) {
       console.error('Erro ao criar grupo:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Ocorreu um erro inesperado';
+      let errorMessage = 'Ocorreu um erro inesperado';
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'object' && error !== null) {
+        errorMessage = JSON.stringify(error);
+      }
+      
       alert('Erro ao criar grupo: ' + errorMessage);
     }
   };
