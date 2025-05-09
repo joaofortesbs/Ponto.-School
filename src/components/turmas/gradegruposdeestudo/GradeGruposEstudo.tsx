@@ -1,23 +1,27 @@
-
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Search, Filter, ChevronRight, Users, TrendingUp, BookOpen, MessageCircle, Plus, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import CreateGroupModalEnhanced from "../CreateGroupModalEnhanced";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/components/ui/use-toast";
 
+// Interface para definir a estrutura de um grupo de estudo
 interface GrupoEstudo {
   id: string;
   nome: string;
-  icon?: string;
+  descricao: string;
   cor: string;
-  membros: number;
-  topico?: string;
-  disciplina?: string;
-  tendencia?: string;
-  novoConteudo?: boolean;
-  criador?: string;
-  dataCriacao: string;
+  topico: string;
+  topico_nome: string;
+  topico_icon: string;
+  privado: boolean;
+  codigo_acesso?: string;
+  criador_id: string;
+  visibilidade: string;
+  created_at: string;
+  membros?: any[]; // Lista de membros carregada separadamente
 }
 
 interface GradeGruposEstudoProps {
@@ -36,6 +40,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
   const [gruposEstudo, setGruposEstudo] = useState<GrupoEstudo[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
+    const { toast } = useToast();
 
   // Simulando carregamento de dados
   useEffect(() => {
@@ -43,25 +48,93 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
     const carregarGrupos = async () => {
       try {
         setLoading(true);
-        // Simula um delay para mostrar estado de carregamento
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // No futuro, substitua por chamada à API
-        // const response = await fetch('/api/grupos-estudo');
-        // const data = await response.json();
-        // setGruposEstudo(data);
-        
-        // Por enquanto, inicia com array vazio (dados removidos)
-        setGruposEstudo([]);
+
+        // Verificar se o usuário está autenticado
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (!user) {
+          console.log("Usuário não autenticado");
+          setLoading(false);
+          return;
+        }
+
+        // Buscar todos os grupos que o usuário é membro
+        const { data: membroData, error: membroError } = await supabase
+          .from('grupos_estudo_membros')
+          .select('grupo_id')
+          .eq('user_id', user.id);
+
+        if (membroError) {
+          console.error("Erro ao buscar grupos do usuário:", membroError);
+            toast({
+                title: "Erro ao carregar grupos",
+                description: "Não foi possível carregar seus grupos de estudo.",
+                variant: "destructive"
+            });
+          setLoading(false);
+          return;
+        }
+
+        // Se o usuário não é membro de nenhum grupo
+        if (!membroData || membroData.length === 0) {
+          setGruposEstudo([]);
+          setLoading(false);
+          return;
+        }
+
+        // Extrair IDs dos grupos
+        const grupoIds = membroData.map(item => item.grupo_id);
+
+        // Buscar detalhes dos grupos
+        const { data: gruposData, error: gruposError } = await supabase
+          .from('grupos_estudo')
+          .select('*')
+          .in('id', grupoIds);
+
+        if (gruposError) {
+          console.error("Erro ao buscar detalhes dos grupos:", gruposError);
+            toast({
+                title: "Erro ao carregar detalhes dos grupos",
+                description: "Ocorreu um erro ao buscar informações dos seus grupos.",
+                variant: "destructive"
+            });
+          setLoading(false);
+          return;
+        }
+
+        // Buscar também grupos públicos que o usuário não é membro
+        const { data: gruposPublicos, error: publicosError } = await supabase
+          .from('grupos_estudo')
+          .select('*')
+          .eq('visibilidade', 'todos')
+          .not('id', 'in', grupoIds.length > 0 ? grupoIds : ['']);
+
+        if (publicosError) {
+          console.error("Erro ao buscar grupos públicos:", publicosError);
+        }
+
+        // Combinar grupos do usuário com grupos públicos
+        const todosGrupos = [
+          ...(gruposData || []),
+          ...(gruposPublicos || [])
+        ];
+
+        // Atualizar estado
+        setGruposEstudo(todosGrupos);
       } catch (error) {
-        console.error("Erro ao carregar grupos de estudo:", error);
+        console.error("Erro ao carregar grupos:", error);
+          toast({
+              title: "Erro inesperado",
+              description: "Ocorreu um erro ao carregar os grupos de estudo.",
+              variant: "destructive"
+          });
       } finally {
         setLoading(false);
       }
     };
 
     carregarGrupos();
-  }, []);
+  }, [toast]);
 
   // Filtrar grupos baseado no tópico selecionado e busca
   const gruposFiltrados = gruposEstudo.filter(
@@ -87,30 +160,54 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
   };
 
   // Função para processar a criação de um novo grupo
-  const handleCreateGroup = (formData: any) => {
-    // Aqui você implementará a lógica para criar um novo grupo
-    console.log("Criando novo grupo:", formData);
-    
-    // Exemplo de como adicionar o novo grupo à lista (a ser implementado com dados reais)
-    // Incluiria integração com banco de dados na versão final
-    const novoGrupo: GrupoEstudo = {
-      id: `grupo-${Date.now()}`,
-      nome: formData.nome,
-      cor: formData.cor || "#FF6B00",
-      membros: formData.amigos ? formData.amigos.length + 1 : 1, // Criador + amigos convidados
-      dataCriacao: new Date().toISOString(),
-      topico: formData.topico || undefined,
-      disciplina: formData.topicoNome || undefined,
-      icon: formData.topicoIcon || undefined,
-      tendencia: Math.random() > 0.7 ? "alta" : undefined, // Simula tendência aleatória
-      privado: formData.privado,
-      visibilidade: formData.visibilidade,
-      // Outros campos baseados no formulário
+  const handleCreateGroup = async (formData: any) => {
+        console.log("Grupo criado com sucesso:", formData);
+        // O grupo já foi salvo no Supabase dentro do modal
+        // Aqui apenas recarregamos os grupos para mostrar o novo grupo
+
+        try {
+            // Verificar se o usuário está autenticado
+            const { data: { user } } = await supabase.auth.getUser();
+
+            if (!user) {
+                console.log("Usuário não autenticado");
+                return;
+            }
+
+            // Buscar todos os grupos que o usuário é membro
+            const { data: membroData, error: membroError } = await supabase
+                .from('grupos_estudo_membros')
+                .select('grupo_id')
+                .eq('user_id', user.id);
+
+            if (membroError) {
+                console.error("Erro ao buscar grupos do usuário:", membroError);
+                return;
+            }
+
+            // Extrair IDs dos grupos
+            const grupoIds = membroData?.map(item => item.grupo_id) || [];
+
+            // Buscar detalhes dos grupos
+            const { data: gruposData, error: gruposError } = await supabase
+                .from('grupos_estudo')
+                .select('*')
+                .in('id', grupoIds.length > 0 ? grupoIds : ['']);
+
+            if (gruposError) {
+                console.error("Erro ao buscar detalhes dos grupos:", gruposError);
+                return;
+            }
+
+            // Atualizar estado
+            if (gruposData) {
+                setGruposEstudo(gruposData);
+            }
+
+        } catch (error) {
+            console.error("Erro ao recarregar grupos:", error);
+        }
     };
-    
-    setGruposEstudo(prev => [...prev, novoGrupo]);
-    setShowCreateGroupModal(false);
-  };
 
   return (
     <div className="mt-8">

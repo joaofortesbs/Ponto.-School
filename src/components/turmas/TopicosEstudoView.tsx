@@ -288,6 +288,22 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
     }
   };
 
+  const handleTopicoClick = (topicoId: number | null) => {
+    if (selectedTopic === topicoId) {
+      setSelectedTopic(null);
+    } else {
+      setSelectedTopic(topicoId);
+
+      // Scroll para a grade de grupos para melhor experiência do usuário
+      setTimeout(() => {
+        const gradeElement = document.getElementById('grade-grupos-estudo');
+        if (gradeElement) {
+          gradeElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+    }
+  };
+
   return (
     <div className={`w-full ${className}`}>
       {/* Container principal com gradiente de fundo */}
@@ -467,7 +483,7 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                       z: 20,
                       boxShadow: `0 15px 30px -10px rgba(0, 0, 0, 0.4), 0 10px 20px -5px rgba(0, 0, 0, 0.3), 0 0 20px ${topico.cor}30`
                     } : {}}
-                    onClick={() => setSelectedTopic(selectedTopic === topico.id ? null : topico.id)}
+                    onClick={() => handleTopicoClick(topico.id)}
                     transition={{ 
                       type: "spring", 
                       stiffness: 300,
@@ -526,6 +542,7 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
 
                       {/* Indicador de novidade redesenhado */}
                       {topico.novoConteudo && (
+                        ```tool_code
                         <div className="absolute top-3 right-3 z-20">
                           <div className="relative">
                             <div className="absolute -inset-0.5 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-full opacity-75 blur-sm animate-pulse"></div>
@@ -623,7 +640,7 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
               </div>
 
               {/* Componente de grade de grupos de estudo */}
-              <div className="mt-6">
+              <div className="mt-6" id="grade-grupos-estudo">
                 {/* Importar o componente de grade de grupos */}
                 <GradeGruposEstudo 
                   selectedTopic={selectedTopic}

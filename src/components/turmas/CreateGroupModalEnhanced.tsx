@@ -6,6 +6,9 @@ import {
   X, Users, Plus, Key, Lock, BookOpen, Palette, Hash, UserPlus, 
   ChevronDown, Check, Search, BookOpen as BookIcon, Tag, Globe
 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { v4 as uuidv4 } from "uuid";
+import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -101,6 +104,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
   onClose,
   onSubmit,
 }) => {
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<string>("criar");
   const [formData, setFormData] = useState({
     nome: "",
@@ -176,12 +180,117 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
     setFormData(prev => ({ ...prev, visibilidade: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({
-      ...formData,
-      amigosDetalhes: selectedFriends
-    });
+    
+    try {
+      // Obter o usuário atual
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Erro",
+          description: "Você precisa estar logado para criar um grupo de estudos.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Gerar código de acesso aleatório
+      const codigoAcesso = formData.privado ? generateAccessCode() : null;
+      
+      // Criar dados do grupo
+      const grupoData = {
+        id: uuidv4(),
+        nome: formData.nome,
+        descricao: formData.descricao,
+        privado: formData.privado,
+        cor: formData.cor,
+        codigo_acesso: codigoAcesso,
+        topico: formData.topico,
+        topico_nome: formData.topicoNome,
+        topico_icon: formData.topicoIcon,
+        visibilidade: formData.visibilidade,
+        criador_id: user.id,
+        created_at: new Date().toISOString()
+      };
+      
+      // Salvar grupo no Supabase
+      const { error } = await supabase
+        .from('grupos_estudo')
+        .insert(grupoData);
+      
+      if (error) {
+        console.error('Erro ao criar grupo:', error);
+        toast({
+          title: "Erro ao criar grupo",
+          description: error.message,
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Adicionar o criador como membro do grupo
+      await supabase
+        .from('grupos_estudo_membros')
+        .insert({
+          grupo_id: grupoData.id,
+          user_id: user.id,
+          tipo: 'administrador',
+          created_at: new Date().toISOString()
+        });
+      
+      // Adicionar amigos como membros se houver
+      if (selectedFriends.length > 0) {
+        const membrosPromises = selectedFriends.map(friend => 
+          supabase
+            .from('grupos_estudo_membros')
+            .insert({
+              grupo_id: grupoData.id,
+              user_id: friend.id.toString(), // Convertendo para string caso seja número
+              tipo: 'membro',
+              created_at: new Date().toISOString()
+            })
+        );
+        
+        await Promise.all(membrosPromises);
+      }
+      
+      toast({
+        title: "Grupo criado com sucesso!",
+        description: "Seu grupo de estudos foi criado e está pronto para uso.",
+        variant: "default"
+      });
+      
+      // Chamar callback original com dados do grupo
+      onSubmit({
+        ...formData,
+        amigosDetalhes: selectedFriends,
+        id: grupoData.id,
+        codigoAcesso: codigoAcesso
+      });
+      
+      // Fechar modal
+      onClose();
+      
+    } catch (error) {
+      console.error('Erro ao processar criação do grupo:', error);
+      toast({
+        title: "Erro inesperado",
+        description: "Ocorreu um erro ao criar o grupo de estudos.",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  // Função para gerar código de acesso aleatório
+  const generateAccessCode = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let code = '';
+    for (let i = 0; i < 6; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
   };
 
   const handleCodeSubmit = (e: React.FormEvent) => {
