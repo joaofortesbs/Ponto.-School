@@ -32,11 +32,12 @@ const topicosEstudo = [
 type InterfaceType = "meus-grupos" | "recomendacoes-ia" | "estatisticas";
 
 const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
-  const [searchQuery, setSearchQuery] = useState("");
   const [interfaceAtiva, setInterfaceAtiva] = useState<InterfaceType>("meus-grupos");
+  const [selectedTopic, setSelectedTopic] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
   const [hoveredTopic, setHoveredTopic] = useState<number | null>(null);
-  const [selectedTopic, setSelectedTopic] = useState<number | null>(null);
+
 
   // Filtrar tópicos baseado na busca e filtros selecionados
   const topicosFilterados = topicosEstudo.filter(
@@ -151,7 +152,7 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                   </Button>
                 </div>
 
-                
+
               </motion.div>
             ))}
           </div>
@@ -620,13 +621,14 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                   </svg>
                 </button>
               </div>
-              
+
               {/* Componente de grade de grupos de estudo */}
               <div className="mt-6">
                 {/* Importar o componente de grade de grupos */}
                 <GradeGruposEstudo 
                   selectedTopic={selectedTopic}
                   topicosEstudo={topicosEstudo}
+                  searchQuery={searchQuery}
                 />
               </div>
             </motion.div>

@@ -18,14 +18,15 @@ interface GrupoEstudo {
 interface GradeGruposEstudoProps {
   selectedTopic: number | null;
   topicosEstudo: GrupoEstudo[];
+  searchQuery?: string;
 }
 
 const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({ 
   selectedTopic, 
-  topicosEstudo 
+  topicosEstudo,
+  searchQuery = ""
 }) => {
   const [hoveredTopic, setHoveredTopic] = useState<number | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
 
   // Filtrar grupos baseado no tópico selecionado e busca
