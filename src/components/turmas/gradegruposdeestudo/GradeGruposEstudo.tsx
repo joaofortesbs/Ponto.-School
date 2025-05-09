@@ -48,11 +48,16 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
   return (
     <div className="mt-8">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xl font-bold text-white">
-          {selectedTopic 
-            ? `Grupos de ${topicosEstudo.find(t => t.id === selectedTopic)?.nome || 'Estudo'}`
-            : 'Todos os Grupos de Estudo'}
-        </h3>
+        <div className="flex items-center gap-3">
+          <div className="h-9 w-9 bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] rounded-lg flex items-center justify-center shadow-lg shadow-[#FF6B00]/10">
+            <Users className="h-5 w-5 text-white" />
+          </div>
+          <h3 className="text-xl font-bold text-white">
+            {selectedTopic 
+              ? `Grupos de ${topicosEstudo.find(t => t.id === selectedTopic)?.nome || 'Estudo'}`
+              : 'Grupos de Estudo'}
+          </h3>
+        </div>
         
         {/* Barra de pesquisa sofisticada */}
         <div className="relative flex group max-w-md">
