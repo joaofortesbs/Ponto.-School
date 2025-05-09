@@ -454,12 +454,7 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                 <div 
                   id="topicos-container"
                   className="flex overflow-x-auto pb-4 pt-2 hide-scrollbar gap-4 scroll-smooth"
-                  style={{ 
-                    scrollbarWidth: 'none', 
-                    msOverflowStyle: 'none',
-                    gridTemplateColumns: 'repeat(8, minmax(0, 1fr))',
-                    maxWidth: 'calc(32px * 8 + 1rem * 7)' // 8 cards de 32px + 7 gaps de 1rem
-                  }}
+                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                   onScroll={() => checkScrollPosition()}
                 >
                   {topicosEstudo.map((topico) => (
@@ -622,7 +617,7 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                       setTimeout(() => checkScrollPosition(), 300);
                     }
                   }}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-gradient-to-l from-[#070e1a] to-transparent pl-8 pr-2 h-10 flex items-center justify-center text-white/80 hover:text-white rounded-l-lg transition-all duration-300 opacity-100"
+                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-gradient-to-l from-[#070e1a] to-transparent pl-8 pr-2 h-10 flex items-center justify-center text-white/80 hover:text-white rounded-l-lg transition-all duration-300"
                   aria-label="Rolar para a direita"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
