@@ -80,7 +80,7 @@ const topicos = [
   "Inglês",
   "Computação",
   "Leitura",
-  "Interdisciplinar",
+  "Projetos",
   "Outros"
 ];
 
