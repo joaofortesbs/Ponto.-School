@@ -139,23 +139,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
               </Button>
             </div>
 
-            {hoveredTopic === grupo.id && (
-              <motion.div 
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="mt-3 pt-3 border-t border-white/10"
-              >
-                <div className="grid grid-cols-2 gap-2">
-                  <Button size="sm" className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white text-xs h-7 rounded-lg">
-                    <Users className="h-3 w-3 mr-1" /> Entrar
-                  </Button>
-                  <Button size="sm" variant="outline" className="border-white/20 text-white/70 hover:text-white hover:bg-white/10 text-xs h-7 rounded-lg">
-                    <BookOpen className="h-3 w-3 mr-1" /> Detalhes
-                  </Button>
-                </div>
-              </motion.div>
-            )}
+            
           </motion.div>
         ))}
 
