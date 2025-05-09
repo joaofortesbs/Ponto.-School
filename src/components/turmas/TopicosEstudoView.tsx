@@ -1,6 +1,4 @@
-The code has been modified to enhance the responsiveness and prevent content cutoff in the study groups mini-section by adjusting the container's style and structure.
-```
-```replit_final_file
+
 import React, { useState, useEffect } from "react";
 import { Search, Filter, Sparkles, BookOpen, Users, TrendingUp, ChevronRight, Plus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -319,174 +317,206 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
   };
 
   return (
-    
-      
-        
-          
-            
-              
+    <div className={`w-full space-y-8 ${className}`}>
+      <div className="bg-gradient-to-r from-gray-900 to-gray-800 dark:from-gray-800 dark:to-gray-900 rounded-xl overflow-hidden border border-white/5">
+        <div className="p-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] flex items-center justify-center shadow-lg">
                 <Users className="h-6 w-6 text-white" />
-              
-              
-                
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-white">
                   Grupos de Estudo
-                
-                Conecte-se e aprenda com seus colegas
-              
-            
-            
+                </h2>
+                <p className="text-white/60 text-sm">Conecte-se e aprenda com seus colegas</p>
+              </div>
+            </div>
+            <Button className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white">
               Criar Grupo
-            
-          
-        
+            </Button>
+          </div>
+        </div>
 
-        
-          
-            
-            
-              
-                
+        <div className="bg-gray-900/50 dark:bg-gray-800/50 backdrop-blur-sm p-4 border-t border-white/5">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center space-x-1 mb-3 lg:mb-0">
+                <Button
+                  variant={interfaceAtiva === "meus-grupos" ? "default" : "ghost"}
+                  className={`h-9 rounded-lg ${interfaceAtiva === "meus-grupos" ? "bg-[#FF6B00] text-white" : "text-white/70"}`}
+                  onClick={() => setInterfaceAtiva("meus-grupos")}
+                >
                   Meus Grupos
-                
-                
+                </Button>
+                <Button
+                  variant={interfaceAtiva === "recomendacoes-ia" ? "default" : "ghost"}
+                  className={`h-9 rounded-lg ${interfaceAtiva === "recomendacoes-ia" ? "bg-[#FF6B00] text-white" : "text-white/70"}`}
+                  onClick={() => setInterfaceAtiva("recomendacoes-ia")}
+                >
                   IA Recomenda
-                
-                
+                </Button>
+                <Button
+                  variant={interfaceAtiva === "estatisticas" ? "default" : "ghost"}
+                  className={`h-9 rounded-lg ${interfaceAtiva === "estatisticas" ? "bg-[#FF6B00] text-white" : "text-white/70"}`}
+                  onClick={() => setInterfaceAtiva("estatisticas")}
+                >
                   Estatísticas
-                
-              
+                </Button>
+              </div>
+            </div>
 
-            
+              <div className="w-full lg:max-w-md">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+                  <Input
+                    placeholder="Buscar por grupos ou temas específicos..."
+                    className="bg-gray-800/50 border-white/10 text-white pl-9 focus-visible:ring-[#FF6B00]/50"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={`h-7 w-7 rounded-full ${selectedFilter === "tendencia-alta" ? "bg-white/10 text-[#FF6B00]" : "text-white/40"}`}
+                      onClick={() => setSelectedFilter(selectedFilter === "tendencia-alta" ? null : "tendencia-alta")}
+                    >
+                      <TrendingUp className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={`h-7 w-7 rounded-full ${selectedFilter === "novo-conteudo" ? "bg-white/10 text-[#FF6B00]" : "text-white/40"}`}
+                      onClick={() => setSelectedFilter(selectedFilter === "novo-conteudo" ? null : "novo-conteudo")}
+                    >
+                      <Sparkles className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+          </div>
+        </div>
 
-              
-                
-                  
-                
-                
-                  Buscar por grupos ou temas específicos...
-                
-                
-                  
-                    
-                  
-                  
-                    
-                  
-                  
-                    
-                  
-                
-              
-            
-          
-
-          
+        <div className="p-6">
           {interfaceAtiva === "meus-grupos" && (
-            
-              
-                
-                  
-                    
-                      
-                    
-                    
-                      Tópicos de Estudo
-                    
-                  
-                
-                
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="bg-[#FF6B00]/10 rounded-lg p-1.5">
+                    <BookOpen className="h-5 w-5 text-[#FF6B00]" />
+                  </div>
+                  <h3 className="font-semibold text-white">
+                    Tópicos de Estudo
+                  </h3>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
                   {selectedTopic && (
-                    
+                    <span className="text-white/60 mr-2">
                       {topicosEstudo.find(t => t.id === selectedTopic)?.nome} selecionado
-                    
+                    </span>
                   )}
-                  Ver todos 
-                
-              
+                  <Button variant="link" className="text-[#FF6B00] p-0 h-auto">Ver todos <ChevronRight className="h-3 w-3 ml-1" /></Button>
+                </div>
+              </div>
 
-              
-                
-                
-                  
-                    
-                      
-                    
-                    
-                  
-                
+              <div className="relative">
+                <Button
+                  id="scroll-left-btn"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute left-0 top-1/2 -translate-y-1/2 z-10 h-8 w-8 rounded-full bg-white/5 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-200"
+                  onClick={() => {
+                    const container = document.getElementById('topicos-container');
+                    if (container) {
+                      container.scrollLeft -= 200;
+                      checkScrollPosition();
+                    }
+                  }}
+                >
+                  <ChevronRight className="h-4 w-4 text-white rotate-180" />
+                </Button>
 
-                
-                  
-                    
-                      
-                    
-                    
-                  
-                
-
-                
+                <div
+                  id="topicos-container"
+                  className="flex items-center gap-3 overflow-x-auto pb-3 pt-1 px-1 hide-scrollbar"
+                  onScroll={checkScrollPosition}
+                >
                   {topicosEstudo.map((topico) => (
-                  
-                    
-                      
-                        
-                          
-                            
-                          
-                          
-                            
-                              
-                                
-                              
-                            
-                          
-                        
+                  <motion.div
+                    key={topico.id}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.2, delay: topico.id * 0.03 }}
+                    whileHover={{ y: -5, transition: { duration: 0.2 } }}
+                    className={`min-w-[180px] bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl border border-white/5 p-3 cursor-pointer transition-all duration-300 
+                      ${selectedTopic === topico.id ? 'ring-2 ring-[#FF6B00]' : 'hover:border-white/20'}
+                      ${isTopicFeatured(topico) ? 'featured-topic ring-1 ring-[#FF6B00]/20' : ''}`}
+                    onClick={() => setSelectedTopic(selectedTopic === topico.id ? null : topico.id)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0">
+                        <div 
+                          className="h-10 w-10 rounded-lg flex items-center justify-center text-white shadow-lg" 
+                          style={{ backgroundColor: topico.cor }}
+                        >
+                          <span className="text-lg">{topico.icon}</span>
+                        </div>
+                      </div>
+                    </div>
 
-                        
-                          
-                            
-                            
-                              NOVO
-                            
-                          
-                          
-                            
-                              
-                                
-                                {topico.grupos}
-                              
-                              
-                            
-                          
-                        
-                      
-                    
-                  
+                    <div className="mt-3">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-medium text-white text-sm">{topico.nome}</h4>
+                        {topico.novoConteudo && (
+                          <Badge className="bg-[#FF6B00] text-white text-[10px] px-1 py-0 h-4">
+                            NOVO
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center justify-between mt-2">
+                        <div className="flex items-center gap-1 text-white/60 text-xs">
+                          <Users className="h-3 w-3" />
+                          <span>{topico.grupos}</span>
+                        </div>
+                        {topico.tendencia === "alta" && (
+                          <div className="flex items-center gap-1 text-emerald-400 text-xs">
+                            <TrendingUp className="h-3 w-3" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
                 ))}
+                </div>
                 
-                
-                  
-                    
-                      
-                    
-                    
-                  
-                
-              
-            
+                <Button
+                  id="scroll-right-btn"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 h-8 w-8 rounded-full bg-white/5 backdrop-blur-sm transition-opacity duration-200"
+                  onClick={() => {
+                    const container = document.getElementById('topicos-container');
+                    if (container) {
+                      container.scrollLeft += 200;
+                      checkScrollPosition();
+                    }
+                  }}
+                >
+                  <ChevronRight className="h-4 w-4 text-white" />
+                </Button>
+              </div>
+            </div>
           )}
 
-          
-          
-            
-              
-                {renderConteudoInterface()}
-              
-            
-          
-        
-      
-    
+          <div className="mt-6">
+            <div className="w-full">
+              {renderConteudoInterface()}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
