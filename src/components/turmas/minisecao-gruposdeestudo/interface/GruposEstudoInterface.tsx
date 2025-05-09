@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Search, Filter, GraduationCap, Users2 } from "lucide-react";
@@ -66,6 +67,23 @@ const GrupoEstudoCard = ({
   );
 };
 
+const topicos = [
+  "Matématica",
+  "Lingua Portuguesa",
+  "Física",
+  "Química",
+  "Biologia",
+  "Geografia",
+  "História",
+  "Filosofia",
+  "Sociologia",
+  "Inglês",
+  "Computação",
+  "Leitura",
+  "Interdisciplinar",
+  "Outros"
+];
+
 const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("todos");
@@ -84,7 +102,6 @@ const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className
           grupo.descricao.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-
 
     setDisplayedGroups(filtered);
   }, [searchTerm, selectedFilter]);
@@ -134,6 +151,25 @@ const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className
             <span className="interface-selector-text">Criar Grupo</span>
           </Button>
         </div>
+      </div>
+
+      {/* Seção de tópicos */}
+      <div className="flex flex-wrap gap-2 mt-4">
+        {topicos.map((topico, index) => (
+          <Button
+            key={index}
+            variant="outline"
+            size="sm"
+            className={`text-xs border-[#FF6B00]/10 dark:border-[#FF6B00]/20 hover:bg-[#FF6B00]/10 hover:text-[#FF6B00] ${
+              selectedFilter === topico.toLowerCase()
+                ? "bg-[#FF6B00]/10 text-[#FF6B00] border-[#FF6B00]"
+                : "text-gray-600 dark:text-gray-400"
+            }`}
+            onClick={() => setSelectedFilter(topico.toLowerCase())}
+          >
+            {topico}
+          </Button>
+        ))}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
