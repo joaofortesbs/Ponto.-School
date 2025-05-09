@@ -177,12 +177,88 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
     setFormData(prev => ({ ...prev, visibilidade: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({
-      ...formData,
-      amigosDetalhes: selectedFriends
-    });
+    try {
+      // Obter o usuário atual
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        console.error("Usuário não autenticado");
+        return;
+      }
+
+      // Gerar um código de acesso aleatório se o grupo for privado
+      let codigo = null;
+      if (formData.privado) {
+        const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        codigo = Array.from({length: 6}, () => caracteres.charAt(Math.floor(Math.random() * caracteres.length))).join('');
+      }
+
+      // Inserir novo grupo no banco de dados
+      const { data: grupo, error } = await supabase
+        .from('grupos_estudo')
+        .insert({
+          nome: formData.nome,
+          descricao: formData.descricao,
+          topico: formData.topico,
+          topico_nome: formData.topicoNome,
+          topico_icon: formData.topicoIcon,
+          cor: formData.cor,
+          codigo: codigo,
+          privado: formData.privado,
+          visibilidade: formData.visibilidade,
+          criador_id: user.id
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Erro ao criar grupo:', error);
+        return;
+      }
+
+      // Adicionar o criador como administrador do grupo
+      const { error: membroError } = await supabase
+        .from('grupos_estudo_membros')
+        .insert({
+          grupo_id: grupo.id,
+          user_id: user.id,
+          tipo: 'administrador'
+        });
+
+      if (membroError) {
+        console.error('Erro ao adicionar criador como membro:', membroError);
+      }
+
+      // Adicionar amigos selecionados como membros
+      if (formData.amigos.length > 0) {
+        const membros = formData.amigos.map(amigoId => ({
+          grupo_id: grupo.id,
+          user_id: amigoId,
+          tipo: 'membro'
+        }));
+
+        const { error: amigosError } = await supabase
+          .from('grupos_estudo_membros')
+          .insert(membros);
+
+        if (amigosError) {
+          console.error('Erro ao adicionar amigos:', amigosError);
+        }
+      }
+
+      // Notificar o componente pai sobre a criação bem-sucedida
+      onSubmit({
+        ...formData,
+        id: grupo.id,
+        codigo: codigo,
+        amigosDetalhes: selectedFriends
+      });
+
+    } catch (error) {
+      console.error('Erro ao criar grupo:', error);
+    }
   };
 
   const handleCodeSubmit = (e: React.FormEvent) => {

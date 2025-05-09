@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Search, Filter, ChevronRight, Users, TrendingUp, BookOpen, MessageCircle, Plus, UserPlus } from "lucide-react";
+import { Search, Filter, ChevronRight, Users, TrendingUp, BookOpen, MessageCircle, Plus, UserPlus, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import CreateGroupModalEnhanced from "../CreateGroupModalEnhanced";
+import { supabase } from "@/lib/supabase";
 
 interface GrupoEstudo {
   id: string;
@@ -40,12 +40,12 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
   const [gruposEstudo, setGruposEstudo] = useState<GrupoEstudo[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
-  
+
   // Sincronizar o filtro externo com o interno
   useEffect(() => {
     setInternalSelectedFilter(selectedFilter);
   }, [selectedFilter]);
-  
+
   // Função para atualizar o filtro localmente e propagar a mudança
   const updateFilter = (filter: string | null) => {
     setInternalSelectedFilter(filter);
@@ -61,15 +61,15 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
       try {
         setLoading(true);
         console.log("Carregando grupos com tópico selecionado:", selectedTopic);
-        
+
         // Simula um delay para mostrar estado de carregamento
         await new Promise(resolve => setTimeout(resolve, 500));
-        
+
         // No futuro, substitua por chamada à API
         // const response = await fetch('/api/grupos-estudo');
         // const data = await response.json();
         // setGruposEstudo(data);
-        
+
         // Dados de exemplo - simulação para demonstrar filtragem por tópico
         const gruposExemplo = [
           {
@@ -138,7 +138,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
             criador: "Fernanda Lima"
           }
         ];
-        
+
         setGruposEstudo(gruposExemplo);
       } catch (error) {
         console.error("Erro ao carregar grupos de estudo:", error);
@@ -156,16 +156,16 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
       // Verificação de correspondência com a busca
       const matchesSearch = grupo.nome.toLowerCase().includes(searchQuery.toLowerCase()) || 
                            (grupo.disciplina?.toLowerCase().includes(searchQuery.toLowerCase()) || false);
-      
+
       // Verificação de correspondência com o filtro
       const currentFilter = internalSelectedFilter;
       const matchesFilter = !currentFilter || 
         (currentFilter === "tendencia-alta" && grupo.tendencia === "alta") ||
         (currentFilter === "novo-conteudo" && grupo.novoConteudo);
-      
+
       // Lógica aprimorada de filtragem por tópico
       const selectedTopicName = selectedTopic && topicosEstudo.find(t => t.id === selectedTopic)?.nome.toLowerCase();
-      
+
       // Verificação mais precisa:
       // 1. Se não há tópico selecionado, mostrar todos
       // 2. Verificar se o ID do tópico do grupo corresponde ao selecionado
@@ -173,12 +173,12 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
       const matchesSelectedTopic = !selectedTopic || 
         (grupo.topico !== undefined && String(selectedTopic) === String(grupo.topico)) ||
         (grupo.disciplina && selectedTopicName && grupo.disciplina.toLowerCase() === selectedTopicName);
-      
+
       // Log para depuração
       if (selectedTopic && grupo.topico) {
         console.log(`Comparando tópico do grupo: ${grupo.topico} (${typeof grupo.topico}) com selectedTopic: ${selectedTopic} (${typeof selectedTopic})`);
       }
-        
+
       return matchesSearch && matchesFilter && matchesSelectedTopic;
     }
   );
@@ -197,7 +197,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
   const handleCreateGroup = (formData: any) => {
     // Aqui você implementará a lógica para criar um novo grupo
     console.log("Criando novo grupo:", formData);
-    
+
     // Exemplo de como adicionar o novo grupo à lista (a ser implementado com dados reais)
     // Incluiria integração com banco de dados na versão final
     const novoGrupo: GrupoEstudo = {
@@ -216,10 +216,10 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
       criador: "Você",
       // Outros campos baseados no formulário
     };
-    
+
     // Log para verificar a criação do grupo com as informações de tópico
     console.log(`Grupo criado com topico=${novoGrupo.topico}, disciplina=${novoGrupo.disciplina}`);
-    
+
     setGruposEstudo(prev => [...prev, novoGrupo]);
     setShowCreateGroupModal(false);
   };
@@ -244,7 +244,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
               {gruposFiltrados.length} grupos
             </Badge>
           </div>
-          
+
           {/* Indicadores de filtros ativos */}
           {(selectedTopic || internalSelectedFilter) && (
             <div className="flex gap-2 mt-2">

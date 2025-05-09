@@ -37,6 +37,7 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
   const [hoveredTopic, setHoveredTopic] = useState<number | null>(null);
+  const [activeTopico, setActiveTopico] = useState<number>(0);
 
 
   // Filtrar tópicos baseado na busca e filtros selecionados
@@ -286,6 +287,14 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
       default:
         return null;
     }
+  };
+
+  // Função para lidar com o envio do formulário de novo grupo
+  const handleGrupoSubmit = (formData: any) => {
+    console.log("Novo grupo criado:", formData);
+    // Recarregar os componentes que exibem grupos
+    // Este efeito forçará os componentes GradeGruposEstudo a recarregar
+    setActiveTopico(activeTopico);
   };
 
   return (
