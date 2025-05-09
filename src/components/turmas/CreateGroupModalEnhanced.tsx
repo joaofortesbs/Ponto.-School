@@ -216,17 +216,16 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
       });
 
       try {
-        // Verificar se a tabela existe - evita erro de tabela não encontrada
-        const { error: tableCheckError } = await supabase
-          .from('grupos_estudo')
-          .select('id')
-          .limit(1);
-          
-        if (tableCheckError) {
-          console.error('Erro ao verificar tabela grupos_estudo:', tableCheckError);
-          alert('Erro ao criar grupo: A estrutura do banco de dados pode não estar correta');
+        // Testar a conexão com o Supabase antes de prosseguir
+        const { data: connectionCheck, error: connectionError } = await supabase.auth.getSession();
+        
+        if (connectionError) {
+          console.error('Erro na conexão com Supabase:', connectionError);
+          alert('Erro ao verificar conexão com o banco de dados. Por favor, tente novamente.');
           return;
         }
+        
+        console.log('Conexão com Supabase estabelecida. Prosseguindo com criação do grupo...');
           
         // Preparar os dados para inserção
         const grupoData = {
@@ -245,79 +244,88 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
         console.log("Dados preparados para inserção:", grupoData);
         
         // Inserir novo grupo no banco de dados
-        const { data: grupo, error } = await supabase
-          .from('grupos_estudo')
-          .insert(grupoData)
-          .select()
-          .single();
+        console.log('Tentando criar grupo com dados:', grupoData);
+        
+        try {
+          const { data: grupo, error } = await supabase
+            .from('grupos_estudo')
+            .insert(grupoData)
+            .select()
+            .single();
 
-        if (error) {
-          console.error('Erro ao criar grupo:', error);
-          let errorDetails = '';
-          
-          // Extrair mais informações sobre o erro
-          if (error.code) {
-            errorDetails += ` (código: ${error.code})`;
+          if (error) {
+            console.error('Erro ao criar grupo:', error);
+            let errorDetails = '';
+            
+            // Extrair mais informações sobre o erro
+            if (error.code) {
+              errorDetails += ` (código: ${error.code})`;
+            }
+            if (error.hint) {
+              errorDetails += ` - Sugestão: ${error.hint}`;
+            }
+            
+            if (error.code === '42P01') {
+              // Código específico para "relation does not exist"
+              alert('Erro: A tabela de grupos de estudo não existe no banco de dados. Entre em contato com o suporte.');
+            } else {
+              const errorMsg = error.message || error.details || 'Erro desconhecido';
+              alert('Erro ao criar grupo: ' + errorMsg + errorDetails);
+            }
+            return;
           }
-          if (error.hint) {
-            errorDetails += ` - Sugestão: ${error.hint}`;
-          }
-          
-          const errorMsg = error.message || error.details || 'Erro desconhecido';
-          alert('Erro ao criar grupo: ' + errorMsg + errorDetails);
-          return;
-        }
 
         if (!grupo) {
-          console.error('Grupo não foi criado corretamente');
-          alert('Erro ao criar grupo: Os dados não foram salvos corretamente');
-          return;
-        }
+            console.error('Grupo não foi criado corretamente');
+            alert('Erro ao criar grupo: Os dados não foram salvos corretamente');
+            return;
+          }
 
-        console.log("Grupo criado com sucesso:", grupo);
-
-        // Verificar se a tabela existe - evita erro de tabela não encontrada
-        const { error: membrosTableCheckError } = await supabase
-          .from('grupos_estudo_membros')
-          .select('id')
-          .limit(1);
+          console.log("Grupo criado com sucesso:", grupo);
           
-        if (membrosTableCheckError) {
-          console.error('Erro ao verificar tabela grupos_estudo_membros:', membrosTableCheckError);
-          console.log('O grupo foi criado, mas pode haver problemas ao adicionar membros');
-        }
-        
-        // Adicionar o criador como administrador do grupo
-        const { error: membroError } = await supabase
-          .from('grupos_estudo_membros')
-          .insert({
-            grupo_id: grupo.id,
-            user_id: user.id,
-            tipo: 'administrador'
-          });
-
-        if (membroError) {
-          console.error('Erro ao adicionar criador como membro:', membroError);
-          console.log('Detalhes do erro:', membroError.message, membroError.details);
-          // Tentar adicionar o usuário novamente com um pequeno atraso
-          setTimeout(async () => {
-            const { error: retryError } = await supabase
+          // Verificar se o usuário foi adicionado como membro do grupo
+          try {
+            // Adicionar o criador como administrador do grupo
+            const { error: membroError } = await supabase
               .from('grupos_estudo_membros')
               .insert({
                 grupo_id: grupo.id,
                 user_id: user.id,
                 tipo: 'administrador'
               });
+
+            if (membroError) {
+              console.error('Erro ao adicionar criador como membro:', membroError);
+              console.log('Detalhes do erro:', membroError.message, membroError.details);
               
-            if (retryError) {
-              console.error('Erro na segunda tentativa de adicionar criador:', retryError);
+              if (membroError.code === '42P01') {
+                console.error('A tabela grupos_estudo_membros não existe');
+                alert('Grupo criado com sucesso, mas houve um problema ao adicionar você como membro. Tente entrar no grupo novamente.');
+              }
             } else {
-              console.log('Criador adicionado como membro administrador na segunda tentativa');
+              console.log('Criador adicionado como membro administrador com sucesso');
             }
-          }, 500);
-        } else {
-          console.log('Criador adicionado como membro administrador com sucesso');
-        }
+        
+        // O código de adição de membro já foi movido para cima,
+            // então aqui podemos adicionar uma tentativa de recuperação se necessário
+            if (membroError) {
+              // Tentar adicionar o usuário novamente com um pequeno atraso
+              setTimeout(async () => {
+                const { error: retryError } = await supabase
+                  .from('grupos_estudo_membros')
+                  .insert({
+                    grupo_id: grupo.id,
+                    user_id: user.id,
+                    tipo: 'administrador'
+                  });
+                  
+                if (retryError) {
+                  console.error('Erro na segunda tentativa de adicionar criador:', retryError);
+                } else {
+                  console.log('Criador adicionado como membro administrador na segunda tentativa');
+                }
+              }, 500);
+            }
 
         // Adicionar amigos selecionados como membros
         if (formData.amigos && formData.amigos.length > 0) {
