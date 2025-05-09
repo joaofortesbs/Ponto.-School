@@ -47,49 +47,6 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
 
   return (
     <div className="mt-8">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className="h-9 w-9 bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] rounded-lg flex items-center justify-center shadow-lg shadow-[#FF6B00]/10">
-            <Users className="h-5 w-5 text-white" />
-          </div>
-          <h3 className="text-xl font-bold text-white">
-            {selectedTopic 
-              ? `Grupos de ${topicosEstudo.find(t => t.id === selectedTopic)?.nome || 'Estudo'}`
-              : 'Grupos de Estudo'}
-          </h3>
-        </div>
-        
-        {/* Barra de pesquisa sofisticada */}
-        <div className="relative flex group max-w-md">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-4 w-4 text-white/40 group-focus-within:text-[#FF6B00] transition-colors" />
-          </div>
-          <input
-            type="text"
-            placeholder="Buscar por grupos ou temas específicos..."
-            className="pl-10 pr-20 py-2 bg-black/30 border border-white/5 hover:border-white/10 focus:border-[#FF6B00]/50 focus:ring-[#FF6B00]/10 h-10 rounded-lg w-full text-white shadow-inner text-sm"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <div className="absolute inset-y-0 right-0 flex items-center space-x-1 pr-2">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-7 w-7 rounded-md bg-black/30 hover:bg-[#FF6B00]/20 text-white/70 hover:text-white"
-              onClick={() => setSelectedFilter(selectedFilter === "tendencia-alta" ? null : "tendencia-alta")}
-            >
-              <TrendingUp className={`h-4 w-4 ${selectedFilter === "tendencia-alta" ? "text-[#FF6B00]" : ""}`} />
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-7 w-7 rounded-md bg-black/30 hover:bg-[#FF6B00]/20 text-white/70 hover:text-white"
-            >
-              <Filter className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mt-6">
         {gruposFiltrados.map((grupo) => (
