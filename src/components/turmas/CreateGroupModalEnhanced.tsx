@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -67,21 +68,21 @@ const colorOptions = [
 
 // Lista de tópicos disponíveis
 const topics = [
-  { id: 1, name: "Matemática", icon: "📐", color: "#FF6B00" },
-  { id: 2, name: "Língua Portuguesa", icon: "📝", color: "#4F46E5" },
-  { id: 3, name: "Física", icon: "⚛️", color: "#8B5CF6" },
-  { id: 4, name: "Química", icon: "🧪", color: "#10B981" },
-  { id: 5, name: "Biologia", icon: "🧬", color: "#06B6D4" },
-  { id: 6, name: "História", icon: "📜", color: "#F59E0B" },
-  { id: 7, name: "Geografia", icon: "🌍", color: "#EC4899" },
-  { id: 8, name: "Filosofia", icon: "🧠", color: "#6366F1" },
-  { id: 9, name: "Sociologia", icon: "👥", color: "#EF4444" },
-  { id: 10, name: "Inglês", icon: "🇬🇧", color: "#0EA5E9" },
-  { id: 11, name: "Artes", icon: "🎨", color: "#EC4899" },
-  { id: 12, name: "Educação Física", icon: "🏃", color: "#10B981" },
-  { id: 13, name: "Literatura", icon: "📚", color: "#F59E0B" },
-  { id: 14, name: "Informática", icon: "💻", color: "#0EA5E9" },
-  { id: 15, name: "Outros", icon: "📌", color: "#6B7280" }
+  { id: "1", name: "Matemática", icon: "📐", color: "#FF6B00" },
+  { id: "2", name: "Língua Portuguesa", icon: "📝", color: "#4F46E5" },
+  { id: "3", name: "Física", icon: "⚛️", color: "#8B5CF6" },
+  { id: "4", name: "Química", icon: "🧪", color: "#10B981" },
+  { id: "5", name: "Biologia", icon: "🧬", color: "#06B6D4" },
+  { id: "6", name: "História", icon: "📜", color: "#F59E0B" },
+  { id: "7", name: "Geografia", icon: "🌍", color: "#EC4899" },
+  { id: "8", name: "Filosofia", icon: "🧠", color: "#6366F1" },
+  { id: "9", name: "Sociologia", icon: "👥", color: "#EF4444" },
+  { id: "10", name: "Inglês", icon: "🇬🇧", color: "#0EA5E9" },
+  { id: "11", name: "Artes", icon: "🎨", color: "#EC4899" },
+  { id: "12", name: "Educação Física", icon: "🏃", color: "#10B981" },
+  { id: "13", name: "Literatura", icon: "📚", color: "#F59E0B" },
+  { id: "14", name: "Informática", icon: "💻", color: "#0EA5E9" },
+  { id: "15", name: "Outros", icon: "📌", color: "#6B7280" }
 ];
 
 // Amigos simulados (em um aplicativo real, isso viria de uma API)
@@ -239,58 +240,62 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
           return;
         }
 
-      if (!grupo) {
-        console.error('Grupo não foi criado corretamente');
-        alert('Erro ao criar grupo: Os dados não foram salvos corretamente');
-        return;
-      }
+        if (!grupo) {
+          console.error('Grupo não foi criado corretamente');
+          alert('Erro ao criar grupo: Os dados não foram salvos corretamente');
+          return;
+        }
 
-      console.log("Grupo criado com sucesso:", grupo);
+        console.log("Grupo criado com sucesso:", grupo);
 
-      // Adicionar o criador como administrador do grupo
-      const { error: membroError } = await supabase
-        .from('grupos_estudo_membros')
-        .insert({
-          grupo_id: grupo.id,
-          user_id: user.id,
-          tipo: 'administrador'
-        });
-
-      if (membroError) {
-        console.error('Erro ao adicionar criador como membro:', membroError);
-        // Continuar mesmo com erro, pois o grupo já foi criado
-      }
-
-      // Adicionar amigos selecionados como membros
-      if (formData.amigos && formData.amigos.length > 0) {
-        const membros = formData.amigos.map(amigoId => ({
-          grupo_id: grupo.id,
-          user_id: amigoId,
-          tipo: 'membro'
-        }));
-
-        const { error: amigosError } = await supabase
+        // Adicionar o criador como administrador do grupo
+        const { error: membroError } = await supabase
           .from('grupos_estudo_membros')
-          .insert(membros);
+          .insert({
+            grupo_id: grupo.id,
+            user_id: user.id,
+            tipo: 'administrador'
+          });
 
-        if (amigosError) {
-          console.error('Erro ao adicionar amigos:', amigosError);
+        if (membroError) {
+          console.error('Erro ao adicionar criador como membro:', membroError);
           // Continuar mesmo com erro, pois o grupo já foi criado
         }
-      }
 
-      // Notificar o componente pai sobre a criação bem-sucedida
-      onSubmit({
-        ...formData,
-        id: grupo.id,
-        codigo: codigo,
-        amigosDetalhes: selectedFriends
-      });
+        // Adicionar amigos selecionados como membros
+        if (formData.amigos && formData.amigos.length > 0) {
+          const membros = formData.amigos.map(amigoId => ({
+            grupo_id: grupo.id,
+            user_id: amigoId,
+            tipo: 'membro'
+          }));
 
-      // Fechar o modal após criação bem-sucedida
-      onClose();
-      
+          const { error: amigosError } = await supabase
+            .from('grupos_estudo_membros')
+            .insert(membros);
+
+          if (amigosError) {
+            console.error('Erro ao adicionar amigos:', amigosError);
+            // Continuar mesmo com erro, pois o grupo já foi criado
+          }
+        }
+
+        // Notificar o componente pai sobre a criação bem-sucedida
+        onSubmit({
+          ...formData,
+          id: grupo.id,
+          codigo: codigo,
+          amigosDetalhes: selectedFriends
+        });
+
+        // Fechar o modal após criação bem-sucedida
+        onClose();
       } catch (error) {
+        console.error('Erro ao criar grupo:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Ocorreu um erro inesperado';
+        alert('Erro ao criar grupo: ' + errorMessage);
+      }
+    } catch (error) {
       console.error('Erro ao criar grupo:', error);
       const errorMessage = error instanceof Error ? error.message : 'Ocorreu um erro inesperado';
       alert('Erro ao criar grupo: ' + errorMessage);
@@ -775,7 +780,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
           </motion.div>
         </div>
       )}
-        </AnimatePresence>
+    </AnimatePresence>
   );
 };
 
