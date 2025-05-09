@@ -304,31 +304,6 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
     }
   };
 
-  // Função para verificar a posição de rolagem e mostrar/ocultar os botões
-  const checkScrollPosition = () => {
-    const container = document.getElementById('topicos-container');
-    const scrollLeftBtn = document.getElementById('scroll-left-btn');
-    const scrollRightBtn = document.getElementById('scroll-right-btn');
-
-    if (container && scrollLeftBtn && scrollRightBtn) {
-      const maxScrollLeft = container.scrollWidth - container.clientWidth;
-
-      // Mostra o botão esquerdo se a rolagem for maior que zero
-      if (container.scrollLeft > 0) {
-        scrollLeftBtn.classList.remove('opacity-0', 'pointer-events-none');
-      } else {
-        scrollLeftBtn.classList.add('opacity-0', 'pointer-events-none');
-      }
-
-      // Mostra o botão direito se ainda houver conteúdo para rolar
-      if (container.scrollLeft < maxScrollLeft) {
-        scrollRightBtn.classList.remove('opacity-0');
-      } else {
-        scrollRightBtn.classList.add('opacity-0');
-      }
-    }
-  };
-
   return (
     <div className={`w-full ${className}`}>
       {/* Container principal com gradiente de fundo */}
