@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Search, Filter, ChevronRight, Users, TrendingUp, BookOpen, MessageCircle, Plus, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import CreateGroupModalEnhanced from "../CreateGroupModalEnhanced";
 
 interface GrupoEstudo {
   id: string;
@@ -34,6 +35,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
   const [gruposEstudo, setGruposEstudo] = useState<GrupoEstudo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
 
   // Simulando carregamento de dados
   useEffect(() => {
@@ -79,14 +81,39 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
     return grupo.tendencia === "alta" && grupo.novoConteudo === true;
   };
 
-  // Modal para criar novo grupo (mock para futura implementação)
+  // Modal para criar novo grupo
   const abrirModalCriarGrupo = () => {
-    // Futuramente: dispatch para abrir modal de criação
-    alert("Funcionalidade para criar novo grupo de estudos será implementada em breve!");
+    setShowCreateGroupModal(true);
+  };
+
+  // Função para processar a criação de um novo grupo
+  const handleCreateGroup = (formData: any) => {
+    // Aqui você implementará a lógica para criar um novo grupo
+    console.log("Criando novo grupo:", formData);
+    
+    // Exemplo de como adicionar o novo grupo à lista (a ser implementado com dados reais)
+    // Incluiria integração com banco de dados na versão final
+    const novoGrupo: GrupoEstudo = {
+      id: `grupo-${Date.now()}`,
+      nome: formData.nome,
+      cor: formData.cor || "#FF6B00",
+      membros: 1, // Começa com o criador
+      dataCriacao: new Date().toISOString(),
+      // Outros campos podem ser adicionados baseados no formulário
+    };
+    
+    setGruposEstudo(prev => [...prev, novoGrupo]);
+    setShowCreateGroupModal(false);
   };
 
   return (
     <div className="mt-8">
+      {/* Modal de criação de grupo */}
+      <CreateGroupModalEnhanced 
+        isOpen={showCreateGroupModal} 
+        onClose={() => setShowCreateGroupModal(false)}
+        onSubmit={handleCreateGroup}
+      />
       {/* Cabeçalho da grade */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
