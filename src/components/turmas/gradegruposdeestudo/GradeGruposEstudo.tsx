@@ -1,46 +1,58 @@
+
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Search, Filter, ChevronRight, Users, TrendingUp, BookOpen, MessageCircle, Plus, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import CreateGroupModalEnhanced from "../CreateGroupModalEnhanced";
-import { supabase } from "@/lib/supabase";
-import { useToast } from "@/components/ui/use-toast";
 
-// Interface para definir a estrutura de um grupo de estudo
 interface GrupoEstudo {
   id: string;
   nome: string;
-  descricao: string;
+  icon?: string;
   cor: string;
-  topico: string;
-  topico_nome: string;
-  topico_icon: string;
-  privado: boolean;
-  codigo_acesso?: string;
-  criador_id: string;
-  visibilidade: string;
-  created_at: string;
-  membros?: any[]; // Lista de membros carregada separadamente
+  membros: number;
+  topico?: string;
+  disciplina?: string;
+  tendencia?: string;
+  novoConteudo?: boolean;
+  criador?: string;
+  dataCriacao: string;
 }
 
 interface GradeGruposEstudoProps {
   selectedTopic: number | null;
   topicosEstudo: any[]; // Mantido para compatibilidade
   searchQuery?: string;
+  selectedFilter?: string | null;
+  onFilterChange?: (filter: string | null) => void;
 }
 
 const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({ 
   selectedTopic, 
   topicosEstudo,
-  searchQuery = ""
+  searchQuery = "",
+  selectedFilter = null,
+  onFilterChange
 }) => {
   const [hoveredGrupo, setHoveredGrupo] = useState<string | null>(null);
-  const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
+  const [internalSelectedFilter, setInternalSelectedFilter] = useState<string | null>(selectedFilter);
   const [gruposEstudo, setGruposEstudo] = useState<GrupoEstudo[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
-    const { toast } = useToast();
+  
+  // Sincronizar o filtro externo com o interno
+  useEffect(() => {
+    setInternalSelectedFilter(selectedFilter);
+  }, [selectedFilter]);
+  
+  // Função para atualizar o filtro localmente e propagar a mudança
+  const updateFilter = (filter: string | null) => {
+    setInternalSelectedFilter(filter);
+    if (onFilterChange) {
+      onFilterChange(filter);
+    }
+  };
 
   // Simulando carregamento de dados
   useEffect(() => {
@@ -48,103 +60,125 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
     const carregarGrupos = async () => {
       try {
         setLoading(true);
-
-        // Verificar se o usuário está autenticado
-        const { data: { user } } = await supabase.auth.getUser();
-
-        if (!user) {
-          console.log("Usuário não autenticado");
-          setLoading(false);
-          return;
-        }
-
-        // Buscar todos os grupos que o usuário é membro
-        const { data: membroData, error: membroError } = await supabase
-          .from('grupos_estudo_membros')
-          .select('grupo_id')
-          .eq('user_id', user.id);
-
-        if (membroError) {
-          console.error("Erro ao buscar grupos do usuário:", membroError);
-            toast({
-                title: "Erro ao carregar grupos",
-                description: "Não foi possível carregar seus grupos de estudo.",
-                variant: "destructive"
-            });
-          setLoading(false);
-          return;
-        }
-
-        // Se o usuário não é membro de nenhum grupo
-        if (!membroData || membroData.length === 0) {
-          setGruposEstudo([]);
-          setLoading(false);
-          return;
-        }
-
-        // Extrair IDs dos grupos
-        const grupoIds = membroData.map(item => item.grupo_id);
-
-        // Buscar detalhes dos grupos
-        const { data: gruposData, error: gruposError } = await supabase
-          .from('grupos_estudo')
-          .select('*')
-          .in('id', grupoIds);
-
-        if (gruposError) {
-          console.error("Erro ao buscar detalhes dos grupos:", gruposError);
-            toast({
-                title: "Erro ao carregar detalhes dos grupos",
-                description: "Ocorreu um erro ao buscar informações dos seus grupos.",
-                variant: "destructive"
-            });
-          setLoading(false);
-          return;
-        }
-
-        // Buscar também grupos públicos que o usuário não é membro
-        const { data: gruposPublicos, error: publicosError } = await supabase
-          .from('grupos_estudo')
-          .select('*')
-          .eq('visibilidade', 'todos')
-          .not('id', 'in', grupoIds.length > 0 ? grupoIds : ['']);
-
-        if (publicosError) {
-          console.error("Erro ao buscar grupos públicos:", publicosError);
-        }
-
-        // Combinar grupos do usuário com grupos públicos
-        const todosGrupos = [
-          ...(gruposData || []),
-          ...(gruposPublicos || [])
+        console.log("Carregando grupos com tópico selecionado:", selectedTopic);
+        
+        // Simula um delay para mostrar estado de carregamento
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // No futuro, substitua por chamada à API
+        // const response = await fetch('/api/grupos-estudo');
+        // const data = await response.json();
+        // setGruposEstudo(data);
+        
+        // Dados de exemplo - simulação para demonstrar filtragem por tópico
+        const gruposExemplo = [
+          {
+            id: "grupo-1",
+            nome: "Grupo de Matemática Avançada",
+            cor: "#FF6B00",
+            membros: 8,
+            topico: "1", // ID correspondente ao tópico Matemática
+            disciplina: "Matématica",
+            icon: "📊",
+            tendencia: "alta",
+            novoConteudo: true,
+            dataCriacao: new Date().toISOString(),
+            criador: "Ana Silva"
+          },
+          {
+            id: "grupo-2",
+            nome: "Linguagem e Literatura",
+            cor: "#9333EA",
+            membros: 12,
+            topico: "2", // ID correspondente ao tópico Língua Portuguesa
+            disciplina: "Lingua Portuguesa",
+            icon: "📝",
+            tendencia: "estável",
+            novoConteudo: false,
+            dataCriacao: new Date().toISOString(),
+            criador: "Carlos Oliveira"
+          },
+          {
+            id: "grupo-3",
+            nome: "Física Quântica",
+            cor: "#4F46E5",
+            membros: 6,
+            topico: "3", // ID correspondente ao tópico Física
+            disciplina: "Física",
+            icon: "⚛️",
+            tendencia: "alta",
+            novoConteudo: true,
+            dataCriacao: new Date().toISOString(),
+            criador: "Mariana Costa"
+          },
+          {
+            id: "grupo-4",
+            nome: "Química Orgânica",
+            cor: "#10B981",
+            membros: 5,
+            topico: "4", // ID correspondente ao tópico Química
+            disciplina: "Química",
+            icon: "🧪",
+            tendencia: "baixa",
+            novoConteudo: false,
+            dataCriacao: new Date().toISOString(),
+            criador: "João Paulo"
+          },
+          {
+            id: "grupo-5",
+            nome: "Biologia Celular",
+            cor: "#16A34A",
+            membros: 7,
+            topico: "5", // ID correspondente ao tópico Biologia
+            disciplina: "Biologia",
+            icon: "🌿",
+            tendencia: "alta",
+            novoConteudo: true,
+            dataCriacao: new Date().toISOString(),
+            criador: "Fernanda Lima"
+          }
         ];
-
-        // Atualizar estado
-        setGruposEstudo(todosGrupos);
+        
+        setGruposEstudo(gruposExemplo);
       } catch (error) {
-        console.error("Erro ao carregar grupos:", error);
-          toast({
-              title: "Erro inesperado",
-              description: "Ocorreu um erro ao carregar os grupos de estudo.",
-              variant: "destructive"
-          });
+        console.error("Erro ao carregar grupos de estudo:", error);
       } finally {
         setLoading(false);
       }
     };
 
     carregarGrupos();
-  }, [toast]);
+  }, []);
 
   // Filtrar grupos baseado no tópico selecionado e busca
   const gruposFiltrados = gruposEstudo.filter(
     (grupo) => {
+      // Verificação de correspondência com a busca
       const matchesSearch = grupo.nome.toLowerCase().includes(searchQuery.toLowerCase()) || 
                            (grupo.disciplina?.toLowerCase().includes(searchQuery.toLowerCase()) || false);
-      const matchesFilter = !selectedFilter || 
-        (selectedFilter === "tendencia-alta" && grupo.tendencia === "alta") ||
-        (selectedFilter === "novo-conteudo" && grupo.novoConteudo);
-      const matchesSelectedTopic = !selectedTopic || (grupo.topico && selectedTopic.toString() === grupo.topico);
+      
+      // Verificação de correspondência com o filtro
+      const currentFilter = internalSelectedFilter;
+      const matchesFilter = !currentFilter || 
+        (currentFilter === "tendencia-alta" && grupo.tendencia === "alta") ||
+        (currentFilter === "novo-conteudo" && grupo.novoConteudo);
+      
+      // Lógica aprimorada de filtragem por tópico
+      const selectedTopicName = selectedTopic && topicosEstudo.find(t => t.id === selectedTopic)?.nome.toLowerCase();
+      
+      // Verificação mais precisa:
+      // 1. Se não há tópico selecionado, mostrar todos
+      // 2. Verificar se o ID do tópico do grupo corresponde ao selecionado
+      // 3. Verificar se o nome da disciplina do grupo corresponde ao nome do tópico selecionado
+      const matchesSelectedTopic = !selectedTopic || 
+        (grupo.topico !== undefined && String(selectedTopic) === String(grupo.topico)) ||
+        (grupo.disciplina && selectedTopicName && grupo.disciplina.toLowerCase() === selectedTopicName);
+      
+      // Log para depuração
+      if (selectedTopic && grupo.topico) {
+        console.log(`Comparando tópico do grupo: ${grupo.topico} (${typeof grupo.topico}) com selectedTopic: ${selectedTopic} (${typeof selectedTopic})`);
+      }
+        
       return matchesSearch && matchesFilter && matchesSelectedTopic;
     }
   );
@@ -160,54 +194,35 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
   };
 
   // Função para processar a criação de um novo grupo
-  const handleCreateGroup = async (formData: any) => {
-        console.log("Grupo criado com sucesso:", formData);
-        // O grupo já foi salvo no Supabase dentro do modal
-        // Aqui apenas recarregamos os grupos para mostrar o novo grupo
-
-        try {
-            // Verificar se o usuário está autenticado
-            const { data: { user } } = await supabase.auth.getUser();
-
-            if (!user) {
-                console.log("Usuário não autenticado");
-                return;
-            }
-
-            // Buscar todos os grupos que o usuário é membro
-            const { data: membroData, error: membroError } = await supabase
-                .from('grupos_estudo_membros')
-                .select('grupo_id')
-                .eq('user_id', user.id);
-
-            if (membroError) {
-                console.error("Erro ao buscar grupos do usuário:", membroError);
-                return;
-            }
-
-            // Extrair IDs dos grupos
-            const grupoIds = membroData?.map(item => item.grupo_id) || [];
-
-            // Buscar detalhes dos grupos
-            const { data: gruposData, error: gruposError } = await supabase
-                .from('grupos_estudo')
-                .select('*')
-                .in('id', grupoIds.length > 0 ? grupoIds : ['']);
-
-            if (gruposError) {
-                console.error("Erro ao buscar detalhes dos grupos:", gruposError);
-                return;
-            }
-
-            // Atualizar estado
-            if (gruposData) {
-                setGruposEstudo(gruposData);
-            }
-
-        } catch (error) {
-            console.error("Erro ao recarregar grupos:", error);
-        }
+  const handleCreateGroup = (formData: any) => {
+    // Aqui você implementará a lógica para criar um novo grupo
+    console.log("Criando novo grupo:", formData);
+    
+    // Exemplo de como adicionar o novo grupo à lista (a ser implementado com dados reais)
+    // Incluiria integração com banco de dados na versão final
+    const novoGrupo: GrupoEstudo = {
+      id: `grupo-${Date.now()}`,
+      nome: formData.nome,
+      cor: formData.cor || "#FF6B00",
+      membros: formData.amigos ? formData.amigos.length + 1 : 1, // Criador + amigos convidados
+      dataCriacao: new Date().toISOString(),
+      topico: formData.topico ? formData.topico.toString() : undefined, // Armazenamos como string para manter compatibilidade 
+      disciplina: formData.topicoNome || undefined,
+      icon: formData.topicoIcon || undefined,
+      tendencia: Math.random() > 0.7 ? "alta" : undefined, // Simula tendência aleatória
+      novoConteudo: Math.random() > 0.7, // Simula conteúdo novo aleatório
+      privado: formData.privado,
+      visibilidade: formData.visibilidade,
+      criador: "Você",
+      // Outros campos baseados no formulário
     };
+    
+    // Log para verificar a criação do grupo com as informações de tópico
+    console.log(`Grupo criado com topico=${novoGrupo.topico}, disciplina=${novoGrupo.disciplina}`);
+    
+    setGruposEstudo(prev => [...prev, novoGrupo]);
+    setShowCreateGroupModal(false);
+  };
 
   return (
     <div className="mt-8">
@@ -219,14 +234,60 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
       />
       {/* Cabeçalho da grade */}
       <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center">
-          <h2 className="text-xl font-bold text-white flex items-center">
-            <Users className="h-5 w-5 mr-2 text-[#FF6B00]" />
-            Grupos de Estudo
-          </h2>
-          <Badge className="ml-3 bg-[#FF6B00]/20 text-[#FF6B00] text-xs">
-            {gruposFiltrados.length} grupos
-          </Badge>
+        <div className="flex flex-col">
+          <div className="flex items-center">
+            <h2 className="text-xl font-bold text-white flex items-center">
+              <Users className="h-5 w-5 mr-2 text-[#FF6B00]" />
+              Grupos de Estudo
+            </h2>
+            <Badge className="ml-3 bg-[#FF6B00]/20 text-[#FF6B00] text-xs">
+              {gruposFiltrados.length} grupos
+            </Badge>
+          </div>
+          
+          {/* Indicadores de filtros ativos */}
+          {(selectedTopic || internalSelectedFilter) && (
+            <div className="flex gap-2 mt-2">
+              {selectedTopic && (
+                <Badge className="bg-[#FF6B00]/30 text-white text-xs flex items-center gap-1 px-3 py-1">
+                  <BookOpen className="h-3 w-3" />
+                  Tópico: {topicosEstudo.find(t => t.id === selectedTopic)?.nome}
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // Aqui não usamos updateFilter porque esse filtro é controlado pelo componente pai
+                    }}
+                    className="ml-2 text-white/70 hover:text-white"
+                  >
+                  </button>
+                </Badge>
+              )}
+              {internalSelectedFilter && (
+                <Badge className="bg-[#FF6B00]/30 text-white text-xs flex items-center gap-1 px-3 py-1">
+                  {internalSelectedFilter === "tendencia-alta" ? (
+                    <>
+                      <TrendingUp className="h-3 w-3" />
+                      Em alta
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-3 w-3" />
+                      Novo conteúdo
+                    </>
+                  )}
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      updateFilter(null);
+                    }}
+                    className="ml-2 text-white/70 hover:text-white"
+                  >
+                    &times;
+                  </button>
+                </Badge>
+              )}
+            </div>
+          )}
         </div>
         <Button 
           onClick={abrirModalCriarGrupo}

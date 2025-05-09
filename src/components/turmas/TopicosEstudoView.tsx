@@ -288,47 +288,6 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
     }
   };
 
-  const handleTopicoClick = (topicoId: number | null) => {
-    if (selectedTopic === topicoId) {
-      setSelectedTopic(null);
-    } else {
-      setSelectedTopic(topicoId);
-
-      // Scroll para a grade de grupos para melhor experiência do usuário
-      setTimeout(() => {
-        const gradeElement = document.getElementById('grade-grupos-estudo');
-        if (gradeElement) {
-          gradeElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      }, 100);
-    }
-  };
-
-  // Função para verificar a posição de rolagem e mostrar/ocultar os botões
-  const checkScrollPosition = () => {
-    const container = document.getElementById('topicos-container');
-    const scrollLeftBtn = document.getElementById('scroll-left-btn');
-    const scrollRightBtn = document.getElementById('scroll-right-btn');
-
-    if (container && scrollLeftBtn && scrollRightBtn) {
-      const maxScrollLeft = container.scrollWidth - container.clientWidth;
-
-      // Mostra o botão esquerdo se a rolagem for maior que zero
-      if (container.scrollLeft > 0) {
-        scrollLeftBtn.classList.remove('opacity-0', 'pointer-events-none');
-      } else {
-        scrollLeftBtn.classList.add('opacity-0', 'pointer-events-none');
-      }
-
-      // Mostra o botão direito se ainda houver conteúdo para rolar
-      if (container.scrollLeft < maxScrollLeft) {
-        scrollRightBtn.classList.remove('opacity-0');
-      } else {
-        scrollRightBtn.classList.add('opacity-0');
-      }
-    }
-  };
-
   return (
     <div className={`w-full ${className}`}>
       {/* Container principal com gradiente de fundo */}
@@ -508,7 +467,7 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                       z: 20,
                       boxShadow: `0 15px 30px -10px rgba(0, 0, 0, 0.4), 0 10px 20px -5px rgba(0, 0, 0, 0.3), 0 0 20px ${topico.cor}30`
                     } : {}}
-                    onClick={() => handleTopicoClick(topico.id)}
+                    onClick={() => setSelectedTopic(selectedTopic === topico.id ? null : topico.id)}
                     transition={{ 
                       type: "spring", 
                       stiffness: 300,
@@ -567,7 +526,6 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
 
                       {/* Indicador de novidade redesenhado */}
                       {topico.novoConteudo && (
-                        ```tool_code
                         <div className="absolute top-3 right-3 z-20">
                           <div className="relative">
                             <div className="absolute -inset-0.5 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-full opacity-75 blur-sm animate-pulse"></div>
@@ -659,19 +617,45 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                   aria-label="Rolar para a direita"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-                    <path d="m9 18 6-6-6-6"/>
+                    <path d="m9 18 6-6 6-6"/>
                   </svg>
                 </button>
               </div>
 
               {/* Componente de grade de grupos de estudo */}
-              <div className="mt-6" id="grade-grupos-estudo">
+              <div className="mt-6">
+                {/* Notificação sobre o tópico selecionado */}
+                {selectedTopic && (
+                  <div className="mb-4 p-3 bg-[#FF6B00]/10 border border-[#FF6B00]/20 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1.5 bg-[#FF6B00]/20 rounded-full">
+                        <BookOpen className="h-4 w-4 text-[#FF6B00]" />
+                      </div>
+                      <p className="text-sm text-white/90">
+                        Mostrando grupos de estudo relacionados ao tópico <span className="font-semibold text-[#FF6B00]">{topicosEstudo.find(t => t.id === selectedTopic)?.nome}</span>
+                      </p>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="ml-auto h-7 text-xs text-white/70 hover:text-white hover:bg-white/10"
+                        onClick={() => setSelectedTopic(null)}
+                      >
+                        Limpar filtro
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
                 {/* Importar o componente de grade de grupos */}
                 <GradeGruposEstudo 
                   selectedTopic={selectedTopic}
                   topicosEstudo={topicosEstudo}
                   searchQuery={searchQuery}
+                  selectedFilter={selectedFilter}
+                  onFilterChange={setSelectedFilter}
                 />
+                {/* Log para debug do tópico selecionado */}
+                {selectedTopic && console.log(`Tópico selecionado para filtragem: ID=${selectedTopic}, Nome=${topicosEstudo.find(t => t.id === selectedTopic)?.nome}, Filtro: ${selectedFilter}`)}
               </div>
             </motion.div>
           )}
