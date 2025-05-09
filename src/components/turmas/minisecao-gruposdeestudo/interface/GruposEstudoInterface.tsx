@@ -105,9 +105,9 @@ const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div className="relative w-full sm:w-auto flex-1 max-w-md">
+        <div className="relative w-full sm:max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
             placeholder="Buscar grupo de estudos..."
@@ -120,14 +120,14 @@ const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className
           <Button
             variant="outline"
             size="sm"
-            className="text-gray-600 dark:text-gray-400 border-[#FF6B00]/10 dark:border-[#FF6B00]/20 h-9 interface-selector"
+            className="text-gray-600 dark:text-gray-400 border-[#FF6B00]/10 dark:border-[#FF6B00]/20 h-9 interface-selector whitespace-nowrap"
           >
             <span className="interface-selector-icon">
               <Filter className="h-4 w-4" />
             </span>
             <span className="interface-selector-text">Filtrar</span>
           </Button>
-          <Button className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white h-9 interface-selector">
+          <Button className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white h-9 interface-selector whitespace-nowrap">
             <span className="interface-selector-icon">
               <Plus className="h-4 w-4" />
             </span>
@@ -136,7 +136,7 @@ const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {displayedGroups.map((grupo, index) => (
           <motion.div
             key={grupo.id}
@@ -169,8 +169,8 @@ const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className
       </div>
 
       {displayedGroups.length > 6 && (
-        <div className="flex justify-center mt-6">
-          <Button variant="outline" className="text-[#FF6B00] border-[#FF6B00] hover:bg-[#FF6B00]/10">
+        <div className="flex justify-center mt-4 mb-2">
+          <Button variant="outline" className="text-[#FF6B00] border-[#FF6B00] hover:bg-[#FF6B00]/10 whitespace-nowrap">
             Ver todos os grupos
           </Button>
         </div>
