@@ -1,20 +1,6 @@
-import React from "react";
-import { motion } from "framer-motion";
-
-interface GruposEstudoViewProps {
-  className?: string;
-}
-
-const GruposEstudoView: React.FC<GruposEstudoViewProps> = ({ className }) => {
-  return (
-    <div className={`w-full ${className} card-container`} style={{ 
-      contain: 'content',
-      overflowY: 'auto',
-      overflowX: 'hidden'
-    }}>
-      {/* Conteúdo removido conforme solicitado */}
-    </div>
-  );
-};
-
-export default GruposEstudoView;
+import React, { useState, useEffect } from "react";
+import { Search, Filter, Sparkles, BookOpen, Users, TrendingUp, ChevronRight, Plus } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
