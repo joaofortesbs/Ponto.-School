@@ -136,15 +136,20 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
     (grupo) => {
       const matchesSearch = grupo.nome.toLowerCase().includes(searchQuery.toLowerCase()) || 
                            (grupo.disciplina?.toLowerCase().includes(searchQuery.toLowerCase()) || false);
+      
       const matchesFilter = !selectedFilter || 
         (selectedFilter === "tendencia-alta" && grupo.tendencia === "alta") ||
         (selectedFilter === "novo-conteudo" && grupo.novoConteudo);
-        
-      // Melhorada lógica de filtragem por tópico
+      
+      // Lógica aprimorada de filtragem por tópico
       const selectedTopicName = selectedTopic && topicosEstudo.find(t => t.id === selectedTopic)?.nome.toLowerCase();
       
+      // Verificação mais precisa:
+      // 1. Se não há tópico selecionado, mostrar todos
+      // 2. Verificar se o ID do tópico do grupo corresponde ao selecionado
+      // 3. Verificar se o nome da disciplina do grupo corresponde ao nome do tópico selecionado
       const matchesSelectedTopic = !selectedTopic || 
-        (grupo.topico && selectedTopic.toString() === grupo.topico) ||
+        (grupo.topico !== undefined && selectedTopic === Number(grupo.topico)) ||
         (grupo.disciplina && selectedTopicName && grupo.disciplina.toLowerCase() === selectedTopicName);
         
       return matchesSearch && matchesFilter && matchesSelectedTopic;
@@ -174,7 +179,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
       cor: formData.cor || "#FF6B00",
       membros: formData.amigos ? formData.amigos.length + 1 : 1, // Criador + amigos convidados
       dataCriacao: new Date().toISOString(),
-      topico: formData.topico || undefined, // Usado para filtragem por tópico
+      topico: formData.topico ? formData.topico.toString() : undefined, // Armazenamos como string para manter compatibilidade 
       disciplina: formData.topicoNome || undefined,
       icon: formData.topicoIcon || undefined,
       tendencia: Math.random() > 0.7 ? "alta" : undefined, // Simula tendência aleatória
@@ -184,6 +189,9 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
       criador: "Você",
       // Outros campos baseados no formulário
     };
+    
+    // Log para verificar a criação do grupo com as informações de tópico
+    console.log(`Grupo criado com topico=${novoGrupo.topico}, disciplina=${novoGrupo.disciplina}`);
     
     setGruposEstudo(prev => [...prev, novoGrupo]);
     setShowCreateGroupModal(false);
