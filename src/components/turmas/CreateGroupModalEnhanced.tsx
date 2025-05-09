@@ -412,7 +412,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
       
       alert('Erro ao criar grupo: ' + errorMessage);
     }
-  };
+  }; // Adicionado ponto e vírgula aqui
 
   const handleCodeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -894,6 +894,6 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
       )}
     </AnimatePresence>
   );
-};
+}; // Adicionado ponto e vírgula aqui
 
 export default CreateGroupModalEnhanced;
