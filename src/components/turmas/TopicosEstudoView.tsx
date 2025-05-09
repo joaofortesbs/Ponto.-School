@@ -457,8 +457,9 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                   style={{ 
                     scrollbarWidth: 'none', 
                     msOverflowStyle: 'none',
-                    maxWidth: 'calc(44rem)', // Largura fixa para comportar 8 cards de tamanho médio
-                    margin: '0 auto',
+                    width: '100%',
+                    paddingLeft: '4px',
+                    paddingRight: '4px',
                     scrollSnapType: 'x mandatory',
                     position: 'relative'
                   }}
@@ -489,7 +490,7 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                     className={`profile-3d-element bg-gradient-to-b from-[#121620]/90 to-[#0a0d14]/80 backdrop-blur-lg 
                       rounded-xl overflow-hidden cursor-pointer 
                       transition-all duration-300 relative flex flex-col transform-gpu
-                      perspective-1000 shadow-xl w-44 h-36 snap-center flex-shrink-0
+                      perspective-1000 shadow-xl w-32 h-32 snap-center flex-shrink-0
                       ${selectedTopic === topico.id ? 'topic-selected' : 'border border-white/10'}
                       ${isTopicFeatured(topico) ? 'featured-topic border-[0.5px] border-[#FF6B00]/40' : ''}`}
                     style={{
@@ -619,8 +620,8 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                   onClick={() => {
                     const container = document.getElementById('topicos-container');
                     if (container) {
-                      // Rolar para frente 4 cards (metade da visualização visível)
-                      const scrollDistance = 4 * (44 + 16); // 4 cards * (largura do card + gap)
+                      // Rolar para frente 8 cards (uma visualização completa)
+                      const scrollDistance = 8 * (32 + 16); // 8 cards * (largura do card + gap)
                       container.scrollBy({ left: scrollDistance, behavior: 'smooth' });
                       // Exibir/ocultar botões após a rolagem
                       setTimeout(() => checkScrollPosition(), 300);

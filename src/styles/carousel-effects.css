@@ -17,15 +17,27 @@ body::-webkit-scrollbar-track,
 @media (max-width: 640px) {
   /* Em telas pequenas, mostrar menos cards */
   #topicos-container {
-    max-width: calc(32rem) !important;
+    max-width: calc(4 * (32px + 16px)) !important; /* 4 cards */
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1279px) {
+  /* Em telas médias, mostrar exatamente 8 cards */
+  #topicos-container {
+    max-width: calc(8 * (32px + 16px)) !important; /* 8 cards */
   }
 }
 
 @media (min-width: 1280px) {
   /* Em telas grandes, manter a largura adequada */
   #topicos-container {
-    max-width: calc(44rem) !important;
+    max-width: calc(8 * (32px + 16px)) !important; /* 8 cards */
   }
+}
+
+/* Garantir que os cards visíveis estão corretamente dimensionados */
+#topicos-container > div {
+  scroll-snap-align: start;
 }
 
 /* Animation para o botão de scroll */
