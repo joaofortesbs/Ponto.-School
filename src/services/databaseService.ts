@@ -309,7 +309,7 @@ export const acceptResponse = async (responseId: string): Promise<Response | nul
     timestamp: updatedResponse.timestamp,
     status: updatedResponse.status,
     price: updatedResponse.price,
-    responseTime: updatedResponse.response},
+    responseTime: updatedResponse.response_time
   };
 };
 
