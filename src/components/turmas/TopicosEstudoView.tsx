@@ -617,45 +617,19 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                   aria-label="Rolar para a direita"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-                    <path d="m9 18 6-6 6-6"/>
+                    <path d="m9 18 6-6-6-6"/>
                   </svg>
                 </button>
               </div>
 
               {/* Componente de grade de grupos de estudo */}
               <div className="mt-6">
-                {/* Notificação sobre o tópico selecionado */}
-                {selectedTopic && (
-                  <div className="mb-4 p-3 bg-[#FF6B00]/10 border border-[#FF6B00]/20 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <div className="p-1.5 bg-[#FF6B00]/20 rounded-full">
-                        <BookOpen className="h-4 w-4 text-[#FF6B00]" />
-                      </div>
-                      <p className="text-sm text-white/90">
-                        Mostrando grupos de estudo relacionados ao tópico <span className="font-semibold text-[#FF6B00]">{topicosEstudo.find(t => t.id === selectedTopic)?.nome}</span>
-                      </p>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="ml-auto h-7 text-xs text-white/70 hover:text-white hover:bg-white/10"
-                        onClick={() => setSelectedTopic(null)}
-                      >
-                        Limpar filtro
-                      </Button>
-                    </div>
-                  </div>
-                )}
-
                 {/* Importar o componente de grade de grupos */}
                 <GradeGruposEstudo 
                   selectedTopic={selectedTopic}
                   topicosEstudo={topicosEstudo}
                   searchQuery={searchQuery}
-                  selectedFilter={selectedFilter}
-                  onFilterChange={setSelectedFilter}
                 />
-                {/* Log para debug do tópico selecionado */}
-                {selectedTopic && console.log(`Tópico selecionado para filtragem: ID=${selectedTopic}, Nome=${topicosEstudo.find(t => t.id === selectedTopic)?.nome}, Filtro: ${selectedFilter}`)}
               </div>
             </motion.div>
           )}
