@@ -67,17 +67,17 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
       const container = document.getElementById('topicos-container');
       const scrollLeftBtn = document.getElementById('scroll-left-btn');
       const scrollRightBtn = document.getElementById('scroll-right-btn');
-  
+
       if (container && scrollLeftBtn && scrollRightBtn) {
         const maxScrollLeft = container.scrollWidth - container.clientWidth;
-  
+
         // Mostra o botão esquerdo se a rolagem for maior que zero
         if (container.scrollLeft > 0) {
           scrollLeftBtn.classList.remove('opacity-0', 'pointer-events-none');
         } else {
           scrollLeftBtn.classList.add('opacity-0', 'pointer-events-none');
         }
-  
+
         // Mostra o botão direito se ainda houver conteúdo para rolar
         if (container.scrollLeft < maxScrollLeft) {
           scrollRightBtn.classList.remove('opacity-0');
@@ -426,7 +426,7 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
               </div>
 
               <div className="relative mt-2">
-                {/* Botão de rolagem para a esquerda - inicialmente oculto */}
+                {/* Botão de rolagem para a esquerda */}
                 <button 
                   id="scroll-left-btn"
                   onClick={() => {
@@ -476,8 +476,8 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                     }}
                     className={`profile-3d-element bg-gradient-to-b from-[#121620]/90 to-[#0a0d14]/80 backdrop-blur-lg 
                       rounded-xl overflow-hidden cursor-pointer 
-                      transition-all duration-300 relative h-full flex flex-col transform-gpu
-                      perspective-1000 shadow-xl
+                      transition-all duration-300 relative flex flex-col transform-gpu
+                      perspective-1000 shadow-xl w-16 h-32
                       ${selectedTopic === topico.id ? 'topic-selected' : 'border border-white/10'}
                       ${isTopicFeatured(topico) ? 'featured-topic border-[0.5px] border-[#FF6B00]/40' : ''}`}
                     style={{
@@ -538,7 +538,7 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                       {/* Grafico hexagonal de fundo para elementos destacados */}
                       {isTopicFeatured(topico) && (
                         <div className="absolute inset-0 z-5 opacity-10"
-                             style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%33E%3Cpath d='M30 5.7735C32.094 5.7735 34.1627 6.456 35.7735 7.7735L52.2265 17.7735C55.5206 19.7735 57.2265 23.3726 57.2265 27.2265V47.2265C57.2265 51.0804 55.5206 54.6795 52.2265 56.6795L35.7735 66.6795C34.1627 67.997 32.094 68.6795 30 68.6795C27.906 68.6795 25.8373 67.997 24.2265 66.6795L7.7735 56.6795C4.47944 54.6795 2.7735 51.0804 2.7735 47.2265V27.2265C2.7735 23.3726 4.47944 19.7735 7.7735 17.7735L24.2265 7.7735C25.8373 6.456 27.906 5.7735 30 5.7735Z' fill='none' stroke='%23FFFFFF' stroke-width='0.3'/%3E%3C/svg%3E")`,
+                             style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/200/svg'%33E%3Cpath d='M30 5.7735C32.094 5.7735 34.1627 6.456 35.7735 7.7735L52.2265 17.7735C55.5206 19.7735 57.2265 23.3726 57.2265 27.2265V47.2265C57.2265 51.0804 55.5206 54.6795 52.2265 56.6795L35.7735 66.6795C34.1627 67.997 32.094 68.6795 30 68.6795C27.906 68.6795 25.8373 67.997 24.2265 66.6795L7.7735 56.6795C4.47944 54.6795 2.7735 51.0804 2.7735 47.2265V27.2265C2.7735 23.3726 4.47944 19.7735 7.7735 17.7735L24.2265 7.7735C25.8373 6.456 27.906 5.7735 30 5.7735Z' fill='none' stroke='%23FFFFFF' stroke-width='0.3'/%3E%3C/svg%3E")`,
                               backgroundSize: '150px 150px',
                               backgroundPosition: 'center',
                               mixBlendMode: 'overlay',
