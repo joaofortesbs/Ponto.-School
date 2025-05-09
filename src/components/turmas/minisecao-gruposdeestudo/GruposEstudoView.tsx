@@ -1,7 +1,5 @@
-
 import React from "react";
 import { motion } from "framer-motion";
-import GruposEstudoInterface from "./interface/GruposEstudoInterface";
 
 interface GruposEstudoViewProps {
   className?: string;
@@ -14,7 +12,7 @@ const GruposEstudoView: React.FC<GruposEstudoViewProps> = ({ className }) => {
       overflowY: 'auto',
       overflowX: 'hidden'
     }}>
-      <GruposEstudoInterface />
+      {/* Conteúdo removido conforme solicitado */}
     </div>
   );
 };
