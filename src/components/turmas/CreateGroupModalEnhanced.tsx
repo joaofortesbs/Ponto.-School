@@ -22,6 +22,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { supabase } from "@/lib/supabase";
 
 interface CreateGroupModalProps {
   isOpen: boolean;
@@ -195,6 +196,18 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
         codigo = Array.from({length: 6}, () => caracteres.charAt(Math.floor(Math.random() * caracteres.length))).join('');
       }
 
+      console.log("Criando grupo com os dados:", {
+        nome: formData.nome,
+        descricao: formData.descricao,
+        topico: formData.topico,
+        topico_nome: formData.topicoNome,
+        topico_icon: formData.topicoIcon,
+        cor: formData.cor,
+        privado: formData.privado,
+        visibilidade: formData.visibilidade,
+        criador_id: user.id
+      });
+
       // Inserir novo grupo no banco de dados
       const { data: grupo, error } = await supabase
         .from('grupos_estudo')
@@ -215,8 +228,11 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
 
       if (error) {
         console.error('Erro ao criar grupo:', error);
+        alert('Erro ao criar grupo: ' + error.message);
         return;
       }
+
+      console.log("Grupo criado com sucesso:", grupo);
 
       // Adicionar o criador como administrador do grupo
       const { error: membroError } = await supabase
@@ -232,7 +248,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
       }
 
       // Adicionar amigos selecionados como membros
-      if (formData.amigos.length > 0) {
+      if (formData.amigos && formData.amigos.length > 0) {
         const membros = formData.amigos.map(amigoId => ({
           grupo_id: grupo.id,
           user_id: amigoId,
@@ -256,8 +272,12 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
         amigosDetalhes: selectedFriends
       });
 
+      // Fechar o modal após criação bem-sucedida
+      onClose();
+
     } catch (error) {
       console.error('Erro ao criar grupo:', error);
+      alert('Erro ao criar grupo: ' + (error as Error).message);
     }
   };
 

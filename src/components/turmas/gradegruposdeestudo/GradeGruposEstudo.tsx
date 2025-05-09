@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import CreateGroupModalEnhanced from "../CreateGroupModalEnhanced";
 import { supabase } from "@/lib/supabase";
+import { useRouter } from "@/lib/useRouter";
 
 interface GrupoEstudo {
   id: string;
@@ -54,92 +55,95 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
     }
   };
 
-  // Simulando carregamento de dados
+  // Carregar dados do banco de dados
   useEffect(() => {
-    // Aqui futuramente você irá buscar os grupos do usuário do banco de dados
     const carregarGrupos = async () => {
       try {
         setLoading(true);
         console.log("Carregando grupos com tópico selecionado:", selectedTopic);
 
-        // Simula um delay para mostrar estado de carregamento
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Buscar grupos do banco de dados
+        const { data: grupos, error } = await supabase
+          .from('grupos_estudo')
+          .select(`
+            id, 
+            nome, 
+            descricao, 
+            topico, 
+            topico_nome, 
+            topico_icon, 
+            cor,
+            privado,
+            visibilidade, 
+            criador_id,
+            created_at
+          `);
 
-        // No futuro, substitua por chamada à API
-        // const response = await fetch('/api/grupos-estudo');
-        // const data = await response.json();
-        // setGruposEstudo(data);
+        if (error) {
+          console.error("Erro ao buscar grupos do banco de dados:", error);
+          return;
+        }
 
-        // Dados de exemplo - simulação para demonstrar filtragem por tópico
-        const gruposExemplo = [
-          {
-            id: "grupo-1",
-            nome: "Grupo de Matemática Avançada",
-            cor: "#FF6B00",
-            membros: 8,
-            topico: "1", // ID correspondente ao tópico Matemática
-            disciplina: "Matématica",
-            icon: "📊",
-            tendencia: "alta",
-            novoConteudo: true,
-            dataCriacao: new Date().toISOString(),
-            criador: "Ana Silva"
-          },
-          {
-            id: "grupo-2",
-            nome: "Linguagem e Literatura",
-            cor: "#9333EA",
-            membros: 12,
-            topico: "2", // ID correspondente ao tópico Língua Portuguesa
-            disciplina: "Lingua Portuguesa",
-            icon: "📝",
-            tendencia: "estável",
-            novoConteudo: false,
-            dataCriacao: new Date().toISOString(),
-            criador: "Carlos Oliveira"
-          },
-          {
-            id: "grupo-3",
-            nome: "Física Quântica",
-            cor: "#4F46E5",
-            membros: 6,
-            topico: "3", // ID correspondente ao tópico Física
-            disciplina: "Física",
-            icon: "⚛️",
-            tendencia: "alta",
-            novoConteudo: true,
-            dataCriacao: new Date().toISOString(),
-            criador: "Mariana Costa"
-          },
-          {
-            id: "grupo-4",
-            nome: "Química Orgânica",
-            cor: "#10B981",
-            membros: 5,
-            topico: "4", // ID correspondente ao tópico Química
-            disciplina: "Química",
-            icon: "🧪",
-            tendencia: "baixa",
-            novoConteudo: false,
-            dataCriacao: new Date().toISOString(),
-            criador: "João Paulo"
-          },
-          {
-            id: "grupo-5",
-            nome: "Biologia Celular",
-            cor: "#16A34A",
-            membros: 7,
-            topico: "5", // ID correspondente ao tópico Biologia
-            disciplina: "Biologia",
-            icon: "🌿",
-            tendencia: "alta",
-            novoConteudo: true,
-            dataCriacao: new Date().toISOString(),
-            criador: "Fernanda Lima"
-          }
-        ];
+        if (grupos && grupos.length > 0) {
+          console.log("Grupos encontrados no banco de dados:", grupos);
+          
+          // Converter dados para o formato esperado pelo componente
+          const gruposFormatados = await Promise.all(grupos.map(async (grupo) => {
+            // Buscar quantidade de membros para cada grupo
+            const { count, error: countError } = await supabase
+              .from('grupos_estudo_membros')
+              .select('*', { count: 'exact', head: true })
+              .eq('grupo_id', grupo.id);
+            
+            if (countError) {
+              console.error("Erro ao contar membros:", countError);
+            }
 
-        setGruposEstudo(gruposExemplo);
+            // Buscar informações do criador
+            const { data: criadorData, error: criadorError } = await supabase
+              .from('profiles')
+              .select('display_name')
+              .eq('id', grupo.criador_id)
+              .single();
+            
+            return {
+              id: grupo.id,
+              nome: grupo.nome,
+              cor: grupo.cor || "#FF6B00",
+              membros: count || 1,
+              topico: grupo.topico?.toString() || "",
+              disciplina: grupo.topico_nome || "",
+              icon: grupo.topico_icon || "📚",
+              tendencia: Math.random() > 0.5 ? "alta" : "estável", // Simulado por enquanto
+              novoConteudo: Math.random() > 0.6, // Simulado por enquanto
+              dataCriacao: grupo.created_at,
+              criador: criadorData?.display_name || "Usuário"
+            };
+          }));
+          
+          setGruposEstudo(gruposFormatados);
+        } else {
+          console.log("Nenhum grupo encontrado, usando exemplos");
+          
+          // Usar dados de exemplo se nenhum grupo for encontrado
+          const gruposExemplo = [
+            {
+              id: "grupo-exemplo-1",
+              nome: "Crie seu primeiro grupo!",
+              cor: "#FF6B00",
+              membros: 0,
+              topico: "1",
+              disciplina: "Matemática",
+              icon: "🚀",
+              tendencia: "alta",
+              novoConteudo: true,
+              dataCriacao: new Date().toISOString(),
+              criador: "Sistema"
+            }
+          ];
+          
+          setGruposEstudo(gruposExemplo);
+        }
       } catch (error) {
         console.error("Erro ao carregar grupos de estudo:", error);
       } finally {
@@ -148,7 +152,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
     };
 
     carregarGrupos();
-  }, []);
+  }, [selectedTopic]);
 
   // Filtrar grupos baseado no tópico selecionado e busca
   const gruposFiltrados = gruposEstudo.filter(
@@ -193,35 +197,37 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
     setShowCreateGroupModal(true);
   };
 
-  // Função para processar a criação de um novo grupo
-  const handleCreateGroup = (formData: any) => {
-    // Aqui você implementará a lógica para criar um novo grupo
-    console.log("Criando novo grupo:", formData);
+  const router = useRouter();
 
-    // Exemplo de como adicionar o novo grupo à lista (a ser implementado com dados reais)
-    // Incluiria integração com banco de dados na versão final
+  // Função para processar a criação de um novo grupo
+  const handleCreateGroup = async (formData: any) => {
+    console.log("Grupo criado com sucesso:", formData);
+    
+    // Adicionar o novo grupo à lista local para atualização imediata da UI
     const novoGrupo: GrupoEstudo = {
-      id: `grupo-${Date.now()}`,
+      id: formData.id || `grupo-${Date.now()}`,
       nome: formData.nome,
       cor: formData.cor || "#FF6B00",
-      membros: formData.amigos ? formData.amigos.length + 1 : 1, // Criador + amigos convidados
+      membros: formData.amigos ? formData.amigos.length + 1 : 1,
       dataCriacao: new Date().toISOString(),
-      topico: formData.topico ? formData.topico.toString() : undefined, // Armazenamos como string para manter compatibilidade 
-      disciplina: formData.topicoNome || undefined,
-      icon: formData.topicoIcon || undefined,
-      tendencia: Math.random() > 0.7 ? "alta" : undefined, // Simula tendência aleatória
-      novoConteudo: Math.random() > 0.7, // Simula conteúdo novo aleatório
-      privado: formData.privado,
-      visibilidade: formData.visibilidade,
-      criador: "Você",
-      // Outros campos baseados no formulário
+      topico: formData.topico ? formData.topico.toString() : "",
+      disciplina: formData.topicoNome || "Geral",
+      icon: formData.topicoIcon || "📚",
+      tendencia: "alta",
+      novoConteudo: true,
+      criador: "Você"
     };
 
-    // Log para verificar a criação do grupo com as informações de tópico
-    console.log(`Grupo criado com topico=${novoGrupo.topico}, disciplina=${novoGrupo.disciplina}`);
-
+    // Atualizar a lista de grupos
     setGruposEstudo(prev => [...prev, novoGrupo]);
+    
+    // Fechar o modal
     setShowCreateGroupModal(false);
+    
+    // Recarregar a lista de grupos para garantir que temos os dados mais recentes
+    setTimeout(() => {
+      window.location.reload();
+    }, 500);
   };
 
   return (
