@@ -75,22 +75,35 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
 
       if (container && scrollLeftBtn && scrollRightBtn) {
         const maxScrollLeft = container.scrollWidth - container.clientWidth;
-
+        
+        // Calcular se existem mais de 8 cards no total para mostrar botão direito
+        const hasMoreThanEightCards = topicosEstudo.length > 8;
+        
         // Mostra o botão esquerdo se a rolagem for maior que zero
-        if (container.scrollLeft > 0) {
+        if (container.scrollLeft > 10) { // Usando 10px como threshold para evitar bugs visuais
           scrollLeftBtn.classList.remove('opacity-0', 'pointer-events-none');
         } else {
           scrollLeftBtn.classList.add('opacity-0', 'pointer-events-none');
         }
 
         // Mostra o botão direito se ainda houver conteúdo para rolar
-        if (container.scrollLeft < maxScrollLeft) {
-          scrollRightBtn.classList.remove('opacity-0');
+        if (container.scrollLeft < maxScrollLeft - 10 && hasMoreThanEightCards) {
+          scrollRightBtn.classList.remove('opacity-0', 'pointer-events-none');
         } else {
-          scrollRightBtn.classList.add('opacity-0');
+          scrollRightBtn.classList.add('opacity-0', 'pointer-events-none');
+        }
+        
+        // Inicializa a verificação na carga da página
+        if (maxScrollLeft <= 0 || !hasMoreThanEightCards) {
+          scrollRightBtn.classList.add('opacity-0', 'pointer-events-none');
         }
       }
     };
+    
+    // Verificar posição na montagem do componente
+    useEffect(() => {
+      setTimeout(() => checkScrollPosition(), 500);
+    }, []);
 
   // Conteúdo condicional baseado na interface selecionada
   const renderConteudoInterface = () => {
@@ -437,12 +450,16 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                   onClick={() => {
                     const container = document.getElementById('topicos-container');
                     if (container) {
-                      container.scrollBy({ left: -300, behavior: 'smooth' });
+                      // Rolar para trás 8 cards completos
+                      const cardWidth = 44; // Largura do card
+                      const gap = 16; // Gap entre cards (1rem = 16px)
+                      const scrollDistance = 8 * (cardWidth + gap); // 8 cards completos
+                      container.scrollBy({ left: -scrollDistance, behavior: 'smooth' });
                       // Exibir/ocultar botões após a rolagem
                       setTimeout(() => checkScrollPosition(), 300);
                     }
                   }}
-                  className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-gradient-to-r from-[#070e1a] to-transparent pr-8 pl-2 h-10 flex items-center justify-center text-white/80 hover:text-white rounded-r-lg transition-all duration-300 opacity-0 pointer-events-none"
+                  className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-gradient-to-r from-[#070e1a] to-transparent pr-8 pl-2 h-10 flex items-center justify-center text-white/80 hover:text-white rounded-r-lg transition-all duration-300 opacity-0 pointer-events-none shadow-xl"
                   aria-label="Rolar para a esquerda"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
@@ -453,14 +470,16 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                 {/* Container com rolagem horizontal */}
                 <div 
                   id="topicos-container"
-                  className="flex overflow-x-auto pb-4 pt-2 hide-scrollbar gap-4 scroll-smooth snap-x"
+                  className="flex overflow-x-auto pb-4 pt-2 hide-scrollbar gap-4 scroll-smooth snap-x px-1"
                   style={{ 
                     scrollbarWidth: 'none', 
                     msOverflowStyle: 'none',
-                    maxWidth: 'calc(44rem)', // Largura fixa para comportar 8 cards de tamanho médio
+                    maxWidth: 'calc(8 * (44px + 1rem))', // Largura exata para 8 cards (44px cada) + gap de 1rem
                     margin: '0 auto',
                     scrollSnapType: 'x mandatory',
-                    position: 'relative'
+                    position: 'relative',
+                    paddingLeft: '4px',
+                    paddingRight: '4px'
                   }}
                   onScroll={() => checkScrollPosition()}
                 >
@@ -619,8 +638,10 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                   onClick={() => {
                     const container = document.getElementById('topicos-container');
                     if (container) {
-                      // Rolar para frente 4 cards (metade da visualização visível)
-                      const scrollDistance = 4 * (44 + 16); // 4 cards * (largura do card + gap)
+                      // Rolar para frente 8 cards completos
+                      const cardWidth = 44; // Largura do card
+                      const gap = 16; // Gap entre cards (1rem = 16px)
+                      const scrollDistance = 8 * (cardWidth + gap); // 8 cards completos
                       container.scrollBy({ left: scrollDistance, behavior: 'smooth' });
                       // Exibir/ocultar botões após a rolagem
                       setTimeout(() => checkScrollPosition(), 300);

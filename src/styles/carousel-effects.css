@@ -14,18 +14,38 @@ body::-webkit-scrollbar-track,
   scroll-behavior: smooth;
 }
 
+/* Cards com snap para alinhamento perfeito */
+#topicos-container > div {
+  scroll-snap-align: start;
+  flex: 0 0 auto;
+  width: 44px; /* Garante tamanho fixo para os cards */
+}
+
+/* Configurações responsivas para diferentes tamanhos de tela */
 @media (max-width: 640px) {
-  /* Em telas pequenas, mostrar menos cards */
+  /* Em telas pequenas, mostrar 4 cards */
   #topicos-container {
-    max-width: calc(32rem) !important;
+    max-width: calc(4 * (44px + 1rem)) !important;
   }
 }
 
-@media (min-width: 1280px) {
-  /* Em telas grandes, manter a largura adequada */
+@media (min-width: 641px) and (max-width: 1023px) {
+  /* Em telas médias, mostrar 6 cards */
   #topicos-container {
-    max-width: calc(44rem) !important;
+    max-width: calc(6 * (44px + 1rem)) !important;
   }
+}
+
+@media (min-width: 1024px) {
+  /* Em telas grandes, mostrar 8 cards */
+  #topicos-container {
+    max-width: calc(8 * (44px + 1rem)) !important;
+  }
+}
+
+/* Garante que o container sempre mostre o número correto de cards sem cortar */
+#topicos-container {
+  scroll-padding: 0 16px;
 }
 
 /* Animation para o botão de scroll */
