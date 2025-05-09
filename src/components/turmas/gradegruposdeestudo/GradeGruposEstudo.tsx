@@ -227,12 +227,12 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
 
       // Exibir feedback de sucesso
       alert("Grupo criado com sucesso!");
-      
+
       // Atualizar a visualização
       setTimeout(() => {
         console.log("Atualizando lista de grupos...");
       }, 500);
-      
+
     } catch (error) {
       console.error("Erro ao processar criação do grupo:", error);
       alert("Erro ao criar grupo: " + (error instanceof Error ? error.message : "Erro desconhecido"));

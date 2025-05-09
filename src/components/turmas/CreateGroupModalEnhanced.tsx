@@ -216,6 +216,18 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
       });
 
       try {
+        // Verificar se a tabela existe - evita erro de tabela não encontrada
+        const { error: tableCheckError } = await supabase
+          .from('grupos_estudo')
+          .select('id')
+          .limit(1);
+          
+        if (tableCheckError) {
+          console.error('Erro ao verificar tabela grupos_estudo:', tableCheckError);
+          alert('Erro ao criar grupo: A estrutura do banco de dados pode não estar correta');
+          return;
+        }
+          
         // Preparar os dados para inserção
         const grupoData = {
           nome: formData.nome,
@@ -241,8 +253,18 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
 
         if (error) {
           console.error('Erro ao criar grupo:', error);
+          let errorDetails = '';
+          
+          // Extrair mais informações sobre o erro
+          if (error.code) {
+            errorDetails += ` (código: ${error.code})`;
+          }
+          if (error.hint) {
+            errorDetails += ` - Sugestão: ${error.hint}`;
+          }
+          
           const errorMsg = error.message || error.details || 'Erro desconhecido';
-          alert('Erro ao criar grupo: ' + errorMsg);
+          alert('Erro ao criar grupo: ' + errorMsg + errorDetails);
           return;
         }
 
@@ -254,6 +276,17 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
 
         console.log("Grupo criado com sucesso:", grupo);
 
+        // Verificar se a tabela existe - evita erro de tabela não encontrada
+        const { error: tableCheckError } = await supabase
+          .from('grupos_estudo_membros')
+          .select('id')
+          .limit(1);
+          
+        if (tableCheckError) {
+          console.error('Erro ao verificar tabela grupos_estudo_membros:', tableCheckError);
+          console.log('O grupo foi criado, mas pode haver problemas ao adicionar membros');
+        }
+        
         // Adicionar o criador como administrador do grupo
         const { error: membroError } = await supabase
           .from('grupos_estudo_membros')
@@ -266,7 +299,22 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
         if (membroError) {
           console.error('Erro ao adicionar criador como membro:', membroError);
           console.log('Detalhes do erro:', membroError.message, membroError.details);
-          // Continuar mesmo com erro, pois o grupo já foi criado
+          // Tentar adicionar o usuário novamente com um pequeno atraso
+          setTimeout(async () => {
+            const { error: retryError } = await supabase
+              .from('grupos_estudo_membros')
+              .insert({
+                grupo_id: grupo.id,
+                user_id: user.id,
+                tipo: 'administrador'
+              });
+              
+            if (retryError) {
+              console.error('Erro na segunda tentativa de adicionar criador:', retryError);
+            } else {
+              console.log('Criador adicionado como membro administrador na segunda tentativa');
+            }
+          }, 500);
         } else {
           console.log('Criador adicionado como membro administrador com sucesso');
         }
@@ -274,19 +322,45 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
         // Adicionar amigos selecionados como membros
         if (formData.amigos && formData.amigos.length > 0) {
           try {
-            const membros = formData.amigos.map(amigoId => ({
-              grupo_id: grupo.id,
-              user_id: amigoId,
-              tipo: 'membro'
-            }));
+            // Para evitar erros de "FOREIGN KEY constraint failed", adicionar um por um
+            let amigosAdicionados = 0;
+            for (const amigoId of formData.amigos) {
+              const { error: amigoError } = await supabase
+                .from('grupos_estudo_membros')
+                .insert({
+                  grupo_id: grupo.id,
+                  user_id: amigoId,
+                  tipo: 'membro'
+                });
+                
+              if (!amigoError) {
+                amigosAdicionados++;
+              } else {
+                console.error(`Erro ao adicionar amigo ID ${amigoId}:`, amigoError);
+              }
+            }
+            
+            console.log(`${amigosAdicionados} de ${formData.amigos.length} amigos adicionados com sucesso`);
+            
+            // Se nenhum amigo foi adicionado com sucesso, tentar método alternativo
+            if (amigosAdicionados === 0 && formData.amigos.length > 0) {
+              console.log("Tentando método alternativo para adicionar amigos...");
+              
+              const membros = formData.amigos.map(amigoId => ({
+                grupo_id: grupo.id,
+                user_id: amigoId,
+                tipo: 'membro'
+              }));
 
-            const { error: amigosError } = await supabase
-              .from('grupos_estudo_membros')
-              .insert(membros);
+              const { error: amigosError } = await supabase
+                .from('grupos_estudo_membros')
+                .insert(membros);
 
-            if (amigosError) {
-              console.error('Erro ao adicionar amigos:', amigosError);
-              // Continuar mesmo com erro, pois o grupo já foi criado
+              if (amigosError) {
+                console.error('Erro ao adicionar amigos (método alternativo):', amigosError);
+              } else {
+                console.log("Amigos adicionados com sucesso usando método alternativo");
+              }
             }
           } catch (addMembersError) {
             console.error('Exceção ao adicionar amigos:', addMembersError);
