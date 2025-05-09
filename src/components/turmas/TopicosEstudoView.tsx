@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import GradeGruposEstudo from "./gradegruposdeestudo/GradeGruposEstudo";
 
 interface TopicosEstudoViewProps {
   className?: string;
@@ -637,14 +636,7 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                 </button>
               </div>
               
-              {/* Componente de grade de grupos de estudo */}
-              <div className="mt-6">
-                {/* Importar o componente de grade de grupos */}
-                <GradeGruposEstudo 
-                  selectedTopic={selectedTopic}
-                  topicosEstudo={topicosEstudo}
-                />
-              </div>
+              {/* Componente de grade de grupos foi removido conforme solicitado */}
             </motion.div>
           )}
 
