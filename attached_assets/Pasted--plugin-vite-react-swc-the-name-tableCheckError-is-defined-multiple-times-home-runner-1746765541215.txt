@@ -1,0 +1,75 @@
+[plugin:vite:react-swc] × the name `tableCheckError` is defined multiple times
+     ╭─[/home/runner/workspace/src/components/turmas/CreateGroupModalEnhanced.tsx:217:1]
+ 217 │ 
+ 218 │       try {
+ 219 │         // Verificar se a tabela existe - evita erro de tabela não encontrada
+ 220 │         const { error: tableCheckError } = await supabase
+     ·                        ───────┬───────
+     ·                               ╰── previous definition of `tableCheckError` here
+ 221 │           .from('grupos_estudo')
+ 222 │           .select('id')
+ 223 │           .limit(1);
+ 224 │           
+ 225 │         if (tableCheckError) {
+ 226 │           console.error('Erro ao verificar tabela grupos_estudo:', tableCheckError);
+ 227 │           alert('Erro ao criar grupo: A estrutura do banco de dados pode não estar correta');
+ 228 │           return;
+ 229 │         }
+ 230 │           
+ 231 │         // Preparar os dados para inserção
+ 232 │         const grupoData = {
+ 233 │           nome: formData.nome,
+ 234 │           descricao: formData.descricao || '',
+ 235 │           topico: formData.topico || '',
+ 236 │           topico_nome: formData.topicoNome || '',
+ 237 │           topico_icon: formData.topicoIcon || '',
+ 238 │           cor: formData.cor || '#FF6B00',
+ 239 │           codigo: codigo,
+ 240 │           privado: formData.privado || false,
+ 241 │           visibilidade: formData.visibilidade || 'todos',
+ 242 │           criador_id: user.id
+ 243 │         };
+ 244 │         
+ 245 │         console.log("Dados preparados para inserção:", grupoData);
+ 246 │         
+ 247 │         // Inserir novo grupo no banco de dados
+ 248 │         const { data: grupo, error } = await supabase
+ 249 │           .from('grupos_estudo')
+ 250 │           .insert(grupoData)
+ 251 │           .select()
+ 252 │           .single();
+ 253 │ 
+ 254 │         if (error) {
+ 255 │           console.error('Erro ao criar grupo:', error);
+ 256 │           let errorDetails = '';
+ 257 │           
+ 258 │           // Extrair mais informações sobre o erro
+ 259 │           if (error.code) {
+ 260 │             errorDetails += ` (código: ${error.code})`;
+ 261 │           }
+ 262 │           if (error.hint) {
+ 263 │             errorDetails += ` - Sugestão: ${error.hint}`;
+ 264 │           }
+ 265 │           
+ 266 │           const errorMsg = error.message || error.details || 'Erro desconhecido';
+ 267 │           alert('Erro ao criar grupo: ' + errorMsg + errorDetails);
+ 268 │           return;
+ 269 │         }
+ 270 │ 
+ 271 │         if (!grupo) {
+ 272 │           console.error('Grupo não foi criado corretamente');
+ 273 │           alert('Erro ao criar grupo: Os dados não foram salvos corretamente');
+ 274 │           return;
+ 275 │         }
+ 276 │ 
+ 277 │         console.log("Grupo criado com sucesso:", grupo);
+ 278 │ 
+ 279 │         // Verificar se a tabela existe - evita erro de tabela não encontrada
+ 280 │         const { error: tableCheckError } = await supabase
+     ·                        ───────┬───────
+     ·                               ╰── `tableCheckError` redefined here
+ 281 │           .from('grupos_estudo_membros')
+ 282 │           .select('id')
+ 283 │           .limit(1);
+     ╰────
+/home/runner/workspace/src/components/turmas/CreateGroupModalEnhanced.tsx:217:1
