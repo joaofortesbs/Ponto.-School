@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Search, Filter, Sparkles, BookOpen, Users, TrendingUp, ChevronRight, Plus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -69,30 +70,30 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
     return () => clearInterval(interval);
   }, []);
 
-    // Função para verificar a posição de rolagem e mostrar/ocultar os botões
-    const checkScrollPosition = () => {
-      const container = document.getElementById('topicos-container');
-      const scrollLeftBtn = document.getElementById('scroll-left-btn');
-      const scrollRightBtn = document.getElementById('scroll-right-btn');
+  // Função para verificar a posição de rolagem e mostrar/ocultar os botões
+  const checkScrollPosition = () => {
+    const container = document.getElementById('topicos-container');
+    const scrollLeftBtn = document.getElementById('scroll-left-btn');
+    const scrollRightBtn = document.getElementById('scroll-right-btn');
 
-      if (container && scrollLeftBtn && scrollRightBtn) {
-        const maxScrollLeft = container.scrollWidth - container.clientWidth;
+    if (container && scrollLeftBtn && scrollRightBtn) {
+      const maxScrollLeft = container.scrollWidth - container.clientWidth;
 
-        // Mostra o botão esquerdo se a rolagem for maior que zero
-        if (container.scrollLeft > 0) {
-          scrollLeftBtn.classList.remove('opacity-0', 'pointer-events-none');
-        } else {
-          scrollLeftBtn.classList.add('opacity-0', 'pointer-events-none');
-        }
-
-        // Mostra o botão direito se ainda houver conteúdo para rolar
-        if (container.scrollLeft < maxScrollLeft) {
-          scrollRightBtn.classList.remove('opacity-0');
-        } else {
-          scrollRightBtn.classList.add('opacity-0');
-        }
+      // Mostra o botão esquerdo se a rolagem for maior que zero
+      if (container.scrollLeft > 0) {
+        scrollLeftBtn.classList.remove('opacity-0', 'pointer-events-none');
+      } else {
+        scrollLeftBtn.classList.add('opacity-0', 'pointer-events-none');
       }
-    };
+
+      // Mostra o botão direito se ainda houver conteúdo para rolar
+      if (container.scrollLeft < maxScrollLeft) {
+        scrollRightBtn.classList.remove('opacity-0');
+      } else {
+        scrollRightBtn.classList.add('opacity-0');
+      }
+    }
+  };
 
   // Conteúdo condicional baseado na interface selecionada
   const renderConteudoInterface = () => {
@@ -151,8 +152,6 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                     <ChevronRight className="h-5 w-5" />
                   </Button>
                 </div>
-
-
               </motion.div>
             ))}
           </div>
@@ -301,31 +300,6 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
           gradeElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
       }, 100);
-    }
-  };
-
-  // Função para verificar a posição de rolagem e mostrar/ocultar os botões
-  const checkScrollPosition = () => {
-    const container = document.getElementById('topicos-container');
-    const scrollLeftBtn = document.getElementById('scroll-left-btn');
-    const scrollRightBtn = document.getElementById('scroll-right-btn');
-
-    if (container && scrollLeftBtn && scrollRightBtn) {
-      const maxScrollLeft = container.scrollWidth - container.clientWidth;
-
-      // Mostra o botão esquerdo se a rolagem for maior que zero
-      if (container.scrollLeft > 0) {
-        scrollLeftBtn.classList.remove('opacity-0', 'pointer-events-none');
-      } else {
-        scrollLeftBtn.classList.add('opacity-0', 'pointer-events-none');
-      }
-
-      // Mostra o botão direito se ainda houver conteúdo para rolar
-      if (container.scrollLeft < maxScrollLeft) {
-        scrollRightBtn.classList.remove('opacity-0');
-      } else {
-        scrollRightBtn.classList.add('opacity-0');
-      }
     }
   };
 
@@ -567,7 +541,6 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
 
                       {/* Indicador de novidade redesenhado */}
                       {topico.novoConteudo && (
-                        ```tool_code
                         <div className="absolute top-3 right-3 z-20">
                           <div className="relative">
                             <div className="absolute -inset-0.5 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-full opacity-75 blur-sm animate-pulse"></div>
