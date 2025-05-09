@@ -183,7 +183,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
     try {
       // Obter o usuário atual
       const { data: { user } } = await supabase.auth.getUser();
-      
+
       if (!user) {
         console.error("Usuário não autenticado");
         return;
@@ -535,7 +535,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
                                         >
                                           <span>{topic.icon}</span>
                                         </div>
-                                        <span className="font-medium">{topic.name}</span>
+                                        <span className="font-medium text-gray-800 dark:text-gray-200">{topic.name}</span>
                                       </div>
                                     ))
                                   ) : (
@@ -761,7 +761,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
           </motion.div>
         </div>
       )}
-    </AnimatePresence>
+        </AnimatePresence>
   );
 };
 
