@@ -103,6 +103,15 @@ const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className
       );
     }
 
+    // Filtrar por tópico selecionado
+    if (selectedFilter && selectedFilter !== "todos") {
+      filtered = filtered.filter(
+        (grupo) => 
+          grupo.materia.toLowerCase() === selectedFilter.toLowerCase() ||
+          grupo.tags.some(tag => tag.toLowerCase() === selectedFilter.toLowerCase())
+      );
+    }
+
     setDisplayedGroups(filtered);
   }, [searchTerm, selectedFilter]);
 
@@ -154,7 +163,19 @@ const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className
       </div>
 
       {/* Seção de tópicos */}
-      <div className="flex flex-wrap gap-2 mt-4">
+      <div className="flex flex-wrap gap-2 mt-4 pb-2 overflow-x-auto max-h-36">
+        <Button
+          variant="outline"
+          size="sm"
+          className={`text-xs border-[#FF6B00]/10 dark:border-[#FF6B00]/20 hover:bg-[#FF6B00]/10 hover:text-[#FF6B00] ${
+            selectedFilter === "todos"
+              ? "bg-[#FF6B00]/10 text-[#FF6B00] border-[#FF6B00]"
+              : "text-gray-600 dark:text-gray-400"
+          }`}
+          onClick={() => setSelectedFilter("todos")}
+        >
+          Todos
+        </Button>
         {topicos.map((topico, index) => (
           <Button
             key={index}
