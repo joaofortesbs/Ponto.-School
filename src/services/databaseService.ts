@@ -452,3 +452,186 @@ export const getFeedbacksByResponseId = async (responseId: string): Promise<Feed
     timestamp: item.timestamp,
   }));
 };
+
+// Tipos para grupos de estudo
+export interface GrupoEstudoUsuario {
+  id: string;
+  userId: string;
+  nome: string;
+  topico: string;
+  disciplina: string;
+  descricao?: string;
+  membros: number;
+  proximaReuniao?: string;
+  progresso: number;
+  nivel: string;
+  imagem: string;
+  tags?: string[];
+  dataInicio: string;
+  createdAt: string;
+}
+
+// Funções para grupos de estudo
+export const createGrupoEstudo = async (
+  grupoData: Omit<GrupoEstudoUsuario, "id" | "createdAt">
+): Promise<GrupoEstudoUsuario | null> => {
+  try {
+    const { data, error } = await supabase
+      .from("grupos_estudo")
+      .insert({
+        user_id: grupoData.userId,
+        nome: grupoData.nome,
+        topico: grupoData.topico,
+        disciplina: grupoData.disciplina,
+        descricao: grupoData.descricao,
+        membros: grupoData.membros,
+        proxima_reuniao: grupoData.proximaReuniao,
+        progresso: grupoData.progresso,
+        nivel: grupoData.nivel,
+        imagem: grupoData.imagem,
+        tags: grupoData.tags,
+        data_inicio: grupoData.dataInicio,
+        created_at: new Date().toISOString(),
+      })
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Erro ao criar grupo de estudo:', error);
+      return null;
+    }
+    
+    if (!data) return null;
+    
+    return {
+      id: data.id,
+      userId: data.user_id,
+      nome: data.nome,
+      topico: data.topico,
+      disciplina: data.disciplina,
+      descricao: data.descricao,
+      membros: data.membros,
+      proximaReuniao: data.proxima_reuniao,
+      progresso: data.progresso,
+      nivel: data.nivel,
+      imagem: data.imagem,
+      tags: data.tags,
+      dataInicio: data.data_inicio,
+      createdAt: data.created_at,
+    };
+  } catch (error) {
+    console.error('Erro ao criar grupo de estudo:', error);
+    return null;
+  }
+};
+
+export const getGruposEstudoByUserId = async (userId: string): Promise<GrupoEstudoUsuario[]> => {
+  try {
+    const { data, error } = await supabase
+      .from("grupos_estudo")
+      .select("*")
+      .eq("user_id", userId)
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Erro ao buscar grupos de estudo:', error);
+      return [];
+    }
+    
+    if (!data) return [];
+    
+    return data.map(item => ({
+      id: item.id,
+      userId: item.user_id,
+      nome: item.nome,
+      topico: item.topico,
+      disciplina: item.disciplina,
+      descricao: item.descricao,
+      membros: item.membros,
+      proximaReuniao: item.proxima_reuniao,
+      progresso: item.progresso,
+      nivel: item.nivel,
+      imagem: item.imagem,
+      tags: item.tags,
+      dataInicio: item.data_inicio,
+      createdAt: item.created_at,
+    }));
+  } catch (error) {
+    console.error('Erro ao buscar grupos de estudo:', error);
+    return [];
+  }
+};
+
+export const updateGrupoEstudo = async (
+  grupoId: string,
+  grupoData: Partial<Omit<GrupoEstudoUsuario, "id" | "userId" | "createdAt">>
+): Promise<GrupoEstudoUsuario | null> => {
+  try {
+    const updateData: any = {};
+    
+    if (grupoData.nome) updateData.nome = grupoData.nome;
+    if (grupoData.topico) updateData.topico = grupoData.topico;
+    if (grupoData.disciplina) updateData.disciplina = grupoData.disciplina;
+    if (grupoData.descricao !== undefined) updateData.descricao = grupoData.descricao;
+    if (grupoData.membros !== undefined) updateData.membros = grupoData.membros;
+    if (grupoData.proximaReuniao !== undefined) updateData.proxima_reuniao = grupoData.proximaReuniao;
+    if (grupoData.progresso !== undefined) updateData.progresso = grupoData.progresso;
+    if (grupoData.nivel) updateData.nivel = grupoData.nivel;
+    if (grupoData.imagem) updateData.imagem = grupoData.imagem;
+    if (grupoData.tags !== undefined) updateData.tags = grupoData.tags;
+    if (grupoData.dataInicio) updateData.data_inicio = grupoData.dataInicio;
+    
+    const { data, error } = await supabase
+      .from("grupos_estudo")
+      .update(updateData)
+      .eq("id", grupoId)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Erro ao atualizar grupo de estudo:', error);
+      return null;
+    }
+    
+    if (!data) return null;
+    
+    return {
+      id: data.id,
+      userId: data.user_id,
+      nome: data.nome,
+      topico: data.topico,
+      disciplina: data.disciplina,
+      descricao: data.descricao,
+      membros: data.membros,
+      proximaReuniao: data.proxima_reuniao,
+      progresso: data.progresso,
+      nivel: data.nivel,
+      imagem: data.imagem,
+      tags: data.tags,
+      dataInicio: data.data_inicio,
+      createdAt: data.created_at,
+    };
+  } catch (error) {
+    console.error('Erro ao atualizar grupo de estudo:', error);
+    return null;
+  }
+};
+
+export const deleteGrupoEstudo = async (grupoId: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from("grupos_estudo")
+      .delete()
+      .eq("id", grupoId);
+    
+    if (error) {
+      console.error('Erro ao excluir grupo de estudo:', error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Erro ao excluir grupo de estudo:', error);
+    return false;
+  }
+};

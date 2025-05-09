@@ -3,18 +3,35 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import CreateGroupForm from "./CreateGroupForm";
+import { useToast } from "@/components/ui/use-toast";
 
 interface CreateGroupModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (formData: any) => void;
+  onCreateSuccess?: () => void;
 }
 
 const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
   isOpen,
   onClose,
   onSubmit,
+  onCreateSuccess,
 }) => {
+  const { toast } = useToast();
+  
+  const handleFormSubmit = (formData: any) => {
+    onSubmit(formData);
+    
+    // Se houver callback de sucesso, chamá-lo
+    if (onCreateSuccess) {
+      onCreateSuccess();
+    }
+    
+    // Fechar o modal após submissão bem-sucedida
+    onClose();
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -39,7 +56,7 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
             </div>
 
             <div className="p-4 max-h-[80vh] overflow-y-auto">
-              <CreateGroupForm onSubmit={onSubmit} onCancel={onClose} />
+              <CreateGroupForm onSubmit={handleFormSubmit} onCancel={onClose} />
             </div>
           </motion.div>
         </div>
