@@ -216,21 +216,26 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
       });
 
       try {
+        // Preparar os dados para inserção
+        const grupoData = {
+          nome: formData.nome,
+          descricao: formData.descricao || '',
+          topico: formData.topico || '',
+          topico_nome: formData.topicoNome || '',
+          topico_icon: formData.topicoIcon || '',
+          cor: formData.cor || '#FF6B00',
+          codigo: codigo,
+          privado: formData.privado || false,
+          visibilidade: formData.visibilidade || 'todos',
+          criador_id: user.id
+        };
+        
+        console.log("Dados preparados para inserção:", grupoData);
+        
         // Inserir novo grupo no banco de dados
         const { data: grupo, error } = await supabase
           .from('grupos_estudo')
-          .insert({
-            nome: formData.nome,
-            descricao: formData.descricao,
-            topico: formData.topico,
-            topico_nome: formData.topicoNome,
-            topico_icon: formData.topicoIcon,
-            cor: formData.cor,
-            codigo: codigo,
-            privado: formData.privado,
-            visibilidade: formData.visibilidade,
-            criador_id: user.id
-          })
+          .insert(grupoData)
           .select()
           .single();
 
@@ -260,7 +265,10 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
 
         if (membroError) {
           console.error('Erro ao adicionar criador como membro:', membroError);
+          console.log('Detalhes do erro:', membroError.message, membroError.details);
           // Continuar mesmo com erro, pois o grupo já foi criado
+        } else {
+          console.log('Criador adicionado como membro administrador com sucesso');
         }
 
         // Adicionar amigos selecionados como membros
@@ -306,9 +314,18 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
       let errorMessage = 'Ocorreu um erro inesperado';
       
       if (error instanceof Error) {
-        errorMessage = error.message;
+        errorMessage = error.message || 'Erro desconhecido';
       } else if (typeof error === 'object' && error !== null) {
-        errorMessage = JSON.stringify(error);
+        try {
+          errorMessage = JSON.stringify(error) || 'Erro desconhecido';
+        } catch (e) {
+          errorMessage = 'Erro ao processar detalhes do erro';
+        }
+      }
+      
+      // Verificar se o formato da mensagem é adequado para exibição
+      if (errorMessage === '[object Object]' || errorMessage === '{}') {
+        errorMessage = 'Erro desconhecido. Verifique o console para mais detalhes.';
       }
       
       alert('Erro ao criar grupo: ' + errorMessage);
