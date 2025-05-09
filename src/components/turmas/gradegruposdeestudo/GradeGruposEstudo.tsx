@@ -155,37 +155,35 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
   }, [selectedTopic]);
 
   // Filtrar grupos baseado no tópico selecionado e busca
-  const gruposFiltrados = gruposEstudo.filter(
-    (grupo) => {
-      // Verificação de correspondência com a busca
-      const matchesSearch = grupo.nome.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                           (grupo.disciplina?.toLowerCase().includes(searchQuery.toLowerCase()) || false);
+  const gruposFiltrados = gruposEstudo.filter((grupo) => {
+    // Verificação de correspondência com a busca
+    const matchesSearch = grupo.nome.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                        (grupo.disciplina?.toLowerCase().includes(searchQuery.toLowerCase()) || false);
 
-      // Verificação de correspondência com o filtro
-      const currentFilter = internalSelectedFilter;
-      const matchesFilter = !currentFilter || 
-        (currentFilter === "tendencia-alta" && grupo.tendencia === "alta") ||
-        (currentFilter === "novo-conteudo" && grupo.novoConteudo);
+    // Verificação de correspondência com o filtro
+    const currentFilter = internalSelectedFilter;
+    const matchesFilter = !currentFilter ||
+      (currentFilter === "tendencia-alta" && grupo.tendencia === "alta") ||
+      (currentFilter === "novo-conteudo" && grupo.novoConteudo);
 
-      // Lógica aprimorada de filtragem por tópico
-      const selectedTopicName = selectedTopic && topicosEstudo.find(t => t.id === selectedTopic)?.nome.toLowerCase();
+    // Lógica aprimorada de filtragem por tópico
+    const selectedTopicName = selectedTopic && topicosEstudo.find(t => t.id === selectedTopic)?.nome.toLowerCase();
 
-      // Verificação mais precisa:
-      // 1. Se não há tópico selecionado, mostrar todos
-      // 2. Verificar se o ID do tópico do grupo corresponde ao selecionado
-      // 3. Verificar se o nome da disciplina do grupo corresponde ao nome do tópico selecionado
-      const matchesSelectedTopic = !selectedTopic || 
-        (grupo.topico !== undefined && String(selectedTopic) === String(grupo.topico)) ||
-        (grupo.disciplina && selectedTopicName && grupo.disciplina.toLowerCase() === selectedTopicName);
+    // Verificação mais precisa:
+    // 1. Se não há tópico selecionado, mostrar todos
+    // 2. Verificar se o ID do tópico do grupo corresponde ao selecionado
+    // 3. Verificar se o nome da disciplina do grupo corresponde ao nome do tópico selecionado
+    const matchesSelectedTopic = !selectedTopic || 
+      (grupo.topico !== undefined && String(selectedTopic) === String(grupo.topico)) ||
+      (grupo.disciplina && selectedTopicName && grupo.disciplina.toLowerCase() === selectedTopicName);
 
-      // Log para depuração
-      if (selectedTopic && grupo.topico) {
-        console.log(`Comparando tópico do grupo: ${grupo.topico} (${typeof grupo.topico}) com selectedTopic: ${selectedTopic} (${typeof selectedTopic})`);
-      }
-
-      return matchesSearch && matchesFilter && matchesSelectedTopic;
+    // Log para depuração
+    if (selectedTopic && grupo.topico) {
+      console.log(`Comparando tópico do grupo: ${grupo.topico} (${typeof grupo.topico}) com selectedTopic: ${selectedTopic} (${typeof selectedTopic})`);
     }
-  );
+
+    return matchesSearch && matchesFilter && matchesSelectedTopic;
+  });
 
   // Detectar grupos em destaque (com tendência alta e novo conteúdo)
   const isGrupoFeatured = (grupo: GrupoEstudo) => {
@@ -410,316 +408,3 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
 };
 
 export default GradeGruposEstudo;
-```
-
-```text
-Ajustar a comparação de tópicos para funcionar com strings e números
-```
-
-```diff
---- a/src/app/grupos/GradeGruposEstudo.tsx
-+++ b/src/app/grupos/GradeGruposEstudo.tsx
-@@ -158,23 +158,23 @@
-   }, [selectedTopic]);
- 
-   // Filtrar grupos baseado no tópico selecionado e busca
--  const gruposFiltrados = gruposEstudo.filter(
--    (grupo) => {
-+  const gruposFiltrados = gruposEstudo.filter((grupo) => {
-       // Verificação de correspondência com a busca
-       const matchesSearch = grupo.nome.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                            (grupo.disciplina?.toLowerCase().includes(searchQuery.toLowerCase()) || false);
- 
-       // Verificação de correspondência com o filtro
-       const currentFilter = internalSelectedFilter;
--      const matchesFilter = !currentFilter || 
--        (currentFilter === "tendencia-alta" && grupo.tendencia === "alta") ||
--        (currentFilter === "novo-conteudo" && grupo.novoConteudo);
-+    const matchesFilter = !currentFilter ||
-+      (currentFilter === "tendencia-alta" && grupo.tendencia === "alta") ||
-+      (currentFilter === "novo-conteudo" && grupo.novoConteudo);
- 
-       // Lógica aprimorada de filtragem por tópico
-       const selectedTopicName = selectedTopic && topicosEstudo.find(t => t.id === selectedTopic)?.nome.toLowerCase();
- 
--      // Verificação mais precisa:
--      // 1. Se não há tópico selecionado, mostrar todos
-+    // Verificação mais precisa:
-+    // 1. Se não há tópico selecionado, mostrar todos
-       // 2. Verificar se o ID do tópico do grupo corresponde ao selecionado
-       // 3. Verificar se o nome da disciplina do grupo corresponde ao nome do tópico selecionado
-       const matchesSelectedTopic = !selectedTopic || 
-@@ -190,9 +190,7 @@
-       return matchesSearch && matchesFilter && matchesSelectedTopic;
-     }
-   );
--
--  // Detectar grupos em destaque (com tendência alta e novo conteúdo)
--  const isGrupoFeatured = (grupo: GrupoEstudo) => {
-+    // Detectar grupos em destaque (com tendência alta e novo conteúdo)
-+    const isGrupoFeatured = (grupo: GrupoEstudo) => {
-     return grupo.tendencia === "alta" && grupo.novoConteudo === true;
-   };
-```
-
-```text
-Replace
-<old_str>
-// Filtrar grupos de acordo com os critérios de pesquisa e filtro
-    const filteredGrupos = gruposEstudo.filter(
-      (grupo: GrupoEstudo) => {
-        // Verificar se corresponde ao termo de pesquisa
-        const matchesSearch = !searchTerm || 
-          grupo.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          grupo.disciplina.toLowerCase().includes(searchTerm.toLowerCase());
-
-        // Verificar se corresponde ao filtro
-        const matchesFilter = activeFilter === 'todos' || 
-          grupo.tendencia === activeFilter ||
-          (activeFilter === 'favoritos' && grupo.favorito);
-
-        // Verificar se corresponde ao tópico selecionado
-        const matchesSelectedTopic = !selectedTopic || 
-          grupo.topico === selectedTopic;
-
-        // Log para depuração
-        if (selectedTopic && grupo.topico) {
-          console.log(`Comparando tópico do grupo: ${grupo.topico} (${typeof grupo.topico}) com selectedTopic: ${selectedTopic} (${typeof selectedTopic})`);
-        }
-
-        return matchesSearch && matchesFilter && matchesSelectedTopic;
-      }
-    );
-</old_str>
-with
-<new_str>
-// Filtrar grupos de acordo com os critérios de pesquisa e filtro
-    const filteredGrupos = gruposEstudo.filter(
-      (grupo: GrupoEstudo) => {
-        // Verificar se corresponde ao termo de pesquisa
-        const matchesSearch = !searchTerm || 
-          grupo.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          grupo.disciplina.toLowerCase().includes(searchTerm.toLowerCase());
-
-        // Verificar se corresponde ao filtro
-        const matchesFilter = activeFilter === 'todos' || 
-          grupo.tendencia === activeFilter ||
-          (activeFilter === 'favoritos' && grupo.favorito);
-
-        // Verificar se corresponde ao tópico selecionado
-        // Convertemos ambos para string para garantir a comparação correta
-        const grupoTopico = String(grupo.topico);
-        const selectedTopicStr = String(selectedTopic);
-        const matchesSelectedTopic = !selectedTopic || 
-          grupoTopico === selectedTopicStr;
-
-        // Log para depuração
-        if (selectedTopic && grupo.topico) {
-          console.log(`Comparando tópico do grupo: ${grupoTopico} (string) com selectedTopic: ${selectedTopicStr} (string)`);
-        }
-
-        return matchesSearch && matchesFilter && matchesSelectedTopic;
-      }
-    );
-</new_str>
-```
-
-```text
-const filteredGrupos = gruposEstudo.filter(
-      (grupo: GrupoEstudo) => {
-        // Verificar se corresponde ao termo de pesquisa
-        const matchesSearch = !searchTerm || 
-          grupo.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          grupo.disciplina.toLowerCase().includes(searchTerm.toLowerCase());
-
-        // Verificar se corresponde ao filtro
-        const matchesFilter = activeFilter === 'todos' || 
-          grupo.tendencia === activeFilter ||
-          (activeFilter === 'favoritos' && grupo.favorito);
-
-        // Verificar se corresponde ao tópico selecionado
-        const matchesSelectedTopic = !selectedTopic || 
-          grupo.topico === selectedTopic;
-
-        // Log para depuração
-        if (selectedTopic && grupo.topico) {
-          console.log(`Comparando tópico do grupo: ${grupo.topico} (${typeof grupo.topico}) com selectedTopic: ${selectedTopic} (${typeof selectedTopic})`);
-        }
-
-        return matchesSearch && matchesFilter && matchesSelectedTopic;
-      }
-    );
-```
-
-```text
-const filteredGrupos = gruposEstudo.filter(
-      (grupo: GrupoEstudo) => {
-        // Verificar se corresponde ao termo de pesquisa
-        const matchesSearch = !searchTerm || 
-          grupo.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          grupo.disciplina.toLowerCase().includes(searchTerm.toLowerCase());
-
-        // Verificar se corresponde ao filtro
-        const matchesFilter = activeFilter === 'todos' || 
-          grupo.tendencia === activeFilter ||
-          (activeFilter === 'favoritos' && grupo.favorito);
-
-        // Verificar se corresponde ao tópico selecionado
-        // Convertemos ambos para string para garantir a comparação correta
-        const grupoTopico = String(grupo.topico);
-        const selectedTopicStr = String(selectedTopic);
-        const matchesSelectedTopic = !selectedTopic || 
-          grupoTopico === selectedTopicStr;
-
-        // Log para depuração
-        if (selectedTopic && grupo.topico) {
-          console.log(`Comparando tópico do grupo: ${grupoTopico} (string) com selectedTopic: ${selectedTopicStr} (string)`);
-        }
-
-        return matchesSearch && matchesFilter && matchesSelectedTopic;
-      }
-    );
-```
-
-```text
-Replacing
-<old_str>
-// Filtrar grupos baseado no tópico selecionado e busca
-  const gruposFiltrados = gruposEstudo.filter(
-    (grupo) => {
-      // Verificação de correspondência com a busca
-      const matchesSearch = grupo.nome.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                           (grupo.disciplina?.toLowerCase().includes(searchQuery.toLowerCase()) || false);
-
-      // Verificação de correspondência com o filtro
-      const currentFilter = internalSelectedFilter;
-      const matchesFilter = !currentFilter || 
-        (currentFilter === "tendencia-alta" && grupo.tendencia === "alta") ||
-        (currentFilter === "novo-conteudo" && grupo.novoConteudo);
-
-      // Lógica aprimorada de filtragem por tópico
-      const selectedTopicName = selectedTopic && topicosEstudo.find(t => t.id === selectedTopic)?.nome.toLowerCase();
-
-      // Verificação mais precisa:
-      // 1. Se não há tópico selecionado, mostrar todos
-      // 2. Verificar se o ID do tópico do grupo corresponde ao selecionado
-      // 3. Verificar se o nome da disciplina do grupo corresponde ao nome do tópico selecionado
-      const matchesSelectedTopic = !selectedTopic || 
-        (grupo.topico !== undefined && String(selectedTopic) === String(grupo.topico)) ||
-        (grupo.disciplina && selectedTopicName && grupo.disciplina.toLowerCase() === selectedTopicName);
-
-      // Log para depuração
-      if (selectedTopic && grupo.topico) {
-        console.log(`Comparando tópico do grupo: ${grupo.topico} (${typeof grupo.topico}) com selectedTopic: ${selectedTopic} (${typeof selectedTopic})`);
-      }
-
-      return matchesSearch && matchesFilter && matchesSelectedTopic;
-    }
-  );
-</old_str>
-with
-<new_str>
-// Filtrar grupos baseado no tópico selecionado e busca
-  const gruposFiltrados = gruposEstudo.filter((grupo) => {
-      // Verificação de correspondência com a busca
-      const matchesSearch = grupo.nome.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                           (grupo.disciplina?.toLowerCase().includes(searchQuery.toLowerCase()) || false);
-
-      // Verificação de correspondência com o filtro
-      const currentFilter = internalSelectedFilter;
-    const matchesFilter = !currentFilter ||
-      (currentFilter === "tendencia-alta" && grupo.tendencia === "alta") ||
-      (currentFilter === "novo-conteudo" && grupo.novoConteudo);
-
-      // Lógica aprimorada de filtragem por tópico
-      const selectedTopicName = selectedTopic && topicosEstudo.find(t => t.id === selectedTopic)?.nome.toLowerCase();
-
-    // Verificação mais precisa:
-    // 1. Se não há tópico selecionado, mostrar todos
-      // 2. Verificar se o ID do tópico do grupo corresponde ao selecionado
-      // 3. Verificar se o nome da disciplina do grupo corresponde ao nome do tópico selecionado
-      const matchesSelectedTopic = !selectedTopic || 
-        (grupo.topico !== undefined && String(selectedTopic) === String(grupo.topico)) ||
-        (grupo.disciplina && selectedTopicName && grupo.disciplina.toLowerCase() === selectedTopicName);
-
-      // Log para depuração
-      if (selectedTopic && grupo.topico) {
-        console.log(`Comparando tópico do grupo: ${grupo.topico} (${typeof grupo.topico}) com selectedTopic: ${selectedTopic} (${typeof selectedTopic})`);
-      }
-
-      return matchesSearch && matchesFilter && matchesSelectedTopic;
-    }
-  );
-</new_str>
-```
-
-```text
-// Filtrar grupos baseado no tópico selecionado e busca
-  const gruposFiltrados = gruposEstudo.filter(
-    (grupo) => {
-      // Verificação de correspondência com a busca
-      const matchesSearch = grupo.nome.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                           (grupo.disciplina?.toLowerCase().includes(searchQuery.toLowerCase()) || false);
-
-      // Verificação de correspondência com o filtro
-      const currentFilter = internalSelectedFilter;
-      const matchesFilter = !currentFilter || 
-        (currentFilter === "tendencia-alta" && grupo.tendencia === "alta") ||
-        (currentFilter === "novo-conteudo" && grupo.novoConteudo);
-
-      // Lógica aprimorada de filtragem por tópico
-      const selectedTopicName = selectedTopic && topicosEstudo.find(t => t.id === selectedTopic)?.nome.toLowerCase();
-
-      // Verificação mais precisa:
-      // 1. Se não há tópico selecionado, mostrar todos
-      // 2. Verificar se o ID do tópico do grupo corresponde ao selecionado
-      // 3. Verificar se o nome da disciplina do grupo corresponde ao nome do tópico selecionado
-      const matchesSelectedTopic = !selectedTopic || 
-        (grupo.topico !== undefined && String(selectedTopic) === String(grupo.topico)) ||
-        (grupo.disciplina && selectedTopicName && grupo.disciplina.toLowerCase() === selectedTopicName);
-
-      // Log para depuração
-      if (selectedTopic && grupo.topico) {
-        console.log(`Comparando tópico do grupo: ${grupo.topico} (${typeof grupo.topico}) com selectedTopic: ${selectedTopic} (${typeof selectedTopic})`);
-      }
-
-      return matchesSearch && matchesFilter && matchesSelectedTopic;
-    }
-  );
-```
-
-```text
-// Filtrar grupos baseado no tópico selecionado e busca
-  const gruposFiltrados = gruposEstudo.filter((grupo) => {
-      // Verificação de correspondência com a busca
-      const matchesSearch = grupo.nome.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                           (grupo.disciplina?.toLowerCase().includes(searchQuery.toLowerCase()) || false);
-
-      // Verificação de correspondência com o filtro
-      const currentFilter = internalSelectedFilter;
-    const matchesFilter = !currentFilter ||
-      (currentFilter === "tendencia-alta" && grupo.tendencia === "alta") ||
-      (currentFilter === "novo-conteudo" && grupo.novoConteudo);
-
-      // Lógica aprimorada de filtragem por tópico
-      const selectedTopicName = selectedTopic && topicosEstudo.find(t => t.id === selectedTopic)?.nome.toLowerCase();
-
-    // Verificação mais precisa:
-    // 1. Se não há tópico selecionado, mostrar todos
-      // 2. Verificar se o ID do tópico do grupo corresponde ao selecionado
-      // 3. Verificar se o nome da disciplina do grupo corresponde ao nome do tópico selecionado
-      const matchesSelectedTopic = !selectedTopic || 
-        (grupo.topico !== undefined && String(selectedTopic) === String(grupo.topico)) ||
-        (grupo.disciplina && selectedTopicName && grupo.disciplina.toLowerCase() === selectedTopicName);
-
-      // Log para depuração
-      if (selectedTopic && grupo.topico) {
-        console.log(`Comparando tópico do grupo: ${grupo.topico} (${typeof grupo.topico}) com selectedTopic: ${selectedTopic} (${typeof selectedTopic})`);
-      }
-
-      return matchesSearch && matchesFilter && matchesSelectedTopic;
-    }
-  );
-```
-
-The change snippet is not addressing the root cause.
