@@ -185,6 +185,13 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
 
       if (!user) {
         console.error("Usuário não autenticado");
+        alert("Erro ao criar grupo: Usuário não autenticado. Por favor, faça login novamente.");
+        return;
+      }
+
+      // Validar nome do grupo
+      if (!formData.nome || formData.nome.trim() === '') {
+        alert("Por favor, digite um nome para o grupo.");
         return;
       }
 
@@ -227,7 +234,13 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
 
       if (error) {
         console.error('Erro ao criar grupo:', error);
-        alert('Erro ao criar grupo: ' + error.message);
+        alert('Erro ao criar grupo: ' + (error.message || 'Erro no servidor'));
+        return;
+      }
+
+      if (!grupo) {
+        console.error('Grupo não foi criado corretamente');
+        alert('Erro ao criar grupo: Os dados não foram salvos corretamente');
         return;
       }
 
@@ -244,6 +257,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
 
       if (membroError) {
         console.error('Erro ao adicionar criador como membro:', membroError);
+        // Continuar mesmo com erro, pois o grupo já foi criado
       }
 
       // Adicionar amigos selecionados como membros
@@ -260,6 +274,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
 
         if (amigosError) {
           console.error('Erro ao adicionar amigos:', amigosError);
+          // Continuar mesmo com erro, pois o grupo já foi criado
         }
       }
 
@@ -276,7 +291,8 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
 
     } catch (error) {
       console.error('Erro ao criar grupo:', error);
-      alert('Erro ao criar grupo: ' + (error as Error).message);
+      const errorMessage = error instanceof Error ? error.message : 'Ocorreu um erro inesperado';
+      alert('Erro ao criar grupo: ' + errorMessage);
     }
   };
 

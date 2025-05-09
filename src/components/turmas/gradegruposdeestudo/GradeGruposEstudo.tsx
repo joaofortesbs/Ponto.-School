@@ -198,34 +198,38 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
   const router = useRouter();
 
   // Função para processar a criação de um novo grupo
-  const handleCreateGroup = async (formData: any) => {
-    console.log("Grupo criado com sucesso:", formData);
+  const handleCreateGroup = (formData: any) => {
+    try {
+      // Na implementação real, você salvaria no banco de dados
+      console.log("Novo grupo criado:", formData);
 
-    // Adicionar o novo grupo à lista local para atualização imediata da UI
-    const novoGrupo: GrupoEstudo = {
-      id: formData.id || `grupo-${Date.now()}`,
-      nome: formData.nome,
-      cor: formData.cor || "#FF6B00",
-      membros: formData.amigos ? formData.amigos.length + 1 : 1,
-      dataCriacao: new Date().toISOString(),
-      topico: formData.topico ? formData.topico.toString() : "",
-      disciplina: formData.topicoNome || "Geral",
-      icon: formData.topicoIcon || "📚",
-      tendencia: "alta",
-      novoConteudo: true,
-      criador: "Você"
-    };
+      if (!formData || !formData.nome) {
+        console.error("Dados do grupo inválidos");
+        return;
+      }
 
-    // Atualizar a lista de grupos
-    setGruposEstudo(prev => [...prev, novoGrupo]);
+      // Adicionar o novo grupo à lista
+      const novoGrupo = {
+        id: formData.id || `temp-${Date.now()}`,
+        nome: formData.nome,
+        membros: 1,
+        topico: formData.topico ? formData.topico.toString() : "",
+        cor: formData.cor || "#FF6B00",
+        icon: formData.topicoIcon || "📚",
+        tendencia: "estável",
+        novoConteudo: false,
+        criador: "você",
+        dataCriacao: new Date().toISOString()
+      };
 
-    // Fechar o modal
-    setShowCreateGroupModal(false);
+      setGruposEstudo(prev => [novoGrupo, ...prev]);
+      setIsCreateModalOpen(false);
 
-    // Recarregar a lista de grupos para garantir que temos os dados mais recentes
-    setTimeout(() => {
-      window.location.reload();
-    }, 500);
+      // Exibir feedback de sucesso
+      alert("Grupo criado com sucesso!");
+    } catch (error) {
+      console.error("Erro ao processar criação do grupo:", error);
+    }
   };
 
   return (
