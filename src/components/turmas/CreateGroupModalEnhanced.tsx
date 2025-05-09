@@ -6,9 +6,6 @@ import {
   X, Users, Plus, Key, Lock, BookOpen, Palette, Hash, UserPlus, 
   ChevronDown, Check, Search, BookOpen as BookIcon, Tag, Globe
 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
-import { v4 as uuidv4 } from "uuid";
-import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -104,7 +101,6 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
   onClose,
   onSubmit,
 }) => {
-  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<string>("criar");
   const [formData, setFormData] = useState({
     nome: "",
@@ -164,7 +160,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
   const handleTopicSelect = (topic: any) => {
     setFormData(prev => ({ 
       ...prev, 
-      topico: topic.id,
+      topico: topic.id,  // Este valor será usado para filtragem
       topicoNome: topic.name,
       topicoIcon: topic.icon
     }));
@@ -180,117 +176,12 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
     setFormData(prev => ({ ...prev, visibilidade: value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    try {
-      // Obter o usuário atual
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        toast({
-          title: "Erro",
-          description: "Você precisa estar logado para criar um grupo de estudos.",
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      // Gerar código de acesso aleatório
-      const codigoAcesso = formData.privado ? generateAccessCode() : null;
-      
-      // Criar dados do grupo
-      const grupoData = {
-        id: uuidv4(),
-        nome: formData.nome,
-        descricao: formData.descricao,
-        privado: formData.privado,
-        cor: formData.cor,
-        codigo_acesso: codigoAcesso,
-        topico: formData.topico,
-        topico_nome: formData.topicoNome,
-        topico_icon: formData.topicoIcon,
-        visibilidade: formData.visibilidade,
-        criador_id: user.id,
-        created_at: new Date().toISOString()
-      };
-      
-      // Salvar grupo no Supabase
-      const { error } = await supabase
-        .from('grupos_estudo')
-        .insert(grupoData);
-      
-      if (error) {
-        console.error('Erro ao criar grupo:', error);
-        toast({
-          title: "Erro ao criar grupo",
-          description: error.message,
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      // Adicionar o criador como membro do grupo
-      await supabase
-        .from('grupos_estudo_membros')
-        .insert({
-          grupo_id: grupoData.id,
-          user_id: user.id,
-          tipo: 'administrador',
-          created_at: new Date().toISOString()
-        });
-      
-      // Adicionar amigos como membros se houver
-      if (selectedFriends.length > 0) {
-        const membrosPromises = selectedFriends.map(friend => 
-          supabase
-            .from('grupos_estudo_membros')
-            .insert({
-              grupo_id: grupoData.id,
-              user_id: friend.id.toString(), // Convertendo para string caso seja número
-              tipo: 'membro',
-              created_at: new Date().toISOString()
-            })
-        );
-        
-        await Promise.all(membrosPromises);
-      }
-      
-      toast({
-        title: "Grupo criado com sucesso!",
-        description: "Seu grupo de estudos foi criado e está pronto para uso.",
-        variant: "default"
-      });
-      
-      // Chamar callback original com dados do grupo
-      onSubmit({
-        ...formData,
-        amigosDetalhes: selectedFriends,
-        id: grupoData.id,
-        codigoAcesso: codigoAcesso
-      });
-      
-      // Fechar modal
-      onClose();
-      
-    } catch (error) {
-      console.error('Erro ao processar criação do grupo:', error);
-      toast({
-        title: "Erro inesperado",
-        description: "Ocorreu um erro ao criar o grupo de estudos.",
-        variant: "destructive"
-      });
-    }
-  };
-  
-  // Função para gerar código de acesso aleatório
-  const generateAccessCode = () => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let code = '';
-    for (let i = 0; i < 6; i++) {
-      code += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return code;
+    onSubmit({
+      ...formData,
+      amigosDetalhes: selectedFriends
+    });
   };
 
   const handleCodeSubmit = (e: React.FormEvent) => {
@@ -348,7 +239,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="bg-white dark:bg-[#1E293B] rounded-xl overflow-hidden max-w-2xl w-full shadow-xl relative"
+            className="bg-white dark:bg-[#1E293B] rounded-xl overflow-hidden w-[560px] shadow-xl relative"
           >
             <div className="sticky top-0 z-10 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-6 flex justify-between items-center">
               <div>
@@ -389,7 +280,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
                 </TabsList>
                 
                 <TabsContent value="codigo" className="mt-0">
-                  <form onSubmit={handleCodeSubmit} className="space-y-4">
+                  <form onSubmit={handleCodeSubmit} className="space-y-4 min-h-[400px] flex flex-col">
                     <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-6 text-center mb-6">
                       <div className="bg-orange-100 dark:bg-orange-900/20 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                         <Lock className="h-7 w-7 text-[#FF6B00]" />
@@ -397,7 +288,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
                       <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
                         Entrar em um grupo existente
                       </h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 max-w-md mx-auto">
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 mx-auto">
                         Digite o código de acesso fornecido pelo administrador do grupo para participar
                       </p>
                     </div>
@@ -418,7 +309,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
                       </p>
                     </div>
                     
-                    <div className="flex justify-end pt-6 space-x-3">
+                    <div className="flex justify-end mt-auto pt-6 space-x-3">
                       <Button 
                         type="button" 
                         variant="outline" 
@@ -438,7 +329,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
                 </TabsContent>
                 
                 <TabsContent value="criar" className="mt-0">
-                  <form onSubmit={handleSubmit} className="space-y-5">
+                  <form onSubmit={handleSubmit} className="space-y-4 min-h-[400px] flex flex-col">
                     {/* Seção Básica */}
                     <div className="space-y-4">
                       <div>
@@ -748,7 +639,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
                     </div>
                     
                     {/* Botões de Ação */}
-                    <div className="flex justify-end pt-6 space-x-3">
+                    <div className="flex justify-end mt-auto pt-6 space-x-3">
                       <Button 
                         type="button" 
                         variant="outline" 

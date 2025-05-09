@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Search, Filter, Sparkles, BookOpen, Users, TrendingUp, ChevronRight, Plus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -70,30 +69,30 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
     return () => clearInterval(interval);
   }, []);
 
-  // Função para verificar a posição de rolagem e mostrar/ocultar os botões
-  const checkScrollPosition = () => {
-    const container = document.getElementById('topicos-container');
-    const scrollLeftBtn = document.getElementById('scroll-left-btn');
-    const scrollRightBtn = document.getElementById('scroll-right-btn');
+    // Função para verificar a posição de rolagem e mostrar/ocultar os botões
+    const checkScrollPosition = () => {
+      const container = document.getElementById('topicos-container');
+      const scrollLeftBtn = document.getElementById('scroll-left-btn');
+      const scrollRightBtn = document.getElementById('scroll-right-btn');
 
-    if (container && scrollLeftBtn && scrollRightBtn) {
-      const maxScrollLeft = container.scrollWidth - container.clientWidth;
+      if (container && scrollLeftBtn && scrollRightBtn) {
+        const maxScrollLeft = container.scrollWidth - container.clientWidth;
 
-      // Mostra o botão esquerdo se a rolagem for maior que zero
-      if (container.scrollLeft > 0) {
-        scrollLeftBtn.classList.remove('opacity-0', 'pointer-events-none');
-      } else {
-        scrollLeftBtn.classList.add('opacity-0', 'pointer-events-none');
+        // Mostra o botão esquerdo se a rolagem for maior que zero
+        if (container.scrollLeft > 0) {
+          scrollLeftBtn.classList.remove('opacity-0', 'pointer-events-none');
+        } else {
+          scrollLeftBtn.classList.add('opacity-0', 'pointer-events-none');
+        }
+
+        // Mostra o botão direito se ainda houver conteúdo para rolar
+        if (container.scrollLeft < maxScrollLeft) {
+          scrollRightBtn.classList.remove('opacity-0');
+        } else {
+          scrollRightBtn.classList.add('opacity-0');
+        }
       }
-
-      // Mostra o botão direito se ainda houver conteúdo para rolar
-      if (container.scrollLeft < maxScrollLeft) {
-        scrollRightBtn.classList.remove('opacity-0');
-      } else {
-        scrollRightBtn.classList.add('opacity-0');
-      }
-    }
-  };
+    };
 
   // Conteúdo condicional baseado na interface selecionada
   const renderConteudoInterface = () => {
@@ -152,6 +151,8 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                     <ChevronRight className="h-5 w-5" />
                   </Button>
                 </div>
+
+
               </motion.div>
             ))}
           </div>
@@ -284,22 +285,6 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
         );
       default:
         return null;
-    }
-  };
-
-  const handleTopicoClick = (topicoId: number | null) => {
-    if (selectedTopic === topicoId) {
-      setSelectedTopic(null);
-    } else {
-      setSelectedTopic(topicoId);
-
-      // Scroll para a grade de grupos para melhor experiência do usuário
-      setTimeout(() => {
-        const gradeElement = document.getElementById('grade-grupos-estudo');
-        if (gradeElement) {
-          gradeElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      }, 100);
     }
   };
 
@@ -482,7 +467,7 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                       z: 20,
                       boxShadow: `0 15px 30px -10px rgba(0, 0, 0, 0.4), 0 10px 20px -5px rgba(0, 0, 0, 0.3), 0 0 20px ${topico.cor}30`
                     } : {}}
-                    onClick={() => handleTopicoClick(topico.id)}
+                    onClick={() => setSelectedTopic(selectedTopic === topico.id ? null : topico.id)}
                     transition={{ 
                       type: "spring", 
                       stiffness: 300,
@@ -638,7 +623,7 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
               </div>
 
               {/* Componente de grade de grupos de estudo */}
-              <div className="mt-6" id="grade-grupos-estudo">
+              <div className="mt-6">
                 {/* Importar o componente de grade de grupos */}
                 <GradeGruposEstudo 
                   selectedTopic={selectedTopic}
