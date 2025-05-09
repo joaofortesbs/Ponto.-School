@@ -67,21 +67,21 @@ const colorOptions = [
 
 // Lista de tópicos disponíveis
 const topics = [
-  { id: "matematica", name: "Matemática", icon: "📐" },
-  { id: "portugues", name: "Língua Portuguesa", icon: "📝" },
-  { id: "fisica", name: "Física", icon: "⚛️" },
-  { id: "quimica", name: "Química", icon: "🧪" },
-  { id: "biologia", name: "Biologia", icon: "🧬" },
-  { id: "historia", name: "História", icon: "📜" },
-  { id: "geografia", name: "Geografia", icon: "🌍" },
-  { id: "filosofia", name: "Filosofia", icon: "🧠" },
-  { id: "sociologia", name: "Sociologia", icon: "👥" },
-  { id: "ingles", name: "Inglês", icon: "🇬🇧" },
-  { id: "artes", name: "Artes", icon: "🎨" },
-  { id: "educacaofisica", name: "Educação Física", icon: "🏃" },
-  { id: "literatura", name: "Literatura", icon: "📚" },
-  { id: "informatica", name: "Informática", icon: "💻" },
-  { id: "outros", name: "Outros", icon: "📌" }
+  { id: 1, name: "Matemática", icon: "📐", color: "#FF6B00" },
+  { id: 2, name: "Língua Portuguesa", icon: "📝", color: "#4F46E5" },
+  { id: 3, name: "Física", icon: "⚛️", color: "#8B5CF6" },
+  { id: 4, name: "Química", icon: "🧪", color: "#10B981" },
+  { id: 5, name: "Biologia", icon: "🧬", color: "#06B6D4" },
+  { id: 6, name: "História", icon: "📜", color: "#F59E0B" },
+  { id: 7, name: "Geografia", icon: "🌍", color: "#EC4899" },
+  { id: 8, name: "Filosofia", icon: "🧠", color: "#6366F1" },
+  { id: 9, name: "Sociologia", icon: "👥", color: "#EF4444" },
+  { id: 10, name: "Inglês", icon: "🇬🇧", color: "#0EA5E9" },
+  { id: 11, name: "Artes", icon: "🎨", color: "#EC4899" },
+  { id: 12, name: "Educação Física", icon: "🏃", color: "#10B981" },
+  { id: 13, name: "Literatura", icon: "📚", color: "#F59E0B" },
+  { id: 14, name: "Informática", icon: "💻", color: "#0EA5E9" },
+  { id: 15, name: "Outros", icon: "📌", color: "#6B7280" }
 ];
 
 // Amigos simulados (em um aplicativo real, isso viria de uma API)
@@ -158,13 +158,12 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
   };
 
   const handleTopicSelect = (topic: any) => {
-    // Convertemos o id para number para garantir compatibilidade com o formato usado em TopicosEstudoView
-    const topicoId = typeof topic.id === 'string' ? parseInt(topic.id) : topic.id;
     setFormData(prev => ({ 
       ...prev, 
-      topico: topicoId,  // Usando o ID numérico para garantir compatibilidade com a filtragem
+      topico: topic.id,  // Usando o ID numérico para garantir compatibilidade com a filtragem
       topicoNome: topic.name,
-      topicoIcon: topic.icon
+      topicoIcon: topic.icon,
+      cor: topic.color // Atualizar a cor do grupo para a cor do tópico selecionado
     }));
     setShowTopicSelector(false);
     setSearchTerm("");
@@ -474,7 +473,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
                           <div className="flex items-center gap-3">
                             <div 
                               className="w-10 h-10 rounded-full flex items-center justify-center text-xl" 
-                              style={{ backgroundColor: topicColors[formData.topico as keyof typeof topicColors] || "#6B7280" }}
+                              style={{ backgroundColor: topics.find(t => t.id === formData.topico)?.color || "#6B7280" }}
                             >
                               <span>{formData.topicoIcon}</span>
                             </div>
@@ -494,10 +493,8 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
                         </div>
                       ) : (
                         <div>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            className="w-full justify-between h-11 border-dashed border-2 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-[#FF6B00] hover:text-[#FF6B00]"
+                          <div 
+                            className="w-full justify-between flex items-center px-4 py-3 h-11 border-dashed border-2 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-[#FF6B00] hover:text-[#FF6B00] rounded-lg cursor-pointer transition-colors"
                             onClick={() => setShowTopicSelector(true)}
                           >
                             <span className="flex items-center">
@@ -505,18 +502,18 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
                               Selecionar tópico
                             </span>
                             <ChevronDown className="h-4 w-4 opacity-70" />
-                          </Button>
+                          </div>
 
                           {showTopicSelector && (
-                            <div className="mt-2 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg">
-                              <div className="p-3 border-b border-gray-200 dark:border-gray-700">
+                            <div className="mt-2 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg bg-[#070e1a] overflow-hidden">
+                              <div className="p-3 border-b border-gray-700">
                                 <div className="relative">
                                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                                   <Input
                                     placeholder="Buscar tópicos..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="pl-9 w-full"
+                                    className="pl-9 w-full bg-[#0c121f] border-gray-700"
                                   />
                                 </div>
                               </div>
@@ -526,16 +523,16 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
                                     filteredTopics.map((topic) => (
                                       <div
                                         key={topic.id}
-                                        className="flex items-center gap-3 p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md cursor-pointer transition-colors"
+                                        className="flex items-center gap-3 p-2.5 hover:bg-[#0c121f] rounded-md cursor-pointer transition-colors"
                                         onClick={() => handleTopicSelect(topic)}
                                       >
                                         <div 
                                           className="w-9 h-9 rounded-full flex items-center justify-center text-lg" 
-                                          style={{ backgroundColor: topicColors[topic.id as keyof typeof topicColors] || "#6B7280" }}
+                                          style={{ backgroundColor: topic.color }}
                                         >
                                           <span>{topic.icon}</span>
                                         </div>
-                                        <span className="font-medium text-gray-800 dark:text-gray-200">{topic.name}</span>
+                                        <span className="font-medium text-gray-200">{topic.name}</span>
                                       </div>
                                     ))
                                   ) : (
