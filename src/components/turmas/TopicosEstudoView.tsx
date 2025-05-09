@@ -632,18 +632,20 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
             </motion.div>
           )}
 
-          {/* Conteúdo da interface selecionada */}
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={interfaceAtiva}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-            >
-              {renderConteudoInterface()}
-            </motion.div>
-          </AnimatePresence>
+          {/* O conteúdo da interface é exibido apenas quando não estamos na visualização de meus grupos */}
+          {interfaceAtiva !== "meus-grupos" && (
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={interfaceAtiva}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                {renderConteudoInterface()}
+              </motion.div>
+            </AnimatePresence>
+          )}
         </div>
       </div>
     </div>
