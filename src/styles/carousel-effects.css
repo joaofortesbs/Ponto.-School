@@ -12,40 +12,40 @@ body::-webkit-scrollbar-track,
 /* Estilos específicos para o carrossel de tópicos */
 .topic-carousel-container {
   scroll-behavior: smooth;
-  overflow-x: auto;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
 }
 
-.topic-carousel-container::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
+/* Cards com snap para alinhamento perfeito */
+#topicos-container > div {
+  scroll-snap-align: start;
+  flex: 0 0 auto;
+  width: 44px; /* Garante tamanho fixo para os cards */
 }
 
+/* Configurações responsivas para diferentes tamanhos de tela */
 @media (max-width: 640px) {
   /* Em telas pequenas, mostrar 4 cards */
   #topicos-container {
-    max-width: calc(4 * 133px) !important; /* 4 cards com width de 130px + 3px gap */
+    max-width: calc(4 * (44px + 1rem)) !important;
   }
 }
 
-@media (min-width: 641px) and (max-width: 1279px) {
-  /* Em telas médias, mostrar exatamente 8 cards */
+@media (min-width: 641px) and (max-width: 1023px) {
+  /* Em telas médias, mostrar 6 cards */
   #topicos-container {
-    max-width: calc(8 * 133px) !important; /* 8 cards com width de 130px + 3px gap */
+    max-width: calc(6 * (44px + 1rem)) !important;
   }
 }
 
-@media (min-width: 1280px) {
-  /* Em telas grandes, mostrar exatamente 8 cards */
+@media (min-width: 1024px) {
+  /* Em telas grandes, mostrar 8 cards */
   #topicos-container {
-    max-width: calc(8 * 133px) !important; /* 8 cards com width de 130px + 3px gap */
+    max-width: calc(8 * (44px + 1rem)) !important;
   }
 }
 
-/* Garantir que os cards visíveis estão corretamente dimensionados */
-#topicos-container > div {
-  scroll-snap-align: start;
-  flex: 0 0 130px; /* Garante largura fixa sem distorções */
+/* Garante que o container sempre mostre o número correto de cards sem cortar */
+#topicos-container {
+  scroll-padding: 0 16px;
 }
 
 /* Animation para o botão de scroll */
