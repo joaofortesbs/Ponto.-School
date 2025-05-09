@@ -97,9 +97,15 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
       id: `grupo-${Date.now()}`,
       nome: formData.nome,
       cor: formData.cor || "#FF6B00",
-      membros: 1, // Começa com o criador
+      membros: formData.amigos ? formData.amigos.length + 1 : 1, // Criador + amigos convidados
       dataCriacao: new Date().toISOString(),
-      // Outros campos podem ser adicionados baseados no formulário
+      topico: formData.topico || undefined,
+      disciplina: formData.topicoNome || undefined,
+      icon: formData.topicoIcon || undefined,
+      tendencia: Math.random() > 0.7 ? "alta" : undefined, // Simula tendência aleatória
+      privado: formData.privado,
+      visibilidade: formData.visibilidade,
+      // Outros campos baseados no formulário
     };
     
     setGruposEstudo(prev => [...prev, novoGrupo]);
