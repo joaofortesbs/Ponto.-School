@@ -437,13 +437,15 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
                       )}
                     </div>
                     <div className="flex justify-between text-white/70 text-xs mt-0.5">
-                      <span className="flex items-center gap-1">
-                        <BookOpen className="h-3 w-3 text-[#FF6B00]" />
-                        {grupo.disciplina || "Sem disciplina"}
-                      </span>
-                      <div className="flex items-center gap-1 text-white/60 text-xs ml-auto">
-                        <Users className="h-3 w-3" />
-                        <span>{grupo.membros} membros</span>
+                      <div className="flex items-center justify-between w-full">
+                        <span className="flex items-center gap-1.5">
+                          <BookOpen className="h-3 w-3 text-[#FF6B00]" />
+                          <span className="font-medium">{grupo.disciplina || "Sem disciplina"}</span>
+                        </span>
+                        <div className="flex items-center gap-1.5 text-white/70 text-xs border-l border-white/10 pl-2 ml-2">
+                          <Users className="h-3 w-3 text-[#FF8C40]" />
+                          <span>{grupo.membros} membros</span>
+                        </div>
                       </div>
                     </div>
                     <div className="text-white/60 text-xs mt-0.5 line-clamp-1">
