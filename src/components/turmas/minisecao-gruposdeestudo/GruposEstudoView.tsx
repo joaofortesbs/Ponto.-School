@@ -1,18 +1,19 @@
+
 import React from "react";
 import { motion } from "framer-motion";
+import GruposEstudoInterface from "./interface/GruposEstudoInterface";
 
 interface GruposEstudoViewProps {
   className?: string;
 }
 
-const GruposEstudoView: React.FC<GruposEstudoViewProps> = ({ className }) => {
+export const GruposEstudoView: React.FC<GruposEstudoViewProps> = ({ className }) => {
   return (
-    <div className={`w-full ${className} card-container`} style={{ 
-      contain: 'content',
+    <div className={className} style={{
       overflowY: 'auto',
       overflowX: 'hidden'
     }}>
-      {/* Conteúdo removido conforme solicitado */}
+      <GruposEstudoInterface />
     </div>
   );
 };
