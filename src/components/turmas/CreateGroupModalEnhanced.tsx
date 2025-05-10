@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { 
   X, Users, Plus, Key, BookOpen, Calendar, Clock, 
-  Search, Upload, Info, Settings, UserPlus, BookmarkIcon
+  Search, Upload, Info, Settings, UserPlus, BookmarkIcon,
+  Sparkles, Check
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
