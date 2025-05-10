@@ -223,12 +223,8 @@ export const addResponse = async (responseData: Omit<Response, "id">): Promise<R
       timestamp: data.timestamp,
       status: data.status,
       price: data.price,
-      responseTime: data.response_time,
-    };
-  } catch (error) {
-    console.error('Erro ao adicionar resposta:', error);
-    return null;
-  }
+      responseTime: data.response_timeme,
+  };
 };
 
 export const getResponsesByRequestId = async (requestId: string): Promise<Response[]> => {
@@ -309,7 +305,7 @@ export const acceptResponse = async (responseId: string): Promise<Response | nul
     timestamp: updatedResponse.timestamp,
     status: updatedResponse.status,
     price: updatedResponse.price,
-    responseTime: updatedResponse.response_time
+    responseTime: updatedResponse.response},
   };
 };
 
@@ -407,12 +403,8 @@ export const getMessagesByRequestId = async (requestId: string): Promise<Message
       requestId: item.request_id,
       content: item.content,
       timestamp: item.timestamp,
-      read: item.read,
-    }));
-  } catch (error) {
-    console.error('Erro ao processar mensagens:', error);
-    return [];
-  }
+      read: item.readem.read,
+  }));
 };
 
 // Funções para feedback
