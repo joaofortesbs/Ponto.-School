@@ -178,9 +178,13 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // Incluir todas as informações necessárias para persistência no banco de dados
     onSubmit({
       ...formData,
-      amigosDetalhes: selectedFriends
+      amigos: selectedFriends.map(f => f.id),
+      amigosDetalhes: selectedFriends,
+      topicoNome: formData.topicoNome,
+      topicoIcon: formData.topicoIcon
     });
   };
 
