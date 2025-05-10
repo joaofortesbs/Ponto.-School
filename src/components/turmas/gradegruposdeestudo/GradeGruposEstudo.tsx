@@ -42,7 +42,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
   const [loading, setLoading] = useState(true);
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
 
-  // Carregar grupos do banco de dados
+  // Carregar grupos do banco de dados e do armazenamento local
   useEffect(() => {
     const carregarGrupos = async () => {
       try {
@@ -52,39 +52,105 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
         const { data: { session } } = await supabase.auth.getSession();
 
         if (session) {
-          const { data, error } = await supabase
-            .from('grupos_estudo')
-            .select('*')
-            .eq('user_id', session.user.id)
-            .order('data_criacao', { ascending: false });
-
-          if (error) {
-            console.error("Erro ao buscar grupos de estudo:", error);
-            return;
+          // Primeiro carregamos os grupos locais para exibição rápida
+          const gruposLocais = obterGruposLocal().filter(grupo => grupo.user_id === session.user.id);
+          
+          // Converter dados locais para o formato da interface
+          if (gruposLocais.length > 0) {
+            const gruposLocaisFormatados: GrupoEstudo[] = gruposLocais.map((grupo: any) => ({
+              id: grupo.id,
+              nome: grupo.nome,
+              descricao: grupo.descricao,
+              cor: grupo.cor,
+              membros: grupo.membros || 1,
+              topico: grupo.topico,
+              disciplina: grupo.topico_nome,
+              icon: grupo.topico_icon,
+              dataCriacao: grupo.data_criacao,
+              tendencia: Math.random() > 0.7 ? "alta" : undefined, // Valor aleatório para demo
+              novoConteudo: Math.random() > 0.7, // Valor aleatório para demo
+              privado: grupo.privado,
+              visibilidade: grupo.visibilidade,
+              topico_nome: grupo.topico_nome,
+              topico_icon: grupo.topico_icon
+            }));
+            
+            // Exibir primeiro os grupos locais enquanto carregamos do Supabase
+            setGruposEstudo(gruposLocaisFormatados);
           }
 
-          console.log("Grupos carregados:", data);
+          // Tentar buscar do Supabase
+          try {
+            const { data, error } = await supabase
+              .from('grupos_estudo')
+              .select('*')
+              .eq('user_id', session.user.id)
+              .order('data_criacao', { ascending: false });
 
-          // Converter dados do banco para o formato da interface
-          const gruposFormatados: GrupoEstudo[] = data.map((grupo: any) => ({
-            id: grupo.id,
-            nome: grupo.nome,
-            descricao: grupo.descricao,
-            cor: grupo.cor,
-            membros: grupo.membros || 1,
-            topico: grupo.topico,
-            disciplina: grupo.topico_nome,
-            icon: grupo.topico_icon,
-            dataCriacao: grupo.data_criacao,
-            tendencia: Math.random() > 0.7 ? "alta" : undefined, // Valor aleatório para demo
-            novoConteudo: Math.random() > 0.7, // Valor aleatório para demo
-            privado: grupo.privado,
-            visibilidade: grupo.visibilidade,
-            topico_nome: grupo.topico_nome,
-            topico_icon: grupo.topico_icon
-          }));
+            if (error) {
+              console.error("Erro ao buscar grupos de estudo do Supabase:", error);
+              // Continuar com os grupos locais já carregados
+              
+              // Tentar sincronizar os grupos locais com o Supabase
+              await sincronizarGruposLocais(session.user.id);
+            } else {
+              console.log("Grupos carregados do Supabase:", data);
 
-          setGruposEstudo(gruposFormatados);
+              // Converter dados do banco para o formato da interface
+              const gruposFormatados: GrupoEstudo[] = data.map((grupo: any) => ({
+                id: grupo.id,
+                nome: grupo.nome,
+                descricao: grupo.descricao,
+                cor: grupo.cor,
+                membros: grupo.membros || 1,
+                topico: grupo.topico,
+                disciplina: grupo.topico_nome,
+                icon: grupo.topico_icon,
+                dataCriacao: grupo.data_criacao,
+                tendencia: Math.random() > 0.7 ? "alta" : undefined, // Valor aleatório para demo
+                novoConteudo: Math.random() > 0.7, // Valor aleatório para demo
+                privado: grupo.privado,
+                visibilidade: grupo.visibilidade,
+                topico_nome: grupo.topico_nome,
+                topico_icon: grupo.topico_icon
+              }));
+
+              // Combinar grupos do Supabase com grupos locais que não estão no Supabase
+              const gruposLocaisFiltrados = gruposLocais
+                .filter(grupoLocal => grupoLocal.id.startsWith('local_') && 
+                  !data.some((grupoRemoto: any) => grupoRemoto.id === grupoLocal.id))
+                .map((grupo: any) => ({
+                  id: grupo.id,
+                  nome: grupo.nome,
+                  descricao: grupo.descricao,
+                  cor: grupo.cor,
+                  membros: grupo.membros || 1,
+                  topico: grupo.topico,
+                  disciplina: grupo.topico_nome,
+                  icon: grupo.topico_icon,
+                  dataCriacao: grupo.data_criacao,
+                  tendencia: Math.random() > 0.7 ? "alta" : undefined,
+                  novoConteudo: Math.random() > 0.7,
+                  privado: grupo.privado,
+                  visibilidade: grupo.visibilidade,
+                  topico_nome: grupo.topico_nome,
+                  topico_icon: grupo.topico_icon
+                }));
+
+              setGruposEstudo([...gruposFormatados, ...gruposLocaisFiltrados]);
+            }
+          } catch (supabaseError) {
+            console.error("Falha ao usar Supabase:", supabaseError);
+            // Já estamos usando os dados locais, então continuar com eles
+          }
+
+          // Carregar grupos usando o sistema de armazenamento 
+          try {
+            const todosGrupos = await obterTodosGrupos(session.user.id);
+            console.log("Grupos obtidos do sistema de armazenamento:", todosGrupos);
+          } catch (storageError) {
+            console.error("Erro ao acessar sistema de armazenamento:", storageError);
+          }
         }
       } catch (error) {
         console.error("Erro ao carregar grupos de estudo:", error);
@@ -94,6 +160,21 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
     };
 
     carregarGrupos();
+
+    // Definir um intervalo para re-sincronização a cada 5 minutos
+    const intervaloSincronizacao = setInterval(async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          await sincronizarGruposLocais(session.user.id);
+        }
+      } catch (error) {
+        console.error("Erro na sincronização automática:", error);
+      }
+    }, 300000); // 5 minutos
+
+    // Limpar intervalo quando o componente for desmontado
+    return () => clearInterval(intervaloSincronizacao);
   }, [showCreateGroupModal]); // Recarregar quando o modal for fechado
 
   // Filtrar grupos baseado no tópico selecionado e busca
@@ -188,6 +269,15 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
       // Adicionar o novo grupo à lista de grupos e atualizar a interface
       setGruposEstudo(prev => [novoGrupo, ...prev]);
 
+      // Garantir que o grupo esteja salvo localmente também
+      if (novoGrupoDados.id.startsWith('local_')) {
+        // Verificamos novamente se o grupo já existe localmente para evitar duplicatas
+        const gruposAtuais = obterGruposLocal();
+        if (!gruposAtuais.some(g => g.id === novoGrupoDados.id)) {
+          salvarGrupoLocal(novoGrupoDados);
+        }
+      }
+
       // Fechar o modal criado pelo CreateGroupModalEnhanced
       setShowCreateGroupModal(false);
 
@@ -198,6 +288,68 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
 
     } catch (error) {
       console.error("Erro ao processar criação de grupo:", error);
+
+      // Tentar salvar localmente mesmo com erro do Supabase
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session && formData) {
+          // Gerar ID local
+          const idLocal = `local_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+          
+          // Criar objeto do grupo para armazenamento local
+          const grupoLocalEmergencia = {
+            id: idLocal,
+            user_id: session.user.id,
+            nome: formData.nome,
+            descricao: formData.descricao || "",
+            cor: formData.cor || "#FF6B00",
+            topico: formData.topico || null,
+            topico_nome: formData.topicoNome || null,
+            topico_icon: formData.topicoIcon || null,
+            privado: formData.privado || false,
+            visibilidade: formData.visibilidade || "todos",
+            membros: formData.amigos ? formData.amigos.length + 1 : 1,
+            codigo: formData.privado ? `GRP${Math.random().toString(36).substring(2, 8).toUpperCase()}` : null,
+            data_criacao: new Date().toISOString()
+          };
+          
+          // Salvar no armazenamento local como backup
+          salvarGrupoLocal(grupoLocalEmergencia);
+          
+          // Adicionar à lista de exibição
+          const novoGrupo: GrupoEstudo = {
+            id: grupoLocalEmergencia.id,
+            nome: grupoLocalEmergencia.nome,
+            cor: grupoLocalEmergencia.cor,
+            membros: grupoLocalEmergencia.membros,
+            dataCriacao: grupoLocalEmergencia.data_criacao,
+            topico: grupoLocalEmergencia.topico,
+            disciplina: grupoLocalEmergencia.topico_nome,
+            icon: grupoLocalEmergencia.topico_icon,
+            tendencia: Math.random() > 0.7 ? "alta" : undefined,
+            novoConteudo: false,
+            privado: grupoLocalEmergencia.privado,
+            visibilidade: grupoLocalEmergencia.visibilidade,
+            topico_nome: grupoLocalEmergencia.topico_nome,
+            topico_icon: grupoLocalEmergencia.topico_icon
+          };
+          
+          // Atualizar interface
+          setGruposEstudo(prev => [novoGrupo, ...prev]);
+          
+          // Fechar modal
+          setShowCreateGroupModal(false);
+          
+          // Mostrar feedback visual
+          mostrarNotificacaoSucesso('Grupo criado e salvo localmente!');
+          
+          // Retornar os dados para o componente chamador
+          return grupoLocalEmergencia;
+        }
+      } catch (localSaveError) {
+        console.error("Falha ao tentar salvar o grupo localmente:", localSaveError);
+      }
 
       // Melhor tratamento de erro com mensagem específica
       let errorMessage = "Erro ao criar grupo: ";
