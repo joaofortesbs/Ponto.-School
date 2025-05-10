@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Search, Filter, ChevronRight, Users, TrendingUp, BookOpen, MessageCircle, Plus, UserPlus } from "lucide-react";
@@ -47,24 +46,24 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
     const carregarGrupos = async () => {
       try {
         setLoading(true);
-        
+
         // Buscar os grupos do usuário atual do Supabase
         const { data: { session } } = await supabase.auth.getSession();
-        
+
         if (session) {
           const { data, error } = await supabase
             .from('grupos_estudo')
             .select('*')
             .eq('user_id', session.user.id)
             .order('data_criacao', { ascending: false });
-          
+
           if (error) {
             console.error("Erro ao buscar grupos de estudo:", error);
             return;
           }
-          
+
           console.log("Grupos carregados:", data);
-          
+
           // Converter dados do banco para o formato da interface
           const gruposFormatados: GrupoEstudo[] = data.map((grupo: any) => ({
             id: grupo.id,
@@ -83,7 +82,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
             topico_nome: grupo.topico_nome,
             topico_icon: grupo.topico_icon
           }));
-          
+
           setGruposEstudo(gruposFormatados);
         }
       } catch (error) {
@@ -104,11 +103,11 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
       const matchesFilter = !selectedFilter || 
         (selectedFilter === "tendencia-alta" && grupo.tendencia === "alta") ||
         (selectedFilter === "novo-conteudo" && grupo.novoConteudo);
-        
+
       // Melhorada lógica de filtragem por tópico
       const matchesSelectedTopic = !selectedTopic || 
         (grupo.topico && selectedTopic.toString() === grupo.topico);
-        
+
       return matchesSearch && matchesFilter && matchesSelectedTopic;
     }
   );
@@ -128,18 +127,18 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
     try {
       // Verificar se o usuário está autenticado
       const { data: { session } } = await supabase.auth.getSession();
-      
+
       if (!session) {
         console.error("Usuário não autenticado");
         alert("Você precisa estar autenticado para criar um grupo");
         return;
       }
-      
+
       // Gerar código único para grupos privados
       const codigoGrupo = formData.privado 
         ? `GRP${Math.random().toString(36).substring(2, 8).toUpperCase()}` 
         : null;
-      
+
       // Preparar dados para inserção no banco
       const grupoData = {
         user_id: session.user.id,
@@ -155,26 +154,62 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
         codigo: codigoGrupo,
         data_criacao: new Date().toISOString() // Garantir que data_criacao esteja definida
       };
-      
+
       console.log("Enviando dados para criação de grupo:", grupoData);
-      
+
+      // Verificar se a tabela existe primeiro
+      const { error: tableCheckError } = await supabase
+        .from('grupos_estudo')
+        .select('count(*)', { count: 'exact', head: true });
+
+      if (tableCheckError && tableCheckError.code === '42P01') {
+        console.error("Tabela grupos_estudo não existe:", tableCheckError);
+
+        // Tentar executar a migração via API
+        try {
+          const response = await fetch('/api/apply-migration', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              migration: '20240820000000_create_grupos_estudo_table.sql' 
+            })
+          });
+
+          if (response.ok) {
+            alert("Estrutura do banco atualizada. Tente criar o grupo novamente.");
+          } else {
+            alert("A tabela grupos_estudo não existe. Execute o fluxo de trabalho 'Aplicar Migrações' para criar a tabela.");
+          }
+        } catch (fetchError) {
+          console.error("Erro ao tentar aplicar migração:", fetchError);
+          alert("A tabela grupos_estudo não existe. Execute o fluxo de trabalho 'Aplicar Migrações' para criar a tabela.");
+        }
+        return;
+      }
+
       // Inserir no banco de dados
       const { data, error } = await supabase
         .from('grupos_estudo')
         .insert(grupoData)
-        .select()
+        .select('*')
         .single();
-      
+
       if (error) {
         console.error("Erro ao criar grupo:", error);
-        // Verificar se o erro tem uma mensagem ou usar um texto genérico
-        const errorMessage = error.message || "Não foi possível criar o grupo. Verifique se a tabela grupos_estudo existe no banco de dados.";
-        alert("Erro ao criar grupo: " + errorMessage);
+        let errorMsg = "Erro ao criar grupo: ";
+
+        if (error.code === '42P01') {
+          errorMsg += "A tabela grupos_estudo não existe. Execute o fluxo de trabalho 'Aplicar Migrações'.";
+        } else {
+          errorMsg += error.message || "Ocorreu um erro desconhecido.";
+        }
+
+        alert(errorMsg);
         return;
       }
-      
+
       console.log("Grupo criado com sucesso:", data);
-      
+
       // Converter o grupo criado para o formato da interface
       const novoGrupo: GrupoEstudo = {
         id: data.id,
@@ -192,12 +227,12 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
         topico_nome: data.topico_nome,
         topico_icon: data.topico_icon
       };
-      
+
       // Adicionar o novo grupo à lista de grupos e atualizar a interface
       setGruposEstudo(prev => [novoGrupo, ...prev]);
-      
+
       // Modal será fechado automaticamente pela função onSubmit no componente CreateGroupModalEnhanced
-      
+
       // Mostrar feedback visual temporário
       const element = document.createElement('div');
       element.style.position = 'fixed';
@@ -211,15 +246,15 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
       element.style.zIndex = '9999';
       element.textContent = 'Grupo criado com sucesso!';
       document.body.appendChild(element);
-      
+
       // Remover após 3 segundos
       setTimeout(() => {
         document.body.removeChild(element);
       }, 3000);
-      
+
     } catch (error) {
       console.error("Erro ao processar criação de grupo:", error);
-      
+
       // Melhor tratamento de erro com mensagem específica
       let errorMessage = "Erro ao criar grupo.";
       if (error instanceof Error) {
@@ -227,7 +262,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
       } else if (typeof error === 'object' && error !== null) {
         errorMessage += " " + (JSON.stringify(error) || "Erro desconhecido");
       }
-      
+
       alert(errorMessage);
     }
   };
