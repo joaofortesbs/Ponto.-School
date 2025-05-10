@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Search, Filter, ChevronRight, Users, TrendingUp, BookOpen, MessageCircle, Plus, UserPlus, FileText, Calendar } from "lucide-react";
@@ -239,7 +238,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
 
       // Fechar modal
       setShowCreateGroupModal(false);
-      
+
       // Mostrar notificação de sucesso
       mostrarNotificacaoSucesso("Grupo criado com sucesso!");
     } catch (error) {
@@ -428,7 +427,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
                 >
                   <div className="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent"></div>
                 </div>
-              
+
               <div className="flex items-center justify-between p-4">
                 <div className="flex items-center gap-4">
                   <div className="flex-shrink-0">
