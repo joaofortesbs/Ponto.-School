@@ -222,8 +222,9 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
       } catch (supabaseError) {
         console.error("Erro ao acessar Supabase:", supabaseError);
         
-        // Salvar localmente em caso de erro
-        await criarGrupo({
+        // Salvar localmente em caso de erro, usando salvarGrupoLocal em vez de criarGrupo
+        // para evitar duplicação
+        await salvarGrupoLocal({
           ...novoGrupo,
           id: crypto.randomUUID(),
           timestamp: new Date().getTime()

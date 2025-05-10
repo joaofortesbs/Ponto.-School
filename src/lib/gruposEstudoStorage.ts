@@ -1,4 +1,3 @@
-
 /**
  * Sistema simples de armazenamento para grupos de estudo
  * Usa localStorage como fallback quando o banco de dados falha
@@ -32,10 +31,10 @@ export const salvarGrupoLocal = (grupo: GrupoEstudo): void => {
   try {
     // Buscar grupos existentes
     const gruposExistentes = obterGruposLocal();
-    
+
     // Verificar se o grupo já existe
     const grupoExistente = gruposExistentes.findIndex(g => g.id === grupo.id);
-    
+
     if (grupoExistente >= 0) {
       // Atualizar grupo existente
       gruposExistentes[grupoExistente] = grupo;
@@ -43,17 +42,17 @@ export const salvarGrupoLocal = (grupo: GrupoEstudo): void => {
       // Adicionar novo grupo
       gruposExistentes.push(grupo);
     }
-    
+
     // Criar backup do estado atual antes de salvar
     const gruposAtuais = localStorage.getItem(STORAGE_KEY);
     if (gruposAtuais) {
       localStorage.setItem(`${STORAGE_KEY}_backup`, gruposAtuais);
     }
-    
+
     // Salvar no localStorage
     localStorage.setItem(STORAGE_KEY, JSON.stringify(gruposExistentes));
     console.log('Grupo salvo localmente com sucesso', grupo);
-    
+
     // Sincronização com sessionStorage para recuperação em caso de perda do localStorage
     try {
       sessionStorage.setItem(`${STORAGE_KEY}_session`, JSON.stringify(gruposExistentes));
@@ -62,7 +61,7 @@ export const salvarGrupoLocal = (grupo: GrupoEstudo): void => {
     }
   } catch (error) {
     console.error('Erro ao salvar grupo localmente:', error);
-    
+
     // Tentar salvar em um formato alternativo em caso de erro
     try {
       localStorage.setItem(`${STORAGE_KEY}_emergency_${Date.now()}`, JSON.stringify([grupo]));
@@ -79,13 +78,13 @@ export const obterGruposLocal = (): GrupoEstudo[] => {
   try {
     const dados = localStorage.getItem(STORAGE_KEY);
     if (!dados) return [];
-    
+
     const gruposParsed = JSON.parse(dados);
     console.log('Grupos recuperados do armazenamento local:', gruposParsed.length);
     return gruposParsed;
   } catch (error) {
     console.error('Erro ao obter grupos locais:', error);
-    
+
     // Tentar recuperar backup caso a primeira tentativa falhe
     try {
       const backupDados = localStorage.getItem(`${STORAGE_KEY}_backup`);
@@ -96,7 +95,7 @@ export const obterGruposLocal = (): GrupoEstudo[] => {
     } catch (backupError) {
       console.error('Falha ao recuperar backup:', backupError);
     }
-    
+
     return [];
   }
 };
@@ -119,22 +118,22 @@ export const criarGrupo = async (dados: Omit<GrupoEstudo, 'id'>): Promise<GrupoE
       .insert(dados)
       .select('*')
       .single();
-    
+
     if (error) {
       console.error('Erro ao criar grupo no banco de dados:', error);
-      
+
       // Gerar ID localmente
       const id = `local_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-      
+
       // Criar grupo para armazenamento local
       const grupoLocal: GrupoEstudo = {
         ...dados,
         id
       };
-      
+
       // Salvar localmente
-      salvarGrupoLocal(grupoLocal);
-      
+      // salvarGrupoLocal(grupoLocal); // This line was removed to avoid double saving
+
       // Mostrar notificação sobre o armazenamento local
       const element = document.createElement('div');
       element.style.position = 'fixed';
@@ -149,7 +148,7 @@ export const criarGrupo = async (dados: Omit<GrupoEstudo, 'id'>): Promise<GrupoE
       element.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
       element.textContent = 'Grupo salvo localmente. Será sincronizado quando o banco de dados estiver disponível.';
       document.body.appendChild(element);
-      
+
       // Remover após 5 segundos
       setTimeout(() => {
         element.style.opacity = '0';
@@ -158,14 +157,14 @@ export const criarGrupo = async (dados: Omit<GrupoEstudo, 'id'>): Promise<GrupoE
           document.body.removeChild(element);
         }, 500);
       }, 5000);
-      
+
       return grupoLocal;
     }
-    
+
     return data;
   } catch (error) {
     console.error('Erro ao criar grupo:', error);
-    
+
     // Falha total, retornar nulo
     return null;
   }
@@ -178,24 +177,24 @@ export const obterTodosGrupos = async (userId: string): Promise<GrupoEstudo[]> =
   try {
     // Primeiro, garantir que temos os grupos locais (failsafe)
     let gruposLocais = obterGruposLocal().filter(grupo => grupo.user_id === userId);
-    
+
     // Tentar obter backup da sessão
     try {
       const backupSessao = sessionStorage.getItem(`${STORAGE_KEY}_session`);
       if (backupSessao) {
         const gruposSessao = JSON.parse(backupSessao);
         console.log('Backup de sessão encontrado com', gruposSessao.length, 'grupos');
-        
+
         // Combinar com grupos locais existentes (evitando duplicatas)
         const gruposLocaisIds = new Set(gruposLocais.map(g => g.id));
-        
+
         const gruposSessaoFiltrados = gruposSessao
           .filter((g: GrupoEstudo) => g.user_id === userId && !gruposLocaisIds.has(g.id));
-        
+
         if (gruposSessaoFiltrados.length > 0) {
           console.log('Adicionando', gruposSessaoFiltrados.length, 'grupos do backup de sessão');
           gruposLocais = [...gruposLocais, ...gruposSessaoFiltrados];
-          
+
           // Atualizar localStorage com os dados combinados
           localStorage.setItem(STORAGE_KEY, JSON.stringify(gruposLocais));
         }
@@ -203,7 +202,7 @@ export const obterTodosGrupos = async (userId: string): Promise<GrupoEstudo[]> =
     } catch (sessionError) {
       console.error('Erro ao recuperar backup de sessão:', sessionError);
     }
-    
+
     // Agora tentar obter do Supabase
     try {
       const { data: gruposSupabase, error } = await supabase
@@ -211,32 +210,32 @@ export const obterTodosGrupos = async (userId: string): Promise<GrupoEstudo[]> =
         .select('*')
         .eq('user_id', userId)
         .order('data_criacao', { ascending: false });
-      
+
       if (error) {
         console.error('Erro ao buscar grupos do banco de dados:', error);
         // Se falhar o Supabase, retornar apenas grupos locais
         return gruposLocais;
       }
-      
+
       // Filtrar grupos locais para incluir apenas os que não estão no Supabase
       const gruposLocaisFiltrados = gruposLocais.filter(
         grupoLocal => !gruposSupabase.some(grupoRemoto => grupoRemoto.id === grupoLocal.id)
       );
-      
+
       // Combinar ambos
       const todosGrupos = [...gruposSupabase, ...gruposLocaisFiltrados];
-      
+
       // Certificar-se de que os grupos locais estão atualizados
       if (todosGrupos.length !== gruposLocais.length) {
         // Salvar apenas os grupos locais (que começam com 'local_')
         const apenasGruposLocais = todosGrupos.filter(g => g.id.startsWith('local_'));
-        
+
         // Se houver alguma diferença, atualizar armazenamento local
         if (apenasGruposLocais.length > 0) {
           localStorage.setItem(STORAGE_KEY, JSON.stringify(apenasGruposLocais));
         }
       }
-      
+
       return todosGrupos;
     } catch (supabaseError) {
       console.error('Erro ao acessar Supabase:', supabaseError);
@@ -244,7 +243,7 @@ export const obterTodosGrupos = async (userId: string): Promise<GrupoEstudo[]> =
     }
   } catch (error) {
     console.error('Erro ao obter todos os grupos:', error);
-    
+
     // Tentar recuperar grupos de qualquer fonte possível
     try {
       // Verificar backup no localStorage
@@ -253,15 +252,15 @@ export const obterTodosGrupos = async (userId: string): Promise<GrupoEstudo[]> =
         const gruposBackup = JSON.parse(backup);
         return gruposBackup.filter((g: GrupoEstudo) => g.user_id === userId);
       }
-      
+
       // Verificar backups de emergência
       const todasChaves = Object.keys(localStorage);
       const chavesEmergencia = todasChaves.filter(chave => chave.startsWith(`${STORAGE_KEY}_emergency_`));
-      
+
       if (chavesEmergencia.length > 0) {
         // Combinar todos os backups de emergência
         let gruposEmergencia: GrupoEstudo[] = [];
-        
+
         for (const chave of chavesEmergencia) {
           try {
             const gruposChave = JSON.parse(localStorage.getItem(chave) || '[]');
@@ -270,13 +269,13 @@ export const obterTodosGrupos = async (userId: string): Promise<GrupoEstudo[]> =
             console.error('Erro ao recuperar backup de emergência:', e);
           }
         }
-        
+
         return gruposEmergencia.filter(g => g.user_id === userId);
       }
     } catch (recoveryError) {
       console.error('Erro na recuperação de emergência:', recoveryError);
     }
-    
+
     // Último recurso: retornar array vazio
     return [];
   }
@@ -292,20 +291,20 @@ export const sincronizarGruposLocais = async (userId: string): Promise<void> => 
         grupo.user_id === userId && 
         grupo.id.startsWith('local_')
       );
-    
+
     if (gruposLocais.length === 0) return;
-    
+
     console.log(`Tentando sincronizar ${gruposLocais.length} grupos locais`);
-    
+
     for (const grupo of gruposLocais) {
       // Remover o ID local para que o Supabase gere um novo
       const { id, ...dadosGrupo } = grupo;
-      
+
       // Tentar inserir no Supabase
       const { error } = await supabase
         .from('grupos_estudo')
         .insert(dadosGrupo);
-      
+
       if (!error) {
         console.log(`Grupo sincronizado com sucesso: ${grupo.nome}`);
         // Remover do armazenamento local após sincronizar

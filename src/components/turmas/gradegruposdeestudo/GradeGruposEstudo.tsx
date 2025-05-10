@@ -209,18 +209,18 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
     try {
       console.log("Dados do formulário:", formData);
 
-      // Usar a função do sistema de armazenamento local
-      const novoGrupo = await criarGrupo({
-        ...formData,
-        id: crypto.randomUUID(),
-        timestamp: new Date().getTime()
-      });
+      // Apenas receber o formData - o modal já está salvando o grupo
+      console.log("Grupo criado com sucesso:", formData);
 
-      console.log("Grupo criado com sucesso:", novoGrupo);
-
-      // Atualizar lista de grupos
+      // Atualizar lista de grupos - remover duplicatas verificando por ID ou nome
       const todosGrupos = await obterTodosGrupos();
-      setGruposEstudo(todosGrupos);
+      
+      // Remover duplicatas baseado no nome do grupo
+      const gruposFiltrados = todosGrupos.filter((grupo, index, self) => 
+        index === self.findIndex((g) => g.nome === grupo.nome)
+      );
+      
+      setGruposEstudo(gruposFiltrados);
 
       // Fechar modal
       setShowCreateGroupModal(false);
