@@ -1,0 +1,41 @@
+
+/* Estilos para a pré-visualização dos grupos de estudo */
+.group-preview-tooltip {
+  filter: drop-shadow(0 10px 8px rgb(0 0 0 / 0.04)) drop-shadow(0 4px 3px rgb(0 0 0 / 0.1));
+  animation: fadeInScale 0.2s ease-out forwards;
+  transform-origin: top center;
+  pointer-events: none;
+  z-index: 50;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(-105%);
+  }
+}
+
+.group-card {
+  transition: all 0.3s ease;
+}
+
+.group-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.group-preview-pointer {
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 10px solid #1E293B;
+}
