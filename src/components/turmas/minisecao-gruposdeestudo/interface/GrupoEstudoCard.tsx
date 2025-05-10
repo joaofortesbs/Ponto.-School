@@ -24,7 +24,7 @@ interface GrupoEstudoCardProps {
 const GrupoEstudoCard: React.FC<GrupoEstudoCardProps> = ({ grupo, onClick }) => {
   return (
     <Card 
-      className="hover:shadow-md transition-all duration-200 ease-in-out transform hover:translate-y-[-2px] cursor-pointer border-[#f0f0f0] dark:border-[#2a2a2a] h-full will-change-transform overflow-hidden"
+      className="grupo-estudo-card hover:shadow-md transition-all duration-200 ease-in-out transform hover:translate-y-[-2px] cursor-pointer border-[#f0f0f0] dark:border-[#2a2a2a] h-full will-change-transform overflow-hidden"
       onClick={(e) => {
         e.preventDefault();
         if (onClick) {
@@ -39,12 +39,12 @@ const GrupoEstudoCard: React.FC<GrupoEstudoCardProps> = ({ grupo, onClick }) => 
     >
       {/* Capa do grupo */}
       <div 
-        className="h-32 w-full bg-cover bg-center relative"
+        className="grupo-estudo-card-cover"
         style={{ 
-          backgroundImage: `url(${grupo.imagem || "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=800&q=80"})` 
+          backgroundImage: `url(${grupo.imagem || "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&q=80"})` 
         }}
       >
-        <div className="absolute inset-0 bg-gradient-to-b from-black/30 to-black/70 flex items-end p-3">
+        <div className="grupo-estudo-card-cover-gradient">
           <Badge className="bg-[#FF6B00] text-white">{grupo.nivel}</Badge>
           {grupo.novasMensagens && (
             <Badge className="bg-green-500 text-white text-xs ml-2">Nova mensagem</Badge>

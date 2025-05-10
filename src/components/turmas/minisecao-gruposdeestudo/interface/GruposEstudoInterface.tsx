@@ -4,6 +4,7 @@ import { Plus, Search, Filter, GraduationCap, Users2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
 import { gruposEstudo } from "@/components/estudos/data/gruposEstudo";
+import GrupoEstudoCard from "./GrupoEstudoCard";
 
 interface GruposEstudoInterfaceProps {
   className?: string;
@@ -22,49 +23,7 @@ interface GrupoEstudo {
   tags: string[];
 }
 
-const GrupoEstudoCard = ({ 
-  grupo, 
-  onClick 
-}: { 
-  grupo: GrupoEstudo; 
-  onClick: (id: string) => void; 
-}) => {
-  return (
-    <motion.div
-      whileHover={{ y: -5, transition: { duration: 0.2 } }}
-      className="bg-white dark:bg-[#1E293B] rounded-xl p-4 border border-[#FF6B00]/10 dark:border-[#FF6B00]/20 shadow-sm hover:shadow-md transition-all cursor-pointer"
-      onClick={() => onClick(grupo.id)}
-    >
-      <div className="flex items-start gap-3">
-        <div className="h-12 w-12 bg-gradient-to-br from-[#FF6B00]/20 to-[#FF8C40]/20 rounded-lg flex items-center justify-center">
-          <GraduationCap className="h-6 w-6 text-[#FF6B00]" />
-        </div>
-        <div className="flex-1">
-          <h3 className="font-semibold text-gray-900 dark:text-white font-montserrat">
-            {grupo.nome}
-          </h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mt-1">
-            {grupo.descricao}
-          </p>
-          <div className="flex items-center justify-between mt-3">
-            <div className="flex items-center gap-1">
-              <Users2 className="h-4 w-4 text-[#FF6B00]" />
-              <span className="text-xs text-gray-600 dark:text-gray-400">{grupo.membros} membros</span>
-            </div>
-            <div className="text-xs text-[#FF6B00]">
-              {grupo.materia}
-            </div>
-          </div>
-          {grupo.proximoEncontro && (
-            <div className="mt-2 text-xs text-gray-600 dark:text-gray-400">
-              Próximo encontro: {grupo.proximoEncontro}
-            </div>
-          )}
-        </div>
-      </div>
-    </motion.div>
-  );
-};
+// Utilizamos o componente importado
 
 const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className }) => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -153,8 +112,20 @@ const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className
             layoutId={`grupo-${grupo.id}`}
           >
             <GrupoEstudoCard 
-              grupo={grupo} 
-              onClick={handleGroupClick} 
+              grupo={{
+                id: grupo.id,
+                nome: grupo.nome,
+                topico: grupo.tags ? grupo.tags[0] : '',
+                disciplina: grupo.materia,
+                membros: grupo.membros,
+                proximaReuniao: grupo.proximoEncontro || 'A definir',
+                progresso: 75, // Valor padrão
+                novasMensagens: false,
+                nivel: 'Intermediário',
+                imagem: grupo.imagem || 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&q=80',
+                tags: grupo.tags
+              }} 
+              onClick={() => handleGroupClick(grupo.id)} 
             />
           </motion.div>
         ))}
