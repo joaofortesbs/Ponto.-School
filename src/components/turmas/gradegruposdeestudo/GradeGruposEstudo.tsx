@@ -459,9 +459,6 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
                               <span>Em alta</span>
                             </div>
                           )}
-                              <span>Em alta</span>
-                            </div>
-                          )}
                         </div>
                       </div>
                 </div>
