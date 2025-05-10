@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Search, Filter, ChevronRight, Users, TrendingUp, BookOpen, MessageCircle, Plus, UserPlus, FileText } from "lucide-react";
@@ -23,6 +24,8 @@ interface GrupoEstudo {
   visibilidade?: string;
   topico_nome?: string;
   topico_icon?: string;
+  descricao?: string;
+  data_inicio?: string;
 }
 
 interface GradeGruposEstudoProps {
@@ -41,6 +44,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
   const [gruposEstudo, setGruposEstudo] = useState<GrupoEstudo[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
 
   // Carregar grupos do banco de dados e do armazenamento local
   useEffect(() => {
@@ -72,7 +76,8 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
               privado: grupo.privado,
               visibilidade: grupo.visibilidade,
               topico_nome: grupo.topico_nome,
-              topico_icon: grupo.topico_icon
+              topico_icon: grupo.topico_icon,
+              data_inicio: grupo.data_inicio
             }));
 
             // Exibir primeiro os grupos locais enquanto carregamos do Supabase
@@ -112,7 +117,8 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
                 privado: grupo.privado,
                 visibilidade: grupo.visibilidade,
                 topico_nome: grupo.topico_nome,
-                topico_icon: grupo.topico_icon
+                topico_icon: grupo.topico_icon,
+                data_inicio: grupo.data_inicio
               }));
 
               // Combinar grupos do Supabase com grupos locais que não estão no Supabase
@@ -134,7 +140,8 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
                   privado: grupo.privado,
                   visibilidade: grupo.visibilidade,
                   topico_nome: grupo.topico_nome,
-                  topico_icon: grupo.topico_icon
+                  topico_icon: grupo.topico_icon,
+                  data_inicio: grupo.data_inicio
                 }));
 
               setGruposEstudo([...gruposFormatados, ...gruposLocaisFiltrados]);
@@ -421,38 +428,45 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
                     </div>
                   </div>
                   <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-bold text-lg text-white/90">{grupo.nome}</h3>
-                          {grupo.novoConteudo && (
-                            <Badge className="bg-[#FF6B00] text-white text-[10px] px-1.5 py-0 h-4">
-                              NOVO
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="text-white/70 text-xs mt-0.5">
-                          <span className="flex items-center gap-1">
-                            <BookOpen className="h-3 w-3 text-[#FF6B00]" />
-                            {grupo.disciplina || "Sem disciplina"}
-                          </span>
-                          <div className="flex items-center gap-1 text-white/60 text-xs ml-auto">
-                            <Users className="h-3 w-3" />
-                            <span>{grupo.membros} membros</span>
-                          </div>
-                        </div>
-                        <div className="text-white/60 text-xs mt-0.5 line-clamp-1">
-                          <span className="flex items-center gap-1">
-                            <FileText className="h-3 w-3 text-[#FF6B00]" />
-                            {grupo.descricao || "Sem descrição"}
-                          </span>
-                        </div>
-                          {grupo.tendencia === "alta" && (
-                            <div className="flex items-center gap-1 text-emerald-400 text-xs">
-                              <TrendingUp className="h-3 w-3" />
-                              <span>Em alta</span>
-                            </div>
-                          )}
-                        </div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-bold text-lg text-white/90">{grupo.nome}</h3>
+                      {grupo.novoConteudo && (
+                        <Badge className="bg-[#FF6B00] text-white text-[10px] px-1.5 py-0 h-4">
+                          NOVO
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="flex justify-between text-white/70 text-xs mt-0.5">
+                      <span className="flex items-center gap-1">
+                        <BookOpen className="h-3 w-3 text-[#FF6B00]" />
+                        {grupo.disciplina || "Sem disciplina"}
+                      </span>
+                      <div className="flex items-center gap-1 text-white/60 text-xs ml-auto">
+                        <Users className="h-3 w-3" />
+                        <span>{grupo.membros} membros</span>
                       </div>
+                    </div>
+                    <div className="text-white/60 text-xs mt-0.5 line-clamp-1">
+                      <span className="flex items-center gap-1">
+                        <FileText className="h-3 w-3 text-[#FF6B00]" />
+                        {grupo.descricao || "Sem descrição"}
+                      </span>
+                    </div>
+                    {grupo.data_inicio && (
+                      <div className="text-white/60 text-xs mt-0.5">
+                        <span className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3 text-[#FF6B00]" />
+                          Início: {grupo.data_inicio}
+                        </span>
+                      </div>
+                    )}
+                    {grupo.tendencia === "alta" && (
+                      <div className="flex items-center gap-1 text-emerald-400 text-xs">
+                        <TrendingUp className="h-3 w-3" />
+                        <span>Em alta</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <Button size="sm" variant="ghost" className="h-8 w-8 rounded-full p-0 text-white/70 hover:text-white hover:bg-white/10">
                   <ChevronRight className="h-5 w-5" />
