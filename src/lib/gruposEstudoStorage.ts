@@ -316,3 +316,45 @@ export const sincronizarGruposLocais = async (userId: string): Promise<void> => 
     console.error('Erro ao sincronizar grupos locais:', error);
   }
 };
+
+import { v4 as uuidv4 } from 'uuid';
+
+// Definição do tipo para um grupo de estudos
+interface Grupo {
+  id: string;
+  nome: string;
+  disciplina: string;
+  descricao: string;
+  membros?: number;
+  data_inicio?: string;
+  privacidade?: string;
+  tags?: string[];
+}
+
+// Função para salvar um grupo no localStorage
+export function salvarGrupoNoStorage(grupo: Grupo): void {
+  // Verificar se já existem grupos no localStorage
+  const gruposExistentes = localStorage.getItem('grupos_estudo');
+  let grupos: Grupo[] = [];
+
+  if (gruposExistentes) {
+    grupos = JSON.parse(gruposExistentes);
+  }
+
+  // Adicionar o novo grupo à lista
+  grupos.push(grupo);
+
+  // Salvar a lista atualizada no localStorage
+  localStorage.setItem('grupos_estudo', JSON.stringify(grupos));
+}
+
+// Função para obter todos os grupos do localStorage
+export function obterGruposDoStorage(): Grupo[] {
+  const gruposJson = localStorage.getItem('grupos_estudo');
+
+  if (gruposJson) {
+    return JSON.parse(gruposJson);
+  }
+
+  return [];
+}
