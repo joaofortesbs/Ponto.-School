@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Search, Filter, ChevronRight, Users, TrendingUp, BookOpen, MessageCircle, Plus, UserPlus, FileText, Calendar } from "lucide-react";
+import { Search, Filter, ChevronRight, Users, TrendingUp, BookOpen, MessageCircle, Plus, UserPlus, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import CreateGroupModalEnhanced from "../CreateGroupModalEnhanced";
@@ -429,17 +429,11 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
                             </Badge>
                           )}
                         </div>
-                        <div className="flex justify-between mt-0.5">
-                          <div className="text-white/70 text-xs">
-                            <span className="flex items-center gap-1">
-                              <BookOpen className="h-3 w-3 text-[#FF6B00]" />
-                              {grupo.disciplina || "Sem disciplina"}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-1 text-white/60 text-xs">
-                            <Users className="h-3 w-3 text-[#FF6B00]" />
-                            <span>{grupo.membros} membros</span>
-                          </div>
+                        <div className="text-white/70 text-xs mt-0.5">
+                          <span className="flex items-center gap-1">
+                            <BookOpen className="h-3 w-3 text-[#FF6B00]" />
+                            {grupo.disciplina || "Sem disciplina"}
+                          </span>
                         </div>
                         <div className="text-white/60 text-xs mt-0.5 line-clamp-1">
                           <span className="flex items-center gap-1">
@@ -447,12 +441,11 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
                             {grupo.descricao || "Sem descrição"}
                           </span>
                         </div>
-                        <div className="text-white/60 text-xs mt-0.5">
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3 text-[#FF6B00]" />
-                            {grupo.dataCriacao ? new Date(grupo.dataCriacao).toLocaleDateString() : "Sem data de início"}
-                          </span>
-                        </div>
+                        <div className="flex items-center gap-2 mt-1">
+                          <div className="flex items-center gap-1 text-white/60 text-xs">
+                            <Users className="h-3 w-3" />
+                            <span>{grupo.membros} membros</span>
+                          </div>
                           {grupo.tendencia === "alta" && (
                             <div className="flex items-center gap-1 text-emerald-400 text-xs">
                               <TrendingUp className="h-3 w-3" />
