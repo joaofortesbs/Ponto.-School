@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Search, Filter, ChevronRight, Users, TrendingUp, BookOpen, MessageCircle, Plus, UserPlus, FileText, Calendar } from "lucide-react";
+import { Search, Filter, ChevronRight, Users, TrendingUp, BookOpen, MessageCircle, Plus, UserPlus, FileText, Calendar, LogOut, Eye, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import CreateGroupModalEnhanced from "../CreateGroupModalEnhanced";
@@ -204,6 +204,28 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
   // Detectar grupos em destaque (com tendência alta e novo conteúdo)
   const isGrupoFeatured = (grupo: GrupoEstudo) => {
     return grupo.tendencia === "alta" && grupo.novoConteudo === true;
+  };
+  
+  // Funções para manipular eventos dos botões de ação
+  const handleLeaveGroup = (e: React.MouseEvent, grupoId: string, grupoNome: string) => {
+    e.stopPropagation();
+    if (window.confirm(`Tem certeza que deseja sair do grupo "${grupoNome}"?`)) {
+      console.log(`Saindo do grupo ${grupoId}`);
+      // Implementar lógica para sair do grupo
+    }
+  };
+  
+  const handleViewGroup = (e: React.MouseEvent, grupoId: string) => {
+    e.stopPropagation();
+    console.log(`Visualizando grupo ${grupoId}`);
+    // Implementar navegação para a visualização detalhada do grupo
+    // window.location.href = `/turmas/grupos/${grupoId}`;
+  };
+  
+  const handleGroupSettings = (e: React.MouseEvent, grupoId: string) => {
+    e.stopPropagation();
+    console.log(`Configurações do grupo ${grupoId}`);
+    // Implementar abertura do modal de configurações do grupo
   };
 
   // Modal para criar novo grupo
@@ -416,6 +438,45 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
               onMouseEnter={() => setHoveredGrupo(grupo.id)}
               onMouseLeave={() => setHoveredGrupo(null)}
             >
+              {/* Botões de ação que aparecem quando o mouse passa por cima */}
+              {hoveredGrupo === grupo.id && (
+                <div className="absolute right-3 top-3 flex items-center gap-2 z-10 bg-black/50 backdrop-blur-sm p-1 rounded-md">
+                  <button 
+                    className="text-white/80 hover:text-red-400 transition-colors p-1 rounded-full hover:bg-white/10"
+                    title="Sair do Grupo"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // Lógica para sair do grupo
+                      window.confirm(`Deseja realmente sair do grupo "${grupo.nome}"?`);
+                    }}
+                  >
+                    <LogOut className="h-4 w-4" />
+                  </button>
+                  
+                  <button 
+                    className="text-white/80 hover:text-blue-400 transition-colors p-1 rounded-full hover:bg-white/10"
+                    title="Visualizar Grupo"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // Lógica para visualizar o grupo
+                    }}
+                  >
+                    <Eye className="h-4 w-4" />
+                  </button>
+                  
+                  <button 
+                    className="text-white/80 hover:text-yellow-400 transition-colors p-1 rounded-full hover:bg-white/10"
+                    title="Configurações do Grupo"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // Lógica para configurações do grupo
+                    }}
+                  >
+                    <Settings className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
+              
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="flex-shrink-0">

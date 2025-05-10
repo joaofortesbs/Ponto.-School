@@ -2,7 +2,7 @@ import React from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Calendar, Users } from "lucide-react";
+import { Calendar, Users, LogOut, Eye, Settings } from "lucide-react";
 
 interface GrupoEstudoCardProps {
   grupo: {
@@ -22,9 +22,13 @@ interface GrupoEstudoCardProps {
 }
 
 const GrupoEstudoCard: React.FC<GrupoEstudoCardProps> = ({ grupo, onClick }) => {
+  const [isHovered, setIsHovered] = React.useState(false);
+
   return (
     <Card 
-      className="hover:shadow-md transition-all duration-200 ease-in-out transform hover:translate-y-[-2px] cursor-pointer border-[#f0f0f0] dark:border-[#2a2a2a] h-full will-change-transform"
+      className="hover:shadow-md transition-all duration-200 ease-in-out transform hover:translate-y-[-2px] cursor-pointer border-[#f0f0f0] dark:border-[#2a2a2a] h-full will-change-transform relative"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       onClick={(e) => {
         e.preventDefault();
         if (onClick) {
@@ -37,6 +41,49 @@ const GrupoEstudoCard: React.FC<GrupoEstudoCardProps> = ({ grupo, onClick }) => 
         }
       }}
     >
+      {/* Botões de ação que aparecem no hover */}
+      {isHovered && (
+        <div className="absolute right-3 top-3 flex items-center gap-2 z-10 bg-black/50 backdrop-blur-sm p-1 rounded-md">
+          <button 
+            className="text-white/80 hover:text-red-400 transition-colors p-1 rounded-full hover:bg-white/10"
+            title="Sair do Grupo"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (window.confirm(`Deseja realmente sair do grupo "${grupo.nome}"?`)) {
+                console.log(`Saindo do grupo ${grupo.id}`);
+                // Implementar lógica para sair do grupo
+              }
+            }}
+          >
+            <LogOut className="h-4 w-4" />
+          </button>
+
+          <button 
+            className="text-white/80 hover:text-blue-400 transition-colors p-1 rounded-full hover:bg-white/10"
+            title="Visualizar Grupo"
+            onClick={(e) => {
+              e.stopPropagation();
+              console.log(`Visualizando grupo ${grupo.id}`);
+              // Implementar navegação para a visualização detalhada do grupo
+            }}
+          >
+            <Eye className="h-4 w-4" />
+          </button>
+
+          <button 
+            className="text-white/80 hover:text-yellow-400 transition-colors p-1 rounded-full hover:bg-white/10"
+            title="Configurações do Grupo"
+            onClick={(e) => {
+              e.stopPropagation();
+              console.log(`Configurações do grupo ${grupo.id}`);
+              // Implementar abertura do modal de configurações do grupo
+            }}
+          >
+            <Settings className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
       <div 
         className="h-32 w-full bg-cover bg-center rounded-t-lg" 
         style={{ backgroundImage: `url(${grupo.imagem})` }}
