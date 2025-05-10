@@ -167,7 +167,9 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
       
       if (error) {
         console.error("Erro ao criar grupo:", error);
-        alert("Erro ao criar grupo: " + error.message);
+        // Verificar se o erro tem uma mensagem ou usar um texto genérico
+        const errorMessage = error.message || "Não foi possível criar o grupo. Verifique se a tabela grupos_estudo existe no banco de dados.";
+        alert("Erro ao criar grupo: " + errorMessage);
         return;
       }
       
@@ -217,7 +219,16 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
       
     } catch (error) {
       console.error("Erro ao processar criação de grupo:", error);
-      alert("Erro ao criar grupo. Verifique o console para mais detalhes.");
+      
+      // Melhor tratamento de erro com mensagem específica
+      let errorMessage = "Erro ao criar grupo.";
+      if (error instanceof Error) {
+        errorMessage += " " + error.message;
+      } else if (typeof error === 'object' && error !== null) {
+        errorMessage += " " + (JSON.stringify(error) || "Erro desconhecido");
+      }
+      
+      alert(errorMessage);
     }
   };
 
