@@ -434,6 +434,10 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
                             <BookOpen className="h-3 w-3 text-[#FF6B00]" />
                             {grupo.disciplina || "Sem disciplina"}
                           </span>
+                          <div className="flex items-center gap-1 text-white/60 text-xs ml-auto">
+                            <Users className="h-3 w-3" />
+                            <span>{grupo.membros} membros</span>
+                          </div>
                         </div>
                         <div className="text-white/60 text-xs mt-0.5 line-clamp-1">
                           <span className="flex items-center gap-1">
@@ -441,11 +445,6 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
                             {grupo.descricao || "Sem descrição"}
                           </span>
                         </div>
-                        <div className="flex items-center gap-2 mt-1">
-                          <div className="flex items-center gap-1 text-white/60 text-xs">
-                            <Users className="h-3 w-3" />
-                            <span>{grupo.membros} membros</span>
-                          </div>
                           {grupo.tendencia === "alta" && (
                             <div className="flex items-center gap-1 text-emerald-400 text-xs">
                               <TrendingUp className="h-3 w-3" />
