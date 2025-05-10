@@ -64,7 +64,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
               cor: grupo.cor,
               membros: grupo.membros || 1,
               topico: grupo.topico,
-              disciplina: grupo.topico_nome,
+              disciplina: grupo.disciplina || "",
               icon: grupo.topico_icon,
               dataCriacao: grupo.data_criacao,
               tendencia: Math.random() > 0.7 ? "alta" : undefined, // Valor aleatório para demo
@@ -104,11 +104,11 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
                 cor: grupo.cor,
                 membros: grupo.membros || 1,
                 topico: grupo.topico,
-                disciplina: grupo.disciplina || grupo.topico_nome || "Sem disciplina",
+                disciplina: grupo.disciplina || "",
                 icon: grupo.topico_icon,
                 dataCriacao: grupo.data_criacao,
                 tendencia: Math.random() > 0.7 ? "alta" : undefined, // Valor aleatório para demo
-                novoConteudo: Math.random() > 0.7 ? "alta" : undefined, // Valor aleatório para demo
+                novoConteudo: Math.random() > 0.7, // Valor aleatório para demo
                 privado: grupo.privado,
                 visibilidade: grupo.visibilidade,
                 topico_nome: grupo.topico_nome,
@@ -126,7 +126,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
                   cor: grupo.cor,
                   membros: grupo.membros || 1,
                   topico: grupo.topico,
-                  disciplina: grupo.topico_nome,
+                  disciplina: grupo.disciplina || "",
                   icon: grupo.topico_icon,
                   dataCriacao: grupo.data_criacao,
                   tendencia: Math.random() > 0.7 ? "alta" : undefined,
@@ -218,7 +218,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
       // Mapear grupos para o formato correto
       const gruposMapeados = todosGrupos.map(grupo => ({
         ...grupo,
-        disciplina: grupo.disciplina || grupo.topico_nome || "",
+        disciplina: grupo.disciplina || "",
         novoConteudo: Boolean(grupo.novoConteudo || Math.random() > 0.7),
         tendencia: grupo.tendencia || (Math.random() > 0.7 ? "alta" : undefined)
       }));
@@ -432,7 +432,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
                         <div className="text-white/70 text-xs mt-0.5">
                           <span className="flex items-center gap-1">
                             <BookOpen className="h-3 w-3 text-[#FF6B00]" />
-                            {grupo.disciplina ? grupo.disciplina : grupo.topico_nome ? grupo.topico_nome : "Sem disciplina"}
+                            {grupo.disciplina || "Sem disciplina"}
                           </span>
                         </div>
                         <div className="flex items-center gap-2 mt-1">
