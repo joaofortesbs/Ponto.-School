@@ -54,7 +54,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
         if (session) {
           // Primeiro carregamos os grupos locais para exibição rápida
           const gruposLocais = obterGruposLocal().filter(grupo => grupo.user_id === session.user.id);
-          
+
           // Converter dados locais para o formato da interface
           if (gruposLocais.length > 0) {
             const gruposLocaisFormatados: GrupoEstudo[] = gruposLocais.map((grupo: any) => ({
@@ -74,7 +74,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
               topico_nome: grupo.topico_nome,
               topico_icon: grupo.topico_icon
             }));
-            
+
             // Exibir primeiro os grupos locais enquanto carregamos do Supabase
             setGruposEstudo(gruposLocaisFormatados);
           }
@@ -90,7 +90,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
             if (error) {
               console.error("Erro ao buscar grupos de estudo do Supabase:", error);
               // Continuar com os grupos locais já carregados
-              
+
               // Tentar sincronizar os grupos locais com o Supabase
               await sincronizarGruposLocais(session.user.id);
             } else {
@@ -108,7 +108,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
                 icon: grupo.topico_icon,
                 dataCriacao: grupo.data_criacao,
                 tendencia: Math.random() > 0.7 ? "alta" : undefined, // Valor aleatório para demo
-                novoConteudo: Math.random() > 0.7, // Valor aleatório para demo
+                novoConteudo: Math.random() > 0.7 ? "alta" : undefined, // Valor aleatório para demo
                 privado: grupo.privado,
                 visibilidade: grupo.visibilidade,
                 topico_nome: grupo.topico_nome,
@@ -207,163 +207,26 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
   // Processar a criação de um novo grupo
   const handleCreateGroup = async (formData: any) => {
     try {
-      // Verificar se o usuário está autenticado
-      const { data: { session } } = await supabase.auth.getSession();
+      console.log("Dados do formulário:", formData);
 
-      if (!session) {
-        console.error("Usuário não autenticado");
-        alert("Você precisa estar autenticado para criar um grupo");
-        return;
-      }
+      // Usar a função do sistema de armazenamento local
+      const novoGrupo = await criarGrupo({
+        ...formData,
+        id: crypto.randomUUID(),
+        timestamp: new Date().getTime()
+      });
 
-      // Gerar código único para grupos privados
-      const codigoGrupo = formData.privado 
-        ? `GRP${Math.random().toString(36).substring(2, 8).toUpperCase()}` 
-        : null;
+      console.log("Grupo criado com sucesso:", novoGrupo);
 
-      // Preparar dados para inserção no banco
-      const grupoData = {
-        user_id: session.user.id,
-        nome: formData.nome,
-        descricao: formData.descricao || "",
-        cor: formData.cor || "#FF6B00",
-        topico: formData.topico || null,
-        topico_nome: formData.topicoNome || null,
-        topico_icon: formData.topicoIcon || null,
-        privado: formData.privado || false,
-        visibilidade: formData.visibilidade || "todos",
-        membros: formData.amigos ? formData.amigos.length + 1 : 1,
-        codigo: codigoGrupo,
-        data_criacao: new Date().toISOString() // Garantir que data_criacao esteja definida
-      };
+      // Atualizar lista de grupos
+      const todosGrupos = await obterTodosGrupos();
+      setGruposEstudo(todosGrupos);
 
-      console.log("Enviando dados para criação de grupo:", grupoData);
-
-      // Usar o novo sistema de armazenamento
-      const novoGrupoDados = await criarGrupo(grupoData);
-
-      if (!novoGrupoDados) {
-        throw new Error("Não foi possível criar o grupo. Tente novamente mais tarde.");
-      }
-
-      console.log("Grupo criado com sucesso:", novoGrupoDados);
-
-      // Converter o grupo criado para o formato da interface
-      const novoGrupo: GrupoEstudo = {
-        id: novoGrupoDados.id,
-        nome: novoGrupoDados.nome,
-        cor: novoGrupoDados.cor,
-        membros: novoGrupoDados.membros,
-        dataCriacao: novoGrupoDados.data_criacao,
-        topico: novoGrupoDados.topico,
-        disciplina: novoGrupoDados.topico_nome,
-        icon: novoGrupoDados.topico_icon,
-        tendencia: Math.random() > 0.7 ? "alta" : undefined, // Valor aleatório para demo
-        novoConteudo: false, // Grupo novo não tem conteúdo novo ainda
-        privado: novoGrupoDados.privado,
-        visibilidade: novoGrupoDados.visibilidade,
-        topico_nome: novoGrupoDados.topico_nome,
-        topico_icon: novoGrupoDados.topico_icon
-      };
-
-      // Adicionar o novo grupo à lista de grupos e atualizar a interface
-      setGruposEstudo(prev => [novoGrupo, ...prev]);
-
-      // Garantir que o grupo esteja salvo localmente também
-      if (novoGrupoDados.id.startsWith('local_')) {
-        // Verificamos novamente se o grupo já existe localmente para evitar duplicatas
-        const gruposAtuais = obterGruposLocal();
-        if (!gruposAtuais.some(g => g.id === novoGrupoDados.id)) {
-          salvarGrupoLocal(novoGrupoDados);
-        }
-      }
-
-      // Fechar o modal criado pelo CreateGroupModalEnhanced
+      // Fechar modal
       setShowCreateGroupModal(false);
-
-      // Mostrar feedback visual temporário
-      mostrarNotificacaoSucesso('Grupo criado com sucesso!');
-
-      return novoGrupoDados; // Retorna os dados para o componente chamador
-
     } catch (error) {
-      console.error("Erro ao processar criação de grupo:", error);
-
-      // Tentar salvar localmente mesmo com erro do Supabase
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (session && formData) {
-          // Gerar ID local
-          const idLocal = `local_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-          
-          // Criar objeto do grupo para armazenamento local
-          const grupoLocalEmergencia = {
-            id: idLocal,
-            user_id: session.user.id,
-            nome: formData.nome,
-            descricao: formData.descricao || "",
-            cor: formData.cor || "#FF6B00",
-            topico: formData.topico || null,
-            topico_nome: formData.topicoNome || null,
-            topico_icon: formData.topicoIcon || null,
-            privado: formData.privado || false,
-            visibilidade: formData.visibilidade || "todos",
-            membros: formData.amigos ? formData.amigos.length + 1 : 1,
-            codigo: formData.privado ? `GRP${Math.random().toString(36).substring(2, 8).toUpperCase()}` : null,
-            data_criacao: new Date().toISOString()
-          };
-          
-          // Salvar no armazenamento local como backup
-          salvarGrupoLocal(grupoLocalEmergencia);
-          
-          // Adicionar à lista de exibição
-          const novoGrupo: GrupoEstudo = {
-            id: grupoLocalEmergencia.id,
-            nome: grupoLocalEmergencia.nome,
-            cor: grupoLocalEmergencia.cor,
-            membros: grupoLocalEmergencia.membros,
-            dataCriacao: grupoLocalEmergencia.data_criacao,
-            topico: grupoLocalEmergencia.topico,
-            disciplina: grupoLocalEmergencia.topico_nome,
-            icon: grupoLocalEmergencia.topico_icon,
-            tendencia: Math.random() > 0.7 ? "alta" : undefined,
-            novoConteudo: false,
-            privado: grupoLocalEmergencia.privado,
-            visibilidade: grupoLocalEmergencia.visibilidade,
-            topico_nome: grupoLocalEmergencia.topico_nome,
-            topico_icon: grupoLocalEmergencia.topico_icon
-          };
-          
-          // Atualizar interface
-          setGruposEstudo(prev => [novoGrupo, ...prev]);
-          
-          // Fechar modal
-          setShowCreateGroupModal(false);
-          
-          // Mostrar feedback visual
-          mostrarNotificacaoSucesso('Grupo criado e salvo localmente!');
-          
-          // Retornar os dados para o componente chamador
-          return grupoLocalEmergencia;
-        }
-      } catch (localSaveError) {
-        console.error("Falha ao tentar salvar o grupo localmente:", localSaveError);
-      }
-
-      // Melhor tratamento de erro com mensagem específica
-      let errorMessage = "Erro ao criar grupo: ";
-      if (error instanceof Error) {
-        errorMessage += error.message;
-      } else if (typeof error === 'object' && error !== null) {
-        errorMessage += (error.toString ? error.toString() : JSON.stringify(error)) || "Ocorreu um erro desconhecido.";
-      } else {
-        errorMessage += "Ocorreu um erro desconhecido.";
-      }
-
-      alert(errorMessage);
-      // Retornar o erro para que o componente pai saiba que houve falha
-      throw error;
+      console.error("Erro ao criar grupo:", error);
+      setErro(`Ocorreu um erro desconhecido ao criar o grupo.`);
     }
   };
 
