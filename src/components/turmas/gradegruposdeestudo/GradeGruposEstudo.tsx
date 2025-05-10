@@ -5,7 +5,6 @@ import { Search, Filter, ChevronRight, Users, TrendingUp, BookOpen, MessageCircl
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import CreateGroupModalEnhanced from "../CreateGroupModalEnhanced";
-import { supabase } from "@/lib/supabase";
 
 interface GrupoEstudo {
   id: string;
@@ -19,7 +18,6 @@ interface GrupoEstudo {
   novoConteudo?: boolean;
   criador?: string;
   dataCriacao: string;
-  user_id?: string;
 }
 
 interface GradeGruposEstudoProps {
@@ -39,33 +37,22 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
   const [loading, setLoading] = useState(true);
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
 
-  // Buscar os grupos do usuário do banco de dados
+  // Simulando carregamento de dados
   useEffect(() => {
+    // Aqui futuramente você irá buscar os grupos do usuário do banco de dados
     const carregarGrupos = async () => {
       try {
         setLoading(true);
+        // Simula um delay para mostrar estado de carregamento
+        await new Promise(resolve => setTimeout(resolve, 500));
         
-        // Obter o usuário atual
-        const { data: { user } } = await supabase.auth.getUser();
+        // No futuro, substitua por chamada à API
+        // const response = await fetch('/api/grupos-estudo');
+        // const data = await response.json();
+        // setGruposEstudo(data);
         
-        if (user) {
-          // Buscar grupos do usuário no Supabase
-          const { data, error } = await supabase
-            .from('grupos_estudo')
-            .select('*')
-            .eq('user_id', user.id);
-          
-          if (error) {
-            console.error("Erro ao buscar grupos de estudo:", error);
-            return;
-          }
-          
-          if (data && data.length > 0) {
-            setGruposEstudo(data);
-          } else {
-            setGruposEstudo([]);
-          }
-        }
+        // Por enquanto, inicia com array vazio (dados removidos)
+        setGruposEstudo([]);
       } catch (error) {
         console.error("Erro ao carregar grupos de estudo:", error);
       } finally {
@@ -104,48 +91,29 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
   };
 
   // Função para processar a criação de um novo grupo
-  const handleCreateGroup = async (formData: any) => {
-    try {
-      // Obter o usuário atual
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        console.error("Usuário não autenticado");
-        return;
-      }
-      
-      // Criar objeto do grupo
-      const novoGrupo: GrupoEstudo = {
-        id: `grupo-${Date.now()}`,
-        nome: formData.nome,
-        cor: formData.cor || "#FF6B00",
-        membros: formData.amigos ? formData.amigos.length + 1 : 1, // Criador + amigos convidados
-        dataCriacao: new Date().toISOString(),
-        topico: formData.topico || undefined, // Usado para filtragem por tópico
-        disciplina: formData.topicoNome || undefined,
-        icon: formData.topicoIcon || undefined,
-        tendencia: Math.random() > 0.7 ? "alta" : undefined, // Simula tendência aleatória
-        user_id: user.id, // Associar ao usuário atual
-        // Outros campos baseados no formulário
-      };
-      
-      // Salvar no Supabase
-      const { error } = await supabase
-        .from('grupos_estudo')
-        .insert(novoGrupo);
-      
-      if (error) {
-        console.error("Erro ao salvar grupo:", error);
-        return;
-      }
-      
-      // Adicionar à lista local
-      setGruposEstudo(prev => [...prev, novoGrupo]);
-      setShowCreateGroupModal(false);
-      
-    } catch (error) {
-      console.error("Erro ao criar grupo:", error);
-    }
+  const handleCreateGroup = (formData: any) => {
+    // Aqui você implementará a lógica para criar um novo grupo
+    console.log("Criando novo grupo:", formData);
+    
+    // Exemplo de como adicionar o novo grupo à lista (a ser implementado com dados reais)
+    // Incluiria integração com banco de dados na versão final
+    const novoGrupo: GrupoEstudo = {
+      id: `grupo-${Date.now()}`,
+      nome: formData.nome,
+      cor: formData.cor || "#FF6B00",
+      membros: formData.amigos ? formData.amigos.length + 1 : 1, // Criador + amigos convidados
+      dataCriacao: new Date().toISOString(),
+      topico: formData.topico || undefined, // Usado para filtragem por tópico
+      disciplina: formData.topicoNome || undefined,
+      icon: formData.topicoIcon || undefined,
+      tendencia: Math.random() > 0.7 ? "alta" : undefined, // Simula tendência aleatória
+      privado: formData.privado,
+      visibilidade: formData.visibilidade,
+      // Outros campos baseados no formulário
+    };
+    
+    setGruposEstudo(prev => [...prev, novoGrupo]);
+    setShowCreateGroupModal(false);
   };
 
   return (
