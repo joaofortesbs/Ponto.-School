@@ -65,10 +65,6 @@ import {
   Presentation,
   Share2,
 } from "lucide-react";
-import { createGrupoEstudo } from "@/services/databaseService";
-import { useAuth } from "@/hooks/useAuth";
-import { toast } from "@/components/ui/use-toast";
-import { Loader2 } from "lucide-react";
 
 // Dados de exemplo para usuários que podem ser convidados
 const usuariosDisponiveis = [
@@ -181,11 +177,10 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({
   onSubmit,
   onCancel,
 }) => {
+  const [activeTab, setActiveTab] = useState("informacoes");
   const [formData, setFormData] = useState({
     nome: "",
     disciplina: "",
-    topico: "",
-    nivel: "Intermediário",
     descricao: "",
     dataInicio: "",
     horarios: "",
@@ -199,11 +194,9 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({
     objetivos: "",
     frequencia: "semanal",
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
 
-  const handleChange = (
+  const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
@@ -211,20 +204,6 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({
   };
 
   const handleSelectChange = (name: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const randomImageUrls = [
-    "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800&q=80",
-    "https://images.unsplash.com/photo-1509228627152-72ae9ae6848d?w=800&q=80",
-    "https://images.unsplash.com/photo-1567427017947-545c5f8d16ad?w=800&q=80",
-    "https://images.unsplash.com/photo-1503428593586-e225b39bddfe?w=800&q=80",
-  ];
-
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -275,63 +254,9 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({
     .map((id) => usuariosDisponiveis.find((user) => user.id === id))
     .filter(Boolean);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!user || !user.id) {
-      toast({
-        title: "Erro",
-        description: "Você precisa estar logado para criar um grupo de estudos.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      // Criar objeto de grupo de estudo
-      const grupoData = {
-        userId: user.id,
-        nome: formData.nome,
-        topico: formData.topico,
-        disciplina: formData.disciplina,
-        descricao: formData.descricao,
-        membros: Math.floor(Math.random() * 15) + 3, // Número aleatório entre 3 e 18
-        proximaReuniao: getFormattedFutureDate(), // Data próxima futura
-        progresso: Math.floor(Math.random() * 100), // Progresso aleatório
-        nivel: formData.nivel,
-        imagem: randomImageUrls[Math.floor(Math.random() * randomImageUrls.length)],
-        tags: [formData.topico.toLowerCase(), formData.disciplina.toLowerCase(), formData.nivel.toLowerCase()],
-        dataInicio: new Date().toLocaleDateString('pt-BR'),
-      };
-
-      // Salvar no banco de dados
-      const resultado = await createGrupoEstudo(grupoData);
-
-      if (resultado) {
-        toast({
-          title: "Sucesso",
-          description: "Grupo de estudos criado com sucesso!",
-        });
-        onSubmit(resultado);
-      } else {
-        toast({
-          title: "Erro",
-          description: "Erro ao criar grupo de estudos. Tente novamente.",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error("Erro ao criar grupo:", error);
-      toast({
-        title: "Erro",
-        description: "Ocorreu um erro ao criar o grupo. Tente novamente.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    onSubmit(formData);
   };
 
   const getTipoGrupoInfo = () => {
@@ -339,22 +264,6 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({
       tiposGrupo.find((tipo) => tipo.id === formData.tipoGrupo) || tiposGrupo[0]
     );
   };
-
-  // Função para gerar uma data futura formatada (DD/MM, HH:MM)
-  const getFormattedFutureDate = () => {
-    const today = new Date();
-    const futureDate = new Date(today);
-    futureDate.setDate(today.getDate() + Math.floor(Math.random() * 14) + 1); // 1-14 dias no futuro
-
-    const day = futureDate.getDate().toString().padStart(2, '0');
-    const month = (futureDate.getMonth() + 1).toString().padStart(2, '0');
-    const hours = (Math.floor(Math.random() * 12) + 8).toString().padStart(2, '0'); // Horário entre 8h e 20h
-    const minutes = ['00', '15', '30', '45'][Math.floor(Math.random() * 4)]; // Minutos em intervalos de 15
-
-    return `${day}/${month}, ${hours}:${minutes}`;
-  };
-
-  const [activeTab, setActiveTab] = useState("informacoes");
 
   return (
     <Card className="max-w-4xl mx-auto border-[#FF6B00]/10 dark:border-[#FF6B00]/20 shadow-lg hover:shadow-xl transition-all duration-300">
@@ -473,18 +382,6 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="topico">Tópico Específico</Label>
-                  <Input
-                    id="topico"
-                    name="topico"
-                    value={formData.topico}
-                    onChange={handleInputChange}
-                    placeholder="Ex: Álgebra Linear"
-                    required
-                    className="border-[#FF6B00]/30 focus:border-[#FF6B00] focus:ring-[#FF6B00]/30"
-                  />
-                </div>
-                <div className="space-y-2">
                   <Label htmlFor="tags">Tags (separadas por vírgula)</Label>
                   <Input
                     id="tags"
@@ -563,23 +460,6 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({
                     required
                     className="border-[#FF6B00]/30 focus:border-[#FF6B00] focus:ring-[#FF6B00]/30"
                   />
-                </div>
-                 <div className="space-y-2">
-                  <Label htmlFor="nivel">Nível de Dificuldade</Label>
-                  <Select
-                    name="nivel"
-                    value={formData.nivel}
-                    onValueChange={(value) => handleSelectChange("nivel", value)}
-                  >
-                    <SelectTrigger className="border-[#FF6B00]/30 focus:border-[#FF6B00] focus:ring-[#FF6B00]/30" id="nivel">
-                      <SelectValue placeholder="Selecione o nível" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Básico">Básico</SelectItem>
-                      <SelectItem value="Intermediário">Intermediário</SelectItem>
-                      <SelectItem value="Avançado">Avançado</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="frequencia">Frequência de Encontros</Label>
@@ -786,7 +666,7 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({
                 </div>
               </div>
 
-              {convidadosInfo.length > 0 &&(
+              {convidadosInfo.length > 0 && (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <h3 className="text-base font-medium text-gray-900 dark:text-white flex items-center gap-2">
@@ -967,16 +847,9 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({
             <Button
               type="submit"
               className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white shadow-md hover:shadow-lg transition-all duration-300 animate-gradient-x"
-              disabled={isSubmitting}
             >
-              {isSubmitting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <>
-                  <Save className="h-4 w-4 mr-2" />
-                  Criar Grupo
-                </>
-              )}
+              <Save className="h-4 w-4 mr-2" />
+              Criar Grupo
             </Button>
           </div>
         </form>
