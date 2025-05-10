@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -73,7 +72,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
     convidados: [] as string[],
     imagem: null as File | null
   });
-  
+
   const [searchQuery, setSearchQuery] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [convidadosInfo, setConvidadosInfo] = useState<any[]>([]);
@@ -114,7 +113,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
         ...prev,
         convidados: [...prev.convidados, usuarioId]
       }));
-      
+
       // Atualizar a lista de convidados com informações detalhadas
       const usuario = usuariosDisponiveis.find(u => u.id === usuarioId);
       if (usuario) {
@@ -128,7 +127,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
       ...prev,
       convidados: prev.convidados.filter(id => id !== usuarioId)
     }));
-    
+
     setConvidadosInfo(prev => prev.filter(u => u.id !== usuarioId));
   };
 
@@ -136,14 +135,14 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setFormData(prev => ({ ...prev, imagem: file }));
-      
+
       // Criar URL para previsualização
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     // Validar formulário
@@ -207,21 +206,21 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
 
         if (error) {
           console.error("Erro ao inserir grupo no Supabase:", error);
-          
+
           // Se falhar o Supabase, salvar localmente
           await salvarGrupoLocal({
             ...novoGrupo,
             id: crypto.randomUUID(), // Gerar um ID local
             timestamp: new Date().getTime()
           });
-          
+
           console.log("Grupo salvo localmente");
         } else {
           console.log("Grupo criado com sucesso no Supabase:", data);
         }
       } catch (supabaseError) {
         console.error("Erro ao acessar Supabase:", supabaseError);
-        
+
         // Salvar localmente em caso de erro, usando salvarGrupoLocal em vez de criarGrupo
         // para evitar duplicação
         await salvarGrupoLocal({
@@ -229,7 +228,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
           id: crypto.randomUUID(),
           timestamp: new Date().getTime()
         });
-        
+
         console.log("Grupo salvo localmente após erro no Supabase");
       }
 
@@ -742,7 +741,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
                       className="hidden"
                       onChange={handleImageChange}
                     />
-                    
+
                     {previewUrl ? (
                       <div className="flex flex-col items-center">
                         <img 

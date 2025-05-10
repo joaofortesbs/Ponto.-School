@@ -19,6 +19,7 @@ export interface GrupoEstudo {
   visibilidade?: string;
   codigo?: string;
   data_criacao: string;
+  disciplina?: string;
 }
 
 // Chave para armazenamento local

@@ -104,7 +104,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
                 cor: grupo.cor,
                 membros: grupo.membros || 1,
                 topico: grupo.topico,
-                disciplina: grupo.topico_nome,
+                disciplina: grupo.disciplina || grupo.topico_nome || "Sem disciplina",
                 icon: grupo.topico_icon,
                 dataCriacao: grupo.data_criacao,
                 tendencia: Math.random() > 0.7 ? "alta" : undefined, // Valor aleatório para demo
@@ -215,8 +215,16 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
       // Atualizar lista de grupos - remover duplicatas verificando por ID ou nome
       const todosGrupos = await obterTodosGrupos();
 
+      // Mapear grupos para o formato correto
+      const gruposMapeados = todosGrupos.map(grupo => ({
+        ...grupo,
+        disciplina: grupo.disciplina || grupo.topico_nome || "",
+        novoConteudo: Boolean(grupo.novoConteudo || Math.random() > 0.7),
+        tendencia: grupo.tendencia || (Math.random() > 0.7 ? "alta" : undefined)
+      }));
+
       // Remover duplicatas baseado no nome do grupo
-      const gruposFiltrados = todosGrupos.filter((grupo, index, self) => 
+      const gruposFiltrados = gruposMapeados.filter((grupo, index, self) => 
         index === self.findIndex((g) => g.nome === grupo.nome)
       );
 
@@ -224,6 +232,9 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
 
       // Fechar modal
       setShowCreateGroupModal(false);
+      
+      // Mostrar notificação de sucesso
+      mostrarNotificacaoSucesso("Grupo criado com sucesso!");
     } catch (error) {
       console.error("Erro ao criar grupo:", error);
       setErro(`Ocorreu um erro desconhecido ao criar o grupo.`);
@@ -421,7 +432,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
                         <div className="text-white/70 text-xs mt-0.5">
                           <span className="flex items-center gap-1">
                             <BookOpen className="h-3 w-3 text-[#FF6B00]" />
-                            {grupo.disciplina || "Sem disciplina"}
+                            {grupo.disciplina ? grupo.disciplina : grupo.topico_nome ? grupo.topico_nome : "Sem disciplina"}
                           </span>
                         </div>
                         <div className="flex items-center gap-2 mt-1">
