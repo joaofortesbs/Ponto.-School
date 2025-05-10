@@ -157,35 +157,8 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
 
       console.log("Enviando dados para criação de grupo:", grupoData);
 
-      // Verificar se a tabela existe primeiro
-      const { error: tableCheckError } = await supabase
-        .from('grupos_estudo')
-        .select('count(*)', { count: 'exact', head: true });
-
-      if (tableCheckError && tableCheckError.code === '42P01') {
-        console.error("Tabela grupos_estudo não existe:", tableCheckError);
-
-        // Tentar executar a migração via API
-        try {
-          const response = await fetch('/api/apply-migration', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-              migration: '20240820000000_create_grupos_estudo_table.sql' 
-            })
-          });
-
-          if (response.ok) {
-            alert("Estrutura do banco atualizada. Tente criar o grupo novamente.");
-          } else {
-            alert("A tabela grupos_estudo não existe. Execute o fluxo de trabalho 'Aplicar Migrações' para criar a tabela.");
-          }
-        } catch (fetchError) {
-          console.error("Erro ao tentar aplicar migração:", fetchError);
-          alert("A tabela grupos_estudo não existe. Execute o fluxo de trabalho 'Aplicar Migrações' para criar a tabela.");
-        }
-        return;
-      }
+      // Primeiro, aplicar a migração para garantir que a tabela existe
+      await executarMigracaoDoBancoDeDados();
 
       // Inserir no banco de dados
       const { data, error } = await supabase
@@ -200,12 +173,17 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
 
         if (error.code === '42P01') {
           errorMsg += "A tabela grupos_estudo não existe. Execute o fluxo de trabalho 'Aplicar Migrações'.";
+          // Tenta aplicar a migração automaticamente
+          await executarMigracaoDoBancoDeDados();
+          throw new Error(errorMsg);
         } else {
-          errorMsg += error.message || "Ocorreu um erro desconhecido.";
+          errorMsg += error.message || "Verifique se a tabela grupos_estudo foi criada corretamente.";
+          throw new Error(errorMsg);
         }
+      }
 
-        alert(errorMsg);
-        return;
+      if (!data) {
+        throw new Error("Não foi possível criar o grupo. Nenhum dado retornado do banco.");
       }
 
       console.log("Grupo criado com sucesso:", data);
@@ -231,40 +209,98 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
       // Adicionar o novo grupo à lista de grupos e atualizar a interface
       setGruposEstudo(prev => [novoGrupo, ...prev]);
 
-      // Modal será fechado automaticamente pela função onSubmit no componente CreateGroupModalEnhanced
+      // Fechar o modal criado pelo CreateGroupModalEnhanced
+      setShowCreateGroupModal(false);
 
       // Mostrar feedback visual temporário
-      const element = document.createElement('div');
-      element.style.position = 'fixed';
-      element.style.top = '20px';
-      element.style.left = '50%';
-      element.style.transform = 'translateX(-50%)';
-      element.style.padding = '10px 20px';
-      element.style.background = '#4CAF50';
-      element.style.color = 'white';
-      element.style.borderRadius = '4px';
-      element.style.zIndex = '9999';
-      element.textContent = 'Grupo criado com sucesso!';
-      document.body.appendChild(element);
+      mostrarNotificacaoSucesso('Grupo criado com sucesso!');
 
-      // Remover após 3 segundos
-      setTimeout(() => {
-        document.body.removeChild(element);
-      }, 3000);
+      return data; // Retorna os dados para o componente chamador
 
     } catch (error) {
       console.error("Erro ao processar criação de grupo:", error);
 
       // Melhor tratamento de erro com mensagem específica
-      let errorMessage = "Erro ao criar grupo.";
+      let errorMessage = "Erro ao criar grupo: ";
       if (error instanceof Error) {
-        errorMessage += " " + error.message;
+        errorMessage += error.message;
       } else if (typeof error === 'object' && error !== null) {
-        errorMessage += " " + (JSON.stringify(error) || "Erro desconhecido");
+        errorMessage += (error.toString ? error.toString() : JSON.stringify(error)) || "Ocorreu um erro desconhecido.";
+      } else {
+        errorMessage += "Ocorreu um erro desconhecido.";
       }
 
       alert(errorMessage);
+      // Retornar o erro para que o componente pai saiba que houve falha
+      throw error;
     }
+  };
+
+  // Função auxiliar para aplicar a migração do banco de dados
+  const executarMigracaoDoBancoDeDados = async () => {
+    try {
+      // Verificar se a tabela existe
+      const { error: tableCheckError } = await supabase
+        .from('grupos_estudo')
+        .select('count(*)', { count: 'exact', head: true });
+
+      if (tableCheckError && tableCheckError.code === '42P01') {
+        console.log("Tentando aplicar migração da tabela grupos_estudo...");
+        
+        // Executar o fluxo de trabalho de migração
+        window.alert("A tabela de grupos de estudo não existe. Aplicando migração automaticamente...");
+        
+        // Tentar executar via workflow
+        try {
+          const response = await fetch('/api/apply-migration', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ migration: '20240820000000_create_grupos_estudo_table.sql' })
+          });
+
+          if (!response.ok) {
+            throw new Error("Falha ao aplicar migração via API");
+          }
+          
+          console.log("Migração aplicada com sucesso");
+          return true;
+        } catch (fetchError) {
+          console.error("Erro ao aplicar migração:", fetchError);
+          throw new Error("Falha ao aplicar migração. Execute o fluxo de trabalho 'Aplicar Migrações'.");
+        }
+      }
+      
+      return true; // Tabela já existe ou foi criada com sucesso
+    } catch (error) {
+      console.error("Erro ao verificar/criar tabela:", error);
+      throw error;
+    }
+  };
+
+  // Função auxiliar para mostrar notificação de sucesso
+  const mostrarNotificacaoSucesso = (mensagem: string) => {
+    const element = document.createElement('div');
+    element.style.position = 'fixed';
+    element.style.top = '20px';
+    element.style.left = '50%';
+    element.style.transform = 'translateX(-50%)';
+    element.style.padding = '10px 20px';
+    element.style.background = '#4CAF50';
+    element.style.color = 'white';
+    element.style.borderRadius = '4px';
+    element.style.zIndex = '9999';
+    element.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+    element.textContent = mensagem;
+    document.body.appendChild(element);
+
+    // Remover após 3 segundos
+    setTimeout(() => {
+      element.style.opacity = '0';
+      element.style.transition = 'opacity 0.5s';
+      setTimeout(() => {
+        document.body.removeChild(element);
+      }, 500);
+    }, 3000);
   };
 
   return (

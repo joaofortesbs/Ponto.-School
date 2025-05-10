@@ -175,7 +175,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
     setFormData(prev => ({ ...prev, visibilidade: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Validar formulário
@@ -184,19 +184,27 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
       return;
     }
 
-    // Incluir todas as informações necessárias para persistência no banco de dados
-    onSubmit({
-      ...formData,
-      amigos: selectedFriends.map(f => f.id),
-      amigosDetalhes: selectedFriends,
-      topicoNome: formData.topicoNome,
-      topicoIcon: formData.topicoIcon
-    });
+    try {
+      // Preparar dados para envio
+      const dadosGrupo = {
+        ...formData,
+        amigos: selectedFriends.map(f => f.id),
+        amigosDetalhes: selectedFriends,
+        topicoNome: formData.topicoNome,
+        topicoIcon: formData.topicoIcon
+      };
 
-    console.log("Formulário enviado:", formData);
+      console.log("Formulário preparado para envio:", dadosGrupo);
 
-    // Fechar o modal após enviar o formulário
-    onClose();
+      // Enviar para a função de submit passada como prop
+      await onSubmit(dadosGrupo);
+
+      // Modal será fechado pelo componente pai após sucesso
+    } catch (error) {
+      // Tratar erro localmente se ocorrer
+      console.error("Erro ao processar formulário:", error);
+      // Não fechar o modal em caso de erro para permitir correções
+    }
   };
 
   const handleCodeSubmit = (e: React.FormEvent) => {
