@@ -1,37 +1,41 @@
 
--- Create table for grupos_estudo (study groups)
-CREATE TABLE IF NOT EXISTS grupos_estudo (
+CREATE TABLE IF NOT EXISTS public.grupos_estudo (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-  nome VARCHAR NOT NULL,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  nome TEXT NOT NULL,
   descricao TEXT,
-  cor VARCHAR NOT NULL,
-  topico VARCHAR,
-  topico_nome VARCHAR,
-  topico_icon VARCHAR,
+  cor TEXT NOT NULL DEFAULT '#FF6B00',
+  membros INTEGER NOT NULL DEFAULT 1,
+  topico TEXT,
+  topico_nome TEXT,
+  topico_icon TEXT,
   privado BOOLEAN DEFAULT false,
-  visibilidade VARCHAR DEFAULT 'todos',
-  membros INTEGER DEFAULT 1,
-  codigo VARCHAR,
-  data_criacao TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  visibilidade TEXT DEFAULT 'todos',
+  codigo TEXT,
+  data_criacao TIMESTAMP WITH TIME ZONE DEFAULT now(),
+
+  CONSTRAINT grupos_estudo_user_id_fkey FOREIGN KEY (user_id)
+    REFERENCES auth.users(id) ON DELETE CASCADE
 );
 
--- Create policies for grupos_estudo
+-- Create index for faster queries
+CREATE INDEX IF NOT EXISTS grupos_estudo_user_id_idx ON public.grupos_estudo(user_id);
+
+-- Grant access to authenticated users
+ALTER TABLE public.grupos_estudo ENABLE ROW LEVEL SECURITY;
+
 CREATE POLICY "Users can view their own grupos_estudo"
-  ON grupos_estudo FOR SELECT
+  ON public.grupos_estudo FOR SELECT
   USING (auth.uid() = user_id);
 
 CREATE POLICY "Users can insert their own grupos_estudo"
-  ON grupos_estudo FOR INSERT
+  ON public.grupos_estudo FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
 CREATE POLICY "Users can update their own grupos_estudo"
-  ON grupos_estudo FOR UPDATE
+  ON public.grupos_estudo FOR UPDATE
   USING (auth.uid() = user_id);
 
 CREATE POLICY "Users can delete their own grupos_estudo"
-  ON grupos_estudo FOR DELETE
+  ON public.grupos_estudo FOR DELETE
   USING (auth.uid() = user_id);
-
--- Grant access to authenticated users
-ALTER TABLE grupos_estudo ENABLE ROW LEVEL SECURITY;

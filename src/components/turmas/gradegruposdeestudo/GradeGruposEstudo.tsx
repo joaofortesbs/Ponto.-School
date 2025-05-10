@@ -63,6 +63,8 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
             return;
           }
           
+          console.log("Grupos carregados:", data);
+          
           // Converter dados do banco para o formato da interface
           const gruposFormatados: GrupoEstudo[] = data.map((grupo: any) => ({
             id: grupo.id,
@@ -92,7 +94,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
     };
 
     carregarGrupos();
-  }, []);
+  }, [showCreateGroupModal]); // Recarregar quando o modal for fechado
 
   // Filtrar grupos baseado no tópico selecionado e busca
   const gruposFiltrados = gruposEstudo.filter(
@@ -132,6 +134,11 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
         return;
       }
       
+      // Gerar código único para grupos privados
+      const codigoGrupo = formData.privado 
+        ? `GRP${Math.random().toString(36).substring(2, 8).toUpperCase()}` 
+        : null;
+      
       // Preparar dados para inserção no banco
       const grupoData = {
         user_id: session.user.id,
@@ -144,8 +151,10 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
         privado: formData.privado || false,
         visibilidade: formData.visibilidade || "todos",
         membros: formData.amigos ? formData.amigos.length + 1 : 1,
-        codigo: formData.privado ? `GRP${Math.random().toString(36).substring(2, 8).toUpperCase()}` : null
+        codigo: codigoGrupo
       };
+      
+      console.log("Enviando dados para criação de grupo:", grupoData);
       
       // Inserir no banco de dados
       const { data, error } = await supabase
@@ -159,6 +168,8 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
         return;
       }
       
+      console.log("Grupo criado com sucesso:", data);
+      
       // Converter o grupo criado para o formato da interface
       const novoGrupo: GrupoEstudo = {
         id: data.id,
@@ -170,14 +181,19 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
         disciplina: data.topico_nome,
         icon: data.topico_icon,
         tendencia: Math.random() > 0.7 ? "alta" : undefined, // Valor aleatório para demo
-        novoConteudo: false, // Grupo novo não tem novo conteúdo ainda
+        novoConteudo: false, // Grupo novo não tem conteúdo novo ainda
         privado: data.privado,
-        visibilidade: data.visibilidade
+        visibilidade: data.visibilidade,
+        topico_nome: data.topico_nome,
+        topico_icon: data.topico_icon
       };
       
       // Adicionar o novo grupo à lista de grupos
       setGruposEstudo(prev => [novoGrupo, ...prev]);
       setShowCreateGroupModal(false);
+      
+      // Mostrar feedback visual de sucesso (poderia ser um toast ou notificação)
+      // Você pode adicionar um componente de toast ou notificação posteriormente
       
     } catch (error) {
       console.error("Erro ao processar criação de grupo:", error);

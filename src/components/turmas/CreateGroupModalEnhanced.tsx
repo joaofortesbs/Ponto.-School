@@ -178,6 +178,13 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validar formulário
+    if (!formData.nome.trim()) {
+      alert("O nome do grupo é obrigatório");
+      return;
+    }
+    
     // Incluir todas as informações necessárias para persistência no banco de dados
     onSubmit({
       ...formData,
@@ -186,6 +193,8 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
       topicoNome: formData.topicoNome,
       topicoIcon: formData.topicoIcon
     });
+    
+    console.log("Formulário enviado:", formData);
   };
 
   const handleCodeSubmit = (e: React.FormEvent) => {
