@@ -24,7 +24,7 @@ interface GrupoEstudoCardProps {
 const GrupoEstudoCard: React.FC<GrupoEstudoCardProps> = ({ grupo, onClick }) => {
   return (
     <Card 
-      className="grupo-estudo-card hover:shadow-md transition-all duration-200 ease-in-out transform hover:translate-y-[-2px] cursor-pointer border-[#f0f0f0] dark:border-[#2a2a2a] h-full will-change-transform overflow-hidden"
+      className="hover:shadow-md transition-all duration-200 ease-in-out transform hover:translate-y-[-2px] cursor-pointer border-[#f0f0f0] dark:border-[#2a2a2a] h-full will-change-transform"
       onClick={(e) => {
         e.preventDefault();
         if (onClick) {
@@ -37,26 +37,22 @@ const GrupoEstudoCard: React.FC<GrupoEstudoCardProps> = ({ grupo, onClick }) => 
         }
       }}
     >
-      {/* Capa do grupo */}
       <div 
-        className="grupo-estudo-card-cover"
-        style={{ 
-          backgroundImage: `url(${grupo.imagem || "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800&q=80"})`
-        }}
+        className="h-32 w-full bg-cover bg-center rounded-t-lg" 
+        style={{ backgroundImage: `url(${grupo.imagem})` }}
       >
-        <div className="grupo-estudo-card-cover-gradient">
+        <div className="w-full h-full bg-gradient-to-b from-transparent to-black/70 rounded-t-lg flex items-end p-3">
           <Badge className="bg-[#FF6B00] text-white">{grupo.nivel}</Badge>
-          {grupo.novasMensagens && (
-            <Badge className="bg-green-500 text-white text-xs ml-2">Nova mensagem</Badge>
-          )}
         </div>
       </div>
-
       <CardHeader className="pb-2 pt-4">
         <div className="flex justify-between items-start">
           <h3 className="font-semibold text-lg text-gray-900 dark:text-white line-clamp-2">
             {grupo.nome}
           </h3>
+          {grupo.novasMensagens && (
+            <Badge className="bg-green-500 text-white text-xs">Nova mensagem</Badge>
+          )}
         </div>
         <p className="text-sm text-gray-500 dark:text-gray-400">{grupo.disciplina} - {grupo.topico}</p>
       </CardHeader>
