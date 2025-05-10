@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Search, Filter, ChevronRight, Users, TrendingUp, BookOpen, MessageCircle, Plus, UserPlus } from "lucide-react";
@@ -45,12 +44,12 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
         setLoading(true);
         // Simula um delay para mostrar estado de carregamento
         await new Promise(resolve => setTimeout(resolve, 500));
-        
+
         // No futuro, substitua por chamada à API
         // const response = await fetch('/api/grupos-estudo');
         // const data = await response.json();
         // setGruposEstudo(data);
-        
+
         // Por enquanto, inicia com array vazio (dados removidos)
         setGruposEstudo([]);
       } catch (error) {
@@ -71,11 +70,11 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
       const matchesFilter = !selectedFilter || 
         (selectedFilter === "tendencia-alta" && grupo.tendencia === "alta") ||
         (selectedFilter === "novo-conteudo" && grupo.novoConteudo);
-        
+
       // Melhorada lógica de filtragem por tópico
       const matchesSelectedTopic = !selectedTopic || 
         (grupo.topico && selectedTopic.toString() === grupo.topico);
-        
+
       return matchesSearch && matchesFilter && matchesSelectedTopic;
     }
   );
@@ -94,7 +93,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
   const handleCreateGroup = (formData: any) => {
     // Aqui você implementará a lógica para criar um novo grupo
     console.log("Criando novo grupo:", formData);
-    
+
     // Exemplo de como adicionar o novo grupo à lista (a ser implementado com dados reais)
     // Incluiria integração com banco de dados na versão final
     const novoGrupo: GrupoEstudo = {
@@ -111,18 +110,21 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
       visibilidade: formData.visibilidade,
       // Outros campos baseados no formulário
     };
-    
+
     setGruposEstudo(prev => [...prev, novoGrupo]);
     setShowCreateGroupModal(false);
   };
 
   return (
     <div className="mt-8">
-      {/* Modal de criação de grupo */}
-      <CreateGroupModalEnhanced 
-        isOpen={showCreateGroupModal} 
+      {/* Modal de Criação de Grupo */}
+      <CreateGroupModalEnhanced
+        isOpen={showCreateGroupModal}
         onClose={() => setShowCreateGroupModal(false)}
-        onSubmit={handleCreateGroup}
+        onSubmit={() => {
+          // Recarregar os grupos após a criação bem-sucedida
+          // Aqui você chamaria sua função de carregamento de grupos
+        }}
       />
       {/* Cabeçalho da grade */}
       <div className="flex items-center justify-between mb-6">

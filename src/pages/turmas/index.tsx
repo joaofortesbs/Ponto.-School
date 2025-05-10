@@ -9,7 +9,6 @@ import EmptyTurmasState from "@/components/turmas/EmptyTurmasState";
 import TurmaFilters from "@/components/turmas/TurmaFilters";
 import EpictusIAHelper from "@/components/turmas/EpictusIAHelper";
 import DesempenhoView from "@/components/turmas/DesempenhoView";
-import GruposEstudoView from "@/components/turmas/minisecao-gruposdeestudo/GruposEstudoView";
 import TopicosEstudoView from "@/components/turmas/TopicosEstudoView";
 import {
   Atom,
@@ -801,7 +800,7 @@ const turmaDetalhada = {
       avaliacao: "Prova Parcial",
       nota: null,
       peso: 30,
-      data: "30/03/2023",
+      data: "30/02023",
     },
   ],
   gruposEstudo: [
@@ -1188,7 +1187,6 @@ export default function TurmasPage() {
                 <DesempenhoView />
               </TabsContent>
               <TabsContent value="grupos-estudo" className="mt-6">
-                <GruposEstudoView className="mb-8" />
                 <TopicosEstudoView className="mb-8" />
               </TabsContent>
             </Tabs>
