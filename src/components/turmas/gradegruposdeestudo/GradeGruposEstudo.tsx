@@ -411,12 +411,25 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
               transition={{ delay: 0.1, duration: 0.3 }}
               whileHover={{ scale: 1.03, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)" }}
               className={`bg-gradient-to-br from-gray-900/90 to-gray-800/90 dark:from-gray-800 dark:to-gray-900 
-                backdrop-blur-sm p-4 rounded-2xl shadow-lg border border-white/10 hover:border-[#FF6B00]/30 transition-all duration-300 
-                ${isGrupoFeatured(grupo) ? 'featured-topic ring-1 ring-[#FF6B00]/30' : ''}`}
+                backdrop-blur-sm rounded-2xl shadow-lg border border-white/10 hover:border-[#FF6B00]/30 transition-all duration-300 
+                overflow-hidden ${isGrupoFeatured(grupo) ? 'featured-topic ring-1 ring-[#FF6B00]/30' : ''}`}
               onMouseEnter={() => setHoveredGrupo(grupo.id)}
               onMouseLeave={() => setHoveredGrupo(null)}
             >
-              <div className="flex items-center justify-between">
+              <div className="relative">
+                {/* Capa do grupo */}
+                <div 
+                  className="w-full h-20 bg-gradient-to-r from-[#FF6B00]/20 to-[#FF8C40]/30 relative overflow-hidden" 
+                  style={{
+                    backgroundImage: `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1523240795612-9a054b0db644?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60')`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center'
+                  }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent"></div>
+                </div>
+              
+              <div className="flex items-center justify-between p-4">
                 <div className="flex items-center gap-4">
                   <div className="flex-shrink-0">
                     <div className="h-12 w-12 rounded-xl flex items-center justify-center text-white shadow-lg transform transition-all duration-300" 
@@ -442,7 +455,8 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
                           <BookOpen className="h-3 w-3 text-[#FF6B00]" />
                           <span className="font-medium">{grupo.disciplina || "Sem disciplina"}</span>
                         </span>
-                        <div className="flex items-center gap-1.5 text-white/70 text-xs border-l border-white/10 pl-2 ml-2">
+                        <div className="flex items-center gap-1.5 text-white/70 text-xs pl-2 ml-2">
+                          <div className="h-1.5 w-1.5 rounded-full bg-[#FF6B00] mr-1"></div>
                           <Users className="h-3 w-3 text-[#FF8C40]" />
                           <span>{grupo.membros} membros</span>
                         </div>
