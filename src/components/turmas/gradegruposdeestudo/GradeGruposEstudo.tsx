@@ -214,12 +214,12 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
 
       // Atualizar lista de grupos - remover duplicatas verificando por ID ou nome
       const todosGrupos = await obterTodosGrupos();
-      
+
       // Remover duplicatas baseado no nome do grupo
       const gruposFiltrados = todosGrupos.filter((grupo, index, self) => 
         index === self.findIndex((g) => g.nome === grupo.nome)
       );
-      
+
       setGruposEstudo(gruposFiltrados);
 
       // Fechar modal
@@ -410,27 +410,33 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
                     </div>
                   </div>
                   <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-bold text-lg text-white/90">{grupo.nome}</h3>
-                      {grupo.novoConteudo && (
-                        <Badge className="bg-[#FF6B00] text-white text-[10px] px-1.5 py-0 h-4">
-                          NOVO
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <div className="flex items-center gap-1 text-white/60 text-xs">
-                        <Users className="h-3 w-3" />
-                        <span>{grupo.membros} membros</span>
-                      </div>
-                      {grupo.tendencia === "alta" && (
-                        <div className="flex items-center gap-1 text-emerald-400 text-xs">
-                          <TrendingUp className="h-3 w-3" />
-                          <span>Em alta</span>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-bold text-lg text-white/90">{grupo.nome}</h3>
+                          {grupo.novoConteudo && (
+                            <Badge className="bg-[#FF6B00] text-white text-[10px] px-1.5 py-0 h-4">
+                              NOVO
+                            </Badge>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  </div>
+                        <div className="text-white/70 text-xs mt-0.5">
+                          <span className="flex items-center gap-1">
+                            <BookOpen className="h-3 w-3 text-[#FF6B00]" />
+                            {grupo.disciplina || "Sem disciplina"}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 mt-1">
+                          <div className="flex items-center gap-1 text-white/60 text-xs">
+                            <Users className="h-3 w-3" />
+                            <span>{grupo.membros} membros</span>
+                          </div>
+                          {grupo.tendencia === "alta" && (
+                            <div className="flex items-center gap-1 text-emerald-400 text-xs">
+                              <TrendingUp className="h-3 w-3" />
+                              <span>Em alta</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                 </div>
                 <Button size="sm" variant="ghost" className="h-8 w-8 rounded-full p-0 text-white/70 hover:text-white hover:bg-white/10">
                   <ChevronRight className="h-5 w-5" />
