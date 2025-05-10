@@ -169,15 +169,38 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
 
       if (error) {
         console.error("Erro ao criar grupo:", error);
-        let errorMsg = "Erro ao criar grupo: ";
-
+        
         if (error.code === '42P01') {
-          errorMsg += "A tabela grupos_estudo não existe. Execute o fluxo de trabalho 'Aplicar Migrações'.";
-          // Tenta aplicar a migração automaticamente
-          await executarMigracaoDoBancoDeDados();
-          throw new Error(errorMsg);
+          // Tabela não existe - tentar criá-la antes de falhar
+          try {
+            console.log("Tabela grupos_estudo não existe. Tentando criar...");
+            await executarMigracaoDoBancoDeDados();
+            
+            // Após criar a tabela, tenta novamente inserir o grupo
+            console.log("Tabela criada, tentando inserir o grupo novamente...");
+            const { data: retryData, error: retryError } = await supabase
+              .from('grupos_estudo')
+              .insert(grupoData)
+              .select('*')
+              .single();
+              
+            if (retryError) {
+              throw retryError;
+            }
+            
+            if (!retryData) {
+              throw new Error("Não foi possível criar o grupo após criar a tabela.");
+            }
+            
+            console.log("Grupo criado com sucesso após criar tabela:", retryData);
+            return retryData;
+          } catch (migrationError) {
+            console.error("Falha ao criar tabela ou inserir grupo:", migrationError);
+            throw new Error("A tabela grupos_estudo não existe. Execute o fluxo de trabalho 'Aplicar Migrações'.");
+          }
         } else {
-          errorMsg += error.message || "Verifique se a tabela grupos_estudo foi criada corretamente.";
+          // Outro tipo de erro
+          const errorMsg = error.message || "Ocorreu um erro desconhecido ao criar o grupo.";
           throw new Error(errorMsg);
         }
       }
@@ -245,28 +268,78 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
         .select('count(*)', { count: 'exact', head: true });
 
       if (tableCheckError && tableCheckError.code === '42P01') {
-        console.log("Tentando aplicar migração da tabela grupos_estudo...");
+        console.log("Tentando criar a tabela grupos_estudo diretamente...");
         
-        // Executar o fluxo de trabalho de migração
-        window.alert("A tabela de grupos de estudo não existe. Aplicando migração automaticamente...");
+        // Criar a tabela diretamente usando função SQL
+        const { data: { session } } = await supabase.auth.getSession();
         
-        // Tentar executar via workflow
+        if (!session) {
+          throw new Error("Você precisa estar autenticado para criar a tabela");
+        }
+        
+        // Criar tabela diretamente através de SQL
+        const createTableSQL = `
+          CREATE TABLE IF NOT EXISTS public.grupos_estudo (
+            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+            user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+            nome TEXT NOT NULL,
+            descricao TEXT,
+            cor TEXT NOT NULL DEFAULT '#FF6B00',
+            membros INTEGER NOT NULL DEFAULT 1,
+            topico TEXT,
+            topico_nome TEXT,
+            topico_icon TEXT,
+            privado BOOLEAN DEFAULT false,
+            visibilidade TEXT DEFAULT 'todos',
+            codigo TEXT,
+            data_criacao TIMESTAMP WITH TIME ZONE DEFAULT now()
+          );
+          
+          -- Create index for faster queries
+          CREATE INDEX IF NOT EXISTS grupos_estudo_user_id_idx ON public.grupos_estudo(user_id);
+          
+          -- Grant access to authenticated users
+          ALTER TABLE public.grupos_estudo ENABLE ROW LEVEL SECURITY;
+          
+          CREATE POLICY "Users can view their own grupos_estudo"
+            ON public.grupos_estudo FOR SELECT
+            USING (auth.uid() = user_id);
+          
+          CREATE POLICY "Users can insert their own grupos_estudo"
+            ON public.grupos_estudo FOR INSERT
+            WITH CHECK (auth.uid() = user_id);
+          
+          CREATE POLICY "Users can update their own grupos_estudo"
+            ON public.grupos_estudo FOR UPDATE
+            USING (auth.uid() = user_id);
+          
+          CREATE POLICY "Users can delete their own grupos_estudo"
+            ON public.grupos_estudo FOR DELETE
+            USING (auth.uid() = user_id);
+        `;
+        
+        // Execute the SQL as RPC or through the REST API
         try {
-          const response = await fetch('/api/apply-migration', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ migration: '20240820000000_create_grupos_estudo_table.sql' })
+          // Tenta através da função execute_sql
+          const { error: execError } = await supabase.rpc('execute_sql', {
+            sql_query: createTableSQL
           });
-
-          if (!response.ok) {
-            throw new Error("Falha ao aplicar migração via API");
+          
+          if (execError) {
+            console.error("Erro ao criar tabela via RPC:", execError);
+            // Será tratado no catch
+            throw execError;
           }
           
-          console.log("Migração aplicada com sucesso");
+          console.log("Tabela grupos_estudo criada com sucesso via RPC");
           return true;
-        } catch (fetchError) {
-          console.error("Erro ao aplicar migração:", fetchError);
-          throw new Error("Falha ao aplicar migração. Execute o fluxo de trabalho 'Aplicar Migrações'.");
+        } catch (sqlError) {
+          console.error("Erro ao criar tabela:", sqlError);
+          
+          // Informa ao usuário
+          window.alert("Não foi possível criar a tabela grupos_estudo automaticamente. Por favor, execute o fluxo de trabalho 'Aplicar Migrações' no menu de workflows para criar a tabela.");
+          
+          throw new Error("Falha ao criar tabela grupos_estudo. Execute o fluxo de trabalho 'Aplicar Migrações'.");
         }
       }
       
