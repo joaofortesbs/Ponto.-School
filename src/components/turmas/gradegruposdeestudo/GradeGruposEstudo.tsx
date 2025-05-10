@@ -373,6 +373,19 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
         onClose={() => setShowCreateGroupModal(false)}
         onSubmit={handleCreateGroup}
       />
+      
+      {/* Capa dos Grupos de Estudo */}
+      <div className="w-full h-40 rounded-2xl overflow-hidden relative mb-6 bg-gradient-to-r from-[#0A2540]/80 to-[#FF6B00]/80 shadow-lg">
+        <div className="absolute inset-0 bg-[url('/images/pattern-grid.svg')] opacity-20"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+        <div className="relative z-10 h-full flex flex-col justify-end p-6">
+          <h1 className="text-3xl font-bold text-white">Grupos de Estudo</h1>
+          <p className="text-white/80 max-w-lg mt-2">
+            Conecte-se com outros estudantes, compartilhe conhecimento e evolua em suas áreas de interesse.
+          </p>
+        </div>
+      </div>
+      
       {/* Cabeçalho da grade */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
