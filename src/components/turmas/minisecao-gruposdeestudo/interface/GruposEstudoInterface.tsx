@@ -152,7 +152,10 @@ const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className
             layout="position"
             layoutId={`grupo-${grupo.id}`}
           >
-            <GrupoEstudoCard grupo={grupo} onClick={handleGroupClick} />
+            <GrupoEstudoCard 
+              grupo={grupo} 
+              onClick={handleGroupClick} 
+            />
           </motion.div>
         ))}
 
