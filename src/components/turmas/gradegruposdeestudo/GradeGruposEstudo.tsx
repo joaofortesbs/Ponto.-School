@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import CreateGroupModalEnhanced from "../CreateGroupModalEnhanced";
 import { supabase } from "@/lib/supabase";
-import { criarGrupo, sincronizarGruposLocais, obterTodosGrupos } from '@/lib/gruposEstudoStorage';
+import { criarGrupo, sincronizarGruposLocais, obterTodosGrupos, obterGruposLocal, salvarGrupoLocal } from '@/lib/gruposEstudoStorage';
 
 interface GrupoEstudo {
   id: string;
