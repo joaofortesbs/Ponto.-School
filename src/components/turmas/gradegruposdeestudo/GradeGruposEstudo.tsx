@@ -391,50 +391,52 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1, duration: 0.3 }}
-              whileHover={{ scale: 1.03, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)" }}
-              className={`bg-gradient-to-br from-gray-900/90 to-gray-800/90 dark:from-gray-800 dark:to-gray-900 
-                backdrop-blur-sm p-4 rounded-2xl shadow-lg border border-white/10 hover:border-[#FF6B00]/30 transition-all duration-300 
-                ${isGrupoFeatured(grupo) ? 'featured-topic ring-1 ring-[#FF6B00]/30' : ''}`}
+              whileHover={{ 
+                scale: 1.03, 
+                boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.2)" 
+              }}
+              className={`bg-gradient-to-br from-[#1A1F2E] to-[#101522] 
+                backdrop-blur-sm p-4 rounded-xl shadow-lg border border-[#2A2F3C] 
+                hover:border-[#FF6B00]/50 transition-all duration-300 
+                ${isGrupoFeatured(grupo) ? 'featured-topic ring-1 ring-[#FF6B00]/50' : ''}`}
               onMouseEnter={() => setHoveredGrupo(grupo.id)}
               onMouseLeave={() => setHoveredGrupo(null)}
             >
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
                   <div className="flex-shrink-0">
                     <div className="h-12 w-12 rounded-xl flex items-center justify-center text-white shadow-lg transform transition-all duration-300" 
                       style={{ 
-                        backgroundColor: grupo.cor,
-                        boxShadow: hoveredGrupo === grupo.id ? `0 0 20px ${grupo.cor}80` : 'none',
+                        backgroundColor: grupo.cor || "#FF6B00",
+                        boxShadow: hoveredGrupo === grupo.id ? `0 0 20px ${grupo.cor || "#FF6B00"}80` : 'none',
                       }}>
                       <span className="text-xl">{grupo.icon || "📚"}</span>
                     </div>
                   </div>
                   <div>
+                    <h3 className="font-bold text-lg text-white mb-0.5 line-clamp-1">{grupo.nome}</h3>
                     <div className="flex items-center gap-2">
-                      <h3 className="font-bold text-lg text-white/90">{grupo.nome}</h3>
-                      {grupo.novoConteudo && (
-                        <Badge className="bg-[#FF6B00] text-white text-[10px] px-1.5 py-0 h-4">
-                          NOVO
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 mt-1">
                       <div className="flex items-center gap-1 text-white/60 text-xs">
                         <Users className="h-3 w-3" />
-                        <span>{grupo.membros} membros</span>
+                        <span>{grupo.membros} {grupo.membros === 1 ? 'membro' : 'membros'}</span>
                       </div>
                       {grupo.tendencia === "alta" && (
-                        <div className="flex items-center gap-1 text-emerald-400 text-xs">
+                        <div className="flex items-center gap-1 text-[#32CD32] text-xs font-medium bg-[#32CD32]/10 px-2 py-0.5 rounded-full">
                           <TrendingUp className="h-3 w-3" />
                           <span>Em alta</span>
                         </div>
                       )}
+                      {grupo.novoConteudo && (
+                        <Badge className="bg-[#FF6B00] text-white text-[10px] px-2 py-0 h-4 rounded-full">
+                          NOVO
+                        </Badge>
+                      )}
                     </div>
                   </div>
                 </div>
-                <Button size="sm" variant="ghost" className="h-8 w-8 rounded-full p-0 text-white/70 hover:text-white hover:bg-white/10">
-                  <ChevronRight className="h-5 w-5" />
-                </Button>
+                <div className="flex items-center justify-center h-8 w-8 rounded-full bg-white/5 hover:bg-[#FF6B00]/20 transition-colors">
+                  <ChevronRight className="h-4 w-4 text-white/70" />
+                </div>
               </div>
             </motion.div>
           ))}

@@ -1,0 +1,32 @@
+
+/* Estilos para cards de grupos de estudo */
+.featured-topic {
+  position: relative;
+  overflow: hidden;
+}
+
+.featured-topic::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 107, 0, 0.2) 0%, transparent 70%);
+  transform: rotate(45deg);
+  animation: rotate-glow 8s linear infinite;
+}
+
+@keyframes rotate-glow {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.featured-topic:hover {
+  box-shadow: 0 0 20px rgba(255, 107, 0, 0.3);
+}
+
