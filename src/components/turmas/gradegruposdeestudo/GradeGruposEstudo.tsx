@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Search, Filter, ChevronRight, Users, TrendingUp, BookOpen, MessageCircle, Plus, UserPlus } from "lucide-react";
+import { Search, Filter, ChevronRight, Users, TrendingUp, BookOpen, MessageCircle, Plus, UserPlus, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import CreateGroupModalEnhanced from "../CreateGroupModalEnhanced";
@@ -433,6 +433,12 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
                           <span className="flex items-center gap-1">
                             <BookOpen className="h-3 w-3 text-[#FF6B00]" />
                             {grupo.disciplina || "Sem disciplina"}
+                          </span>
+                        </div>
+                        <div className="text-white/60 text-xs mt-0.5 line-clamp-1">
+                          <span className="flex items-center gap-1">
+                            <FileText className="h-3 w-3 text-[#FF6B00]" />
+                            {grupo.descricao || "Sem descrição"}
                           </span>
                         </div>
                         <div className="flex items-center gap-2 mt-1">
