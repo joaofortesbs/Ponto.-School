@@ -394,72 +394,10 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
               whileHover={{ scale: 1.03, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)" }}
               className={`bg-gradient-to-br from-gray-900/90 to-gray-800/90 dark:from-gray-800 dark:to-gray-900 
                 backdrop-blur-sm p-4 rounded-2xl shadow-lg border border-white/10 hover:border-[#FF6B00]/30 transition-all duration-300 
-                ${isGrupoFeatured(grupo) ? 'featured-topic ring-1 ring-[#FF6B00]/30' : ''} relative group`}
+                ${isGrupoFeatured(grupo) ? 'featured-topic ring-1 ring-[#FF6B00]/30' : ''}`}
               onMouseEnter={() => setHoveredGrupo(grupo.id)}
               onMouseLeave={() => setHoveredGrupo(null)}
             >
-              {/* Card preview hover effect */}
-              <div className="absolute z-50 top-0 left-0 transform -translate-y-full -translate-x-1/4 w-[340px] opacity-0 pointer-events-none group-hover:opacity-100 group-hover:-translate-y-[105%] transition-all duration-300 ease-in-out">
-                <div className="p-1">
-                  <div className="relative">
-                    {/* Triangle pointer */}
-                    <div className="absolute bottom-0 left-1/3 transform translate-y-full w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-t-[10px] border-t-[#1E293B]"></div>
-                    
-                    {/* Preview content */}
-                    <div className="w-full">
-                      <div className="text-sm font-medium text-[#FF6B00] mb-1 flex items-center">
-                        <span className="mr-1">Prévia do Grupo</span>
-                      </div>
-                      <div className="bg-[#0B1322] rounded-xl overflow-hidden border border-[#1E293B] shadow-lg">
-                        <div className="p-4">
-                          <div className="flex items-start gap-3">
-                            <div className="flex-shrink-0">
-                              <div className="h-10 w-10 rounded-full flex items-center justify-center text-white" 
-                                style={{ backgroundColor: grupo.cor }}>
-                                <span className="text-lg">{grupo.icon || "📚"}</span>
-                              </div>
-                            </div>
-                            
-                            <div className="flex-1">
-                              <h3 className="font-bold text-base text-white">{grupo.nome}</h3>
-                              <div className="flex items-center text-xs text-gray-400 mt-0.5">
-                                <span>{grupo.disciplina || grupo.topico_nome || "Disciplina/Área"}</span>
-                                <span className="mx-1.5">•</span>
-                                <div className="flex items-center">
-                                  <Users className="h-3 w-3 mr-1" />
-                                  <span>{grupo.membros} participantes</span>
-                                </div>
-                              </div>
-                              
-                              <div className="text-xs text-gray-500 italic mt-2">
-                                Tags aparecerão aqui
-                              </div>
-                              
-                              {grupo.dataCriacao && (
-                                <div className="flex items-center mt-3 text-xs text-gray-400">
-                                  <Calendar className="h-3 w-3 mr-1" />
-                                  <span>Data de início: {new Date(grupo.dataCriacao).toLocaleDateString('pt-BR')}</span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          
-                          <div className="mt-3 flex justify-end">
-                            <Button 
-                              size="sm"
-                              className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white text-xs rounded-lg h-7 px-3"
-                            >
-                              Acessar Grupo <ArrowRight className="h-3 w-3 ml-1" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Main card content */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="flex-shrink-0">
@@ -494,11 +432,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
                     </div>
                   </div>
                 </div>
-                <Button 
-                  size="sm" 
-                  variant="ghost" 
-                  className="h-8 w-8 rounded-full p-0 text-white/70 hover:text-white hover:bg-white/10"
-                >
+                <Button size="sm" variant="ghost" className="h-8 w-8 rounded-full p-0 text-white/70 hover:text-white hover:bg-white/10">
                   <ChevronRight className="h-5 w-5" />
                 </Button>
               </div>

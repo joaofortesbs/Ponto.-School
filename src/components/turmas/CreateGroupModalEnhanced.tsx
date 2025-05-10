@@ -1,6 +1,6 @@
+
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { 
   X, Users, Plus, Key, BookOpen, Calendar, Clock, 
@@ -73,7 +73,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
     convidados: [] as string[],
     imagem: null as File | null
   });
-
+  
   const [searchQuery, setSearchQuery] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [convidadosInfo, setConvidadosInfo] = useState<any[]>([]);
@@ -114,7 +114,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
         ...prev,
         convidados: [...prev.convidados, usuarioId]
       }));
-
+      
       // Atualizar a lista de convidados com informações detalhadas
       const usuario = usuariosDisponiveis.find(u => u.id === usuarioId);
       if (usuario) {
@@ -128,7 +128,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
       ...prev,
       convidados: prev.convidados.filter(id => id !== usuarioId)
     }));
-
+    
     setConvidadosInfo(prev => prev.filter(u => u.id !== usuarioId));
   };
 
@@ -136,7 +136,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setFormData(prev => ({ ...prev, imagem: file }));
-
+      
       // Criar URL para previsualização
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
@@ -207,21 +207,21 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
 
         if (error) {
           console.error("Erro ao inserir grupo no Supabase:", error);
-
+          
           // Se falhar o Supabase, salvar localmente
           await salvarGrupoLocal({
             ...novoGrupo,
             id: crypto.randomUUID(), // Gerar um ID local
             timestamp: new Date().getTime()
           });
-
+          
           console.log("Grupo salvo localmente");
         } else {
           console.log("Grupo criado com sucesso no Supabase:", data);
         }
       } catch (supabaseError) {
         console.error("Erro ao acessar Supabase:", supabaseError);
-
+        
         // Salvar localmente em caso de erro, usando salvarGrupoLocal em vez de criarGrupo
         // para evitar duplicação
         await salvarGrupoLocal({
@@ -229,7 +229,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
           id: crypto.randomUUID(),
           timestamp: new Date().getTime()
         });
-
+        
         console.log("Grupo salvo localmente após erro no Supabase");
       }
 
@@ -293,15 +293,24 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
           transition={{ type: "spring", damping: 25, stiffness: 300 }}
           className="bg-[#0F172A] dark:bg-[#0F172A] rounded-xl overflow-hidden w-[650px] max-w-full shadow-xl relative"
         >
-          
-          <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-4 text-white rounded-t-xl flex items-center justify-between">
-            <h2 className="text-xl font-bold flex items-center">
-              <Users className="mr-2 h-5 w-5" /> Criar Novo Grupo de Estudos
-            </h2>
-            <div className="flex items-center text-xs bg-white/20 px-2 py-1 rounded-lg">
-              <Sparkles className="h-3.5 w-3.5 mr-1.5 text-yellow-200" />
-              <span>Conecte-se e evolua</span>
+          <div className="sticky top-0 z-10 bg-gradient-to-r from-[#0F172A] to-[#0F172A] border-b border-[#1E293B] p-6">
+            <div>
+              <h2 className="text-2xl font-bold text-white flex items-center">
+                <Users className="h-6 w-6 mr-3 text-[#FF6B00]" />
+                Novo Grupo de Estudo
+              </h2>
+              <p className="text-white/70 text-sm mt-1">
+                Preencha os detalhes do seu novo grupo. Você poderá editá-los posteriormente.
+              </p>
             </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-4 right-4 h-9 w-9 rounded-full text-white/80 hover:text-white hover:bg-white/20"
+              onClick={onClose}
+            >
+              <X className="h-5 w-5" />
+            </Button>
           </div>
 
           <form onSubmit={handleSubmit} className="p-6">
@@ -733,7 +742,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
                       className="hidden"
                       onChange={handleImageChange}
                     />
-
+                    
                     {previewUrl ? (
                       <div className="flex flex-col items-center">
                         <img 
@@ -742,7 +751,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
                           className="w-full max-h-40 object-contain mb-3"
                         />
                         <Button 
-Enhancing the CreateGroupModalEnhanced component's image selection and preview functionalities.                          type="button" 
+                          type="button" 
                           variant="destructive" 
                           size="sm"
                           onClick={(e) => {
