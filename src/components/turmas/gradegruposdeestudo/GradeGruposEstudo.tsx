@@ -131,6 +131,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
       
       if (!session) {
         console.error("Usuário não autenticado");
+        alert("Você precisa estar autenticado para criar um grupo");
         return;
       }
       
@@ -151,7 +152,8 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
         privado: formData.privado || false,
         visibilidade: formData.visibilidade || "todos",
         membros: formData.amigos ? formData.amigos.length + 1 : 1,
-        codigo: codigoGrupo
+        codigo: codigoGrupo,
+        data_criacao: new Date().toISOString() // Garantir que data_criacao esteja definida
       };
       
       console.log("Enviando dados para criação de grupo:", grupoData);
@@ -165,6 +167,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
       
       if (error) {
         console.error("Erro ao criar grupo:", error);
+        alert("Erro ao criar grupo: " + error.message);
         return;
       }
       
@@ -188,15 +191,33 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
         topico_icon: data.topico_icon
       };
       
-      // Adicionar o novo grupo à lista de grupos
+      // Adicionar o novo grupo à lista de grupos e atualizar a interface
       setGruposEstudo(prev => [novoGrupo, ...prev]);
-      setShowCreateGroupModal(false);
       
-      // Mostrar feedback visual de sucesso (poderia ser um toast ou notificação)
-      // Você pode adicionar um componente de toast ou notificação posteriormente
+      // Modal será fechado automaticamente pela função onSubmit no componente CreateGroupModalEnhanced
+      
+      // Mostrar feedback visual temporário
+      const element = document.createElement('div');
+      element.style.position = 'fixed';
+      element.style.top = '20px';
+      element.style.left = '50%';
+      element.style.transform = 'translateX(-50%)';
+      element.style.padding = '10px 20px';
+      element.style.background = '#4CAF50';
+      element.style.color = 'white';
+      element.style.borderRadius = '4px';
+      element.style.zIndex = '9999';
+      element.textContent = 'Grupo criado com sucesso!';
+      document.body.appendChild(element);
+      
+      // Remover após 3 segundos
+      setTimeout(() => {
+        document.body.removeChild(element);
+      }, 3000);
       
     } catch (error) {
       console.error("Erro ao processar criação de grupo:", error);
+      alert("Erro ao criar grupo. Verifique o console para mais detalhes.");
     }
   };
 

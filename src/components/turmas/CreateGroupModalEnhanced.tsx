@@ -195,6 +195,9 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
     });
     
     console.log("Formulário enviado:", formData);
+    
+    // Fechar o modal após enviar o formulário
+    onClose();
   };
 
   const handleCodeSubmit = (e: React.FormEvent) => {
