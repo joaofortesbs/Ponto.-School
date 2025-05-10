@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Search, Filter, ChevronRight, Users, TrendingUp, BookOpen, MessageCircle, Plus, UserPlus } from "lucide-react";
+import { Search, Filter, ChevronRight, Users, TrendingUp, BookOpen, MessageCircle, Plus, UserPlus, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import CreateGroupModalEnhanced from "../CreateGroupModalEnhanced";
@@ -391,52 +391,78 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1, duration: 0.3 }}
-              whileHover={{ 
-                scale: 1.03, 
-                boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.2)" 
-              }}
-              className={`bg-gradient-to-br from-[#1A1F2E] to-[#101522] 
-                backdrop-blur-sm p-4 rounded-xl shadow-lg border border-[#2A2F3C] 
-                hover:border-[#FF6B00]/50 transition-all duration-300 
+              whileHover={{ scale: 1.02 }}
+              className={`grupo-estudo-card 
                 ${isGrupoFeatured(grupo) ? 'featured-topic ring-1 ring-[#FF6B00]/50' : ''}`}
               onMouseEnter={() => setHoveredGrupo(grupo.id)}
               onMouseLeave={() => setHoveredGrupo(null)}
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex-shrink-0">
-                    <div className="h-12 w-12 rounded-xl flex items-center justify-center text-white shadow-lg transform transition-all duration-300" 
-                      style={{ 
-                        backgroundColor: grupo.cor || "#FF6B00",
-                        boxShadow: hoveredGrupo === grupo.id ? `0 0 20px ${grupo.cor || "#FF6B00"}80` : 'none',
-                      }}>
-                      <span className="text-xl">{grupo.icon || "📚"}</span>
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-lg text-white mb-0.5 line-clamp-1">{grupo.nome}</h3>
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-1 text-white/60 text-xs">
-                        <Users className="h-3 w-3" />
-                        <span>{grupo.membros} {grupo.membros === 1 ? 'membro' : 'membros'}</span>
-                      </div>
-                      {grupo.tendencia === "alta" && (
-                        <div className="flex items-center gap-1 text-[#32CD32] text-xs font-medium bg-[#32CD32]/10 px-2 py-0.5 rounded-full">
-                          <TrendingUp className="h-3 w-3" />
-                          <span>Em alta</span>
-                        </div>
-                      )}
-                      {grupo.novoConteudo && (
-                        <Badge className="bg-[#FF6B00] text-white text-[10px] px-2 py-0 h-4 rounded-full">
-                          NOVO
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
+              <div className="grupo-header">
+                <div className="grupo-estudo-icon" 
+                  style={{ 
+                    background: `linear-gradient(135deg, ${grupo.cor || "#FF6B00"} 0%, ${grupo.cor ? grupo.cor + "CC" : "#FF8C40"} 100%)`,
+                    boxShadow: hoveredGrupo === grupo.id ? `0 0 15px ${grupo.cor || "#FF6B00"}60` : 'none',
+                  }}>
+                  <span>{grupo.icon || "📚"}</span>
                 </div>
-                <div className="flex items-center justify-center h-8 w-8 rounded-full bg-white/5 hover:bg-[#FF6B00]/20 transition-colors">
-                  <ChevronRight className="h-4 w-4 text-white/70" />
+                <div>
+                  <h3 className="grupo-nome line-clamp-1">{grupo.nome}</h3>
+                  <p className="grupo-disciplina line-clamp-1">{grupo.disciplina || "Disciplina/Área"} • {grupo.membros} {grupo.membros === 1 ? 'participante' : 'participantes'}</p>
                 </div>
+              </div>
+              
+              <div className="grupo-info">
+                {/* Tópico/Matéria */}
+                <div className="flex items-center gap-1 text-white/70 text-sm">
+                  <BookOpen className="h-4 w-4 text-[#FF6B00]" />
+                  <span>Tópico: {grupo.topico_nome || grupo.disciplina || "Matemática"}</span>
+                </div>
+
+                {/* Tags do grupo (geradas aleatoriamente para demonstração) */}
+                <div className="grupo-tags">
+                  {grupo.tags && grupo.tags.length > 0 ? (
+                    grupo.tags.map((tag, idx) => (
+                      <span key={idx} className="grupo-tag">{tag}</span>
+                    ))
+                  ) : (
+                    <span className="text-[#FF6B00]/60 text-xs italic">Tags aparecerão aqui</span>
+                  )}
+                </div>
+                
+                {/* Data de início */}
+                {grupo.data_inicio && (
+                  <div className="grupo-data">
+                    <Calendar className="h-4 w-4 text-[#FF6B00]" />
+                    <span>Data de início: {new Date(grupo.data_inicio).toLocaleDateString('pt-BR')}</span>
+                  </div>
+                )}
+                
+                {/* Indicadores especiais */}
+                <div className="flex items-center gap-2 mt-2">
+                  {grupo.tendencia === "alta" && (
+                    <div className="flex items-center gap-1 text-[#32CD32] text-xs font-medium bg-[#32CD32]/10 px-2 py-1 rounded-full">
+                      <TrendingUp className="h-3 w-3" />
+                      <span>Em alta</span>
+                    </div>
+                  )}
+                  {grupo.novoConteudo && (
+                    <Badge className="bg-[#FF6B00] text-white text-[10px] px-2 py-0.5 h-5 rounded-full">
+                      NOVO
+                    </Badge>
+                  )}
+                </div>
+              </div>
+              
+              <div className="grupo-footer">
+                <Button 
+                  className="acesso-btn"
+                  onClick={() => {
+                    // Lógica para navegar até o detalhe do grupo ou abrir o grupo
+                    console.log(`Acessando grupo: ${grupo.id}`);
+                  }}
+                >
+                  Acessar Grupo
+                </Button>
               </div>
             </motion.div>
           ))}

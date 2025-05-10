@@ -30,3 +30,153 @@
   box-shadow: 0 0 20px rgba(255, 107, 0, 0.3);
 }
 
+/* Estilos aprimorados para os cards de grupos */
+.grupo-estudo-card {
+  position: relative;
+  background: linear-gradient(135deg, rgba(13, 17, 28, 0.85) 0%, rgba(5, 9, 20, 0.95) 100%);
+  border: 1px solid rgba(40, 45, 60, 0.8);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.grupo-estudo-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(255, 107, 0, 0.5);
+  box-shadow: 0 8px 20px -5px rgba(0, 0, 0, 0.3), 
+              0 6px 10px -6px rgba(0, 0, 0, 0.2),
+              0 0 0 1px rgba(255, 107, 0, 0.2);
+}
+
+.grupo-estudo-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 107, 0, 0.3), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.grupo-estudo-card:hover::after {
+  opacity: 1;
+}
+
+.grupo-estudo-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #FF6B00 0%, #FF8C40 100%);
+  color: white;
+  font-size: 22px;
+  box-shadow: 0 4px 10px rgba(255, 107, 0, 0.25);
+  transition: all 0.3s ease;
+}
+
+.grupo-estudo-card:hover .grupo-estudo-icon {
+  transform: scale(1.05);
+  box-shadow: 0 6px 15px rgba(255, 107, 0, 0.35);
+}
+
+.grupo-info {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.grupo-nome {
+  font-weight: 600;
+  color: white;
+  font-size: 1.1rem;
+  line-height: 1.3;
+  margin-bottom: 2px;
+}
+
+.grupo-disciplina {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.grupo-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.grupo-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.08);
+  padding: 3px 8px;
+  border-radius: 30px;
+}
+
+.grupo-tags {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.grupo-tag {
+  background: rgba(255, 107, 0, 0.15);
+  color: #FF8C40;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+.grupo-data {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.acesso-btn {
+  background: linear-gradient(to right, #FF6B00, #FF8C40);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 5px rgba(255, 107, 0, 0.2);
+}
+
+.acesso-btn:hover {
+  box-shadow: 0 4px 12px rgba(255, 107, 0, 0.4);
+  transform: translateY(-1px);
+}
+
+.grupo-header {
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.grupo-footer {
+  padding: 8px 10px;
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
