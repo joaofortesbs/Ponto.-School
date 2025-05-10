@@ -157,11 +157,9 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
   };
 
   const handleTopicSelect = (topic: any) => {
-    // Convertemos o id para number para garantir compatibilidade com o formato usado em TopicosEstudoView
-    const topicoId = typeof topic.id === 'string' ? parseInt(topic.id) : topic.id;
     setFormData(prev => ({ 
       ...prev, 
-      topico: topicoId,  // Usando o ID numérico para garantir compatibilidade com a filtragem
+      topico: topic.id,  // Este valor será usado para filtragem
       topicoNome: topic.name,
       topicoIcon: topic.icon
     }));

@@ -330,7 +330,7 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                 <Users className="h-3 w-3 mr-1" /> Meus Grupos
               </button>
               <button
-                onClick={()={() => setInterfaceAtiva("recomendacoes-ia")}
+                onClick={() => setInterfaceAtiva("recomendacoes-ia")}
                 className={`flex-1 py-1.5 px-3 rounded-md text-xs font-medium transition-all flex items-center justify-center gap-1 ${
                   interfaceAtiva === "recomendacoes-ia"
                     ? "bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white shadow-sm"
@@ -652,8 +652,6 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                   topicosEstudo={topicosEstudo}
                   searchQuery={searchQuery}
                 />
-                {/* Log para debug do tópico selecionado */}
-                {selectedTopic && console.log(`Tópico selecionado para filtragem: ID=${selectedTopic}, Nome=${topicosEstudo.find(t => t.id === selectedTopic)?.nome}`)}
               </div>
             </motion.div>
           )}
