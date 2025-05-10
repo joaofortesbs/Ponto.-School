@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import CreateGroupModalEnhanced from "../CreateGroupModalEnhanced";
 import { supabase } from "@/lib/supabase";
+import { criarGrupo, sincronizarGruposLocais, obterTodosGrupos } from '@/lib/gruposEstudoStorage';
 
 interface GrupoEstudo {
   id: string;
@@ -121,9 +122,6 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
   const abrirModalCriarGrupo = () => {
     setShowCreateGroupModal(true);
   };
-
-  // Importar o novo sistema de armazenamento
-  import { criarGrupo, sincronizarGruposLocais, obterTodosGrupos } from '@/lib/gruposEstudoStorage';
 
   // Processar a criação de um novo grupo
   const handleCreateGroup = async (formData: any) => {
