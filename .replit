@@ -101,6 +101,24 @@ mode = "sequential"
 task = "shell.exec"
 args = "npx supabase migration up"
 
+[[workflows.workflow]]
+name = "Aplicar Migrações SQL"
+author = 42059808
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npx supabase migration up"
+
+[[workflows.workflow]]
+name = "Inicializar DB Simples"
+author = 42059808
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node scripts/setup-simple-db.js"
+
 [auth]
 pageEnabled = false
 buttonEnabled = false

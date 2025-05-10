@@ -122,7 +122,10 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
     setShowCreateGroupModal(true);
   };
 
-  // Função para processar a criação de um novo grupo
+  // Importar o novo sistema de armazenamento
+  import { criarGrupo, sincronizarGruposLocais, obterTodosGrupos } from '@/lib/gruposEstudoStorage';
+
+  // Processar a criação de um novo grupo
   const handleCreateGroup = async (formData: any) => {
     try {
       // Verificar se o usuário está autenticado
@@ -157,76 +160,31 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
 
       console.log("Enviando dados para criação de grupo:", grupoData);
 
-      // Primeiro, aplicar a migração para garantir que a tabela existe
-      await executarMigracaoDoBancoDeDados();
+      // Usar o novo sistema de armazenamento
+      const novoGrupoDados = await criarGrupo(grupoData);
 
-      // Inserir no banco de dados
-      const { data, error } = await supabase
-        .from('grupos_estudo')
-        .insert(grupoData)
-        .select('*')
-        .single();
-
-      if (error) {
-        console.error("Erro ao criar grupo:", error);
-        
-        if (error.code === '42P01') {
-          // Tabela não existe - tentar criá-la antes de falhar
-          try {
-            console.log("Tabela grupos_estudo não existe. Tentando criar...");
-            await executarMigracaoDoBancoDeDados();
-            
-            // Após criar a tabela, tenta novamente inserir o grupo
-            console.log("Tabela criada, tentando inserir o grupo novamente...");
-            const { data: retryData, error: retryError } = await supabase
-              .from('grupos_estudo')
-              .insert(grupoData)
-              .select('*')
-              .single();
-              
-            if (retryError) {
-              throw retryError;
-            }
-            
-            if (!retryData) {
-              throw new Error("Não foi possível criar o grupo após criar a tabela.");
-            }
-            
-            console.log("Grupo criado com sucesso após criar tabela:", retryData);
-            return retryData;
-          } catch (migrationError) {
-            console.error("Falha ao criar tabela ou inserir grupo:", migrationError);
-            throw new Error("A tabela grupos_estudo não existe. Execute o fluxo de trabalho 'Aplicar Migrações'.");
-          }
-        } else {
-          // Outro tipo de erro
-          const errorMsg = error.message || "Ocorreu um erro desconhecido ao criar o grupo.";
-          throw new Error(errorMsg);
-        }
+      if (!novoGrupoDados) {
+        throw new Error("Não foi possível criar o grupo. Tente novamente mais tarde.");
       }
 
-      if (!data) {
-        throw new Error("Não foi possível criar o grupo. Nenhum dado retornado do banco.");
-      }
-
-      console.log("Grupo criado com sucesso:", data);
+      console.log("Grupo criado com sucesso:", novoGrupoDados);
 
       // Converter o grupo criado para o formato da interface
       const novoGrupo: GrupoEstudo = {
-        id: data.id,
-        nome: data.nome,
-        cor: data.cor,
-        membros: data.membros,
-        dataCriacao: data.data_criacao,
-        topico: data.topico,
-        disciplina: data.topico_nome,
-        icon: data.topico_icon,
+        id: novoGrupoDados.id,
+        nome: novoGrupoDados.nome,
+        cor: novoGrupoDados.cor,
+        membros: novoGrupoDados.membros,
+        dataCriacao: novoGrupoDados.data_criacao,
+        topico: novoGrupoDados.topico,
+        disciplina: novoGrupoDados.topico_nome,
+        icon: novoGrupoDados.topico_icon,
         tendencia: Math.random() > 0.7 ? "alta" : undefined, // Valor aleatório para demo
         novoConteudo: false, // Grupo novo não tem conteúdo novo ainda
-        privado: data.privado,
-        visibilidade: data.visibilidade,
-        topico_nome: data.topico_nome,
-        topico_icon: data.topico_icon
+        privado: novoGrupoDados.privado,
+        visibilidade: novoGrupoDados.visibilidade,
+        topico_nome: novoGrupoDados.topico_nome,
+        topico_icon: novoGrupoDados.topico_icon
       };
 
       // Adicionar o novo grupo à lista de grupos e atualizar a interface
@@ -238,7 +196,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
       // Mostrar feedback visual temporário
       mostrarNotificacaoSucesso('Grupo criado com sucesso!');
 
-      return data; // Retorna os dados para o componente chamador
+      return novoGrupoDados; // Retorna os dados para o componente chamador
 
     } catch (error) {
       console.error("Erro ao processar criação de grupo:", error);
@@ -269,14 +227,14 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
 
       if (tableCheckError && tableCheckError.code === '42P01') {
         console.log("Tentando criar a tabela grupos_estudo diretamente...");
-        
+
         // Criar a tabela diretamente usando função SQL
         const { data: { session } } = await supabase.auth.getSession();
-        
+
         if (!session) {
           throw new Error("Você precisa estar autenticado para criar a tabela");
         }
-        
+
         // Criar tabela diretamente através de SQL
         const createTableSQL = `
           CREATE TABLE IF NOT EXISTS public.grupos_estudo (
@@ -294,55 +252,55 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
             codigo TEXT,
             data_criacao TIMESTAMP WITH TIME ZONE DEFAULT now()
           );
-          
+
           -- Create index for faster queries
           CREATE INDEX IF NOT EXISTS grupos_estudo_user_id_idx ON public.grupos_estudo(user_id);
-          
+
           -- Grant access to authenticated users
           ALTER TABLE public.grupos_estudo ENABLE ROW LEVEL SECURITY;
-          
+
           CREATE POLICY "Users can view their own grupos_estudo"
             ON public.grupos_estudo FOR SELECT
             USING (auth.uid() = user_id);
-          
+
           CREATE POLICY "Users can insert their own grupos_estudo"
             ON public.grupos_estudo FOR INSERT
             WITH CHECK (auth.uid() = user_id);
-          
+
           CREATE POLICY "Users can update their own grupos_estudo"
             ON public.grupos_estudo FOR UPDATE
             USING (auth.uid() = user_id);
-          
+
           CREATE POLICY "Users can delete their own grupos_estudo"
             ON public.grupos_estudo FOR DELETE
             USING (auth.uid() = user_id);
         `;
-        
+
         // Execute the SQL as RPC or through the REST API
         try {
           // Tenta através da função execute_sql
           const { error: execError } = await supabase.rpc('execute_sql', {
             sql_query: createTableSQL
           });
-          
+
           if (execError) {
             console.error("Erro ao criar tabela via RPC:", execError);
             // Será tratado no catch
             throw execError;
           }
-          
+
           console.log("Tabela grupos_estudo criada com sucesso via RPC");
           return true;
         } catch (sqlError) {
           console.error("Erro ao criar tabela:", sqlError);
-          
+
           // Informa ao usuário
           window.alert("Não foi possível criar a tabela grupos_estudo automaticamente. Por favor, execute o fluxo de trabalho 'Aplicar Migrações' no menu de workflows para criar a tabela.");
-          
+
           throw new Error("Falha ao criar tabela grupos_estudo. Execute o fluxo de trabalho 'Aplicar Migrações'.");
         }
       }
-      
+
       return true; // Tabela já existe ou foi criada com sucesso
     } catch (error) {
       console.error("Erro ao verificar/criar tabela:", error);
