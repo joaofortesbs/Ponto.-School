@@ -8,6 +8,11 @@
   position: relative;
   border-radius: 8px 8px 0 0;
   overflow: hidden;
+  transition: transform 0.5s ease;
+}
+
+.grupo-estudo-card:hover .grupo-estudo-card-cover {
+  transform: scale(1.05);
 }
 
 .grupo-estudo-card-cover-gradient {

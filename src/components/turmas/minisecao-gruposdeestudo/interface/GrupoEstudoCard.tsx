@@ -41,7 +41,7 @@ const GrupoEstudoCard: React.FC<GrupoEstudoCardProps> = ({ grupo, onClick }) => 
       <div 
         className="grupo-estudo-card-cover"
         style={{ 
-          backgroundImage: `url(${grupo.imagem || "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&q=80"})` 
+          backgroundImage: `url(${grupo.imagem || "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800&q=80"})`
         }}
       >
         <div className="grupo-estudo-card-cover-gradient">
