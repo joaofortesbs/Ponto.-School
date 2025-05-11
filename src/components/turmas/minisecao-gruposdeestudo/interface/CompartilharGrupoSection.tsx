@@ -53,7 +53,7 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
           <Input
             value={grupoCodigo}
             readOnly
-            className="pr-20 bg-[#1E293B] border-[#1E293B] text-white font-mono text-lg tracking-wider"
+            className="pr-20 bg-[#1E293B] border-[#1E293B] text-white font-mono text-lg tracking-wider uppercase"
           />
           <Button
             size="sm"
