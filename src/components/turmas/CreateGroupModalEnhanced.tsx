@@ -21,7 +21,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/lib/supabase";
-import { criarGrupo, salvarGrupoLocal } from "@/lib/gruposEstudoStorage";
+import { criarGrupo, salvarGrupoLocal, gerarCodigoUnicoGrupo } from "@/lib/gruposEstudoStorage";
 
 interface CreateGroupModalProps {
   isOpen: boolean;
@@ -170,6 +170,9 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
         return;
       }
 
+      // Gerar um código único para o grupo
+      const codigoGrupo = await gerarCodigoUnicoGrupo();
+
       // Preparar dados para criação do grupo
       const novoGrupo = {
         user_id: session.user.id,
@@ -189,6 +192,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
         atividades: formData.atividades,
         convidados: formData.convidados,
         convidados_info: convidadosInfo,
+        codigo: codigoGrupo, // Código único gerado
         cor: "#FF6B00", // Cor padrão
         membros: 1, // Inicialmente, apenas o criador é membro
         data_criacao: new Date().toISOString()

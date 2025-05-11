@@ -245,7 +245,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
         const gruposRemovidosKey = 'grupos_removidos';
         const gruposRemovidosStr = localStorage.getItem(gruposRemovidosKey) || '[]';
         const gruposRemovidos = JSON.parse(gruposRemovidosStr);
-        
+
         if (!gruposRemovidos.includes(selectedGrupo.id)) {
           gruposRemovidos.push(selectedGrupo.id);
           localStorage.setItem(gruposRemovidosKey, JSON.stringify(gruposRemovidos));
@@ -314,7 +314,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
         const gruposRemovidosKey = 'grupos_removidos';
         const gruposRemovidosStr = localStorage.getItem(gruposRemovidosKey) || '[]';
         const gruposRemovidos = JSON.parse(gruposRemovidosStr);
-        
+
         if (!gruposRemovidos.includes(selectedGrupo.id)) {
           gruposRemovidos.push(selectedGrupo.id);
           localStorage.setItem(gruposRemovidosKey, JSON.stringify(gruposRemovidos));
@@ -426,7 +426,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
       );
 
       localStorage.setItem('epictus_grupos_estudo', JSON.stringify(gruposAtualizados));
-      
+
       // Atualizar a cópia na sessão
       try {
         sessionStorage.setItem('epictus_grupos_estudo_session', JSON.stringify(gruposAtualizados));

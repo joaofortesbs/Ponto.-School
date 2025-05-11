@@ -22,6 +22,75 @@ export interface GrupoEstudo {
   disciplina?: string;
 }
 
+// Caracteres permitidos para códigos de grupo (sem caracteres ambíguos como I, O, 0, 1)
+const CARACTERES_PERMITIDOS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const COMPRIMENTO_CODIGO = 7;
+
+/**
+ * Gera uma string aleatória para ser usada como código de grupo
+ */
+export const gerarStringAleatoria = (comprimento = COMPRIMENTO_CODIGO, caracteres = CARACTERES_PERMITIDOS): string => {
+  let resultado = '';
+  const caracteresLength = caracteres.length;
+  
+  for (let i = 0; i < comprimento; i++) {
+    resultado += caracteres.charAt(Math.floor(Math.random() * caracteresLength));
+  }
+  
+  return resultado;
+};
+
+/**
+ * Verifica se um código de grupo já existe no armazenamento
+ */
+export const verificarSeCodigoExiste = async (codigo: string): Promise<boolean> => {
+  try {
+    // Primeiro tentar verificar no Supabase
+    const { data, error } = await supabase
+      .from('grupos_estudo')
+      .select('id')
+      .eq('codigo', codigo)
+      .single();
+    
+    if (error && error.code !== 'PGRST116') {
+      console.error('Erro ao verificar código no Supabase:', error);
+      // Se ocorrer um erro no Supabase, verificar localmente
+      const gruposLocais = obterGruposLocal();
+      return gruposLocais.some(grupo => grupo.codigo === codigo);
+    }
+    
+    return !!data;
+  } catch (error) {
+    console.error('Erro ao verificar código:', error);
+    // Em caso de erro, verificar localmente
+    const gruposLocais = obterGruposLocal();
+    return gruposLocais.some(grupo => grupo.codigo === codigo);
+  }
+};
+
+/**
+ * Gera um código único para o grupo de estudos
+ */
+export const gerarCodigoUnicoGrupo = async (): Promise<string> => {
+  let novoCodigoUnico = '';
+  let existeNoSistema = true;
+  let tentativas = 0;
+  const maxTentativas = 10; // Limite de tentativas para evitar loop infinito
+  
+  while (existeNoSistema && tentativas < maxTentativas) {
+    novoCodigoUnico = gerarStringAleatoria();
+    existeNoSistema = await verificarSeCodigoExiste(novoCodigoUnico);
+    tentativas++;
+  }
+  
+  if (tentativas >= maxTentativas) {
+    // Se atingir o limite de tentativas, adicionar um timestamp para garantir unicidade
+    novoCodigoUnico = `${gerarStringAleatoria(4)}${Date.now().toString(36).slice(-3)}`;
+  }
+  
+  return novoCodigoUnico;
+};
+
 // Chave para armazenamento local
 const STORAGE_KEY = 'epictus_grupos_estudo';
 

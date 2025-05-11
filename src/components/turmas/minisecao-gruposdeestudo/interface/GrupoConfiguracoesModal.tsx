@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -11,10 +10,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Settings, Users, BookOpen, Calendar, Lock, Shield, 
   Edit3, Eye, UserPlus, Bell, MessageSquare, Image, 
-  Brush, CheckCircle, X, Save, ChevronRight, AlertCircle
+  Brush, CheckCircle, X, Save, ChevronRight, AlertCircle, Share2
 } from "lucide-react";
 import { HexColorPicker } from "react-colorful";
 import { supabase } from "@/lib/supabase";
+import CompartilharGrupoSection from "./CompartilharGrupoSection";
 
 interface GrupoConfiguracoesModalProps {
   isOpen: boolean;
@@ -75,7 +75,7 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
 
   const handleSubmit = async () => {
     if (!grupo) return;
-    
+
     try {
       setSaving(true);
       setError(null);
@@ -101,7 +101,7 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
       // Atualizar no Supabase se não for um grupo local
       if (!grupo.id.startsWith('local_')) {
         const { data: { session } } = await supabase.auth.getSession();
-        
+
         if (session) {
           const { error } = await supabase
             .from('grupos_estudo')
@@ -128,10 +128,10 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
 
       // Atualizar localmente sempre
       onSave(grupoAtualizado);
-      
+
       // Mostrar animação de sucesso
       mostrarNotificacaoSucesso("Grupo atualizado com sucesso!");
-      
+
       // Fechar modal após sucesso
       setTimeout(() => {
         onClose();
@@ -160,14 +160,14 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
     element.style.display = 'flex';
     element.style.alignItems = 'center';
     element.style.gap = '8px';
-    
+
     const icon = document.createElement('span');
     icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`;
-    
+
     const text = document.createElement('span');
     text.textContent = mensagem;
     text.style.fontWeight = '500';
-    
+
     element.appendChild(icon);
     element.appendChild(text);
     document.body.appendChild(element);
@@ -198,7 +198,7 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
       <DialogContent className="sm:max-w-xl bg-gradient-to-br from-white/95 to-white/90 dark:from-[#0A2540]/95 dark:to-[#071a2e]/90 backdrop-blur-xl border-0 shadow-2xl rounded-2xl p-0 overflow-hidden">
         {/* Decorative gradient background */}
         <div className="absolute inset-0 bg-gradient-to-tr from-[#FF6B00]/10 via-transparent to-[#FF8C40]/5 dark:from-[#FF6B00]/10 dark:via-transparent dark:to-[#FF8C40]/5 rounded-2xl pointer-events-none"></div>
-        
+
         {/* Header */}
         <DialogHeader className="p-6 pb-2 relative z-10">
           <div className="flex items-center gap-3">
@@ -222,7 +222,7 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
         {/* Tabs Navigation */}
         <div className="px-6 pt-2">
           <Tabs defaultValue="informacoes" value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid grid-cols-3 mb-6">
+            <TabsList className="grid grid-cols-4 mb-6">
               <TabsTrigger value="informacoes" className="data-[state=active]:bg-[#FF6B00] data-[state=active]:text-white">
                 <Edit3 className="h-4 w-4 mr-2" />
                 Informações
@@ -234,6 +234,10 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
               <TabsTrigger value="membros" className="data-[state=active]:bg-[#FF6B00] data-[state=active]:text-white">
                 <Users className="h-4 w-4 mr-2" />
                 Membros
+              </TabsTrigger>
+              <TabsTrigger value="compartilhar" className="data-[state=active]:bg-[#FF6B00] data-[state=active]:text-white">
+                <Share2 className="h-4 w-4 mr-2" />
+                Compartilhar
               </TabsTrigger>
             </TabsList>
 
@@ -310,7 +314,7 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
                       className="flex-1 border-gray-300 dark:border-gray-700 focus:ring-[#FF6B00] focus:border-[#FF6B00]"
                     />
                   </div>
-                  
+
                   {showColorPicker && (
                     <div className="mt-2 p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
                       <HexColorPicker color={cor} onChange={setCor} />
@@ -413,7 +417,7 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
                         </div>
                       </div>
                     </div>
-                    
+
                     {index === 0 ? (
                       <div className="text-xs font-medium text-[#FF6B00] bg-[#FF6B00]/10 px-2 py-1 rounded">Criador</div>
                     ) : (
@@ -439,6 +443,11 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
                 )}
               </div>
             </TabsContent>
+
+            {/* Compartilhar */}
+            <TabsContent value="compartilhar" className="space-y-4 focus:outline-none">
+              <CompartilharGrupoSection grupo={grupo} />
+            </TabsContent>
           </Tabs>
         </div>
 
@@ -463,7 +472,7 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
           >
             Cancelar
           </Button>
-          
+
           <motion.button
             whileHover={{ scale: 1.02, boxShadow: "0 10px 25px -5px rgba(255, 107, 0, 0.2)" }}
             whileTap={{ scale: 0.98 }}
