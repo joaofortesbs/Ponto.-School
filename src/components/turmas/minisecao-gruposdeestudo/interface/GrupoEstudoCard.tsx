@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Calendar, Users, LogOut, Eye, Settings } from "lucide-react";
-import GrupoSairModal from "./GrupoSairModal";
 
 interface GrupoEstudoCardProps {
   grupo: {
@@ -24,76 +23,66 @@ interface GrupoEstudoCardProps {
 
 const GrupoEstudoCard: React.FC<GrupoEstudoCardProps> = ({ grupo, onClick }) => {
   const [isHovered, setIsHovered] = React.useState(false);
-  const [showSairModal, setShowSairModal] = React.useState(false);
-
-  // Funções para lidar com as ações do grupo
-  const handleSairGrupo = (grupoId: string) => {
-    console.log(`Saindo do grupo ${grupoId}`);
-    // Aqui você implementa a lógica para sair do grupo
-  };
-
-  const handleExcluirGrupo = (grupoId: string) => {
-    console.log(`Excluindo grupo ${grupoId}`);
-    // Aqui você implementa a lógica para excluir o grupo
-  };
 
   return (
-    <>
-      <Card 
-        className="hover:shadow-md transition-all duration-200 ease-in-out transform hover:translate-y-[-2px] cursor-pointer border-[#f0f0f0] dark:border-[#2a2a2a] h-full will-change-transform relative"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        onClick={(e) => {
-          e.preventDefault();
-          if (onClick) {
-            // Aplicar efeito visual ao clicar
-            e.currentTarget.style.transform = "translateY(1px)";
-            setTimeout(() => {
-              e.currentTarget.style.transform = "";
-              onClick(grupo.id);
-            }, 100);
-          }
-        }}
-      >
-        {/* Botões de ação que aparecem no hover */}
-        {isHovered && (
-          <div className="absolute right-3 top-3 flex items-center gap-2 z-10">
-            <button 
-              className="text-white/80 hover:text-[#FF6B00] transition-colors p-1 rounded-full"
-              title="Sair do Grupo"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowSairModal(true);
-              }}
-            >
-              <LogOut className="h-4 w-4" />
-            </button>
+    <Card 
+      className="hover:shadow-md transition-all duration-200 ease-in-out transform hover:translate-y-[-2px] cursor-pointer border-[#f0f0f0] dark:border-[#2a2a2a] h-full will-change-transform relative"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={(e) => {
+        e.preventDefault();
+        if (onClick) {
+          // Aplicar efeito visual ao clicar
+          e.currentTarget.style.transform = "translateY(1px)";
+          setTimeout(() => {
+            e.currentTarget.style.transform = "";
+            onClick(grupo.id);
+          }, 100);
+        }
+      }}
+    >
+      {/* Botões de ação que aparecem no hover */}
+      {isHovered && (
+        <div className="absolute right-3 top-3 flex items-center gap-2 z-10">
+          <button 
+            className="text-white/80 hover:text-[#FF6B00] transition-colors p-1 rounded-full"
+            title="Sair do Grupo"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (window.confirm(`Deseja realmente sair do grupo "${grupo.nome}"?`)) {
+                console.log(`Saindo do grupo ${grupo.id}`);
+                // Implementar lógica para sair do grupo
+              }
+            }}
+          >
+            <LogOut className="h-4 w-4" />
+          </button>
 
-            <button 
-              className="text-white/80 hover:text-[#FF6B00] transition-colors p-1 rounded-full"
-              title="Visualizar Grupo"
-              onClick={(e) => {
-                e.stopPropagation();
-                console.log(`Visualizando grupo ${grupo.id}`);
-                // Implementar navegação para a visualização detalhada do grupo
-              }}
-            >
-              <Eye className="h-4 w-4" />
-            </button>
+          <button 
+            className="text-white/80 hover:text-[#FF6B00] transition-colors p-1 rounded-full"
+            title="Visualizar Grupo"
+            onClick={(e) => {
+              e.stopPropagation();
+              console.log(`Visualizando grupo ${grupo.id}`);
+              // Implementar navegação para a visualização detalhada do grupo
+            }}
+          >
+            <Eye className="h-4 w-4" />
+          </button>
 
-            <button 
-              className="text-white/80 hover:text-[#FF6B00] transition-colors p-1 rounded-full"
-              title="Configurações do Grupo"
-              onClick={(e) => {
-                e.stopPropagation();
-                console.log(`Configurações do grupo ${grupo.id}`);
-                // Implementar abertura do modal de configurações do grupo
-              }}
-            >
-              <Settings className="h-4 w-4" />
-            </button>
-          </div>
-        )}
+          <button 
+            className="text-white/80 hover:text-[#FF6B00] transition-colors p-1 rounded-full"
+            title="Configurações do Grupo"
+            onClick={(e) => {
+              e.stopPropagation();
+              console.log(`Configurações do grupo ${grupo.id}`);
+              // Implementar abertura do modal de configurações do grupo
+            }}
+          >
+            <Settings className="h-4 w-4" />
+          </button>
+        </div>
+      )}
 
       <div 
         className="h-32 w-full bg-cover bg-center rounded-t-lg" 
@@ -149,17 +138,6 @@ const GrupoEstudoCard: React.FC<GrupoEstudoCardProps> = ({ grupo, onClick }) => 
         </div>
       </CardContent>
     </Card>
-
-    {/* Modal para sair/excluir grupo */}
-    <GrupoSairModal
-      isOpen={showSairModal}
-      onClose={() => setShowSairModal(false)}
-      grupoId={grupo.id}
-      grupoNome={grupo.nome}
-      onSair={handleSairGrupo}
-      onExcluir={handleExcluirGrupo}
-    />
-    </>
   );
 };
 
