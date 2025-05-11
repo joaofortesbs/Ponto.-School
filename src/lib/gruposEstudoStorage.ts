@@ -194,15 +194,31 @@ export const excluirGrupo = async (grupoId: string, userId: string): Promise<boo
   }
 };
 
+// Função para gerar código único do grupo
+const gerarCodigoGrupo = () => {
+  // Caracteres que serão usados para gerar o código (excluindo caracteres ambíguos como O, 0, I, l, 1)
+  const caracteres = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let codigo = '';
+
+  // Gera um código de 6 caracteres
+  for (let i = 0; i < 6; i++) {
+    // Adiciona um hífen após os primeiros 3 caracteres
+    if (i === 3) codigo += '-';
+    codigo += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+  }
+
+  return codigo;
+};
+
 /**
  * Cria um grupo no Supabase com fallback para armazenamento local
  */
-export const criarGrupo = async (dados: Omit<GrupoEstudo, 'id'>): Promise<GrupoEstudo | null> => {
+export const criarGrupo = async (dados: Omit<GrupoEstudo, 'id' | 'codigo'>, codigo?: string): Promise<GrupoEstudo | null> => {
   try {
     // Tentar inserir no Supabase
     const { data, error } = await supabase
       .from('grupos_estudo')
-      .insert(dados)
+      .insert({...dados, codigo})
       .select('*')
       .single();
 
@@ -215,11 +231,12 @@ export const criarGrupo = async (dados: Omit<GrupoEstudo, 'id'>): Promise<GrupoE
       // Criar grupo para armazenamento local
       const grupoLocal: GrupoEstudo = {
         ...dados,
-        id
+        id,
+        codigo: codigo || gerarCodigoGrupo()
       };
 
       // Salvar localmente
-      // salvarGrupoLocal(grupoLocal); // This line was removed to avoid double saving
+      salvarGrupoLocal(grupoLocal);
 
       // Mostrar notificação sobre o armazenamento local
       const element = document.createElement('div');
@@ -464,4 +481,43 @@ export const filtrarGruposRemovidos = (grupos: any[]): any[] => {
   const gruposRemovidos = JSON.parse(gruposRemovidosStr);
 
   return grupos.filter(grupo => !gruposRemovidos.includes(grupo.id));
+};
+
+/**
+ * Tenta sincronizar grupos locais com o banco de dados
+ */
+export const sincronizarGruposLocais = async (userId: string): Promise<void> => {
+  try {
+    const gruposLocais = obterGruposLocal()
+      .filter(grupo =>
+        grupo.user_id === userId &&
+        grupo.id.startsWith('local_')
+      );
+
+    if (gruposLocais.length === 0) return;
+
+    console.log(`Tentando sincronizar ${gruposLocais.length} grupos locais`);
+
+    for (const grupo of gruposLocais) {
+      // Remover o ID local para que o Supabase gere um novo
+      const { id, ...dadosGrupo } = grupo;
+
+      // Tentar inserir no Supabase
+      const { error } = await supabase
+        .from('grupos_estudo')
+        .insert({
+          ...dadosGrupo,
+          codigo: grupo.codigo || gerarCodigoGrupo()
+        });
+
+      if (!error) {
+        console.log(`Grupo sincronizado com sucesso: ${grupo.nome}`);
+        // Remover do armazenamento local após sincronizar
+        const gruposAtualizados = obterGruposLocal().filter(g => g.id !== grupo.id);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(gruposAtualizados));
+      }
+    }
+  } catch (error) {
+    console.error('Erro ao sincronizar grupos locais:', error);
+  }
 };

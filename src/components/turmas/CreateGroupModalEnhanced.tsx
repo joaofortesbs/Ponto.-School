@@ -142,6 +142,22 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
     }
   };
 
+  // Função para gerar código único do grupo
+  const gerarCodigoGrupo = () => {
+    // Caracteres que serão usados para gerar o código (excluindo caracteres ambíguos como O, 0, I, l, 1)
+    const caracteres = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let codigo = '';
+
+    // Gera um código de 6 caracteres
+    for (let i = 0; i < 6; i++) {
+      // Adiciona um hífen após os primeiros 3 caracteres
+      if (i === 3) codigo += '-';
+      codigo += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+    }
+
+    return codigo;
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -191,7 +207,8 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
         convidados_info: convidadosInfo,
         cor: "#FF6B00", // Cor padrão
         membros: 1, // Inicialmente, apenas o criador é membro
-        data_criacao: new Date().toISOString()
+        data_criacao: new Date().toISOString(),
+        codigo: gerarCodigoGrupo()
       };
 
       console.log("Criando grupo de estudos:", novoGrupo);
@@ -715,8 +732,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
                             onClick={() => handleRemoverConvidado(usuario.id)}
                           >
                             <X className="h-4 w-4" />
-                          </Button>
-                        </div>
+                          </Button>                        </div>
                       ))}
                     </div>
                   </div>
