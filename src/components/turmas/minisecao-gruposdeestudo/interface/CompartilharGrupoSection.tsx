@@ -51,7 +51,7 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
         </label>
         <div className="relative">
           <Input
-            value={grupoCodigo || "PONTO123"}
+            value={grupoCodigo || ""}
             readOnly
             className="pr-20 bg-[#1E293B] border-[#1E293B] text-white font-mono text-lg tracking-wider uppercase font-bold"
           />
@@ -124,7 +124,7 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
           <p className="text-white text-sm mb-2">
             Venha estudar comigo no grupo "{grupoNome}" na Ponto. School!
             <br />
-            Use o código: <span className="bg-[#FF6B00]/10 text-[#FF6B00] border-[#FF6B00]/30 px-2 py-1 rounded-md font-bold ml-1">{grupoCodigo || "PONTO123"}</span>
+            Use o código: <span className="bg-[#FF6B00]/10 text-[#FF6B00] border-[#FF6B00]/30 px-2 py-1 rounded-md font-bold ml-1">{grupoCodigo || ""}</span>
           </p>
         </div>
       </div>

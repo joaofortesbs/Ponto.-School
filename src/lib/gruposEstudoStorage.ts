@@ -77,18 +77,28 @@ export const gerarCodigoUnicoGrupo = async (): Promise<string> => {
   let tentativas = 0;
   const maxTentativas = 10; // Limite de tentativas para evitar loop infinito
 
-  while (existeNoSistema && tentativas < maxTentativas) {
-    novoCodigoUnico = gerarStringAleatoria();
-    existeNoSistema = await verificarSeCodigoExiste(novoCodigoUnico);
-    tentativas++;
-  }
+  try {
+    while (existeNoSistema && tentativas < maxTentativas) {
+      novoCodigoUnico = gerarStringAleatoria();
+      console.log("Tentando código:", novoCodigoUnico);
+      existeNoSistema = await verificarSeCodigoExiste(novoCodigoUnico);
+      tentativas++;
+    }
 
-  if (tentativas >= maxTentativas) {
-    // Se atingir o limite de tentativas, adicionar um timestamp para garantir unicidade
-    novoCodigoUnico = `${gerarStringAleatoria(4)}${Date.now().toString(36).slice(-3)}`;
-  }
+    if (tentativas >= maxTentativas) {
+      // Se atingir o limite de tentativas, adicionar um timestamp para garantir unicidade
+      novoCodigoUnico = `${gerarStringAleatoria(4)}${Date.now().toString(36).slice(-3)}`;
+      console.log("Usando código com timestamp após máximo de tentativas:", novoCodigoUnico);
+    }
 
-  return novoCodigoUnico;
+    return novoCodigoUnico;
+  } catch (error) {
+    console.error("Erro ao gerar código único:", error);
+    // Em caso de erro, retornar um código de emergência com timestamp
+    const codigoEmergencia = `${CARACTERES_PERMITIDOS.substring(0, 3)}${Date.now().toString(36).slice(-4)}`;
+    console.log("Usando código de emergência:", codigoEmergencia);
+    return codigoEmergencia;
+  }
 };
 
 // Chave para armazenamento local
