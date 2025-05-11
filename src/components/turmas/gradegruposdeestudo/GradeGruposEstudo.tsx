@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import CreateGroupModalEnhanced from "../CreateGroupModalEnhanced";
 import GrupoSairModal from "../minisecao-gruposdeestudo/interface/GrupoSairModal";
+import GrupoConfiguracoesModal from "../minisecao-gruposdeestudo/interface/GrupoConfiguracoesModal";
 import { supabase } from "@/lib/supabase";
 import { criarGrupo, sincronizarGruposLocais, obterTodosGrupos, obterGruposLocal, salvarGrupoLocal, removerGrupoLocal } from '@/lib/gruposEstudoStorage';
 
@@ -46,6 +47,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [sairModalOpen, setSairModalOpen] = useState(false);
+  const [configModalOpen, setConfigModalOpen] = useState(false);
   const [selectedGrupo, setSelectedGrupo] = useState<GrupoEstudo | null>(null);
 
   // Carregar grupos do banco de dados e do armazenamento local
@@ -391,10 +393,57 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
     // window.location.href = `/turmas/grupos/${grupoId}`;
   };
 
-  const handleGroupSettings = (e: React.MouseEvent, grupoId: string) => {
+  const handleGroupSettings = (e: React.MouseEvent, grupo: GrupoEstudo) => {
     e.stopPropagation();
-    console.log(`Configurações do grupo ${grupoId}`);
-    // Implementar abertura do modal de configurações do grupo
+    console.log(`Configurações do grupo ${grupo.id}`);
+    setSelectedGrupo(grupo);
+    setConfigModalOpen(true);
+  };
+
+  // Função para salvar as alterações do grupo
+  const handleSaveGroupSettings = async (grupoAtualizado: GrupoEstudo) => {
+    try {
+      // Atualizar a lista de grupos
+      setGruposEstudo(prevGrupos => 
+        prevGrupos.map(grupo => 
+          grupo.id === grupoAtualizado.id ? grupoAtualizado : grupo
+        )
+      );
+
+      // Atualizar no armazenamento local
+      const gruposLocais = obterGruposLocal();
+      const gruposAtualizados = gruposLocais.map((grupo: any) => 
+        grupo.id === grupoAtualizado.id ? {
+          ...grupo,
+          nome: grupoAtualizado.nome,
+          descricao: grupoAtualizado.descricao,
+          disciplina: grupoAtualizado.disciplina,
+          cor: grupoAtualizado.cor,
+          privado: grupoAtualizado.privado,
+          visibilidade: grupoAtualizado.visibilidade,
+          data_inicio: grupoAtualizado.data_inicio
+        } : grupo
+      );
+
+      localStorage.setItem('epictus_grupos_estudo', JSON.stringify(gruposAtualizados));
+      
+      // Atualizar a cópia na sessão
+      try {
+        sessionStorage.setItem('epictus_grupos_estudo_session', JSON.stringify(gruposAtualizados));
+      } catch (sessionError) {
+        console.error("Erro ao atualizar backup na sessão:", sessionError);
+      }
+
+      // Fechar o modal
+      setConfigModalOpen(false);
+      setSelectedGrupo(null);
+
+      // Mostrar notificação de sucesso
+      mostrarNotificacaoSucesso("Grupo atualizado com sucesso!");
+    } catch (error) {
+      console.error("Erro ao salvar configurações do grupo:", error);
+      mostrarNotificacaoErro("Não foi possível salvar as alterações. Tente novamente.");
+    }
   };
 
   // Modal para criar novo grupo
@@ -609,6 +658,17 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
         onLeaveGroup={handleConfirmLeaveGroup}
         onDeleteGroup={handleDeleteGroup}
       />
+
+      {/* Modal de configurações do grupo */}
+      <GrupoConfiguracoesModal
+        isOpen={configModalOpen}
+        onClose={() => {
+          setConfigModalOpen(false);
+          setSelectedGrupo(null);
+        }}
+        grupo={selectedGrupo}
+        onSave={handleSaveGroupSettings}
+      />
       {/* Cabeçalho da grade */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
@@ -677,10 +737,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
                   <button 
                     className="text-white/80 hover:text-[#FF6B00] transition-colors p-1 rounded-full"
                     title="Configurações do Grupo"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      // Lógica para configurações do grupo
-                    }}
+                    onClick={(e) => handleGroupSettings(e, grupo)}
                   >
                     <Settings className="h-4 w-4" />
                   </button>
