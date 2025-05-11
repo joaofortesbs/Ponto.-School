@@ -80,7 +80,8 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
               visibilidade: grupo.visibilidade,
               topico_nome: grupo.topico_nome,
               topico_icon: grupo.topico_icon,
-              data_inicio: grupo.data_inicio
+              data_inicio: grupo.data_inicio,
+              criador: grupo.criador || "você" // Garantir que o criador esteja definido
             }));
 
             // Exibir primeiro os grupos locais enquanto carregamos do Supabase
@@ -121,7 +122,8 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
                 visibilidade: grupo.visibilidade,
                 topico_nome: grupo.topico_nome,
                 topico_icon: grupo.topico_icon,
-                data_inicio: grupo.data_inicio
+                data_inicio: grupo.data_inicio,
+                criador: grupo.criador || "você" // Garantir que o criador esteja definido
               }));
 
               // Combinar grupos do Supabase com grupos locais que não estão no Supabase
@@ -144,7 +146,8 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
                   visibilidade: grupo.visibilidade,
                   topico_nome: grupo.topico_nome,
                   topico_icon: grupo.topico_icon,
-                  data_inicio: grupo.data_inicio
+                  data_inicio: grupo.data_inicio,
+                  criador: grupo.criador || "você" // Garantir que o criador esteja definido
                 }));
 
               setGruposEstudo([...gruposFormatados, ...gruposLocaisFiltrados]);
@@ -183,9 +186,22 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
       }
     }, 300000); // 5 minutos
 
-    // Limpar intervalo quando o componente for desmontado
-    return () => clearInterval(intervaloSincronizacao);
-  }, [showCreateGroupModal]); // Recarregar quando o modal for fechado
+    // Adicionar evento de visibilidade para recarregar os dados quando o usuário volta para a página
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log("Página visível novamente, recarregando grupos...");
+        carregarGrupos();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Limpar listeners e intervalos quando o componente for desmontado
+    return () => {
+      clearInterval(intervaloSincronizacao);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [showCreateGroupModal, sairModalOpen]); // Recarregar quando o modal for fechado ou quando sair de um grupo
 
   // Filtrar grupos baseado no tópico selecionado e busca
   const gruposFiltrados = gruposEstudo.filter(
@@ -216,33 +232,107 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
     setSairModalOpen(true);
   };
   
-  const handleConfirmLeaveGroup = () => {
+  const handleConfirmLeaveGroup = async () => {
     if (selectedGrupo) {
-      console.log(`Saindo do grupo ${selectedGrupo.id}`);
-      // Implementar lógica para sair do grupo
-      
-      // Remover o grupo da lista local (temporário até implementar a lógica completa)
-      const gruposAtualizados = gruposEstudo.filter(g => g.id !== selectedGrupo.id);
-      setGruposEstudo(gruposAtualizados);
-      
-      // Fechar o modal após a ação
-      setSairModalOpen(false);
-      setSelectedGrupo(null);
+      try {
+        console.log(`Saindo do grupo ${selectedGrupo.id}`);
+        
+        // 1. Obter sessão do usuário atual
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          throw new Error("Usuário não autenticado");
+        }
+        
+        // 2. Remover do Supabase se não for um grupo local
+        if (!selectedGrupo.id.startsWith('local_')) {
+          const { error } = await supabase
+            .from('grupos_estudo')
+            .delete()
+            .eq('id', selectedGrupo.id)
+            .eq('user_id', session.user.id);
+            
+          if (error) {
+            console.error("Erro ao sair do grupo no Supabase:", error);
+            throw error;
+          }
+        }
+        
+        // 3. Remover do armazenamento local
+        const gruposLocais = obterGruposLocal();
+        const gruposAtualizados = gruposLocais.filter(g => g.id !== selectedGrupo.id);
+        localStorage.setItem('epictus_grupos_estudo', JSON.stringify(gruposAtualizados));
+        
+        // 4. Atualizar o estado da interface
+        setGruposEstudo(prevGrupos => prevGrupos.filter(g => g.id !== selectedGrupo.id));
+        
+        // 5. Mostrar notificação de sucesso
+        mostrarNotificacaoSucesso("Você saiu do grupo com sucesso!");
+        
+        // 6. Fechar o modal
+        setSairModalOpen(false);
+        setSelectedGrupo(null);
+      } catch (error) {
+        console.error("Erro ao sair do grupo:", error);
+        mostrarNotificacaoErro("Não foi possível sair do grupo. Tente novamente.");
+      }
     }
   };
   
-  const handleDeleteGroup = () => {
+  const handleDeleteGroup = async () => {
     if (selectedGrupo) {
-      console.log(`Excluindo o grupo ${selectedGrupo.id}`);
-      // Implementar lógica para excluir o grupo
-      
-      // Remover o grupo da lista local (temporário até implementar a lógica completa)
-      const gruposAtualizados = gruposEstudo.filter(g => g.id !== selectedGrupo.id);
-      setGruposEstudo(gruposAtualizados);
-      
-      // Fechar o modal após a ação
-      setSairModalOpen(false);
-      setSelectedGrupo(null);
+      try {
+        console.log(`Excluindo o grupo ${selectedGrupo.id}`);
+        
+        // 1. Obter sessão do usuário atual
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          throw new Error("Usuário não autenticado");
+        }
+        
+        // 2. Excluir do Supabase se não for um grupo local
+        if (!selectedGrupo.id.startsWith('local_')) {
+          const { error } = await supabase
+            .from('grupos_estudo')
+            .delete()
+            .eq('id', selectedGrupo.id)
+            .eq('user_id', session.user.id);
+            
+          if (error) {
+            console.error("Erro ao excluir grupo no Supabase:", error);
+            throw error;
+          }
+        }
+        
+        // 3. Remover do armazenamento local
+        const gruposLocais = obterGruposLocal();
+        const gruposAtualizados = gruposLocais.filter(g => g.id !== selectedGrupo.id);
+        localStorage.setItem('epictus_grupos_estudo', JSON.stringify(gruposAtualizados));
+        
+        // 4. Atualizar também a cópia de segurança na sessão
+        try {
+          const backupSessao = sessionStorage.getItem('epictus_grupos_estudo_session');
+          if (backupSessao) {
+            const gruposSessao = JSON.parse(backupSessao);
+            const gruposSessaoAtualizados = gruposSessao.filter((g: any) => g.id !== selectedGrupo.id);
+            sessionStorage.setItem('epictus_grupos_estudo_session', JSON.stringify(gruposSessaoAtualizados));
+          }
+        } catch (sessionError) {
+          console.error("Erro ao atualizar backup na sessão:", sessionError);
+        }
+        
+        // 5. Atualizar o estado da interface
+        setGruposEstudo(prevGrupos => prevGrupos.filter(g => g.id !== selectedGrupo.id));
+        
+        // 6. Mostrar notificação de sucesso
+        mostrarNotificacaoSucesso("Grupo excluído com sucesso!");
+        
+        // 7. Fechar o modal
+        setSairModalOpen(false);
+        setSelectedGrupo(null);
+      } catch (error) {
+        console.error("Erro ao excluir grupo:", error);
+        mostrarNotificacaoErro("Não foi possível excluir o grupo. Tente novamente.");
+      }
     }
   };
   
@@ -416,6 +506,32 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
         document.body.removeChild(element);
       }, 500);
     }, 3000);
+  };
+  
+  // Função auxiliar para mostrar notificação de erro
+  const mostrarNotificacaoErro = (mensagem: string) => {
+    const element = document.createElement('div');
+    element.style.position = 'fixed';
+    element.style.top = '20px';
+    element.style.left = '50%';
+    element.style.transform = 'translateX(-50%)';
+    element.style.padding = '10px 20px';
+    element.style.background = '#F44336';
+    element.style.color = 'white';
+    element.style.borderRadius = '4px';
+    element.style.zIndex = '9999';
+    element.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+    element.textContent = mensagem;
+    document.body.appendChild(element);
+
+    // Remover após 4 segundos
+    setTimeout(() => {
+      element.style.opacity = '0';
+      element.style.transition = 'opacity 0.5s';
+      setTimeout(() => {
+        document.body.removeChild(element);
+      }, 500);
+    }, 4000);
   };
 
   return (
