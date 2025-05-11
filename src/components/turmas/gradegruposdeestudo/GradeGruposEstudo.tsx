@@ -34,6 +34,8 @@ interface GradeGruposEstudoProps {
   searchQuery?: string;
 }
 
+import GrupoSairModal from "../minisecao-gruposdeestudo/interface/GrupoSairModal";
+
 const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({ 
   selectedTopic, 
   topicosEstudo,
@@ -45,6 +47,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
   const [loading, setLoading] = useState(true);
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [showSairModal, setShowSairModal] = useState<{ id: string, nome: string } | null>(null);
 
   // Carregar grupos do banco de dados e do armazenamento local
   useEffect(() => {
@@ -387,8 +390,35 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
     }, 3000);
   };
 
+  const handleSairGrupo = () => {
+    if (showSairModal) {
+      console.log(`Saindo do grupo ${showSairModal.id}`);
+      // Implementar lógica para sair do grupo
+      setShowSairModal(null);
+    }
+  };
+
+  const handleExcluirGrupo = () => {
+    if (showSairModal) {
+      console.log(`Excluindo grupo ${showSairModal.id}`);
+      // Implementar lógica para excluir o grupo
+      setShowSairModal(null);
+    }
+  };
+
   return (
     <div className="mt-8">
+      {/* Modal de sair/excluir grupo */}
+      {showSairModal && (
+        <GrupoSairModal 
+          isOpen={!!showSairModal}
+          onClose={() => setShowSairModal(null)}
+          onSair={handleSairGrupo}
+          onExcluir={handleExcluirGrupo}
+          grupoNome={showSairModal.nome}
+        />
+      )}
+      
       {/* Modal de criação de grupo */}
       <CreateGroupModalEnhanced 
         isOpen={showCreateGroupModal} 
@@ -446,8 +476,8 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
                     title="Sair do Grupo"
                     onClick={(e) => {
                       e.stopPropagation();
-                      // Lógica para sair do grupo
-                      window.confirm(`Deseja realmente sair do grupo "${grupo.nome}"?`);
+                      setHoveredGrupo(null);
+                      setShowSairModal({ id: grupo.id, nome: grupo.nome });
                     }}
                   >
                     <LogOut className="h-4 w-4" />
