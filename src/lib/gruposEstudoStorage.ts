@@ -135,6 +135,24 @@ export const removerGrupoLocal = (grupoId: string): boolean => {
       console.error('Erro ao atualizar backup na sessão:', sessionError);
     }
     
+    // Limpar também quaisquer backups de emergência que possam conter este grupo
+    try {
+      const todasChaves = Object.keys(localStorage);
+      const chavesEmergencia = todasChaves.filter(chave => chave.startsWith(`${STORAGE_KEY}_emergency_`));
+      
+      for (const chave of chavesEmergencia) {
+        try {
+          const gruposEmergencia = JSON.parse(localStorage.getItem(chave) || '[]');
+          const gruposEmergenciaFiltrados = gruposEmergencia.filter((g: any) => g.id !== grupoId);
+          localStorage.setItem(chave, JSON.stringify(gruposEmergenciaFiltrados));
+        } catch (e) {
+          console.error('Erro ao atualizar backup de emergência:', e);
+        }
+      }
+    } catch (backupError) {
+      console.error('Erro ao limpar backups de emergência:', backupError);
+    }
+    
     console.log('Grupo removido localmente com sucesso', grupoId);
     return true;
   } catch (error) {

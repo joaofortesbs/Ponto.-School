@@ -60,6 +60,8 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
 
         if (session) {
           // Primeiro carregamos os grupos locais para exibição rápida
+          // Garantir que estamos pegando a versão mais recente dos grupos
+          localStorage.removeItem('epictus_grupos_estudo_temp_cache');
           const gruposLocais = obterGruposLocal().filter(grupo => grupo.user_id === session.user.id);
 
           // Converter dados locais para o formato da interface
@@ -257,10 +259,23 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
           }
         }
         
-        // 3. Remover do armazenamento local
-        const gruposLocais = obterGruposLocal();
-        const gruposAtualizados = gruposLocais.filter(g => g.id !== selectedGrupo.id);
-        localStorage.setItem('epictus_grupos_estudo', JSON.stringify(gruposAtualizados));
+        // 3. Remover do armazenamento local usando a função dedicada
+        const sucesso = removerGrupoLocal(selectedGrupo.id);
+        if (!sucesso) {
+          console.warn("Problema ao remover grupo localmente, tentando método alternativo");
+          
+          // Método alternativo manual
+          const gruposLocais = obterGruposLocal();
+          const gruposAtualizados = gruposLocais.filter(g => g.id !== selectedGrupo.id);
+          localStorage.setItem('epictus_grupos_estudo', JSON.stringify(gruposAtualizados));
+          
+          // Atualizar também a cópia na sessão
+          try {
+            sessionStorage.setItem('epictus_grupos_estudo_session', JSON.stringify(gruposAtualizados));
+          } catch (sessionError) {
+            console.error("Erro ao atualizar backup na sessão:", sessionError);
+          }
+        }
         
         // 4. Atualizar o estado da interface
         setGruposEstudo(prevGrupos => prevGrupos.filter(g => g.id !== selectedGrupo.id));
@@ -271,6 +286,33 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
         // 6. Fechar o modal
         setSairModalOpen(false);
         setSelectedGrupo(null);
+        
+        // 7. Forçar uma recarga dos grupos em 200ms para garantir que a lista esteja atualizada
+        setTimeout(async () => {
+          if (session) {
+            const todosGrupos = await obterTodosGrupos(session.user.id);
+            const gruposFormatados = todosGrupos.map(grupo => ({
+              id: grupo.id,
+              nome: grupo.nome,
+              descricao: grupo.descricao,
+              cor: grupo.cor,
+              membros: grupo.membros || 1,
+              topico: grupo.topico,
+              disciplina: grupo.disciplina || "",
+              icon: grupo.topico_icon,
+              dataCriacao: grupo.data_criacao,
+              tendencia: Math.random() > 0.7 ? "alta" : undefined,
+              novoConteudo: Math.random() > 0.7,
+              privado: grupo.privado,
+              visibilidade: grupo.visibilidade,
+              topico_nome: grupo.topico_nome,
+              topico_icon: grupo.topico_icon,
+              data_inicio: grupo.data_inicio,
+              criador: grupo.criador || "você"
+            }));
+            setGruposEstudo(gruposFormatados);
+          }
+        }, 200);
       } catch (error) {
         console.error("Erro ao sair do grupo:", error);
         mostrarNotificacaoErro("Não foi possível sair do grupo. Tente novamente.");
@@ -303,32 +345,78 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
           }
         }
         
-        // 3. Remover do armazenamento local
-        const gruposLocais = obterGruposLocal();
-        const gruposAtualizados = gruposLocais.filter(g => g.id !== selectedGrupo.id);
-        localStorage.setItem('epictus_grupos_estudo', JSON.stringify(gruposAtualizados));
-        
-        // 4. Atualizar também a cópia de segurança na sessão
-        try {
-          const backupSessao = sessionStorage.getItem('epictus_grupos_estudo_session');
-          if (backupSessao) {
-            const gruposSessao = JSON.parse(backupSessao);
-            const gruposSessaoAtualizados = gruposSessao.filter((g: any) => g.id !== selectedGrupo.id);
-            sessionStorage.setItem('epictus_grupos_estudo_session', JSON.stringify(gruposSessaoAtualizados));
+        // 3. Utilizar a função excluirGrupo para uma remoção completa
+        if (session) {
+          const sucesso = await excluirGrupo(selectedGrupo.id, session.user.id);
+          if (!sucesso) {
+            // Método alternativo se a função principal falhar
+            console.warn("Método principal de exclusão falhou, tentando método alternativo");
+            
+            // Remover do localStorage
+            const gruposLocais = obterGruposLocal();
+            const gruposAtualizados = gruposLocais.filter(g => g.id !== selectedGrupo.id);
+            localStorage.setItem('epictus_grupos_estudo', JSON.stringify(gruposAtualizados));
+            
+            // Atualizar sessionStorage
+            try {
+              sessionStorage.setItem('epictus_grupos_estudo_session', JSON.stringify(gruposAtualizados));
+            } catch (err) {
+              console.error("Erro ao atualizar sessionStorage:", err);
+            }
+            
+            // Verificar backups de emergência
+            const todasChaves = Object.keys(localStorage);
+            const chavesEmergencia = todasChaves.filter(chave => 
+              chave.startsWith('epictus_grupos_estudo_emergency_'));
+            
+            for (const chave of chavesEmergencia) {
+              try {
+                const gruposEmergencia = JSON.parse(localStorage.getItem(chave) || '[]');
+                const gruposEmergenciaFiltrados = gruposEmergencia.filter((g: any) => g.id !== selectedGrupo.id);
+                localStorage.setItem(chave, JSON.stringify(gruposEmergenciaFiltrados));
+              } catch (e) {
+                console.error(`Erro ao limpar backup ${chave}:`, e);
+              }
+            }
           }
-        } catch (sessionError) {
-          console.error("Erro ao atualizar backup na sessão:", sessionError);
         }
         
-        // 5. Atualizar o estado da interface
+        // 4. Atualizar o estado da interface
         setGruposEstudo(prevGrupos => prevGrupos.filter(g => g.id !== selectedGrupo.id));
         
-        // 6. Mostrar notificação de sucesso
+        // 5. Mostrar notificação de sucesso
         mostrarNotificacaoSucesso("Grupo excluído com sucesso!");
         
-        // 7. Fechar o modal
+        // 6. Fechar o modal
         setSairModalOpen(false);
         setSelectedGrupo(null);
+        
+        // 7. Forçar uma recarga dos grupos em 200ms para garantir que a lista esteja atualizada
+        setTimeout(async () => {
+          if (session) {
+            const todosGrupos = await obterTodosGrupos(session.user.id);
+            const gruposFormatados = todosGrupos.map(grupo => ({
+              id: grupo.id,
+              nome: grupo.nome,
+              descricao: grupo.descricao,
+              cor: grupo.cor,
+              membros: grupo.membros || 1,
+              topico: grupo.topico,
+              disciplina: grupo.disciplina || "",
+              icon: grupo.topico_icon,
+              dataCriacao: grupo.data_criacao,
+              tendencia: Math.random() > 0.7 ? "alta" : undefined,
+              novoConteudo: Math.random() > 0.7,
+              privado: grupo.privado,
+              visibilidade: grupo.visibilidade,
+              topico_nome: grupo.topico_nome,
+              topico_icon: grupo.topico_icon,
+              data_inicio: grupo.data_inicio,
+              criador: grupo.criador || "você"
+            }));
+            setGruposEstudo(gruposFormatados);
+          }
+        }, 200);
       } catch (error) {
         console.error("Erro ao excluir grupo:", error);
         mostrarNotificacaoErro("Não foi possível excluir o grupo. Tente novamente.");
@@ -539,14 +627,23 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
       {/* Modal de criação de grupo */}
       <CreateGroupModalEnhanced 
         isOpen={showCreateGroupModal} 
-        onClose={() => setShowCreateGroupModal(false)}
+        onClose={() => {
+          setShowCreateGroupModal(false);
+          // Limpar o cache temporário para forçar o recarregamento
+          localStorage.removeItem('epictus_grupos_estudo_temp_cache');
+        }}
         onSubmit={handleCreateGroup}
       />
       
       {/* Modal de sair do grupo */}
       <GrupoSairModal
         isOpen={sairModalOpen}
-        onClose={() => setSairModalOpen(false)}
+        onClose={() => {
+          setSairModalOpen(false);
+          setSelectedGrupo(null);
+          // Limpar o cache temporário para forçar o recarregamento
+          localStorage.removeItem('epictus_grupos_estudo_temp_cache');
+        }}
         groupName={selectedGrupo?.nome || ""}
         isCreator={selectedGrupo?.criador === "você" || (selectedGrupo && Math.random() > 0.5) || false}
         onLeaveGroup={handleConfirmLeaveGroup}
