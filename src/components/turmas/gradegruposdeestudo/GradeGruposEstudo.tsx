@@ -221,6 +221,10 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
       console.log(`Saindo do grupo ${selectedGrupo.id}`);
       // Implementar lógica para sair do grupo
       
+      // Remover o grupo da lista local (temporário até implementar a lógica completa)
+      const gruposAtualizados = gruposEstudo.filter(g => g.id !== selectedGrupo.id);
+      setGruposEstudo(gruposAtualizados);
+      
       // Fechar o modal após a ação
       setSairModalOpen(false);
       setSelectedGrupo(null);
@@ -231,6 +235,10 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
     if (selectedGrupo) {
       console.log(`Excluindo o grupo ${selectedGrupo.id}`);
       // Implementar lógica para excluir o grupo
+      
+      // Remover o grupo da lista local (temporário até implementar a lógica completa)
+      const gruposAtualizados = gruposEstudo.filter(g => g.id !== selectedGrupo.id);
+      setGruposEstudo(gruposAtualizados);
       
       // Fechar o modal após a ação
       setSairModalOpen(false);
@@ -420,16 +428,14 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
       />
       
       {/* Modal de sair do grupo */}
-      {selectedGrupo && (
-        <GrupoSairModal
-          isOpen={sairModalOpen}
-          onClose={() => setSairModalOpen(false)}
-          groupName={selectedGrupo.nome}
-          isCreator={selectedGrupo.criador === "você" || Math.random() > 0.5} /* Verificação temporária, ajustar conforme necessidade */
-          onLeaveGroup={handleConfirmLeaveGroup}
-          onDeleteGroup={handleDeleteGroup}
-        />
-      )}
+      <GrupoSairModal
+        isOpen={sairModalOpen}
+        onClose={() => setSairModalOpen(false)}
+        groupName={selectedGrupo?.nome || ""}
+        isCreator={selectedGrupo?.criador === "você" || (selectedGrupo && Math.random() > 0.5) || false}
+        onLeaveGroup={handleConfirmLeaveGroup}
+        onDeleteGroup={handleDeleteGroup}
+      />
       {/* Cabeçalho da grade */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">

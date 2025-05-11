@@ -3,7 +3,7 @@ import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { LogOut, Trash2, AlertTriangle, X } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 interface GrupoSairModalProps {
   isOpen: boolean;
@@ -70,7 +70,7 @@ const GrupoSairModal: React.FC<GrupoSairModalProps> = ({
               whileHover={{ scale: 1.02, boxShadow: "0 10px 25px -5px rgba(239, 68, 68, 0.1)" }}
               whileTap={{ scale: 0.98 }}
               onClick={onDeleteGroup}
-              className="w-full flex items-center gap-4 p-5 rounded-xl border border-red-100/50 dark:border-red-900/20 hover:bg-red-50/50 dark:hover:bg-red-900/10 transition-all duration-300 group"
+              className="w-full flex items-center gap-4 p-5 rounded-xl border border-red-100/50 dark:border-red-900/20 hover:bg-red-50/50 dark:hover:bg-red-900/10 transition-all duration-300 group relative"
             >
               <div className="flex-shrink-0 h-14 w-14 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center text-red-600 dark:text-red-400 group-hover:bg-red-100 dark:group-hover:bg-red-900/40 transition-colors">
                 <Trash2 className="h-7 w-7" />
@@ -79,7 +79,7 @@ const GrupoSairModal: React.FC<GrupoSairModalProps> = ({
                 <h3 className="font-medium text-[#29335C] dark:text-white text-lg">Excluir grupo</h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Esta ação é permanente e excluirá todo o conteúdo e histórico</p>
               </div>
-              <div className="absolute right-4 -top-1">
+              <div className="absolute right-4 top-4">
                 <span className="px-2 py-1 text-xs bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 rounded-md font-medium">
                   Admin
                 </span>
