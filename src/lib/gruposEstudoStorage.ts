@@ -194,31 +194,15 @@ export const excluirGrupo = async (grupoId: string, userId: string): Promise<boo
   }
 };
 
-// Função para gerar código único do grupo
-const gerarCodigoGrupo = () => {
-  // Caracteres que serão usados para gerar o código (excluindo caracteres ambíguos como O, 0, I, l, 1)
-  const caracteres = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let codigo = '';
-
-  // Gera um código de 6 caracteres
-  for (let i = 0; i < 6; i++) {
-    // Adiciona um hífen após os primeiros 3 caracteres
-    if (i === 3) codigo += '-';
-    codigo += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
-  }
-
-  return codigo;
-};
-
 /**
  * Cria um grupo no Supabase com fallback para armazenamento local
  */
-export const criarGrupo = async (dados: Omit<GrupoEstudo, 'id' | 'codigo'>, codigo?: string): Promise<GrupoEstudo | null> => {
+export const criarGrupo = async (dados: Omit<GrupoEstudo, 'id'>): Promise<GrupoEstudo | null> => {
   try {
     // Tentar inserir no Supabase
     const { data, error } = await supabase
       .from('grupos_estudo')
-      .insert({...dados, codigo})
+      .insert(dados)
       .select('*')
       .single();
 
@@ -231,12 +215,11 @@ export const criarGrupo = async (dados: Omit<GrupoEstudo, 'id' | 'codigo'>, codi
       // Criar grupo para armazenamento local
       const grupoLocal: GrupoEstudo = {
         ...dados,
-        id,
-        codigo: codigo || gerarCodigoGrupo()
+        id
       };
 
       // Salvar localmente
-      salvarGrupoLocal(grupoLocal);
+      // salvarGrupoLocal(grupoLocal); // This line was removed to avoid double saving
 
       // Mostrar notificação sobre o armazenamento local
       const element = document.createElement('div');
@@ -449,9 +432,9 @@ export const sincronizarGruposLocais = async (userId: string): Promise<void> => 
 };
 
 export const removerGrupo = (grupoId: string) => {
-  const grupos = obterGruposLocal();
+  const grupos = getGruposFromStorage();
   const gruposAtualizados = grupos.filter(grupo => grupo.id !== grupoId);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(gruposAtualizados));
+  saveGruposToStorage(gruposAtualizados);
 
   // Adicionar o ID do grupo à lista de grupos removidos
   const gruposRemovidosKey = 'grupos_removidos';
@@ -482,5 +465,3 @@ export const filtrarGruposRemovidos = (grupos: any[]): any[] => {
 
   return grupos.filter(grupo => !gruposRemovidos.includes(grupo.id));
 };
-
-// Esta função foi removida pois estava duplicada

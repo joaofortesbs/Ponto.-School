@@ -1,3 +1,4 @@
+
 CREATE TABLE IF NOT EXISTS public.grupos_estudo (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -10,9 +11,11 @@ CREATE TABLE IF NOT EXISTS public.grupos_estudo (
   topico_icon TEXT,
   privado BOOLEAN DEFAULT false,
   visibilidade TEXT DEFAULT 'todos',
+  codigo TEXT,
   data_criacao TIMESTAMP WITH TIME ZONE DEFAULT now(),
-  data_inicio TEXT,
-  codigo TEXT UNIQUE -- Código único para compartilhamento do grupo
+
+  CONSTRAINT grupos_estudo_user_id_fkey FOREIGN KEY (user_id)
+    REFERENCES auth.users(id) ON DELETE CASCADE
 );
 
 -- Create index for faster queries
