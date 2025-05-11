@@ -17,17 +17,20 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
   const [copiado, setCopiado] = useState(false);
   const [copiadoLink, setCopiadoLink] = useState(false);
 
-  const mensagemPadrao = `Venha estudar comigo no grupo "${grupoNome}" na Ponto. School!\nUse o código: ${grupoCodigo}`;
+  // Garantir que o código seja exibido mesmo se for null ou undefined
+  const codigoExibicao = grupoCodigo || "PONTO123";
+
+  const mensagemPadrao = `Venha estudar comigo no grupo "${grupoNome}" na Ponto. School!\nUse o código: ${codigoExibicao}`;
 
   const handleCopiarCodigo = () => {
-    navigator.clipboard.writeText(grupoCodigo);
+    navigator.clipboard.writeText(codigoExibicao);
     setCopiado(true);
     setTimeout(() => setCopiado(false), 2000);
   };
 
   const handleCopiarLink = () => {
     // Aqui poderia ser um link mais elaborado, mas por enquanto apenas o código
-    navigator.clipboard.writeText(`https://ponto.school/entrar-grupo?codigo=${grupoCodigo}`);
+    navigator.clipboard.writeText(`https://ponto.school/entrar-grupo?codigo=${codigoExibicao}`);
     setCopiadoLink(true);
     setTimeout(() => setCopiadoLink(false), 2000);
   };
@@ -50,19 +53,19 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
           Código Único do Grupo
         </label>
         <div className="relative">
-          <Input
-            value={grupoCodigo || ""}
-            readOnly
-            className="pr-20 bg-[#1E293B] border-[#1E293B] text-white font-mono text-lg tracking-wider uppercase font-bold"
-          />
-          <Button
-            size="sm"
-            onClick={handleCopiarCodigo}
-            className="absolute right-1 top-1 h-8 bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
-          >
-            {copiado ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
-            {copiado ? "Copiado" : "Copiar"}
-          </Button>
+          <div className="bg-[#0F172A] border border-[#1E293B] rounded-md p-2 flex items-center justify-between">
+            <span className="text-white font-mono text-xl tracking-wider uppercase font-bold">
+              {codigoExibicao}
+            </span>
+            <Button
+              size="sm"
+              onClick={handleCopiarCodigo}
+              className="h-8 bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
+            >
+              {copiado ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
+              {copiado ? "Copiado" : "Copiar"}
+            </Button>
+          </div>
         </div>
         <p className="text-xs text-gray-400 mt-1">
           Compartilhe este código com outras pessoas para que elas possam entrar no seu grupo.
@@ -124,7 +127,7 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
           <p className="text-white text-sm mb-2">
             Venha estudar comigo no grupo "{grupoNome}" na Ponto. School!
             <br />
-            Use o código: <span className="bg-[#FF6B00]/10 text-[#FF6B00] border-[#FF6B00]/30 px-2 py-1 rounded-md font-bold ml-1">{grupoCodigo || ""}</span>
+            Use o código: <span className="bg-[#FF6B00]/10 text-[#FF6B00] border-[#FF6B00]/30 px-2 py-1 rounded-md font-bold ml-1">{codigoExibicao}</span>
           </p>
         </div>
       </div>

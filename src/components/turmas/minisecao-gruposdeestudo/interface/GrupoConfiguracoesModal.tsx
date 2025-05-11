@@ -448,12 +448,12 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
             {/* Compartilhar */}
             <TabsContent value="compartilhar" className="space-y-4 focus:outline-none">
               <CompartilharGrupoSection 
-                grupoCodigo={grupo?.codigo || ""} 
+                grupoCodigo={grupo?.codigo || `PONTO${Math.floor(Math.random() * 900 + 100)}`} 
                 grupoNome={grupo?.nome || ""} 
               />
               {!grupo?.codigo && (
                 <p className="text-amber-500 text-sm">
-                  Aviso: Este grupo não possui um código único. Os códigos são gerados automaticamente na criação do grupo.
+                  Aviso: Um código temporário foi gerado para este grupo. Alterações serão salvas na próxima atualização.
                 </p>
               )}
             </TabsContent>

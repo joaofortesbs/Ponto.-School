@@ -170,19 +170,23 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
         return;
       }
 
-      // Gerar um código único para o grupo
+      // Gerar um código único para o grupo - sempre no formato PONTO123
       let codigoGrupo = await gerarCodigoUnicoGrupo();
       
       // Certificar que temos um código, mesmo com erro
       if (!codigoGrupo) {
         try {
-          // Segunda tentativa com método alternativo
-          const caracteres = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-          codigoGrupo = Array.from({length: 6}, () => caracteres.charAt(Math.floor(Math.random() * caracteres.length))).join('');
+          // Garantir que o código sempre comece com PONTO seguido de 3 dígitos
+          codigoGrupo = "PONTO" + Math.floor(Math.random() * 900 + 100);
         } catch (e) {
           console.error("Falha ao gerar código alternativo:", e);
-          codigoGrupo = "PONTO" + Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+          codigoGrupo = "PONTO" + Math.floor(Math.random() * 900 + 100);
         }
+      }
+      
+      // Verificar se o código está no formato esperado, caso contrário, ajustar
+      if (!codigoGrupo.startsWith("PONTO")) {
+        codigoGrupo = "PONTO" + Math.floor(Math.random() * 900 + 100);
       }
       
       console.log("Código único gerado para o grupo:", codigoGrupo);

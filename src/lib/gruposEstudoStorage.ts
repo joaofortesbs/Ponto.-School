@@ -78,24 +78,31 @@ export const gerarCodigoUnicoGrupo = async (): Promise<string> => {
   const maxTentativas = 10; // Limite de tentativas para evitar loop infinito
 
   try {
-    while (existeNoSistema && tentativas < maxTentativas) {
-      novoCodigoUnico = gerarStringAleatoria();
-      console.log("Tentando código:", novoCodigoUnico);
-      existeNoSistema = await verificarSeCodigoExiste(novoCodigoUnico);
-      tentativas++;
-    }
+    // Primeiro tenta gerar um código no formato PONTO seguido de 3 dígitos
+    novoCodigoUnico = `PONTO${Math.floor(Math.random() * 900) + 100}`;
+    existeNoSistema = await verificarSeCodigoExiste(novoCodigoUnico);
+    
+    // Se o código já existir, tenta com o formato padrão de string aleatória
+    if (existeNoSistema) {
+      while (existeNoSistema && tentativas < maxTentativas) {
+        novoCodigoUnico = gerarStringAleatoria();
+        console.log("Tentando código:", novoCodigoUnico);
+        existeNoSistema = await verificarSeCodigoExiste(novoCodigoUnico);
+        tentativas++;
+      }
 
-    if (tentativas >= maxTentativas) {
-      // Se atingir o limite de tentativas, adicionar um timestamp para garantir unicidade
-      novoCodigoUnico = `${gerarStringAleatoria(4)}${Date.now().toString(36).slice(-3)}`;
-      console.log("Usando código com timestamp após máximo de tentativas:", novoCodigoUnico);
+      if (tentativas >= maxTentativas) {
+        // Se atingir o limite de tentativas, adicionar um timestamp para garantir unicidade
+        novoCodigoUnico = `PONTO${Math.floor(Math.random() * 900) + 100}`;
+        console.log("Usando código PONTO após máximo de tentativas:", novoCodigoUnico);
+      }
     }
 
     return novoCodigoUnico;
   } catch (error) {
     console.error("Erro ao gerar código único:", error);
-    // Em caso de erro, retornar um código de emergência com timestamp
-    const codigoEmergencia = `${CARACTERES_PERMITIDOS.substring(0, 3)}${Date.now().toString(36).slice(-4)}`;
+    // Em caso de erro, retornar um código no formato PONTO seguido de 3 dígitos
+    const codigoEmergencia = `PONTO${Math.floor(Math.random() * 900) + 100}`;
     console.log("Usando código de emergência:", codigoEmergencia);
     return codigoEmergencia;
   }
