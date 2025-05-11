@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import CreateGroupModalEnhanced from "../CreateGroupModalEnhanced";
 import GrupoSairModal from "../minisecao-gruposdeestudo/interface/GrupoSairModal";
 import { supabase } from "@/lib/supabase";
-import { criarGrupo, sincronizarGruposLocais, obterTodosGrupos, obterGruposLocal, salvarGrupoLocal } from '@/lib/gruposEstudoStorage';
+import { criarGrupo, sincronizarGruposLocais, obterTodosGrupos, obterGruposLocal, salvarGrupoLocal, removerGrupoLocal } from '@/lib/gruposEstudoStorage';
 
 interface GrupoEstudo {
   id: string;
@@ -290,27 +290,31 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
         // 7. Forçar uma recarga dos grupos em 200ms para garantir que a lista esteja atualizada
         setTimeout(async () => {
           if (session) {
-            const todosGrupos = await obterTodosGrupos(session.user.id);
-            const gruposFormatados = todosGrupos.map(grupo => ({
-              id: grupo.id,
-              nome: grupo.nome,
-              descricao: grupo.descricao,
-              cor: grupo.cor,
-              membros: grupo.membros || 1,
-              topico: grupo.topico,
-              disciplina: grupo.disciplina || "",
-              icon: grupo.topico_icon,
-              dataCriacao: grupo.data_criacao,
-              tendencia: Math.random() > 0.7 ? "alta" : undefined,
-              novoConteudo: Math.random() > 0.7,
-              privado: grupo.privado,
-              visibilidade: grupo.visibilidade,
-              topico_nome: grupo.topico_nome,
-              topico_icon: grupo.topico_icon,
-              data_inicio: grupo.data_inicio,
-              criador: grupo.criador || "você"
-            }));
-            setGruposEstudo(gruposFormatados);
+            try {
+              const todosGrupos = await obterTodosGrupos(session.user.id);
+              const gruposFormatados = todosGrupos.map(grupo => ({
+                id: grupo.id,
+                nome: grupo.nome,
+                descricao: grupo.descricao,
+                cor: grupo.cor,
+                membros: grupo.membros || 1,
+                topico: grupo.topico,
+                disciplina: grupo.disciplina || "",
+                icon: grupo.topico_icon,
+                dataCriacao: grupo.data_criacao,
+                tendencia: Math.random() > 0.7 ? "alta" : undefined,
+                novoConteudo: Math.random() > 0.7,
+                privado: grupo.privado,
+                visibilidade: grupo.visibilidade,
+                topico_nome: grupo.topico_nome,
+                topico_icon: grupo.topico_icon,
+                data_inicio: grupo.data_inicio,
+                criador: grupo.criador || "você"
+              }));
+              setGruposEstudo(gruposFormatados);
+            } catch (reloadError) {
+              console.error("Erro ao recarregar grupos:", reloadError);
+            }
           }
         }, 200);
       } catch (error) {
@@ -331,57 +335,56 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
           throw new Error("Usuário não autenticado");
         }
         
-        // 2. Excluir do Supabase se não for um grupo local
-        if (!selectedGrupo.id.startsWith('local_')) {
-          const { error } = await supabase
-            .from('grupos_estudo')
-            .delete()
-            .eq('id', selectedGrupo.id)
-            .eq('user_id', session.user.id);
-            
-          if (error) {
-            console.error("Erro ao excluir grupo no Supabase:", error);
-            throw error;
-          }
-        }
+        // 2. Importar a função excluirGrupo
+        const { excluirGrupo } = await import('@/lib/gruposEstudoStorage');
         
         // 3. Utilizar a função excluirGrupo para uma remoção completa
-        if (session) {
-          const sucesso = await excluirGrupo(selectedGrupo.id, session.user.id);
-          if (!sucesso) {
-            // Método alternativo se a função principal falhar
-            console.warn("Método principal de exclusão falhou, tentando método alternativo");
-            
-            // Remover do localStorage
-            const gruposLocais = obterGruposLocal();
-            const gruposAtualizados = gruposLocais.filter(g => g.id !== selectedGrupo.id);
-            localStorage.setItem('epictus_grupos_estudo', JSON.stringify(gruposAtualizados));
-            
-            // Atualizar sessionStorage
-            try {
-              sessionStorage.setItem('epictus_grupos_estudo_session', JSON.stringify(gruposAtualizados));
-            } catch (err) {
-              console.error("Erro ao atualizar sessionStorage:", err);
+        const sucesso = await excluirGrupo(selectedGrupo.id, session.user.id);
+        if (!sucesso) {
+          console.warn("Método principal de exclusão falhou, tentando método alternativo");
+          
+          // Excluir do Supabase se não for um grupo local
+          if (!selectedGrupo.id.startsWith('local_')) {
+            const { error } = await supabase
+              .from('grupos_estudo')
+              .delete()
+              .eq('id', selectedGrupo.id)
+              .eq('user_id', session.user.id);
+              
+            if (error) {
+              console.error("Erro ao excluir grupo no Supabase:", error);
             }
-            
-            // Verificar backups de emergência
-            const todasChaves = Object.keys(localStorage);
-            const chavesEmergencia = todasChaves.filter(chave => 
-              chave.startsWith('epictus_grupos_estudo_emergency_'));
-            
-            for (const chave of chavesEmergencia) {
-              try {
-                const gruposEmergencia = JSON.parse(localStorage.getItem(chave) || '[]');
-                const gruposEmergenciaFiltrados = gruposEmergencia.filter((g: any) => g.id !== selectedGrupo.id);
-                localStorage.setItem(chave, JSON.stringify(gruposEmergenciaFiltrados));
-              } catch (e) {
-                console.error(`Erro ao limpar backup ${chave}:`, e);
-              }
+          }
+          
+          // Remover do localStorage
+          const gruposLocais = obterGruposLocal();
+          const gruposAtualizados = gruposLocais.filter(g => g.id !== selectedGrupo.id);
+          localStorage.setItem('epictus_grupos_estudo', JSON.stringify(gruposAtualizados));
+          
+          // Atualizar sessionStorage
+          try {
+            sessionStorage.setItem('epictus_grupos_estudo_session', JSON.stringify(gruposAtualizados));
+          } catch (err) {
+            console.error("Erro ao atualizar sessionStorage:", err);
+          }
+          
+          // Verificar backups de emergência
+          const todasChaves = Object.keys(localStorage);
+          const chavesEmergencia = todasChaves.filter(chave => 
+            chave.startsWith('epictus_grupos_estudo_emergency_'));
+          
+          for (const chave of chavesEmergencia) {
+            try {
+              const gruposEmergencia = JSON.parse(localStorage.getItem(chave) || '[]');
+              const gruposEmergenciaFiltrados = gruposEmergencia.filter((g: any) => g.id !== selectedGrupo.id);
+              localStorage.setItem(chave, JSON.stringify(gruposEmergenciaFiltrados));
+            } catch (e) {
+              console.error(`Erro ao limpar backup ${chave}:`, e);
             }
           }
         }
         
-        // 4. Atualizar o estado da interface
+        // 4. Atualizar o estado da interface imediatamente para feedback ao usuário
         setGruposEstudo(prevGrupos => prevGrupos.filter(g => g.id !== selectedGrupo.id));
         
         // 5. Mostrar notificação de sucesso
@@ -394,27 +397,31 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
         // 7. Forçar uma recarga dos grupos em 200ms para garantir que a lista esteja atualizada
         setTimeout(async () => {
           if (session) {
-            const todosGrupos = await obterTodosGrupos(session.user.id);
-            const gruposFormatados = todosGrupos.map(grupo => ({
-              id: grupo.id,
-              nome: grupo.nome,
-              descricao: grupo.descricao,
-              cor: grupo.cor,
-              membros: grupo.membros || 1,
-              topico: grupo.topico,
-              disciplina: grupo.disciplina || "",
-              icon: grupo.topico_icon,
-              dataCriacao: grupo.data_criacao,
-              tendencia: Math.random() > 0.7 ? "alta" : undefined,
-              novoConteudo: Math.random() > 0.7,
-              privado: grupo.privado,
-              visibilidade: grupo.visibilidade,
-              topico_nome: grupo.topico_nome,
-              topico_icon: grupo.topico_icon,
-              data_inicio: grupo.data_inicio,
-              criador: grupo.criador || "você"
-            }));
-            setGruposEstudo(gruposFormatados);
+            try {
+              const todosGrupos = await obterTodosGrupos(session.user.id);
+              const gruposFormatados = todosGrupos.map(grupo => ({
+                id: grupo.id,
+                nome: grupo.nome,
+                descricao: grupo.descricao,
+                cor: grupo.cor,
+                membros: grupo.membros || 1,
+                topico: grupo.topico,
+                disciplina: grupo.disciplina || "",
+                icon: grupo.topico_icon,
+                dataCriacao: grupo.data_criacao,
+                tendencia: Math.random() > 0.7 ? "alta" : undefined,
+                novoConteudo: Math.random() > 0.7,
+                privado: grupo.privado,
+                visibilidade: grupo.visibilidade,
+                topico_nome: grupo.topico_nome,
+                topico_icon: grupo.topico_icon,
+                data_inicio: grupo.data_inicio,
+                criador: grupo.criador || "você"
+              }));
+              setGruposEstudo(gruposFormatados);
+            } catch (reloadError) {
+              console.error("Erro ao recarregar grupos:", reloadError);
+            }
           }
         }, 200);
       } catch (error) {

@@ -66,7 +66,7 @@ const GrupoSairModal: React.FC<GrupoSairModalProps> = ({
           </motion.button>
           
           {isCreator && (
-            <motion.button 
+            <motion.buttonn.button 
               whileHover={{ scale: 1.02, boxShadow: "0 10px 25px -5px rgba(239, 68, 68, 0.1)" }}
               whileTap={{ scale: 0.98 }}
               onClick={onDeleteGroup}
