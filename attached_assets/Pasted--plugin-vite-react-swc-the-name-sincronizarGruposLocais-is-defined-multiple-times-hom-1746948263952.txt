@@ -1,0 +1,86 @@
+[plugin:vite:react-swc] × the name `sincronizarGruposLocais` is defined multiple times
+     ╭─[/home/runner/workspace/src/lib/gruposEstudoStorage.ts:415:1]
+ 415 │ /**
+ 416 │  * Tenta sincronizar grupos locais com o banco de dados
+ 417 │  */
+ 418 │ export const sincronizarGruposLocais = async (userId: string): Promise<void> => {
+     ·              ───────────┬───────────
+     ·                         ╰── previous definition of `sincronizarGruposLocais` here
+ 419 │   try {
+ 420 │     const gruposLocais = obterGruposLocal()
+ 421 │       .filter(grupo => 
+ 422 │         grupo.user_id === userId && 
+ 423 │         grupo.id.startsWith('local_')
+ 424 │       );
+ 425 │ 
+ 426 │     if (gruposLocais.length === 0) return;
+ 427 │ 
+ 428 │     console.log(`Tentando sincronizar ${gruposLocais.length} grupos locais`);
+ 429 │ 
+ 430 │     for (const grupo of gruposLocais) {
+ 431 │       // Remover o ID local para que o Supabase gere um novo
+ 432 │       const { id, ...dadosGrupo } = grupo;
+ 433 │ 
+ 434 │       // Tentar inserir no Supabase
+ 435 │       const { error } = await supabase
+ 436 │         .from('grupos_estudo')
+ 437 │         .insert(dadosGrupo);
+ 438 │ 
+ 439 │       if (!error) {
+ 440 │         console.log(`Grupo sincronizado com sucesso: ${grupo.nome}`);
+ 441 │         // Remover do armazenamento local após sincronizar
+ 442 │         const gruposAtualizados = obterGruposLocal().filter(g => g.id !== grupo.id);
+ 443 │         localStorage.setItem(STORAGE_KEY, JSON.stringify(gruposAtualizados));
+ 444 │       }
+ 445 │     }
+ 446 │   } catch (error) {
+ 447 │     console.error('Erro ao sincronizar grupos locais:', error);
+ 448 │   }
+ 449 │ };
+ 450 │ 
+ 451 │ export const removerGrupo = (grupoId: string) => {
+ 452 │   const grupos = getGruposFromStorage();
+ 453 │   const gruposAtualizados = grupos.filter(grupo => grupo.id !== grupoId);
+ 454 │   saveGruposToStorage(gruposAtualizados);
+ 455 │ 
+ 456 │   // Adicionar o ID do grupo à lista de grupos removidos
+ 457 │   const gruposRemovidosKey = 'grupos_removidos';
+ 458 │   const gruposRemovidosStr = localStorage.getItem(gruposRemovidosKey) || '[]';
+ 459 │   const gruposRemovidos = JSON.parse(gruposRemovidosStr);
+ 460 │ 
+ 461 │   if (!gruposRemovidos.includes(grupoId)) {
+ 462 │     gruposRemovidos.push(grupoId);
+ 463 │     localStorage.setItem(gruposRemovidosKey, JSON.stringify(gruposRemovidos));
+ 464 │   }
+ 465 │ 
+ 466 │   return gruposAtualizados;
+ 467 │ };
+ 468 │ 
+ 469 │ // Verificar se um grupo está na lista de removidos
+ 470 │ export const isGrupoRemovido = (grupoId: string): boolean => {
+ 471 │   const gruposRemovidosKey = 'grupos_removidos';
+ 472 │   const gruposRemovidosStr = localStorage.getItem(gruposRemovidosKey) || '[]';
+ 473 │   const gruposRemovidos = JSON.parse(gruposRemovidosStr);
+ 474 │   return gruposRemovidos.includes(grupoId);
+ 475 │ };
+ 476 │ 
+ 477 │ // Método para filtrar grupos que foram removidos
+ 478 │ export const filtrarGruposRemovidos = (grupos: any[]): any[] => {
+ 479 │   const gruposRemovidosKey = 'grupos_removidos';
+ 480 │   const gruposRemovidosStr = localStorage.getItem(gruposRemovidosKey) || '[]';
+ 481 │   const gruposRemovidos = JSON.parse(gruposRemovidosStr);
+ 482 │ 
+ 483 │   return grupos.filter(grupo => !gruposRemovidos.includes(grupo.id));
+ 484 │ };
+ 485 │ 
+ 486 │ /**
+ 487 │  * Tenta sincronizar grupos locais com o banco de dados
+ 488 │  */
+ 489 │ export const sincronizarGruposLocais = async (userId: string): Promise<void> => {
+     ·              ───────────┬───────────
+     ·                         ╰── `sincronizarGruposLocais` redefined here
+ 490 │   try {
+ 491 │     const gruposLocais = obterGruposLocal()
+ 492 │       .filter(grupo =>
+     ╰────
+/home/runner/workspace/src/lib/gruposEstudoStorage.ts:415:1
