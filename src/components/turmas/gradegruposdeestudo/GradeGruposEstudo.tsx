@@ -425,7 +425,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
           isOpen={sairModalOpen}
           onClose={() => setSairModalOpen(false)}
           groupName={selectedGrupo.nome}
-          isCreator={selectedGrupo.criador === "você" || Math.random() > 0.5} {/* Verificação temporária, ajustar conforme necessidade */}
+          isCreator={selectedGrupo.criador === "você" || Math.random() > 0.5} /* Verificação temporária, ajustar conforme necessidade */
           onLeaveGroup={handleConfirmLeaveGroup}
           onDeleteGroup={handleDeleteGroup}
         />
