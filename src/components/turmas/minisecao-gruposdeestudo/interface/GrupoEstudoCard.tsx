@@ -63,7 +63,7 @@ const GrupoEstudoCard: React.FC<GrupoEstudoCardProps> = ({ grupo, onClick }) => 
         onExcluir={handleExcluirGrupo}
         grupoNome={grupo.nome}
       />
-      
+
       {/* Botões de ação que aparecem no hover */}
       {isHovered && (
         <div className="absolute right-3 top-3 flex items-center gap-2 z-10">

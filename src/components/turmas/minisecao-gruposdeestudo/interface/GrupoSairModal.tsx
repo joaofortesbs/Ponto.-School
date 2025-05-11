@@ -1,82 +1,81 @@
 
 import React from "react";
-import { motion } from "framer-motion";
-import { X } from "lucide-react";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { LogOut, Trash2, AlertTriangle } from "lucide-react";
 
 interface GrupoSairModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSair: () => void;
-  onExcluir: () => void;
-  grupoNome: string;
+  onLeaveGroup: () => void;
+  onDeleteGroup: () => void;
+  groupName: string;
+  isCreator: boolean;
 }
 
-const GrupoSairModal: React.FC<GrupoSairModalProps> = ({
+const GrupoSairModal = ({
   isOpen,
   onClose,
-  onSair,
-  onExcluir,
-  grupoNome
-}) => {
+  onLeaveGroup,
+  onDeleteGroup,
+  groupName,
+  isCreator = false
+}: GrupoSairModalProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-gradient-to-b from-gray-900 to-black border border-white/10 p-0 max-w-md rounded-xl overflow-hidden">
-        <div className="flex flex-col">
-          <DialogTitle className="px-6 py-4 border-b border-white/10 flex justify-between items-center">
-            <span className="text-white text-lg font-medium">Opções do Grupo</span>
-            <Button
-              variant="ghost"
-              className="p-0 h-8 w-8 rounded-full hover:bg-white/10"
-              onClick={onClose}
-            >
-              <X className="h-4 w-4 text-white/70" />
-            </Button>
+      <DialogContent className="sm:max-w-md bg-white dark:bg-[#0A2540] border-0 shadow-xl rounded-xl">
+        <DialogHeader className="border-b border-gray-200 dark:border-gray-700 pb-3">
+          <DialogTitle className="text-xl font-bold text-[#29335C] dark:text-white flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-[#FF6B00]" />
+            Confirmar ação
           </DialogTitle>
+        </DialogHeader>
+        
+        <div className="py-4 space-y-4">
+          <p className="text-gray-700 dark:text-gray-300">
+            O que você deseja fazer com o grupo <span className="font-semibold text-[#29335C] dark:text-white">"{groupName}"</span>?
+          </p>
           
-          <div className="p-6">
-            <p className="text-white/80 mb-6">
-              O que você deseja fazer com o grupo <span className="font-semibold text-white">"{grupoNome}"</span>?
-            </p>
+          <div className="space-y-3">
+            <button 
+              onClick={onLeaveGroup}
+              className="w-full flex items-center gap-3 p-3 rounded-lg border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
+            >
+              <div className="flex-shrink-0 h-10 w-10 rounded-full bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/50 transition-colors">
+                <LogOut className="h-5 w-5" />
+              </div>
+              <div className="text-left">
+                <h3 className="font-medium text-[#29335C] dark:text-white">Sair do grupo</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Você continuará na lista de membros até ser removido</p>
+              </div>
+            </button>
             
-            <div className="space-y-3">
-              <motion.div 
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+            {isCreator && (
+              <button 
+                onClick={onDeleteGroup}
+                className="w-full flex items-center gap-3 p-3 rounded-lg border border-gray-100 dark:border-gray-700 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors group"
               >
-                <Button
-                  className="w-full py-6 flex justify-center items-center bg-white/10 hover:bg-white/20 text-white border border-white/10 rounded-lg font-medium text-sm transition-all duration-200"
-                  onClick={onSair}
-                >
-                  Sair do Grupo
-                </Button>
-              </motion.div>
-              
-              <motion.div 
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <Button
-                  className="w-full py-6 flex justify-center items-center bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/20 rounded-lg font-medium text-sm transition-all duration-200"
-                  onClick={onExcluir}
-                >
-                  Excluir Grupo
-                </Button>
-              </motion.div>
-            </div>
-            
-            <div className="mt-6 text-center">
-              <Button
-                variant="ghost"
-                className="text-white/60 hover:text-white hover:bg-transparent underline text-xs"
-                onClick={onClose}
-              >
-                Cancelar
-              </Button>
-            </div>
+                <div className="flex-shrink-0 h-10 w-10 rounded-full bg-red-50 dark:bg-red-900/30 flex items-center justify-center text-red-600 dark:text-red-400 group-hover:bg-red-100 dark:group-hover:bg-red-900/50 transition-colors">
+                  <Trash2 className="h-5 w-5" />
+                </div>
+                <div className="text-left">
+                  <h3 className="font-medium text-[#29335C] dark:text-white">Excluir grupo</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Essa ação é irreversível e excluirá todo o conteúdo</p>
+                </div>
+              </button>
+            )}
           </div>
         </div>
+        
+        <DialogFooter className="border-t border-gray-200 dark:border-gray-700 pt-3">
+          <Button 
+            variant="outline" 
+            onClick={onClose}
+            className="text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800"
+          >
+            Cancelar
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
