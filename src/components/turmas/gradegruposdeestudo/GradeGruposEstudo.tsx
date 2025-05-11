@@ -58,10 +58,16 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
         const { data: { session } } = await supabase.auth.getSession();
 
         if (session) {
+          // Obter a lista de grupos removidos do localStorage para filtragem
+          const gruposRemovidosKey = 'grupos_removidos';
+          const gruposRemovidosStr = localStorage.getItem(gruposRemovidosKey) || '[]';
+          const gruposRemovidos = JSON.parse(gruposRemovidosStr);
+
           // Primeiro carregamos os grupos locais para exibição rápida
-          // Garantir que estamos pegando a versão mais recente dos grupos
-          localStorage.removeItem('epictus_grupos_estudo_temp_cache');
-          const gruposLocais = obterGruposLocal().filter(grupo => grupo.user_id === session.user.id);
+          const gruposLocais = obterGruposLocal()
+            .filter(grupo => grupo.user_id === session.user.id)
+            // Filtrar grupos que foram removidos
+            .filter(grupo => !gruposRemovidos.includes(grupo.id));
 
           // Converter dados locais para o formato da interface
           if (gruposLocais.length > 0) {
@@ -106,8 +112,13 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
             } else {
               console.log("Grupos carregados do Supabase:", data);
 
+              // Filtrar grupos do Supabase que não estão na lista de removidos
+              const gruposSupabaseFiltrados = data.filter((grupo: any) => 
+                !gruposRemovidos.includes(grupo.id)
+              );
+
               // Converter dados do banco para o formato da interface
-              const gruposFormatados: GrupoEstudo[] = data.map((grupo: any) => ({
+              const gruposFormatados: GrupoEstudo[] = gruposSupabaseFiltrados.map((grupo: any) => ({
                 id: grupo.id,
                 nome: grupo.nome,
                 descricao: grupo.descricao,
@@ -130,7 +141,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
               // Combinar grupos do Supabase com grupos locais que não estão no Supabase
               const gruposLocaisFiltrados = gruposLocais
                 .filter(grupoLocal => grupoLocal.id.startsWith('local_') && 
-                  !data.some((grupoRemoto: any) => grupoRemoto.id === grupoLocal.id))
+                  !gruposSupabaseFiltrados.some((grupoRemoto: any) => grupoRemoto.id === grupoLocal.id))
                 .map((grupo: any) => ({
                   id: grupo.id,
                   nome: grupo.nome,
@@ -157,14 +168,6 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
             console.error("Falha ao usar Supabase:", supabaseError);
             // Já estamos usando os dados locais, então continuar com eles
           }
-
-          // Carregar grupos usando o sistema de armazenamento 
-          try {
-            const todosGrupos = await obterTodosGrupos(session.user.id);
-            console.log("Grupos obtidos do sistema de armazenamento:", todosGrupos);
-          } catch (storageError) {
-            console.error("Erro ao acessar sistema de armazenamento:", storageError);
-          }
         }
       } catch (error) {
         console.error("Erro ao carregar grupos de estudo:", error);
@@ -187,22 +190,14 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
       }
     }, 300000); // 5 minutos
 
-    // Adicionar evento de visibilidade para recarregar os dados quando o usuário volta para a página
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        console.log("Página visível novamente, recarregando grupos...");
-        carregarGrupos();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    // NÃO recarregar os grupos quando a página se torna visível novamente
+    // pois isso estava causando o problema de recarregamento indevido
 
     // Limpar listeners e intervalos quando o componente for desmontado
     return () => {
       clearInterval(intervaloSincronizacao);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [showCreateGroupModal, sairModalOpen]); // Recarregar quando o modal for fechado ou quando sair de um grupo
+  }, []); // Remover dependências para evitar recarregamentos desnecessários
 
   // Filtrar grupos baseado no tópico selecionado e busca
   const gruposFiltrados = gruposEstudo.filter(
@@ -244,7 +239,17 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
           throw new Error("Usuário não autenticado");
         }
 
-        // 2. Remover do Supabase se não for um grupo local
+        // 2. Adicionar o ID à lista de grupos removidos no localStorage
+        const gruposRemovidosKey = 'grupos_removidos';
+        const gruposRemovidosStr = localStorage.getItem(gruposRemovidosKey) || '[]';
+        const gruposRemovidos = JSON.parse(gruposRemovidosStr);
+        
+        if (!gruposRemovidos.includes(selectedGrupo.id)) {
+          gruposRemovidos.push(selectedGrupo.id);
+          localStorage.setItem(gruposRemovidosKey, JSON.stringify(gruposRemovidos));
+        }
+
+        // 3. Remover do Supabase se não for um grupo local
         if (!selectedGrupo.id.startsWith('local_')) {
           const { error } = await supabase
             .from('grupos_estudo')
@@ -254,11 +259,11 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
 
           if (error) {
             console.error("Erro ao sair do grupo no Supabase:", error);
-            throw error;
+            // Continuar mesmo se houver erro, pois o grupo foi marcado como removido localmente
           }
         }
 
-        // 3. Remover do armazenamento local usando a função dedicada
+        // 4. Remover do armazenamento local usando a função dedicada
         const sucesso = removerGrupoLocal(selectedGrupo.id);
         if (!sucesso) {
           console.warn("Problema ao remover grupo localmente, tentando método alternativo");
@@ -276,46 +281,15 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
           }
         }
 
-        // 4. Atualizar o estado da interface
+        // 5. Atualizar o estado da interface imediatamente
         setGruposEstudo(prevGrupos => prevGrupos.filter(g => g.id !== selectedGrupo.id));
 
-        // 5. Mostrar notificação de sucesso
+        // 6. Mostrar notificação de sucesso
         mostrarNotificacaoSucesso("Você saiu do grupo com sucesso!");
 
-        // 6. Fechar o modal
+        // 7. Fechar o modal
         setSairModalOpen(false);
         setSelectedGrupo(null);
-
-        // 7. Forçar uma recarga dos grupos em 200ms para garantir que a lista esteja atualizada
-        setTimeout(async () => {
-          if (session) {
-            try {
-              const todosGrupos = await obterTodosGrupos(session.user.id);
-              const gruposFormatados = todosGrupos.map(grupo => ({
-                id: grupo.id,
-                nome: grupo.nome,
-                descricao: grupo.descricao,
-                cor: grupo.cor,
-                membros: grupo.membros || 1,
-                topico: grupo.topico,
-                disciplina: grupo.disciplina || "",
-                icon: grupo.topico_icon,
-                dataCriacao: grupo.data_criacao,
-                tendencia: Math.random() > 0.7 ? "alta" : undefined,
-                novoConteudo: Math.random() > 0.7,
-                privado: grupo.privado,
-                visibilidade: grupo.visibilidade,
-                topico_nome: grupo.topico_nome,
-                topico_icon: grupo.topico_icon,
-                data_inicio: grupo.data_inicio,
-                criador: grupo.criador || "você"
-              }));
-              setGruposEstudo(gruposFormatados);
-            } catch (reloadError) {
-              console.error("Erro ao recarregar grupos:", reloadError);
-            }
-          }
-        }, 200);
       } catch (error) {
         console.error("Erro ao sair do grupo:", error);
         mostrarNotificacaoErro("Não foi possível sair do grupo. Tente novamente.");
@@ -334,10 +308,20 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
           throw new Error("Usuário não autenticado");
         }
 
-        // 2. Importar a função excluirGrupo
+        // 2. Adicionar o ID à lista de grupos removidos no localStorage
+        const gruposRemovidosKey = 'grupos_removidos';
+        const gruposRemovidosStr = localStorage.getItem(gruposRemovidosKey) || '[]';
+        const gruposRemovidos = JSON.parse(gruposRemovidosStr);
+        
+        if (!gruposRemovidos.includes(selectedGrupo.id)) {
+          gruposRemovidos.push(selectedGrupo.id);
+          localStorage.setItem(gruposRemovidosKey, JSON.stringify(gruposRemovidos));
+        }
+
+        // 3. Importar a função excluirGrupo
         const { excluirGrupo } = await import('@/lib/gruposEstudoStorage');
 
-        // 3. Utilizar a função excluirGrupo para uma remoção completa
+        // 4. Utilizar a função excluirGrupo para uma remoção completa
         const sucesso = await excluirGrupo(selectedGrupo.id, session.user.id);
         if (!sucesso) {
           console.warn("Método principal de exclusão falhou, tentando método alternativo");
@@ -352,6 +336,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
 
             if (error) {
               console.error("Erro ao excluir grupo no Supabase:", error);
+              // Continuar mesmo com erro, já que o grupo está na lista de removidos
             }
           }
 
@@ -383,46 +368,15 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
           }
         }
 
-        // 4. Atualizar o estado da interface imediatamente para feedback ao usuário
+        // 5. Atualizar o estado da interface imediatamente para feedback ao usuário
         setGruposEstudo(prevGrupos => prevGrupos.filter(g => g.id !== selectedGrupo.id));
 
-        // 5. Mostrar notificação de sucesso
+        // 6. Mostrar notificação de sucesso
         mostrarNotificacaoSucesso("Grupo excluído com sucesso!");
 
-        // 6. Fechar o modal
+        // 7. Fechar o modal
         setSairModalOpen(false);
         setSelectedGrupo(null);
-
-        // 7. Forçar uma recarga dos grupos em 200ms para garantir que a lista esteja atualizada
-        setTimeout(async () => {
-          if (session) {
-            try {
-              const todosGrupos = await obterTodosGrupos(session.user.id);
-              const gruposFormatados = todosGrupos.map(grupo => ({
-                id: grupo.id,
-                nome: grupo.nome,
-                descricao: grupo.descricao,
-                cor: grupo.cor,
-                membros: grupo.membros || 1,
-                topico: grupo.topico,
-                disciplina: grupo.disciplina || "",
-                icon: grupo.topico_icon,
-                dataCriacao: grupo.data_criacao,
-                tendencia: Math.random() > 0.7 ? "alta" : undefined,
-                novoConteudo: Math.random() > 0.7,
-                privado: grupo.privado,
-                visibilidade: grupo.visibilidade,
-                topico_nome: grupo.topico_nome,
-                topico_icon: grupo.topico_icon,
-                data_inicio: grupo.data_inicio,
-                criador: grupo.criador || "você"
-              }));
-              setGruposEstudo(gruposFormatados);
-            } catch (reloadError) {
-              console.error("Erro ao recarregar grupos:", reloadError);
-            }
-          }
-        }, 200);
       } catch (error) {
         console.error("Erro ao excluir grupo:", error);
         mostrarNotificacaoErro("Não foi possível excluir o grupo. Tente novamente.");

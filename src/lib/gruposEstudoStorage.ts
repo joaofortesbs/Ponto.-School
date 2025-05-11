@@ -262,8 +262,15 @@ export const criarGrupo = async (dados: Omit<GrupoEstudo, 'id'>): Promise<GrupoE
  */
 export const obterTodosGrupos = async (userId: string): Promise<GrupoEstudo[]> => {
   try {
-    // Primeiro, garantir que temos os grupos locais (failsafe)
-    let gruposLocais = obterGruposLocal().filter(grupo => grupo.user_id === userId);
+    // Obter a lista de grupos removidos
+    const gruposRemovidosKey = 'grupos_removidos';
+    const gruposRemovidosStr = localStorage.getItem(gruposRemovidosKey) || '[]';
+    const gruposRemovidos = JSON.parse(gruposRemovidosStr);
+
+    // Primeiro, garantir que temos os grupos locais (failsafe), excluindo os removidos
+    let gruposLocais = obterGruposLocal()
+      .filter(grupo => grupo.user_id === userId)
+      .filter(grupo => !gruposRemovidos.includes(grupo.id));
 
     // Tentar obter backup da sessão
     try {
@@ -272,11 +279,15 @@ export const obterTodosGrupos = async (userId: string): Promise<GrupoEstudo[]> =
         const gruposSessao = JSON.parse(backupSessao);
         console.log('Backup de sessão encontrado com', gruposSessao.length, 'grupos');
 
-        // Combinar com grupos locais existentes (evitando duplicatas)
+        // Combinar com grupos locais existentes (evitando duplicatas e grupos removidos)
         const gruposLocaisIds = new Set(gruposLocais.map(g => g.id));
 
         const gruposSessaoFiltrados = gruposSessao
-          .filter((g: GrupoEstudo) => g.user_id === userId && !gruposLocaisIds.has(g.id));
+          .filter((g: GrupoEstudo) => 
+            g.user_id === userId && 
+            !gruposLocaisIds.has(g.id) && 
+            !gruposRemovidos.includes(g.id)
+          );
 
         if (gruposSessaoFiltrados.length > 0) {
           console.log('Adicionando', gruposSessaoFiltrados.length, 'grupos do backup de sessão');
@@ -304,18 +315,25 @@ export const obterTodosGrupos = async (userId: string): Promise<GrupoEstudo[]> =
         return gruposLocais;
       }
 
+      // Filtrar grupos do Supabase para excluir os grupos removidos
+      const gruposSupabaseFiltrados = gruposSupabase.filter(
+        grupo => !gruposRemovidos.includes(grupo.id)
+      );
+
       // Filtrar grupos locais para incluir apenas os que não estão no Supabase
       const gruposLocaisFiltrados = gruposLocais.filter(
-        grupoLocal => !gruposSupabase.some(grupoRemoto => grupoRemoto.id === grupoLocal.id)
+        grupoLocal => !gruposSupabaseFiltrados.some(grupoRemoto => grupoRemoto.id === grupoLocal.id)
       );
 
       // Combinar ambos
-      const todosGrupos = [...gruposSupabase, ...gruposLocaisFiltrados];
+      const todosGrupos = [...gruposSupabaseFiltrados, ...gruposLocaisFiltrados];
 
       // Certificar-se de que os grupos locais estão atualizados
       if (todosGrupos.length !== gruposLocais.length) {
         // Salvar apenas os grupos locais (que começam com 'local_')
-        const apenasGruposLocais = todosGrupos.filter(g => g.id.startsWith('local_'));
+        const apenasGruposLocais = todosGrupos
+          .filter(g => g.id.startsWith('local_'))
+          .filter(g => !gruposRemovidos.includes(g.id));
 
         // Se houver alguma diferença, atualizar armazenamento local
         if (apenasGruposLocais.length > 0) {
@@ -331,13 +349,20 @@ export const obterTodosGrupos = async (userId: string): Promise<GrupoEstudo[]> =
   } catch (error) {
     console.error('Erro ao obter todos os grupos:', error);
 
+    // Obter a lista de grupos removidos para filtrar recuperações de emergência
+    const gruposRemovidosKey = 'grupos_removidos';
+    const gruposRemovidosStr = localStorage.getItem(gruposRemovidosKey) || '[]';
+    const gruposRemovidos = JSON.parse(gruposRemovidosStr);
+
     // Tentar recuperar grupos de qualquer fonte possível
     try {
       // Verificar backup no localStorage
       const backup = localStorage.getItem(`${STORAGE_KEY}_backup`);
       if (backup) {
         const gruposBackup = JSON.parse(backup);
-        return gruposBackup.filter((g: GrupoEstudo) => g.user_id === userId);
+        return gruposBackup
+          .filter((g: GrupoEstudo) => g.user_id === userId)
+          .filter((g: GrupoEstudo) => !gruposRemovidos.includes(g.id));
       }
 
       // Verificar backups de emergência
@@ -357,7 +382,9 @@ export const obterTodosGrupos = async (userId: string): Promise<GrupoEstudo[]> =
           }
         }
 
-        return gruposEmergencia.filter(g => g.user_id === userId);
+        return gruposEmergencia
+          .filter(g => g.user_id === userId)
+          .filter(g => !gruposRemovidos.includes(g.id));
       }
     } catch (recoveryError) {
       console.error('Erro na recuperação de emergência:', recoveryError);
