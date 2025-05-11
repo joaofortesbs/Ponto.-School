@@ -24,7 +24,7 @@ export interface GrupoEstudo {
 
 // Caracteres permitidos para códigos de grupo (sem caracteres ambíguos como I, O, 0, 1)
 const CARACTERES_PERMITIDOS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-const COMPRIMENTO_CODIGO = 7;
+const COMPRIMENTO_CODIGO = 6; // Reduzido para 6 caracteres para melhor leitura
 
 /**
  * Gera uma string aleatória para ser usada como código de grupo

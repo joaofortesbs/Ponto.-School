@@ -447,7 +447,7 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
 
             {/* Compartilhar */}
             <TabsContent value="compartilhar" className="space-y-4 focus:outline-none">
-              <CompartilharGrupoSection grupoCodigo={grupo?.codigo || ""} grupoNome={grupo?.nome || ""} />
+              <CompartilharGrupoSection grupoCodigo={grupo?.codigo || "PONTO123"} grupoNome={grupo?.nome || ""} />
             </TabsContent>
           </Tabs>
         </div>

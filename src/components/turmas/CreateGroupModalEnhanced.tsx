@@ -171,7 +171,11 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
       }
 
       // Gerar um código único para o grupo
-      const codigoGrupo = await gerarCodigoUnicoGrupo();
+      let codigoGrupo = await gerarCodigoUnicoGrupo();
+      // Certificar que temos um código, mesmo com erro
+      if (!codigoGrupo) {
+        codigoGrupo = "PONTO" + Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+      }
 
       // Preparar dados para criação do grupo
       const novoGrupo = {
