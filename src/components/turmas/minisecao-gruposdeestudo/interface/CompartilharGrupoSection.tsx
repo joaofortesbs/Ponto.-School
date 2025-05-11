@@ -1,81 +1,46 @@
-
-import React, { useState } from "react";
+import React, { useState } from 'react';
+import { Copy, Check, MessageSquare, Share2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Copy, Check, Share2, Link, Mail, MessageSquare } from "lucide-react";
-import { toast } from "@/components/ui/use-toast";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Textarea } from "@/components/ui/textarea";
 
 interface CompartilharGrupoSectionProps {
-  grupo: {
-    id: string;
-    nome: string;
-    codigo?: string;
-  };
+  grupoCodigo: string;
+  grupoNome: string;
 }
 
-const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({ grupo }) => {
+const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
+  grupoCodigo,
+  grupoNome
+}) => {
   const [copiado, setCopiado] = useState(false);
-  const grupoCodigo = grupo.codigo || "CODIGO";
-  
-  // URL para compartilhar (pode mudar conforme sua estrutura de rotas)
-  const shareUrl = `${window.location.origin}/turmas/grupos/${grupo.id}?codigo=${grupoCodigo}`;
-  
-  const handleCopiarCodigo = async () => {
-    try {
-      await navigator.clipboard.writeText(grupoCodigo);
-      setCopiado(true);
-      toast({
-        title: "Código copiado!",
-        description: "O código do grupo foi copiado para a área de transferência.",
-        duration: 3000,
-      });
-      
-      setTimeout(() => {
-        setCopiado(false);
-      }, 2000);
-    } catch (error) {
-      console.error("Erro ao copiar o código:", error);
-      toast({
-        title: "Erro ao copiar",
-        description: "Não foi possível copiar o código. Por favor, tente novamente.",
-        variant: "destructive",
-        duration: 3000,
-      });
-    }
+  const [copiadoLink, setCopiadoLink] = useState(false);
+
+  const mensagemPadrao = `Venha estudar comigo no grupo "${grupoNome}" na Ponto. School!\nUse o código: ${grupoCodigo}`;
+
+  const handleCopiarCodigo = () => {
+    navigator.clipboard.writeText(grupoCodigo);
+    setCopiado(true);
+    setTimeout(() => setCopiado(false), 2000);
   };
-  
-  const handleCopiarLink = async () => {
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      toast({
-        title: "Link copiado!",
-        description: "O link do grupo foi copiado para a área de transferência.",
-        duration: 3000,
-      });
-    } catch (error) {
-      console.error("Erro ao copiar o link:", error);
-      toast({
-        title: "Erro ao copiar",
-        description: "Não foi possível copiar o link. Por favor, tente novamente.",
-        variant: "destructive",
-        duration: 3000,
-      });
-    }
+
+  const handleCopiarLink = () => {
+    // Aqui poderia ser um link mais elaborado, mas por enquanto apenas o código
+    navigator.clipboard.writeText(`https://ponto.school/entrar-grupo?codigo=${grupoCodigo}`);
+    setCopiadoLink(true);
+    setTimeout(() => setCopiadoLink(false), 2000);
   };
-  
+
   const handleCompartilharWhatsApp = () => {
-    const mensagem = `Venha estudar comigo no grupo "${grupo.nome}" na Ponto. School! Use o código: ${grupoCodigo}`;
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(mensagem)}`;
-    window.open(whatsappUrl, "_blank");
+    const text = encodeURIComponent(mensagemPadrao);
+    window.open(`https://wa.me/?text=${text}`, "_blank");
   };
-  
+
   const handleCompartilharEmail = () => {
-    const assunto = `Convite para o grupo de estudos: ${grupo.nome}`;
-    const corpo = `Olá!\n\nGostaria de te convidar para participar do grupo de estudos "${grupo.nome}" na Ponto. School.\n\nPara entrar, use o código: ${grupoCodigo}\n\nAté mais!`;
-    const mailtoUrl = `mailto:?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpo)}`;
-    window.open(mailtoUrl, "_blank");
+    const subject = encodeURIComponent(`Convite para o grupo "${grupoNome}"`);
+    const body = encodeURIComponent(mensagemPadrao);
+    window.open(`mailto:?subject=${subject}&body=${body}`, "_blank");
   };
 
   return (
@@ -104,79 +69,62 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({ gru
         </p>
       </div>
 
-      <div className="pt-2">
-        <h4 className="text-sm font-medium text-white/70 mb-3">
+      <div className="mt-6">
+        <h3 className="text-sm font-medium text-white/70 mb-2">
           Opções de Compartilhamento
-        </h4>
+        </h3>
+
         <div className="grid grid-cols-2 gap-3">
           <Button
-            variant="outline"
-            className="bg-[#1E293B] border-[#1E293B] text-white hover:bg-[#FF6B00]/10 hover:text-[#FF6B00] hover:border-[#FF6B00]"
+            variant="outline" 
+            className="border-[#1E293B] bg-[#1E293B] text-white hover:bg-[#1E293B]/80"
             onClick={handleCopiarLink}
           >
-            <Link className="h-4 w-4 mr-2" />
-            Copiar Link
+            {copiadoLink ? <Check className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
+            {copiadoLink ? "Link Copiado" : "Copiar Link"}
           </Button>
+
           <Button
-            variant="outline"
-            className="bg-[#1E293B] border-[#1E293B] text-white hover:bg-[#FF6B00]/10 hover:text-[#FF6B00] hover:border-[#FF6B00]"
+            variant="outline" 
+            className="border-[#1E293B] bg-[#1E293B] text-white hover:bg-[#1E293B]/80"
             onClick={handleCompartilharWhatsApp}
           >
             <MessageSquare className="h-4 w-4 mr-2" />
             WhatsApp
           </Button>
+
           <Button
-            variant="outline"
-            className="bg-[#1E293B] border-[#1E293B] text-white hover:bg-[#FF6B00]/10 hover:text-[#FF6B00] hover:border-[#FF6B00]"
+            variant="outline" 
+            className="border-[#1E293B] bg-[#1E293B] text-white hover:bg-[#1E293B]/80"
             onClick={handleCompartilharEmail}
           >
-            <Mail className="h-4 w-4 mr-2" />
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 mr-2">
+              <rect width="20" height="16" x="2" y="4" rx="2" />
+              <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+            </svg>
             Email
           </Button>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div>
-                  <Button
-                    variant="outline"
-                    className="w-full bg-[#1E293B] border-[#1E293B] text-white hover:bg-[#FF6B00]/10 hover:text-[#FF6B00] hover:border-[#FF6B00]"
-                    onClick={() => {
-                      if (navigator.share) {
-                        navigator.share({
-                          title: `Convite para o grupo: ${grupo.nome}`,
-                          text: `Venha estudar comigo no grupo "${grupo.nome}" na Ponto. School! Use o código: ${grupoCodigo}`,
-                          url: shareUrl
-                        }).catch((error) => console.log('Erro ao compartilhar', error));
-                      } else {
-                        toast({
-                          title: "Compartilhamento não suportado",
-                          description: "Seu navegador não suporta esta função. Use uma das outras opções.",
-                          variant: "destructive",
-                        });
-                      }
-                    }}
-                  >
-                    <Share2 className="h-4 w-4 mr-2" />
-                    Mais Opções
-                  </Button>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Abre o menu de compartilhamento nativo (se disponível)</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+
+          <Button
+            variant="outline" 
+            className="border-[#1E293B] bg-[#1E293B] text-white hover:bg-[#1E293B]/80"
+          >
+            <Share2 className="h-4 w-4 mr-2" />
+            Mais Opções
+          </Button>
         </div>
       </div>
 
-      <div className="pt-2">
-        <h4 className="text-sm font-medium text-white/70 mb-2">
+      <div className="mt-6">
+        <h3 className="text-sm font-medium text-white/70 mb-2">
           Mensagem para Compartilhar
-        </h4>
-        <div className="bg-[#1E293B] rounded-lg p-3 border border-[#1E293B]">
-          <p className="text-sm text-white/90">
-            Venha estudar comigo no grupo "{grupo.nome}" na Ponto. School! 
-            <br />Use o código: <Badge className="ml-1 bg-[#FF6B00]/20 text-[#FF6B00] border-0 font-mono">{grupoCodigo}</Badge>
+        </h3>
+
+        <div className="bg-[#1E293B] p-4 rounded-lg">
+          <p className="text-white text-sm mb-2">
+            Venha estudar comigo no grupo "{grupoNome}" na Ponto. School!
+            <br />
+            Use o código: <Badge variant="outline" className="bg-[#FF6B00]/10 text-[#FF6B00] border-[#FF6B00]/30 ml-1">{grupoCodigo}</Badge>
           </p>
         </div>
       </div>

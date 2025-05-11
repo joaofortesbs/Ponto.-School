@@ -30,6 +30,7 @@ interface GrupoConfiguracoesModalProps {
     visibilidade?: string;
     data_inicio?: string;
     criador?: string;
+    codigo?: string; // Adicionado o campo codigo
   } | null;
   onSave: (grupoAtualizado: any) => void;
 }
