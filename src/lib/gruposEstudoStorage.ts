@@ -116,30 +116,30 @@ export const removerGrupoLocal = (grupoId: string): boolean => {
   try {
     // Obter grupos existentes
     const gruposExistentes = obterGruposLocal();
-    
+
     // Filtrar removendo o grupo com o ID especificado
     const gruposFiltrados = gruposExistentes.filter(g => g.id !== grupoId);
-    
+
     // Se não houve alteração, o grupo não existia
     if (gruposExistentes.length === gruposFiltrados.length) {
       return false;
     }
-    
+
     // Salvar a nova lista de grupos
     localStorage.setItem(STORAGE_KEY, JSON.stringify(gruposFiltrados));
-    
+
     // Atualizar também o backup na sessão
     try {
       sessionStorage.setItem(`${STORAGE_KEY}_session`, JSON.stringify(gruposFiltrados));
     } catch (sessionError) {
       console.error('Erro ao atualizar backup na sessão:', sessionError);
     }
-    
+
     // Limpar também quaisquer backups de emergência que possam conter este grupo
     try {
       const todasChaves = Object.keys(localStorage);
       const chavesEmergencia = todasChaves.filter(chave => chave.startsWith(`${STORAGE_KEY}_emergency_`));
-      
+
       for (const chave of chavesEmergencia) {
         try {
           const gruposEmergencia = JSON.parse(localStorage.getItem(chave) || '[]');
@@ -152,7 +152,7 @@ export const removerGrupoLocal = (grupoId: string): boolean => {
     } catch (backupError) {
       console.error('Erro ao limpar backups de emergência:', backupError);
     }
-    
+
     console.log('Grupo removido localmente com sucesso', grupoId);
     return true;
   } catch (error) {
@@ -168,24 +168,24 @@ export const excluirGrupo = async (grupoId: string, userId: string): Promise<boo
   try {
     // Primeiro remover localmente para garantir resposta rápida na interface
     removerGrupoLocal(grupoId);
-    
+
     // Se for um ID local, não precisamos tentar remover do Supabase
     if (grupoId.startsWith('local_')) {
       return true;
     }
-    
+
     // Tentar excluir do Supabase
     const { error } = await supabase
       .from('grupos_estudo')
       .delete()
       .eq('id', grupoId)
       .eq('user_id', userId);
-      
+
     if (error) {
       console.error('Erro ao excluir grupo do banco de dados:', error);
       return false;
     }
-    
+
     console.log('Grupo excluído com sucesso do banco de dados', grupoId);
     return true;
   } catch (error) {
@@ -402,4 +402,39 @@ export const sincronizarGruposLocais = async (userId: string): Promise<void> => 
   } catch (error) {
     console.error('Erro ao sincronizar grupos locais:', error);
   }
+};
+
+export const removerGrupo = (grupoId: string) => {
+  const grupos = getGruposFromStorage();
+  const gruposAtualizados = grupos.filter(grupo => grupo.id !== grupoId);
+  saveGruposToStorage(gruposAtualizados);
+
+  // Adicionar o ID do grupo à lista de grupos removidos
+  const gruposRemovidosKey = 'grupos_removidos';
+  const gruposRemovidosStr = localStorage.getItem(gruposRemovidosKey) || '[]';
+  const gruposRemovidos = JSON.parse(gruposRemovidosStr);
+
+  if (!gruposRemovidos.includes(grupoId)) {
+    gruposRemovidos.push(grupoId);
+    localStorage.setItem(gruposRemovidosKey, JSON.stringify(gruposRemovidos));
+  }
+
+  return gruposAtualizados;
+};
+
+// Verificar se um grupo está na lista de removidos
+export const isGrupoRemovido = (grupoId: string): boolean => {
+  const gruposRemovidosKey = 'grupos_removidos';
+  const gruposRemovidosStr = localStorage.getItem(gruposRemovidosKey) || '[]';
+  const gruposRemovidos = JSON.parse(gruposRemovidosStr);
+  return gruposRemovidos.includes(grupoId);
+};
+
+// Método para filtrar grupos que foram removidos
+export const filtrarGruposRemovidos = (grupos: any[]): any[] => {
+  const gruposRemovidosKey = 'grupos_removidos';
+  const gruposRemovidosStr = localStorage.getItem(gruposRemovidosKey) || '[]';
+  const gruposRemovidos = JSON.parse(gruposRemovidosStr);
+
+  return grupos.filter(grupo => !gruposRemovidos.includes(grupo.id));
 };

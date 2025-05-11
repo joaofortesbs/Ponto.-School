@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Search, Filter, ChevronRight, Users, TrendingUp, BookOpen, MessageCircle, Plus, UserPlus, FileText, Calendar, LogOut, Eye, Settings } from "lucide-react";
@@ -226,25 +225,25 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
   const isGrupoFeatured = (grupo: GrupoEstudo) => {
     return grupo.tendencia === "alta" && grupo.novoConteudo === true;
   };
-  
+
   // Funções para manipular eventos dos botões de ação
   const handleLeaveGroup = (e: React.MouseEvent, grupo: GrupoEstudo) => {
     e.stopPropagation();
     setSelectedGrupo(grupo);
     setSairModalOpen(true);
   };
-  
+
   const handleConfirmLeaveGroup = async () => {
     if (selectedGrupo) {
       try {
         console.log(`Saindo do grupo ${selectedGrupo.id}`);
-        
+
         // 1. Obter sessão do usuário atual
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
           throw new Error("Usuário não autenticado");
         }
-        
+
         // 2. Remover do Supabase se não for um grupo local
         if (!selectedGrupo.id.startsWith('local_')) {
           const { error } = await supabase
@@ -252,23 +251,23 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
             .delete()
             .eq('id', selectedGrupo.id)
             .eq('user_id', session.user.id);
-            
+
           if (error) {
             console.error("Erro ao sair do grupo no Supabase:", error);
             throw error;
           }
         }
-        
+
         // 3. Remover do armazenamento local usando a função dedicada
         const sucesso = removerGrupoLocal(selectedGrupo.id);
         if (!sucesso) {
           console.warn("Problema ao remover grupo localmente, tentando método alternativo");
-          
+
           // Método alternativo manual
           const gruposLocais = obterGruposLocal();
           const gruposAtualizados = gruposLocais.filter(g => g.id !== selectedGrupo.id);
           localStorage.setItem('epictus_grupos_estudo', JSON.stringify(gruposAtualizados));
-          
+
           // Atualizar também a cópia na sessão
           try {
             sessionStorage.setItem('epictus_grupos_estudo_session', JSON.stringify(gruposAtualizados));
@@ -276,17 +275,17 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
             console.error("Erro ao atualizar backup na sessão:", sessionError);
           }
         }
-        
+
         // 4. Atualizar o estado da interface
         setGruposEstudo(prevGrupos => prevGrupos.filter(g => g.id !== selectedGrupo.id));
-        
+
         // 5. Mostrar notificação de sucesso
         mostrarNotificacaoSucesso("Você saiu do grupo com sucesso!");
-        
+
         // 6. Fechar o modal
         setSairModalOpen(false);
         setSelectedGrupo(null);
-        
+
         // 7. Forçar uma recarga dos grupos em 200ms para garantir que a lista esteja atualizada
         setTimeout(async () => {
           if (session) {
@@ -323,26 +322,26 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
       }
     }
   };
-  
+
   const handleDeleteGroup = async () => {
     if (selectedGrupo) {
       try {
         console.log(`Excluindo o grupo ${selectedGrupo.id}`);
-        
+
         // 1. Obter sessão do usuário atual
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
           throw new Error("Usuário não autenticado");
         }
-        
+
         // 2. Importar a função excluirGrupo
         const { excluirGrupo } = await import('@/lib/gruposEstudoStorage');
-        
+
         // 3. Utilizar a função excluirGrupo para uma remoção completa
         const sucesso = await excluirGrupo(selectedGrupo.id, session.user.id);
         if (!sucesso) {
           console.warn("Método principal de exclusão falhou, tentando método alternativo");
-          
+
           // Excluir do Supabase se não for um grupo local
           if (!selectedGrupo.id.startsWith('local_')) {
             const { error } = await supabase
@@ -350,29 +349,29 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
               .delete()
               .eq('id', selectedGrupo.id)
               .eq('user_id', session.user.id);
-              
+
             if (error) {
               console.error("Erro ao excluir grupo no Supabase:", error);
             }
           }
-          
+
           // Remover do localStorage
           const gruposLocais = obterGruposLocal();
           const gruposAtualizados = gruposLocais.filter(g => g.id !== selectedGrupo.id);
           localStorage.setItem('epictus_grupos_estudo', JSON.stringify(gruposAtualizados));
-          
+
           // Atualizar sessionStorage
           try {
             sessionStorage.setItem('epictus_grupos_estudo_session', JSON.stringify(gruposAtualizados));
           } catch (err) {
             console.error("Erro ao atualizar sessionStorage:", err);
           }
-          
+
           // Verificar backups de emergência
           const todasChaves = Object.keys(localStorage);
           const chavesEmergencia = todasChaves.filter(chave => 
             chave.startsWith('epictus_grupos_estudo_emergency_'));
-          
+
           for (const chave of chavesEmergencia) {
             try {
               const gruposEmergencia = JSON.parse(localStorage.getItem(chave) || '[]');
@@ -383,17 +382,17 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
             }
           }
         }
-        
+
         // 4. Atualizar o estado da interface imediatamente para feedback ao usuário
         setGruposEstudo(prevGrupos => prevGrupos.filter(g => g.id !== selectedGrupo.id));
-        
+
         // 5. Mostrar notificação de sucesso
         mostrarNotificacaoSucesso("Grupo excluído com sucesso!");
-        
+
         // 6. Fechar o modal
         setSairModalOpen(false);
         setSelectedGrupo(null);
-        
+
         // 7. Forçar uma recarga dos grupos em 200ms para garantir que a lista esteja atualizada
         setTimeout(async () => {
           if (session) {
@@ -430,14 +429,14 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
       }
     }
   };
-  
+
   const handleViewGroup = (e: React.MouseEvent, grupoId: string) => {
     e.stopPropagation();
     console.log(`Visualizando grupo ${grupoId}`);
     // Implementar navegação para a visualização detalhada do grupo
     // window.location.href = `/turmas/grupos/${grupoId}`;
   };
-  
+
   const handleGroupSettings = (e: React.MouseEvent, grupoId: string) => {
     e.stopPropagation();
     console.log(`Configurações do grupo ${grupoId}`);
@@ -477,7 +476,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
 
       // Fechar modal
       setShowCreateGroupModal(false);
-      
+
       // Mostrar notificação de sucesso
       mostrarNotificacaoSucesso("Grupo criado com sucesso!");
     } catch (error) {
@@ -602,7 +601,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
       }, 500);
     }, 3000);
   };
-  
+
   // Função auxiliar para mostrar notificação de erro
   const mostrarNotificacaoErro = (mensagem: string) => {
     const element = document.createElement('div');
@@ -641,7 +640,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
         }}
         onSubmit={handleCreateGroup}
       />
-      
+
       {/* Modal de sair do grupo */}
       <GrupoSairModal
         isOpen={sairModalOpen}
@@ -709,7 +708,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
                   >
                     <LogOut className="h-4 w-4" />
                   </button>
-                  
+
                   <button 
                     className="text-white/80 hover:text-[#FF6B00] transition-colors p-1 rounded-full"
                     title="Visualizar Grupo"
@@ -720,7 +719,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
                   >
                     <Eye className="h-4 w-4" />
                   </button>
-                  
+
                   <button 
                     className="text-white/80 hover:text-[#FF6B00] transition-colors p-1 rounded-full"
                     title="Configurações do Grupo"
@@ -733,7 +732,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
                   </button>
                 </div>
               )}
-              
+
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="flex-shrink-0">
