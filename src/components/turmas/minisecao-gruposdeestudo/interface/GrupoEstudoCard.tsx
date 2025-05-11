@@ -1,9 +1,8 @@
-import React, { useState } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Calendar, Users, LogOut, Eye, Settings } from "lucide-react";
-import GrupoSairModal from "./GrupoSairModal";
 
 interface GrupoEstudoCardProps {
   grupo: {
@@ -23,20 +22,7 @@ interface GrupoEstudoCardProps {
 }
 
 const GrupoEstudoCard: React.FC<GrupoEstudoCardProps> = ({ grupo, onClick }) => {
-  const [isHovered, setIsHovered] = useState(false);
-  const [showSairModal, setShowSairModal] = useState(false);
-
-  const handleSairGrupo = () => {
-    console.log(`Saindo do grupo ${grupo.id}`);
-    // Implementar lógica para sair do grupo
-    setShowSairModal(false);
-  };
-
-  const handleExcluirGrupo = () => {
-    console.log(`Excluindo grupo ${grupo.id}`);
-    // Implementar lógica para excluir o grupo
-    setShowSairModal(false);
-  };
+  const [isHovered, setIsHovered] = React.useState(false);
 
   return (
     <Card 
@@ -55,15 +41,6 @@ const GrupoEstudoCard: React.FC<GrupoEstudoCardProps> = ({ grupo, onClick }) => 
         }
       }}
     >
-      {/* Modal de sair/excluir grupo */}
-      <GrupoSairModal 
-        isOpen={showSairModal}
-        onClose={() => setShowSairModal(false)}
-        onSair={handleSairGrupo}
-        onExcluir={handleExcluirGrupo}
-        grupoNome={grupo.nome}
-      />
-
       {/* Botões de ação que aparecem no hover */}
       {isHovered && (
         <div className="absolute right-3 top-3 flex items-center gap-2 z-10">
@@ -72,7 +49,10 @@ const GrupoEstudoCard: React.FC<GrupoEstudoCardProps> = ({ grupo, onClick }) => 
             title="Sair do Grupo"
             onClick={(e) => {
               e.stopPropagation();
-              setShowSairModal(true);
+              if (window.confirm(`Deseja realmente sair do grupo "${grupo.nome}"?`)) {
+                console.log(`Saindo do grupo ${grupo.id}`);
+                // Implementar lógica para sair do grupo
+              }
             }}
           >
             <LogOut className="h-4 w-4" />

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Search, Filter, ChevronRight, Users, TrendingUp, BookOpen, MessageCircle, Plus, UserPlus, FileText, Calendar, LogOut, Eye, Settings } from "lucide-react";
@@ -6,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import CreateGroupModalEnhanced from "../CreateGroupModalEnhanced";
 import { supabase } from "@/lib/supabase";
 import { criarGrupo, sincronizarGruposLocais, obterTodosGrupos, obterGruposLocal, salvarGrupoLocal } from '@/lib/gruposEstudoStorage';
-import GrupoSairModal from "../minisecao-gruposdeestudo/interface/GrupoSairModal";
 
 interface GrupoEstudo {
   id: string;
@@ -34,22 +34,17 @@ interface GradeGruposEstudoProps {
   searchQuery?: string;
 }
 
-
-
 const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({ 
   selectedTopic, 
   topicosEstudo,
   searchQuery = ""
 }) => {
-  const [grupos, setGrupos] = useState([]);
   const [hoveredGrupo, setHoveredGrupo] = useState<string | null>(null);
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
   const [gruposEstudo, setGruposEstudo] = useState<GrupoEstudo[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
-  const [showSairModal, setShowSairModal] = useState(false);
-  const [selectedGrupo, setSelectedGrupo] = useState<GrupoEstudo | null>(null);
 
   // Carregar grupos do banco de dados e do armazenamento local
   useEffect(() => {
@@ -210,21 +205,23 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
   const isGrupoFeatured = (grupo: GrupoEstudo) => {
     return grupo.tendencia === "alta" && grupo.novoConteudo === true;
   };
-
+  
   // Funções para manipular eventos dos botões de ação
-  const handleLeaveGroup = (grupoId: string) => {
-    
-    console.log(`Saindo do grupo ${grupoId}`);
-    // Implementar lógica para sair do grupo
+  const handleLeaveGroup = (e: React.MouseEvent, grupoId: string, grupoNome: string) => {
+    e.stopPropagation();
+    if (window.confirm(`Tem certeza que deseja sair do grupo "${grupoNome}"?`)) {
+      console.log(`Saindo do grupo ${grupoId}`);
+      // Implementar lógica para sair do grupo
+    }
   };
-
+  
   const handleViewGroup = (e: React.MouseEvent, grupoId: string) => {
     e.stopPropagation();
     console.log(`Visualizando grupo ${grupoId}`);
     // Implementar navegação para a visualização detalhada do grupo
     // window.location.href = `/turmas/grupos/${grupoId}`;
   };
-
+  
   const handleGroupSettings = (e: React.MouseEvent, grupoId: string) => {
     e.stopPropagation();
     console.log(`Configurações do grupo ${grupoId}`);
@@ -264,7 +261,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
 
       // Fechar modal
       setShowCreateGroupModal(false);
-
+      
       // Mostrar notificação de sucesso
       mostrarNotificacaoSucesso("Grupo criado com sucesso!");
     } catch (error) {
@@ -390,12 +387,8 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
     }, 3000);
   };
 
-
-
   return (
     <div className="mt-8">
-      
-
       {/* Modal de criação de grupo */}
       <CreateGroupModalEnhanced 
         isOpen={showCreateGroupModal} 
@@ -453,13 +446,13 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
                     title="Sair do Grupo"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setSelectedGrupo(grupo);
-                      setShowSairModal(true);
+                      // Lógica para sair do grupo
+                      window.confirm(`Deseja realmente sair do grupo "${grupo.nome}"?`);
                     }}
                   >
                     <LogOut className="h-4 w-4" />
                   </button>
-
+                  
                   <button 
                     className="text-white/80 hover:text-[#FF6B00] transition-colors p-1 rounded-full"
                     title="Visualizar Grupo"
@@ -470,7 +463,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
                   >
                     <Eye className="h-4 w-4" />
                   </button>
-
+                  
                   <button 
                     className="text-white/80 hover:text-[#FF6B00] transition-colors p-1 rounded-full"
                     title="Configurações do Grupo"
@@ -483,7 +476,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
                   </button>
                 </div>
               )}
-
+              
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="flex-shrink-0">
@@ -579,24 +572,6 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
             </div>
           )}
         </div>
-      )}
-
-      {/* Modal de confirmação para sair/excluir o grupo */}
-      {selectedGrupo && (
-        <GrupoSairModal 
-          isOpen={showSairModal}
-          onClose={() => setShowSairModal(false)}
-          onLeaveGroup={() => {
-            handleLeaveGroup(selectedGrupo.id);
-            setShowSairModal(false);
-          }}
-          onDeleteGroup={() => {
-            handleLeaveGroup(selectedGrupo.id); // Mesma função por enquanto
-            setShowSairModal(false);
-          }}
-          groupName={selectedGrupo.nome}
-          isCreator={selectedGrupo.criador === "current_user_id"} // Substitua pelo ID do usuário atual
-        />
       )}
     </div>
   );
