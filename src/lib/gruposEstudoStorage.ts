@@ -449,9 +449,9 @@ export const sincronizarGruposLocais = async (userId: string): Promise<void> => 
 };
 
 export const removerGrupo = (grupoId: string) => {
-  const grupos = getGruposFromStorage();
+  const grupos = obterGruposLocal();
   const gruposAtualizados = grupos.filter(grupo => grupo.id !== grupoId);
-  saveGruposToStorage(gruposAtualizados);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(gruposAtualizados));
 
   // Adicionar o ID do grupo à lista de grupos removidos
   const gruposRemovidosKey = 'grupos_removidos';
@@ -483,41 +483,4 @@ export const filtrarGruposRemovidos = (grupos: any[]): any[] => {
   return grupos.filter(grupo => !gruposRemovidos.includes(grupo.id));
 };
 
-/**
- * Tenta sincronizar grupos locais com o banco de dados
- */
-export const sincronizarGruposLocais = async (userId: string): Promise<void> => {
-  try {
-    const gruposLocais = obterGruposLocal()
-      .filter(grupo =>
-        grupo.user_id === userId &&
-        grupo.id.startsWith('local_')
-      );
-
-    if (gruposLocais.length === 0) return;
-
-    console.log(`Tentando sincronizar ${gruposLocais.length} grupos locais`);
-
-    for (const grupo of gruposLocais) {
-      // Remover o ID local para que o Supabase gere um novo
-      const { id, ...dadosGrupo } = grupo;
-
-      // Tentar inserir no Supabase
-      const { error } = await supabase
-        .from('grupos_estudo')
-        .insert({
-          ...dadosGrupo,
-          codigo: grupo.codigo || gerarCodigoGrupo()
-        });
-
-      if (!error) {
-        console.log(`Grupo sincronizado com sucesso: ${grupo.nome}`);
-        // Remover do armazenamento local após sincronizar
-        const gruposAtualizados = obterGruposLocal().filter(g => g.id !== grupo.id);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(gruposAtualizados));
-      }
-    }
-  } catch (error) {
-    console.error('Erro ao sincronizar grupos locais:', error);
-  }
-};
+// Esta função foi removida pois estava duplicada
