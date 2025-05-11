@@ -43,9 +43,9 @@ const GrupoEstudoCard: React.FC<GrupoEstudoCardProps> = ({ grupo, onClick }) => 
     >
       {/* Botões de ação que aparecem no hover */}
       {isHovered && (
-        <div className="absolute right-3 top-3 flex items-center gap-2 z-10 bg-black/50 backdrop-blur-sm p-1 rounded-md">
+        <div className="absolute right-3 top-3 flex items-center gap-2 z-10">
           <button 
-            className="text-white/80 hover:text-red-400 transition-colors p-1 rounded-full hover:bg-white/10"
+            className="text-white/80 hover:text-[#FF6B00] transition-colors p-1 rounded-full"
             title="Sair do Grupo"
             onClick={(e) => {
               e.stopPropagation();
@@ -59,7 +59,7 @@ const GrupoEstudoCard: React.FC<GrupoEstudoCardProps> = ({ grupo, onClick }) => 
           </button>
 
           <button 
-            className="text-white/80 hover:text-blue-400 transition-colors p-1 rounded-full hover:bg-white/10"
+            className="text-white/80 hover:text-[#FF6B00] transition-colors p-1 rounded-full"
             title="Visualizar Grupo"
             onClick={(e) => {
               e.stopPropagation();
@@ -71,7 +71,7 @@ const GrupoEstudoCard: React.FC<GrupoEstudoCardProps> = ({ grupo, onClick }) => 
           </button>
 
           <button 
-            className="text-white/80 hover:text-yellow-400 transition-colors p-1 rounded-full hover:bg-white/10"
+            className="text-white/80 hover:text-[#FF6B00] transition-colors p-1 rounded-full"
             title="Configurações do Grupo"
             onClick={(e) => {
               e.stopPropagation();
