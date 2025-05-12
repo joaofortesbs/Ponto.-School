@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { X, Users, Plus, ArrowLeft } from "lucide-react";
+import { X, Users, Plus, ArrowLeft, Key } from "lucide-react";
 import CreateGroupForm from "./CreateGroupForm";
 import EntrarGrupoPorCodigoForm from "./EntrarGrupoPorCodigoForm";
 
@@ -46,8 +46,8 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
             >
               <div className="sticky top-0 z-10 flex justify-between items-center bg-[#0F172A] border-b border-[#1E293B] p-6">
                 <h2 className="text-2xl font-bold text-white flex items-center">
-                  <Users className="h-6 w-6 mr-3 text-[#FF6B00]" />
-                  Criar Grupo de Estudo
+                  <Key className="h-6 w-6 mr-3 text-[#FF6B00]" />
+                  Entrar em Grupo
                 </h2>
                 <Button
                   variant="ghost"
