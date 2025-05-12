@@ -131,10 +131,9 @@ const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className
             variant="outline"
             size="sm"
             className="text-gray-600 dark:text-gray-400 border-[#FF6B00]/10 dark:border-[#FF6B00]/20 h-9 interface-selector"
-            disabled
           >
             <span className="interface-selector-icon">
-              <UserPlus className="h-4 w-4" />
+              <Plus className="h-4 w-4" />
             </span>
             <span className="interface-selector-text">Adicionar</span>
           </Button>
