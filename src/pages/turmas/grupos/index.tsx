@@ -123,11 +123,19 @@ export default function GruposEstudo() {
   );
 
   const handleCreateGroup = (formData: any) => {
-    console.log("Novo grupo criado:", formData);
-    // Here you would typically save the new group to your database
-    // and then add it to the list of groups
+    console.log("Grupo criado com sucesso:", formData);
+
+    // Check if we need to show the código modal
+    if (formData.showAdicionarPorCodigo) {
+      if (formData.closeCurrentModal) {
+        setIsCreateModalOpen(false);
+      }
+      //setIsCodigoModalOpen(true);
+      return;
+    }
+
+    // Normal group creation logic
     setIsCreateModalOpen(false);
-    // Show success message or redirect to the new group page
   };
 
   const getActivityBadge = (level: string) => {
