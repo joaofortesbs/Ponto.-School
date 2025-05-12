@@ -530,8 +530,9 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
              {/* Compartilhar */}
             <TabsContent value="compartilhar" className="space-y-4 focus:outline-none">
               <CompartilharGrupoSection 
-                grupoCodigo={grupo?.codigo || `PONTO${Math.floor(Math.random() * 900 + 100)}`} 
+                grupoCodigo={grupo?.codigo || ""} 
                 grupoNome={grupo?.nome || ""} 
+                onGerarCodigo={handleGerarCodigo}
               />
               {!grupo?.codigo && (
                 <p className="text-amber-500 text-sm">

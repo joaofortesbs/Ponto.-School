@@ -91,7 +91,7 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
             </p>
           </div>
 
-          {!codigoGerado && (
+          {!grupoCodigo && (
             <div className="pt-2">
               <Button
                 onClick={handleGerarCodigo}
