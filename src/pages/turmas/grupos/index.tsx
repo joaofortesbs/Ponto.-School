@@ -126,18 +126,23 @@ export default function GruposEstudo() {
   );
 
   const handleCreateGroup = (formData: any) => {
-    console.log("Grupo criado com sucesso:", formData);
+    console.log("Dados do formulário:", formData);
 
     // Check if we need to show the código modal
     if (formData.showAdicionarPorCodigo) {
+      console.log("Abrindo modal para adicionar grupo por código");
       if (formData.closeCurrentModal) {
         setIsCreateModalOpen(false);
       }
-      setIsCodigoModalOpen(true);
+      // Pequeno timeout para garantir que o modal anterior seja fechado antes de abrir o novo
+      setTimeout(() => {
+        setIsCodigoModalOpen(true);
+      }, 100);
       return;
     }
 
     // Normal group creation logic
+    console.log("Grupo criado com sucesso:", formData);
     setIsCreateModalOpen(false);
   };
 

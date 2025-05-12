@@ -31,6 +31,7 @@ const AdicionarGrupoPorCodigoModal: React.FC<AdicionarGrupoPorCodigoModalProps> 
     }
     
     setIsLoading(true);
+    console.log("Processando código de grupo:", codigo);
     
     // Simulação de processamento
     setTimeout(() => {
@@ -41,6 +42,7 @@ const AdicionarGrupoPorCodigoModal: React.FC<AdicionarGrupoPorCodigoModalProps> 
       });
       
       // Fechar o modal após exibir a mensagem
+      console.log("Fechando modal de código após processamento");
       onClose();
     }, 1500);
   };

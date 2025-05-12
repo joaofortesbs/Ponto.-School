@@ -903,6 +903,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
                 variant="outline"
                 onClick={() => {
                   // Pass data to parent component to show the code entry modal
+                  console.log("Botão Adicionar Grupo clicado - fechando modal atual e solicitando abertura do modal de código");
                   onSubmit({showAdicionarPorCodigo: true, closeCurrentModal: true});
                   onClose(); // Garantir que este modal seja fechado
                 }}
