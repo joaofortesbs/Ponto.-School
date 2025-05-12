@@ -445,7 +445,7 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
               </div>
             </TabsContent>
 
-            {/* Compartilhar */}
+             {/* Compartilhar */}
             <TabsContent value="compartilhar" className="space-y-4 focus:outline-none">
               <CompartilharGrupoSection 
                 grupoCodigo={grupo?.codigo || `PONTO${Math.floor(Math.random() * 900 + 100)}`} 
@@ -456,6 +456,22 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
                   Aviso: Um código temporário foi gerado para este grupo. Alterações serão salvas na próxima atualização.
                 </p>
               )}
+              
+              <div className="mb-4">
+        <label className="block text-sm font-medium text-white/70 mb-1">
+          Código Único do Grupo
+        </label>
+        <div className="flex items-center">
+          <span className="inline-block bg-[#1E293B] text-white px-3 py-2 rounded-md font-mono text-sm tracking-wider uppercase font-bold">
+            {grupo?.codigo ? 
+              `${grupo.codigo.substring(0, 4)} ${grupo.codigo.substring(4)}` : 
+              "Sem código"}
+          </span>
+        </div>
+        <p className="text-xs text-gray-400 mt-1">
+          Este código é usado para convidar pessoas para o seu grupo. O código é insensível a maiúsculas e minúsculas.
+        </p>
+      </div>
             </TabsContent>
           </Tabs>
         </div>

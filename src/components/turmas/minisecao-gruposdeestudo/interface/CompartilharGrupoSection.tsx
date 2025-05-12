@@ -18,7 +18,8 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
   const [copiadoLink, setCopiadoLink] = useState(false);
 
   // Garantir que o código seja exibido mesmo se for null ou undefined
-  const codigoExibicao = grupoCodigo || "PONTO123";
+  // Usar o novo formato padrão se o código não existir
+  const codigoExibicao = grupoCodigo || "MJ2TG54";
 
   const mensagemPadrao = `Venha estudar comigo no grupo "${grupoNome}" na Ponto. School!\nUse o código: ${codigoExibicao}`;
 
@@ -29,7 +30,6 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
   };
 
   const handleCopiarLink = () => {
-    // Aqui poderia ser um link mais elaborado, mas por enquanto apenas o código
     navigator.clipboard.writeText(`https://ponto.school/entrar-grupo?codigo=${codigoExibicao}`);
     setCopiadoLink(true);
     setTimeout(() => setCopiadoLink(false), 2000);
@@ -46,6 +46,11 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
     window.open(`mailto:?subject=${subject}&body=${body}`, "_blank");
   };
 
+  // Formatar código para exibição com espaço no meio para melhor legibilidade
+  const codigoFormatado = codigoExibicao.length >= 4 
+    ? `${codigoExibicao.substring(0, 4)} ${codigoExibicao.substring(4)}`
+    : codigoExibicao;
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col space-y-2">
@@ -55,7 +60,7 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
         <div className="relative">
           <div className="bg-[#0F172A] border border-[#1E293B] rounded-md p-2 flex items-center justify-between">
             <span className="text-white font-mono text-xl tracking-wider uppercase font-bold">
-              {codigoExibicao}
+              {codigoFormatado}
             </span>
             <Button
               size="sm"

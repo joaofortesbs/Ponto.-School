@@ -24,7 +24,7 @@ export interface GrupoEstudo {
 
 // Caracteres permitidos para códigos de grupo (sem caracteres ambíguos como I, O, 0, 1)
 const CARACTERES_PERMITIDOS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-const COMPRIMENTO_CODIGO = 6; // Reduzido para 6 caracteres para melhor leitura
+const COMPRIMENTO_CODIGO = 7; // Código com 7 caracteres conforme a especificação
 
 /**
  * Gera uma string aleatória para ser usada como código de grupo
@@ -42,21 +42,27 @@ export const gerarStringAleatoria = (comprimento = COMPRIMENTO_CODIGO, caractere
 
 /**
  * Verifica se um código de grupo já existe no armazenamento
+ * Nota: Trata códigos como não sensíveis a maiúsculas/minúsculas
  */
 export const verificarSeCodigoExiste = async (codigo: string): Promise<boolean> => {
   try {
+    // Converter o código para maiúsculas para garantir consistência
+    const codigoMaiusculo = codigo.toUpperCase();
+    
     // Primeiro tentar verificar no Supabase
     const { data, error } = await supabase
       .from('grupos_estudo')
       .select('id')
-      .eq('codigo', codigo)
+      .eq('codigo', codigoMaiusculo)
       .single();
 
     if (error && error.code !== 'PGRST116') {
       console.error('Erro ao verificar código no Supabase:', error);
       // Se ocorrer um erro no Supabase, verificar localmente
       const gruposLocais = obterGruposLocal();
-      return gruposLocais.some(grupo => grupo.codigo === codigo);
+      return gruposLocais.some(grupo => 
+        grupo.codigo && grupo.codigo.toUpperCase() === codigoMaiusculo
+      );
     }
 
     return !!data;
@@ -64,7 +70,9 @@ export const verificarSeCodigoExiste = async (codigo: string): Promise<boolean> 
     console.error('Erro ao verificar código:', error);
     // Em caso de erro, verificar localmente
     const gruposLocais = obterGruposLocal();
-    return gruposLocais.some(grupo => grupo.codigo === codigo);
+    return gruposLocais.some(grupo => 
+      grupo.codigo && grupo.codigo.toUpperCase() === codigo.toUpperCase()
+    );
   }
 };
 
@@ -75,34 +83,30 @@ export const gerarCodigoUnicoGrupo = async (): Promise<string> => {
   let novoCodigoUnico = '';
   let existeNoSistema = true;
   let tentativas = 0;
-  const maxTentativas = 10; // Limite de tentativas para evitar loop infinito
+  const maxTentativas = 50; // Aumentado para lidar com mais tentativas possíveis
 
   try {
-    // Primeiro tenta gerar um código no formato PONTO seguido de 3 dígitos
-    novoCodigoUnico = `PONTO${Math.floor(Math.random() * 900) + 100}`;
-    existeNoSistema = await verificarSeCodigoExiste(novoCodigoUnico);
-    
-    // Se o código já existir, tenta com o formato padrão de string aleatória
-    if (existeNoSistema) {
-      while (existeNoSistema && tentativas < maxTentativas) {
-        novoCodigoUnico = gerarStringAleatoria();
-        console.log("Tentando código:", novoCodigoUnico);
-        existeNoSistema = await verificarSeCodigoExiste(novoCodigoUnico);
-        tentativas++;
-      }
+    // Tentar gerar um código aleatório único
+    while (existeNoSistema && tentativas < maxTentativas) {
+      novoCodigoUnico = gerarStringAleatoria();
+      console.log("Tentando código:", novoCodigoUnico);
+      existeNoSistema = await verificarSeCodigoExiste(novoCodigoUnico);
+      tentativas++;
+    }
 
-      if (tentativas >= maxTentativas) {
-        // Se atingir o limite de tentativas, adicionar um timestamp para garantir unicidade
-        novoCodigoUnico = `PONTO${Math.floor(Math.random() * 900) + 100}`;
-        console.log("Usando código PONTO após máximo de tentativas:", novoCodigoUnico);
-      }
+    if (tentativas >= maxTentativas) {
+      // Se atingir o limite de tentativas, adicionar um timestamp para garantir unicidade
+      const timestampBase36 = Date.now().toString(36).toUpperCase().substring(0, 4);
+      novoCodigoUnico = gerarStringAleatoria(3) + timestampBase36;
+      console.log("Usando código com timestamp após máximo de tentativas:", novoCodigoUnico);
     }
 
     return novoCodigoUnico;
   } catch (error) {
     console.error("Erro ao gerar código único:", error);
-    // Em caso de erro, retornar um código no formato PONTO seguido de 3 dígitos
-    const codigoEmergencia = `PONTO${Math.floor(Math.random() * 900) + 100}`;
+    // Em caso de erro, retornar um código que combina uma string aleatória com timestamp
+    const timestampBase36 = Date.now().toString(36).toUpperCase().substring(0, 4);
+    const codigoEmergencia = gerarStringAleatoria(3) + timestampBase36;
     console.log("Usando código de emergência:", codigoEmergencia);
     return codigoEmergencia;
   }
