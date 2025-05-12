@@ -899,6 +899,14 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
                 Cancelar
               </Button>
               <Button
+                type="button"
+                variant="outline"
+                disabled={true}
+                className="border-[#1E293B] text-white hover:bg-[#1E293B] hover:text-white opacity-50 cursor-not-allowed"
+              >
+                Adicionar Grupo
+              </Button>
+              <Button
                 type="submit"
                 className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
               >
