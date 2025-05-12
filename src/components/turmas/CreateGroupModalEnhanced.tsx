@@ -902,8 +902,8 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
                 type="button"
                 variant="outline"
                 onClick={() => {
-                  onClose();
-                  // Notificar o componente pai para mostrar o modal de adicionar por código
+                  // Apenas notificar o componente pai para mostrar o modal de adicionar por código
+                  // sem fechar o modal atual primeiro, para evitar mensagens temporárias
                   onSubmit({ showAdicionarPorCodigo: true });
                 }}
                 className="border-[#1E293B] text-white hover:bg-[#1E293B] hover:text-white"

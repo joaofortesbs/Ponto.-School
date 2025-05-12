@@ -157,7 +157,10 @@ export default function GruposEstudo() {
         
         // Verificar se é solicitação para abrir o modal de adicionar por código
         if (formData && formData.showAdicionarPorCodigo) {
-            setIsAdicionarPorCodigoModalOpen(true);
+            setIsCreateModalOpen(false); // Fechar o modal de criação primeiro
+            setTimeout(() => {
+                setIsAdicionarPorCodigoModalOpen(true); // Abrir o modal de adicionar por código
+            }, 100); // Pequeno atraso para garantir que o primeiro modal foi fechado
             return;
         }
         
