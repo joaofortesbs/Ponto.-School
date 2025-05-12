@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { X, Users, Key, Plus } from "lucide-react";
 import CreateGroupForm from "./CreateGroupForm";
 import EntrarGrupoPorCodigoForm from "./EntrarGrupoPorCodigoForm";
+import CreateGroupModalEnhanced from "./CreateGroupModalEnhanced";
 
 interface CreateGroupModalProps {
   isOpen: boolean;
@@ -30,6 +31,20 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
     }
   }, [isOpen]);
 
+  // Renderizar o modal aprimorado quando a view for 'createGroup'
+  if (view === 'createGroup') {
+    return (
+      <CreateGroupModalEnhanced 
+        isOpen={isOpen} 
+        onClose={() => {
+          handleBackToInitial();
+          onClose();
+        }}
+        onSubmit={onSubmit} 
+      />
+    );
+  }
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -45,12 +60,10 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
               <div>
                 <h2 className="text-2xl font-bold text-white flex items-center">
                   <Users className="h-6 w-6 mr-3 text-[#FF6B00]" />
-                  {view === 'initial' ? 'Novo Grupo de Estudo' : 'Criar Grupo de Estudo'}
+                  Novo Grupo de Estudo
                 </h2>
                 <p className="text-white/70 text-sm mt-1">
-                  {view === 'initial' 
-                    ? 'Você pode entrar em um grupo existente usando um código ou criar um novo grupo.'
-                    : 'Preencha os detalhes do seu novo grupo. Você poderá editá-los posteriormente.'}
+                  Você pode entrar em um grupo existente usando um código ou criar um novo grupo.
                 </p>
               </div>
               <Button
@@ -64,31 +77,25 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
             </div>
 
             <div className="p-6">
-              {view === 'initial' ? (
-                <div className="space-y-6">
-                  <EntrarGrupoPorCodigoForm />
-                  
-                  <div className="relative my-8">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-[#1E293B]"></div>
-                    </div>
-                    <div className="relative flex justify-center text-xs">
-                      <span className="bg-[#0F172A] px-2 text-white/60">ou</span>
-                    </div>
+              <div className="space-y-6">
+                <EntrarGrupoPorCodigoForm />
+                
+                <div className="relative my-8">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-[#1E293B]"></div>
                   </div>
-                  
-                  <Button 
-                    onClick={() => setView('createGroup')}
-                    className="w-full bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white py-6"
-                  >
-                    <Plus className="h-5 w-5 mr-2" /> Criar Novo Grupo
-                  </Button>
+                  <div className="relative flex justify-center text-xs">
+                    <span className="bg-[#0F172A] px-2 text-white/60">ou</span>
+                  </div>
                 </div>
-              ) : (
-                <div>
-                  <CreateGroupForm onSubmit={onSubmit} onCancel={handleBackToInitial} />
-                </div>
-              )}
+                
+                <Button 
+                  onClick={() => setView('createGroup')}
+                  className="w-full bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white py-6"
+                >
+                  <Plus className="h-5 w-5 mr-2" /> Criar Novo Grupo
+                </Button>
+              </div>
             </div>
           </motion.div>
         </div>
