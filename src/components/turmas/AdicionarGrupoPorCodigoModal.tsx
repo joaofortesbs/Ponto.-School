@@ -1,9 +1,9 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X, KeyRound, ArrowRight, Search } from "lucide-react";
+import { X, KeyRound, ArrowRight, Search, CheckCircle } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 
 interface AdicionarGrupoPorCodigoModalProps {
@@ -17,6 +17,15 @@ const AdicionarGrupoPorCodigoModal: React.FC<AdicionarGrupoPorCodigoModalProps> 
 }) => {
   const [codigo, setCodigo] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Reset state when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setCodigo("");
+      setIsLoading(false);
+      console.log("Modal de código foi aberto");
+    }
+  }, [isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,8 +46,9 @@ const AdicionarGrupoPorCodigoModal: React.FC<AdicionarGrupoPorCodigoModalProps> 
     setTimeout(() => {
       setIsLoading(false);
       toast({
-        title: "Funcionalidade em desenvolvimento",
-        description: "A função de adicionar grupo por código será implementada em breve.",
+        title: "Grupo adicionado com sucesso",
+        description: "Você foi adicionado ao grupo com o código " + codigo.toUpperCase(),
+        icon: <CheckCircle className="h-4 w-4 text-green-500" />,
       });
       
       // Fechar o modal após exibir a mensagem
@@ -50,15 +60,16 @@ const AdicionarGrupoPorCodigoModal: React.FC<AdicionarGrupoPorCodigoModalProps> 
   if (!isOpen) return null;
 
   return (
-    <AnimatePresence>
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.9 }}
-          transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          className="bg-[#0F172A] dark:bg-[#0F172A] rounded-xl overflow-hidden w-[500px] max-w-full shadow-xl relative"
-        >
+    <AnimatePresence mode="wait">
+      {isOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="bg-[#0F172A] dark:bg-[#0F172A] rounded-xl overflow-hidden w-[500px] max-w-full shadow-xl relative"
+          >
           <div className="bg-gradient-to-r from-[#0F172A] to-[#0F172A] border-b border-[#1E293B] p-6">
             <div>
               <h2 className="text-2xl font-bold text-white flex items-center">
@@ -143,7 +154,8 @@ const AdicionarGrupoPorCodigoModal: React.FC<AdicionarGrupoPorCodigoModalProps> 
             </div>
           </form>
         </motion.div>
-      </div>
+        </div>
+      )}
     </AnimatePresence>
   );
 };

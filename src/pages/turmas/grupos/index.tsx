@@ -131,13 +131,17 @@ export default function GruposEstudo() {
     // Check if we need to show the código modal
     if (formData.showAdicionarPorCodigo) {
       console.log("Abrindo modal para adicionar grupo por código");
+      
       if (formData.closeCurrentModal) {
         setIsCreateModalOpen(false);
       }
-      // Pequeno timeout para garantir que o modal anterior seja fechado antes de abrir o novo
+      
+      // Aumentar timeout para garantir que o modal anterior seja completamente fechado
+      // antes de abrir o novo, evitando problemas de animação
       setTimeout(() => {
+        console.log("Abrindo modal de código após timeout");
         setIsCodigoModalOpen(true);
-      }, 100);
+      }, 200);
       return;
     }
 

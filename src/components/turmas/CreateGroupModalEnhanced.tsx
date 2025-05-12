@@ -905,7 +905,10 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
                   // Pass data to parent component to show the code entry modal
                   console.log("Botão Adicionar Grupo clicado - fechando modal atual e solicitando abertura do modal de código");
                   onSubmit({showAdicionarPorCodigo: true, closeCurrentModal: true});
-                  onClose(); // Garantir que este modal seja fechado
+                  // Pequeno timeout para garantir que a animação do modal atual comece antes de abrir o próximo
+                  setTimeout(() => {
+                    onClose(); // Garantir que este modal seja fechado
+                  }, 50);
                 }}
                 className="border-[#1E293B] text-white hover:bg-[#1E293B] hover:text-white"
               >
