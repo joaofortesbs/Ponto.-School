@@ -377,7 +377,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <Fragment>
+    <>
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
@@ -1070,7 +1070,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
           </form>
         </motion.div>
       </div>
-    </Fragment>
+    </>
   );
 };
 
