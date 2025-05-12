@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState, useEffect, Fragment } from "react";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { 
   X, Users, Plus, Key, BookOpen, Calendar, Clock, 
@@ -377,7 +377,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <React.Fragment>
+    <Fragment>
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
@@ -1070,7 +1070,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
           </form>
         </motion.div>
       </div>
-    </React.Fragment>
+    </Fragment>
   );
 };
 
