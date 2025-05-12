@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { X, Users, Key, Plus } from "lucide-react";
+import { X, Users, Key, Plus, ArrowLeft } from "lucide-react";
 import CreateGroupForm from "./CreateGroupForm";
 import EntrarGrupoPorCodigoForm from "./EntrarGrupoPorCodigoForm";
 import CreateGroupModalEnhanced from "./CreateGroupModalEnhanced";

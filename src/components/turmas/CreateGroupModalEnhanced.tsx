@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { 
   X, Users, Plus, Key, BookOpen, Calendar, Clock, 
   Search, Upload, Info, Settings, UserPlus, BookmarkIcon,
-  Sparkles, Check
+  Sparkles, Check, ArrowLeft
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -338,20 +338,31 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
             <div>
               <h2 className="text-2xl font-bold text-white flex items-center">
                 <Users className="h-6 w-6 mr-3 text-[#FF6B00]" />
-                Novo Grupo de Estudo
+                Criar Grupo de Estudo
               </h2>
               <p className="text-white/70 text-sm mt-1">
                 Preencha os detalhes do seu novo grupo. Você poderá editá-los posteriormente.
               </p>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-4 right-4 h-9 w-9 rounded-full text-white/80 hover:text-white hover:bg-white/20"
-              onClick={onClose}
-            >
-              <X className="h-5 w-5" />
-            </Button>
+            <div className="absolute top-4 right-4 flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-9 rounded-full text-white/80 hover:text-white hover:bg-white/20 flex items-center gap-1"
+                onClick={onClose}
+              >
+                <ArrowLeft className="h-4 w-4" />
+                <span>Voltar</span>
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 rounded-full text-white/80 hover:text-white hover:bg-white/20"
+                onClick={onClose}
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
 
           <form onSubmit={handleSubmit} className="p-6">
@@ -889,14 +900,15 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
               </div>
             )}
 
-            <div className="flex justify-end gap-3 mt-6">
+            <div className="flex justify-between gap-3 mt-6">
               <Button
                 type="button"
                 variant="outline"
                 onClick={onClose}
-                className="border-[#1E293B] text-white hover:bg-[#1E293B] hover:text-white"
+                className="border-[#1E293B] text-white hover:bg-[#1E293B] hover:text-white flex items-center"
               >
-                Cancelar
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Voltar
               </Button>
               <Button
                 type="submit"
