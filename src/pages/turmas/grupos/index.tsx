@@ -15,12 +15,10 @@ import {
   Star,
 } from "lucide-react";
 import CreateGroupModal from "@/components/turmas/CreateGroupModal";
-import AdicionarGrupoPorCodigoModal from "@/components/turmas/AdicionarGrupoPorCodigoModal";
 
 export default function GruposEstudo() {
   const navigate = useNavigate();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isAdicionarPorCodigoModalOpen, setIsAdicionarPorCodigoModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("meus-grupos");
 
@@ -124,6 +122,14 @@ export default function GruposEstudo() {
       group.course.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
+  const handleCreateGroup = (formData: any) => {
+    console.log("Novo grupo criado:", formData);
+    // Here you would typically save the new group to your database
+    // and then add it to the list of groups
+    setIsCreateModalOpen(false);
+    // Show success message or redirect to the new group page
+  };
+
   const getActivityBadge = (level: string) => {
     switch (level) {
       case "alta":
@@ -146,50 +152,6 @@ export default function GruposEstudo() {
         );
     }
   };
-
-  const handleAdicionarGrupoClick = () => {
-        setIsCreateModalOpen(false);
-        setTimeout(() => {
-            setIsAdicionarPorCodigoModalOpen(true);
-        }, 300); // Aumento do delay para garantir que o primeiro modal foi completamente fechado
-    };
-
-    const handleCreateGroup = (formData: any) => {
-        console.log("Novo grupo criado ou ação solicitada:", formData);
-        
-        // Verificar se é solicitação para abrir o modal de adicionar por código
-        if (formData && formData.showAdicionarPorCodigo) {
-            setIsCreateModalOpen(false); // Fechar o modal de criação primeiro
-            setTimeout(() => {
-                setIsAdicionarPorCodigoModalOpen(true); // Abrir o modal de adicionar por código
-            }, 300); // Aumento do delay para garantir que o primeiro modal foi completamente fechado
-            return;
-        }
-        
-        // Aqui você normalmente salvaria o novo grupo no banco de dados
-        setIsCreateModalOpen(false);
-        // Mostrar mensagem de sucesso ou redirecionar para a página do novo grupo
-    };
-    
-    const handleAdicionarGrupoPorCodigo = (grupoId: string) => {
-        console.log("Grupo adicionado com sucesso, ID:", grupoId);
-        setIsAdicionarPorCodigoModalOpen(false);
-        
-        // Mostrar feedback visual para o usuário
-        const successElement = document.createElement('div');
-        successElement.className = 'fixed top-4 right-4 bg-green-500 text-white p-4 rounded-lg z-50 shadow-lg';
-        successElement.innerHTML = '<div class="flex items-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>Grupo adicionado com sucesso!</div>';
-        document.body.appendChild(successElement);
-        
-        // Remover o elemento após 3 segundos
-        setTimeout(() => {
-            if (document.body.contains(successElement)) {
-                document.body.removeChild(successElement);
-            }
-        }, 3000);
-        
-        // Opcionalmente, redirecionar para o grupo ou atualizar a lista de grupos
-    };
 
   return (
     <div className="container mx-auto p-4 max-w-7xl">
@@ -544,17 +506,10 @@ export default function GruposEstudo() {
         </TabsContent>
       </Tabs>
 
-      <CreateGroupModalEnhanced
+      <CreateGroupModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onSubmit={handleCreateGroup}
-      />
-
-      {/* Modal para adicionar grupo por código */}
-      <AdicionarGrupoPorCodigoModal
-        isOpen={isAdicionarPorCodigoModalOpen}
-        onClose={() => setIsAdicionarPorCodigoModalOpen(false)}
-        onSuccess={handleAdicionarGrupoPorCodigo}
       />
     </div>
   );
