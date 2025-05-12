@@ -76,6 +76,8 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [convidadosInfo, setConvidadosInfo] = useState<any[]>([]);
+  const [showCodeEntry, setShowCodeEntry] = useState(false);
+  const [groupCode, setGroupCode] = useState("");
 
   // Filtrar usuários baseado no termo de busca
   const filteredUsuarios = usuariosDisponiveis.filter(usuario => 
@@ -139,6 +141,50 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
       // Criar URL para previsualização
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
+    }
+  };
+
+  const handleShowCodeEntry = () => {
+    setShowCodeEntry(true);
+  };
+
+  const handleJoinGroupByCode = async () => {
+    if (!groupCode.trim()) {
+      alert("Por favor, insira o código do grupo");
+      return;
+    }
+
+    try {
+      // Obter a sessão do usuário atual
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session) {
+        alert("Você precisa estar logado para entrar em um grupo de estudo.");
+        return;
+      }
+
+      // Verificar se o grupo existe
+      const { data: grupoExistente, error: errorBusca } = await supabase
+        .from('grupos_estudo')
+        .select('*')
+        .eq('codigo', groupCode.toUpperCase())
+        .single();
+
+      if (errorBusca || !grupoExistente) {
+        alert("Código de grupo inválido ou grupo não encontrado.");
+        return;
+      }
+
+      // Aqui você implementaria a lógica para adicionar o usuário ao grupo
+
+      // Notificar sobre o sucesso
+      alert(`Você foi adicionado ao grupo: ${grupoExistente.nome}`);
+      
+      // Fechar o modal
+      onClose();
+    } catch (error) {
+      console.error("Erro ao entrar no grupo:", error);
+      alert("Ocorreu um erro ao tentar entrar no grupo. Tente novamente mais tarde.");
     }
   };
 
@@ -310,6 +356,8 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
       setPreviewUrl(null);
       setConvidadosInfo([]);
       setActiveTab("informacoes");
+      setShowCodeEntry(false);
+      setGroupCode("");
     }
   }, [isOpen]);
 
@@ -341,7 +389,9 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
                 Novo Grupo de Estudo
               </h2>
               <p className="text-white/70 text-sm mt-1">
-                Preencha os detalhes do seu novo grupo. Você poderá editá-los posteriormente.
+                {showCodeEntry 
+                  ? "Digite o código único do grupo que deseja participar" 
+                  : "Preencha os detalhes do seu novo grupo. Você poderá editá-los posteriormente."}
               </p>
             </div>
             <Button
@@ -354,567 +404,623 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
             </Button>
           </div>
 
-          <form onSubmit={handleSubmit} className="p-6">
-            <TabsList className="grid grid-cols-4 gap-2 mb-6 bg-transparent">
-              <TabsTrigger 
-                value="informacoes" 
-                onClick={() => setActiveTab("informacoes")}
-                className={`${activeTab === "informacoes" ? "bg-[#FF6B00]/20 text-[#FF6B00] border-[#FF6B00]" : "bg-[#1E293B] text-white/70 border-[#1E293B]"} border px-3 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-[#1E293B]/80 transition-colors`}
-              >
-                <Info className="h-4 w-4" />
-                <span>Informações Básicas</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="configuracoes" 
-                onClick={() => setActiveTab("configuracoes")}
-                className={`${activeTab === "configuracoes" ? "bg-[#FF6B00]/20 text-[#FF6B00] border-[#FF6B00]" : "bg-[#1E293B] text-white/70 border-[#1E293B]"} border px-3 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-[#1E293B]/80 transition-colors`}
-              >
-                <Settings className="h-4 w-4" />
-                <span>Configurações</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="participantes" 
-                onClick={() => setActiveTab("participantes")}
-                className={`${activeTab === "participantes" ? "bg-[#FF6B00]/20 text-[#FF6B00] border-[#FF6B00]" : "bg-[#1E293B] text-white/70 border-[#1E293B]"} border px-3 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-[#1E293B]/80 transition-colors`}
-              >
-                <UserPlus className="h-4 w-4" />
-                <span>Participantes</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="imagem" 
-                onClick={() => setActiveTab("imagem")}
-                className={`${activeTab === "imagem" ? "bg-[#FF6B00]/20 text-[#FF6B00] border-[#FF6B00]" : "bg-[#1E293B] text-white/70 border-[#1E293B]"} border px-3 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-[#1E293B]/80 transition-colors`}
-              >
-                <Upload className="h-4 w-4" />
-                <span>Imagem do Grupo</span>
-              </TabsTrigger>
-            </TabsList>
-
-            {activeTab === "informacoes" && (
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="nome" className="block text-sm font-medium text-white/70 mb-1 flex items-center">
-                    Nome do Grupo <span className="text-[#FF6B00] ml-1">*</span>
-                  </label>
-                  <Input
-                    id="nome"
-                    name="nome"
-                    value={formData.nome}
-                    onChange={handleInputChange}
-                    placeholder="Ex: Grupo de Estudos de Cálculo"
-                    required
-                    className="w-full border-[#1E293B] bg-[#0F172A] text-white placeholder:text-gray-500 focus:border-[#FF6B00]"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="disciplina" className="block text-sm font-medium text-white/70 mb-1 flex items-center">
-                      Disciplina/Área <span className="text-[#FF6B00] ml-1">*</span>
-                    </label>
-                    <Input
-                      id="disciplina"
-                      name="disciplina"
-                      value={formData.disciplina}
-                      onChange={handleInputChange}
-                      placeholder="Ex: Matemática"
-                      required
-                      className="w-full border-[#1E293B] bg-[#0F172A] text-white placeholder:text-gray-500 focus:border-[#FF6B00]"
-                    />
+          {showCodeEntry ? (
+            <div className="p-6">
+              <div className="bg-[#1E293B]/50 rounded-lg p-6 border border-[#1E293B] mb-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="bg-[#FF6B00]/20 p-3 rounded-full">
+                    <Key className="h-6 w-6 text-[#FF6B00]" />
                   </div>
                   <div>
-                    <label htmlFor="topico" className="block text-sm font-medium text-white/70 mb-1">
-                      Tópico Específico
-                    </label>
-                    <Input
-                      id="topico"
-                      name="topico"
-                      value={formData.topico}
-                      onChange={handleInputChange}
-                      placeholder="Ex: Álgebra Linear"
-                      className="w-full border-[#1E293B] bg-[#0F172A] text-white placeholder:text-gray-500 focus:border-[#FF6B00]"
-                    />
+                    <h3 className="text-lg font-semibold text-white">Adicionar Grupo por Código</h3>
+                    <p className="text-sm text-gray-400">
+                      Digite o código único do grupo que você deseja participar
+                    </p>
                   </div>
                 </div>
 
-                <div>
-                  <label htmlFor="tags" className="block text-sm font-medium text-white/70 mb-1">
-                    Tags (separadas por vírgula)
-                  </label>
-                  <Input
-                    id="tags"
-                    name="tags"
-                    value={formData.tags}
-                    onChange={handleInputChange}
-                    placeholder="Ex: cálculo, matemática, integrais"
-                    className="w-full border-[#1E293B] bg-[#0F172A] text-white placeholder:text-gray-500 focus:border-[#FF6B00]"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="descricao" className="block text-sm font-medium text-white/70 mb-1">
-                    Descrição do Grupo
-                  </label>
-                  <Textarea
-                    id="descricao"
-                    name="descricao"
-                    value={formData.descricao}
-                    onChange={handleInputChange}
-                    placeholder="Descreva o objetivo do grupo, temas de estudo, etc..."
-                    className="min-h-[100px] border-[#1E293B] bg-[#0F172A] text-white placeholder:text-gray-500 focus:border-[#FF6B00]"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="objetivos" className="block text-sm font-medium text-white/70 mb-1">
-                    Objetivos do Grupo
-                  </label>
-                  <Textarea
-                    id="objetivos"
-                    name="objetivos"
-                    value={formData.objetivos}
-                    onChange={handleInputChange}
-                    placeholder="Quais são os principais objetivos deste grupo de estudos?"
-                    className="min-h-[100px] border-[#1E293B] bg-[#0F172A] text-white placeholder:text-gray-500 focus:border-[#FF6B00]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-white/70 mb-2">
-                    Atividades Sugeridas
-                  </label>
-                  <div className="grid grid-cols-2 gap-3">
-                    {atividadesSugeridas.map((atividade) => (
-                      <div key={atividade.id} className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          id={`atividade-${atividade.id}`}
-                          checked={formData.atividades.includes(atividade.id)}
-                          onChange={() => handleAtividadeToggle(atividade.id)}
-                          className="h-4 w-4 rounded border-[#1E293B] text-[#FF6B00] bg-[#0F172A] focus:ring-[#FF6B00]"
-                        />
-                        <label 
-                          htmlFor={`atividade-${atividade.id}`} 
-                          className="text-white flex items-center gap-2 cursor-pointer"
-                        >
-                          {atividade.icon}
-                          <span>{atividade.nome}</span>
-                        </label>
-                      </div>
-                    ))}
+                <div className="space-y-4">
+                  <div>
+                    <label htmlFor="grupoCodigo" className="block text-sm font-medium text-white/70 mb-2">
+                      Código do Grupo <span className="text-[#FF6B00]">*</span>
+                    </label>
+                    <Input
+                      id="grupoCodigo"
+                      value={groupCode}
+                      onChange={(e) => setGroupCode(e.target.value.toUpperCase())}
+                      placeholder="Ex: ABC1234"
+                      className="w-full border-[#1E293B] bg-[#0F172A] text-white placeholder:text-gray-500 focus:border-[#FF6B00] uppercase tracking-wider text-center text-lg font-mono"
+                      maxLength={7}
+                    />
+                    <p className="text-xs text-gray-500 mt-2">
+                      O código do grupo é um identificador único de 7 caracteres fornecido pelo criador do grupo.
+                    </p>
                   </div>
                 </div>
               </div>
-            )}
 
-            {activeTab === "configuracoes" && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+              <div className="flex justify-end gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowCodeEntry(false)}
+                  className="border-[#1E293B] text-white hover:bg-[#1E293B] hover:text-white"
+                >
+                  Voltar
+                </Button>
+                <Button
+                  type="button"
+                  className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
+                  onClick={handleJoinGroupByCode}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Entrar no Grupo
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="p-6">
+              <TabsList className="grid grid-cols-4 gap-2 mb-6 bg-transparent">
+                <TabsTrigger 
+                  value="informacoes" 
+                  onClick={() => setActiveTab("informacoes")}
+                  className={`${activeTab === "informacoes" ? "bg-[#FF6B00]/20 text-[#FF6B00] border-[#FF6B00]" : "bg-[#1E293B] text-white/70 border-[#1E293B]"} border px-3 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-[#1E293B]/80 transition-colors`}
+                >
+                  <Info className="h-4 w-4" />
+                  <span>Informações Básicas</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="configuracoes" 
+                  onClick={() => setActiveTab("configuracoes")}
+                  className={`${activeTab === "configuracoes" ? "bg-[#FF6B00]/20 text-[#FF6B00] border-[#FF6B00]" : "bg-[#1E293B] text-white/70 border-[#1E293B]"} border px-3 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-[#1E293B]/80 transition-colors`}
+                >
+                  <Settings className="h-4 w-4" />
+                  <span>Configurações</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="participantes" 
+                  onClick={() => setActiveTab("participantes")}
+                  className={`${activeTab === "participantes" ? "bg-[#FF6B00]/20 text-[#FF6B00] border-[#FF6B00]" : "bg-[#1E293B] text-white/70 border-[#1E293B]"} border px-3 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-[#1E293B]/80 transition-colors`}
+                >
+                  <UserPlus className="h-4 w-4" />
+                  <span>Participantes</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="imagem" 
+                  onClick={() => setActiveTab("imagem")}
+                  className={`${activeTab === "imagem" ? "bg-[#FF6B00]/20 text-[#FF6B00] border-[#FF6B00]" : "bg-[#1E293B] text-white/70 border-[#1E293B]"} border px-3 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-[#1E293B]/80 transition-colors`}
+                >
+                  <Upload className="h-4 w-4" />
+                  <span>Imagem do Grupo</span>
+                </TabsTrigger>
+              </TabsList>
+
+              {activeTab === "informacoes" && (
+                <div className="space-y-4">
                   <div>
-                    <label htmlFor="dataInicio" className="block text-sm font-medium text-white/70 mb-1 flex items-center">
-                      Data de Início <span className="text-[#FF6B00] ml-1">*</span>
+                    <label htmlFor="nome" className="block text-sm font-medium text-white/70 mb-1 flex items-center">
+                      Nome do Grupo <span className="text-[#FF6B00] ml-1">*</span>
                     </label>
                     <Input
-                      id="dataInicio"
-                      name="dataInicio"
-                      type="date"
-                      value={formData.dataInicio}
+                      id="nome"
+                      name="nome"
+                      value={formData.nome}
                       onChange={handleInputChange}
+                      placeholder="Ex: Grupo de Estudos de Cálculo"
                       required
                       className="w-full border-[#1E293B] bg-[#0F172A] text-white placeholder:text-gray-500 focus:border-[#FF6B00]"
                     />
                   </div>
-                  <div>
-                    <label htmlFor="nivelDificuldade" className="block text-sm font-medium text-white/70 mb-1">
-                      Nível de Dificuldade
-                    </label>
-                    <Select 
-                      value={formData.nivelDificuldade} 
-                      onValueChange={(value) => handleSelectChange("nivelDificuldade", value)}
-                    >
-                      <SelectTrigger className="w-full border-[#1E293B] bg-[#0F172A] text-white">
-                        <SelectValue placeholder="Selecione a dificuldade" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-[#1E293B] text-white border-[#1E293B]">
-                        <SelectItem value="Iniciante">Iniciante</SelectItem>
-                        <SelectItem value="Intermediário">Intermediário</SelectItem>
-                        <SelectItem value="Avançado">Avançado</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
 
-                <div className="grid grid-cols-1 gap-4">
-                  <div>
-                    <label htmlFor="frequencia" className="block text-sm font-medium text-white/70 mb-1">
-                      Frequência de Encontros
-                    </label>
-                    <Select 
-                      value={formData.frequencia} 
-                      onValueChange={(value) => handleSelectChange("frequencia", value)}
-                    >
-                      <SelectTrigger className="w-full border-[#1E293B] bg-[#0F172A] text-white">
-                        <SelectValue placeholder="Selecione a frequência" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-[#1E293B] text-white border-[#1E293B]">
-                        <SelectItem value="Diário">Diário</SelectItem>
-                        <SelectItem value="Semanal">Semanal</SelectItem>
-                        <SelectItem value="Quinzenal">Quinzenal</SelectItem>
-                        <SelectItem value="Mensal">Mensal</SelectItem>
-                        <SelectItem value="Flexível">Flexível</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div>
-                  <label htmlFor="horarios" className="block text-sm font-medium text-white/70 mb-1">
-                    Horários dos Encontros
-                  </label>
-                  <Input
-                    id="horarios"
-                    name="horarios"
-                    value={formData.horarios}
-                    onChange={handleInputChange}
-                    placeholder="Ex: Segundas, 18:00 - 19:30"
-                    className="w-full border-[#1E293B] bg-[#0F172A] text-white placeholder:text-gray-500 focus:border-[#FF6B00]"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="privacidade" className="block text-sm font-medium text-white/70 mb-1 flex items-center">
-                      Privacidade do Grupo <span className="text-[#FF6B00] ml-1">*</span>
-                    </label>
-                    <Select 
-                      value={formData.privacidade} 
-                      onValueChange={(value) => handleSelectChange("privacidade", value)}
-                    >
-                      <SelectTrigger className="w-full border-[#1E293B] bg-[#0F172A] text-white">
-                        <SelectValue placeholder="Selecione a privacidade" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-[#1E293B] text-white border-[#1E293B]">
-                        <SelectItem value="Público (qualquer um pode ver e solicitar participação)">Público (qualquer um pode ver e solicitar participação)</SelectItem>
-                        <SelectItem value="Restrito (visível, mas requer aprovação)">Restrito (visível, mas requer aprovação)</SelectItem>
-                        <SelectItem value="Privado (apenas por convite)">Privado (apenas por convite)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <label htmlFor="maxMembros" className="block text-sm font-medium text-white/70 mb-1">
-                      Número Máximo de Membros
-                    </label>
-                    <Select 
-                      value={formData.maxMembros} 
-                      onValueChange={(value) => handleSelectChange("maxMembros", value)}
-                    >
-                      <SelectTrigger className="w-full border-[#1E293B] bg-[#0F172A] text-white">
-                        <SelectValue placeholder="Selecione o limite" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-[#1E293B] text-white border-[#1E293B]">
-                        <SelectItem value="5 membros">5 membros</SelectItem>
-                        <SelectItem value="10 membros">10 membros</SelectItem>
-                        <SelectItem value="15 membros">15 membros</SelectItem>
-                        <SelectItem value="20 membros">20 membros</SelectItem>
-                        <SelectItem value="30 membros">30 membros</SelectItem>
-                        <SelectItem value="50 membros">50 membros</SelectItem>
-                        <SelectItem value="Ilimitado">Ilimitado</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between p-4 bg-[#1E293B]/50 rounded-lg border border-[#1E293B]">
-                  <div className="flex items-center gap-2">
-                    <div className="text-[#FF6B00]">
-                      <Sparkles className="h-5 w-5" />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="disciplina" className="block text-sm font-medium text-white/70 mb-1 flex items-center">
+                        Disciplina/Área <span className="text-[#FF6B00] ml-1">*</span>
+                      </label>
+                      <Input
+                        id="disciplina"
+                        name="disciplina"
+                        value={formData.disciplina}
+                        onChange={handleInputChange}
+                        placeholder="Ex: Matemática"
+                        required
+                        className="w-full border-[#1E293B] bg-[#0F172A] text-white placeholder:text-gray-500 focus:border-[#FF6B00]"
+                      />
                     </div>
                     <div>
-                      <h4 className="text-sm font-medium text-white">
-                        Permitir sugestões do Mentor IA
-                      </h4>
-                      <p className="text-xs text-gray-400">
-                        O Mentor IA pode sugerir materiais e atividades para o grupo
-                      </p>
+                      <label htmlFor="topico" className="block text-sm font-medium text-white/70 mb-1">
+                        Tópico Específico
+                      </label>
+                      <Input
+                        id="topico"
+                        name="topico"
+                        value={formData.topico}
+                        onChange={handleInputChange}
+                        placeholder="Ex: Álgebra Linear"
+                        className="w-full border-[#1E293B] bg-[#0F172A] text-white placeholder:text-gray-500 focus:border-[#FF6B00]"
+                      />
                     </div>
                   </div>
-                  <Switch
-                    checked={formData.permitirMentorIA}
-                    onCheckedChange={(checked) => 
-                      setFormData(prev => ({ ...prev, permitirMentorIA: checked }))
-                    }
-                    className="data-[state=checked]:bg-[#FF6B00]"
-                  />
-                </div>
-              </div>
-            )}
 
-            {activeTab === "participantes" && (
-              <div className="space-y-5">
-                <div className="bg-[#1E293B]/50 rounded-lg p-4 border border-[#1E293B]">
-                  <div className="flex items-center gap-2 mb-2">
-                    <UserPlus className="h-5 w-5 text-[#FF6B00]" />
-                    <h3 className="text-base font-medium text-white">
-                      Convidar Participantes
-                    </h3>
-                  </div>
-                  <p className="text-sm text-gray-400 mb-4">
-                    Convide colegas para participar do seu grupo de estudos. Eles receberão uma notificação e poderão aceitar ou recusar o convite.
-                  </p>
-
-                  <div className="relative mb-4">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <div>
+                    <label htmlFor="tags" className="block text-sm font-medium text-white/70 mb-1">
+                      Tags (separadas por vírgula)
+                    </label>
                     <Input
-                      placeholder="Buscar por nome, email ou curso..."
-                      className="pl-9 border-[#1E293B] bg-[#0F172A] text-white placeholder:text-gray-500 focus:border-[#FF6B00]"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      id="tags"
+                      name="tags"
+                      value={formData.tags}
+                      onChange={handleInputChange}
+                      placeholder="Ex: cálculo, matemática, integrais"
+                      className="w-full border-[#1E293B] bg-[#0F172A] text-white placeholder:text-gray-500 focus:border-[#FF6B00]"
                     />
                   </div>
 
-                  <ScrollArea className="h-[260px] pr-2">
-                    <div className="space-y-2">
-                      {filteredUsuarios.length > 0 ? (
-                        filteredUsuarios.map((usuario) => (
+                  <div>
+                    <label htmlFor="descricao" className="block text-sm font-medium text-white/70 mb-1">
+                      Descrição do Grupo
+                    </label>
+                    <Textarea
+                      id="descricao"
+                      name="descricao"
+                      value={formData.descricao}
+                      onChange={handleInputChange}
+                      placeholder="Descreva o objetivo do grupo, temas de estudo, etc..."
+                      className="min-h-[100px] border-[#1E293B] bg-[#0F172A] text-white placeholder:text-gray-500 focus:border-[#FF6B00]"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="objetivos" className="block text-sm font-medium text-white/70 mb-1">
+                      Objetivos do Grupo
+                    </label>
+                    <Textarea
+                      id="objetivos"
+                      name="objetivos"
+                      value={formData.objetivos}
+                      onChange={handleInputChange}
+                      placeholder="Quais são os principais objetivos deste grupo de estudos?"
+                      className="min-h-[100px] border-[#1E293B] bg-[#0F172A] text-white placeholder:text-gray-500 focus:border-[#FF6B00]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-white/70 mb-2">
+                      Atividades Sugeridas
+                    </label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {atividadesSugeridas.map((atividade) => (
+                        <div key={atividade.id} className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            id={`atividade-${atividade.id}`}
+                            checked={formData.atividades.includes(atividade.id)}
+                            onChange={() => handleAtividadeToggle(atividade.id)}
+                            className="h-4 w-4 rounded border-[#1E293B] text-[#FF6B00] bg-[#0F172A] focus:ring-[#FF6B00]"
+                          />
+                          <label 
+                            htmlFor={`atividade-${atividade.id}`} 
+                            className="text-white flex items-center gap-2 cursor-pointer"
+                          >
+                            {atividade.icon}
+                            <span>{atividade.nome}</span>
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === "configuracoes" && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="dataInicio" className="block text-sm font-medium text-white/70 mb-1 flex items-center">
+                        Data de Início <span className="text-[#FF6B00] ml-1">*</span>
+                      </label>
+                      <Input
+                        id="dataInicio"
+                        name="dataInicio"
+                        type="date"
+                        value={formData.dataInicio}
+                        onChange={handleInputChange}
+                        required
+                        className="w-full border-[#1E293B] bg-[#0F172A] text-white placeholder:text-gray-500 focus:border-[#FF6B00]"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="nivelDificuldade" className="block text-sm font-medium text-white/70 mb-1">
+                        Nível de Dificuldade
+                      </label>
+                      <Select 
+                        value={formData.nivelDificuldade} 
+                        onValueChange={(value) => handleSelectChange("nivelDificuldade", value)}
+                      >
+                        <SelectTrigger className="w-full border-[#1E293B] bg-[#0F172A] text-white">
+                          <SelectValue placeholder="Selecione a dificuldade" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#1E293B] text-white border-[#1E293B]">
+                          <SelectItem value="Iniciante">Iniciante</SelectItem>
+                          <SelectItem value="Intermediário">Intermediário</SelectItem>
+                          <SelectItem value="Avançado">Avançado</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4">
+                    <div>
+                      <label htmlFor="frequencia" className="block text-sm font-medium text-white/70 mb-1">
+                        Frequência de Encontros
+                      </label>
+                      <Select 
+                        value={formData.frequencia} 
+                        onValueChange={(value) => handleSelectChange("frequencia", value)}
+                      >
+                        <SelectTrigger className="w-full border-[#1E293B] bg-[#0F172A] text-white">
+                          <SelectValue placeholder="Selecione a frequência" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#1E293B] text-white border-[#1E293B]">
+                          <SelectItem value="Diário">Diário</SelectItem>
+                          <SelectItem value="Semanal">Semanal</SelectItem>
+                          <SelectItem value="Quinzenal">Quinzenal</SelectItem>
+                          <SelectItem value="Mensal">Mensal</SelectItem>
+                          <SelectItem value="Flexível">Flexível</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label htmlFor="horarios" className="block text-sm font-medium text-white/70 mb-1">
+                      Horários dos Encontros
+                    </label>
+                    <Input
+                      id="horarios"
+                      name="horarios"
+                      value={formData.horarios}
+                      onChange={handleInputChange}
+                      placeholder="Ex: Segundas, 18:00 - 19:30"
+                      className="w-full border-[#1E293B] bg-[#0F172A] text-white placeholder:text-gray-500 focus:border-[#FF6B00]"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="privacidade" className="block text-sm font-medium text-white/70 mb-1 flex items-center">
+                        Privacidade do Grupo <span className="text-[#FF6B00] ml-1">*</span>
+                      </label>
+                      <Select 
+                        value={formData.privacidade} 
+                        onValueChange={(value) => handleSelectChange("privacidade", value)}
+                      >
+                        <SelectTrigger className="w-full border-[#1E293B] bg-[#0F172A] text-white">
+                          <SelectValue placeholder="Selecione a privacidade" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#1E293B] text-white border-[#1E293B]">
+                          <SelectItem value="Público (qualquer um pode ver e solicitar participação)">Público (qualquer um pode ver e solicitar participação)</SelectItem>
+                          <SelectItem value="Restrito (visível, mas requer aprovação)">Restrito (visível, mas requer aprovação)</SelectItem>
+                          <SelectItem value="Privado (apenas por convite)">Privado (apenas por convite)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label htmlFor="maxMembros" className="block text-sm font-medium text-white/70 mb-1">
+                        Número Máximo de Membros
+                      </label>
+                      <Select 
+                        value={formData.maxMembros} 
+                        onValueChange={(value) => handleSelectChange("maxMembros", value)}
+                      >
+                        <SelectTrigger className="w-full border-[#1E293B] bg-[#0F172A] text-white">
+                          <SelectValue placeholder="Selecione o limite" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#1E293B] text-white border-[#1E293B]">
+                          <SelectItem value="5 membros">5 membros</SelectItem>
+                          <SelectItem value="10 membros">10 membros</SelectItem>
+                          <SelectItem value="15 membros">15 membros</SelectItem>
+                          <SelectItem value="20 membros">20 membros</SelectItem>
+                          <SelectItem value="30 membros">30 membros</SelectItem>
+                          <SelectItem value="50 membros">50 membros</SelectItem>
+                          <SelectItem value="Ilimitado">Ilimitado</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 bg-[#1E293B]/50 rounded-lg border border-[#1E293B]">
+                    <div className="flex items-center gap-2">
+                      <div className="text-[#FF6B00]">
+                        <Sparkles className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-medium text-white">
+                          Permitir sugestões do Mentor IA
+                        </h4>
+                        <p className="text-xs text-gray-400">
+                          O Mentor IA pode sugerir materiais e atividades para o grupo
+                        </p>
+                      </div>
+                    </div>
+                    <Switch
+                      checked={formData.permitirMentorIA}
+                      onCheckedChange={(checked) => 
+                        setFormData(prev => ({ ...prev, permitirMentorIA: checked }))
+                      }
+                      className="data-[state=checked]:bg-[#FF6B00]"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {activeTab === "participantes" && (
+                <div className="space-y-5">
+                  <div className="bg-[#1E293B]/50 rounded-lg p-4 border border-[#1E293B]">
+                    <div className="flex items-center gap-2 mb-2">
+                      <UserPlus className="h-5 w-5 text-[#FF6B00]" />
+                      <h3 className="text-base font-medium text-white">
+                        Convidar Participantes
+                      </h3>
+                    </div>
+                    <p className="text-sm text-gray-400 mb-4">
+                      Convide colegas para participar do seu grupo de estudos. Eles receberão uma notificação e poderão aceitar ou recusar o convite.
+                    </p>
+
+                    <div className="relative mb-4">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                      <Input
+                        placeholder="Buscar por nome, email ou curso..."
+                        className="pl-9 border-[#1E293B] bg-[#0F172A] text-white placeholder:text-gray-500 focus:border-[#FF6B00]"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                      />
+                    </div>
+
+                    <ScrollArea className="h-[260px] pr-2">
+                      <div className="space-y-2">
+                        {filteredUsuarios.length > 0 ? (
+                          filteredUsuarios.map((usuario) => (
+                            <div
+                              key={usuario.id}
+                              className="flex items-center justify-between p-3 rounded-lg bg-[#1E293B] border border-[#1E293B]"
+                            >
+                              <div className="flex items-center gap-3">
+                                <Avatar className="h-10 w-10 border border-[#1E293B]">
+                                  <AvatarFallback className="bg-[#0F172A] text-white">
+                                    {usuario.nome.charAt(0)}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div>
+                                  <h4 className="text-sm font-medium text-white">
+                                    {usuario.nome}
+                                  </h4>
+                                  <div className="text-xs text-gray-400">
+                                    <span>{usuario.email}</span>
+                                    <span> • </span>
+                                    <span>{usuario.curso}</span>
+                                  </div>
+                                </div>
+                              </div>
+                              {formData.convidados.includes(usuario.id) ? (
+                                <Badge variant="outline" className="bg-transparent border-[#FF6B00] text-[#FF6B00] flex items-center">
+                                  <Check className="h-3 w-3 mr-1" /> Convidado
+                                </Badge>
+                              ) : (
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  onClick={() => handleConvidarUsuario(usuario.id)}
+                                  className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
+                                >
+                                  <UserPlus className="h-3.5 w-3.5 mr-1" /> Convidar
+                                </Button>
+                              )}
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-center py-6 text-gray-400">
+                            <p>Nenhum usuário encontrado com os termos da busca.</p>
+                          </div>
+                        )}
+                      </div>
+                    </ScrollArea>
+                  </div>
+
+                  {convidadosInfo.length > 0 && (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-base font-medium text-white flex items-center gap-2">
+                          <Users className="h-5 w-5 text-[#FF6B00]" /> Participantes Convidados
+                        </h3>
+                        <Badge className="bg-[#FF6B00]/10 text-[#FF6B00] dark:bg-[#FF6B00]/20 border-0">
+                          {convidadosInfo.length} convidados
+                        </Badge>
+                      </div>
+
+                      <div className="space-y-2">
+                        {convidadosInfo.map((usuario) => (
                           <div
                             key={usuario.id}
                             className="flex items-center justify-between p-3 rounded-lg bg-[#1E293B] border border-[#1E293B]"
                           >
                             <div className="flex items-center gap-3">
-                              <Avatar className="h-10 w-10 border border-[#1E293B]">
+                              <Avatar className="h-8 w-8 border border-[#1E293B]">
                                 <AvatarFallback className="bg-[#0F172A] text-white">
                                   {usuario.nome.charAt(0)}
                                 </AvatarFallback>
                               </Avatar>
                               <div>
-                                <h4 className="text-sm font-medium text-white">
-                                  {usuario.nome}
-                                </h4>
-                                <div className="text-xs text-gray-400">
-                                  <span>{usuario.email}</span>
-                                  <span> • </span>
-                                  <span>{usuario.curso}</span>
-                                </div>
+                                <p className="text-sm font-medium text-white">{usuario.nome}</p>
+                                <p className="text-xs text-gray-400">{usuario.curso}</p>
                               </div>
                             </div>
-                            {formData.convidados.includes(usuario.id) ? (
-                              <Badge variant="outline" className="bg-transparent border-[#FF6B00] text-[#FF6B00] flex items-center">
-                                <Check className="h-3 w-3 mr-1" /> Convidado
-                              </Badge>
-                            ) : (
-                              <Button
-                                type="button"
-                                size="sm"
-                                onClick={() => handleConvidarUsuario(usuario.id)}
-                                className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
-                              >
-                                <UserPlus className="h-3.5 w-3.5 mr-1" /> Convidar
-                              </Button>
-                            )}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 text-gray-400 hover:text-white rounded-full"
+                              onClick={() => handleRemoverConvidado(usuario.id)}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
                           </div>
-                        ))
-                      ) : (
-                        <div className="text-center py-6 text-gray-400">
-                          <p>Nenhum usuário encontrado com os termos da busca.</p>
-                        </div>
-                      )}
+                        ))}
+                      </div>
                     </div>
-                  </ScrollArea>
+                  )}
                 </div>
+              )}
 
-                {convidadosInfo.length > 0 && (
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-base font-medium text-white flex items-center gap-2">
-                        <Users className="h-5 w-5 text-[#FF6B00]" /> Participantes Convidados
-                      </h3>
-                      <Badge className="bg-[#FF6B00]/10 text-[#FF6B00] dark:bg-[#FF6B00]/20 border-0">
-                        {convidadosInfo.length} convidados
-                      </Badge>
-                    </div>
+              {activeTab === "imagem" && (
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-medium text-white/70 mb-3">
+                      Imagem do Grupo
+                    </label>
+                    <div 
+                      className="border-2 border-dashed border-[#1E293B] rounded-lg p-10 text-center hover:border-[#FF6B00]/50 transition-colors cursor-pointer"
+                      onClick={() => document.getElementById('grupoImagem')?.click()}
+                    >
+                      <input
+                        type="file"
+                        id="grupoImagem"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleImageChange}
+                      />
 
-                    <div className="space-y-2">
-                      {convidadosInfo.map((usuario) => (
-                        <div
-                          key={usuario.id}
-                          className="flex items-center justify-between p-3 rounded-lg bg-[#1E293B] border border-[#1E293B]"
-                        >
-                          <div className="flex items-center gap-3">
-                            <Avatar className="h-8 w-8 border border-[#1E293B]">
-                              <AvatarFallback className="bg-[#0F172A] text-white">
-                                {usuario.nome.charAt(0)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <p className="text-sm font-medium text-white">{usuario.nome}</p>
-                              <p className="text-xs text-gray-400">{usuario.curso}</p>
-                            </div>
-                          </div>
-                          <Button
-                            variant="ghost"
+                      {previewUrl ? (
+                        <div className="flex flex-col items-center">
+                          <img 
+                            src={previewUrl} 
+                            alt="Preview" 
+                            className="w-full max-h-40 object-contain mb-3"
+                          />
+                          <Button 
+                            type="button" 
+                            variant="destructive" 
                             size="sm"
-                            className="h-8 w-8 p-0 text-gray-400 hover:text-white rounded-full"
-                            onClick={() => handleRemoverConvidado(usuario.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPreviewUrl(null);
+                              setFormData(prev => ({ ...prev, imagem: null }));
+                            }}
+                            className="mt-2"
                           >
-                            <X className="h-4 w-4" />
+                            <X className="h-4 w-4 mr-1" /> Remover imagem
                           </Button>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {activeTab === "imagem" && (
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-white/70 mb-3">
-                    Imagem do Grupo
-                  </label>
-                  <div 
-                    className="border-2 border-dashed border-[#1E293B] rounded-lg p-10 text-center hover:border-[#FF6B00]/50 transition-colors cursor-pointer"
-                    onClick={() => document.getElementById('grupoImagem')?.click()}
-                  >
-                    <input
-                      type="file"
-                      id="grupoImagem"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleImageChange}
-                    />
-
-                    {previewUrl ? (
-                      <div className="flex flex-col items-center">
-                        <img 
-                          src={previewUrl} 
-                          alt="Preview" 
-                          className="w-full max-h-40 object-contain mb-3"
-                        />
-                        <Button 
-                          type="button" 
-                          variant="destructive" 
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setPreviewUrl(null);
-                            setFormData(prev => ({ ...prev, imagem: null }));
-                          }}
-                          className="mt-2"
-                        >
-                          <X className="h-4 w-4 mr-1" /> Remover imagem
-                        </Button>
-                      </div>
-                    ) : (
-                      <>
-                        <Upload className="h-10 w-10 text-[#FF6B00]/50 mx-auto" />
-                        <p className="mt-2 text-sm text-gray-400">
-                          Clique para fazer upload de uma imagem
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          Recomendado: 1200 x 400 pixels, máximo 2MB
-                        </p>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                <div className="bg-[#1E293B]/50 rounded-lg p-4 border border-[#1E293B]">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Info className="h-5 w-5 text-[#FF6B00]" />
-                    <h3 className="text-base font-medium text-white">
-                      Prévia do Grupo
-                    </h3>
-                  </div>
-
-                  <div className="bg-[#0F172A] rounded-lg p-4 border border-[#1E293B]">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-12 h-12 rounded-full bg-[#FF6B00]/20 flex items-center justify-center">
-                        <BookOpen className="h-6 w-6 text-[#FF6B00]" />
-                      </div>
-                      <div>
-                        <h4 className="text-lg font-bold text-white">
-                          {formData.nome || "Nome do Grupo"}
-                        </h4>
-                        <p className="text-sm text-gray-400">
-                          {formData.disciplina || "Disciplina/Área"} • {formData.convidados.length + 1} participantes
-                        </p>
-                      </div>
-                    </div>
-
-                    <p className="text-sm text-gray-300 mb-3 line-clamp-2">
-                      {formData.descricao || "Descrição do grupo aparecerá aqui..."}
-                    </p>
-
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      {formData.tags && formData.tags.split(",").map((tag, index) => (
-                        <Badge
-                          key={index}
-                          variant="outline"
-                          className="text-xs border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10"
-                        >
-                          {tag.trim()}
-                        </Badge>
-                      ))}
-                      {!formData.tags && (
-                        <Badge
-                          variant="outline"
-                          className="text-xs border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10"
-                        >
-                          Tags aparecerão aqui
-                        </Badge>
+                      ) : (
+                        <>
+                          <Upload className="h-10 w-10 text-[#FF6B00]/50 mx-auto" />
+                          <p className="mt-2 text-sm text-gray-400">
+                            Clique para fazer upload de uma imagem
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Recomendado: 1200 x 400 pixels, máximo 2MB
+                          </p>
+                        </>
                       )}
                     </div>
+                  </div>
 
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1 text-sm text-gray-400">
-                        <Calendar className="h-4 w-4 text-[#FF6B00]" />
-                        <span>
-                          {formData.dataInicio
-                            ? new Date(formData.dataInicio).toLocaleDateString()
-                            : "Data de início"}
-                        </span>
+                  <div className="bg-[#1E293B]/50 rounded-lg p-4 border border-[#1E293B]">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Info className="h-5 w-5 text-[#FF6B00]" />
+                      <h3 className="text-base font-medium text-white">
+                        Prévia do Grupo
+                      </h3>
+                    </div>
+
+                    <div className="bg-[#0F172A] rounded-lg p-4 border border-[#1E293B]">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-12 h-12 rounded-full bg-[#FF6B00]/20 flex items-center justify-center">
+                          <BookOpen className="h-6 w-6 text-[#FF6B00]" />
+                        </div>
+                        <div>
+                          <h4 className="text-lg font-bold text-white">
+                            {formData.nome || "Nome do Grupo"}
+                          </h4>
+                          <p className="text-sm text-gray-400">
+                            {formData.disciplina || "Disciplina/Área"} • {formData.convidados.length + 1} participantes
+                          </p>
+                        </div>
                       </div>
 
-                      <Button
-                        size="sm"
-                        className="h-8 text-xs bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
-                        disabled
-                      >
-                        Acessar Grupo
-                      </Button>
+                      <p className="text-sm text-gray-300 mb-3 line-clamp-2">
+                        {formData.descricao || "Descrição do grupo aparecerá aqui..."}
+                      </p>
+
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {formData.tags && formData.tags.split(",").map((tag, index) => (
+                          <Badge
+                            key={index}
+                            variant="outline"
+                            className="text-xs border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10"
+                          >
+                            {tag.trim()}
+                          </Badge>
+                        ))}
+                        {!formData.tags && (
+                          <Badge
+                            variant="outline"
+                            className="text-xs border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10"
+                          >
+                            Tags aparecerão aqui
+                          </Badge>
+                        )}
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1 text-sm text-gray-400">
+                          <Calendar className="h-4 w-4 text-[#FF6B00]" />
+                          <span>
+                            {formData.dataInicio
+                              ? new Date(formData.dataInicio).toLocaleDateString()
+                              : "Data de início"}
+                          </span>
+                        </div>
+
+                        <Button
+                          size="sm"
+                          className="h-8 text-xs bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
+                          disabled
+                        >
+                          Acessar Grupo
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            <div className="flex justify-end gap-3 mt-6">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onClose}
-                className="border-[#1E293B] text-white hover:bg-[#1E293B] hover:text-white"
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                disabled={true}
-                className="border-[#1E293B] text-white hover:bg-[#1E293B] hover:text-white opacity-50 cursor-not-allowed"
-              >
-                Adicionar Grupo
-              </Button>
-              <Button
-                type="submit"
-                className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Criar Grupo
-              </Button>
-            </div>
-          </form>
+              <div className="flex justify-end gap-3 mt-6">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={onClose}
+                  className="border-[#1E293B] text-white hover:bg-[#1E293B] hover:text-white"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleShowCodeEntry}
+                  className="border-[#1E293B] text-white hover:bg-[#1E293B] hover:text-white"
+                >
+                  Adicionar Grupo
+                </Button>
+                <Button
+                  type="submit"
+                  className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Criar Grupo
+                </Button>
+              </div>
+            </form>
+          )}
         </motion.div>
       </div>
     </AnimatePresence>
