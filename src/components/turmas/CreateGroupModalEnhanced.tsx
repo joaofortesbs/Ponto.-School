@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { 
   X, Users, Plus, Key, BookOpen, Calendar, Clock, 
   Search, Upload, Info, Settings, UserPlus, BookmarkIcon,
-  Sparkles, Check
+  Sparkles, Check, ArrowRight
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -53,7 +53,10 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
   onClose,
   onSubmit,
 }) => {
+  const [modalMode, setModalMode] = useState<"initial" | "createGroup" | "enterCode">("initial");
   const [activeTab, setActiveTab] = useState<string>("informacoes");
+  const [codigo, setCodigo] = useState("");
+  const [isLoadingCode, setIsLoadingCode] = useState(false);
   const [formData, setFormData] = useState({
     nome: "",
     disciplina: "",
@@ -288,6 +291,9 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
   // Reset form when modal closes
   useEffect(() => {
     if (!isOpen) {
+      setModalMode("initial");
+      setCodigo("");
+      setIsLoadingCode(false);
       setFormData({
         nome: "",
         disciplina: "",
@@ -322,6 +328,52 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
     };
   }, [previewUrl]);
 
+  // Handler for validating and entering a group via code
+  const handleEnterGroupByCode = async () => {
+    if (!codigo.trim()) {
+      alert("Por favor, digite um código para entrar no grupo.");
+      return;
+    }
+
+    setIsLoadingCode(true);
+    
+    try {
+      // Verificar se o código existe usando a função do lib/gruposEstudoStorage
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        alert("Você precisa estar logado para entrar em um grupo.");
+        setIsLoadingCode(false);
+        return;
+      }
+
+      // Verificar se o código existe
+      const { data: grupo, error } = await supabase
+        .from('grupos_estudo')
+        .select('*')
+        .eq('codigo', codigo.toUpperCase())
+        .single();
+      
+      if (error || !grupo) {
+        alert("Código inválido ou grupo não encontrado. Verifique o código e tente novamente.");
+        setIsLoadingCode(false);
+        return;
+      }
+      
+      // Navegar para a página do grupo ou fazer outra ação necessária
+      alert(`Você entrou no grupo: ${grupo.nome}`);
+      onClose();
+      
+      // Redirecionar para o grupo - pode ser adaptado conforme necessário
+      window.location.href = `/turmas/grupos/${grupo.id}`;
+    } catch (error) {
+      console.error("Erro ao entrar no grupo:", error);
+      alert("Ocorreu um erro ao tentar entrar no grupo. Tente novamente.");
+    } finally {
+      setIsLoadingCode(false);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -341,7 +393,11 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
                 Novo Grupo de Estudo
               </h2>
               <p className="text-white/70 text-sm mt-1">
-                Preencha os detalhes do seu novo grupo. Você poderá editá-los posteriormente.
+                {modalMode === "initial" 
+                  ? "Entre em um grupo existente com um código ou crie seu próprio grupo."
+                  : modalMode === "enterCode"
+                    ? "Digite o código do grupo para entrar."
+                    : "Preencha os detalhes do seu novo grupo. Você poderá editá-los posteriormente."}
               </p>
             </div>
             <Button
@@ -354,8 +410,112 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
             </Button>
           </div>
 
-          <form onSubmit={handleSubmit} className="p-6">
-            <TabsList className="grid grid-cols-4 gap-2 mb-6 bg-transparent">
+          {modalMode === "initial" ? (
+            <div className="p-6 space-y-6">
+              <div className="space-y-4">
+                <div className="bg-[#1E293B]/50 p-6 rounded-lg border border-[#1E293B] flex flex-col items-center text-center">
+                  <Key className="h-12 w-12 text-[#FF6B00] mb-3" />
+                  <h3 className="text-xl font-bold text-white mb-2">Entrar com Código</h3>
+                  <p className="text-gray-400 mb-4">
+                    Use um código de convite para encontrar e entrar em um grupo de estudo existente.
+                  </p>
+                  <Button 
+                    onClick={() => setModalMode("enterCode")} 
+                    className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
+                  >
+                    <Key className="h-4 w-4 mr-2" /> Entrar com Código
+                  </Button>
+                </div>
+
+                <div className="bg-[#1E293B]/50 p-6 rounded-lg border border-[#1E293B] flex flex-col items-center text-center">
+                  <Plus className="h-12 w-12 text-[#FF6B00] mb-3" />
+                  <h3 className="text-xl font-bold text-white mb-2">Criar Novo Grupo</h3>
+                  <p className="text-gray-400 mb-4">
+                    Crie seu próprio grupo de estudos e convide outros alunos para participar.
+                  </p>
+                  <Button 
+                    onClick={() => setModalMode("createGroup")} 
+                    className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
+                  >
+                    <Users className="h-4 w-4 mr-2" /> Criar Grupo
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="flex justify-end">
+                <Button
+                  variant="outline"
+                  onClick={onClose}
+                  className="border-[#1E293B] text-white hover:bg-[#1E293B] hover:text-white"
+                >
+                  Cancelar
+                </Button>
+              </div>
+            </div>
+          ) : modalMode === "enterCode" ? (
+            <div className="p-6 space-y-6">
+              <div className="bg-[#1E293B]/30 p-6 rounded-lg border border-[#1E293B]">
+                <h3 className="text-lg font-medium text-white mb-4">Digite o código do grupo</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label htmlFor="codigo" className="block text-sm font-medium text-white/70 mb-1">
+                      Código do Grupo
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <Key className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <Input
+                        id="codigo"
+                        value={codigo}
+                        onChange={(e) => setCodigo(e.target.value.toUpperCase())}
+                        placeholder="Digite o código (Ex: ABCD123)"
+                        className="pl-10 uppercase border-[#1E293B] bg-[#0F172A] text-white placeholder:text-gray-500 focus:border-[#FF6B00]"
+                        maxLength={10}
+                      />
+                    </div>
+                    <p className="text-xs text-gray-400 mt-2">
+                      O código do grupo é fornecido pelo criador ou administrador do grupo.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex justify-between">
+                <Button
+                  variant="outline"
+                  onClick={() => setModalMode("initial")}
+                  className="border-[#1E293B] text-white hover:bg-[#1E293B] hover:text-white"
+                >
+                  Voltar
+                </Button>
+                <Button
+                  onClick={handleEnterGroupByCode}
+                  disabled={isLoadingCode || !codigo.trim()}
+                  className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
+                >
+                  {isLoadingCode ? (
+                    <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                  ) : (
+                    <ArrowRight className="h-4 w-4 mr-2" />
+                  )}
+                  Entrar no Grupo
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="p-6">
+              <div className="flex items-center mb-6">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setModalMode("initial")}
+                  className="text-white hover:text-white hover:bg-[#1E293B] mr-4"
+                >
+                  <ArrowRight className="h-4 w-4 mr-2 rotate-180" />
+                  Voltar
+                </Button>
+                <TabsList className="grid grid-cols-4 gap-2 bg-transparent flex-1">
               <TabsTrigger 
                 value="informacoes" 
                 onClick={() => setActiveTab("informacoes")}
@@ -389,8 +549,9 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
                 <span>Imagem do Grupo</span>
               </TabsTrigger>
             </TabsList>
+              </div>
 
-            {activeTab === "informacoes" && (
+              {activeTab === "informacoes" && (
               <div className="space-y-4">
                 <div>
                   <label htmlFor="nome" className="block text-sm font-medium text-white/70 mb-1 flex items-center">
