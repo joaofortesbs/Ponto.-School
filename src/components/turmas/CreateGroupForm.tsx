@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -63,7 +64,6 @@ import {
   CheckSquare,
   Presentation,
   Share2,
-  ArrowLeft,
 } from "lucide-react";
 
 // Dados de exemplo para usuários que podem ser convidados
@@ -835,16 +835,14 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({
             </TabsContent>
           </Tabs>
 
-          
-          <div className="flex justify-between gap-3 mt-8">
+          <div className="flex justify-end gap-3 mt-8">
             <Button
               type="button"
               variant="outline"
               onClick={onCancel}
               className="border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10 transition-all duration-300"
             >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Voltar
+              Cancelar
             </Button>
             <Button
               type="submit"
