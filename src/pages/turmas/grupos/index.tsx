@@ -15,13 +15,10 @@ import {
   Star,
 } from "lucide-react";
 import CreateGroupModal from "@/components/turmas/CreateGroupModal";
-import CreateGroupModalEnhanced from "@/components/turmas/CreateGroupModalEnhanced";
-import AdicionarGrupoPorCodigoModal from "@/components/turmas/AdicionarGrupoPorCodigoModal";
 
 export default function GruposEstudo() {
   const navigate = useNavigate();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isCodigoModalOpen, setIsCodigoModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("meus-grupos");
 
@@ -126,28 +123,11 @@ export default function GruposEstudo() {
   );
 
   const handleCreateGroup = (formData: any) => {
-    console.log("Dados do formulário:", formData);
-
-    // Check if we need to show the código modal
-    if (formData.showAdicionarPorCodigo) {
-      console.log("Abrindo modal para adicionar grupo por código");
-      
-      if (formData.closeCurrentModal) {
-        setIsCreateModalOpen(false);
-      }
-      
-      // Aumentar timeout para garantir que o modal anterior seja completamente fechado
-      // antes de abrir o novo, evitando problemas de animação
-      setTimeout(() => {
-        console.log("Abrindo modal de código após timeout");
-        setIsCodigoModalOpen(true);
-      }, 200);
-      return;
-    }
-
-    // Normal group creation logic
-    console.log("Grupo criado com sucesso:", formData);
+    console.log("Novo grupo criado:", formData);
+    // Here you would typically save the new group to your database
+    // and then add it to the list of groups
     setIsCreateModalOpen(false);
+    // Show success message or redirect to the new group page
   };
 
   const getActivityBadge = (level: string) => {
@@ -526,15 +506,10 @@ export default function GruposEstudo() {
         </TabsContent>
       </Tabs>
 
-      <CreateGroupModalEnhanced
+      <CreateGroupModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onSubmit={handleCreateGroup}
-      />
-      
-      <AdicionarGrupoPorCodigoModal
-        isOpen={isCodigoModalOpen}
-        onClose={() => setIsCodigoModalOpen(false)}
       />
     </div>
   );

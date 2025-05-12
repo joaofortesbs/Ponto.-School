@@ -899,22 +899,6 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
                 Cancelar
               </Button>
               <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  // Pass data to parent component to show the code entry modal
-                  console.log("Botão Adicionar Grupo clicado - fechando modal atual e solicitando abertura do modal de código");
-                  onSubmit({showAdicionarPorCodigo: true, closeCurrentModal: true});
-                  // Pequeno timeout para garantir que a animação do modal atual comece antes de abrir o próximo
-                  setTimeout(() => {
-                    onClose(); // Garantir que este modal seja fechado
-                  }, 50);
-                }}
-                className="border-[#1E293B] text-white hover:bg-[#1E293B] hover:text-white"
-              >
-                Adicionar Grupo
-              </Button>
-              <Button
                 type="submit"
                 className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
               >
