@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -835,14 +835,15 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({
             </TabsContent>
           </Tabs>
 
-          <div className="flex justify-end gap-3 mt-8">
+          <div className="flex justify-between gap-3 mt-8">
             <Button
               type="button"
               variant="outline"
               onClick={onCancel}
               className="border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10 transition-all duration-300"
             >
-              Cancelar
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Voltar
             </Button>
             <Button
               type="submit"

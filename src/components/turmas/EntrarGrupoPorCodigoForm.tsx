@@ -107,6 +107,12 @@ const EntrarGrupoPorCodigoForm: React.FC = () => {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col space-y-3">
+      <h3 className="text-lg font-medium text-white mb-2 flex items-center">
+        <Key className="h-5 w-5 mr-2 text-[#FF6B00]" /> Entrar com código
+      </h3>
+      <p className="text-sm text-gray-400 mb-4">
+        Digite o código de convite para entrar em um grupo de estudos existente.
+      </p>
       <div className="flex items-center space-x-2">
         <div className="relative flex-1">
           <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
@@ -134,9 +140,7 @@ const EntrarGrupoPorCodigoForm: React.FC = () => {
           )}
         </Button>
       </div>
-      <p className="text-xs text-gray-400">
-        Digite o código de convite do grupo para encontrá-lo automaticamente.
-      </p>
+      {/* Removed redundant description */}
     </form>
   );
 };
