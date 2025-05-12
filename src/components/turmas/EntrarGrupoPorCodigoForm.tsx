@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +14,7 @@ const EntrarGrupoPorCodigoForm: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!codigo.trim()) {
       toast({
         title: "Código obrigatório",
@@ -24,13 +23,13 @@ const EntrarGrupoPorCodigoForm: React.FC = () => {
       });
       return;
     }
-    
+
     setIsLoading(true);
-    
+
     try {
       // Verificar se o código existe
       const codigoExiste = await verificarSeCodigoExiste(codigo.toUpperCase());
-      
+
       if (!codigoExiste) {
         toast({
           title: "Código inválido",
@@ -40,14 +39,14 @@ const EntrarGrupoPorCodigoForm: React.FC = () => {
         setIsLoading(false);
         return;
       }
-      
+
       // Buscar informações do grupo
       const { data: grupo, error } = await supabase
         .from('grupos_estudo')
         .select('*')
         .eq('codigo', codigo.toUpperCase())
         .single();
-      
+
       if (error) {
         console.error("Erro ao buscar grupo:", error);
         toast({
@@ -58,12 +57,12 @@ const EntrarGrupoPorCodigoForm: React.FC = () => {
         setIsLoading(false);
         return;
       }
-      
+
       // Verificar privacidade do grupo
       if (grupo.privacidade === "Privado (apenas por convite)") {
         // Verificar se o usuário está na lista de convidados
         const { data: { user } } = await supabase.auth.getUser();
-        
+
         if (!user) {
           toast({
             title: "Autenticação necessária",
@@ -73,7 +72,7 @@ const EntrarGrupoPorCodigoForm: React.FC = () => {
           setIsLoading(false);
           return;
         }
-        
+
         const convidados = grupo.convidados || [];
         if (!convidados.includes(user.id)) {
           toast({
@@ -85,13 +84,13 @@ const EntrarGrupoPorCodigoForm: React.FC = () => {
           return;
         }
       }
-      
+
       // Navegar para a página do grupo
       toast({
         title: "Grupo encontrado!",
         description: `Você entrou no grupo "${grupo.nome}"`,
       });
-      
+
       navigate(`/turmas/grupos/${grupo.id}`);
     } catch (error) {
       console.error("Erro ao processar entrada no grupo:", error);
