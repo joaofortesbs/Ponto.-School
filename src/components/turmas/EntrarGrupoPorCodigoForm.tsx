@@ -114,16 +114,16 @@ const EntrarGrupoPorCodigoForm: React.FC = () => {
           </div>
           <Input
             value={codigo}
-            onChange={(e) => setCodigo(e.target.value)}
-            placeholder="Digite o código do grupo"
-            className="pl-9 bg-[#1E293B] border-[#1E293B] text-white focus:border-[#FF6B00] font-mono"
-            maxLength={10}
+            onChange={(e) => setCodigo(e.target.value.toUpperCase())}
+            placeholder="Digite o código do grupo (ex: ABC1234)"
+            className="pl-9 bg-[#1E293B] border-[#1E293B] text-white focus:border-[#FF6B00] font-mono uppercase"
+            maxLength={7}
           />
         </div>
         <Button 
           type="submit" 
           className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
-          disabled={isLoading}
+          disabled={isLoading || !codigo.trim()}
         >
           {isLoading ? (
             <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -136,6 +136,7 @@ const EntrarGrupoPorCodigoForm: React.FC = () => {
       </div>
       <p className="text-xs text-gray-400">
         Digite o código de convite do grupo para encontrá-lo automaticamente.
+        O código consiste em 7 caracteres e pode ser obtido com o administrador do grupo.
       </p>
     </form>
   );
