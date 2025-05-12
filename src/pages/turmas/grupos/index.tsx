@@ -146,7 +146,7 @@ export default function GruposEstudo() {
             Atividade Média
           </Badge>
         );
-      default":
+      default:
         return (
           <Badge className="bg-gray-500 hover:bg-gray-600">
             Atividade Baixa
