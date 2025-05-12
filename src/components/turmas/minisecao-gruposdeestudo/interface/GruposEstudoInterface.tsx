@@ -132,6 +132,7 @@ const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className
               <UserPlus className="h-4 w-4" />
             </span>
             <span className="interface-selector-text">Adicionar Grupo</span>
+            <span className="interface-selector-text">Adicionar Grupo</span>
           </Button>
           <Button className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white h-9 interface-selector">
             <span className="interface-selector-icon">
