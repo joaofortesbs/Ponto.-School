@@ -127,10 +127,8 @@ const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className
             </span>
             <span className="interface-selector-text">Filtrar</span>
           </Button>
-           <Button
-            variant="outline"
-            size="sm"
-            className="text-gray-600 dark:text-gray-400 border-[#FF6B00]/10 dark:border-[#FF6B00]/20 h-9 interface-selector"
+           <Button 
+            className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white h-9 interface-selector"
           >
             <span className="interface-selector-icon">
               <UserPlus className="h-4 w-4" />
