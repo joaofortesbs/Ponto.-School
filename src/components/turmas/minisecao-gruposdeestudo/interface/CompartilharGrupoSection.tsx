@@ -1,151 +1,106 @@
 import React, { useState } from 'react';
-import { Copy, Check, MessageSquare, Share2 } from 'lucide-react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
+import { Button } from '@/components/ui/button';
+import { Copy, Check, Share2 } from 'lucide-react';
 
 interface CompartilharGrupoSectionProps {
   grupoCodigo: string;
   grupoNome: string;
 }
 
-const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
-  grupoCodigo,
-  grupoNome
+const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({ 
+  grupoCodigo, 
+  grupoNome 
 }) => {
   const [copiado, setCopiado] = useState(false);
-  const [copiadoLink, setCopiadoLink] = useState(false);
 
-  // Garantir que o código seja exibido mesmo se for null ou undefined
-  // Usar o novo formato padrão se o código não existir
-  const codigoExibicao = grupoCodigo || "";
-  
-  // Mensagem específica baseada na existência do código
-  const mensagemPadrao = codigoExibicao 
-    ? `Venha estudar comigo no grupo "${grupoNome}" na Ponto. School!\nUse o código: ${codigoExibicao}`
-    : `Venha estudar comigo no grupo "${grupoNome}" na Ponto. School!`;
+  const formattedCodigo = grupoCodigo && grupoCodigo.length > 4 
+    ? `${grupoCodigo.substring(0, 4)} ${grupoCodigo.substring(4)}`
+    : grupoCodigo || "SEM CÓDIGO";
 
   const handleCopiarCodigo = () => {
-    navigator.clipboard.writeText(codigoExibicao);
-    setCopiado(true);
-    setTimeout(() => setCopiado(false), 2000);
+    // Garantir que copiamos o código sem formatação (sem espaços)
+    navigator.clipboard.writeText(grupoCodigo)
+      .then(() => {
+        setCopiado(true);
+        setTimeout(() => setCopiado(false), 2000);
+      })
+      .catch(err => {
+        console.error('Erro ao copiar código:', err);
+      });
   };
 
-  const handleCopiarLink = () => {
-    navigator.clipboard.writeText(`https://ponto.school/entrar-grupo?codigo=${codigoExibicao}`);
-    setCopiadoLink(true);
-    setTimeout(() => setCopiadoLink(false), 2000);
+  const handleCompartilhar = async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `Grupo de Estudos: ${grupoNome}`,
+          text: `Entre no meu grupo de estudos "${grupoNome}" usando o código: ${grupoCodigo}`,
+          url: window.location.href,
+        });
+      } else {
+        handleCopiarCodigo();
+      }
+    } catch (error) {
+      console.error('Erro ao compartilhar:', error);
+    }
   };
-
-  const handleCompartilharWhatsApp = () => {
-    const text = encodeURIComponent(mensagemPadrao);
-    window.open(`https://wa.me/?text=${text}`, "_blank");
-  };
-
-  const handleCompartilharEmail = () => {
-    const subject = encodeURIComponent(`Convite para o grupo "${grupoNome}"`);
-    const body = encodeURIComponent(mensagemPadrao);
-    window.open(`mailto:?subject=${subject}&body=${body}`, "_blank");
-  };
-
-  // Formatar código para exibição com espaço no meio para melhor legibilidade
-  const codigoFormatado = codigoExibicao.length >= 4 
-    ? `${codigoExibicao.substring(0, 4)} ${codigoExibicao.substring(4)}`
-    : codigoExibicao;
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col space-y-2">
-        <label className="text-sm font-medium text-white/70">
-          Código Único do Grupo
-        </label>
-        <div className="relative">
-          {codigoExibicao ? (
-            <div className="bg-[#0F172A] border border-[#1E293B] rounded-md p-2 flex items-center justify-between">
-              <span className="text-white font-mono text-xl tracking-wider uppercase font-bold">
-                {codigoFormatado}
-              </span>
-              <Button
-                size="sm"
-                onClick={handleCopiarCodigo}
-                className="h-8 bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
-              >
-                {copiado ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
-                {copiado ? "Copiado" : "Copiar"}
-              </Button>
-            </div>
-          ) : (
-            <div className="bg-[#0F172A] border border-[#1E293B] rounded-md p-3 text-center">
-              <span className="text-white/60 font-mono">SEM CÓDIGO</span>
-            </div>
-          )}
-        </div>
-        <p className="text-xs text-gray-400 mt-1">
-          {codigoExibicao 
-            ? "Compartilhe este código com outras pessoas para que elas possam entrar no seu grupo." 
-            : "Este código é usado para convidar pessoas para o seu grupo. O código será gerado quando você salvar as alterações."}
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Compartilhar grupo
+        </h3>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+          Compartilhe o código do grupo para que outras pessoas possam encontrá-lo e solicitar participação.
         </p>
       </div>
 
-      <div className="mt-6">
-        <h3 className="text-sm font-medium text-white/70 mb-2">
-          Opções de Compartilhamento
-        </h3>
+      <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div className="flex flex-col space-y-4">
+          <div>
+            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+              Código do grupo
+            </label>
+            <div className="flex items-center">
+              <span className="bg-white dark:bg-gray-900 py-2 px-3 text-sm font-mono rounded-l-md border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-gray-200 flex-1 font-bold tracking-wider">
+                {formattedCodigo}
+              </span>
+              <Button
+                onClick={handleCopiarCodigo}
+                variant="ghost"
+                className="h-9 rounded-l-none rounded-r-md border border-l-0 border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700"
+                disabled={!grupoCodigo}
+              >
+                {copiado ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+              </Button>
+            </div>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              {grupoCodigo ? "O código é insensível a maiúsculas e minúsculas." : "Um código será gerado quando você salvar."}
+            </p>
+          </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <Button
-            variant="outline" 
-            className="border-[#1E293B] bg-[#1E293B] text-white hover:bg-[#1E293B]/80"
-            onClick={handleCopiarLink}
-          >
-            {copiadoLink ? <Check className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
-            {copiadoLink ? "Link Copiado" : "Copiar Link"}
-          </Button>
-
-          <Button
-            variant="outline" 
-            className="border-[#1E293B] bg-[#1E293B] text-white hover:bg-[#1E293B]/80"
-            onClick={handleCompartilharWhatsApp}
-          >
-            <MessageSquare className="h-4 w-4 mr-2" />
-            WhatsApp
-          </Button>
-
-          <Button
-            variant="outline" 
-            className="border-[#1E293B] bg-[#1E293B] text-white hover:bg-[#1E293B]/80"
-            onClick={handleCompartilharEmail}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 mr-2">
-              <rect width="20" height="16" x="2" y="4" rx="2" />
-              <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-            </svg>
-            Email
-          </Button>
-
-          <Button
-            variant="outline" 
-            className="border-[#1E293B] bg-[#1E293B] text-white hover:bg-[#1E293B]/80"
-          >
-            <Share2 className="h-4 w-4 mr-2" />
-            Mais Opções
-          </Button>
+          <div className="pt-2">
+            <Button
+              onClick={handleCompartilhar}
+              variant="outline"
+              className="w-full justify-center border-[#FF6B00] text-[#FF6B00] hover:bg-[#FF6B00]/10"
+              disabled={!grupoCodigo}
+            >
+              <Share2 className="h-4 w-4 mr-2" />
+              Compartilhar grupo
+            </Button>
+          </div>
         </div>
       </div>
 
-      <div className="mt-6">
-        <h3 className="text-sm font-medium text-white/70 mb-2">
-          Mensagem para Compartilhar
-        </h3>
-
-        <div className="bg-[#1E293B] p-4 rounded-lg">
-          <p className="text-white text-sm mb-2">
-            Venha estudar comigo no grupo "{grupoNome}" na Ponto. School!
-            <br />
-            Use o código: <span className="bg-[#FF6B00]/10 text-[#FF6B00] border-[#FF6B00]/30 px-2 py-1 rounded-md font-bold ml-1">{codigoExibicao}</span>
-          </p>
-        </div>
+      <div className="text-xs text-gray-500 dark:text-gray-400 space-y-2">
+        <p>
+          <span className="font-medium">Nota:</span> Apenas pessoas com o código podem solicitar entrada no grupo.
+        </p>
+        <p>
+          <span className="font-medium">Dica:</span> Configure as opções de privacidade do grupo na aba "Privacidade".
+        </p>
       </div>
     </div>
   );

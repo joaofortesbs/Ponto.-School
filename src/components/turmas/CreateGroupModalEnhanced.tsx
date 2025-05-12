@@ -172,7 +172,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
 
       // Gerar um código único para o grupo no novo formato de 7 caracteres
       let codigoGrupo = await gerarCodigoUnicoGrupo();
-      
+
       // Certificar que temos um código, mesmo com erro
       if (!codigoGrupo) {
         try {
@@ -187,10 +187,10 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
           codigoGrupo = "TMP" + Math.floor(Math.random() * 9000 + 1000);
         }
       }
-      
+
       // Garantir que o código esteja em maiúsculas e tenha o comprimento correto
       codigoGrupo = codigoGrupo.toUpperCase();
-      
+
       // Verificar se o código tem o comprimento esperado (7 caracteres)
       if (codigoGrupo.length !== 7) {
         console.warn("Código gerado não tem o comprimento esperado:", codigoGrupo);
@@ -208,7 +208,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
           codigoGrupo = codigoGrupo.substring(0, 7);
         }
       }
-      
+
       console.log("Código único gerado para o grupo:", codigoGrupo);
 
       // Preparar dados para criação do grupo

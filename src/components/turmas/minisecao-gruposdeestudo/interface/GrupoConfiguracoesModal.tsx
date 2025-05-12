@@ -118,37 +118,61 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
         codigo: codigoGrupo
       };
 
-      // Atualizar no Supabase se não for um grupo local
-      if (!grupo.id.startsWith('local_')) {
-        const { data: { session } } = await supabase.auth.getSession();
+      // Primeiro atualizar localmente para feedback imediato
+      onSave(grupoAtualizado);
 
-        if (session) {
-          const { error } = await supabase
-            .from('grupos_estudo')
-            .update({
-              nome,
-              descricao,
-              disciplina,
-              cor,
-              privado,
-              visibilidade,
-              data_inicio: dataInicio,
-              codigo: codigoGrupo
-            })
-            .eq('id', grupo.id)
-            .eq('user_id', session.user.id);
+      // Se for um grupo local, apenas atualizar via callback
+      if (grupo.id.startsWith('local_')) {
+        // Atualizar no armazenamento local
+        try {
+          const { obterGruposLocal, salvarGrupoLocal } = await import('@/lib/gruposEstudoStorage');
+          const gruposLocais = obterGruposLocal();
+          const gruposAtualizados = gruposLocais.map((g: any) => 
+            g.id === grupo.id ? grupoAtualizado : g
+          );
+          
+          // Salvar os grupos atualizados no localStorage
+          localStorage.setItem('epictus_grupos_estudo', JSON.stringify(gruposAtualizados));
+          
+          // Atualizar também via função específica (redundância para segurança)
+          salvarGrupoLocal(grupoAtualizado);
+          
+          console.log("Grupo local atualizado com sucesso:", grupoAtualizado);
+        } catch (localError) {
+          console.error("Erro ao atualizar grupo localmente:", localError);
+        }
+      } else {
+        // Atualizar no Supabase para grupos não-locais
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
 
-          if (error) {
-            console.error("Erro ao atualizar grupo:", error);
-            setError("Não foi possível salvar as alterações. Tente novamente.");
-            setSaving(false);
-            return;
+          if (session) {
+            const { error } = await supabase
+              .from('grupos_estudo')
+              .update({
+                nome,
+                descricao,
+                disciplina,
+                cor,
+                privado,
+                visibilidade,
+                data_inicio: dataInicio,
+                codigo: codigoGrupo
+              })
+              .eq('id', grupo.id);
+
+            if (error) {
+              console.error("Erro ao atualizar grupo no Supabase:", error);
+              // Não impedimos o fluxo aqui, pois já salvamos localmente
+            } else {
+              console.log("Grupo atualizado no Supabase com sucesso");
+            }
           }
+        } catch (supabaseError) {
+          console.error("Erro ao comunicar com Supabase:", supabaseError);
+          // Já salvamos localmente, então continuamos o fluxo
         }
       }
-
-      // Atualizar localmente sempre
-      onSave(grupoAtualizado);
 
       // Mostrar animação de sucesso
       mostrarNotificacaoSucesso("Grupo atualizado com sucesso!");
