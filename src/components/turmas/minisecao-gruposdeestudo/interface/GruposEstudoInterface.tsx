@@ -108,26 +108,26 @@ const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <h2 className="text-lg font-medium">Grupos de Estudo</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-medium">Grupos de Estudo</h2>
+            <span className="bg-[#FF6B00] text-white text-xs px-2 py-0.5 rounded-full">{displayedGroups.length} grupos</span>
+          </div>
+          <Button className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white rounded-lg">
+            <Plus className="h-4 w-4 mr-1" />
+            Criar Grupo
+          </Button>
+        </div>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
           <Button
             variant="outline"
             size="sm"
             className="text-gray-600 dark:text-gray-400 border-[#FF6B00]/10 dark:border-[#FF6B00]/20 h-9 interface-selector"
-            disabled
           >
             <span className="interface-selector-icon">
               <UserPlus className="h-4 w-4" />
             </span>
             <span className="interface-selector-text">Adicionar Grupo</span>
           </Button>
-          <Button className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white h-9 interface-selector">
-            <span className="interface-selector-icon">
-              <Plus className="h-4 w-4" />
-            </span>
-            <span className="interface-selector-text">Criar Grupo</span>
-          </Button>
-        </div>
-        <div className="flex items-center gap-2 w-full sm:w-auto">
           <div className="relative w-full sm:w-auto max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
