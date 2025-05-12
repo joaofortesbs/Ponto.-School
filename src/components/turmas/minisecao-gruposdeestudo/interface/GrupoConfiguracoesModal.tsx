@@ -53,6 +53,7 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("informacoes");
+   const [grupoAtualizado, setGrupoAtualizado] = useState(grupo); // Usar estado para o grupo atualizado
 
   // Opções de visibilidade
   const opcoesVisibilidade = [
@@ -71,6 +72,7 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
       setPrivado(grupo.privado || false);
       setVisibilidade(grupo.visibilidade || "todos");
       setDataInicio(grupo.data_inicio || "");
+        setGrupoAtualizado(grupo); // Inicializar o estado do grupo atualizado
     }
   }, [grupo, isOpen]);
 
@@ -130,13 +132,13 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
           const gruposAtualizados = gruposLocais.map((g: any) => 
             g.id === grupo.id ? grupoAtualizado : g
           );
-          
+
           // Salvar os grupos atualizados no localStorage
           localStorage.setItem('epictus_grupos_estudo', JSON.stringify(gruposAtualizados));
-          
+
           // Atualizar também via função específica (redundância para segurança)
           salvarGrupoLocal(grupoAtualizado);
-          
+
           console.log("Grupo local atualizado com sucesso:", grupoAtualizado);
         } catch (localError) {
           console.error("Erro ao atualizar grupo localmente:", localError);
@@ -187,6 +189,42 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
       setError("Ocorreu um erro ao salvar as alterações. Tente novamente.");
       setSaving(false);
     }
+  };
+
+    // Função para gerar um código único para o grupo
+    const handleGerarCodigo = async () => {
+      try {
+          // Verificar se o grupo já tem um código
+          if (grupoAtualizado?.codigo) {
+              return;
+          }
+  
+          // Gerar um código único para o grupo
+          const { gerarCodigoUnicoGrupo } = await import('@/lib/gruposEstudoStorage');
+          const novoCodigo = await gerarCodigoUnicoGrupo();
+  
+          if (novoCodigo) {
+              // Atualizar o estado local
+              setGrupoAtualizado(prev => ({
+                  ...prev,
+                  codigo: novoCodigo
+              }));
+  
+              // Atualizar no Supabase
+              if (grupo?.id) {
+                  const { error } = await supabase
+                      .from('grupos_estudo')
+                      .update({ codigo: novoCodigo })
+                      .eq('id', grupo.id);
+  
+                  if (error) {
+                      console.error('Erro ao salvar código no banco de dados:', error);
+                  }
+              }
+          }
+      } catch (error) {
+          console.error('Erro ao gerar código do grupo:', error);
+      }
   };
 
   // Função para mostrar notificação de sucesso
@@ -500,7 +538,7 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
                   Aviso: Um código temporário foi gerado para este grupo. Alterações serão salvas na próxima atualização.
                 </p>
               )}
-              
+
               <div className="mb-4">
         <label className="block text-sm font-medium text-white/70 mb-1">
           Código Único do Grupo

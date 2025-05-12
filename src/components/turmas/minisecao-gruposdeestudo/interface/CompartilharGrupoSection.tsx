@@ -1,17 +1,20 @@
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Copy, Check, Share2 } from 'lucide-react';
+import { Share, Check, Copy, Key } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
 interface CompartilharGrupoSectionProps {
   grupoCodigo: string;
   grupoNome: string;
+  onGerarCodigo?: () => Promise<void>;
 }
 
 const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({ 
   grupoCodigo, 
-  grupoNome 
+  grupoNome,
+  onGerarCodigo
 }) => {
   const [copiado, setCopiado] = useState(false);
+  const [codigoGerado, setCodigoGerado] = useState(!!grupoCodigo);
 
   const formattedCodigo = grupoCodigo && grupoCodigo.length > 4 
     ? `${grupoCodigo.substring(0, 4)} ${grupoCodigo.substring(4)}`
@@ -42,6 +45,13 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
       }
     } catch (error) {
       console.error('Erro ao compartilhar:', error);
+    }
+  };
+
+  const handleGerarCodigo = async () => {
+    if (onGerarCodigo) {
+      await onGerarCodigo();
+      setCodigoGerado(true);
     }
   };
 
@@ -80,6 +90,18 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
             </p>
           </div>
 
+          {!codigoGerado && (
+            <div className="pt-2">
+              <Button
+                onClick={handleGerarCodigo}
+                variant="secondary"
+                className="w-full justify-center"
+              >
+                Gerar código do grupo
+              </Button>
+            </div>
+          )}
+
           <div className="pt-2">
             <Button
               onClick={handleCompartilhar}
@@ -87,7 +109,7 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
               className="w-full justify-center border-[#FF6B00] text-[#FF6B00] hover:bg-[#FF6B00]/10"
               disabled={!grupoCodigo}
             >
-              <Share2 className="h-4 w-4 mr-2" />
+              <Share className="h-4 w-4 mr-2" />
               Compartilhar grupo
             </Button>
           </div>
