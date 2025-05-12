@@ -15,10 +15,12 @@ import {
   Star,
 } from "lucide-react";
 import CreateGroupModal from "@/components/turmas/CreateGroupModal";
+import AdicionarGrupoPorCodigoModal from "@/components/turmas/AdicionarGrupoPorCodigoModal";
 
 export default function GruposEstudo() {
   const navigate = useNavigate();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isAdicionarPorCodigoModalOpen, setIsAdicionarPorCodigoModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("meus-grupos");
 
@@ -144,7 +146,7 @@ export default function GruposEstudo() {
             Atividade Média
           </Badge>
         );
-      default:
+      default":
         return (
           <Badge className="bg-gray-500 hover:bg-gray-600">
             Atividade Baixa
@@ -152,6 +154,16 @@ export default function GruposEstudo() {
         );
     }
   };
+
+  const handleAdicionarGrupoClick = () => {
+        setIsCreateModalOpen(false);
+        setIsAdicionarPorCodigoModalOpen(true);
+    };
+
+    const handleAdicionarGrupoPorCodigo = (codigo: string) => {
+        console.log("Adicionar grupo com código:", codigo);
+        setIsAdicionarPorCodigoModalOpen(false);
+    };
 
   return (
     <div className="container mx-auto p-4 max-w-7xl">
@@ -511,6 +523,12 @@ export default function GruposEstudo() {
         onClose={() => setIsCreateModalOpen(false)}
         onSubmit={handleCreateGroup}
       />
+
+       <AdicionarGrupoPorCodigoModal
+                isOpen={isAdicionarPorCodigoModalOpen}
+                onClose={() => setIsAdicionarPorCodigoModalOpen(false)}
+                onSubmit={handleAdicionarGrupoPorCodigo}
+            />
     </div>
   );
 }

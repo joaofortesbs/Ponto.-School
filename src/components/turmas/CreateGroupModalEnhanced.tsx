@@ -901,8 +901,12 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
               <Button
                 type="button"
                 variant="outline"
-                disabled={true}
-                className="border-[#1E293B] text-white hover:bg-[#1E293B] hover:text-white opacity-50 cursor-not-allowed"
+                onClick={() => {
+                  onClose();
+                  // Notificar o componente pai para mostrar o modal de adicionar por código
+                  onSubmit({ showAdicionarPorCodigo: true });
+                }}
+                className="border-[#1E293B] text-white hover:bg-[#1E293B] hover:text-white"
               >
                 Adicionar Grupo
               </Button>
