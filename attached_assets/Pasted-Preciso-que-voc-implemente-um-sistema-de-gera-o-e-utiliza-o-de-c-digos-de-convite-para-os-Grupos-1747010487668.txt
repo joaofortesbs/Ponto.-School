@@ -1,0 +1,45 @@
+Preciso que você implemente um sistema de geração e utilização de códigos de convite para os 'Grupos de Estudo' da plataforma Ponto. School. O objetivo é permitir que os usuários criem grupos e compartilhem um código único para que outros possam encontrar e solicitar participação nesses grupos.
+Funcionamento Geral:
+Quando um usuário (administrador do grupo) cria um novo grupo de estudo, o sistema deve gerar automaticamente um código de convite único para esse grupo. Este código será exibido para o administrador, que poderá copiá-lo e compartilhá-lo com outros usuários. Os outros usuários, por sua vez, poderão usar este código para localizar e solicitar entrada no grupo.
+Requisitos e Detalhes da Implementação:
+Formato do Código de Convite:
+Comprimento: 7 caracteres.
+Caracteres Permitidos: Utilizar apenas letras maiúsculas (A-Z, excluindo 'I' e 'O') e números (0-9, excluindo '0' e '1'). O conjunto de caracteres será: ABCDEFGHJKLMNPQRSTUVWXYZ23456789.
+Sensibilidade: O sistema deve tratar os códigos como NÃO SENSÍVEIS A MAIÚSCULAS/MINÚSCULAS. Ou seja, o código gerado deve ser sempre em maiúsculas, e ao verificar um código inserido pelo usuário, converta-o para maiúsculas antes da comparação.
+Geração do Código (Backend - no momento da criação do grupo):
+Crie uma função gerar_string_aleatoria(comprimento, caracteres) que retorne uma string aleatória com base nos parâmetros fornecidos.
+Crie uma função principal gerar_codigo_unico_grupo(db_connection):
+Dentro de um loop while True:
+Chame gerar_string_aleatoria() para obter um codigo_tentativa.
+Consulte o banco de dados na tabela grupos_estudo (ou equivalente) para verificar se o codigo_tentativa já existe na coluna codigo_convite. Esta consulta deve ser eficiente e usar um índice na coluna codigo_convite.
+Se o codigo_tentativa NÃO EXISTIR no banco de dados, retorne este código. O loop termina.
+Se o codigo_tentativa JÁ EXISTIR, o loop continua, gerando e verificando um novo código.
+Importante: A verificação de unicidade e a subsequente inserção do novo grupo com o código único devem ser feitas dentro de uma transação no banco de dados para garantir a atomicidade e prevenir condições de corrida onde dois grupos poderiam, teoricamente, receber o mesmo código em um cenário de alta concorrência.
+Armazenamento do Código (Banco de Dados):
+Na tabela grupos_estudo, adicione uma coluna codigo_convite (ex: VARCHAR(10) ou CHAR(7)).
+Esta coluna deve ter a restrição NOT NULL.
+Crie um ÍNDICE ÚNICO (UNIQUE INDEX) na coluna codigo_convite para reforçar a unicidade no nível do banco de dados e otimizar as buscas por código.
+Ao salvar um novo grupo, armazene o código único gerado (pela função gerar_codigo_unico_grupo) nesta coluna.
+Exibição e Compartilhamento do Código (Frontend):
+Na página de visualização/gerenciamento de um grupo de estudo (para membros e administradores):
+Exiba o código de forma clara: "Código do Grupo: [CODIGO_GERADO]".
+Implemente um botão "Copiar Código" ao lado do código. Ao ser clicado, o código deve ser copiado para a área de transferência do usuário, e um feedback visual (ex: "Código copiado!") deve ser exibido brevemente.
+Opcional: Implementar um botão "Compartilhar Grupo" que abra opções de compartilhamento (link, WhatsApp, E-mail), incluindo o código na mensagem pré-definida.
+Acesso ao Grupo via Código (Frontend e Backend):
+Interface (Frontend):
+Na página principal da seção "Grupos de Estudo", adicione um campo de texto com o placeholder "Insira o código do grupo" e um botão "Entrar no Grupo" (ou "Procurar").
+Processamento (Backend):
+Crie um endpoint (rota) que receba o codigo_digitado pelo usuário.
+Converta o codigo_digitado para maiúsculas.
+Consulte a tabela grupos_estudo buscando pelo codigo_convite.
+Se o Código for Encontrado:
+Verifique a privacidade do grupo.
+Se o grupo for Público: Adicione o usuário logado como membro do grupo (se ele ainda não for) e redirecione-o para a página do grupo. Retorne uma mensagem de sucesso.
+Se o grupo for Privado: Apresente informações básicas do grupo (nome, descrição, número de membros) e um botão "Solicitar Participação". O clique neste botão deve enviar uma notificação para os administradores do grupo. Retorne uma mensagem indicando que a solicitação foi enviada.
+Se o Código NÃO for Encontrado (ou Inválido):
+Retorne uma mensagem de erro clara para o frontend (ex: "Código inválido ou grupo não encontrado. Verifique o código e tente novamente.").
+Considerações Adicionais para Implementação:
+Eficiência da Verificação: A consulta para verificar se um código já existe deve ser otimizada com o uso do índice único na coluna codigo_convite.
+Tratamento de Loops Infinitos (Extremamente Improvável): Embora altamente improvável com 7 caracteres alfanuméricos (do conjunto reduzido), teoricamente, se todos os códigos possíveis fossem usados, a função gerar_codigo_unico_grupo poderia entrar em loop infinito. Adicione um contador de tentativas e lance uma exceção ou retorne um erro específico se um número muito alto de tentativas for atingido sem encontrar um código único (isso indicaria um problema maior ou um volume de grupos muito além do esperado).
+Modularidade: Crie o sistema de geração de códigos de forma modular, para que possa ser facilmente testado e, se necessário, modificado no futuro sem impactar outras partes da plataforma.
+Este é o sistema que precisamos implementar. Por favor, foque na robustez, segurança (especialmente a verificação de unicidade dentro de uma transação) e na experiência fluida para o usuário.
