@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +15,7 @@ const EntrarGrupoPorCodigoForm: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    
     if (!codigo.trim()) {
       toast({
         title: "Código obrigatório",
@@ -23,13 +24,13 @@ const EntrarGrupoPorCodigoForm: React.FC = () => {
       });
       return;
     }
-
+    
     setIsLoading(true);
-
+    
     try {
       // Verificar se o código existe
       const codigoExiste = await verificarSeCodigoExiste(codigo.toUpperCase());
-
+      
       if (!codigoExiste) {
         toast({
           title: "Código inválido",
@@ -39,14 +40,14 @@ const EntrarGrupoPorCodigoForm: React.FC = () => {
         setIsLoading(false);
         return;
       }
-
+      
       // Buscar informações do grupo
       const { data: grupo, error } = await supabase
         .from('grupos_estudo')
         .select('*')
         .eq('codigo', codigo.toUpperCase())
         .single();
-
+      
       if (error) {
         console.error("Erro ao buscar grupo:", error);
         toast({
@@ -57,12 +58,12 @@ const EntrarGrupoPorCodigoForm: React.FC = () => {
         setIsLoading(false);
         return;
       }
-
+      
       // Verificar privacidade do grupo
       if (grupo.privacidade === "Privado (apenas por convite)") {
         // Verificar se o usuário está na lista de convidados
         const { data: { user } } = await supabase.auth.getUser();
-
+        
         if (!user) {
           toast({
             title: "Autenticação necessária",
@@ -72,7 +73,7 @@ const EntrarGrupoPorCodigoForm: React.FC = () => {
           setIsLoading(false);
           return;
         }
-
+        
         const convidados = grupo.convidados || [];
         if (!convidados.includes(user.id)) {
           toast({
@@ -84,13 +85,13 @@ const EntrarGrupoPorCodigoForm: React.FC = () => {
           return;
         }
       }
-
+      
       // Navegar para a página do grupo
       toast({
         title: "Grupo encontrado!",
         description: `Você entrou no grupo "${grupo.nome}"`,
       });
-
+      
       navigate(`/turmas/grupos/${grupo.id}`);
     } catch (error) {
       console.error("Erro ao processar entrada no grupo:", error);
@@ -113,16 +114,16 @@ const EntrarGrupoPorCodigoForm: React.FC = () => {
           </div>
           <Input
             value={codigo}
-            onChange={(e) => setCodigo(e.target.value.toUpperCase())}
-            placeholder="Digite o código do grupo (ex: ABC1234)"
-            className="pl-9 bg-[#1E293B] border-[#1E293B] text-white focus:border-[#FF6B00] font-mono uppercase"
-            maxLength={7}
+            onChange={(e) => setCodigo(e.target.value)}
+            placeholder="Digite o código do grupo"
+            className="pl-9 bg-[#1E293B] border-[#1E293B] text-white focus:border-[#FF6B00] font-mono"
+            maxLength={10}
           />
         </div>
         <Button 
           type="submit" 
           className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
-          disabled={isLoading || !codigo.trim()}
+          disabled={isLoading}
         >
           {isLoading ? (
             <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -135,7 +136,6 @@ const EntrarGrupoPorCodigoForm: React.FC = () => {
       </div>
       <p className="text-xs text-gray-400">
         Digite o código de convite do grupo para encontrá-lo automaticamente.
-        O código consiste em 7 caracteres e pode ser obtido com o administrador do grupo.
       </p>
     </form>
   );

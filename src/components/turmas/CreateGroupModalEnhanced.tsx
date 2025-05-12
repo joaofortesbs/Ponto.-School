@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { 
-  X, Users, Plus, Key, BookOpen, Calendar, Clock, ArrowLeft,
+  X, Users, Plus, Key, BookOpen, Calendar, Clock, 
   Search, Upload, Info, Settings, UserPlus, BookmarkIcon,
   Sparkles, Check
 } from "lucide-react";
@@ -47,35 +47,6 @@ const usuariosDisponiveis = [
   { id: "u4", nome: "João Costa", avatar: null, email: "joao.costa@gmail.com", curso: "Computação" },
   { id: "u5", nome: "Carla Mendes", avatar: null, email: "carla.mendes@gmail.com", curso: "Biologia" }
 ];
-
-// Componente para entrar em um grupo usando um código
-const EntrarGrupoPorCodigoForm = () => {
-  const [codigo, setCodigo] = useState("");
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Lógica para verificar o código e entrar no grupo
-    console.log("Código inserido:", codigo);
-    // Aqui você pode adicionar a lógica para verificar o código no banco de dados e adicionar o usuário ao grupo
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-3">
-      <div>
-        <Input
-          type="text"
-          placeholder="Código do Grupo"
-          value={codigo}
-          onChange={(e) => setCodigo(e.target.value)}
-          className="w-full border-[#1E293B] bg-[#0F172A] text-white placeholder:text-gray-500 focus:border-[#FF6B00]"
-        />
-      </div>
-      <Button type="submit" className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white w-full">
-        Entrar no Grupo
-      </Button>
-    </form>
-  );
-};
 
 const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
   isOpen,
@@ -354,7 +325,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <React.Fragment>
+    <AnimatePresence>
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
@@ -370,7 +341,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
                 Novo Grupo de Estudo
               </h2>
               <p className="text-white/70 text-sm mt-1">
-                Entre em um grupo existente usando um código ou crie um novo grupo.
+                Preencha os detalhes do seu novo grupo. Você poderá editá-los posteriormente.
               </p>
             </div>
             <Button
@@ -383,36 +354,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
             </Button>
           </div>
 
-          {/* Opções de entrada no grupo */}
-          <div className="p-6 pb-0">
-            <div className="flex flex-col gap-4">
-              <div className="bg-[#1E293B]/50 rounded-lg p-4 border border-[#1E293B]">
-                <h3 className="text-lg font-medium text-white flex items-center gap-2 mb-3">
-                  <Key className="h-5 w-5 text-[#FF6B00]" />
-                  Entrar com Código
-                </h3>
-                <EntrarGrupoPorCodigoForm />
-              </div>
-
-              <div className="flex items-center gap-4 my-2">
-                <div className="flex-1 h-px bg-[#1E293B]"></div>
-                <span className="text-white/50 text-sm">ou</span>
-                <div className="flex-1 h-px bg-[#1E293B]"></div>
-              </div>
-
-              <div className="mb-4 flex justify-center">
-                <Button 
-                  type="button"
-                  className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white w-full py-6"
-                  onClick={() => document.getElementById('criar-grupo-form')?.classList.remove('hidden')}
-                >
-                  <Plus className="h-5 w-5 mr-2" /> Criar Novo Grupo
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          <form id="criar-grupo-form" onSubmit={handleSubmit} className="p-6 hidden">
+          <form onSubmit={handleSubmit} className="p-6">
             <TabsList className="grid grid-cols-4 gap-2 mb-6 bg-transparent">
               <TabsTrigger 
                 value="informacoes" 
@@ -726,7 +668,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
                       placeholder="Buscar por nome, email ou curso..."
                       className="pl-9 border-[#1E293B] bg-[#0F172A] text-white placeholder:text-gray-500 focus:border-[#FF6B00]"
                       value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)
+                      onChange={(e) => setSearchQuery(e.target.value)}
                     />
                   </div>
 
@@ -951,14 +893,10 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => {
-                  document.getElementById('criar-grupo-form')?.classList.add('hidden');
-                  /*setActiveTab("informacoes");*/ // Não reseta a aba, pois pode ter digitado algo
-                }}
+                onClick={onClose}
                 className="border-[#1E293B] text-white hover:bg-[#1E293B] hover:text-white"
               >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Voltar
+                Cancelar
               </Button>
               <Button
                 type="submit"
@@ -971,7 +909,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
           </form>
         </motion.div>
       </div>
-    </React.Fragment>
+    </AnimatePresence>
   );
 };
 
