@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -64,6 +63,7 @@ import {
   CheckSquare,
   Presentation,
   Share2,
+  ArrowLeft,
 } from "lucide-react";
 
 // Dados de exemplo para usuários que podem ser convidados
@@ -835,6 +835,7 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({
             </TabsContent>
           </Tabs>
 
+          
           <div className="flex justify-between gap-3 mt-8">
             <Button
               type="button"
