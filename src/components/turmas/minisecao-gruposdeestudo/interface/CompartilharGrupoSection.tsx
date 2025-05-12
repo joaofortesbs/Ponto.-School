@@ -19,9 +19,12 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
 
   // Garantir que o código seja exibido mesmo se for null ou undefined
   // Usar o novo formato padrão se o código não existir
-  const codigoExibicao = grupoCodigo || "MJ2TG54";
-
-  const mensagemPadrao = `Venha estudar comigo no grupo "${grupoNome}" na Ponto. School!\nUse o código: ${codigoExibicao}`;
+  const codigoExibicao = grupoCodigo || "";
+  
+  // Mensagem específica baseada na existência do código
+  const mensagemPadrao = codigoExibicao 
+    ? `Venha estudar comigo no grupo "${grupoNome}" na Ponto. School!\nUse o código: ${codigoExibicao}`
+    : `Venha estudar comigo no grupo "${grupoNome}" na Ponto. School!`;
 
   const handleCopiarCodigo = () => {
     navigator.clipboard.writeText(codigoExibicao);
@@ -58,22 +61,30 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
           Código Único do Grupo
         </label>
         <div className="relative">
-          <div className="bg-[#0F172A] border border-[#1E293B] rounded-md p-2 flex items-center justify-between">
-            <span className="text-white font-mono text-xl tracking-wider uppercase font-bold">
-              {codigoFormatado}
-            </span>
-            <Button
-              size="sm"
-              onClick={handleCopiarCodigo}
-              className="h-8 bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
-            >
-              {copiado ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
-              {copiado ? "Copiado" : "Copiar"}
-            </Button>
-          </div>
+          {codigoExibicao ? (
+            <div className="bg-[#0F172A] border border-[#1E293B] rounded-md p-2 flex items-center justify-between">
+              <span className="text-white font-mono text-xl tracking-wider uppercase font-bold">
+                {codigoFormatado}
+              </span>
+              <Button
+                size="sm"
+                onClick={handleCopiarCodigo}
+                className="h-8 bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
+              >
+                {copiado ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
+                {copiado ? "Copiado" : "Copiar"}
+              </Button>
+            </div>
+          ) : (
+            <div className="bg-[#0F172A] border border-[#1E293B] rounded-md p-3 text-center">
+              <span className="text-white/60 font-mono">SEM CÓDIGO</span>
+            </div>
+          )}
         </div>
         <p className="text-xs text-gray-400 mt-1">
-          Compartilhe este código com outras pessoas para que elas possam entrar no seu grupo.
+          {codigoExibicao 
+            ? "Compartilhe este código com outras pessoas para que elas possam entrar no seu grupo." 
+            : "Este código é usado para convidar pessoas para o seu grupo. O código será gerado quando você salvar as alterações."}
         </p>
       </div>
 

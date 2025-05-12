@@ -188,8 +188,26 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
         }
       }
       
-      // Garantir que o código esteja em maiúsculas
+      // Garantir que o código esteja em maiúsculas e tenha o comprimento correto
       codigoGrupo = codigoGrupo.toUpperCase();
+      
+      // Verificar se o código tem o comprimento esperado (7 caracteres)
+      if (codigoGrupo.length !== 7) {
+        console.warn("Código gerado não tem o comprimento esperado:", codigoGrupo);
+        // Ajustar o código para ter 7 caracteres se necessário
+        const CARACTERES_PERMITIDOS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+        if (codigoGrupo.length < 7) {
+          // Adicionar caracteres aleatórios até completar 7
+          while (codigoGrupo.length < 7) {
+            codigoGrupo += CARACTERES_PERMITIDOS.charAt(
+              Math.floor(Math.random() * CARACTERES_PERMITIDOS.length)
+            );
+          }
+        } else if (codigoGrupo.length > 7) {
+          // Truncar para 7 caracteres
+          codigoGrupo = codigoGrupo.substring(0, 7);
+        }
+      }
       
       console.log("Código único gerado para o grupo:", codigoGrupo);
 

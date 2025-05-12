@@ -88,6 +88,24 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
         return;
       }
 
+      // Verificar se é necessário gerar um novo código para o grupo
+      let codigoGrupo = grupo.codigo;
+      if (!codigoGrupo) {
+        try {
+          // Importar a função de geração de código do módulo gruposEstudoStorage
+          const { gerarCodigoUnicoGrupo } = await import('@/lib/gruposEstudoStorage');
+          codigoGrupo = await gerarCodigoUnicoGrupo();
+          console.log("Código gerado para o grupo:", codigoGrupo);
+        } catch (error) {
+          console.error("Erro ao gerar código para o grupo:", error);
+          // Fallback para código simples se ocorrer erro
+          const CARACTERES_PERMITIDOS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+          codigoGrupo = Array(7).fill(0).map(() => 
+            CARACTERES_PERMITIDOS.charAt(Math.floor(Math.random() * CARACTERES_PERMITIDOS.length))
+          ).join('');
+        }
+      }
+
       const grupoAtualizado = {
         ...grupo,
         nome,
@@ -96,7 +114,8 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
         cor,
         privado,
         visibilidade,
-        data_inicio: dataInicio
+        data_inicio: dataInicio,
+        codigo: codigoGrupo
       };
 
       // Atualizar no Supabase se não for um grupo local
@@ -113,7 +132,8 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
               cor,
               privado,
               visibilidade,
-              data_inicio: dataInicio
+              data_inicio: dataInicio,
+              codigo: codigoGrupo
             })
             .eq('id', grupo.id)
             .eq('user_id', session.user.id);
@@ -462,14 +482,22 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
           Código Único do Grupo
         </label>
         <div className="flex items-center">
-          <span className="inline-block bg-[#1E293B] text-white px-3 py-2 rounded-md font-mono text-sm tracking-wider uppercase font-bold">
-            {grupo?.codigo ? 
-              `${grupo.codigo.substring(0, 4)} ${grupo.codigo.substring(4)}` : 
-              "Sem código"}
-          </span>
+          {grupo?.codigo ? (
+            <span className="inline-block bg-[#1E293B] text-white px-3 py-2 rounded-md font-mono text-sm tracking-wider uppercase font-bold">
+              {grupo.codigo.length >= 4 ? 
+                `${grupo.codigo.substring(0, 4)} ${grupo.codigo.substring(4)}` : 
+                grupo.codigo}
+            </span>
+          ) : (
+            <span className="inline-block bg-[#1E293B] text-white/60 px-3 py-2 rounded-md font-mono text-sm">
+              SEM CÓDIGO
+            </span>
+          )}
         </div>
         <p className="text-xs text-gray-400 mt-1">
-          Este código é usado para convidar pessoas para o seu grupo. O código é insensível a maiúsculas e minúsculas.
+          {grupo?.codigo ? 
+            "Este código é usado para convidar pessoas para o seu grupo. O código é insensível a maiúsculas e minúsculas." :
+            "Um código único será gerado para este grupo quando você salvar as alterações."}
         </p>
       </div>
             </TabsContent>
