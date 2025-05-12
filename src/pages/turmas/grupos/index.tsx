@@ -160,9 +160,24 @@ export default function GruposEstudo() {
         setIsAdicionarPorCodigoModalOpen(true);
     };
 
-    const handleAdicionarGrupoPorCodigo = (codigo: string) => {
-        console.log("Adicionar grupo com código:", codigo);
+    const handleCreateGroup = (formData: any) => {
+        console.log("Novo grupo criado ou ação solicitada:", formData);
+        
+        // Verificar se é solicitação para abrir o modal de adicionar por código
+        if (formData && formData.showAdicionarPorCodigo) {
+            setIsAdicionarPorCodigoModalOpen(true);
+            return;
+        }
+        
+        // Aqui você normalmente salvaria o novo grupo no banco de dados
+        setIsCreateModalOpen(false);
+        // Mostrar mensagem de sucesso ou redirecionar para a página do novo grupo
+    };
+    
+    const handleAdicionarGrupoPorCodigo = (grupoId: string) => {
+        console.log("Grupo adicionado com sucesso, ID:", grupoId);
         setIsAdicionarPorCodigoModalOpen(false);
+        // Opcionalmente, redirecionar para o grupo ou atualizar a lista de grupos
     };
 
   return (
@@ -518,17 +533,17 @@ export default function GruposEstudo() {
         </TabsContent>
       </Tabs>
 
-      <CreateGroupModal
+      <CreateGroupModalEnhanced
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onSubmit={handleCreateGroup}
       />
 
-       <AdicionarGrupoPorCodigoModal
-                isOpen={isAdicionarPorCodigoModalOpen}
-                onClose={() => setIsAdicionarPorCodigoModalOpen(false)}
-                onSubmit={handleAdicionarGrupoPorCodigo}
-            />
+      <AdicionarGrupoPorCodigoModal
+        isOpen={isAdicionarPorCodigoModalOpen}
+        onClose={() => setIsAdicionarPorCodigoModalOpen(false)}
+        onSuccess={handleAdicionarGrupoPorCodigo}
+      />
     </div>
   );
 }
