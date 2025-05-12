@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Search, Filter, UserPlus, GraduationCap, Users2 } from "lucide-react";
@@ -107,14 +108,27 @@ const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div className="relative w-full sm:w-auto flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input
-            placeholder="Buscar grupo de estudos..."
-            className="pl-9 bg-white dark:bg-[#1E293B] border-[#FF6B00]/10 dark:border-[#FF6B00]/20"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Buscar grupo de estudos..."
+              className="pl-9 bg-white dark:bg-[#1E293B] border-[#FF6B00]/10 dark:border-[#FF6B00]/20"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-gray-600 dark:text-gray-400 border-[#FF6B00]/10 dark:border-[#FF6B00]/20 h-9 interface-selector"
+            disabled
+          >
+            <span className="interface-selector-icon">
+              <Plus className="h-4 w-4" />
+            </span>
+            <span className="interface-selector-text">Adicionar</span>
+          </Button>
         </div>
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <Button
@@ -126,16 +140,6 @@ const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className
               <Filter className="h-4 w-4" />
             </span>
             <span className="interface-selector-text">Filtrar</span>
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-gray-600 dark:text-gray-400 border-[#FF6B00]/10 dark:border-[#FF6B00]/20 h-9 interface-selector"
-          >
-            <span className="interface-selector-icon">
-              <Plus className="h-4 w-4" />
-            </span>
-            <span className="interface-selector-text">Adicionar</span>
           </Button>
           <Button
             variant="outline"
