@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Filter, UserPlus, GraduationCap, Users2 } from "lucide-react";
+import { Plus, Search, Filter, GraduationCap, Users2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
 import { gruposEstudo } from "@/components/estudos/data/gruposEstudo";
@@ -126,13 +126,6 @@ const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className
               <Filter className="h-4 w-4" />
             </span>
             <span className="interface-selector-text">Filtrar</span>
-          </Button>
-           <Button className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white h-9 interface-selector mr-2">
-            <span className="interface-selector-icon">
-              <UserPlus className="h-4 w-4" />
-            </span>
-            <span className="interface-selector-text">Adicionar Grupo</span>
-            <span className="interface-selector-text">Adicionar Grupo</span>
           </Button>
           <Button className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white h-9 interface-selector">
             <span className="interface-selector-icon">
