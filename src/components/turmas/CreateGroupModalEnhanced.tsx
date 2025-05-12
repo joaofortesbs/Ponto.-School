@@ -904,6 +904,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
                 onClick={() => {
                   // Pass data to parent component to show the code entry modal
                   onSubmit({showAdicionarPorCodigo: true, closeCurrentModal: true});
+                  onClose(); // Garantir que este modal seja fechado
                 }}
                 className="border-[#1E293B] text-white hover:bg-[#1E293B] hover:text-white"
               >

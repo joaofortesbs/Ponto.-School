@@ -15,10 +15,13 @@ import {
   Star,
 } from "lucide-react";
 import CreateGroupModal from "@/components/turmas/CreateGroupModal";
+import CreateGroupModalEnhanced from "@/components/turmas/CreateGroupModalEnhanced";
+import AdicionarGrupoPorCodigoModal from "@/components/turmas/AdicionarGrupoPorCodigoModal";
 
 export default function GruposEstudo() {
   const navigate = useNavigate();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isCodigoModalOpen, setIsCodigoModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("meus-grupos");
 
@@ -130,7 +133,7 @@ export default function GruposEstudo() {
       if (formData.closeCurrentModal) {
         setIsCreateModalOpen(false);
       }
-      //setIsCodigoModalOpen(true);
+      setIsCodigoModalOpen(true);
       return;
     }
 
@@ -514,10 +517,15 @@ export default function GruposEstudo() {
         </TabsContent>
       </Tabs>
 
-      <CreateGroupModal
+      <CreateGroupModalEnhanced
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onSubmit={handleCreateGroup}
+      />
+      
+      <AdicionarGrupoPorCodigoModal
+        isOpen={isCodigoModalOpen}
+        onClose={() => setIsCodigoModalOpen(false)}
       />
     </div>
   );

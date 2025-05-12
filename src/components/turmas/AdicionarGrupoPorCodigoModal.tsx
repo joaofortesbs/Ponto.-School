@@ -39,6 +39,9 @@ const AdicionarGrupoPorCodigoModal: React.FC<AdicionarGrupoPorCodigoModalProps> 
         title: "Funcionalidade em desenvolvimento",
         description: "A função de adicionar grupo por código será implementada em breve.",
       });
+      
+      // Fechar o modal após exibir a mensagem
+      onClose();
     }, 1500);
   };
 
