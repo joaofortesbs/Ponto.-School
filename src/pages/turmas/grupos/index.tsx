@@ -124,14 +124,6 @@ export default function GruposEstudo() {
       group.course.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
-  const handleCreateGroup = (formData: any) => {
-    console.log("Novo grupo criado:", formData);
-    // Here you would typically save the new group to your database
-    // and then add it to the list of groups
-    setIsCreateModalOpen(false);
-    // Show success message or redirect to the new group page
-  };
-
   const getActivityBadge = (level: string) => {
     switch (level) {
       case "alta":
