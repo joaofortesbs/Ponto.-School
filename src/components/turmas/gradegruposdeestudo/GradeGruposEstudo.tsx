@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
 import GrupoEstudoCard from '../minisecao-gruposdeestudo/interface/GrupoEstudoCard';
-import { getGruposEstudo, adicionarGrupoEstudo, atualizarGrupoEstudo, removerMembroGrupo, gerarCodigoGrupo, GrupoEstudo } from '@/lib/gruposEstudoStorage';
+import { GrupoEstudo } from '@/lib/gruposEstudoStorage';
 
 interface GrupoEstudo {
   id: string;
@@ -233,9 +233,11 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
       const carregarGrupos = async () => {
         setIsLoading(true);
         try {
-          const todosGrupos = await getGruposEstudo();
-          setGrupos(todosGrupos);
-          setGruposFiltrados(todosGrupos);
+          // Usar os grupos já carregados de outras fontes
+          if (gruposEstudo.length > 0) {
+            setGrupos(gruposEstudo);
+            setGruposFiltrados(gruposEstudo);
+          }
         } catch (error) {
           console.error('Erro ao carregar grupos de estudo:', error);
           toast({
@@ -249,7 +251,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
       };
   
       carregarGrupos();
-    }, []);
+    }, [gruposEstudo]);
 
   // Filtra os grupos baseado no tópico selecionado e busca
   // Atualiza o estado gruposFiltrados em vez de criar uma nova constante
@@ -483,10 +485,16 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
   };
 
       // Função que é chamada quando um novo grupo é criado
-      const handleGrupoCreated = async (novoGrupo: Omit<GrupoEstudo, 'id' | 'dataCriacao' | 'ultimaAtividade'>) => {
+      const handleGrupoCreated = async (novoGrupo: any) => {
         try {
-          // Adiciona o grupo ao armazenamento
-          const grupoAdicionado = await adicionarGrupoEstudo(novoGrupo);
+          // Criar um ID temporário para o grupo
+          const tempId = `local_${Date.now()}`;
+          const grupoAdicionado = {
+            ...novoGrupo,
+            id: tempId,
+            dataCriacao: new Date().toISOString(),
+            membros: 1
+          };
   
           // Atualiza o estado local
           setGrupos(prevGrupos => [...prevGrupos, grupoAdicionado]);
@@ -517,16 +525,14 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
         // Função para salvar alterações em um grupo existente
         const handleSalvarGrupo = async (grupoAtualizado: GrupoEstudo) => {
           try {
-            const resultado = await atualizarGrupoEstudo(grupoAtualizado);
-    
-            // Atualiza o estado local
+            // Atualiza o estado local diretamente
             setGrupos(prevGrupos => 
-              prevGrupos.map(g => g.id === resultado.id ? resultado : g)
+              prevGrupos.map(g => g.id === grupoAtualizado.id ? grupoAtualizado : g)
             );
     
             toast({
               title: "Alterações salvas",
-              description: `As alterações no grupo "${resultado.nome}" foram salvas.`,
+              description: `As alterações no grupo "${grupoAtualizado.nome}" foram salvas.`,
             });
           } catch (error) {
             console.error('Erro ao atualizar grupo:', error);
@@ -548,32 +554,13 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
         // Função para sair de um grupo
         const handleSairGrupo = async (grupoId: string) => {
           try {
-            await removerMembroGrupo(grupoId, userId);
-    
             // Atualiza o estado local
             const grupoAtual = grupos.find(g => g.id === grupoId);
     
             if (grupoAtual) {
-              // Se o usuário era o criador, o grupo fica sem criador
-              // Em uma implementação real, você pode querer fazer mais validações ou ações
-              if (grupoAtual.criadoPor === userId) {
-                toast({
-                  title: "Você era o administrador",
-                  description: "Considere transferir a administração antes de sair do grupo.",
-                });
-              }
-    
               // Atualiza a lista de grupos localmente
               setGrupos(prevGrupos => 
-                prevGrupos.map(g => {
-                  if (g.id === grupoId) {
-                    return {
-                      ...g,
-                      membros: g.membros.filter(id => id !== userId)
-                    };
-                  }
-                  return g;
-                })
+                prevGrupos.filter(g => g.id !== grupoId)
               );
     
               toast({
@@ -604,7 +591,8 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
             // Função para gerar código de grupo
       const handleGerarCodigo = async (grupoId: string): Promise<string | null> => {
         try {
-          const codigo = await gerarCodigoGrupo(grupoId);
+          // Gerar um código aleatório simples
+          const codigo = Math.random().toString(36).substring(2, 8).toUpperCase();
     
           if (codigo) {
             // Atualiza o estado local com o novo código
