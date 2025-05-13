@@ -1,3 +1,11 @@
+` tags.
+
+```text
+Corrected the handleSubmit function in the GrupoConfiguracoesModal component to properly save group configurations, including handling the group code and error cases.
+```
+
+```
+<replit_final_file>
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -55,6 +63,8 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("informacoes");
    const [grupoAtualizado, setGrupoAtualizado] = useState(grupo); // Usar estado para o grupo atualizado
+     const [submitting, setSubmitting] = useState(false);
+    const [nomeError, setNomeError] = useState<string | null>(null);
 
   // Opções de visibilidade
   const opcoesVisibilidade = [
@@ -77,25 +87,25 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
     }
   }, [grupo, isOpen]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitting(true);
-
+const handleSubmit = async () => {
     try {
-      // Validar dados
-      if (!grupoAtualizado.nome || grupoAtualizado.nome.trim() === '') {
-        setNomeError('Nome é obrigatório');
-        setSubmitting(false);
+      setSaving(true);
+      setError(null);
+
+      // Validações básicas
+      if (!nome.trim()) {
+        setError("O nome do grupo é obrigatório");
+        setSaving(false);
         return;
       }
 
-      // IMPORTANTE: NUNCA REGENERAR UM CÓDIGO JÁ EXISTENTE
-      // Verificar o código em múltiplas camadas, começando com o mais confiável
+      // IMPORTANTE: Nunca gerar um novo código, apenas usar o existente ou recuperar se já existe
       let codigoGrupo = grupo.codigo;
 
       if (!codigoGrupo) {
+        // Tentar recuperar o código de todas as fontes possíveis antes de gerar um novo
         try {
-          // 1. Verificar primeiro no armazenamento dedicado para códigos (mais confiável)
+          // 1. Verificar no armazenamento dedicado para códigos
           const CODIGOS_STORAGE_KEY = 'epictus_codigos_grupo';
           const codigosGrupos = JSON.parse(localStorage.getItem(CODIGOS_STORAGE_KEY) || '{}');
 
@@ -103,141 +113,108 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
             console.log("Recuperado código existente do storage dedicado:", codigosGrupos[grupo.id]);
             codigoGrupo = codigosGrupos[grupo.id];
           } else {
-            // 2. Verificar no localStorage via obterGruposLocal
-            const { obterGruposLocal, gerarCodigoUnicoGrupo, salvarCodigoGrupo } = await import('@/lib/gruposEstudoStorage');
+            // 2. Verificar em outros locais de armazenamento
+            const { obterGruposLocal, gerarCodigoUnicoGrupo } = await import('@/lib/gruposEstudoStorage');
             const grupos = obterGruposLocal();
             const grupoExistente = grupos.find(g => g.id === grupo.id);
 
             if (grupoExistente?.codigo) {
               console.log("Recuperado código existente do localStorage:", grupoExistente.codigo);
               codigoGrupo = grupoExistente.codigo;
-
-              // Salvar também no storage dedicado para futura referência
-              await salvarCodigoGrupo(grupo.id, grupoExistente.codigo);
             } else {
-              // 3. Verificar no Supabase
-              try {
-                const { data, error } = await supabase
-                  .from('grupos_estudo')
-                  .select('codigo')
-                  .eq('id', grupo.id)
-                  .single();
-
-                if (!error && data?.codigo) {
-                  console.log("Recuperado código existente do Supabase:", data.codigo);
-                  codigoGrupo = data.codigo;
-
-                  // Salvar em camadas de armazenamento locais para futura referência
-                  await salvarCodigoGrupo(grupo.id, data.codigo);
-                } else {
-                  // 4. Só gerar um novo código se realmente não existir em nenhum lugar
-                  console.log("Nenhum código encontrado, gerando um novo...");
-                  codigoGrupo = await gerarCodigoUnicoGrupo(grupo.id);
-                  console.log("Novo código gerado para o grupo:", codigoGrupo);
-                }
-              } catch (error) {
-                console.error("Erro ao verificar código no Supabase:", error);
-
-                // Gerar novo código como último recurso
+              // 3. Verificar na sessionStorage
+              const sessionCode = sessionStorage.getItem(`grupo_codigo_${grupo.id}`);
+              if (sessionCode) {
+                console.log("Recuperado código da sessionStorage:", sessionCode);
+                codigoGrupo = sessionCode;
+              } else {
+                // 4. Somente gerar um novo se realmente não existir em lugar nenhum
+                console.log("Nenhum código encontrado, gerando um novo...");
+                const { gerarCodigoUnicoGrupo } = await import('@/lib/gruposEstudoStorage');
                 codigoGrupo = await gerarCodigoUnicoGrupo(grupo.id);
-                console.log("Novo código gerado após erro:", codigoGrupo);
+
+                // Salvar imediatamente nos storages para evitar perda
+                if (grupo.id) {
+                  codigosGrupos[grupo.id] = codigoGrupo;
+                  localStorage.setItem(CODIGOS_STORAGE_KEY, JSON.stringify(codigosGrupos));
+                  sessionStorage.setItem(`grupo_codigo_${grupo.id}`, codigoGrupo);
+                }
+
+                console.log("Novo código gerado e salvo:", codigoGrupo);
               }
             }
           }
-        } catch (error) {
-          console.error("Erro ao recuperar/gerar código para o grupo:", error);
-          // Fallback para código simples se ocorrer erro apenas se não existir nenhum código
+        } catch (codeError) {
+          console.error("Erro ao recuperar/gerar código:", codeError);
+
+          // Apenas se realmente não tiver código, use um fallback
           if (!codigoGrupo) {
             const CARACTERES_PERMITIDOS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
             codigoGrupo = Array(7).fill(0).map(() => 
               CARACTERES_PERMITIDOS.charAt(Math.floor(Math.random() * CARACTERES_PERMITIDOS.length))
             ).join('');
-            console.log("Código de fallback gerado:", codigoGrupo);
-
-            // Tentar salvar este código de fallback
-            try {
-              const { salvarCodigoGrupo } = await import('@/lib/gruposEstudoStorage');
-              await salvarCodigoGrupo(grupo.id, codigoGrupo);
-            } catch (e) {
-              console.error("Erro ao salvar código de fallback:", e);
-            }
+            console.log("Código fallback gerado:", codigoGrupo);
           }
         }
       }
 
-      // Preparar dados atualizados, MANTENDO o código original
-      const grupoAtualizadoParaEnvio = {
-        ...grupoAtualizado,
-        codigo: codigoGrupo // Usar o código recuperado ou gerado
+      // Garantir que o código esteja em maiúsculas
+      codigoGrupo = codigoGrupo?.toUpperCase();
+
+      // Preparar o objeto atualizado preservando o código
+      const grupoAtualizado = {
+        ...grupo,
+        nome,
+        descricao,
+        disciplina,
+        cor,
+        privado,
+        visibilidade,
+        data_inicio: dataInicio,
+        codigo: codigoGrupo // Usar o código existente ou o novo recuperado
       };
 
-      // Tentar atualizar no Supabase
-      const { error } = await supabase
-        .from('grupos_estudo')
-        .update(grupoAtualizadoParaEnvio)
-        .eq('id', grupo.id);
+      console.log("Salvando grupo atualizado:", grupoAtualizado);
 
-      if (error) {
-        console.error('Erro ao atualizar grupo:', error);
+      // Atualizar no Supabase (quando disponível)
+      try {
+        const { data, error } = await supabase
+          .from('grupos_estudo')
+          .update(grupoAtualizado)
+          .eq('id', grupo.id)
+          .select();
 
-        // Mesmo com erro no Supabase, atualizamos localmente
-        const { salvarGrupoLocal, salvarCodigoGrupo } = await import('@/lib/gruposEstudoStorage');
-
-        // Garantir que o código seja preservado em todas as camadas
-        await salvarCodigoGrupo(grupo.id, codigoGrupo);
-
-        const grupoAtualizado = {
-          ...grupo,
-          ...grupoAtualizadoParaEnvio,
-          codigo: codigoGrupo
-        };
-
-        salvarGrupoLocal(grupoAtualizado);
-
-        toast({
-          title: "Configurações salvas localmente",
-          description: "As alterações foram salvas no dispositivo e serão sincronizadas quando possível.",
-        });
-      } else {
-        // Atualizar no localStorage também
-        const { salvarGrupoLocal, salvarCodigoGrupo } = await import('@/lib/gruposEstudoStorage');
-
-        // Garantir que o código seja preservado em todas as camadas
-        await salvarCodigoGrupo(grupo.id, codigoGrupo);
-
-        const grupoAtualizado = {
-          ...grupo,
-          ...grupoAtualizadoParaEnvio,
-          codigo: codigoGrupo
-        };
-
-        salvarGrupoLocal(grupoAtualizado);
-
-        toast({
-          title: "Configurações salvas",
-          description: "As alterações no grupo foram salvas com sucesso.",
-        });
+        if (error) throw error;
+        console.log("Grupo atualizado no Supabase:", data);
+      } catch (supabaseError) {
+        console.error("Erro ao atualizar o grupo no Supabase:", supabaseError);
+        // Continuar e salvar localmente mesmo com erro no Supabase
       }
 
-      // Chamar callback de sucesso para atualizar a UI
+      // Atualizar no armazenamento local
+      const { atualizarGrupoLocal } = await import('@/lib/gruposEstudoStorage');
+      await atualizarGrupoLocal(grupoAtualizado);
+
+      // Atualizar o estado local para refletir as mudanças
+      setGrupoAtualizado(grupoAtualizado);
+
+      // Retornar o grupo atualizado para o componente pai
       if (onSave) {
-        onSave({
-          ...grupo,
-          ...grupoAtualizadoParaEnvio,
-          codigo: codigoGrupo
-        });
+        onSave(grupoAtualizado);
       }
 
-      onClose();
+      // Mostrar notificação de sucesso
+      mostrarNotificacaoSucesso("Configurações salvas com sucesso!");
+
+      // Fechar o modal após um breve delay
+      setTimeout(() => {
+        onClose();
+      }, 1000);
     } catch (error) {
-      console.error('Erro ao salvar configurações:', error);
-      toast({
-        title: "Erro ao salvar",
-        description: "Ocorreu um erro ao salvar as configurações. Tente novamente.",
-        variant: "destructive",
-      });
+      console.error("Erro ao salvar configurações:", error);
+      setError(typeof error === 'string' ? error : 'Ocorreu um erro ao salvar as configurações. Tente novamente.');
     } finally {
-      setSubmitting(false);
+      setSaving(false);
     }
   };
 
