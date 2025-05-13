@@ -73,16 +73,7 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
       setPrivado(grupo.privado || false);
       setVisibilidade(grupo.visibilidade || "todos");
       setDataInicio(grupo.data_inicio || "");
-      setGrupoAtualizado(grupo); // Inicializar o estado do grupo atualizado
-      
-      // Se o grupo já tiver um código, mostrar notificação
-      if (grupo.codigo) {
-        console.log("Grupo já possui código:", grupo.codigo);
-      } else {
-        console.log("Grupo não possui código, será gerado automaticamente");
-        // Se o grupo não tiver código, gerar um ao abrir as configurações
-        handleGerarCodigo();
-      }
+        setGrupoAtualizado(grupo); // Inicializar o estado do grupo atualizado
     }
   }, [grupo, isOpen]);
 
@@ -218,14 +209,14 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
           console.log("Novo código gerado:", novoCodigo);
 
           if (novoCodigo) {
-              // Criar uma cópia do objeto do grupo com o novo código para evitar problemas de referência
-              const grupoComCodigo = grupo ? { ...grupo, codigo: novoCodigo } : null;
-              
               // Atualizar o estado local
-              setGrupoAtualizado(prev => prev ? {
+              setGrupoAtualizado(prev => ({
                   ...prev,
                   codigo: novoCodigo
-              } : null);
+              }));
+
+              // Atualizar o grupo original também para garantir que a UI seja atualizada
+              if (grupo) grupo.codigo = novoCodigo;
 
               // Mostrar notificação de sucesso
               mostrarNotificacaoSucesso("Código permanente do grupo gerado com sucesso!");
@@ -246,11 +237,10 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
                           console.log('Código salvo com sucesso no Supabase:', novoCodigo);
                       }
                   } catch (dbError) {
-                      console.error('Erro na comunicação com o banco de dados:', dbError);
-                      mostrarNotificacaoErro("Erro na comunicação com o servidor. O código foi salvo localmente.");
+                      console.error('Erro na comunicação com Supabase:', dbError);
                   }
               }
-              
+
               // Sempre salvar localmente, independente do tipo de grupo (local ou remoto)
               // Isso garante redundância e persistência mesmo se houver problemas com o Supabase
               try {
@@ -285,9 +275,8 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
               }
 
               // Forçar atualização da UI e dos componentes pais
-              // IMPORTANTE: Passar o objeto completo com o novo código, não apenas o código
-              if (grupo && onSave && grupoComCodigo) {
-                  onSave(grupoComCodigo);
+              if (grupo && onSave) {
+                  onSave({...grupo, codigo: novoCodigo});
               }
           }
       } catch (error) {

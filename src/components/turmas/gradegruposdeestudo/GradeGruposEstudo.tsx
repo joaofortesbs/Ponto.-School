@@ -403,34 +403,25 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
   // Função para salvar as alterações do grupo
   const handleSaveGroupSettings = async (grupoAtualizado: GrupoEstudo) => {
     try {
-      console.log("Salvando alterações do grupo:", grupoAtualizado);
-      
-      // Garantir que o objeto atualizado preserva todas as propriedades originais
-      const grupoParaSalvar = grupoAtualizado.id ? {
-        ...gruposEstudo.find(g => g.id === grupoAtualizado.id) || {},
-        ...grupoAtualizado
-      } : grupoAtualizado;
-      
       // Atualizar a lista de grupos
       setGruposEstudo(prevGrupos => 
         prevGrupos.map(grupo => 
-          grupo.id === grupoParaSalvar.id ? grupoParaSalvar : grupo
+          grupo.id === grupoAtualizado.id ? grupoAtualizado : grupo
         )
       );
 
       // Atualizar no armazenamento local
       const gruposLocais = obterGruposLocal();
       const gruposAtualizados = gruposLocais.map((grupo: any) => 
-        grupo.id === grupoParaSalvar.id ? {
+        grupo.id === grupoAtualizado.id ? {
           ...grupo,
-          nome: grupoParaSalvar.nome,
-          descricao: grupoParaSalvar.descricao,
-          disciplina: grupoParaSalvar.disciplina,
-          cor: grupoParaSalvar.cor,
-          privado: grupoParaSalvar.privado,
-          visibilidade: grupoParaSalvar.visibilidade,
-          data_inicio: grupoParaSalvar.data_inicio,
-          codigo: grupoParaSalvar.codigo // Garantir que o código seja preservado
+          nome: grupoAtualizado.nome,
+          descricao: grupoAtualizado.descricao,
+          disciplina: grupoAtualizado.disciplina,
+          cor: grupoAtualizado.cor,
+          privado: grupoAtualizado.privado,
+          visibilidade: grupoAtualizado.visibilidade,
+          data_inicio: grupoAtualizado.data_inicio
         } : grupo
       );
 
@@ -441,27 +432,6 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
         sessionStorage.setItem('epictus_grupos_estudo_session', JSON.stringify(gruposAtualizados));
       } catch (sessionError) {
         console.error("Erro ao atualizar backup na sessão:", sessionError);
-      }
-      
-      // Implementar redundância adicional com a função salvarGrupoLocal
-      try {
-        const grupoLocalAtualizado = gruposLocais.find((g: any) => g.id === grupoParaSalvar.id);
-        if (grupoLocalAtualizado) {
-          const grupoComDadosAtualizados = {
-            ...grupoLocalAtualizado,
-            nome: grupoParaSalvar.nome,
-            descricao: grupoParaSalvar.descricao,
-            disciplina: grupoParaSalvar.disciplina,
-            cor: grupoParaSalvar.cor,
-            privado: grupoParaSalvar.privado,
-            visibilidade: grupoParaSalvar.visibilidade,
-            data_inicio: grupoParaSalvar.data_inicio,
-            codigo: grupoParaSalvar.codigo
-          };
-          salvarGrupoLocal(grupoComDadosAtualizados);
-        }
-      } catch (error) {
-        console.error("Erro na redundância de salvamento:", error);
       }
 
       // Fechar o modal
@@ -486,40 +456,26 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
     try {
       console.log("Dados do formulário:", formData);
 
-      // Obter sessão do usuário atual
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        throw new Error("Usuário não autenticado");
-      }
-      
-      // Atualizar lista de grupos carregando novamente do banco e localStorage
-      const todosGrupos = await obterTodosGrupos(session.user.id);
-      console.log("Grupos atualizados após criação:", todosGrupos.length);
+      // Apenas receber o formData - o modal já está salvando o grupo
+      console.log("Grupo criado com sucesso:", formData);
+
+      // Atualizar lista de grupos - remover duplicatas verificando por ID ou nome
+      const todosGrupos = await obterTodosGrupos();
 
       // Mapear grupos para o formato correto
       const gruposMapeados = todosGrupos.map(grupo => ({
-        id: grupo.id,
-        nome: grupo.nome,
-        descricao: grupo.descricao,
-        cor: grupo.cor,
-        membros: grupo.membros || 1,
-        topico: grupo.topico,
+        ...grupo,
         disciplina: grupo.disciplina || "",
-        icon: grupo.topico_icon,
-        dataCriacao: grupo.data_criacao,
-        tendencia: Math.random() > 0.7 ? "alta" : undefined, // Valor aleatório para demo
-        novoConteudo: Math.random() > 0.7, // Valor aleatório para demo
-        privado: grupo.privado,
-        visibilidade: grupo.visibilidade,
-        topico_nome: grupo.topico_nome,
-        topico_icon: grupo.topico_icon,
-        data_inicio: grupo.data_inicio,
-        criador: grupo.criador || "você" // Garantir que o criador esteja definido
+        novoConteudo: Boolean(grupo.novoConteudo || Math.random() > 0.7),
+        tendencia: grupo.tendencia || (Math.random() > 0.7 ? "alta" : undefined)
       }));
 
-      // Atualizar a lista de grupos no estado
-      setGruposEstudo(gruposMapeados);
+      // Remover duplicatas baseado no nome do grupo
+      const gruposFiltrados = gruposMapeados.filter((grupo, index, self) => 
+        index === self.findIndex((g) => g.nome === grupo.nome)
+      );
+
+      setGruposEstudo(gruposFiltrados);
 
       // Fechar modal
       setShowCreateGroupModal(false);

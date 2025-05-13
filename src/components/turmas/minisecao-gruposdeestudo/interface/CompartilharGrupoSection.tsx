@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Share, Check, Copy, Key } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -15,48 +15,15 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
   onGerarCodigo
 }) => {
   const [copiado, setCopiado] = useState(false);
-  const [codigoLocalExibido, setCodigoLocalExibido] = useState(grupoCodigo);
+  const [codigoGerado, setCodigoGerado] = useState(!!grupoCodigo);
 
-  // Atualizar o código local quando o prop mudar
-  useEffect(() => {
-    if (grupoCodigo) {
-      setCodigoLocalExibido(grupoCodigo);
-      setCopiado(false);
-      console.log("Código do grupo atualizado no componente:", grupoCodigo);
-    } else if (onGerarCodigo) {
-      // Se não houver código e existir a função para gerar, chamá-la automaticamente
-      console.log("Não há código definido, gerando automaticamente...");
-      // Usar um setTimeout mais longo para garantir que o componente está completamente montado
-      setTimeout(() => {
-        if (onGerarCodigo) {
-          onGerarCodigo();
-        }
-      }, 800); // Aumentado para 800ms para garantir que a interface foi renderizada completamente
-    }
-  }, [grupoCodigo, onGerarCodigo]);
-  
-  // Efeito adicional para verificar o código após a montagem completa do componente
-  useEffect(() => {
-    const verificarCodigo = () => {
-      if (!grupoCodigo && onGerarCodigo) {
-        console.log("Verificação secundária: código não encontrado, gerando...");
-        onGerarCodigo();
-      }
-    };
-    
-    // Verificar após um tempo maior para garantir que todos os estados foram atualizados
-    const timer = setTimeout(verificarCodigo, 1500);
-    
-    return () => clearTimeout(timer);
-  }, []);
-
-  const formattedCodigo = codigoLocalExibido && codigoLocalExibido.length > 4 
-    ? `${codigoLocalExibido.substring(0, 4)} ${codigoLocalExibido.substring(4)}`
-    : codigoLocalExibido || "SEM CÓDIGO";
+  const formattedCodigo = grupoCodigo && grupoCodigo.length > 4 
+    ? `${grupoCodigo.substring(0, 4)} ${grupoCodigo.substring(4)}`
+    : grupoCodigo || "SEM CÓDIGO";
 
   const handleCopiarCodigo = () => {
     // Garantir que copiamos o código sem formatação (sem espaços)
-    navigator.clipboard.writeText(codigoLocalExibido)
+    navigator.clipboard.writeText(grupoCodigo)
       .then(() => {
         setCopiado(true);
         setTimeout(() => setCopiado(false), 2000);
@@ -71,7 +38,7 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
       if (navigator.share) {
         await navigator.share({
           title: `Grupo de Estudos: ${grupoNome}`,
-          text: `Entre no meu grupo de estudos "${grupoNome}" usando o código: ${codigoLocalExibido}`,
+          text: `Entre no meu grupo de estudos "${grupoNome}" usando o código: ${grupoCodigo}`,
           url: window.location.href,
         });
       } else {
@@ -81,15 +48,17 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
       console.error('Erro ao compartilhar:', error);
     }
   };
+    }
+  };
 
   const handleGerarCodigo = async () => {
     if (onGerarCodigo) {
-      try {
-        // Chamar a função de gerar código do componente pai
-        await onGerarCodigo();
-      } catch (error) {
-        console.error('Erro ao gerar código:', error);
-      }
+      await onGerarCodigo();
+      setCodigoGerado(true);
+      // Forçar re-renderização com um pequeno atraso para garantir que a UI seja atualizada
+      setTimeout(() => {
+        console.log("Código gerado e atualizado:", grupoCodigo);
+      }, 300);
     }
   };
 
