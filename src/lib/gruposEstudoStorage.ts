@@ -390,8 +390,8 @@ export const criarGrupo = async (dados: Omit<GrupoEstudo, 'id'>): Promise<GrupoE
         id
       };
 
-      // Salvar localmente
-      // salvarGrupoLocal(grupoLocal); // This line was removed to avoid double saving
+      // Salvar localmente - Reabilitamos esta função para garantir o salvamento
+      salvarGrupoLocal(grupoLocal);
 
       // Mostrar notificação sobre o armazenamento local
       const element = document.createElement('div');
@@ -420,9 +420,28 @@ export const criarGrupo = async (dados: Omit<GrupoEstudo, 'id'>): Promise<GrupoE
       return grupoLocal;
     }
 
+    // Para grupos criados no Supabase, vamos adicionar também ao localStorage
+    // para garantir consistência entre as interfaces
+    if (data) {
+      salvarGrupoLocal(data);
+    }
+
     return data;
   } catch (error) {
     console.error('Erro ao criar grupo:', error);
+
+    // Tentar criar localmente mesmo em caso de erro
+    try {
+      const id = `local_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+      const grupoLocal: GrupoEstudo = {
+        ...dados,
+        id
+      };
+      salvarGrupoLocal(grupoLocal);
+      return grupoLocal;
+    } catch (localError) {
+      console.error('Erro ao criar grupo localmente:', localError);
+    }
 
     // Falha total, retornar nulo
     return null;
