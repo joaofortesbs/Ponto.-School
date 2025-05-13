@@ -216,30 +216,12 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
         return;
       }
 
-      // Gerar um código único para o grupo no formato de 7 caracteres
-      const { gerarCodigoUnico } = await import('@/lib/gruposEstudoStorage');
-      let codigoGrupo = gerarCodigoUnico();
+      // Gerar um código único para o grupo usando a função atualizada
+      const { gerarCodigoUnicoGrupo } = await import('@/lib/gruposEstudoStorage');
+      let codigoGrupo = await gerarCodigoUnicoGrupo();
       
       // Garantir que o código está em maiúsculas
       codigoGrupo = codigoGrupo.toUpperCase();
-      
-      // Verificar se o código tem exatamente 7 caracteres
-      if (codigoGrupo.length !== 7) {
-        console.warn("Ajustando tamanho do código para 7 caracteres");
-        const CARACTERES_PERMITIDOS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-        
-        // Adicionar caracteres se for menor que 7
-        while (codigoGrupo.length < 7) {
-          codigoGrupo += CARACTERES_PERMITIDOS.charAt(
-            Math.floor(Math.random() * CARACTERES_PERMITIDOS.length)
-          );
-        }
-        
-        // Truncar se for maior que 7
-        if (codigoGrupo.length > 7) {
-          codigoGrupo = codigoGrupo.substring(0, 7);
-        }
-      }
       
       console.log("Código único gerado automaticamente:", codigoGrupo);
 

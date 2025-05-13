@@ -139,11 +139,39 @@ export const verificarSeCodigoExiste = async (codigo: string): Promise<boolean> 
 
 /**
  * Gera um código único para o grupo de estudos
- * Simplificada para retornar imediatamente um código válido
+ * O código é gerado apenas uma vez para cada grupo e persistido
  */
-export const gerarCodigoUnicoGrupo = async (): Promise<string> => {
+export const gerarCodigoUnicoGrupo = async (grupoId?: string): Promise<string> => {
   try {
-    // Gerar código diretamente para uso imediato
+    // Se um grupoId foi fornecido, verificar se já existe um código associado a ele
+    if (grupoId) {
+      // Verificar se o grupo já tem um código no localStorage
+      const grupos = obterGruposLocal();
+      const grupoExistente = grupos.find(g => g.id === grupoId);
+      
+      if (grupoExistente && grupoExistente.codigo) {
+        console.log(`Utilizando código existente para o grupo:`, grupoExistente.codigo);
+        return grupoExistente.codigo;
+      }
+      
+      // Verificar no Supabase se o grupo já tem um código
+      try {
+        const { data, error } = await supabase
+          .from('grupos_estudo')
+          .select('codigo')
+          .eq('id', grupoId)
+          .single();
+          
+        if (!error && data && data.codigo) {
+          console.log(`Código encontrado no banco de dados:`, data.codigo);
+          return data.codigo;
+        }
+      } catch (supabaseError) {
+        console.error('Erro ao buscar código existente no Supabase:', supabaseError);
+      }
+    }
+    
+    // Se não encontrar um código existente, gerar um novo
     let codigoGrupo = gerarCodigoUnico();
     
     // Garantir que o código está em formato correto
@@ -170,12 +198,58 @@ export const gerarCodigoUnicoGrupo = async (): Promise<string> => {
     const timestamp = Date.now().toString(36).substring(0, 2).toUpperCase();
     codigoGrupo = codigoGrupo.substring(0, 5) + timestamp;
     
+    // Se um grupoId foi fornecido e o código foi gerado, salvar o código para este grupo
+    if (grupoId) {
+      // Salvar no localStorage
+      const grupos = obterGruposLocal();
+      const grupoIndex = grupos.findIndex(g => g.id === grupoId);
+      
+      if (grupoIndex >= 0) {
+        grupos[grupoIndex].codigo = codigoGrupo;
+        localStorage.setItem('epictus_grupos_estudo', JSON.stringify(grupos));
+        console.log(`Código ${codigoGrupo} salvo localmente para o grupo ${grupoId}`);
+      }
+      
+      // Tentar salvar no Supabase
+      try {
+        const { error } = await supabase
+          .from('grupos_estudo')
+          .update({ codigo: codigoGrupo })
+          .eq('id', grupoId);
+          
+        if (error) {
+          console.error('Erro ao salvar código no Supabase:', error);
+        } else {
+          console.log(`Código ${codigoGrupo} salvo no Supabase para o grupo ${grupoId}`);
+        }
+      } catch (supabaseError) {
+        console.error('Erro ao acessar Supabase para salvar código:', supabaseError);
+      }
+    }
+    
     console.log(`Código único gerado automaticamente:`, codigoGrupo);
     return codigoGrupo;
   } catch (error) {
     console.error("Erro ao gerar código único para grupo:", error);
     // Garantir que sempre retornamos um código, mesmo em caso de erro
-    return `GE${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+    const codigoEmergencia = `GE${Math.random().toString(36).substring(2, 5).toUpperCase()}`;
+    
+    // Se um grupoId foi fornecido, tentar salvar este código de emergência
+    if (grupoId) {
+      try {
+        const grupos = obterGruposLocal();
+        const grupoIndex = grupos.findIndex(g => g.id === grupoId);
+        
+        if (grupoIndex >= 0) {
+          grupos[grupoIndex].codigo = codigoEmergencia;
+          localStorage.setItem('epictus_grupos_estudo', JSON.stringify(grupos));
+        }
+      } catch (saveError) {
+        console.error('Erro ao salvar código de emergência:', saveError);
+      }
+    }
+    
+    return codigoEmergencia;
   }
 };
 
