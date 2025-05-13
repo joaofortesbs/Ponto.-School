@@ -2,6 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Share, Check, Copy, Key, Link } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { toast } from '@/components/ui/use-toast';
+import { useToast } from '@/components/ui/use-toast';
+import { supabase } from '@/lib/supabase';
 
 interface CompartilharGrupoSectionProps {
   grupoCodigo: string;
@@ -20,123 +23,125 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
   const [codigoGerado, setCodigoGerado] = useState(!!grupoCodigo);
   const [codigoLocal, setCodigoLocal] = useState(grupoCodigo);
   const gerouCodigoRef = useRef(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   // Tentar recuperar código do armazenamento dedicado
   useEffect(() => {
     const recuperarOuGerarCodigo = async () => {
-    setIsLoading(true);
+      setIsLoading(true);
 
-    try {
-      if (grupoId) {
-        // Usar a função centralizada para recuperar o código em todas as camadas
-        const { obterGrupoPorId, gerarCodigoUnicoGrupo, salvarCodigoGrupo } = await import('@/lib/gruposEstudoStorage');
+      try {
+        if (grupoId) {
+          // Usar a função centralizada para recuperar o código em todas as camadas
+          const { obterGrupoPorId, gerarCodigoUnicoGrupo, salvarCodigoGrupo } = await import('@/lib/gruposEstudoStorage');
 
-        // Estratégia multinível para recuperar código:
+          // Estratégia multinível para recuperar código:
 
-        // 1. Verificar primeiro no armazenamento dedicado para códigos (mais confiável)
-        try {
-          const CODIGOS_STORAGE_KEY = 'epictus_codigos_grupo';
-          const codigosGrupos = JSON.parse(localStorage.getItem(CODIGOS_STORAGE_KEY) || '{}');
-
-          if (codigosGrupos[grupoId]) {
-            console.log("Recuperado código do storage dedicado:", codigosGrupos[grupoId]);
-            setCodigoLocal(codigosGrupos[grupoId]);
-            setCodigoGerado(true);
-            setIsLoading(false);
-            return;
-          }
-        } catch (e) {
-          console.error("Erro ao verificar storage dedicado:", e);
-        }
-
-        // 2. Verificar no grupo armazenado localmente
-        try {
-          const { obterGruposLocal } = await import('@/lib/gruposEstudoStorage');
-          const grupos = obterGruposLocal();
-          const grupoExistente = grupos.find(g => g.id === grupoId);
-
-          if (grupoExistente?.codigo) {
-            console.log("Recuperado código do localStorage:", grupoExistente.codigo);
-            setCodigoLocal(grupoExistente.codigo);
-            setCodigoGerado(true);
-
-            // Salvar no armazenamento dedicado para futuras recuperações
-            try {
-              const CODIGOS_STORAGE_KEY = 'epictus_codigos_grupo';
-              const codigosGrupos = JSON.parse(localStorage.getItem(CODIGOS_STORAGE_KEY) || '{}');
-              codigosGrupos[grupoId] = grupoExistente.codigo;
-              localStorage.setItem(CODIGOS_STORAGE_KEY, JSON.stringify(codigosGrupos));
-            } catch (e) {
-              console.error("Erro ao salvar no armazenamento dedicado:", e);
-            }
-
-            setIsLoading(false);
-            return;
-          }
-        } catch (e) {
-          console.error("Erro ao verificar grupos no localStorage:", e);
-        }
-
-        // 3. Verificar no Supabase
-        try {
-          const { data, error } = await supabase
-            .from('grupos_estudo')
-            .select('codigo')
-            .eq('id', grupoId)
-            .single();
-
-          if (!error && data?.codigo) {
-            console.log("Recuperado código do Supabase:", data.codigo);
-            setCodigoLocal(data.codigo);
-            setCodigoGerado(true);
-
-            // Propagar para camadas de armazenamento local
-            await salvarCodigoGrupo(grupoId, data.codigo);
-
-            setIsLoading(false);
-            return;
-          }
-        } catch (supabaseError) {
-          console.error("Erro ao verificar código no Supabase:", supabaseError);
-        }
-
-        // 4. Se chegou aqui, não encontrou código existente. Gerar um novo.
-        if (onGerarCodigo) {
-          const novoCodigo = await onGerarCodigo();
-          console.log("Novo código gerado via callback:", novoCodigo);
-          setCodigoLocal(novoCodigo);
-          setCodigoGerado(true);
-        } else {
-          // Gerar internamente se não houver callback
-          const codigo = await gerarCodigoUnicoGrupo(grupoId);
-          console.log("Novo código gerado internamente:", codigo);
-          setCodigoLocal(codigo);
-          setCodigoGerado(true);
-
-          // Atualizar no Supabase
+          // 1. Verificar primeiro no armazenamento dedicado para códigos (mais confiável)
           try {
-            await supabase
-              .from('grupos_estudo')
-              .update({ codigo })
-              .eq('id', grupoId);
+            const CODIGOS_STORAGE_KEY = 'epictus_codigos_grupo';
+            const codigosGrupos = JSON.parse(localStorage.getItem(CODIGOS_STORAGE_KEY) || '{}');
 
-            console.log("Código atualizado no Supabase");
+            if (codigosGrupos[grupoId]) {
+              console.log("Recuperado código do storage dedicado:", codigosGrupos[grupoId]);
+              setCodigoLocal(codigosGrupos[grupoId]);
+              setCodigoGerado(true);
+              setIsLoading(false);
+              return;
+            }
           } catch (e) {
-            console.error("Erro ao atualizar código no Supabase:", e);
+            console.error("Erro ao verificar storage dedicado:", e);
+          }
+
+          // 2. Verificar no grupo armazenado localmente
+          try {
+            const { obterGruposLocal } = await import('@/lib/gruposEstudoStorage');
+            const grupos = obterGruposLocal();
+            const grupoExistente = grupos.find(g => g.id === grupoId);
+
+            if (grupoExistente?.codigo) {
+              console.log("Recuperado código do localStorage:", grupoExistente.codigo);
+              setCodigoLocal(grupoExistente.codigo);
+              setCodigoGerado(true);
+
+              // Salvar no armazenamento dedicado para futuras recuperações
+              try {
+                const CODIGOS_STORAGE_KEY = 'epictus_codigos_grupo';
+                const codigosGrupos = JSON.parse(localStorage.getItem(CODIGOS_STORAGE_KEY) || '{}');
+                codigosGrupos[grupoId] = grupoExistente.codigo;
+                localStorage.setItem(CODIGOS_STORAGE_KEY, JSON.stringify(codigosGrupos));
+              } catch (e) {
+                console.error("Erro ao salvar no armazenamento dedicado:", e);
+              }
+
+              setIsLoading(false);
+              return;
+            }
+          } catch (e) {
+            console.error("Erro ao verificar grupos no localStorage:", e);
+          }
+
+          // 3. Verificar no Supabase
+          try {
+            const { data, error } = await supabase
+              .from('grupos_estudo')
+              .select('codigo')
+              .eq('id', grupoId)
+              .single();
+
+            if (!error && data?.codigo) {
+              console.log("Recuperado código do Supabase:", data.codigo);
+              setCodigoLocal(data.codigo);
+              setCodigoGerado(true);
+
+              // Propagar para camadas de armazenamento local
+              await salvarCodigoGrupo(grupoId, data.codigo);
+
+              setIsLoading(false);
+              return;
+            }
+          } catch (supabaseError) {
+            console.error("Erro ao verificar código no Supabase:", supabaseError);
+          }
+
+          // 4. Se chegou aqui, não encontrou código existente. Gerar um novo.
+          if (onGerarCodigo) {
+            const novoCodigo = await onGerarCodigo();
+            console.log("Novo código gerado via callback:", novoCodigo);
+            setCodigoLocal(novoCodigo);
+            setCodigoGerado(true);
+          } else {
+            // Gerar internamente se não houver callback
+            const codigo = await gerarCodigoUnicoGrupo(grupoId);
+            console.log("Novo código gerado internamente:", codigo);
+            setCodigoLocal(codigo);
+            setCodigoGerado(true);
+
+            // Atualizar no Supabase
+            try {
+              await supabase
+                .from('grupos_estudo')
+                .update({ codigo })
+                .eq('id', grupoId);
+
+              console.log("Código atualizado no Supabase");
+            } catch (e) {
+              console.error("Erro ao atualizar código no Supabase:", e);
+            }
           }
         }
+      } catch (error) {
+        console.error("Erro ao recuperar ou gerar código:", error);
+        toast({
+          title: "Erro ao gerar código",
+          description: "Não foi possível gerar um código para o grupo. Tente novamente.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error("Erro ao recuperar ou gerar código:", error);
-      toast({
-        title: "Erro ao gerar código",
-        description: "Não foi possível gerar um código para o grupo. Tente novamente.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    };
 
     recuperarOuGerarCodigo();
   }, [grupoId]);
@@ -299,11 +304,6 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
     }
   };
 
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast()
-
-  
-
   return (
     <div className="space-y-6">
       <div>
@@ -346,76 +346,22 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
                 onClick={handleGerarCodigo}
                 variant="secondary"
                 className="w-full justify-center"
+                disabled={isLoading}
               >
-                Gerar código do grupo
+                {isLoading ? "Gerando código..." : "Gerar código do grupo"}
               </Button>
             </div>
           )}
-
-          
         </div>
       </div>
 
-      
-
-      
-    
-    
-        
-          
-            
-              
-                {codigoLocal}
-              
-              
-                
-                  
-                    
-                  
-                  
-                    
-                      
-                    ) : (
-                      
-                    )}
-                    
-                  
-                
-              
-              
-                Compartilhe este código com as pessoas que você deseja convidar para o grupo.
-                Os convidados podem usar o código diretamente ou o link completo.
-              
-            
-          ) : (
-            
-              
-                
-                  
-                  Gerando código...
-                
-              ) : (
-                
-                  
-                  Gerar código de convite
-                
-              )}
-            
-          )}
-        
-      
-    
-    
-
-      
-        
-          Apenas pessoas com o código podem solicitar entrada no grupo.
-        
-        
-          Configure as opções de privacidade do grupo na aba "Privacidade".
-        
-      
-    
+      {codigoLocal && (
+        <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
+          <p>Apenas pessoas com o código podem solicitar entrada no grupo.</p>
+          <p>Configure as opções de privacidade do grupo na aba "Privacidade".</p>
+        </div>
+      )}
+    </div>
   );
 };
 
