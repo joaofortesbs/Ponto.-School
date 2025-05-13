@@ -74,7 +74,7 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
       setVisibilidade(grupo.visibilidade || "todos");
       setDataInicio(grupo.data_inicio || "");
       setGrupoAtualizado(grupo); // Inicializar o estado do grupo atualizado
-
+      
       // Se o grupo já tiver um código, mostrar notificação
       if (grupo.codigo) {
         console.log("Grupo já possui código:", grupo.codigo);
@@ -212,131 +212,87 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
           }
 
           // Gerar um código único para o grupo
-          const { gerarCodigoUnicoGrupo, salvarGrupoLocal, salvarCodigoGrupo } = await import('@/lib/gruposEstudoStorage');
+          const { gerarCodigoUnicoGrupo } = await import('@/lib/gruposEstudoStorage');
           const novoCodigo = await gerarCodigoUnicoGrupo();
 
           console.log("Novo código gerado:", novoCodigo);
 
           if (novoCodigo) {
-              // Impedir que a operação seja interrompida
+              // Criar uma cópia do objeto do grupo com o novo código para evitar problemas de referência
+              const grupoComCodigo = grupo ? { ...grupo, codigo: novoCodigo } : null;
+              
+              // Atualizar o estado local
+              setGrupoAtualizado(prev => prev ? {
+                  ...prev,
+                  codigo: novoCodigo
+              } : null);
+
+              // Mostrar notificação de sucesso
+              mostrarNotificacaoSucesso("Código permanente do grupo gerado com sucesso!");
+
+              // Atualizar no Supabase se for um grupo remoto
+              if (grupo?.id && !grupo.id.startsWith('local_')) {
+                  try {
+                      const { error } = await supabase
+                          .from('grupos_estudo')
+                          .update({ codigo: novoCodigo })
+                          .eq('id', grupo.id);
+
+                      if (error) {
+                          console.error('Erro ao salvar código no banco de dados:', error);
+                          // Mostrar notificação de erro
+                          mostrarNotificacaoErro("Erro ao salvar código no servidor. O código foi salvo localmente.");
+                      } else {
+                          console.log('Código salvo com sucesso no Supabase:', novoCodigo);
+                      }
+                  } catch (dbError) {
+                      console.error('Erro na comunicação com o banco de dados:', dbError);
+                      mostrarNotificacaoErro("Erro na comunicação com o servidor. O código foi salvo localmente.");
+                  }
+              }
+              
+              // Sempre salvar localmente, independente do tipo de grupo (local ou remoto)
+              // Isso garante redundância e persistência mesmo se houver problemas com o Supabase
               try {
-                // Criar uma cópia completa do objeto do grupo com o novo código
-                const grupoComCodigo = grupo ? { 
-                    ...grupo, 
-                    codigo: novoCodigo,
-                    ultima_atualizacao: new Date().toISOString()  // Adicionar timestamp de atualização
-                } : null;
+                  const { obterGruposLocal, salvarGrupoLocal } = await import('@/lib/gruposEstudoStorage');
+                  const gruposLocais = obterGruposLocal();
 
-                // Atualizar o estado local imediatamente
-                setGrupoAtualizado(prev => prev ? {
-                    ...prev,
-                    codigo: novoCodigo,
-                    ultima_atualizacao: new Date().toISOString()
-                } : null);
+                  // Atualizar o grupo nos grupos locais
+                  const grupoExistente = gruposLocais.find((g: any) => g.id === grupo?.id);
 
-                // Salvar o código no grupo usando função dedicada (mais segura)
-                if (grupo?.id) {
-                    await salvarCodigoGrupo(grupo.id, novoCodigo);
-                    console.log(`Código ${novoCodigo} salvo para o grupo ${grupo.id} usando função dedicada`);
-                }
+                  if (grupoExistente) {
+                      // Atualizar grupo existente
+                      const gruposAtualizados = gruposLocais.map((g: any) => 
+                          g.id === grupo?.id ? {...g, codigo: novoCodigo} : g
+                      );
 
-                // IMPORTANTE: Persistência multi-nível para garantir que o grupo não seja perdido
-                if (grupo) {
-                    // 1. Salvar usando a função especializada
-                    salvarGrupoLocal({...grupo, codigo: novoCodigo});
-                    console.log("Grupo persistido com salvarGrupoLocal");
+                      // Salvar os grupos atualizados no localStorage
+                      localStorage.setItem('epictus_grupos_estudo', JSON.stringify(gruposAtualizados));
+                      console.log('Código do grupo atualizado no localStorage:', novoCodigo);
+                  } else if (grupo) {
+                      // Adicionar novo grupo com código
+                      gruposLocais.push({...grupo, codigo: novoCodigo});
+                      localStorage.setItem('epictus_grupos_estudo', JSON.stringify(gruposLocais));
+                      console.log('Novo grupo com código adicionado ao localStorage:', novoCodigo);
+                  }
 
-                    // 2. Backup adicional no localStorage
-                    try {
-                        localStorage.setItem(`grupo_${grupo.id}_backup`, JSON.stringify({...grupo, codigo: novoCodigo}));
-                        console.log("Backup adicional do grupo salvo");
-                    } catch (backupError) {
-                        console.error("Erro no backup adicional:", backupError);
-                    }
+                  // Utilizar também a função específica para garantir redundância
+                  if (grupo) {
+                      salvarGrupoLocal({...grupo, codigo: novoCodigo});
+                  }
+              } catch (localError) {
+                  console.error("Erro ao atualizar grupo localmente:", localError);
+              }
 
-                    // 3. Backup no sessionStorage
-                    try {
-                        sessionStorage.setItem(`grupo_${grupo.id}_session`, JSON.stringify({...grupo, codigo: novoCodigo}));
-                        console.log("Backup na sessão realizado");
-                    } catch (sessionError) {
-                        console.error("Erro no backup de sessão:", sessionError);
-                    }
-                }
-
-                // Mostrar notificação de sucesso ao usuário
-                mostrarNotificacaoSucesso("Código permanente do grupo gerado com sucesso!");
-
-                // Atualizar no Supabase se for um grupo remoto (não começando com 'local_')
-                if (grupo?.id && !grupo.id.startsWith('local_')) {
-                    try {
-                        // Tentar múltiplas vezes para garantir que a atualização seja bem-sucedida
-                        let tentativas = 0;
-                        let sucesso = false;
-
-                        while (tentativas < 3 && !sucesso) {
-                            const { error } = await supabase
-                                .from('grupos_estudo')
-                                .update({ 
-                                    codigo: novoCodigo,
-                                    ultima_atualizacao: new Date().toISOString()
-                                })
-                                .eq('id', grupo.id);
-
-                            if (error) {
-                                console.error(`Tentativa ${tentativas + 1} falhou:`, error);
-                                tentativas++;
-                                // Esperar um pouco antes de tentar novamente
-                                await new Promise(resolve => setTimeout(resolve, 500));
-                            } else {
-                                console.log('Código salvo com sucesso no Supabase:', novoCodigo);
-                                sucesso = true;
-                            }
-                        }
-
-                        if (!sucesso) {
-                            // Se falhou após todas as tentativas, mostrar notificação de erro
-                            mostrarNotificacaoErro("Dificuldade ao salvar no servidor. O código foi salvo localmente para garantir persistência.");
-                        }
-                    } catch (dbError) {
-                        console.error('Erro na comunicação com o banco de dados:', dbError);
-                        mostrarNotificacaoErro("Erro na comunicação com o servidor. O código foi salvo localmente para garantir persistência.");
-                    }
-                }
-
-                // CRÍTICO: Forçar atualização da UI e dos componentes pais para visualização imediata
-                if (grupo && onSave && grupoComCodigo) {
-                    onSave(grupoComCodigo);
-                    console.log("Componente pai atualizado com o novo grupo:", grupoComCodigo);
-
-                    // Pequeno atraso para garantir que a UI foi atualizada antes de prosseguir
-                    setTimeout(() => {
-                        // Verificar se o código foi aplicado corretamente
-                        if (grupoAtualizado?.codigo !== novoCodigo) {
-                            console.warn("Possível inconsistência detectada no estado do grupo");
-                            // Forçar nova atualização como medida de segurança
-                            setGrupoAtualizado(prev => ({...prev, codigo: novoCodigo}));
-                            if (onSave) onSave({...grupo, codigo: novoCodigo});
-                        }
-                    }, 500);
-                }
-              } catch (innerError) {
-                console.error("Erro durante o processamento do código:", innerError);
-                // Mesmo com erro, tentar garantir que o código seja salvo
-                if (grupo && novoCodigo) {
-                    try {
-                        localStorage.setItem(`grupo_${grupo.id}_codigo_emergencia`, novoCodigo);
-                    } catch (e) {}
-                }
+              // Forçar atualização da UI e dos componentes pais
+              // IMPORTANTE: Passar o objeto completo com o novo código, não apenas o código
+              if (grupo && onSave && grupoComCodigo) {
+                  onSave(grupoComCodigo);
               }
           }
       } catch (error) {
           console.error('Erro ao gerar código do grupo:', error);
-          mostrarNotificacaoErro("Erro ao gerar código. As alterações do grupo foram salvas, mas você precisará tentar gerar o código novamente.");
-
-          // Mesmo com erro, salvar o grupo sem código
-          if (grupo && onSave) {
-              onSave(grupo);
-          }
+          mostrarNotificacaoErro("Erro ao gerar código. Tente novamente.");
       }
   };
 

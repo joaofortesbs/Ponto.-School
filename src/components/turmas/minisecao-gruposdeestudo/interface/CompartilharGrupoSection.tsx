@@ -1,125 +1,170 @@
-// Atualizar o código local quando o prop mudar
+import React, { useState, useEffect } from 'react';
+import { Share, Check, Copy, Key } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+
+interface CompartilharGrupoSectionProps {
+  grupoCodigo: string;
+  grupoNome: string;
+  onGerarCodigo?: () => Promise<void>;
+}
+
+const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({ 
+  grupoCodigo, 
+  grupoNome,
+  onGerarCodigo
+}) => {
+  const [copiado, setCopiado] = useState(false);
+  const [codigoLocalExibido, setCodigoLocalExibido] = useState(grupoCodigo);
+
+  // Atualizar o código local quando o prop mudar
   useEffect(() => {
     if (grupoCodigo) {
       setCodigoLocalExibido(grupoCodigo);
       setCopiado(false);
       console.log("Código do grupo atualizado no componente:", grupoCodigo);
-
-      // Salvar o código em armazenamento persistente como backup adicional
-      try {
-        // Usar o nome do grupo como parte da chave para facilitar debug
-        const nomeSeguro = grupoNome.replace(/[^a-zA-Z0-9]/g, "_").substring(0, 15);
-        localStorage.setItem(`codigo_grupo_${nomeSeguro}_${Date.now()}`, grupoCodigo);
-        sessionStorage.setItem(`codigo_grupo_atual_${nomeSeguro}`, grupoCodigo);
-      } catch (storageError) {
-        console.error("Erro ao salvar backup do código:", storageError);
-      }
     } else if (onGerarCodigo) {
       // Se não houver código e existir a função para gerar, chamá-la automaticamente
       console.log("Não há código definido, gerando automaticamente...");
-
-      // Sistema de retry - tentar várias vezes com delay progressivo
-      const tentarGerarCodigo = (tentativa = 1) => {
-        if (tentativa > 5) {
-          console.error("Falha após 5 tentativas de gerar código");
-          return;
+      // Usar um setTimeout mais longo para garantir que o componente está completamente montado
+      setTimeout(() => {
+        if (onGerarCodigo) {
+          onGerarCodigo();
         }
-
-        console.log(`Tentativa ${tentativa} de gerar código automático`);
-
-        setTimeout(() => {
-          if (!codigoLocalExibido && onGerarCodigo) {
-            onGerarCodigo().catch(error => {
-              console.error(`Erro na tentativa ${tentativa}:`, error);
-              // Tentar novamente com atraso maior
-              tentarGerarCodigo(tentativa + 1);
-            });
-          }
-        }, 800 * tentativa); // Aumentar o atraso a cada tentativa
-      };
-
-      // Iniciar o processo de retry
-      tentarGerarCodigo();
+      }, 800); // Aumentado para 800ms para garantir que a interface foi renderizada completamente
     }
-  }, [grupoCodigo, onGerarCodigo, grupoNome]);
-
+  }, [grupoCodigo, onGerarCodigo]);
+  
   // Efeito adicional para verificar o código após a montagem completa do componente
   useEffect(() => {
-    // Verificações múltiplas em tempos diferentes para garantir que o código seja gerado
-    const verificacoes = [1500, 3000, 6000, 10000];
-
-    const verificadores: NodeJS.Timeout[] = [];
-
-    verificacoes.forEach(tempo => {
-      const timer = setTimeout(() => {
-        if (!codigoLocalExibido && !grupoCodigo && onGerarCodigo) {
-          console.log(`Verificação em ${tempo}ms: código não encontrado, gerando...`);
-          onGerarCodigo().catch(error => {
-            console.error(`Erro na verificação ${tempo}ms:`, error);
-          });
-        }
-      }, tempo);
-
-      verificadores.push(timer);
-    });
-
-    // Verificar armazenamento local para códigos salvos anteriormente
-    const verificarCodigosExistentes = () => {
-      if (!codigoLocalExibido && !grupoCodigo) {
-        try {
-          // Buscar em todas as chaves que possam conter códigos
-          const todasChaves = Object.keys(localStorage);
-          const chavesCodigo = todasChaves.filter(chave => 
-            chave.includes('codigo_grupo') || chave.includes('_codigo_') || chave.includes('grupo_codigo')
-          );
-
-          // Se encontramos possíveis chaves com códigos, tentar usá-las
-          if (chavesCodigo.length > 0) {
-            console.log(`Encontradas ${chavesCodigo.length} possíveis fontes de código`);
-
-            for (const chave of chavesCodigo) {
-              try {
-                const codigoSalvo = localStorage.getItem(chave);
-                if (codigoSalvo && codigoSalvo.length >= 7) {
-                  console.log(`Recuperado código ${codigoSalvo} da chave ${chave}`);
-                  setCodigoLocalExibido(codigoSalvo);
-                  return true;
-                }
-              } catch {}
-            }
-          }
-        } catch (storageError) {
-          console.error("Erro ao verificar códigos existentes:", storageError);
-        }
-        return false;
+    const verificarCodigo = () => {
+      if (!grupoCodigo && onGerarCodigo) {
+        console.log("Verificação secundária: código não encontrado, gerando...");
+        onGerarCodigo();
       }
-      return true;
     };
+    
+    // Verificar após um tempo maior para garantir que todos os estados foram atualizados
+    const timer = setTimeout(verificarCodigo, 1500);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
-    // Executar verificação de códigos existentes após um curto delay
-    setTimeout(verificarCodigosExistentes, 1000);
+  const formattedCodigo = codigoLocalExibido && codigoLocalExibido.length > 4 
+    ? `${codigoLocalExibido.substring(0, 4)} ${codigoLocalExibido.substring(4)}`
+    : codigoLocalExibido || "SEM CÓDIGO";
 
-    return () => {
-      // Limpar todos os timers ao desmontar
-      verificadores.forEach(timer => clearTimeout(timer));
-    };
-  }, [codigoLocalExibido, grupoCodigo, onGerarCodigo]);
+  const handleCopiarCodigo = () => {
+    // Garantir que copiamos o código sem formatação (sem espaços)
+    navigator.clipboard.writeText(codigoLocalExibido)
+      .then(() => {
+        setCopiado(true);
+        setTimeout(() => setCopiado(false), 2000);
+      })
+      .catch(err => {
+        console.error('Erro ao copiar código:', err);
+      });
+  };
 
-  // Verificação final contínua para garantir que sempre temos um código
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      // Se ainda não temos código depois de todas as tentativas anteriores, 
-      // fazer uma última tentativa a cada 5 segundos
-      if (!codigoLocalExibido && !grupoCodigo && onGerarCodigo) {
-        console.log("Verificação periódica: código ainda não gerado, tentando novamente");
-        onGerarCodigo().catch(error => {
-          console.error("Erro na verificação periódica:", error);
+  const handleCompartilhar = async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `Grupo de Estudos: ${grupoNome}`,
+          text: `Entre no meu grupo de estudos "${grupoNome}" usando o código: ${codigoLocalExibido}`,
+          url: window.location.href,
         });
       } else {
-        // Se já temos o código, podemos limpar o intervalo
-        clearInterval(intervalId);
+        handleCopiarCodigo();
       }
-    }, 5000);
+    } catch (error) {
+      console.error('Erro ao compartilhar:', error);
+    }
+  };
 
-    return () => clearInterval(intervalId);
-  }, [codigoLocalExibido, grupoCodigo, onGerarCodigo]);
+  const handleGerarCodigo = async () => {
+    if (onGerarCodigo) {
+      try {
+        // Chamar a função de gerar código do componente pai
+        await onGerarCodigo();
+      } catch (error) {
+        console.error('Erro ao gerar código:', error);
+      }
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Compartilhar grupo
+        </h3>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+          Compartilhe o código do grupo para que outras pessoas possam encontrá-lo e solicitar participação.
+        </p>
+      </div>
+
+      <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div className="flex flex-col space-y-4">
+          <div>
+            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 flex items-center">
+              Código do grupo
+              <span className="ml-2 px-1.5 py-0.5 bg-green-500/20 text-green-500 rounded-md text-xs font-medium">Permanente</span>
+            </label>
+            <div className="flex items-center">
+              <span className="bg-white dark:bg-gray-900 py-2 px-3 text-sm font-mono rounded-l-md border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-gray-200 flex-1 font-bold tracking-wider">
+                {formattedCodigo}
+              </span>
+              <Button
+                onClick={handleCopiarCodigo}
+                variant="ghost"
+                className="h-9 rounded-l-none rounded-r-md border border-l-0 border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700"
+                disabled={!grupoCodigo}
+              >
+                {copiado ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+              </Button>
+            </div>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              {grupoCodigo ? "Este código permanente é usado para convidar pessoas para o seu grupo. O código é único, inalterável e insensível a maiúsculas e minúsculas." : "Um código único e permanente será gerado para este grupo quando você clicar no botão 'Gerar código do grupo'."}
+            </p>
+          </div>
+
+          {!grupoCodigo && (
+            <div className="pt-2">
+              <Button
+                onClick={handleGerarCodigo}
+                variant="secondary"
+                className="w-full justify-center"
+              >
+                Gerar código do grupo
+              </Button>
+            </div>
+          )}
+
+          <div className="pt-2">
+            <Button
+              onClick={handleCompartilhar}
+              variant="outline"
+              className="w-full justify-center border-[#FF6B00] text-[#FF6B00] hover:bg-[#FF6B00]/10"
+              disabled={!grupoCodigo}
+            >
+              <Share className="h-4 w-4 mr-2" />
+              Compartilhar grupo
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div className="text-xs text-gray-500 dark:text-gray-400 space-y-2">
+        <p>
+          <span className="font-medium">Nota:</span> Apenas pessoas com o código podem solicitar entrada no grupo.
+        </p>
+        <p>
+          <span className="font-medium">Dica:</span> Configure as opções de privacidade do grupo na aba "Privacidade".
+        </p>
+      </div>
+    </div>
+  );
+};
+
+export default CompartilharGrupoSection;
