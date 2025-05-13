@@ -2,20 +2,24 @@ import React, { useState } from 'react';
 import { Share, Check, Copy, Key } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { gerarCodigoUnicoGrupo, salvarCodigoGrupo } from '@/lib/gruposEstudoStorage';
 
 interface CompartilharGrupoSectionProps {
   grupoCodigo: string;
   grupoNome: string;
-  onGerarCodigo?: () => Promise<void>;
+  grupoId?: string;
+  onGerarCodigo?: (codigo?: string) => Promise<void>;
 }
 
 const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({ 
   grupoCodigo, 
   grupoNome,
+  grupoId,
   onGerarCodigo
 }) => {
   const [copiado, setCopiado] = useState(false);
   const [codigoGerado, setCodigoGerado] = useState(!!grupoCodigo);
+  const [error, setError] = useState<string | null>(null);
 
   const formattedCodigo = grupoCodigo && grupoCodigo.length > 4 
     ? `${grupoCodigo.substring(0, 4)} ${grupoCodigo.substring(4)}`
@@ -54,22 +58,23 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
       try {
         // Gerar código único para o grupo
         const codigo = await gerarCodigoUnicoGrupo();
-
-        // Atualizar o grupo com o novo código
-        if (grupo && codigo) {
-          const sucesso = await salvarCodigoGrupo(grupo.id, codigo);
-
-          if (sucesso) {
-            // Atualizar o estado local
-            setCodigoGrupo(codigo);
-            setCopiedCode(false);
-
-            // Notificar o componente pai
-            onGerarCodigo(codigo);
-          } else {
-            setError("Erro ao salvar código no servidor. O código foi salvo localmente.");
+        
+        // Se temos ID do grupo, salvar o código
+        if (grupoId && codigo) {
+          const sucesso = await salvarCodigoGrupo(grupoId, codigo);
+          
+          if (!sucesso) {
+            console.warn("Aviso: Código salvo apenas localmente");
           }
         }
+        
+        // Notificar o componente pai com o novo código
+        await onGerarCodigo(codigo);
+        
+        // Atualizar o estado local
+        setCodigoGerado(true);
+        setError(null);
+        
       } catch (error) {
         console.error('Erro ao gerar código:', error);
         setError("Não foi possível gerar um código. Tente novamente.");
@@ -138,6 +143,12 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
           </div>
         </div>
       </div>
+
+      {error && (
+        <div className="mt-2 text-sm text-red-500 bg-red-100/10 p-2 rounded-md">
+          {error}
+        </div>
+      )}
 
       <div className="text-xs text-gray-500 dark:text-gray-400 space-y-2">
         <p>

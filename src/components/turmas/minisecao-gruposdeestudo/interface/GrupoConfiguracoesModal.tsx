@@ -16,6 +16,7 @@ import { HexColorPicker } from "react-colorful";
 import { supabase } from "@/lib/supabase";
 import CompartilharGrupoSection from "./CompartilharGrupoSection";
 import { verificarSeCodigoExiste, salvarCodigoGrupo } from "@/lib/gruposEstudoStorage";
+import { useToast } from "@/components/ui/use-toast"; // Import useToast
 
 interface GrupoConfiguracoesModalProps {
   isOpen: boolean;
@@ -55,6 +56,7 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("informacoes");
    const [grupoAtualizado, setGrupoAtualizado] = useState(grupo); // Usar estado para o grupo atualizado
+    const { toast } = useToast(); // Initialize toast
 
   // Opções de visibilidade
   const opcoesVisibilidade = [
@@ -192,98 +194,57 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
     }
   };
 
-    // Função para gerar um código único para o grupo
-    const handleGerarCodigo = async () => {
+    const handleGerarCodigo = async (codigo?: string) => {
       try {
-          // Verificar se o grupo já tem um código
-          if (grupoAtualizado?.codigo) {
-              // Se já existe um código, mostrar notificação e não gerar um novo
-              mostrarNotificacaoSucesso("Este grupo já possui um código permanente!");
-              return;
-          }
-
-          // Gerar um código único para o grupo
-          const { gerarCodigoUnicoGrupo } = await import('@/lib/gruposEstudoStorage');
-          const novoCodigo = await gerarCodigoUnicoGrupo();
-
-          console.log("Novo código gerado:", novoCodigo);
-
-          if (novoCodigo) {
-              // Atualizar o estado local
-              setGrupoAtualizado(prev => ({
-                  ...prev,
-                  codigo: novoCodigo
-              }));
-
-              // Atualizar o grupo original também para garantir que a UI seja atualizada
-              if (grupo) grupo.codigo = novoCodigo;
-
-              // Mostrar notificação de sucesso
-              mostrarNotificacaoSucesso("Código permanente do grupo gerado com sucesso!");
-
-              // Atualizar no Supabase se for um grupo remoto
-              if (grupo?.id && !grupo.id.startsWith('local_')) {
-                  try {
-                      const { error } = await supabase
-                          .from('grupos_estudo')
-                          .update({ codigo: novoCodigo })
-                          .eq('id', grupo.id);
-
-                      if (error) {
-                          console.error('Erro ao salvar código no banco de dados:', error);
-                          // Mostrar notificação de erro
-                          mostrarNotificacaoErro("Erro ao salvar código no servidor. O código foi salvo localmente.");
-                      } else {
-                          console.log('Código salvo com sucesso no Supabase:', novoCodigo);
-                      }
-                  } catch (dbError) {
-                      console.error('Erro na comunicação com Supabase:', dbError);
-                  }
-              }
-
-              // Sempre salvar localmente, independente do tipo de grupo (local ou remoto)
-              // Isso garante redundância e persistência mesmo se houver problemas com o Supabase
-              try {
-                  const { obterGruposLocal, salvarGrupoLocal } = await import('@/lib/gruposEstudoStorage');
-                  const gruposLocais = obterGruposLocal();
-
-                  // Atualizar o grupo nos grupos locais
-                  const grupoExistente = gruposLocais.find((g: any) => g.id === grupo?.id);
-
-                  if (grupoExistente) {
-                      // Atualizar grupo existente
-                      const gruposAtualizados = gruposLocais.map((g: any) => 
-                          g.id === grupo?.id ? {...g, codigo: novoCodigo} : g
-                      );
-
-                      // Salvar os grupos atualizados no localStorage
-                      localStorage.setItem('epictus_grupos_estudo', JSON.stringify(gruposAtualizados));
-                      console.log('Código do grupo atualizado no localStorage:', novoCodigo);
-                  } else if (grupo) {
-                      // Adicionar novo grupo com código
-                      gruposLocais.push({...grupo, codigo: novoCodigo});
-                      localStorage.setItem('epictus_grupos_estudo', JSON.stringify(gruposLocais));
-                      console.log('Novo grupo com código adicionado ao localStorage:', novoCodigo);
-                  }
-
-                  // Utilizar também a função específica para garantir redundância
-                  if (grupo) {
-                      salvarGrupoLocal({...grupo, codigo: novoCodigo});
-                  }
-              } catch (localError) {
-                  console.error("Erro ao atualizar grupo localmente:", localError);
-              }
-
-              // Forçar atualização da UI e dos componentes pais
-              if (grupo && onSave) {
-                  onSave({...grupo, codigo: novoCodigo});
-              }
-          }
+        if (!grupo) return;
+  
+        // Se recebemos um código do componente filho, usamos ele
+        if (codigo) {
+          // Atualizar o grupo local com o novo código
+          const grupoAtualizado = { ...grupo, codigo };
+          setGrupoAtualizado(grupoAtualizado);
+  
+          // Notificar sobre o sucesso
+          toast({
+            title: "Código gerado com sucesso",
+            description: "O código do grupo foi criado e já pode ser compartilhado.",
+            variant: "success",
+          });
+  
+          console.log("Código gerado para o grupo:", codigo);
+          return;
+        }
+  
+        // Caso não tenhamos recebido um código, geramos um novo
+        const novoCodigoResponse = await gerarCodigoUnicoGrupo();
+  
+        if (novoCodigoResponse) {
+          // Salvar o código no banco de dados
+          const sucesso = await salvarCodigoGrupo(grupo.id, novoCodigoResponse);
+  
+          // Atualizar o grupo local com o novo código
+          const grupoAtualizado = { ...grupo, codigo: novoCodigoResponse };
+          setGrupoAtualizado(grupoAtualizado);
+  
+          toast({
+            title: sucesso ? "Código gerado com sucesso" : "Código salvo localmente",
+            description: sucesso 
+              ? "O código do grupo foi criado e já pode ser compartilhado." 
+              : "O código foi criado e salvo localmente por enquanto.",
+            variant: sucesso ? "success" : "warning",
+          });
+  
+          console.log("Código gerado para o grupo:", novoCodigoResponse);
+        }
       } catch (error) {
-          console.error('Erro ao gerar código do grupo:', error);
-          mostrarNotificacaoErro("Erro ao gerar código. Tente novamente.");
+        console.error("Erro ao gerar código:", error);
+        toast({
+          title: "Erro ao gerar código",
+          description: "Não foi possível gerar um código para o grupo. Tente novamente.",
+          variant: "destructive",
+        });
       }
-  };
+    };
 
   // Adicionar função de notificação de erro
   const mostrarNotificacaoErro = (mensagem: string) => {
@@ -639,6 +600,7 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
               <CompartilharGrupoSection 
                 grupoCodigo={grupo?.codigo || ""} 
                 grupoNome={grupo?.nome || ""} 
+                grupoId={grupo?.id}
                 onGerarCodigo={handleGerarCodigo}
               />
               {!grupo?.codigo && (
@@ -726,4 +688,4 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
   );
 };
 
-export default GrupoConfiguracoesModal;
+export default GrupoConfiguraçõesModal;
