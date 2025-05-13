@@ -220,38 +220,117 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
               // Mostrar notificação de sucesso
               mostrarNotificacaoSucesso("Código permanente do grupo gerado com sucesso!");
 
-              // Atualizar no Supabase
+              // Atualizar no Supabase se for um grupo remoto
               if (grupo?.id && !grupo.id.startsWith('local_')) {
-                  const { error } = await supabase
-                      .from('grupos_estudo')
-                      .update({ codigo: novoCodigo })
-                      .eq('id', grupo.id);
-  
-                  if (error) {
-                      console.error('Erro ao salvar código no banco de dados:', error);
-                  }
-              } else if (grupo?.id.startsWith('local_')) {
-                  // Atualizar grupo local
                   try {
-                      const { obterGruposLocal, salvarGrupoLocal } = await import('@/lib/gruposEstudoStorage');
-                      const gruposLocais = obterGruposLocal();
+                      const { error } = await supabase
+                          .from('grupos_estudo')
+                          .update({ codigo: novoCodigo })
+                          .eq('id', grupo.id);
+      
+                      if (error) {
+                          console.error('Erro ao salvar código no banco de dados:', error);
+                          // Mostrar notificação de erro
+                          mostrarNotificacaoErro("Erro ao salvar código no servidor. O código foi salvo localmente.");
+                      } else {
+                          console.log('Código salvo com sucesso no Supabase:', novoCodigo);
+                      }
+                  } catch (dbError) {
+                      console.error('Erro na comunicação com Supabase:', dbError);
+                  }
+              }
+              
+              // Sempre salvar localmente, independente do tipo de grupo (local ou remoto)
+              // Isso garante redundância e persistência mesmo se houver problemas com o Supabase
+              try {
+                  const { obterGruposLocal, salvarGrupoLocal } = await import('@/lib/gruposEstudoStorage');
+                  const gruposLocais = obterGruposLocal();
+                  
+                  // Atualizar o grupo nos grupos locais
+                  const grupoExistente = gruposLocais.find((g: any) => g.id === grupo?.id);
+                  
+                  if (grupoExistente) {
+                      // Atualizar grupo existente
                       const gruposAtualizados = gruposLocais.map((g: any) => 
-                        g.id === grupo.id ? {...g, codigo: novoCodigo} : g
+                          g.id === grupo?.id ? {...g, codigo: novoCodigo} : g
                       );
                       
                       // Salvar os grupos atualizados no localStorage
                       localStorage.setItem('epictus_grupos_estudo', JSON.stringify(gruposAtualizados));
-                  } catch (localError) {
-                      console.error("Erro ao atualizar grupo local:", localError);
+                      console.log('Código do grupo atualizado no localStorage:', novoCodigo);
+                  } else if (grupo) {
+                      // Adicionar novo grupo com código
+                      gruposLocais.push({...grupo, codigo: novoCodigo});
+                      localStorage.setItem('epictus_grupos_estudo', JSON.stringify(gruposLocais));
+                      console.log('Novo grupo com código adicionado ao localStorage:', novoCodigo);
                   }
+                  
+                  // Utilizar também a função específica para garantir redundância
+                  if (grupo) {
+                      salvarGrupoLocal({...grupo, codigo: novoCodigo});
+                  }
+              } catch (localError) {
+                  console.error("Erro ao atualizar grupo localmente:", localError);
               }
               
-              // Forçar atualização da UI
-              onSave({...grupo, codigo: novoCodigo});
+              // Forçar atualização da UI e dos componentes pais
+              if (grupo && onSave) {
+                  onSave({...grupo, codigo: novoCodigo});
+              }
           }
       } catch (error) {
           console.error('Erro ao gerar código do grupo:', error);
+          mostrarNotificacaoErro("Erro ao gerar código. Tente novamente.");
       }
+  };
+  
+  // Adicionar função de notificação de erro
+  const mostrarNotificacaoErro = (mensagem: string) => {
+      const element = document.createElement('div');
+      element.style.position = 'fixed';
+      element.style.top = '20px';
+      element.style.left = '50%';
+      element.style.transform = 'translateX(-50%)';
+      element.style.padding = '12px 24px';
+      element.style.background = 'linear-gradient(135deg, #D32F2F, #B71C1C)';
+      element.style.color = 'white';
+      element.style.borderRadius = '8px';
+      element.style.zIndex = '9999';
+      element.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.15)';
+      element.style.display = 'flex';
+      element.style.alignItems = 'center';
+      element.style.gap = '8px';
+
+      const icon = document.createElement('span');
+      icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`;
+
+      const text = document.createElement('span');
+      text.textContent = mensagem;
+      text.style.fontWeight = '500';
+
+      element.appendChild(icon);
+      element.appendChild(text);
+      document.body.appendChild(element);
+
+      // Efeito de entrada
+      element.animate([
+        { opacity: 0, transform: 'translate(-50%, -20px)' },
+        { opacity: 1, transform: 'translate(-50%, 0)' }
+      ], {
+        duration: 300,
+        easing: 'ease-out'
+      });
+
+      // Remover após 3 segundos com efeito de saída
+      setTimeout(() => {
+        element.animate([
+          { opacity: 1, transform: 'translate(-50%, 0)' },
+          { opacity: 0, transform: 'translate(-50%, -20px)' }
+        ], {
+          duration: 300,
+          easing: 'ease-in'
+        }).onfinish = () => document.body.removeChild(element);
+      }, 3000);
   };
 
   // Função para mostrar notificação de sucesso

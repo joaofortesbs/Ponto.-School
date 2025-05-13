@@ -521,14 +521,116 @@ export const sincronizarGruposLocais = async (userId: string): Promise<void> => 
   }
 };
 
-// Adicionar funções para gerar e verificar códigos de grupo
+// Funções para gerar e verificar códigos de grupo
 export const gerarCodigoUnico = (): string => {
-  const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  // Usar apenas letras maiúsculas e números que são facilmente distinguíveis
+  // Excluindo caracteres como O e 0, I e 1, que podem causar confusão
+  const caracteres = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let resultado = '';
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 7; i++) {
     resultado += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
   }
   return resultado;
+};
+
+// Verificar se um código já existe (em Supabase ou localStorage)
+export const verificarSeCodigoExiste = async (codigo: string): Promise<boolean> => {
+  try {
+    // Verificar primeiro em localStorage
+    const gruposLocais = obterGruposLocal();
+    const existeLocal = gruposLocais.some((grupo: any) => 
+      grupo.codigo && grupo.codigo.toUpperCase() === codigo.toUpperCase()
+    );
+    
+    if (existeLocal) {
+      console.log('Código já existe localmente:', codigo);
+      return true;
+    }
+    
+    // Verificar no Supabase
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session) {
+        const { data, error } = await supabase
+          .from('grupos_estudo')
+          .select('id')
+          .eq('codigo', codigo.toUpperCase())
+          .limit(1);
+        
+        if (error) {
+          console.error('Erro ao verificar código no Supabase:', error);
+          return false;
+        }
+        
+        return data && data.length > 0;
+      }
+    } catch (error) {
+      console.error('Erro ao comunicar com Supabase:', error);
+    }
+    
+    return false;
+  } catch (error) {
+    console.error('Erro ao verificar se código existe:', error);
+    return false;
+  }
+};
+
+// Função para gerar um código único para um grupo, garantindo que não há duplicatas
+export const gerarCodigoUnicoGrupo = async (): Promise<string> => {
+  try {
+    // Número máximo de tentativas para evitar loops infinitos
+    const MAX_TENTATIVAS = 10;
+    let tentativas = 0;
+    let codigoGrupo: string;
+    let codigoJaExiste = false;
+    
+    do {
+      // Gerar um novo código
+      codigoGrupo = gerarCodigoUnico();
+      
+      // Verificar se já existe
+      codigoJaExiste = await verificarSeCodigoExiste(codigoGrupo);
+      
+      // Incrementar contador de tentativas
+      tentativas++;
+      
+      // Se já tentamos muitas vezes, adicionar timestamp no final para garantir unicidade
+      if (tentativas >= MAX_TENTATIVAS) {
+        const timestamp = Date.now().toString(36).substring(0, 2).toUpperCase();
+        codigoGrupo = codigoGrupo.substring(0, 5) + timestamp;
+        break;
+      }
+    } while (codigoJaExiste);
+    
+    // Garantir que o código está em formato correto
+    codigoGrupo = codigoGrupo.toUpperCase();
+
+    // Verificar se o código tem o comprimento esperado (7 caracteres)
+    if (codigoGrupo.length !== 7) {
+      console.warn("Código gerado não tem o comprimento esperado:", codigoGrupo);
+      // Ajustar o código para ter 7 caracteres se necessário
+      const CARACTERES_PERMITIDOS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      if (codigoGrupo.length < 7) {
+        // Adicionar caracteres aleatórios até completar 7
+        while (codigoGrupo.length < 7) {
+          codigoGrupo += CARACTERES_PERMITIDOS.charAt(
+            Math.floor(Math.random() * CARACTERES_PERMITIDOS.length)
+          );
+        }
+      } else if (codigoGrupo.length > 7) {
+        // Truncar para 7 caracteres
+        codigoGrupo = codigoGrupo.substring(0, 7);
+      }
+    }
+    
+    console.log(`Código único gerado após ${tentativas} tentativa(s):`, codigoGrupo);
+    return codigoGrupo;
+  } catch (error) {
+    console.error("Erro ao gerar código único para grupo:", error);
+    // Garantir que sempre retornamos um código, mesmo em caso de erro
+    return `GE${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+  }
 };
 
 export const removerGrupo = (grupoId: string) => {

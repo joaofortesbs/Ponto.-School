@@ -1,0 +1,1024 @@
+[plugin:vite:react-swc] × the name `verificarSeCodigoExiste` is defined multiple times
+     ╭─[/home/runner/workspace/src/lib/gruposEstudoStorage.ts:44:1]
+  44 │  * Verifica se um código de grupo já existe no armazenamento
+  45 │  * Nota: Trata códigos como não sensíveis a maiúsculas/minúsculas
+  46 │  */
+  47 │ export const verificarSeCodigoExiste = async (codigo: string): Promise<boolean> => {
+     ·              ───────────┬───────────
+     ·                         ╰── previous definition of `verificarSeCodigoExiste` here
+  48 │   try {
+  49 │     // Converter o código para maiúsculas para garantir consistência
+  50 │     const codigoMaiusculo = codigo.toUpperCase();
+  51 │     
+  52 │     // Primeiro tentar verificar no Supabase
+  53 │     const { data, error } = await supabase
+  54 │       .from('grupos_estudo')
+  55 │       .select('id')
+  56 │       .eq('codigo', codigoMaiusculo)
+  57 │       .single();
+  58 │ 
+  59 │     if (error && error.code !== 'PGRST116') {
+  60 │       console.error('Erro ao verificar código no Supabase:', error);
+  61 │       // Se ocorrer um erro no Supabase, verificar localmente
+  62 │       const gruposLocais = obterGruposLocal();
+  63 │       return gruposLocais.some(grupo => 
+  64 │         grupo.codigo && grupo.codigo.toUpperCase() === codigoMaiusculo
+  65 │       );
+  66 │     }
+  67 │ 
+  68 │     return !!data;
+  69 │   } catch (error) {
+  70 │     console.error('Erro ao verificar código:', error);
+  71 │     // Em caso de erro, verificar localmente
+  72 │     const gruposLocais = obterGruposLocal();
+  73 │     return gruposLocais.some(grupo => 
+  74 │       grupo.codigo && grupo.codigo.toUpperCase() === codigo.toUpperCase()
+  75 │     );
+  76 │   }
+  77 │ };
+  78 │ 
+  79 │ /**
+  80 │  * Gera um código único para o grupo de estudos
+  81 │  */
+  82 │ export const gerarCodigoUnicoGrupo = async (): Promise<string> => {
+  83 │   let novoCodigoUnico = '';
+  84 │   let existeNoSistema = true;
+  85 │   let tentativas = 0;
+  86 │   const maxTentativas = 50; // Aumentado para lidar com mais tentativas possíveis
+  87 │ 
+  88 │   try {
+  89 │     // Tentar gerar um código aleatório único
+  90 │     while (existeNoSistema && tentativas < maxTentativas) {
+  91 │       novoCodigoUnico = gerarStringAleatoria();
+  92 │       console.log("Tentando código:", novoCodigoUnico);
+  93 │       existeNoSistema = await verificarSeCodigoExiste(novoCodigoUnico);
+  94 │       tentativas++;
+  95 │     }
+  96 │ 
+  97 │     if (tentativas >= maxTentativas) {
+  98 │       // Se atingir o limite de tentativas, adicionar um timestamp para garantir unicidade
+  99 │       const timestampBase36 = Date.now().toString(36).toUpperCase().substring(0, 4);
+ 100 │       novoCodigoUnico = gerarStringAleatoria(3) + timestampBase36;
+ 101 │       console.log("Usando código com timestamp após máximo de tentativas:", novoCodigoUnico);
+ 102 │     }
+ 103 │ 
+ 104 │     return novoCodigoUnico;
+ 105 │   } catch (error) {
+ 106 │     console.error("Erro ao gerar código único:", error);
+ 107 │     // Em caso de erro, retornar um código que combina uma string aleatória com timestamp
+ 108 │     const timestampBase36 = Date.now().toString(36).toUpperCase().substring(0, 4);
+ 109 │     const codigoEmergencia = gerarStringAleatoria(3) + timestampBase36;
+ 110 │     console.log("Usando código de emergência:", codigoEmergencia);
+ 111 │     return codigoEmergencia;
+ 112 │   }
+ 113 │ };
+ 114 │ 
+ 115 │ // Chave para armazenamento local
+ 116 │ const STORAGE_KEY = 'epictus_grupos_estudo';
+ 117 │ 
+ 118 │ /**
+ 119 │  * Salva um grupo no armazenamento local
+ 120 │  */
+ 121 │ export const salvarGrupoLocal = (grupo: GrupoEstudo): void => {
+ 122 │   try {
+ 123 │     // Buscar grupos existentes
+ 124 │     const gruposExistentes = obterGruposLocal();
+ 125 │ 
+ 126 │     // Verificar se o grupo já existe
+ 127 │     const grupoExistente = gruposExistentes.findIndex(g => g.id === grupo.id);
+ 128 │ 
+ 129 │     if (grupoExistente >= 0) {
+ 130 │       // Atualizar grupo existente
+ 131 │       gruposExistentes[grupoExistente] = grupo;
+ 132 │     } else {
+ 133 │       // Adicionar novo grupo
+ 134 │       gruposExistentes.push(grupo);
+ 135 │     }
+ 136 │ 
+ 137 │     // Criar backup do estado atual antes de salvar
+ 138 │     const gruposAtuais = localStorage.getItem(STORAGE_KEY);
+ 139 │     if (gruposAtuais) {
+ 140 │       localStorage.setItem(`${STORAGE_KEY}_backup`, gruposAtuais);
+ 141 │     }
+ 142 │ 
+ 143 │     // Salvar no localStorage
+ 144 │     localStorage.setItem(STORAGE_KEY, JSON.stringify(gruposExistentes));
+ 145 │     console.log('Grupo salvo localmente com sucesso', grupo);
+ 146 │ 
+ 147 │     // Sincronização com sessionStorage para recuperação em caso de perda do localStorage
+ 148 │     try {
+ 149 │       sessionStorage.setItem(`${STORAGE_KEY}_session`, JSON.stringify(gruposExistentes));
+ 150 │     } catch (sessionError) {
+ 151 │       console.error('Erro ao criar cópia de segurança na sessão:', sessionError);
+ 152 │     }
+ 153 │   } catch (error) {
+ 154 │     console.error('Erro ao salvar grupo localmente:', error);
+ 155 │ 
+ 156 │     // Tentar salvar em um formato alternativo em caso de erro
+ 157 │     try {
+ 158 │       localStorage.setItem(`${STORAGE_KEY}_emergency_${Date.now()}`, JSON.stringify([grupo]));
+ 159 │     } catch (emergencyError) {
+ 160 │       console.error('Erro crítico ao salvar em modo emergência:', emergencyError);
+ 161 │     }
+ 162 │   }
+ 163 │ };
+ 164 │ 
+ 165 │ /**
+ 166 │  * Obtém todos os grupos do armazenamento local
+ 167 │  */
+ 168 │ export const obterGruposLocal = (): GrupoEstudo[] => {
+ 169 │   try {
+ 170 │     const dados = localStorage.getItem(STORAGE_KEY);
+ 171 │     if (!dados) return [];
+ 172 │ 
+ 173 │     const gruposParsed = JSON.parse(dados);
+ 174 │     console.log('Grupos recuperados do armazenamento local:', gruposParsed.length);
+ 175 │     return gruposParsed;
+ 176 │   } catch (error) {
+ 177 │     console.error('Erro ao obter grupos locais:', error);
+ 178 │ 
+ 179 │     // Tentar recuperar backup caso a primeira tentativa falhe
+ 180 │     try {
+ 181 │       const backupDados = localStorage.getItem(`${STORAGE_KEY}_backup`);
+ 182 │       if (backupDados) {
+ 183 │         console.log('Usando backup de grupos estudos');
+ 184 │         return JSON.parse(backupDados);
+ 185 │       }
+ 186 │     } catch (backupError) {
+ 187 │       console.error('Falha ao recuperar backup:', backupError);
+ 188 │     }
+ 189 │ 
+ 190 │     return [];
+ 191 │   }
+ 192 │ };
+ 193 │ 
+ 194 │ /**
+ 195 │  * Limpa os grupos salvos localmente
+ 196 │  */
+ 197 │ export const limparGruposLocal = (): void => {
+ 198 │   localStorage.removeItem(STORAGE_KEY);
+ 199 │   sessionStorage.removeItem(`${STORAGE_KEY}_session`);
+ 200 │ };
+ 201 │ 
+ 202 │ /**
+ 203 │  * Remove um grupo específico do armazenamento local
+ 204 │  */
+ 205 │ export const removerGrupoLocal = (grupoId: string): boolean => {
+ 206 │   try {
+ 207 │     // Obter grupos existentes
+ 208 │     const gruposExistentes = obterGruposLocal();
+ 209 │ 
+ 210 │     // Filtrar removendo o grupo com o ID especificado
+ 211 │     const gruposFiltrados = gruposExistentes.filter(g => g.id !== grupoId);
+ 212 │ 
+ 213 │     // Se não houve alteração, o grupo não existia
+ 214 │     if (gruposExistentes.length === gruposFiltrados.length) {
+ 215 │       return false;
+ 216 │     }
+ 217 │ 
+ 218 │     // Salvar a nova lista de grupos
+ 219 │     localStorage.setItem(STORAGE_KEY, JSON.stringify(gruposFiltrados));
+ 220 │ 
+ 221 │     // Atualizar também o backup na sessão
+ 222 │     try {
+ 223 │       sessionStorage.setItem(`${STORAGE_KEY}_session`, JSON.stringify(gruposFiltrados));
+ 224 │     } catch (sessionError) {
+ 225 │       console.error('Erro ao atualizar backup na sessão:', sessionError);
+ 226 │     }
+ 227 │ 
+ 228 │     // Limpar também quaisquer backups de emergência que possam conter este grupo
+ 229 │     try {
+ 230 │       const todasChaves = Object.keys(localStorage);
+ 231 │       const chavesEmergencia = todasChaves.filter(chave => chave.startsWith(`${STORAGE_KEY}_emergency_`));
+ 232 │ 
+ 233 │       for (const chave of chavesEmergencia) {
+ 234 │         try {
+ 235 │           const gruposEmergencia = JSON.parse(localStorage.getItem(chave) || '[]');
+ 236 │           const gruposEmergenciaFiltrados = gruposEmergencia.filter((g: any) => g.id !== grupoId);
+ 237 │           localStorage.setItem(chave, JSON.stringify(gruposEmergenciaFiltrados));
+ 238 │         } catch (e) {
+ 239 │           console.error('Erro ao atualizar backup de emergência:', e);
+ 240 │         }
+ 241 │       }
+ 242 │     } catch (backupError) {
+ 243 │       console.error('Erro ao limpar backups de emergência:', backupError);
+ 244 │     }
+ 245 │ 
+ 246 │     console.log('Grupo removido localmente com sucesso', grupoId);
+ 247 │     return true;
+ 248 │   } catch (error) {
+ 249 │     console.error('Erro ao remover grupo localmente:', error);
+ 250 │     return false;
+ 251 │   }
+ 252 │ };
+ 253 │ 
+ 254 │ /**
+ 255 │  * Exclui um grupo do Supabase
+ 256 │  */
+ 257 │ export const excluirGrupo = async (grupoId: string, userId: string): Promise<boolean> => {
+ 258 │   try {
+ 259 │     // Primeiro remover localmente para garantir resposta rápida na interface
+ 260 │     removerGrupoLocal(grupoId);
+ 261 │ 
+ 262 │     // Se for um ID local, não precisamos tentar remover do Supabase
+ 263 │     if (grupoId.startsWith('local_')) {
+ 264 │       return true;
+ 265 │     }
+ 266 │ 
+ 267 │     // Tentar excluir do Supabase
+ 268 │     const { error } = await supabase
+ 269 │       .from('grupos_estudo')
+ 270 │       .delete()
+ 271 │       .eq('id', grupoId)
+ 272 │       .eq('user_id', userId);
+ 273 │ 
+ 274 │     if (error) {
+ 275 │       console.error('Erro ao excluir grupo do banco de dados:', error);
+ 276 │       return false;
+ 277 │     }
+ 278 │ 
+ 279 │     console.log('Grupo excluído com sucesso do banco de dados', grupoId);
+ 280 │     return true;
+ 281 │   } catch (error) {
+ 282 │     console.error('Erro ao excluir grupo:', error);
+ 283 │     return false;
+ 284 │   }
+ 285 │ };
+ 286 │ 
+ 287 │ /**
+ 288 │  * Cria um grupo no Supabase com fallback para armazenamento local
+ 289 │  */
+ 290 │ export const criarGrupo = async (dados: Omit<GrupoEstudo, 'id'>): Promise<GrupoEstudo | null> => {
+ 291 │   try {
+ 292 │     // Tentar inserir no Supabase
+ 293 │     const { data, error } = await supabase
+ 294 │       .from('grupos_estudo')
+ 295 │       .insert(dados)
+ 296 │       .select('*')
+ 297 │       .single();
+ 298 │ 
+ 299 │     if (error) {
+ 300 │       console.error('Erro ao criar grupo no banco de dados:', error);
+ 301 │ 
+ 302 │       // Gerar ID localmente
+ 303 │       const id = `local_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+ 304 │ 
+ 305 │       // Criar grupo para armazenamento local
+ 306 │       const grupoLocal: GrupoEstudo = {
+ 307 │         ...dados,
+ 308 │         id
+ 309 │       };
+ 310 │ 
+ 311 │       // Salvar localmente
+ 312 │       // salvarGrupoLocal(grupoLocal); // This line was removed to avoid double saving
+ 313 │ 
+ 314 │       // Mostrar notificação sobre o armazenamento local
+ 315 │       const element = document.createElement('div');
+ 316 │       element.style.position = 'fixed';
+ 317 │       element.style.top = '20px';
+ 318 │       element.style.left = '50%';
+ 319 │       element.style.transform = 'translateX(-50%)';
+ 320 │       element.style.padding = '10px 20px';
+ 321 │       element.style.background = '#FFA500';
+ 322 │       element.style.color = 'white';
+ 323 │       element.style.borderRadius = '4px';
+ 324 │       element.style.zIndex = '9999';
+ 325 │       element.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+ 326 │       element.textContent = 'Grupo salvo localmente. Será sincronizado quando o banco de dados estiver disponível.';
+ 327 │       document.body.appendChild(element);
+ 328 │ 
+ 329 │       // Remover após 5 segundos
+ 330 │       setTimeout(() => {
+ 331 │         element.style.opacity = '0';
+ 332 │         element.style.transition = 'opacity 0.5s';
+ 333 │         setTimeout(() => {
+ 334 │           document.body.removeChild(element);
+ 335 │         }, 500);
+ 336 │       }, 5000);
+ 337 │ 
+ 338 │       return grupoLocal;
+ 339 │     }
+ 340 │ 
+ 341 │     return data;
+ 342 │   } catch (error) {
+ 343 │     console.error('Erro ao criar grupo:', error);
+ 344 │ 
+ 345 │     // Falha total, retornar nulo
+ 346 │     return null;
+ 347 │   }
+ 348 │ };
+ 349 │ 
+ 350 │ /**
+ 351 │  * Obtém todos os grupos de estudo (do Supabase + localStorage)
+ 352 │  */
+ 353 │ export const obterTodosGrupos = async (userId: string): Promise<GrupoEstudo[]> => {
+ 354 │   try {
+ 355 │     // Obter a lista de grupos removidos
+ 356 │     const gruposRemovidosKey = 'grupos_removidos';
+ 357 │     const gruposRemovidosStr = localStorage.getItem(gruposRemovidosKey) || '[]';
+ 358 │     const gruposRemovidos = JSON.parse(gruposRemovidosStr);
+ 359 │ 
+ 360 │     // Primeiro, garantir que temos os grupos locais (failsafe), excluindo os removidos
+ 361 │     let gruposLocais = obterGruposLocal()
+ 362 │       .filter(grupo => grupo.user_id === userId)
+ 363 │       .filter(grupo => !gruposRemovidos.includes(grupo.id));
+ 364 │ 
+ 365 │     // Tentar obter backup da sessão
+ 366 │     try {
+ 367 │       const backupSessao = sessionStorage.getItem(`${STORAGE_KEY}_session`);
+ 368 │       if (backupSessao) {
+ 369 │         const gruposSessao = JSON.parse(backupSessao);
+ 370 │         console.log('Backup de sessão encontrado com', gruposSessao.length, 'grupos');
+ 371 │ 
+ 372 │         // Combinar com grupos locais existentes (evitando duplicatas e grupos removidos)
+ 373 │         const gruposLocaisIds = new Set(gruposLocais.map(g => g.id));
+ 374 │ 
+ 375 │         const gruposSessaoFiltrados = gruposSessao
+ 376 │           .filter((g: GrupoEstudo) => 
+ 377 │             g.user_id === userId && 
+ 378 │             !gruposLocaisIds.has(g.id) && 
+ 379 │             !gruposRemovidos.includes(g.id)
+ 380 │           );
+ 381 │ 
+ 382 │         if (gruposSessaoFiltrados.length > 0) {
+ 383 │           console.log('Adicionando', gruposSessaoFiltrados.length, 'grupos do backup de sessão');
+ 384 │           gruposLocais = [...gruposLocais, ...gruposSessaoFiltrados];
+ 385 │ 
+ 386 │           // Atualizar localStorage com os dados combinados
+ 387 │           localStorage.setItem(STORAGE_KEY, JSON.stringify(gruposLocais));
+ 388 │         }
+ 389 │       }
+ 390 │     } catch (sessionError) {
+ 391 │       console.error('Erro ao recuperar backup de sessão:', sessionError);
+ 392 │     }
+ 393 │ 
+ 394 │     // Agora tentar obter do Supabase
+ 395 │     try {
+ 396 │       const { data: gruposSupabase, error } = await supabase
+ 397 │         .from('grupos_estudo')
+ 398 │         .select('*')
+ 399 │         .eq('user_id', userId)
+ 400 │         .order('data_criacao', { ascending: false });
+ 401 │ 
+ 402 │       if (error) {
+ 403 │         console.error('Erro ao buscar grupos do banco de dados:', error);
+ 404 │         // Se falhar o Supabase, retornar apenas grupos locais
+ 405 │         return gruposLocais;
+ 406 │       }
+ 407 │ 
+ 408 │       // Filtrar grupos do Supabase para excluir os grupos removidos
+ 409 │       const gruposSupabaseFiltrados = gruposSupabase.filter(
+ 410 │         grupo => !gruposRemovidos.includes(grupo.id)
+ 411 │       );
+ 412 │ 
+ 413 │       // Filtrar grupos locais para incluir apenas os que não estão no Supabase
+ 414 │       const gruposLocaisFiltrados = gruposLocais.filter(
+ 415 │         grupoLocal => !gruposSupabaseFiltrados.some(grupoRemoto => grupoRemoto.id === grupoLocal.id)
+ 416 │       );
+ 417 │ 
+ 418 │       // Combinar ambos
+ 419 │       const todosGrupos = [...gruposSupabaseFiltrados, ...gruposLocaisFiltrados];
+ 420 │ 
+ 421 │       // Certificar-se de que os grupos locais estão atualizados
+ 422 │       if (todosGrupos.length !== gruposLocais.length) {
+ 423 │         // Salvar apenas os grupos locais (que começam com 'local_')
+ 424 │         const apenasGruposLocais = todosGrupos
+ 425 │           .filter(g => g.id.startsWith('local_'))
+ 426 │           .filter(g => !gruposRemovidos.includes(g.id));
+ 427 │ 
+ 428 │         // Se houver alguma diferença, atualizar armazenamento local
+ 429 │         if (apenasGruposLocais.length > 0) {
+ 430 │           localStorage.setItem(STORAGE_KEY, JSON.stringify(apenasGruposLocais));
+ 431 │         }
+ 432 │       }
+ 433 │ 
+ 434 │       return todosGrupos;
+ 435 │     } catch (supabaseError) {
+ 436 │       console.error('Erro ao acessar Supabase:', supabaseError);
+ 437 │       return gruposLocais;
+ 438 │     }
+ 439 │   } catch (error) {
+ 440 │     console.error('Erro ao obter todos os grupos:', error);
+ 441 │ 
+ 442 │     // Obter a lista de grupos removidos para filtrar recuperações de emergência
+ 443 │     const gruposRemovidosKey = 'grupos_removidos';
+ 444 │     const gruposRemovidosStr = localStorage.getItem(gruposRemovidosKey) || '[]';
+ 445 │     const gruposRemovidos = JSON.parse(gruposRemovidosStr);
+ 446 │ 
+ 447 │     // Tentar recuperar grupos de qualquer fonte possível
+ 448 │     try {
+ 449 │       // Verificar backup no localStorage
+ 450 │       const backup = localStorage.getItem(`${STORAGE_KEY}_backup`);
+ 451 │       if (backup) {
+ 452 │         const gruposBackup = JSON.parse(backup);
+ 453 │         return gruposBackup
+ 454 │           .filter((g: GrupoEstudo) => g.user_id === userId)
+ 455 │           .filter((g: GrupoEstudo) => !gruposRemovidos.includes(g.id));
+ 456 │       }
+ 457 │ 
+ 458 │       // Verificar backups de emergência
+ 459 │       const todasChaves = Object.keys(localStorage);
+ 460 │       const chavesEmergencia = todasChaves.filter(chave => chave.startsWith(`${STORAGE_KEY}_emergency_`));
+ 461 │ 
+ 462 │       if (chavesEmergencia.length > 0) {
+ 463 │         // Combinar todos os backups de emergência
+ 464 │         let gruposEmergencia: GrupoEstudo[] = [];
+ 465 │ 
+ 466 │         for (const chave of chavesEmergencia) {
+ 467 │           try {
+ 468 │             const gruposChave = JSON.parse(localStorage.getItem(chave) || '[]');
+ 469 │             gruposEmergencia = [...gruposEmergencia, ...gruposChave];
+ 470 │           } catch (e) {
+ 471 │             console.error('Erro ao recuperar backup de emergência:', e);
+ 472 │           }
+ 473 │         }
+ 474 │ 
+ 475 │         return gruposEmergencia
+ 476 │           .filter(g => g.user_id === userId)
+ 477 │           .filter(g => !gruposRemovidos.includes(g.id));
+ 478 │       }
+ 479 │     } catch (recoveryError) {
+ 480 │       console.error('Erro na recuperação de emergência:', recoveryError);
+ 481 │     }
+ 482 │ 
+ 483 │     // Último recurso: retornar array vazio
+ 484 │     return [];
+ 485 │   }
+ 486 │ };
+ 487 │ 
+ 488 │ /**
+ 489 │  * Tenta sincronizar grupos locais com o banco de dados
+ 490 │  */
+ 491 │ export const sincronizarGruposLocais = async (userId: string): Promise<void> => {
+ 492 │   try {
+ 493 │     const gruposLocais = obterGruposLocal()
+ 494 │       .filter(grupo => 
+ 495 │         grupo.user_id === userId && 
+ 496 │         grupo.id.startsWith('local_')
+ 497 │       );
+ 498 │ 
+ 499 │     if (gruposLocais.length === 0) return;
+ 500 │ 
+ 501 │     console.log(`Tentando sincronizar ${gruposLocais.length} grupos locais`);
+ 502 │ 
+ 503 │     for (const grupo of gruposLocais) {
+ 504 │       // Remover o ID local para que o Supabase gere um novo
+ 505 │       const { id, ...dadosGrupo } = grupo;
+ 506 │ 
+ 507 │       // Tentar inserir no Supabase
+ 508 │       const { error } = await supabase
+ 509 │         .from('grupos_estudo')
+ 510 │         .insert(dadosGrupo);
+ 511 │ 
+ 512 │       if (!error) {
+ 513 │         console.log(`Grupo sincronizado com sucesso: ${grupo.nome}`);
+ 514 │         // Remover do armazenamento local após sincronizar
+ 515 │         const gruposAtualizados = obterGruposLocal().filter(g => g.id !== grupo.id);
+ 516 │         localStorage.setItem(STORAGE_KEY, JSON.stringify(gruposAtualizados));
+ 517 │       }
+ 518 │     }
+ 519 │   } catch (error) {
+ 520 │     console.error('Erro ao sincronizar grupos locais:', error);
+ 521 │   }
+ 522 │ };
+ 523 │ 
+ 524 │ // Funções para gerar e verificar códigos de grupo
+ 525 │ export const gerarCodigoUnico = (): string => {
+ 526 │   // Usar apenas letras maiúsculas e números que são facilmente distinguíveis
+ 527 │   // Excluindo caracteres como O e 0, I e 1, que podem causar confusão
+ 528 │   const caracteres = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+ 529 │   let resultado = '';
+ 530 │   for (let i = 0; i < 7; i++) {
+ 531 │     resultado += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+ 532 │   }
+ 533 │   return resultado;
+ 534 │ };
+ 535 │ 
+ 536 │ // Verificar se um código já existe (em Supabase ou localStorage)
+ 537 │ export const verificarSeCodigoExiste = async (codigo: string): Promise<boolean> => {
+     ·              ───────────┬───────────
+     ·                         ╰── `verificarSeCodigoExiste` redefined here
+ 538 │   try {
+ 539 │     // Verificar primeiro em localStorage
+ 540 │     const gruposLocais = obterGruposLocal();
+     ╰────
+
+  × the name `gerarCodigoUnicoGrupo` is defined multiple times
+     ╭─[/home/runner/workspace/src/lib/gruposEstudoStorage.ts:79:1]
+  79 │ /**
+  80 │  * Gera um código único para o grupo de estudos
+  81 │  */
+  82 │ export const gerarCodigoUnicoGrupo = async (): Promise<string> => {
+     ·              ──────────┬──────────
+     ·                        ╰── previous definition of `gerarCodigoUnicoGrupo` here
+  83 │   let novoCodigoUnico = '';
+  84 │   let existeNoSistema = true;
+  85 │   let tentativas = 0;
+  86 │   const maxTentativas = 50; // Aumentado para lidar com mais tentativas possíveis
+  87 │ 
+  88 │   try {
+  89 │     // Tentar gerar um código aleatório único
+  90 │     while (existeNoSistema && tentativas < maxTentativas) {
+  91 │       novoCodigoUnico = gerarStringAleatoria();
+  92 │       console.log("Tentando código:", novoCodigoUnico);
+  93 │       existeNoSistema = await verificarSeCodigoExiste(novoCodigoUnico);
+  94 │       tentativas++;
+  95 │     }
+  96 │ 
+  97 │     if (tentativas >= maxTentativas) {
+  98 │       // Se atingir o limite de tentativas, adicionar um timestamp para garantir unicidade
+  99 │       const timestampBase36 = Date.now().toString(36).toUpperCase().substring(0, 4);
+ 100 │       novoCodigoUnico = gerarStringAleatoria(3) + timestampBase36;
+ 101 │       console.log("Usando código com timestamp após máximo de tentativas:", novoCodigoUnico);
+ 102 │     }
+ 103 │ 
+ 104 │     return novoCodigoUnico;
+ 105 │   } catch (error) {
+ 106 │     console.error("Erro ao gerar código único:", error);
+ 107 │     // Em caso de erro, retornar um código que combina uma string aleatória com timestamp
+ 108 │     const timestampBase36 = Date.now().toString(36).toUpperCase().substring(0, 4);
+ 109 │     const codigoEmergencia = gerarStringAleatoria(3) + timestampBase36;
+ 110 │     console.log("Usando código de emergência:", codigoEmergencia);
+ 111 │     return codigoEmergencia;
+ 112 │   }
+ 113 │ };
+ 114 │ 
+ 115 │ // Chave para armazenamento local
+ 116 │ const STORAGE_KEY = 'epictus_grupos_estudo';
+ 117 │ 
+ 118 │ /**
+ 119 │  * Salva um grupo no armazenamento local
+ 120 │  */
+ 121 │ export const salvarGrupoLocal = (grupo: GrupoEstudo): void => {
+ 122 │   try {
+ 123 │     // Buscar grupos existentes
+ 124 │     const gruposExistentes = obterGruposLocal();
+ 125 │ 
+ 126 │     // Verificar se o grupo já existe
+ 127 │     const grupoExistente = gruposExistentes.findIndex(g => g.id === grupo.id);
+ 128 │ 
+ 129 │     if (grupoExistente >= 0) {
+ 130 │       // Atualizar grupo existente
+ 131 │       gruposExistentes[grupoExistente] = grupo;
+ 132 │     } else {
+ 133 │       // Adicionar novo grupo
+ 134 │       gruposExistentes.push(grupo);
+ 135 │     }
+ 136 │ 
+ 137 │     // Criar backup do estado atual antes de salvar
+ 138 │     const gruposAtuais = localStorage.getItem(STORAGE_KEY);
+ 139 │     if (gruposAtuais) {
+ 140 │       localStorage.setItem(`${STORAGE_KEY}_backup`, gruposAtuais);
+ 141 │     }
+ 142 │ 
+ 143 │     // Salvar no localStorage
+ 144 │     localStorage.setItem(STORAGE_KEY, JSON.stringify(gruposExistentes));
+ 145 │     console.log('Grupo salvo localmente com sucesso', grupo);
+ 146 │ 
+ 147 │     // Sincronização com sessionStorage para recuperação em caso de perda do localStorage
+ 148 │     try {
+ 149 │       sessionStorage.setItem(`${STORAGE_KEY}_session`, JSON.stringify(gruposExistentes));
+ 150 │     } catch (sessionError) {
+ 151 │       console.error('Erro ao criar cópia de segurança na sessão:', sessionError);
+ 152 │     }
+ 153 │   } catch (error) {
+ 154 │     console.error('Erro ao salvar grupo localmente:', error);
+ 155 │ 
+ 156 │     // Tentar salvar em um formato alternativo em caso de erro
+ 157 │     try {
+ 158 │       localStorage.setItem(`${STORAGE_KEY}_emergency_${Date.now()}`, JSON.stringify([grupo]));
+ 159 │     } catch (emergencyError) {
+ 160 │       console.error('Erro crítico ao salvar em modo emergência:', emergencyError);
+ 161 │     }
+ 162 │   }
+ 163 │ };
+ 164 │ 
+ 165 │ /**
+ 166 │  * Obtém todos os grupos do armazenamento local
+ 167 │  */
+ 168 │ export const obterGruposLocal = (): GrupoEstudo[] => {
+ 169 │   try {
+ 170 │     const dados = localStorage.getItem(STORAGE_KEY);
+ 171 │     if (!dados) return [];
+ 172 │ 
+ 173 │     const gruposParsed = JSON.parse(dados);
+ 174 │     console.log('Grupos recuperados do armazenamento local:', gruposParsed.length);
+ 175 │     return gruposParsed;
+ 176 │   } catch (error) {
+ 177 │     console.error('Erro ao obter grupos locais:', error);
+ 178 │ 
+ 179 │     // Tentar recuperar backup caso a primeira tentativa falhe
+ 180 │     try {
+ 181 │       const backupDados = localStorage.getItem(`${STORAGE_KEY}_backup`);
+ 182 │       if (backupDados) {
+ 183 │         console.log('Usando backup de grupos estudos');
+ 184 │         return JSON.parse(backupDados);
+ 185 │       }
+ 186 │     } catch (backupError) {
+ 187 │       console.error('Falha ao recuperar backup:', backupError);
+ 188 │     }
+ 189 │ 
+ 190 │     return [];
+ 191 │   }
+ 192 │ };
+ 193 │ 
+ 194 │ /**
+ 195 │  * Limpa os grupos salvos localmente
+ 196 │  */
+ 197 │ export const limparGruposLocal = (): void => {
+ 198 │   localStorage.removeItem(STORAGE_KEY);
+ 199 │   sessionStorage.removeItem(`${STORAGE_KEY}_session`);
+ 200 │ };
+ 201 │ 
+ 202 │ /**
+ 203 │  * Remove um grupo específico do armazenamento local
+ 204 │  */
+ 205 │ export const removerGrupoLocal = (grupoId: string): boolean => {
+ 206 │   try {
+ 207 │     // Obter grupos existentes
+ 208 │     const gruposExistentes = obterGruposLocal();
+ 209 │ 
+ 210 │     // Filtrar removendo o grupo com o ID especificado
+ 211 │     const gruposFiltrados = gruposExistentes.filter(g => g.id !== grupoId);
+ 212 │ 
+ 213 │     // Se não houve alteração, o grupo não existia
+ 214 │     if (gruposExistentes.length === gruposFiltrados.length) {
+ 215 │       return false;
+ 216 │     }
+ 217 │ 
+ 218 │     // Salvar a nova lista de grupos
+ 219 │     localStorage.setItem(STORAGE_KEY, JSON.stringify(gruposFiltrados));
+ 220 │ 
+ 221 │     // Atualizar também o backup na sessão
+ 222 │     try {
+ 223 │       sessionStorage.setItem(`${STORAGE_KEY}_session`, JSON.stringify(gruposFiltrados));
+ 224 │     } catch (sessionError) {
+ 225 │       console.error('Erro ao atualizar backup na sessão:', sessionError);
+ 226 │     }
+ 227 │ 
+ 228 │     // Limpar também quaisquer backups de emergência que possam conter este grupo
+ 229 │     try {
+ 230 │       const todasChaves = Object.keys(localStorage);
+ 231 │       const chavesEmergencia = todasChaves.filter(chave => chave.startsWith(`${STORAGE_KEY}_emergency_`));
+ 232 │ 
+ 233 │       for (const chave of chavesEmergencia) {
+ 234 │         try {
+ 235 │           const gruposEmergencia = JSON.parse(localStorage.getItem(chave) || '[]');
+ 236 │           const gruposEmergenciaFiltrados = gruposEmergencia.filter((g: any) => g.id !== grupoId);
+ 237 │           localStorage.setItem(chave, JSON.stringify(gruposEmergenciaFiltrados));
+ 238 │         } catch (e) {
+ 239 │           console.error('Erro ao atualizar backup de emergência:', e);
+ 240 │         }
+ 241 │       }
+ 242 │     } catch (backupError) {
+ 243 │       console.error('Erro ao limpar backups de emergência:', backupError);
+ 244 │     }
+ 245 │ 
+ 246 │     console.log('Grupo removido localmente com sucesso', grupoId);
+ 247 │     return true;
+ 248 │   } catch (error) {
+ 249 │     console.error('Erro ao remover grupo localmente:', error);
+ 250 │     return false;
+ 251 │   }
+ 252 │ };
+ 253 │ 
+ 254 │ /**
+ 255 │  * Exclui um grupo do Supabase
+ 256 │  */
+ 257 │ export const excluirGrupo = async (grupoId: string, userId: string): Promise<boolean> => {
+ 258 │   try {
+ 259 │     // Primeiro remover localmente para garantir resposta rápida na interface
+ 260 │     removerGrupoLocal(grupoId);
+ 261 │ 
+ 262 │     // Se for um ID local, não precisamos tentar remover do Supabase
+ 263 │     if (grupoId.startsWith('local_')) {
+ 264 │       return true;
+ 265 │     }
+ 266 │ 
+ 267 │     // Tentar excluir do Supabase
+ 268 │     const { error } = await supabase
+ 269 │       .from('grupos_estudo')
+ 270 │       .delete()
+ 271 │       .eq('id', grupoId)
+ 272 │       .eq('user_id', userId);
+ 273 │ 
+ 274 │     if (error) {
+ 275 │       console.error('Erro ao excluir grupo do banco de dados:', error);
+ 276 │       return false;
+ 277 │     }
+ 278 │ 
+ 279 │     console.log('Grupo excluído com sucesso do banco de dados', grupoId);
+ 280 │     return true;
+ 281 │   } catch (error) {
+ 282 │     console.error('Erro ao excluir grupo:', error);
+ 283 │     return false;
+ 284 │   }
+ 285 │ };
+ 286 │ 
+ 287 │ /**
+ 288 │  * Cria um grupo no Supabase com fallback para armazenamento local
+ 289 │  */
+ 290 │ export const criarGrupo = async (dados: Omit<GrupoEstudo, 'id'>): Promise<GrupoEstudo | null> => {
+ 291 │   try {
+ 292 │     // Tentar inserir no Supabase
+ 293 │     const { data, error } = await supabase
+ 294 │       .from('grupos_estudo')
+ 295 │       .insert(dados)
+ 296 │       .select('*')
+ 297 │       .single();
+ 298 │ 
+ 299 │     if (error) {
+ 300 │       console.error('Erro ao criar grupo no banco de dados:', error);
+ 301 │ 
+ 302 │       // Gerar ID localmente
+ 303 │       const id = `local_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+ 304 │ 
+ 305 │       // Criar grupo para armazenamento local
+ 306 │       const grupoLocal: GrupoEstudo = {
+ 307 │         ...dados,
+ 308 │         id
+ 309 │       };
+ 310 │ 
+ 311 │       // Salvar localmente
+ 312 │       // salvarGrupoLocal(grupoLocal); // This line was removed to avoid double saving
+ 313 │ 
+ 314 │       // Mostrar notificação sobre o armazenamento local
+ 315 │       const element = document.createElement('div');
+ 316 │       element.style.position = 'fixed';
+ 317 │       element.style.top = '20px';
+ 318 │       element.style.left = '50%';
+ 319 │       element.style.transform = 'translateX(-50%)';
+ 320 │       element.style.padding = '10px 20px';
+ 321 │       element.style.background = '#FFA500';
+ 322 │       element.style.color = 'white';
+ 323 │       element.style.borderRadius = '4px';
+ 324 │       element.style.zIndex = '9999';
+ 325 │       element.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+ 326 │       element.textContent = 'Grupo salvo localmente. Será sincronizado quando o banco de dados estiver disponível.';
+ 327 │       document.body.appendChild(element);
+ 328 │ 
+ 329 │       // Remover após 5 segundos
+ 330 │       setTimeout(() => {
+ 331 │         element.style.opacity = '0';
+ 332 │         element.style.transition = 'opacity 0.5s';
+ 333 │         setTimeout(() => {
+ 334 │           document.body.removeChild(element);
+ 335 │         }, 500);
+ 336 │       }, 5000);
+ 337 │ 
+ 338 │       return grupoLocal;
+ 339 │     }
+ 340 │ 
+ 341 │     return data;
+ 342 │   } catch (error) {
+ 343 │     console.error('Erro ao criar grupo:', error);
+ 344 │ 
+ 345 │     // Falha total, retornar nulo
+ 346 │     return null;
+ 347 │   }
+ 348 │ };
+ 349 │ 
+ 350 │ /**
+ 351 │  * Obtém todos os grupos de estudo (do Supabase + localStorage)
+ 352 │  */
+ 353 │ export const obterTodosGrupos = async (userId: string): Promise<GrupoEstudo[]> => {
+ 354 │   try {
+ 355 │     // Obter a lista de grupos removidos
+ 356 │     const gruposRemovidosKey = 'grupos_removidos';
+ 357 │     const gruposRemovidosStr = localStorage.getItem(gruposRemovidosKey) || '[]';
+ 358 │     const gruposRemovidos = JSON.parse(gruposRemovidosStr);
+ 359 │ 
+ 360 │     // Primeiro, garantir que temos os grupos locais (failsafe), excluindo os removidos
+ 361 │     let gruposLocais = obterGruposLocal()
+ 362 │       .filter(grupo => grupo.user_id === userId)
+ 363 │       .filter(grupo => !gruposRemovidos.includes(grupo.id));
+ 364 │ 
+ 365 │     // Tentar obter backup da sessão
+ 366 │     try {
+ 367 │       const backupSessao = sessionStorage.getItem(`${STORAGE_KEY}_session`);
+ 368 │       if (backupSessao) {
+ 369 │         const gruposSessao = JSON.parse(backupSessao);
+ 370 │         console.log('Backup de sessão encontrado com', gruposSessao.length, 'grupos');
+ 371 │ 
+ 372 │         // Combinar com grupos locais existentes (evitando duplicatas e grupos removidos)
+ 373 │         const gruposLocaisIds = new Set(gruposLocais.map(g => g.id));
+ 374 │ 
+ 375 │         const gruposSessaoFiltrados = gruposSessao
+ 376 │           .filter((g: GrupoEstudo) => 
+ 377 │             g.user_id === userId && 
+ 378 │             !gruposLocaisIds.has(g.id) && 
+ 379 │             !gruposRemovidos.includes(g.id)
+ 380 │           );
+ 381 │ 
+ 382 │         if (gruposSessaoFiltrados.length > 0) {
+ 383 │           console.log('Adicionando', gruposSessaoFiltrados.length, 'grupos do backup de sessão');
+ 384 │           gruposLocais = [...gruposLocais, ...gruposSessaoFiltrados];
+ 385 │ 
+ 386 │           // Atualizar localStorage com os dados combinados
+ 387 │           localStorage.setItem(STORAGE_KEY, JSON.stringify(gruposLocais));
+ 388 │         }
+ 389 │       }
+ 390 │     } catch (sessionError) {
+ 391 │       console.error('Erro ao recuperar backup de sessão:', sessionError);
+ 392 │     }
+ 393 │ 
+ 394 │     // Agora tentar obter do Supabase
+ 395 │     try {
+ 396 │       const { data: gruposSupabase, error } = await supabase
+ 397 │         .from('grupos_estudo')
+ 398 │         .select('*')
+ 399 │         .eq('user_id', userId)
+ 400 │         .order('data_criacao', { ascending: false });
+ 401 │ 
+ 402 │       if (error) {
+ 403 │         console.error('Erro ao buscar grupos do banco de dados:', error);
+ 404 │         // Se falhar o Supabase, retornar apenas grupos locais
+ 405 │         return gruposLocais;
+ 406 │       }
+ 407 │ 
+ 408 │       // Filtrar grupos do Supabase para excluir os grupos removidos
+ 409 │       const gruposSupabaseFiltrados = gruposSupabase.filter(
+ 410 │         grupo => !gruposRemovidos.includes(grupo.id)
+ 411 │       );
+ 412 │ 
+ 413 │       // Filtrar grupos locais para incluir apenas os que não estão no Supabase
+ 414 │       const gruposLocaisFiltrados = gruposLocais.filter(
+ 415 │         grupoLocal => !gruposSupabaseFiltrados.some(grupoRemoto => grupoRemoto.id === grupoLocal.id)
+ 416 │       );
+ 417 │ 
+ 418 │       // Combinar ambos
+ 419 │       const todosGrupos = [...gruposSupabaseFiltrados, ...gruposLocaisFiltrados];
+ 420 │ 
+ 421 │       // Certificar-se de que os grupos locais estão atualizados
+ 422 │       if (todosGrupos.length !== gruposLocais.length) {
+ 423 │         // Salvar apenas os grupos locais (que começam com 'local_')
+ 424 │         const apenasGruposLocais = todosGrupos
+ 425 │           .filter(g => g.id.startsWith('local_'))
+ 426 │           .filter(g => !gruposRemovidos.includes(g.id));
+ 427 │ 
+ 428 │         // Se houver alguma diferença, atualizar armazenamento local
+ 429 │         if (apenasGruposLocais.length > 0) {
+ 430 │           localStorage.setItem(STORAGE_KEY, JSON.stringify(apenasGruposLocais));
+ 431 │         }
+ 432 │       }
+ 433 │ 
+ 434 │       return todosGrupos;
+ 435 │     } catch (supabaseError) {
+ 436 │       console.error('Erro ao acessar Supabase:', supabaseError);
+ 437 │       return gruposLocais;
+ 438 │     }
+ 439 │   } catch (error) {
+ 440 │     console.error('Erro ao obter todos os grupos:', error);
+ 441 │ 
+ 442 │     // Obter a lista de grupos removidos para filtrar recuperações de emergência
+ 443 │     const gruposRemovidosKey = 'grupos_removidos';
+ 444 │     const gruposRemovidosStr = localStorage.getItem(gruposRemovidosKey) || '[]';
+ 445 │     const gruposRemovidos = JSON.parse(gruposRemovidosStr);
+ 446 │ 
+ 447 │     // Tentar recuperar grupos de qualquer fonte possível
+ 448 │     try {
+ 449 │       // Verificar backup no localStorage
+ 450 │       const backup = localStorage.getItem(`${STORAGE_KEY}_backup`);
+ 451 │       if (backup) {
+ 452 │         const gruposBackup = JSON.parse(backup);
+ 453 │         return gruposBackup
+ 454 │           .filter((g: GrupoEstudo) => g.user_id === userId)
+ 455 │           .filter((g: GrupoEstudo) => !gruposRemovidos.includes(g.id));
+ 456 │       }
+ 457 │ 
+ 458 │       // Verificar backups de emergência
+ 459 │       const todasChaves = Object.keys(localStorage);
+ 460 │       const chavesEmergencia = todasChaves.filter(chave => chave.startsWith(`${STORAGE_KEY}_emergency_`));
+ 461 │ 
+ 462 │       if (chavesEmergencia.length > 0) {
+ 463 │         // Combinar todos os backups de emergência
+ 464 │         let gruposEmergencia: GrupoEstudo[] = [];
+ 465 │ 
+ 466 │         for (const chave of chavesEmergencia) {
+ 467 │           try {
+ 468 │             const gruposChave = JSON.parse(localStorage.getItem(chave) || '[]');
+ 469 │             gruposEmergencia = [...gruposEmergencia, ...gruposChave];
+ 470 │           } catch (e) {
+ 471 │             console.error('Erro ao recuperar backup de emergência:', e);
+ 472 │           }
+ 473 │         }
+ 474 │ 
+ 475 │         return gruposEmergencia
+ 476 │           .filter(g => g.user_id === userId)
+ 477 │           .filter(g => !gruposRemovidos.includes(g.id));
+ 478 │       }
+ 479 │     } catch (recoveryError) {
+ 480 │       console.error('Erro na recuperação de emergência:', recoveryError);
+ 481 │     }
+ 482 │ 
+ 483 │     // Último recurso: retornar array vazio
+ 484 │     return [];
+ 485 │   }
+ 486 │ };
+ 487 │ 
+ 488 │ /**
+ 489 │  * Tenta sincronizar grupos locais com o banco de dados
+ 490 │  */
+ 491 │ export const sincronizarGruposLocais = async (userId: string): Promise<void> => {
+ 492 │   try {
+ 493 │     const gruposLocais = obterGruposLocal()
+ 494 │       .filter(grupo => 
+ 495 │         grupo.user_id === userId && 
+ 496 │         grupo.id.startsWith('local_')
+ 497 │       );
+ 498 │ 
+ 499 │     if (gruposLocais.length === 0) return;
+ 500 │ 
+ 501 │     console.log(`Tentando sincronizar ${gruposLocais.length} grupos locais`);
+ 502 │ 
+ 503 │     for (const grupo of gruposLocais) {
+ 504 │       // Remover o ID local para que o Supabase gere um novo
+ 505 │       const { id, ...dadosGrupo } = grupo;
+ 506 │ 
+ 507 │       // Tentar inserir no Supabase
+ 508 │       const { error } = await supabase
+ 509 │         .from('grupos_estudo')
+ 510 │         .insert(dadosGrupo);
+ 511 │ 
+ 512 │       if (!error) {
+ 513 │         console.log(`Grupo sincronizado com sucesso: ${grupo.nome}`);
+ 514 │         // Remover do armazenamento local após sincronizar
+ 515 │         const gruposAtualizados = obterGruposLocal().filter(g => g.id !== grupo.id);
+ 516 │         localStorage.setItem(STORAGE_KEY, JSON.stringify(gruposAtualizados));
+ 517 │       }
+ 518 │     }
+ 519 │   } catch (error) {
+ 520 │     console.error('Erro ao sincronizar grupos locais:', error);
+ 521 │   }
+ 522 │ };
+ 523 │ 
+ 524 │ // Funções para gerar e verificar códigos de grupo
+ 525 │ export const gerarCodigoUnico = (): string => {
+ 526 │   // Usar apenas letras maiúsculas e números que são facilmente distinguíveis
+ 527 │   // Excluindo caracteres como O e 0, I e 1, que podem causar confusão
+ 528 │   const caracteres = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+ 529 │   let resultado = '';
+ 530 │   for (let i = 0; i < 7; i++) {
+ 531 │     resultado += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+ 532 │   }
+ 533 │   return resultado;
+ 534 │ };
+ 535 │ 
+ 536 │ // Verificar se um código já existe (em Supabase ou localStorage)
+ 537 │ export const verificarSeCodigoExiste = async (codigo: string): Promise<boolean> => {
+ 538 │   try {
+ 539 │     // Verificar primeiro em localStorage
+ 540 │     const gruposLocais = obterGruposLocal();
+ 541 │     const existeLocal = gruposLocais.some((grupo: any) => 
+ 542 │       grupo.codigo && grupo.codigo.toUpperCase() === codigo.toUpperCase()
+ 543 │     );
+ 544 │     
+ 545 │     if (existeLocal) {
+ 546 │       console.log('Código já existe localmente:', codigo);
+ 547 │       return true;
+ 548 │     }
+ 549 │     
+ 550 │     // Verificar no Supabase
+ 551 │     try {
+ 552 │       const { data: { session } } = await supabase.auth.getSession();
+ 553 │       
+ 554 │       if (session) {
+ 555 │         const { data, error } = await supabase
+ 556 │           .from('grupos_estudo')
+ 557 │           .select('id')
+ 558 │           .eq('codigo', codigo.toUpperCase())
+ 559 │           .limit(1);
+ 560 │         
+ 561 │         if (error) {
+ 562 │           console.error('Erro ao verificar código no Supabase:', error);
+ 563 │           return false;
+ 564 │         }
+ 565 │         
+ 566 │         return data && data.length > 0;
+ 567 │       }
+ 568 │     } catch (error) {
+ 569 │       console.error('Erro ao comunicar com Supabase:', error);
+ 570 │     }
+ 571 │     
+ 572 │     return false;
+ 573 │   } catch (error) {
+ 574 │     console.error('Erro ao verificar se código existe:', error);
+ 575 │     return false;
+ 576 │   }
+ 577 │ };
+ 578 │ 
+ 579 │ // Função para gerar um código único para um grupo, garantindo que não há duplicatas
+ 580 │ export const gerarCodigoUnicoGrupo = async (): Promise<string> => {
+     ·              ──────────┬──────────
+     ·                        ╰── `gerarCodigoUnicoGrupo` redefined here
+ 581 │   try {
+ 582 │     // Número máximo de tentativas para evitar loops infinitos
+ 583 │     const MAX_TENTATIVAS = 10;
+     ╰────
+/home/runner/workspace/src/lib/gruposEstudoStorage.ts:44:1
+356|      const gruposRemovidosKey = 'grupos_removidos';
+357|      const gruposRemovidosStr = localStorage.getItem(gruposRemovidosKey) || '[]';
+358|      const gruposRemovidos = JSON.parse(gruposRemovidosStr);
+   |                               ^
+359|  
+360|      // Primeiro, garantir que temos os grupos locais (failsafe), excluindo os removidos
