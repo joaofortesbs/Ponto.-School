@@ -2,72 +2,73 @@ import React, { useState, useEffect } from 'react';
 import { Share, Check, Copy, Key } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { useToast } from "@/components/ui/use-toast"
-import { gerarCodigoUnicoGrupo, obterGruposLocal } from '@/lib/utils';
+import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/lib/supabase';
-import { GrupoEstudo } from '@/types';
 
 interface CompartilharGrupoSectionProps {
-  grupo: GrupoEstudo;
-  onUpdateGrupo?: (grupo: GrupoEstudo) => void;
+  grupoCodigo: string;
+  grupoNome: string;
+  onGerarCodigo: () => Promise<void>;
 }
 
-export function CompartilharGrupoSection({ grupo, onUpdateGrupo }: { grupo: GrupoEstudo, onUpdateGrupo?: (grupo: GrupoEstudo) => void }) {
-  const [codigoGrupo, setCodigoGrupo] = useState<string | null>(grupo?.codigo || null);
+export default function CompartilharGrupoSection({ 
+  grupoCodigo, 
+  grupoNome, 
+  onGerarCodigo 
+}: CompartilharGrupoSectionProps) {
   const [isCopied, setIsCopied] = useState(false);
   const [isGeneratingCode, setIsGeneratingCode] = useState(false);
   const { toast } = useToast();
 
-  // Atualizar código quando o grupo mudar
-  useEffect(() => {
-    if (grupo?.codigo) {
-      setCodigoGrupo(grupo.codigo);
+  const handleCopiarCodigo = () => {
+    if (grupoCodigo) {
+      navigator.clipboard.writeText(grupoCodigo)
+        .then(() => {
+          setIsCopied(true);
+          setTimeout(() => setIsCopied(false), 2000);
+          
+          toast({
+            title: "Código copiado!",
+            description: "O código do grupo foi copiado para a área de transferência.",
+            variant: "default"
+          });
+        })
+        .catch(err => {
+          console.error('Erro ao copiar código:', err);
+          toast({
+            title: "Erro ao copiar",
+            description: "Não foi possível copiar o código. Tente novamente.",
+            variant: "destructive"
+          });
+        });
     }
-  }, [grupo?.codigo]);
+  };
 
-  const handleGenerateCode = async () => {
-    setIsGeneratingCode(true);
+  const handleCompartilhar = async () => {
     try {
-      const codigoUnico = await gerarCodigoUnicoGrupo();
-
-      // Primeiro salvar no localStorage para garantir persistência imediata
-      const gruposLocal = obterGruposLocal();
-      const indexGrupo = gruposLocal.findIndex(g => g.id === grupo.id);
-      if (indexGrupo >= 0) {
-        gruposLocal[indexGrupo].codigo = codigoUnico;
-        localStorage.setItem('epictus_grupos_estudo', JSON.stringify(gruposLocal));
-        console.log('Código salvo localmente primeiro:', codigoUnico);
-      }
-
-      // Atualizar o estado local
-      setCodigoGrupo(codigoUnico);
-
-      // Atualizar grupo no estado global
-      const grupoAtualizado = { ...grupo, codigo: codigoUnico };
-      if (typeof onUpdateGrupo === 'function') {
-        onUpdateGrupo(grupoAtualizado);
-      }
-
-      // Tentar salvar no Supabase
-      const { error } = await supabase
-        .from('grupos_estudo')
-        .update({ codigo: codigoUnico })
-        .eq('id', grupo.id);
-
-      if (error) {
-        console.error('Erro ao salvar código no servidor:', error);
-        toast({
-          title: "Aviso",
-          description: "O código foi gerado e salvo localmente. Sincronizará com o servidor mais tarde.",
-          variant: "default"
+      if (grupoCodigo && navigator.share) {
+        await navigator.share({
+          title: `Grupo de Estudos: ${grupoNome}`,
+          text: `Entre no meu grupo de estudos "${grupoNome}" usando o código: ${grupoCodigo}`,
+          url: window.location.href,
         });
       } else {
-        toast({
-          title: "Código gerado com sucesso!",
-          description: "Compartilhe este código para convidar pessoas para o grupo.",
-          variant: "default"
-        });
+        handleCopiarCodigo();
       }
+    } catch (error) {
+      console.error('Erro ao compartilhar:', error);
+    }
+  };
+
+  const handleGerarCodigoClick = async () => {
+    setIsGeneratingCode(true);
+    try {
+      await onGerarCodigo();
+      toast({
+        title: "Código gerado com sucesso!",
+        description: "Compartilhe este código para convidar pessoas para o grupo.",
+        variant: "default"
+      });
     } catch (error) {
       console.error('Erro ao gerar código:', error);
       toast({
@@ -80,39 +81,9 @@ export function CompartilharGrupoSection({ grupo, onUpdateGrupo }: { grupo: Grup
     }
   };
 
-  const handleCopiarCodigo = () => {
-    // Garantir que copiamos o código sem formatação (sem espaços)
-    if (codigoGrupo) {
-      navigator.clipboard.writeText(codigoGrupo)
-        .then(() => {
-          setIsCopied(true);
-          setTimeout(() => setIsCopied(false), 2000);
-        })
-        .catch(err => {
-          console.error('Erro ao copiar código:', err);
-        });
-    }
-  };
-
-  const handleCompartilhar = async () => {
-    try {
-      if (codigoGrupo && navigator.share) {
-        await navigator.share({
-          title: `Grupo de Estudos: ${grupo.nome}`,
-          text: `Entre no meu grupo de estudos "${grupo.nome}" usando o código: ${codigoGrupo}`,
-          url: window.location.href,
-        });
-      } else {
-        handleCopiarCodigo();
-      }
-    } catch (error) {
-      console.error('Erro ao compartilhar:', error);
-    }
-  };
-
-  const formattedCodigo = codigoGrupo && codigoGrupo.length > 4
-    ? `${codigoGrupo.substring(0, 4)} ${codigoGrupo.substring(4)}`
-    : codigoGrupo || "SEM CÓDIGO";
+  const formattedCodigo = grupoCodigo && grupoCodigo.length > 4
+    ? `${grupoCodigo.substring(0, 4)} ${grupoCodigo.substring(4)}`
+    : grupoCodigo || "SEM CÓDIGO";
 
   return (
     <div className="space-y-6">
@@ -140,20 +111,20 @@ export function CompartilharGrupoSection({ grupo, onUpdateGrupo }: { grupo: Grup
                 onClick={handleCopiarCodigo}
                 variant="ghost"
                 className="h-9 rounded-l-none rounded-r-md border border-l-0 border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700"
-                disabled={!codigoGrupo}
+                disabled={!grupoCodigo}
               >
                 {isCopied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
               </Button>
             </div>
             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              {codigoGrupo ? "Este código permanente é usado para convidar pessoas para o seu grupo. O código é único, inalterável e insensível a maiúsculas e minúsculas." : "Um código único e permanente será gerado para este grupo quando você clicar no botão 'Gerar código do grupo'."}
+              {grupoCodigo ? "Este código permanente é usado para convidar pessoas para o seu grupo. O código é único, inalterável e insensível a maiúsculas e minúsculas." : "Um código único e permanente será gerado para este grupo quando você clicar no botão 'Gerar código do grupo'."}
             </p>
           </div>
 
-          {!codigoGrupo && (
+          {!grupoCodigo && (
             <div className="pt-2">
               <Button
-                onClick={handleGenerateCode}
+                onClick={handleGerarCodigoClick}
                 variant="secondary"
                 className="w-full justify-center"
                 disabled={isGeneratingCode}
@@ -168,7 +139,7 @@ export function CompartilharGrupoSection({ grupo, onUpdateGrupo }: { grupo: Grup
               onClick={handleCompartilhar}
               variant="outline"
               className="w-full justify-center border-[#FF6B00] text-[#FF6B00] hover:bg-[#FF6B00]/10"
-              disabled={!codigoGrupo}
+              disabled={!grupoCodigo}
             >
               <Share className="h-4 w-4 mr-2" />
               Compartilhar grupo

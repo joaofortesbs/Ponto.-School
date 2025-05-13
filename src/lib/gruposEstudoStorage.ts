@@ -45,11 +45,16 @@ export const gerarStringAleatoria = (comprimento = COMPRIMENTO_CODIGO, caractere
  * Nota: Trata códigos como não sensíveis a maiúsculas/minúsculas
  */
 export const verificarSeCodigoExiste = async (codigo: string): Promise<boolean> => {
+  if (!codigo) return false;
+  
   try {
-    // Verificar primeiro em localStorage
+    // Normalizar o código para maiúsculas para comparação
+    const codigoUpperCase = codigo.toUpperCase();
+    
+    // Verificar primeiro em localStorage (resposta rápida)
     const gruposLocais = obterGruposLocal();
-    const existeLocal = gruposLocais.some((grupo: any) => 
-      grupo.codigo && grupo.codigo.toUpperCase() === codigo.toUpperCase()
+    const existeLocal = gruposLocais.some(grupo => 
+      grupo.codigo && grupo.codigo.toUpperCase() === codigoUpperCase
     );
 
     if (existeLocal) {
@@ -59,27 +64,24 @@ export const verificarSeCodigoExiste = async (codigo: string): Promise<boolean> 
 
     // Verificar no Supabase
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data, error } = await supabase
+        .from('grupos_estudo')
+        .select('id')
+        .eq('codigo', codigoUpperCase)
+        .limit(1);
 
-      if (session) {
-        const { data, error } = await supabase
-          .from('grupos_estudo')
-          .select('id')
-          .eq('codigo', codigo.toUpperCase())
-          .limit(1);
-
-        if (error) {
-          console.error('Erro ao verificar código no Supabase:', error);
-          return false;
-        }
-
-        return data && data.length > 0;
+      if (error) {
+        console.error('Erro ao verificar código no Supabase:', error);
+        // Se houver erro no Supabase, consideramos apenas a verificação local
+        return existeLocal;
       }
-    } catch (error) {
-      console.error('Erro ao comunicar com Supabase:', error);
-    }
 
-    return false;
+      return data && data.length > 0;
+    } catch (supabaseError) {
+      console.error('Erro ao comunicar com Supabase:', supabaseError);
+      // Se houver erro de comunicação, consideramos apenas a verificação local
+      return existeLocal;
+    }
   } catch (error) {
     console.error('Erro ao verificar se código existe:', error);
     return false;
@@ -92,7 +94,7 @@ export const verificarSeCodigoExiste = async (codigo: string): Promise<boolean> 
 export const gerarCodigoUnicoGrupo = async (): Promise<string> => {
   try {
     // Número máximo de tentativas para evitar loops infinitos
-    const MAX_TENTATIVAS = 10;
+    const MAX_TENTATIVAS = 20;
     let tentativas = 0;
     let codigoGrupo: string;
     let codigoJaExiste = false;
@@ -100,47 +102,55 @@ export const gerarCodigoUnicoGrupo = async (): Promise<string> => {
     do {
       // Gerar um novo código
       codigoGrupo = gerarCodigoUnico();
-
+      
       // Verificar se já existe
       codigoJaExiste = await verificarSeCodigoExiste(codigoGrupo);
-
+      
       // Incrementar contador de tentativas
       tentativas++;
-
-      // Se já tentamos muitas vezes, adicionar timestamp no final para garantir unicidade
+      
+      // Log para debug
+      console.log(`Tentativa ${tentativas}: código ${codigoGrupo} ${codigoJaExiste ? 'já existe' : 'é único'}`);
+      
+      // Se já tentamos muitas vezes, garantir unicidade com timestamp
       if (tentativas >= MAX_TENTATIVAS) {
         const timestamp = Date.now().toString(36).substring(0, 2).toUpperCase();
-        codigoGrupo = codigoGrupo.substring(0, 5) + timestamp;
+        const randomChars = Array(2).fill(0).map(() => 
+          CARACTERES_PERMITIDOS.charAt(Math.floor(Math.random() * CARACTERES_PERMITIDOS.length))
+        ).join('');
+        
+        codigoGrupo = codigoGrupo.substring(0, 3) + timestamp + randomChars;
+        console.log(`Gerado código com timestamp após ${tentativas} tentativas: ${codigoGrupo}`);
         break;
       }
     } while (codigoJaExiste);
 
-    // Garantir que o código está em formato correto
+    // Garantir que o código está em formato correto (maiúsculas)
     codigoGrupo = codigoGrupo.toUpperCase();
 
-    // Verificar se o código tem o comprimento esperado (7 caracteres)
+    // Ajustar o tamanho para exatamente 7 caracteres
     if (codigoGrupo.length !== 7) {
-      console.warn("Código gerado não tem o comprimento esperado:", codigoGrupo);
-      // Ajustar o código para ter 7 caracteres se necessário
       if (codigoGrupo.length < 7) {
-        // Adicionar caracteres aleatórios até completar 7
+        // Adicionar caracteres aleatórios
         while (codigoGrupo.length < 7) {
           codigoGrupo += CARACTERES_PERMITIDOS.charAt(
             Math.floor(Math.random() * CARACTERES_PERMITIDOS.length)
           );
         }
-      } else if (codigoGrupo.length > 7) {
-        // Truncar para 7 caracteres
+      } else {
+        // Truncar
         codigoGrupo = codigoGrupo.substring(0, 7);
       }
+      console.log(`Código ajustado para 7 caracteres: ${codigoGrupo}`);
     }
 
-    console.log(`Código único gerado após ${tentativas} tentativa(s):`, codigoGrupo);
     return codigoGrupo;
   } catch (error) {
     console.error("Erro ao gerar código único para grupo:", error);
-    // Garantir que sempre retornamos um código, mesmo em caso de erro
-    return `GE${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+    // Código de emergência com prefixo para identificação
+    const fallbackCode = `GE${Math.random().toString(36).substring(2, 5).toUpperCase()}${Date.now().toString(36).substring(0, 2).toUpperCase()}`;
+    console.log(`Gerado código de emergência: ${fallbackCode}`);
+    return fallbackCode.substring(0, 7);
   }
 };
 
@@ -321,6 +331,16 @@ export const excluirGrupo = async (grupoId: string, userId: string): Promise<boo
  */
 export const criarGrupo = async (dados: Omit<GrupoEstudo, 'id'>): Promise<GrupoEstudo | null> => {
   try {
+    // Gerar um código único para o grupo se não foi fornecido
+    if (!dados.codigo) {
+      try {
+        dados.codigo = await gerarCodigoUnicoGrupo();
+        console.log('Código gerado automaticamente durante criação:', dados.codigo);
+      } catch (codeError) {
+        console.error('Erro ao gerar código durante criação:', codeError);
+      }
+    }
+
     // Tentar inserir no Supabase
     const { data, error } = await supabase
       .from('grupos_estudo')
@@ -340,8 +360,9 @@ export const criarGrupo = async (dados: Omit<GrupoEstudo, 'id'>): Promise<GrupoE
         id
       };
 
-      // Salvar localmente
-      // salvarGrupoLocal(grupoLocal); // This line was removed to avoid double saving
+      // Salvar explicitamente no armazenamento local
+      salvarGrupoLocal(grupoLocal);
+      console.log('Grupo salvo localmente com ID:', id);
 
       // Mostrar notificação sobre o armazenamento local
       const element = document.createElement('div');
@@ -370,12 +391,27 @@ export const criarGrupo = async (dados: Omit<GrupoEstudo, 'id'>): Promise<GrupoE
       return grupoLocal;
     }
 
+    // Também salvar localmente para garantir consistência e disponibilidade offline
+    salvarGrupoLocal(data);
+    console.log('Grupo criado com sucesso no Supabase e salvo localmente:', data.id);
+    
     return data;
   } catch (error) {
     console.error('Erro ao criar grupo:', error);
 
-    // Falha total, retornar nulo
-    return null;
+    // Tente criar apenas localmente como último recurso
+    try {
+      const dadosEmergencia = {
+        ...dados,
+        id: `emergency_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
+      };
+      salvarGrupoLocal(dadosEmergencia as GrupoEstudo);
+      console.log('Grupo salvo em modo de emergência:', dadosEmergencia.id);
+      return dadosEmergencia as GrupoEstudo;
+    } catch (emergencyError) {
+      console.error('Falha total ao salvar grupo:', emergencyError);
+      return null;
+    }
   }
 };
 
