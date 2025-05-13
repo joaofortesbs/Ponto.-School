@@ -253,6 +253,9 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
           // Truncar para 7 caracteres
           codigoGrupo = codigoGrupo.substring(0, 7);
         }
+        
+        // NOTA: O código é apenas para exibição e não está sendo persistido
+        console.log('Código apenas para UI, não persistido:', codigoGrupo);
       }
 
       console.log("Código único gerado para o grupo:", codigoGrupo);
