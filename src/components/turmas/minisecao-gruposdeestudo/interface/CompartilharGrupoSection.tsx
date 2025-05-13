@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Share, Check, Copy, Key } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -15,15 +15,23 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
   onGerarCodigo
 }) => {
   const [copiado, setCopiado] = useState(false);
-  const [codigoGerado, setCodigoGerado] = useState(!!grupoCodigo);
+  const [codigoLocalExibido, setCodigoLocalExibido] = useState(grupoCodigo);
 
-  const formattedCodigo = grupoCodigo && grupoCodigo.length > 4 
-    ? `${grupoCodigo.substring(0, 4)} ${grupoCodigo.substring(4)}`
-    : grupoCodigo || "SEM CÓDIGO";
+  // Atualizar o código local quando o prop mudar
+  useEffect(() => {
+    if (grupoCodigo) {
+      setCodigoLocalExibido(grupoCodigo);
+      console.log("Código do grupo atualizado no componente:", grupoCodigo);
+    }
+  }, [grupoCodigo]);
+
+  const formattedCodigo = codigoLocalExibido && codigoLocalExibido.length > 4 
+    ? `${codigoLocalExibido.substring(0, 4)} ${codigoLocalExibido.substring(4)}`
+    : codigoLocalExibido || "SEM CÓDIGO";
 
   const handleCopiarCodigo = () => {
     // Garantir que copiamos o código sem formatação (sem espaços)
-    navigator.clipboard.writeText(grupoCodigo)
+    navigator.clipboard.writeText(codigoLocalExibido)
       .then(() => {
         setCopiado(true);
         setTimeout(() => setCopiado(false), 2000);
@@ -38,7 +46,7 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
       if (navigator.share) {
         await navigator.share({
           title: `Grupo de Estudos: ${grupoNome}`,
-          text: `Entre no meu grupo de estudos "${grupoNome}" usando o código: ${grupoCodigo}`,
+          text: `Entre no meu grupo de estudos "${grupoNome}" usando o código: ${codigoLocalExibido}`,
           url: window.location.href,
         });
       } else {

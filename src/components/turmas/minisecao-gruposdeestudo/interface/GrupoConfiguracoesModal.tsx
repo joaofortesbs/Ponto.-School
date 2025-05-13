@@ -237,7 +237,24 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
                           console.log('Código salvo com sucesso no Supabase:', novoCodigo);
                       }
                   } catch (dbError) {
-                      console.error('Erro na comunicação com Supabase:', dbError);
+                      console.error('Erro na comunicação com o banco de dados:', dbError);
+                      mostrarNotificacaoErro("Erro na comunicação com o servidor. O código foi salvo localmente.");
+                  }
+              } else {
+                  // Salvar no localStorage para grupos locais
+                  try {
+                      const gruposLocal = JSON.parse(localStorage.getItem('grupos_estudo') || '[]');
+                      const indexGrupo = gruposLocal.findIndex((g: any) => g.id === grupo?.id);
+                      
+                      if (indexGrupo !== -1) {
+                          gruposLocal[indexGrupo].codigo = novoCodigo;
+                          localStorage.setItem('grupos_estudo', JSON.stringify(gruposLocal));
+                          console.log('Código salvo com sucesso no localStorage:', novoCodigo);
+                      }
+                  } catch (localError) {
+                      console.error('Erro ao salvar no localStorage:', localError);
+                  }
+              } com Supabase:', dbError);
                   }
               }
 

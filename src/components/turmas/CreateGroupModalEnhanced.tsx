@@ -179,7 +179,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
 
       // Notificar sobre o sucesso
       alert(`Você foi adicionado ao grupo: ${grupoExistente.nome}`);
-      
+
       // Fechar o modal
       onClose();
     } catch (error) {
@@ -208,31 +208,34 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
     }
 
     try {
-      // Obter a sessão do usuário atual
-      const { data: { session } } = await supabase.auth.getSession();
+        // Obter a sessão do usuário atual
+        const { data: { session } } = await supabase.auth.getSession();
 
-      if (!session) {
-        alert("Você precisa estar logado para criar um grupo de estudo.");
-        return;
-      }
-
-      // Gerar um código único para o grupo no novo formato de 7 caracteres
-      let codigoGrupo = await gerarCodigoUnicoGrupo();
-
-      // Certificar que temos um código, mesmo com erro
-      if (!codigoGrupo) {
-        try {
-          // Se falhou a geração normal, gerar um código de emergência
-          const CARACTERES_PERMITIDOS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-          codigoGrupo = Array(7).fill(0).map(() => 
-            CARACTERES_PERMITIDOS.charAt(Math.floor(Math.random() * CARACTERES_PERMITIDOS.length))
-          ).join('');
-        } catch (e) {
-          console.error("Falha ao gerar código alternativo:", e);
-          // Código básico de último recurso
-          codigoGrupo = "TMP" + Math.floor(Math.random() * 9000 + 1000);
+        if (!session) {
+          alert("Você precisa estar logado para criar um grupo de estudo.");
+          return;
         }
-      }
+
+        // Gerar um código único para o grupo no novo formato de 7 caracteres
+        let codigoGrupo = await gerarCodigoUnicoGrupo();
+        console.log("Código único gerado inicialmente:", codigoGrupo);
+
+        // Certificar que temos um código, mesmo com erro
+        if (!codigoGrupo) {
+          try {
+            // Se falhou a geração normal, gerar um código de emergência
+            const CARACTERES_PERMITIDOS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+            codigoGrupo = Array(7).fill(0).map(() => 
+              CARACTERES_PERMITIDOS.charAt(Math.floor(Math.random() * CARACTERES_PERMITIDOS.length))
+            ).join('');
+            console.log("Código de emergência gerado:", codigoGrupo);
+          } catch (e) {
+            console.error("Falha ao gerar código alternativo:", e);
+            // Código básico de último recurso
+            codigoGrupo = "TMP" + Math.floor(Math.random() * 9000 + 1000);
+            console.log("Código básico de último recurso gerado:", codigoGrupo);
+          }
+        }
 
       // Garantir que o código esteja em maiúsculas e tenha o comprimento correto
       codigoGrupo = codigoGrupo.toUpperCase();
@@ -739,7 +742,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
                           Permitir sugestões do Mentor IA
                         </h4>
                         <p className="text-xs text-gray-400">
-                          O Mentor IA pode sugerir materiais e atividades para o grupo
+                          O Mentor IA podesugerir materiais e atividades para o grupo
                         </p>
                       </div>
                     </div>
