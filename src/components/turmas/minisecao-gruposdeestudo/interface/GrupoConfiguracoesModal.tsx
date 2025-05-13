@@ -190,8 +190,35 @@ const handleSubmit = async () => {
       }
 
       // Atualizar no armazenamento local
-      const { atualizarGrupoLocal } = await import('@/lib/gruposEstudoStorage');
-      await atualizarGrupoLocal(grupoAtualizado);
+      try {
+        const gruposModule = await import('@/lib/gruposEstudoStorage');
+        
+        // Verificar se a função existe antes de chamá-la
+        if (typeof gruposModule.atualizarGrupoLocal === 'function') {
+          await gruposModule.atualizarGrupoLocal(grupoAtualizado);
+        } else {
+          // Implementação manual de fallback caso a função não exista
+          console.log("Usando método alternativo para atualizar grupo local...");
+          const GRUPOS_STORAGE_KEY = 'epictus_grupos_estudo';
+          const gruposAtuais = JSON.parse(localStorage.getItem(GRUPOS_STORAGE_KEY) || '[]');
+          const gruposAtualizados = gruposAtuais.map(g => g.id === grupoAtualizado.id ? grupoAtualizado : g);
+          localStorage.setItem(GRUPOS_STORAGE_KEY, JSON.stringify(gruposAtualizados));
+          
+          // Atualizar também na sessão
+          try {
+            sessionStorage.setItem('epictus_grupos_estudo_session', JSON.stringify(gruposAtualizados));
+          } catch (e) {
+            console.error("Erro ao salvar na sessão:", e);
+          }
+        }
+      } catch (storageError) {
+        console.error("Erro ao atualizar armazenamento local:", storageError);
+        // Implementação de fallback direto
+        const GRUPOS_STORAGE_KEY = 'epictus_grupos_estudo';
+        const gruposAtuais = JSON.parse(localStorage.getItem(GRUPOS_STORAGE_KEY) || '[]');
+        const gruposAtualizados = gruposAtuais.map(g => g.id === grupoAtualizado.id ? grupoAtualizado : g);
+        localStorage.setItem(GRUPOS_STORAGE_KEY, JSON.stringify(gruposAtualizados));
+      }
 
       // Atualizar o estado local para refletir as mudanças
       setGrupoAtualizado(grupoAtualizado);
