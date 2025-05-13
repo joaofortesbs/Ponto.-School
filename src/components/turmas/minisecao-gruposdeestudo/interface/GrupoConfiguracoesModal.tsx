@@ -195,7 +195,7 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
     // Função para gerar um código único para o grupo e garantir que seja permanente
     const handleGerarCodigo = async () => {
       try {
-          // Sistema de verificação dupla para evitar geração de códigos duplicados
+          // Sistema de verificação multicamada para evitar geração de códigos duplicados
           
           // 1. Verificar se o grupo já tem um código na UI atual
           if (grupoAtualizado?.codigo) {
@@ -218,14 +218,42 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
               return;
           }
 
-          // 3. Verificar código diretamente no armazenamento antes de tentar gerar
+          // 3. Verificar no armazenamento dedicado de códigos (mais confiável)
           if (grupo?.id) {
+              try {
+                  const CODIGOS_STORAGE_KEY = 'epictus_codigos_grupo';
+                  const codigosGrupos = JSON.parse(localStorage.getItem(CODIGOS_STORAGE_KEY) || '{}');
+                  
+                  if (codigosGrupos[grupo.id]) {
+                      mostrarNotificacaoSucesso("Código único recuperado do armazenamento permanente!");
+                      
+                      // Atualizar o estado local para a UI
+                      setGrupoAtualizado(prev => ({
+                          ...prev,
+                          codigo: codigosGrupos[grupo.id]
+                      }));
+
+                      // Atualizar o grupo original para manter consistência
+                      if (grupo) grupo.codigo = codigosGrupos[grupo.id];
+
+                      // Forçar atualização da UI e persistir a alteração
+                      if (grupo && onSave) {
+                          onSave({...grupo, codigo: codigosGrupos[grupo.id]});
+                      }
+                      
+                      return;
+                  }
+              } catch (e) {
+                  console.error("Erro ao verificar armazenamento dedicado:", e);
+              }
+              
+              // 4. Verificar código no armazenamento geral de grupos como fallback
               const { obterGruposLocal } = await import('@/lib/gruposEstudoStorage');
               const grupos = obterGruposLocal();
               const grupoExistente = grupos.find(g => g.id === grupo.id);
               
               if (grupoExistente?.codigo) {
-                  mostrarNotificacaoSucesso("Código único recuperado do armazenamento!");
+                  mostrarNotificacaoSucesso("Código único recuperado do armazenamento de grupos!");
                   
                   // Atualizar o estado da UI com o código encontrado
                   setGrupoAtualizado(prev => ({
@@ -241,12 +269,23 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
                       onSave({...grupo, codigo: grupoExistente.codigo});
                   }
                   
+                  // Adicionar ao armazenamento dedicado para maior confiabilidade futura
+                  try {
+                      const CODIGOS_STORAGE_KEY = 'epictus_codigos_grupo';
+                      const codigosGrupos = JSON.parse(localStorage.getItem(CODIGOS_STORAGE_KEY) || '{}');
+                      codigosGrupos[grupo.id] = grupoExistente.codigo;
+                      localStorage.setItem(CODIGOS_STORAGE_KEY, JSON.stringify(codigosGrupos));
+                      console.log("Código existente adicionado ao armazenamento dedicado:", grupoExistente.codigo);
+                  } catch (storageError) {
+                      console.error("Erro ao adicionar código existente ao armazenamento dedicado:", storageError);
+                  }
+                  
                   return;
               }
           }
 
-          // 4. Se realmente não existir código, só então gerar um novo
-          const { gerarCodigoUnicoGrupo } = await import('@/lib/gruposEstudoStorage');
+          // 5. Se realmente não existir código, só então gerar um novo
+          const { gerarCodigoUnicoGrupo, salvarCodigoGrupo } = await import('@/lib/gruposEstudoStorage');
           
           // Mostrar notificação de que o processo começou
           mostrarNotificacaoSucesso("Gerando código permanente...");
@@ -274,8 +313,19 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
               
               // Salvamento adicional para garantir persistência
               if (grupo?.id) {
-                  const { salvarCodigoGrupo } = await import('@/lib/gruposEstudoStorage');
+                  // Usar a função de salvamento dedicada para garantir persistência
                   await salvarCodigoGrupo(grupo.id, novoCodigo);
+                  
+                  // Adicionar ao armazenamento dedicado para maior confiabilidade
+                  try {
+                      const CODIGOS_STORAGE_KEY = 'epictus_codigos_grupo';
+                      const codigosGrupos = JSON.parse(localStorage.getItem(CODIGOS_STORAGE_KEY) || '{}');
+                      codigosGrupos[grupo.id] = novoCodigo;
+                      localStorage.setItem(CODIGOS_STORAGE_KEY, JSON.stringify(codigosGrupos));
+                      console.log("Novo código adicionado ao armazenamento dedicado:", novoCodigo);
+                  } catch (storageError) {
+                      console.error("Erro ao adicionar novo código ao armazenamento dedicado:", storageError);
+                  }
               }
           }
       } catch (error) {
@@ -638,14 +688,15 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
               <CompartilharGrupoSection 
                 grupoCodigo={grupo?.codigo || ""} 
                 grupoNome={grupo?.nome || ""} 
+                grupoId={grupo?.id}
                 onGerarCodigo={handleGerarCodigo}
               />
-              {!grupo?.codigo && (
+              {!grupo?.codigo && !grupoAtualizado?.codigo && (
                 <p className="text-amber-500 text-sm">
                   Aviso: Clique em "Gerar código do grupo" para criar um código permanente e único para este grupo.
                 </p>
               )}
-              {grupo?.codigo && (
+              {(grupo?.codigo || grupoAtualizado?.codigo) && (
                 <p className="text-green-500 text-sm">
                   Este grupo já possui um código permanente que não pode ser alterado ou perdido.
                 </p>
