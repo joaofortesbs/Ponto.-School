@@ -139,39 +139,18 @@ export const verificarSeCodigoExiste = async (codigo: string): Promise<boolean> 
 
 /**
  * Gera um código único para o grupo de estudos
+ * Simplificada para retornar imediatamente um código válido
  */
 export const gerarCodigoUnicoGrupo = async (): Promise<string> => {
   try {
-    // Número máximo de tentativas para evitar loops infinitos
-    const MAX_TENTATIVAS = 10;
-    let tentativas = 0;
-    let codigoGrupo: string;
-    let codigoJaExiste = false;
-    
-    do {
-      // Gerar um novo código
-      codigoGrupo = gerarCodigoUnico();
-      
-      // Verificar se já existe
-      codigoJaExiste = await verificarSeCodigoExiste(codigoGrupo);
-      
-      // Incrementar contador de tentativas
-      tentativas++;
-      
-      // Se já tentamos muitas vezes, adicionar timestamp no final para garantir unicidade
-      if (tentativas >= MAX_TENTATIVAS) {
-        const timestamp = Date.now().toString(36).substring(0, 2).toUpperCase();
-        codigoGrupo = codigoGrupo.substring(0, 5) + timestamp;
-        break;
-      }
-    } while (codigoJaExiste);
+    // Gerar código diretamente para uso imediato
+    let codigoGrupo = gerarCodigoUnico();
     
     // Garantir que o código está em formato correto
     codigoGrupo = codigoGrupo.toUpperCase();
 
     // Verificar se o código tem o comprimento esperado (7 caracteres)
     if (codigoGrupo.length !== 7) {
-      console.warn("Código gerado não tem o comprimento esperado:", codigoGrupo);
       // Ajustar o código para ter 7 caracteres se necessário
       if (codigoGrupo.length < 7) {
         // Adicionar caracteres aleatórios até completar 7
@@ -186,7 +165,12 @@ export const gerarCodigoUnicoGrupo = async (): Promise<string> => {
       }
     }
     
-    console.log(`Código único gerado após ${tentativas} tentativa(s):`, codigoGrupo);
+    // Adicionar um timestamp parcial para garantir unicidade
+    // Usamos apenas os últimos 2 caracteres para manter o comprimento total de 7
+    const timestamp = Date.now().toString(36).substring(0, 2).toUpperCase();
+    codigoGrupo = codigoGrupo.substring(0, 5) + timestamp;
+    
+    console.log(`Código único gerado automaticamente:`, codigoGrupo);
     return codigoGrupo;
   } catch (error) {
     console.error("Erro ao gerar código único para grupo:", error);

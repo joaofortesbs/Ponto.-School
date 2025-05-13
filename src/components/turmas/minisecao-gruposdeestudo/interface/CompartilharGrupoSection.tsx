@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Share, Check, Copy, Key } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,16 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
 }) => {
   const [copiado, setCopiado] = useState(false);
   const [codigoGerado, setCodigoGerado] = useState(!!grupoCodigo);
+
+  // Verificar se já temos código ao inicializar o componente
+  useEffect(() => {
+    setCodigoGerado(!!grupoCodigo);
+
+    // Se não temos código mas temos a função para gerar, gerar automaticamente
+    if (!grupoCodigo && onGerarCodigo && !codigoGerado) {
+      handleGerarCodigo();
+    }
+  }, [grupoCodigo, onGerarCodigo, codigoGerado]);
 
   const formattedCodigo = grupoCodigo && grupoCodigo.length > 4 
     ? `${grupoCodigo.substring(0, 4)} ${grupoCodigo.substring(4)}`
@@ -53,10 +63,7 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
     if (onGerarCodigo) {
       await onGerarCodigo();
       setCodigoGerado(true);
-      // Apenas para UI, sem persistência
-      setTimeout(() => {
-        console.log("Código gerado apenas para a interface:", grupoCodigo);
-      }, 300);
+      console.log("Código gerado automaticamente:", grupoCodigo);
     }
   };
 

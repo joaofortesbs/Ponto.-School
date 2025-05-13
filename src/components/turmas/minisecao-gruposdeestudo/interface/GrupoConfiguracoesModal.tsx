@@ -193,6 +193,7 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
   };
 
     // Função para gerar um código único para o grupo - SEM PERSISTÊNCIA
+    // Agora apenas usado como fallback se não existir código
     const handleGerarCodigo = async () => {
       try {
           // Verificar se o grupo já tem um código na UI
@@ -206,7 +207,7 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
           const { gerarCodigoUnico } = await import('@/lib/gruposEstudoStorage');
           const novoCodigo = gerarCodigoUnico();
 
-          console.log("Novo código gerado (apenas UI, sem armazenamento):", novoCodigo);
+          console.log("Novo código gerado automaticamente:", novoCodigo);
 
           if (novoCodigo) {
               // Atualizar o estado local apenas para a UI
@@ -220,9 +221,6 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
 
               // Mostrar notificação de sucesso
               mostrarNotificacaoSucesso("Código do grupo gerado com sucesso!");
-              
-              // Aviso para indicar que o código não está sendo armazenado
-              console.log('NOTA: Conforme solicitado, o código não está sendo armazenado no banco de dados ou localStorage');
               
               // Forçar atualização da UI apenas localmente
               if (grupo && onSave) {

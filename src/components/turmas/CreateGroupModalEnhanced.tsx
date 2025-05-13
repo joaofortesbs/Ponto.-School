@@ -216,49 +216,32 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
         return;
       }
 
-      // Gerar um código único para o grupo no novo formato de 7 caracteres
-      let codigoGrupo = await gerarCodigoUnicoGrupo();
-
-      // Certificar que temos um código, mesmo com erro
-      if (!codigoGrupo) {
-        try {
-          // Se falhou a geração normal, gerar um código de emergência
-          const CARACTERES_PERMITIDOS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-          codigoGrupo = Array(7).fill(0).map(() => 
-            CARACTERES_PERMITIDOS.charAt(Math.floor(Math.random() * CARACTERES_PERMITIDOS.length))
-          ).join('');
-        } catch (e) {
-          console.error("Falha ao gerar código alternativo:", e);
-          // Código básico de último recurso
-          codigoGrupo = "TMP" + Math.floor(Math.random() * 9000 + 1000);
-        }
-      }
-
-      // Garantir que o código esteja em maiúsculas e tenha o comprimento correto
+      // Gerar um código único para o grupo no formato de 7 caracteres
+      const { gerarCodigoUnico } = await import('@/lib/gruposEstudoStorage');
+      let codigoGrupo = gerarCodigoUnico();
+      
+      // Garantir que o código está em maiúsculas
       codigoGrupo = codigoGrupo.toUpperCase();
-
-      // Verificar se o código tem o comprimento esperado (7 caracteres)
+      
+      // Verificar se o código tem exatamente 7 caracteres
       if (codigoGrupo.length !== 7) {
-        console.warn("Código gerado não tem o comprimento esperado:", codigoGrupo);
-        // Ajustar o código para ter 7 caracteres se necessário
+        console.warn("Ajustando tamanho do código para 7 caracteres");
         const CARACTERES_PERMITIDOS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-        if (codigoGrupo.length < 7) {
-          // Adicionar caracteres aleatórios até completar 7
-          while (codigoGrupo.length < 7) {
-            codigoGrupo += CARACTERES_PERMITIDOS.charAt(
-              Math.floor(Math.random() * CARACTERES_PERMITIDOS.length)
-            );
-          }
-        } else if (codigoGrupo.length > 7) {
-          // Truncar para 7 caracteres
-          codigoGrupo = codigoGrupo.substring(0, 7);
+        
+        // Adicionar caracteres se for menor que 7
+        while (codigoGrupo.length < 7) {
+          codigoGrupo += CARACTERES_PERMITIDOS.charAt(
+            Math.floor(Math.random() * CARACTERES_PERMITIDOS.length)
+          );
         }
         
-        // NOTA: O código é apenas para exibição e não está sendo persistido
-        console.log('Código apenas para UI, não persistido:', codigoGrupo);
+        // Truncar se for maior que 7
+        if (codigoGrupo.length > 7) {
+          codigoGrupo = codigoGrupo.substring(0, 7);
+        }
       }
-
-      console.log("Código único gerado para o grupo:", codigoGrupo);
+      
+      console.log("Código único gerado automaticamente:", codigoGrupo);
 
       // Preparar dados para criação do grupo
       const novoGrupo = {
