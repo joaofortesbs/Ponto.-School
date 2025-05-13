@@ -74,8 +74,9 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
       <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
         <div className="flex flex-col space-y-4">
           <div>
-            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 flex items-center">
               Código do grupo
+              <span className="ml-2 px-1.5 py-0.5 bg-green-500/20 text-green-500 rounded-md text-xs font-medium">Permanente</span>
             </label>
             <div className="flex items-center">
               <span className="bg-white dark:bg-gray-900 py-2 px-3 text-sm font-mono rounded-l-md border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-gray-200 flex-1 font-bold tracking-wider">
@@ -91,7 +92,7 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
               </Button>
             </div>
             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              {grupoCodigo ? "O código é insensível a maiúsculas e minúsculas." : "Um código será gerado quando você salvar."}
+              {grupoCodigo ? "Este código permanente é usado para convidar pessoas para o seu grupo. O código é único, inalterável e insensível a maiúsculas e minúsculas." : "Um código único e permanente será gerado para este grupo quando você clicar no botão 'Gerar código do grupo'."}
             </p>
           </div>
 

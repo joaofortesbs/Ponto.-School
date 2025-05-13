@@ -196,6 +196,8 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
       try {
           // Verificar se o grupo já tem um código
           if (grupoAtualizado?.codigo) {
+              // Se já existe um código, mostrar notificação e não gerar um novo
+              mostrarNotificacaoSucesso("Este grupo já possui um código permanente!");
               return;
           }
   
@@ -213,10 +215,10 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
               }));
               
               // Atualizar o grupo original também para garantir que a UI seja atualizada
-              grupo.codigo = novoCodigo;
+              if (grupo) grupo.codigo = novoCodigo;
               
               // Mostrar notificação de sucesso
-              mostrarNotificacaoSucesso("Código do grupo gerado com sucesso!");
+              mostrarNotificacaoSucesso("Código permanente do grupo gerado com sucesso!");
 
               // Atualizar no Supabase
               if (grupo?.id && !grupo.id.startsWith('local_')) {
@@ -561,7 +563,12 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
               />
               {!grupo?.codigo && (
                 <p className="text-amber-500 text-sm">
-                  Aviso: Um código temporário foi gerado para este grupo. Alterações serão salvas na próxima atualização.
+                  Aviso: Clique em "Gerar código do grupo" para criar um código permanente e único para este grupo.
+                </p>
+              )}
+              {grupo?.codigo && (
+                <p className="text-green-500 text-sm">
+                  Este grupo já possui um código permanente que não pode ser alterado ou perdido.
                 </p>
               )}
 
