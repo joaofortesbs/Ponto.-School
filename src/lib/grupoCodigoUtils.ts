@@ -6,10 +6,6 @@
 import { supabase } from './supabase';
 import { salvarGrupoLocal, obterGruposLocal } from './gruposEstudoStorage';
 
-// Caracteres permitidos para códigos de grupo (sem caracteres ambíguos como I, O, 0, 1)
-const CARACTERES_PERMITIDOS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-const COMPRIMENTO_CODIGO = 7;
-
 /**
  * Caracteres permitidos para geração de códigos únicos
  * Evitamos caracteres ambíguos como I, O, 0, 1
