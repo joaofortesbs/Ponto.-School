@@ -155,6 +155,9 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
     }
 
     try {
+      // Normalizar o código (remover espaços e converter para maiúsculas)
+      const codigoNormalizado = groupCode.trim().toUpperCase();
+      
       // Obter a sessão do usuário atual
       const { data: { session } } = await supabase.auth.getSession();
 
@@ -163,25 +166,45 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
         return;
       }
 
-      // Verificar se o grupo existe
-      const { data: grupoExistente, error: errorBusca } = await supabase
-        .from('grupos_estudo')
-        .select('*')
-        .eq('codigo', groupCode.toUpperCase())
-        .single();
-
-      if (errorBusca || !grupoExistente) {
+      // Verificar se o código existe usando a função dedicada
+      const { verificarSeCodigoExiste, obterGrupoPorCodigo } = await import('@/lib/gruposEstudoStorage');
+      const codigoExiste = await verificarSeCodigoExiste(codigoNormalizado);
+      
+      if (!codigoExiste) {
         alert("Código de grupo inválido ou grupo não encontrado.");
         return;
       }
-
-      // Aqui você implementaria a lógica para adicionar o usuário ao grupo
-
-      // Notificar sobre o sucesso
-      alert(`Você foi adicionado ao grupo: ${grupoExistente.nome}`);
-
-      // Fechar o modal
-      onClose();
+      
+      // Obter o grupo pelo código
+      const grupo = await obterGrupoPorCodigo(codigoNormalizado);
+      
+      if (!grupo) {
+        alert("Não foi possível encontrar o grupo com este código.");
+        return;
+      }
+      
+      // Verificar privacidade do grupo
+      if (grupo.privado || grupo.visibilidade === "Privado (apenas por convite)") {
+        // Verificar se o usuário já é membro ou está na lista de convidados
+        const convidados = grupo.convidados || [];
+        const membrosIds = grupo.membros_ids || [];
+        
+        if (!convidados.includes(session.user.id) && !membrosIds.includes(session.user.id) && grupo.user_id !== session.user.id) {
+          alert("Este grupo é privado e requer convite do administrador.");
+          return;
+        }
+      }
+      
+      // Adicionar usuário ao grupo usando a função dedicada
+      const { adicionarUsuarioAoGrupo } = await import('@/lib/gruposEstudoStorage');
+      const sucesso = await adicionarUsuarioAoGrupo(grupo.id);
+      
+      if (sucesso) {
+        alert(`Você foi adicionado ao grupo: ${grupo.nome}`);
+        onClose();
+      } else {
+        alert("Ocorreu um erro ao entrar no grupo. Tente novamente.");
+      }
     } catch (error) {
       console.error("Erro ao entrar no grupo:", error);
       alert("Ocorreu um erro ao tentar entrar no grupo. Tente novamente mais tarde.");
@@ -245,6 +268,35 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
         console.error("Erro ao salvar código em storages:", e);
       }
 
+      // Gerar um ID temporário para o grupo
+      const grupoTempId = crypto.randomUUID();
+      
+      // Gerar um código único para o grupo
+      const { gerarCodigoUnicoGrupo } = await import('@/lib/gruposEstudoStorage');
+      let codigoGrupo = await gerarCodigoUnicoGrupo(grupoTempId);
+      
+      // Garantir que o código está em maiúsculas
+      codigoGrupo = codigoGrupo.toUpperCase();
+      
+      console.log("Código único gerado para novo grupo:", codigoGrupo);
+      
+      // Salvar o código em múltiplos locais para máxima persistência
+      try {
+        // Storage dedicado para códigos (principal)
+        const CODIGOS_STORAGE_KEY = 'epictus_codigos_grupo';
+        const codigosGrupos = JSON.parse(localStorage.getItem(CODIGOS_STORAGE_KEY) || '{}');
+        codigosGrupos[grupoTempId] = codigoGrupo;
+        localStorage.setItem(CODIGOS_STORAGE_KEY, JSON.stringify(codigosGrupos));
+        
+        // SessionStorage para recuperação temporária
+        sessionStorage.setItem(`grupo_codigo_${grupoTempId}`, codigoGrupo);
+        sessionStorage.setItem(`novo_grupo_codigo_${codigoGrupo}`, codigoGrupo);
+        
+        console.log("Código armazenado em múltiplos locais para garantir persistência");
+      } catch (e) {
+        console.error("Erro ao salvar código em storages:", e);
+      }
+      
       // Preparar dados para criação do grupo
       const novoGrupo = {
         user_id: session.user.id,

@@ -25,6 +25,7 @@ export interface GrupoEstudo {
 
 // Caracteres permitidos para códigos de grupo (sem caracteres ambíguos como I, O, 0, 1)
 const CARACTERES_PERMITIDOS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const COMPRIMENTO_CODIGO = 7; // Código com 7 caracteres
 
 /**
  * Salva o código de um grupo em múltiplas camadas de armazenamento para garantir persistência
@@ -137,10 +138,28 @@ export const gerarStringAleatoria = (comprimento = COMPRIMENTO_CODIGO, caractere
  */
 export const verificarSeCodigoExiste = async (codigo: string): Promise<boolean> => {
   try {
-    // Verificar primeiro em localStorage
+    // Normalizar o código (maiúsculas e sem espaços)
+    codigo = codigo.trim().toUpperCase();
+    
+    // Verificar primeiro no storage dedicado para códigos
+    try {
+      const CODIGOS_STORAGE_KEY = 'epictus_codigos_grupo';
+      const codigosGrupos = JSON.parse(localStorage.getItem(CODIGOS_STORAGE_KEY) || '{}');
+      
+      // Verificar se algum grupo tem este código
+      const codigosExistentes = Object.values(codigosGrupos);
+      if (codigosExistentes.includes(codigo)) {
+        console.log('Código encontrado no storage dedicado:', codigo);
+        return true;
+      }
+    } catch (storageError) {
+      console.error('Erro ao verificar storage dedicado:', storageError);
+    }
+    
+    // Verificar em localStorage
     const gruposLocais = obterGruposLocal();
     const existeLocal = gruposLocais.some((grupo: any) => 
-      grupo.codigo && grupo.codigo.toUpperCase() === codigo.toUpperCase()
+      grupo.codigo && grupo.codigo.toUpperCase() === codigo
     );
     
     if (existeLocal) {
@@ -156,7 +175,7 @@ export const verificarSeCodigoExiste = async (codigo: string): Promise<boolean> 
         const { data, error } = await supabase
           .from('grupos_estudo')
           .select('id')
-          .eq('codigo', codigo.toUpperCase())
+          .eq('codigo', codigo)
           .limit(1);
         
         if (error) {

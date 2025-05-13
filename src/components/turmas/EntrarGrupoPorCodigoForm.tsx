@@ -66,13 +66,63 @@ const EntrarGrupoPorCodigoForm: React.FC = () => {
       
       if (error) {
         console.error("Erro ao buscar grupo:", error);
-        toast({
-          title: "Erro ao entrar no grupo",
-          description: "Não foi possível encontrar o grupo. Tente novamente.",
-          variant: "destructive",
-        });
-        setIsLoading(false);
-        return;
+        
+        // Tentar buscar no armazenamento local como fallback
+        const gruposLocais = obterGruposLocal();
+        const grupoLocal = gruposLocais.find(g => 
+          g.codigo && g.codigo.toUpperCase() === codigoNormalizado
+        );
+        
+        if (!grupoLocal) {
+          toast({
+            title: "Erro ao entrar no grupo",
+            description: "Não foi possível encontrar o grupo. Tente novamente.",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
+        
+        // Se encontrado localmente, usar este grupo
+        const grupo = grupoLocal;
+        
+        // Verificar privacidade do grupo
+        if (grupo.privado || grupo.visibilidade === "Privado (apenas por convite)") {
+          // Verificar se o usuário já é membro ou está na lista de convidados
+          const convidados = grupo.convidados || [];
+          const membrosIds = grupo.membros_ids || [];
+          
+          if (!convidados.includes(user.id) && !membrosIds.includes(user.id) && grupo.user_id !== user.id) {
+            toast({
+              title: "Acesso restrito",
+              description: "Este grupo é privado e requer convite do administrador.",
+              variant: "destructive",
+            });
+            setIsLoading(false);
+            return;
+          }
+        }
+        
+        // Adicionar usuário à lista de membros se ainda não estiver
+        const membrosIds = grupo.membros_ids || [];
+        if (!membrosIds.includes(user.id) && grupo.user_id !== user.id) {
+          // Adicionar à lista local
+          membrosIds.push(user.id);
+          grupo.membros_ids = membrosIds;
+          grupo.membros = (grupo.membros || 1) + 1;
+          
+          // Salvar no armazenamento local
+          await salvarGrupoLocal(grupo);
+          
+          toast({
+            title: "Grupo encontrado!",
+            description: `Você entrou no grupo "${grupo.nome}"`,
+          });
+          
+          navigate(`/turmas/grupos/${grupo.id}`);
+          setIsLoading(false);
+          return;
+        }
       }
       
       // Verificar privacidade do grupo

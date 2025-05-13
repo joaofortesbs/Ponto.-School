@@ -13,10 +13,14 @@ CREATE TABLE IF NOT EXISTS public.grupos_estudo (
   visibilidade TEXT DEFAULT 'todos',
   codigo TEXT,
   data_criacao TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  membros_ids UUID[] DEFAULT '{}',
 
   CONSTRAINT grupos_estudo_user_id_fkey FOREIGN KEY (user_id)
     REFERENCES auth.users(id) ON DELETE CASCADE
 );
+
+-- Create index for faster queries by code
+CREATE INDEX IF NOT EXISTS grupos_estudo_codigo_idx ON public.grupos_estudo(codigo);
 
 -- Create index for faster queries
 CREATE INDEX IF NOT EXISTS grupos_estudo_user_id_idx ON public.grupos_estudo(user_id);
