@@ -202,6 +202,8 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
           // Gerar um código único para o grupo
           const { gerarCodigoUnicoGrupo } = await import('@/lib/gruposEstudoStorage');
           const novoCodigo = await gerarCodigoUnicoGrupo();
+          
+          console.log("Novo código gerado:", novoCodigo);
   
           if (novoCodigo) {
               // Atualizar o estado local
@@ -209,9 +211,15 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
                   ...prev,
                   codigo: novoCodigo
               }));
-  
+              
+              // Atualizar o grupo original também para garantir que a UI seja atualizada
+              grupo.codigo = novoCodigo;
+              
+              // Mostrar notificação de sucesso
+              mostrarNotificacaoSucesso("Código do grupo gerado com sucesso!");
+
               // Atualizar no Supabase
-              if (grupo?.id) {
+              if (grupo?.id && !grupo.id.startsWith('local_')) {
                   const { error } = await supabase
                       .from('grupos_estudo')
                       .update({ codigo: novoCodigo })
@@ -220,7 +228,24 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
                   if (error) {
                       console.error('Erro ao salvar código no banco de dados:', error);
                   }
+              } else if (grupo?.id.startsWith('local_')) {
+                  // Atualizar grupo local
+                  try {
+                      const { obterGruposLocal, salvarGrupoLocal } = await import('@/lib/gruposEstudoStorage');
+                      const gruposLocais = obterGruposLocal();
+                      const gruposAtualizados = gruposLocais.map((g: any) => 
+                        g.id === grupo.id ? {...g, codigo: novoCodigo} : g
+                      );
+                      
+                      // Salvar os grupos atualizados no localStorage
+                      localStorage.setItem('epictus_grupos_estudo', JSON.stringify(gruposAtualizados));
+                  } catch (localError) {
+                      console.error("Erro ao atualizar grupo local:", localError);
+                  }
               }
+              
+              // Forçar atualização da UI
+              onSave({...grupo, codigo: novoCodigo});
           }
       } catch (error) {
           console.error('Erro ao gerar código do grupo:', error);

@@ -53,6 +53,10 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
     if (onGerarCodigo) {
       await onGerarCodigo();
       setCodigoGerado(true);
+      // Forçar re-renderização com um pequeno atraso para garantir que a UI seja atualizada
+      setTimeout(() => {
+        console.log("Código gerado e atualizado:", grupoCodigo);
+      }, 300);
     }
   };
 
