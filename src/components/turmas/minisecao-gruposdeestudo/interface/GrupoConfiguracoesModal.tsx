@@ -1,11 +1,4 @@
-` tags.
 
-```text
-Corrected the handleSubmit function in the GrupoConfiguracoesModal component to properly save group configurations, including handling the group code and error cases.
-```
-
-```
-<replit_final_file>
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
