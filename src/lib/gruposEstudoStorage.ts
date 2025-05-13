@@ -1,3 +1,4 @@
+
 /**
  * Sistema simples de armazenamento para grupos de estudo
  * Usa localStorage como fallback quando o banco de dados falha
@@ -46,33 +47,43 @@ export const gerarStringAleatoria = (comprimento = COMPRIMENTO_CODIGO, caractere
  */
 export const verificarSeCodigoExiste = async (codigo: string): Promise<boolean> => {
   try {
-    // Converter o código para maiúsculas para garantir consistência
-    const codigoMaiusculo = codigo.toUpperCase();
-    
-    // Primeiro tentar verificar no Supabase
-    const { data, error } = await supabase
-      .from('grupos_estudo')
-      .select('id')
-      .eq('codigo', codigoMaiusculo)
-      .single();
-
-    if (error && error.code !== 'PGRST116') {
-      console.error('Erro ao verificar código no Supabase:', error);
-      // Se ocorrer um erro no Supabase, verificar localmente
-      const gruposLocais = obterGruposLocal();
-      return gruposLocais.some(grupo => 
-        grupo.codigo && grupo.codigo.toUpperCase() === codigoMaiusculo
-      );
-    }
-
-    return !!data;
-  } catch (error) {
-    console.error('Erro ao verificar código:', error);
-    // Em caso de erro, verificar localmente
+    // Verificar primeiro em localStorage
     const gruposLocais = obterGruposLocal();
-    return gruposLocais.some(grupo => 
+    const existeLocal = gruposLocais.some((grupo: any) => 
       grupo.codigo && grupo.codigo.toUpperCase() === codigo.toUpperCase()
     );
+    
+    if (existeLocal) {
+      console.log('Código já existe localmente:', codigo);
+      return true;
+    }
+    
+    // Verificar no Supabase
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session) {
+        const { data, error } = await supabase
+          .from('grupos_estudo')
+          .select('id')
+          .eq('codigo', codigo.toUpperCase())
+          .limit(1);
+        
+        if (error) {
+          console.error('Erro ao verificar código no Supabase:', error);
+          return false;
+        }
+        
+        return data && data.length > 0;
+      }
+    } catch (error) {
+      console.error('Erro ao comunicar com Supabase:', error);
+    }
+    
+    return false;
+  } catch (error) {
+    console.error('Erro ao verificar se código existe:', error);
+    return false;
   }
 };
 
@@ -80,35 +91,57 @@ export const verificarSeCodigoExiste = async (codigo: string): Promise<boolean> 
  * Gera um código único para o grupo de estudos
  */
 export const gerarCodigoUnicoGrupo = async (): Promise<string> => {
-  let novoCodigoUnico = '';
-  let existeNoSistema = true;
-  let tentativas = 0;
-  const maxTentativas = 50; // Aumentado para lidar com mais tentativas possíveis
-
   try {
-    // Tentar gerar um código aleatório único
-    while (existeNoSistema && tentativas < maxTentativas) {
-      novoCodigoUnico = gerarStringAleatoria();
-      console.log("Tentando código:", novoCodigoUnico);
-      existeNoSistema = await verificarSeCodigoExiste(novoCodigoUnico);
+    // Número máximo de tentativas para evitar loops infinitos
+    const MAX_TENTATIVAS = 10;
+    let tentativas = 0;
+    let codigoGrupo: string;
+    let codigoJaExiste = false;
+    
+    do {
+      // Gerar um novo código
+      codigoGrupo = gerarCodigoUnico();
+      
+      // Verificar se já existe
+      codigoJaExiste = await verificarSeCodigoExiste(codigoGrupo);
+      
+      // Incrementar contador de tentativas
       tentativas++;
-    }
+      
+      // Se já tentamos muitas vezes, adicionar timestamp no final para garantir unicidade
+      if (tentativas >= MAX_TENTATIVAS) {
+        const timestamp = Date.now().toString(36).substring(0, 2).toUpperCase();
+        codigoGrupo = codigoGrupo.substring(0, 5) + timestamp;
+        break;
+      }
+    } while (codigoJaExiste);
+    
+    // Garantir que o código está em formato correto
+    codigoGrupo = codigoGrupo.toUpperCase();
 
-    if (tentativas >= maxTentativas) {
-      // Se atingir o limite de tentativas, adicionar um timestamp para garantir unicidade
-      const timestampBase36 = Date.now().toString(36).toUpperCase().substring(0, 4);
-      novoCodigoUnico = gerarStringAleatoria(3) + timestampBase36;
-      console.log("Usando código com timestamp após máximo de tentativas:", novoCodigoUnico);
+    // Verificar se o código tem o comprimento esperado (7 caracteres)
+    if (codigoGrupo.length !== 7) {
+      console.warn("Código gerado não tem o comprimento esperado:", codigoGrupo);
+      // Ajustar o código para ter 7 caracteres se necessário
+      if (codigoGrupo.length < 7) {
+        // Adicionar caracteres aleatórios até completar 7
+        while (codigoGrupo.length < 7) {
+          codigoGrupo += CARACTERES_PERMITIDOS.charAt(
+            Math.floor(Math.random() * CARACTERES_PERMITIDOS.length)
+          );
+        }
+      } else if (codigoGrupo.length > 7) {
+        // Truncar para 7 caracteres
+        codigoGrupo = codigoGrupo.substring(0, 7);
+      }
     }
-
-    return novoCodigoUnico;
+    
+    console.log(`Código único gerado após ${tentativas} tentativa(s):`, codigoGrupo);
+    return codigoGrupo;
   } catch (error) {
-    console.error("Erro ao gerar código único:", error);
-    // Em caso de erro, retornar um código que combina uma string aleatória com timestamp
-    const timestampBase36 = Date.now().toString(36).toUpperCase().substring(0, 4);
-    const codigoEmergencia = gerarStringAleatoria(3) + timestampBase36;
-    console.log("Usando código de emergência:", codigoEmergencia);
-    return codigoEmergencia;
+    console.error("Erro ao gerar código único para grupo:", error);
+    // Garantir que sempre retornamos um código, mesmo em caso de erro
+    return `GE${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
   }
 };
 
@@ -533,106 +566,6 @@ export const gerarCodigoUnico = (): string => {
   return resultado;
 };
 
-// Verificar se um código já existe (em Supabase ou localStorage)
-export const verificarSeCodigoExiste = async (codigo: string): Promise<boolean> => {
-  try {
-    // Verificar primeiro em localStorage
-    const gruposLocais = obterGruposLocal();
-    const existeLocal = gruposLocais.some((grupo: any) => 
-      grupo.codigo && grupo.codigo.toUpperCase() === codigo.toUpperCase()
-    );
-    
-    if (existeLocal) {
-      console.log('Código já existe localmente:', codigo);
-      return true;
-    }
-    
-    // Verificar no Supabase
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session) {
-        const { data, error } = await supabase
-          .from('grupos_estudo')
-          .select('id')
-          .eq('codigo', codigo.toUpperCase())
-          .limit(1);
-        
-        if (error) {
-          console.error('Erro ao verificar código no Supabase:', error);
-          return false;
-        }
-        
-        return data && data.length > 0;
-      }
-    } catch (error) {
-      console.error('Erro ao comunicar com Supabase:', error);
-    }
-    
-    return false;
-  } catch (error) {
-    console.error('Erro ao verificar se código existe:', error);
-    return false;
-  }
-};
-
-// Função para gerar um código único para um grupo, garantindo que não há duplicatas
-export const gerarCodigoUnicoGrupo = async (): Promise<string> => {
-  try {
-    // Número máximo de tentativas para evitar loops infinitos
-    const MAX_TENTATIVAS = 10;
-    let tentativas = 0;
-    let codigoGrupo: string;
-    let codigoJaExiste = false;
-    
-    do {
-      // Gerar um novo código
-      codigoGrupo = gerarCodigoUnico();
-      
-      // Verificar se já existe
-      codigoJaExiste = await verificarSeCodigoExiste(codigoGrupo);
-      
-      // Incrementar contador de tentativas
-      tentativas++;
-      
-      // Se já tentamos muitas vezes, adicionar timestamp no final para garantir unicidade
-      if (tentativas >= MAX_TENTATIVAS) {
-        const timestamp = Date.now().toString(36).substring(0, 2).toUpperCase();
-        codigoGrupo = codigoGrupo.substring(0, 5) + timestamp;
-        break;
-      }
-    } while (codigoJaExiste);
-    
-    // Garantir que o código está em formato correto
-    codigoGrupo = codigoGrupo.toUpperCase();
-
-    // Verificar se o código tem o comprimento esperado (7 caracteres)
-    if (codigoGrupo.length !== 7) {
-      console.warn("Código gerado não tem o comprimento esperado:", codigoGrupo);
-      // Ajustar o código para ter 7 caracteres se necessário
-      const CARACTERES_PERMITIDOS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-      if (codigoGrupo.length < 7) {
-        // Adicionar caracteres aleatórios até completar 7
-        while (codigoGrupo.length < 7) {
-          codigoGrupo += CARACTERES_PERMITIDOS.charAt(
-            Math.floor(Math.random() * CARACTERES_PERMITIDOS.length)
-          );
-        }
-      } else if (codigoGrupo.length > 7) {
-        // Truncar para 7 caracteres
-        codigoGrupo = codigoGrupo.substring(0, 7);
-      }
-    }
-    
-    console.log(`Código único gerado após ${tentativas} tentativa(s):`, codigoGrupo);
-    return codigoGrupo;
-  } catch (error) {
-    console.error("Erro ao gerar código único para grupo:", error);
-    // Garantir que sempre retornamos um código, mesmo em caso de erro
-    return `GE${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
-  }
-};
-
 export const removerGrupo = (grupoId: string) => {
   const grupos = getGruposFromStorage();
   const gruposAtualizados = grupos.filter(grupo => grupo.id !== grupoId);
@@ -649,6 +582,27 @@ export const removerGrupo = (grupoId: string) => {
   }
 
   return gruposAtualizados;
+};
+
+// Função auxiliar para obter grupos do localStorage (para compatibilidade)
+const getGruposFromStorage = (): GrupoEstudo[] => {
+  try {
+    const dados = localStorage.getItem(STORAGE_KEY);
+    if (!dados) return [];
+    return JSON.parse(dados);
+  } catch (error) {
+    console.error('Erro ao obter grupos do storage:', error);
+    return [];
+  }
+};
+
+// Função auxiliar para salvar grupos no localStorage (para compatibilidade)
+const saveGruposToStorage = (grupos: GrupoEstudo[]): void => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(grupos));
+  } catch (error) {
+    console.error('Erro ao salvar grupos no storage:', error);
+  }
 };
 
 // Verificar se um grupo está na lista de removidos
