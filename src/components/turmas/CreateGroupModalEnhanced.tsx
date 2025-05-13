@@ -222,10 +222,17 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
 
       if (sucesso) {
         console.log("Usuário adicionado com sucesso ao grupo!");
+        
+        // Disparar evento de grupo adicionado para atualizar a interface
+        const grupoAdicionadoEvent = new CustomEvent('grupoAdicionado', { 
+          detail: { 
+            grupo: grupo 
+          }
+        });
+        window.dispatchEvent(grupoAdicionadoEvent);
+        
         alert(`Você foi adicionado ao grupo "${grupo.nome}"`);
         onClose();
-        // Redirecionar para a página do grupo
-        window.location.href = `/turmas/grupos/${grupo.id}`;
       } else {
         console.error("Falha ao adicionar usuário ao grupo");
         alert("Erro ao entrar no grupo. Por favor, tente novamente.");

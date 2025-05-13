@@ -217,13 +217,32 @@ const EntrarGrupoPorCodigoForm: React.FC = () => {
         
         console.log("Usuário adicionado com sucesso ao grupo");
         
-        // 5. SUCESSO! NAVEGAR PARA A PÁGINA DO GRUPO
+        // 5. SUCESSO! MOSTRAR NOTIFICAÇÃO E ATUALIZAR LOCALMENTE
         toast({
           title: "Grupo encontrado!",
           description: `Você entrou no grupo "${grupoEncontrado.nome}"`,
         });
         
-        navigate(`/turmas/grupos/${grupoEncontrado.id}`);
+        // Adicionar o grupo à lista local sem redirecionar
+        try {
+          // Disparar um evento personalizado para atualizar a grade de grupos
+          const grupoAdicionadoEvent = new CustomEvent('grupoAdicionado', { 
+            detail: { 
+              grupo: grupoEncontrado 
+            }
+          });
+          window.dispatchEvent(grupoAdicionadoEvent);
+          
+          // Salvar o grupo localmente para garantir persistência
+          if (grupoEncontrado) {
+            salvarGrupoLocal(grupoEncontrado);
+          }
+          
+          // Indicar que a operação foi concluída
+          setIsLoading(false);
+        } catch (err) {
+          console.error("Erro ao atualizar lista de grupos:", err);
+        }
       } catch (error) {
         console.error("Erro ao processar detalhes do grupo:", error);
         toast({

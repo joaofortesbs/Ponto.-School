@@ -451,6 +451,56 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
     setShowCreateGroupModal(true);
   };
 
+  // Atualizar a lista de grupos quando um novo grupo é adicionado via código
+  useEffect(() => {
+    const handleGrupoAdicionado = async (event: CustomEvent) => {
+      try {
+        console.log("Evento grupoAdicionado recebido:", event.detail.grupo);
+        // Recarregar todos os grupos para garantir que temos a lista atualizada
+        await carregarGruposEstudo();
+      } catch (error) {
+        console.error("Erro ao processar evento grupoAdicionado:", error);
+      }
+    };
+
+    // Adicionar ouvinte de evento
+    window.addEventListener('grupoAdicionado', handleGrupoAdicionado as EventListener);
+
+    // Remover ouvinte quando componente for desmontado
+    return () => {
+      window.removeEventListener('grupoAdicionado', handleGrupoAdicionado as EventListener);
+    };
+  }, []);
+
+  // Função para carregar grupos de estudo
+  const carregarGruposEstudo = async () => {
+    try {
+      setIsLoading(true);
+      // Obter todos os grupos e garantir que eles são filtrados corretamente
+      const todosGrupos = await obterTodosGrupos();
+      
+      // Mapear grupos para o formato correto
+      const gruposMapeados = todosGrupos.map(grupo => ({
+        ...grupo,
+        disciplina: grupo.disciplina || "",
+        novoConteudo: Boolean(grupo.novoConteudo || Math.random() > 0.7),
+        tendencia: grupo.tendencia || (Math.random() > 0.7 ? "alta" : undefined)
+      }));
+
+      // Remover duplicatas baseado no ID do grupo
+      const gruposFiltrados = gruposMapeados.filter((grupo, index, self) => 
+        index === self.findIndex((g) => g.id === grupo.id)
+      );
+
+      console.log("Grupos de estudo carregados:", gruposFiltrados.length);
+      setGruposEstudo(gruposFiltrados);
+    } catch (error) {
+      console.error("Erro ao carregar grupos de estudo:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Processar a criação de um novo grupo
   const handleCreateGroup = async (formData: any) => {
     try {
@@ -459,8 +509,8 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
       // Apenas receber o formData - o modal já está salvando o grupo
       console.log("Grupo criado com sucesso:", formData);
 
-      // Atualizar lista de grupos - remover duplicatas verificando por ID ou nome
-      const todosGrupos = await obterTodosGrupos();
+      // Atualizar lista de grupos
+      await carregarGruposEstudo();
 
       // Mapear grupos para o formato correto
       const gruposMapeados = todosGrupos.map(grupo => ({

@@ -1122,8 +1122,26 @@ export const criarGrupo = async (dados: Omit<GrupoEstudo, 'id'>): Promise<GrupoE
 /**
  * Obtém todos os grupos de estudo (do Supabase + localStorage)
  */
-export const obterTodosGrupos = async (userId: string): Promise<GrupoEstudo[]> => {
+export const obterTodosGrupos = async (userId?: string): Promise<GrupoEstudo[]> => {
   try {
+    // Se não foi fornecido um userId, tentar obter o usuário atual
+    if (!userId) {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        userId = user?.id;
+        
+        if (!userId) {
+          console.error('Não foi possível obter o ID do usuário atual');
+          // Retornar grupos locais sem filtro de usuário como fallback
+          return obterGruposLocal();
+        }
+      } catch (error) {
+        console.error('Erro ao obter usuário atual:', error);
+        // Retornar grupos locais sem filtro de usuário como fallback
+        return obterGruposLocal();
+      }
+    }
+
     // Obter a lista de grupos removidos
     const gruposRemovidosKey = 'grupos_removidos';
     const gruposRemovidosStr = localStorage.getItem(gruposRemovidosKey) || '[]';
@@ -1131,8 +1149,16 @@ export const obterTodosGrupos = async (userId: string): Promise<GrupoEstudo[]> =
 
     // Primeiro, garantir que temos os grupos locais (failsafe), excluindo os removidos
     let gruposLocais = obterGruposLocal()
-      .filter(grupo => grupo.user_id === userId)
       .filter(grupo => !gruposRemovidos.includes(grupo.id));
+      
+    // Filtrar por userId apenas se o parâmetro foi fornecido (para permitir visualizar todos os grupos)
+    if (userId) {
+      // Incluir grupos onde o usuário é criador OU membro
+      gruposLocais = gruposLocais.filter(grupo => 
+        grupo.user_id === userId || 
+        (grupo.membros_ids && grupo.membros_ids.includes(userId))
+      );
+    }
 
     // Tentar obter backup da sessão
     try {
