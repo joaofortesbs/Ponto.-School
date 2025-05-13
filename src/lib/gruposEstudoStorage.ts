@@ -73,7 +73,8 @@ const obterGruposLocalStorage = (): GrupoEstudo[] => {
     console.error('Erro ao obter grupos do localStorage:', e);
     return [];
   }
-};";
+};
+
 const COMPRIMENTO_CODIGO = 7; // Código com 7 caracteres conforme a especificação
 
 /**
