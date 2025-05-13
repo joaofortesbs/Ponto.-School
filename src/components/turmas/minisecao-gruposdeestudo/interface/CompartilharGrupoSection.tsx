@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Share, Check, Copy, Key } from 'lucide-react';
+import { Share, Check, Copy, Key, Link } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
@@ -23,65 +23,129 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
 
   // Tentar recuperar código do armazenamento dedicado
   useEffect(() => {
-    const recuperarCodigoArmazenado = async () => {
-      // Não fazer nada se já temos um código válido
-      if (codigoLocal && codigoLocal.trim() !== "" && codigoLocal !== "SEM CÓDIGO") {
-        return;
-      }
+    const recuperarOuGerarCodigo = async () => {
+    setIsLoading(true);
 
+    try {
       if (grupoId) {
+        // Usar a função centralizada para recuperar o código em todas as camadas
+        const { obterGrupoPorId, gerarCodigoUnicoGrupo, salvarCodigoGrupo } = await import('@/lib/gruposEstudoStorage');
+
+        // Estratégia multinível para recuperar código:
+
+        // 1. Verificar primeiro no armazenamento dedicado para códigos (mais confiável)
         try {
-          // Verificar primeiro no armazenamento dedicado
           const CODIGOS_STORAGE_KEY = 'epictus_codigos_grupo';
           const codigosGrupos = JSON.parse(localStorage.getItem(CODIGOS_STORAGE_KEY) || '{}');
-          
+
           if (codigosGrupos[grupoId]) {
-            console.log("Recuperado código do armazenamento dedicado:", codigosGrupos[grupoId]);
+            console.log("Recuperado código do storage dedicado:", codigosGrupos[grupoId]);
             setCodigoLocal(codigosGrupos[grupoId]);
             setCodigoGerado(true);
+            setIsLoading(false);
             return;
           }
         } catch (e) {
-          console.error("Erro ao verificar armazenamento dedicado:", e);
+          console.error("Erro ao verificar storage dedicado:", e);
         }
-        
-        // Tentar recuperar do localStorage via módulo gruposEstudoStorage
+
+        // 2. Verificar no grupo armazenado localmente
         try {
           const { obterGruposLocal } = await import('@/lib/gruposEstudoStorage');
           const grupos = obterGruposLocal();
           const grupoExistente = grupos.find(g => g.id === grupoId);
-          
+
           if (grupoExistente?.codigo) {
             console.log("Recuperado código do localStorage:", grupoExistente.codigo);
             setCodigoLocal(grupoExistente.codigo);
             setCodigoGerado(true);
-            
+
             // Salvar no armazenamento dedicado para futuras recuperações
             try {
               const CODIGOS_STORAGE_KEY = 'epictus_codigos_grupo';
               const codigosGrupos = JSON.parse(localStorage.getItem(CODIGOS_STORAGE_KEY) || '{}');
               codigosGrupos[grupoId] = grupoExistente.codigo;
               localStorage.setItem(CODIGOS_STORAGE_KEY, JSON.stringify(codigosGrupos));
-            } catch (storageError) {
-              console.error("Erro ao salvar no armazenamento dedicado:", storageError);
+            } catch (e) {
+              console.error("Erro ao salvar no armazenamento dedicado:", e);
             }
-            
+
+            setIsLoading(false);
             return;
           }
         } catch (e) {
-          console.error("Erro ao recuperar grupos do localStorage:", e);
+          console.error("Erro ao verificar grupos no localStorage:", e);
+        }
+
+        // 3. Verificar no Supabase
+        try {
+          const { data, error } = await supabase
+            .from('grupos_estudo')
+            .select('codigo')
+            .eq('id', grupoId)
+            .single();
+
+          if (!error && data?.codigo) {
+            console.log("Recuperado código do Supabase:", data.codigo);
+            setCodigoLocal(data.codigo);
+            setCodigoGerado(true);
+
+            // Propagar para camadas de armazenamento local
+            await salvarCodigoGrupo(grupoId, data.codigo);
+
+            setIsLoading(false);
+            return;
+          }
+        } catch (supabaseError) {
+          console.error("Erro ao verificar código no Supabase:", supabaseError);
+        }
+
+        // 4. Se chegou aqui, não encontrou código existente. Gerar um novo.
+        if (onGerarCodigo) {
+          const novoCodigo = await onGerarCodigo();
+          console.log("Novo código gerado via callback:", novoCodigo);
+          setCodigoLocal(novoCodigo);
+          setCodigoGerado(true);
+        } else {
+          // Gerar internamente se não houver callback
+          const codigo = await gerarCodigoUnicoGrupo(grupoId);
+          console.log("Novo código gerado internamente:", codigo);
+          setCodigoLocal(codigo);
+          setCodigoGerado(true);
+
+          // Atualizar no Supabase
+          try {
+            await supabase
+              .from('grupos_estudo')
+              .update({ codigo })
+              .eq('id', grupoId);
+
+            console.log("Código atualizado no Supabase");
+          } catch (e) {
+            console.error("Erro ao atualizar código no Supabase:", e);
+          }
         }
       }
-    };
-    
-    recuperarCodigoArmazenado();
+    } catch (error) {
+      console.error("Erro ao recuperar ou gerar código:", error);
+      toast({
+        title: "Erro ao gerar código",
+        description: "Não foi possível gerar um código para o grupo. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+    recuperarOuGerarCodigo();
   }, [grupoId]);
 
   // Verificar se já temos código ao inicializar o componente
   useEffect(() => {
     // Atualizar o estado de código gerado apenas se temos um código válido
     const temCodigo = !!grupoCodigo && grupoCodigo.trim() !== "" && grupoCodigo !== "SEM CÓDIGO";
-    
+
     if (temCodigo) {
       setCodigoLocal(grupoCodigo);
       setCodigoGerado(true);
@@ -93,12 +157,12 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
       // apenas uma vez para evitar loops de geração
       console.log("Inicializando geração automática de código do grupo");
       gerouCodigoRef.current = true;
-      
+
       // Usar setTimeout para garantir que a geração ocorra após a renderização completa
       const timer = setTimeout(() => {
         handleGerarCodigo();
       }, 500);
-      
+
       return () => clearTimeout(timer);
     }
   }, [grupoCodigo, codigoLocal]); // Dependências ajustadas
@@ -106,6 +170,65 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
   const formattedCodigo = codigoLocal && codigoLocal.length > 4 
     ? `${codigoLocal.substring(0, 4)} ${codigoLocal.substring(4)}`
     : codigoLocal || "SEM CÓDIGO";
+
+  // Função para copiar apenas o código
+  const copiarCodigoGrupo = () => {
+    if (codigoLocal) {
+      // Copiar apenas o código para a área de transferência
+      navigator.clipboard.writeText(codigoLocal)
+        .then(() => {
+          setCopiado(true);
+          toast({
+            title: "Código copiado!",
+            description: "O código do grupo foi copiado para a área de transferência.",
+          });
+
+          // Resetar estado após 3 segundos
+          setTimeout(() => {
+            setCopiado(false);
+          }, 3000);
+        })
+        .catch(err => {
+          console.error('Erro ao copiar código:', err);
+          toast({
+            title: "Erro ao copiar",
+            description: "Não foi possível copiar o código. Tente novamente.",
+            variant: "destructive",
+          });
+        });
+    }
+  };
+
+  // Função para copiar o link completo de convite
+  const copiarLinkConvite = () => {
+    if (codigoLocal) {
+      // Criar link de convite com o código
+      const linkConvite = `${window.location.origin}/turmas/grupos/join?codigo=${codigoLocal}`;
+
+      // Copiar para a área de transferência
+      navigator.clipboard.writeText(linkConvite)
+        .then(() => {
+          setCopiado(true);
+          toast({
+            title: "Link copiado!",
+            description: "O link de convite foi copiado para a área de transferência.",
+          });
+
+          // Resetar estado após 3 segundos
+          setTimeout(() => {
+            setCopiado(false);
+          }, 3000);
+        })
+        .catch(err => {
+          console.error('Erro ao copiar link:', err);
+          toast({
+            title: "Erro ao copiar",
+            description: "Não foi possível copiar o link. Tente novamente.",
+            variant: "destructive",
+          });
+        });
+    }
+  };
 
   const handleCopiarCodigo = () => {
     // Garantir que copiamos o código sem formatação (sem espaços)
@@ -139,21 +262,21 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
     if (onGerarCodigo) {
       await onGerarCodigo();
       setCodigoGerado(true);
-      
+
       // Atualizar código local após geração
       if (grupoId) {
         try {
           // Verificar no armazenamento dedicado após a geração
           const CODIGOS_STORAGE_KEY = 'epictus_codigos_grupo';
           const codigosGrupos = JSON.parse(localStorage.getItem(CODIGOS_STORAGE_KEY) || '{}');
-          
+
           if (codigosGrupos[grupoId]) {
             console.log("Recuperado código recém-gerado do armazenamento dedicado:", codigosGrupos[grupoId]);
             setCodigoLocal(codigosGrupos[grupoId]);
           } else if (grupoCodigo && grupoCodigo !== "SEM CÓDIGO") {
             // Se o código foi atualizado mas não está no armazenamento dedicado
             setCodigoLocal(grupoCodigo);
-            
+
             // Salvar no armazenamento dedicado
             try {
               codigosGrupos[grupoId] = grupoCodigo;
@@ -171,10 +294,15 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
         // Se não temos grupoId, usar o código recebido por props
         setCodigoLocal(grupoCodigo);
       }
-      
+
       console.log("Código gerado automaticamente:", codigoLocal || grupoCodigo);
     }
   };
+
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast()
+
+  
 
   return (
     <div className="space-y-6">
@@ -224,29 +352,70 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
             </div>
           )}
 
-          <div className="pt-2">
-            <Button
-              onClick={handleCompartilhar}
-              variant="outline"
-              className="w-full justify-center border-[#FF6B00] text-[#FF6B00] hover:bg-[#FF6B00]/10"
-              disabled={!codigoLocal && !grupoCodigo}
-            >
-              <Share className="h-4 w-4 mr-2" />
-              Compartilhar grupo
-            </Button>
-          </div>
+          
         </div>
       </div>
 
-      <div className="text-xs text-gray-500 dark:text-gray-400 space-y-2">
-        <p>
-          <span className="font-medium">Nota:</span> Apenas pessoas com o código podem solicitar entrada no grupo.
-        </p>
-        <p>
-          <span className="font-medium">Dica:</span> Configure as opções de privacidade do grupo na aba "Privacidade".
-        </p>
-      </div>
-    </div>
+      
+
+      
+    
+    
+        
+          
+            
+              
+                {codigoLocal}
+              
+              
+                
+                  
+                    
+                  
+                  
+                    
+                      
+                    ) : (
+                      
+                    )}
+                    
+                  
+                
+              
+              
+                Compartilhe este código com as pessoas que você deseja convidar para o grupo.
+                Os convidados podem usar o código diretamente ou o link completo.
+              
+            
+          ) : (
+            
+              
+                
+                  
+                  Gerando código...
+                
+              ) : (
+                
+                  
+                  Gerar código de convite
+                
+              )}
+            
+          )}
+        
+      
+    
+    
+
+      
+        
+          Apenas pessoas com o código podem solicitar entrada no grupo.
+        
+        
+          Configure as opções de privacidade do grupo na aba "Privacidade".
+        
+      
+    
   );
 };
 

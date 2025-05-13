@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { useNavigate } from "react-router-dom";
 import { KeyRound, ArrowRight } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
-import { verificarSeCodigoExiste } from "@/lib/gruposEstudoStorage";
+import { verificarSeCodigoExiste, salvarGrupoLocal } from "@/lib/gruposEstudoStorage";
 
 const EntrarGrupoPorCodigoForm: React.FC = () => {
   const [codigo, setCodigo] = useState("");
@@ -28,8 +28,11 @@ const EntrarGrupoPorCodigoForm: React.FC = () => {
     setIsLoading(true);
     
     try {
+      // Normalizar o código (remover espaços e converter para maiúsculas)
+      const codigoNormalizado = codigo.trim().toUpperCase();
+      
       // Verificar se o código existe
-      const codigoExiste = await verificarSeCodigoExiste(codigo.toUpperCase());
+      const codigoExiste = await verificarSeCodigoExiste(codigoNormalizado);
       
       if (!codigoExiste) {
         toast({
@@ -41,18 +44,31 @@ const EntrarGrupoPorCodigoForm: React.FC = () => {
         return;
       }
       
-      // Buscar informações do grupo
+      // Obter a sessão atual do usuário
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Autenticação necessária",
+          description: "Você precisa estar logado para entrar em um grupo.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+      
+      // Buscar informações completas do grupo
       const { data: grupo, error } = await supabase
         .from('grupos_estudo')
         .select('*')
-        .eq('codigo', codigo.toUpperCase())
+        .eq('codigo', codigoNormalizado)
         .single();
       
       if (error) {
         console.error("Erro ao buscar grupo:", error);
         toast({
           title: "Erro ao entrar no grupo",
-          description: "Não foi possível entrar no grupo. Tente novamente.",
+          description: "Não foi possível encontrar o grupo. Tente novamente.",
           variant: "destructive",
         });
         setIsLoading(false);
@@ -60,22 +76,12 @@ const EntrarGrupoPorCodigoForm: React.FC = () => {
       }
       
       // Verificar privacidade do grupo
-      if (grupo.privacidade === "Privado (apenas por convite)") {
-        // Verificar se o usuário está na lista de convidados
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (!user) {
-          toast({
-            title: "Autenticação necessária",
-            description: "Você precisa estar logado para entrar em um grupo.",
-            variant: "destructive",
-          });
-          setIsLoading(false);
-          return;
-        }
-        
+      if (grupo.privado || grupo.visibilidade === "Privado (apenas por convite)") {
+        // Verificar se o usuário já é membro ou está na lista de convidados
         const convidados = grupo.convidados || [];
-        if (!convidados.includes(user.id)) {
+        const membrosIds = grupo.membros_ids || [];
+        
+        if (!convidados.includes(user.id) && !membrosIds.includes(user.id) && grupo.user_id !== user.id) {
           toast({
             title: "Acesso restrito",
             description: "Este grupo é privado e requer convite do administrador.",
@@ -85,6 +91,33 @@ const EntrarGrupoPorCodigoForm: React.FC = () => {
           return;
         }
       }
+      
+      // Adicionar usuário à lista de membros se ainda não estiver
+      const membrosIds = grupo.membros_ids || [];
+      if (!membrosIds.includes(user.id) && grupo.user_id !== user.id) {
+        // Adicionar o usuário à lista de membros
+        const novosMembrosIds = [...membrosIds, user.id];
+        
+        // Atualizar o grupo no Supabase
+        const { error: updateError } = await supabase
+          .from('grupos_estudo')
+          .update({ 
+            membros_ids: novosMembrosIds,
+            membros: (grupo.membros || 1) + 1 // Incrementar contador de membros
+          })
+          .eq('id', grupo.id);
+        
+        if (updateError) {
+          console.error("Erro ao atualizar membros do grupo:", updateError);
+        }
+        
+        // Também atualizar localmente para garantir visualização imediata
+        grupo.membros_ids = novosMembrosIds;
+        grupo.membros = (grupo.membros || 1) + 1;
+      }
+      
+      // Salvar o grupo no armazenamento local para acesso offline
+      salvarGrupoLocal(grupo);
       
       // Navegar para a página do grupo
       toast({

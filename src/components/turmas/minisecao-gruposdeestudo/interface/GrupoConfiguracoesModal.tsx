@@ -77,47 +77,71 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
     }
   }, [grupo, isOpen]);
 
-  const handleSubmit = async () => {
-    if (!grupo) return;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
 
     try {
-      setSaving(true);
-      setError(null);
-
-      // Validar campos obrigatórios
-      if (!nome.trim()) {
-        setError("O nome do grupo é obrigatório");
-        setSaving(false);
+      // Validar dados
+      if (!grupoAtualizado.nome || grupoAtualizado.nome.trim() === '') {
+        setNomeError('Nome é obrigatório');
+        setSubmitting(false);
         return;
       }
 
-      // Manter o código atual do grupo, jamais gerar um novo se já existir
+      // IMPORTANTE: NUNCA REGENERAR UM CÓDIGO JÁ EXISTENTE
+      // Verificar o código em múltiplas camadas, começando com o mais confiável
       let codigoGrupo = grupo.codigo;
+
       if (!codigoGrupo) {
         try {
-          // IMPORTANTE: Verificar em múltiplas camadas se o grupo já possui um código
-          
-          // 1. Verificar no armazenamento dedicado para códigos (mais confiável)
+          // 1. Verificar primeiro no armazenamento dedicado para códigos (mais confiável)
           const CODIGOS_STORAGE_KEY = 'epictus_codigos_grupo';
           const codigosGrupos = JSON.parse(localStorage.getItem(CODIGOS_STORAGE_KEY) || '{}');
-          
+
           if (grupo.id && codigosGrupos[grupo.id]) {
             console.log("Recuperado código existente do storage dedicado:", codigosGrupos[grupo.id]);
             codigoGrupo = codigosGrupos[grupo.id];
           } else {
             // 2. Verificar no localStorage via obterGruposLocal
-            const { obterGruposLocal, gerarCodigoUnicoGrupo } = await import('@/lib/gruposEstudoStorage');
+            const { obterGruposLocal, gerarCodigoUnicoGrupo, salvarCodigoGrupo } = await import('@/lib/gruposEstudoStorage');
             const grupos = obterGruposLocal();
             const grupoExistente = grupos.find(g => g.id === grupo.id);
-            
+
             if (grupoExistente?.codigo) {
               console.log("Recuperado código existente do localStorage:", grupoExistente.codigo);
               codigoGrupo = grupoExistente.codigo;
+
+              // Salvar também no storage dedicado para futura referência
+              await salvarCodigoGrupo(grupo.id, grupoExistente.codigo);
             } else {
-              // 3. Só gerar um novo código se realmente não existir em nenhum lugar
-              console.log("Nenhum código encontrado, gerando um novo...");
-              codigoGrupo = await gerarCodigoUnicoGrupo(grupo.id);
-              console.log("Novo código gerado para o grupo:", codigoGrupo);
+              // 3. Verificar no Supabase
+              try {
+                const { data, error } = await supabase
+                  .from('grupos_estudo')
+                  .select('codigo')
+                  .eq('id', grupo.id)
+                  .single();
+
+                if (!error && data?.codigo) {
+                  console.log("Recuperado código existente do Supabase:", data.codigo);
+                  codigoGrupo = data.codigo;
+
+                  // Salvar em camadas de armazenamento locais para futura referência
+                  await salvarCodigoGrupo(grupo.id, data.codigo);
+                } else {
+                  // 4. Só gerar um novo código se realmente não existir em nenhum lugar
+                  console.log("Nenhum código encontrado, gerando um novo...");
+                  codigoGrupo = await gerarCodigoUnicoGrupo(grupo.id);
+                  console.log("Novo código gerado para o grupo:", codigoGrupo);
+                }
+              } catch (error) {
+                console.error("Erro ao verificar código no Supabase:", error);
+
+                // Gerar novo código como último recurso
+                codigoGrupo = await gerarCodigoUnicoGrupo(grupo.id);
+                console.log("Novo código gerado após erro:", codigoGrupo);
+              }
             }
           }
         } catch (error) {
@@ -129,90 +153,91 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
               CARACTERES_PERMITIDOS.charAt(Math.floor(Math.random() * CARACTERES_PERMITIDOS.length))
             ).join('');
             console.log("Código de fallback gerado:", codigoGrupo);
-          }
-        }
-      }
 
-      const grupoAtualizado = {
-        ...grupo,
-        nome,
-        descricao,
-        disciplina,
-        cor,
-        privado,
-        visibilidade,
-        data_inicio: dataInicio,
-        codigo: codigoGrupo
-      };
-
-      // Primeiro atualizar localmente para feedback imediato
-      onSave(grupoAtualizado);
-
-      // Se for um grupo local, apenas atualizar via callback
-      if (grupo.id.startsWith('local_')) {
-        // Atualizar no armazenamento local
-        try {
-          const { obterGruposLocal, salvarGrupoLocal } = await import('@/lib/gruposEstudoStorage');
-          const gruposLocais = obterGruposLocal();
-          const gruposAtualizados = gruposLocais.map((g: any) => 
-            g.id === grupo.id ? grupoAtualizado : g
-          );
-
-          // Salvar os grupos atualizados no localStorage
-          localStorage.setItem('epictus_grupos_estudo', JSON.stringify(gruposAtualizados));
-
-          // Atualizar também via função específica (redundância para segurança)
-          salvarGrupoLocal(grupoAtualizado);
-
-          console.log("Grupo local atualizado com sucesso:", grupoAtualizado);
-        } catch (localError) {
-          console.error("Erro ao atualizar grupo localmente:", localError);
-        }
-      } else {
-        // Atualizar no Supabase para grupos não-locais
-        try {
-          const { data: { session } } = await supabase.auth.getSession();
-
-          if (session) {
-            const { error } = await supabase
-              .from('grupos_estudo')
-              .update({
-                nome,
-                descricao,
-                disciplina,
-                cor,
-                privado,
-                visibilidade,
-                data_inicio: dataInicio,
-                codigo: codigoGrupo
-              })
-              .eq('id', grupo.id);
-
-            if (error) {
-              console.error("Erro ao atualizar grupo no Supabase:", error);
-              // Não impedimos o fluxo aqui, pois já salvamos localmente
-            } else {
-              console.log("Grupo atualizado no Supabase com sucesso");
+            // Tentar salvar este código de fallback
+            try {
+              const { salvarCodigoGrupo } = await import('@/lib/gruposEstudoStorage');
+              await salvarCodigoGrupo(grupo.id, codigoGrupo);
+            } catch (e) {
+              console.error("Erro ao salvar código de fallback:", e);
             }
           }
-        } catch (supabaseError) {
-          console.error("Erro ao comunicar com Supabase:", supabaseError);
-          // Já salvamos localmente, então continuamos o fluxo
         }
       }
 
-      // Mostrar animação de sucesso
-      mostrarNotificacaoSucesso("Grupo atualizado com sucesso!");
+      // Preparar dados atualizados, MANTENDO o código original
+      const grupoAtualizadoParaEnvio = {
+        ...grupoAtualizado,
+        codigo: codigoGrupo // Usar o código recuperado ou gerado
+      };
 
-      // Fechar modal após sucesso
-      setTimeout(() => {
-        onClose();
-        setSaving(false);
-      }, 500);
+      // Tentar atualizar no Supabase
+      const { error } = await supabase
+        .from('grupos_estudo')
+        .update(grupoAtualizadoParaEnvio)
+        .eq('id', grupo.id);
+
+      if (error) {
+        console.error('Erro ao atualizar grupo:', error);
+
+        // Mesmo com erro no Supabase, atualizamos localmente
+        const { salvarGrupoLocal, salvarCodigoGrupo } = await import('@/lib/gruposEstudoStorage');
+
+        // Garantir que o código seja preservado em todas as camadas
+        await salvarCodigoGrupo(grupo.id, codigoGrupo);
+
+        const grupoAtualizado = {
+          ...grupo,
+          ...grupoAtualizadoParaEnvio,
+          codigo: codigoGrupo
+        };
+
+        salvarGrupoLocal(grupoAtualizado);
+
+        toast({
+          title: "Configurações salvas localmente",
+          description: "As alterações foram salvas no dispositivo e serão sincronizadas quando possível.",
+        });
+      } else {
+        // Atualizar no localStorage também
+        const { salvarGrupoLocal, salvarCodigoGrupo } = await import('@/lib/gruposEstudoStorage');
+
+        // Garantir que o código seja preservado em todas as camadas
+        await salvarCodigoGrupo(grupo.id, codigoGrupo);
+
+        const grupoAtualizado = {
+          ...grupo,
+          ...grupoAtualizadoParaEnvio,
+          codigo: codigoGrupo
+        };
+
+        salvarGrupoLocal(grupoAtualizado);
+
+        toast({
+          title: "Configurações salvas",
+          description: "As alterações no grupo foram salvas com sucesso.",
+        });
+      }
+
+      // Chamar callback de sucesso para atualizar a UI
+      if (onSave) {
+        onSave({
+          ...grupo,
+          ...grupoAtualizadoParaEnvio,
+          codigo: codigoGrupo
+        });
+      }
+
+      onClose();
     } catch (error) {
-      console.error("Erro ao salvar grupo:", error);
-      setError("Ocorreu um erro ao salvar as alterações. Tente novamente.");
-      setSaving(false);
+      console.error('Erro ao salvar configurações:', error);
+      toast({
+        title: "Erro ao salvar",
+        description: "Ocorreu um erro ao salvar as configurações. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -220,7 +245,7 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
     const handleGerarCodigo = async () => {
       try {
           // Sistema de verificação multicamada para evitar geração de códigos duplicados
-          
+
           // 1. Verificar se o grupo já tem um código na UI atual
           if (grupoAtualizado?.codigo) {
               // Se já existe um código na interface, mostrar notificação e não gerar um novo
@@ -232,13 +257,13 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
           if (grupo && grupo.codigo) {
               // Se já existe código no objeto original, apenas exibe notificação e atualiza UI
               mostrarNotificacaoSucesso("Este grupo já possui um código único permanente!");
-              
+
               // Mesmo que o estado não tenha o código, atualizamos para garantir consistência
               setGrupoAtualizado(prev => ({
                   ...prev,
                   codigo: grupo.codigo
               }));
-              
+
               return;
           }
 
@@ -247,10 +272,10 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
               try {
                   const CODIGOS_STORAGE_KEY = 'epictus_codigos_grupo';
                   const codigosGrupos = JSON.parse(localStorage.getItem(CODIGOS_STORAGE_KEY) || '{}');
-                  
+
                   if (codigosGrupos[grupo.id]) {
                       mostrarNotificacaoSucesso("Código único recuperado do armazenamento permanente!");
-                      
+
                       // Atualizar o estado local para a UI
                       setGrupoAtualizado(prev => ({
                           ...prev,
@@ -264,35 +289,35 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
                       if (grupo && onSave) {
                           onSave({...grupo, codigo: codigosGrupos[grupo.id]});
                       }
-                      
+
                       return;
                   }
               } catch (e) {
                   console.error("Erro ao verificar armazenamento dedicado:", e);
               }
-              
+
               // 4. Verificar código no armazenamento geral de grupos como fallback
               const { obterGruposLocal } = await import('@/lib/gruposEstudoStorage');
               const grupos = obterGruposLocal();
               const grupoExistente = grupos.find(g => g.id === grupo.id);
-              
+
               if (grupoExistente?.codigo) {
                   mostrarNotificacaoSucesso("Código único recuperado do armazenamento de grupos!");
-                  
+
                   // Atualizar o estado da UI com o código encontrado
                   setGrupoAtualizado(prev => ({
                       ...prev,
                       codigo: grupoExistente.codigo
                   }));
-                  
+
                   // Atualizar o grupo original para manter consistência
                   if (grupo) grupo.codigo = grupoExistente.codigo;
-                  
+
                   // Forçar atualização da UI e persistir a alteração
                   if (grupo && onSave) {
                       onSave({...grupo, codigo: grupoExistente.codigo});
                   }
-                  
+
                   // Adicionar ao armazenamento dedicado para maior confiabilidade futura
                   try {
                       const CODIGOS_STORAGE_KEY = 'epictus_codigos_grupo';
@@ -303,17 +328,17 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
                   } catch (storageError) {
                       console.error("Erro ao adicionar código existente ao armazenamento dedicado:", storageError);
                   }
-                  
+
                   return;
               }
           }
 
           // 5. Se realmente não existir código, só então gerar um novo
           const { gerarCodigoUnicoGrupo, salvarCodigoGrupo } = await import('@/lib/gruposEstudoStorage');
-          
+
           // Mostrar notificação de que o processo começou
           mostrarNotificacaoSucesso("Gerando código permanente...");
-          
+
           const novoCodigo = await gerarCodigoUnicoGrupo(grupo?.id);
           console.log("Novo código único gerado e armazenado:", novoCodigo);
 
@@ -329,17 +354,17 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
 
               // Mostrar notificação de sucesso
               mostrarNotificacaoSucesso("Código permanente do grupo gerado com sucesso!");
-              
+
               // Forçar atualização da UI e persistir a alteração
               if (grupo && onSave) {
                   onSave({...grupo, codigo: novoCodigo});
               }
-              
+
               // Salvamento adicional para garantir persistência
               if (grupo?.id) {
                   // Usar a função de salvamento dedicada para garantir persistência
                   await salvarCodigoGrupo(grupo.id, novoCodigo);
-                  
+
                   // Adicionar ao armazenamento dedicado para maior confiabilidade
                   try {
                       const CODIGOS_STORAGE_KEY = 'epictus_codigos_grupo';
@@ -688,7 +713,7 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
                         <ChevronRight className="h-4 w-4" />
                       </Button>
                     )}
-                  </div>
+                                    </div>
                 ))}
 
                 {/* Seção para mostrar quando não há membros */}

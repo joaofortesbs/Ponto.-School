@@ -178,6 +178,122 @@ export const verificarSeCodigoExiste = async (codigo: string): Promise<boolean> 
 };
 
 /**
+ * Obtém um grupo pelo seu código único
+ * @param codigo - Código único do grupo
+ * @returns O grupo encontrado ou null
+ */
+export const obterGrupoPorCodigo = async (codigo: string): Promise<GrupoEstudo | null> => {
+  try {
+    // Normalizar o código
+    codigo = codigo.trim().toUpperCase();
+    
+    // Verificar primeiro no localStorage
+    const gruposLocais = obterGruposLocal();
+    const grupoLocal = gruposLocais.find(grupo => 
+      grupo.codigo && grupo.codigo.toUpperCase() === codigo
+    );
+    
+    if (grupoLocal) {
+      console.log('Grupo encontrado localmente pelo código:', codigo);
+      return grupoLocal;
+    }
+    
+    // Verificar no Supabase
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      console.error('Usuário não autenticado ao buscar grupo por código');
+      return null;
+    }
+    
+    const { data, error } = await supabase
+      .from('grupos_estudo')
+      .select('*')
+      .eq('codigo', codigo)
+      .single();
+    
+    if (error) {
+      console.error('Erro ao buscar grupo por código no Supabase:', error);
+      return null;
+    }
+    
+    if (data) {
+      // Salvar localmente para acesso futuro mais rápido
+      salvarGrupoLocal(data);
+      return data;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Erro ao obter grupo por código:', error);
+    return null;
+  }
+};
+
+/**
+ * Adiciona o usuário atual a um grupo específico
+ * @param grupoId - ID do grupo
+ * @returns true se o usuário foi adicionado com sucesso
+ */
+export const adicionarUsuarioAoGrupo = async (grupoId: string): Promise<boolean> => {
+  try {
+    // Obter dados do usuário atual
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      console.error('Usuário não autenticado ao tentar entrar no grupo');
+      return false;
+    }
+    
+    // Obter o grupo do Supabase
+    const { data: grupo, error } = await supabase
+      .from('grupos_estudo')
+      .select('*')
+      .eq('id', grupoId)
+      .single();
+    
+    if (error || !grupo) {
+      console.error('Erro ao obter grupo para adicionar usuário:', error);
+      return false;
+    }
+    
+    // Verificar se o usuário já é membro do grupo
+    const membrosIds = grupo.membros_ids || [];
+    if (membrosIds.includes(user.id) || grupo.user_id === user.id) {
+      // Usuário já é membro, não precisa adicionar
+      return true;
+    }
+    
+    // Adicionar o usuário à lista de membros
+    const novosMembrosIds = [...membrosIds, user.id];
+    
+    // Atualizar o grupo no Supabase
+    const { error: updateError } = await supabase
+      .from('grupos_estudo')
+      .update({ 
+        membros_ids: novosMembrosIds,
+        membros: (grupo.membros || 1) + 1 // Incrementar contador de membros
+      })
+      .eq('id', grupoId);
+    
+    if (updateError) {
+      console.error('Erro ao adicionar usuário ao grupo:', updateError);
+      return false;
+    }
+    
+    // Atualizar grupo local
+    grupo.membros_ids = novosMembrosIds;
+    grupo.membros = (grupo.membros || 1) + 1;
+    salvarGrupoLocal(grupo);
+    
+    return true;
+  } catch (error) {
+    console.error('Erro ao adicionar usuário ao grupo:', error);
+    return false;
+  }
+};
+
+/**
  * Gera um código único para o grupo de estudos
  * O código é gerado apenas uma vez para cada grupo e persistido
  * Uma vez gerado, o mesmo código será sempre retornado
