@@ -35,42 +35,247 @@ const CARACTERES_PERMITIDOS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 export const salvarCodigoGrupo = async (grupoId: string, codigo: string): Promise<boolean> => {
   // Primeiro salva no localStorage como backup
   try {
+    // Obter grupos de todas as fontes possíveis para garantir persistência
     const grupos = obterGruposLocalStorage();
     const grupoIndex = grupos.findIndex(g => g.id === grupoId);
     
     if (grupoIndex >= 0) {
       grupos[grupoIndex].codigo = codigo;
+      
+      // Garantir que o grupo tenha todas as propriedades necessárias
+      if (!grupos[grupoIndex].data_criacao) {
+        grupos[grupoIndex].data_criacao = new Date().toISOString();
+      }
+      
+      // Criar múltiplas camadas de persistência
+      // 1. Salvar na chave principal
       localStorage.setItem('grupos_estudo', JSON.stringify(grupos));
+      
+      // 2. Salvar no STORAGE_KEY 
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(grupos));
+      
+      // 3. Criar cópias de backup em diferentes formatos
+      try {
+        // Backup na sessionStorage para persistência entre navegações
+        sessionStorage.setItem(`${STORAGE_KEY}_session`, JSON.stringify(grupos));
+        
+        // Backup específico do grupo com o código
+        const grupoComCodigo = grupos[grupoIndex];
+        localStorage.setItem(`grupo_${grupoId}_codigo`, JSON.stringify(grupoComCodigo));
+        
+        // Backup de emergência com timestamp
+        localStorage.setItem(`grupo_backup_${Date.now()}_${grupoId}`, JSON.stringify(grupoComCodigo));
+      } catch (backupErr) {
+        console.warn('Erro em backup secundário:', backupErr);
+      }
+    } else {
+      console.warn('Grupo não encontrado no localStorage, tentando recuperar de outras fontes');
+      
+      // Se não encontrou no localStorage principal, tentar obter do Supabase
+      try {
+        const { data: grupoSupabase, error } = await supabase
+          .from('grupos_estudo')
+          .select('*')
+          .eq('id', grupoId)
+          .single();
+        
+        if (!error && grupoSupabase) {
+          grupoSupabase.codigo = codigo;
+          grupos.push(grupoSupabase);
+          localStorage.setItem('grupos_estudo', JSON.stringify(grupos));
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(grupos));
+          
+          // Criar backup de emergência
+          localStorage.setItem(`grupo_recuperado_${grupoId}`, JSON.stringify(grupoSupabase));
+        }
+      } catch (supabaseError) {
+        console.error('Erro ao buscar grupo do Supabase:', supabaseError);
+      }
     }
     
     // Tenta salvar no Supabase
-    const { error } = await supabase
-      .from('grupos_estudo')
-      .update({ codigo })
-      .eq('id', grupoId);
+    try {
+      const { error } = await supabase
+        .from('grupos_estudo')
+        .update({ codigo })
+        .eq('id', grupoId);
+      
+      if (error) {
+        console.error('Erro ao atualizar código no Supabase:', error);
+        // Mesmo com erro do Supabase, os dados locais foram salvos
+      }
+    } catch (supabaseErr) {
+      console.error('Erro de comunicação com Supabase:', supabaseErr);
+    }
     
-    if (error) {
-      console.error('Erro ao atualizar código no Supabase:', error);
-      return false;
+    // Verificar se o grupo foi realmente salvo e está acessível
+    const gruposSalvos = obterGruposLocalStorage();
+    const grupoSalvo = gruposSalvos.some(g => g.id === grupoId);
+    
+    if (!grupoSalvo) {
+      console.warn('Grupo não encontrado após salvar, tentando recuperação de emergência');
+      
+      // Recuperar o grupo de qualquer fonte de backup
+      const backupKeys = Object.keys(localStorage).filter(
+        key => key.includes(`grupo_${grupoId}`) || key.includes(`grupo_backup`) || key === STORAGE_KEY
+      );
+      
+      for (const key of backupKeys) {
+        try {
+          const dadosBackup = localStorage.getItem(key);
+          if (dadosBackup) {
+            const gruposBackup = key === STORAGE_KEY 
+              ? JSON.parse(dadosBackup)
+              : [JSON.parse(dadosBackup)];
+            
+            const grupoEncontrado = key === STORAGE_KEY
+              ? gruposBackup.find((g: GrupoEstudo) => g.id === grupoId)
+              : gruposBackup[0];
+            
+            if (grupoEncontrado) {
+              // Encontrou o grupo, restaurar para localStorage principal
+              const gruposAtualizados = gruposSalvos.filter(g => g.id !== grupoId);
+              gruposAtualizados.push(grupoEncontrado);
+              localStorage.setItem('grupos_estudo', JSON.stringify(gruposAtualizados));
+              console.log('Grupo recuperado com sucesso de backup:', key);
+              break;
+            }
+          }
+        } catch (recoveryErr) {
+          console.warn(`Erro ao recuperar de ${key}:`, recoveryErr);
+        }
+      }
     }
     
     return true;
   } catch (err) {
     console.error('Erro ao salvar código:', err);
-    // Mesmo com erro, confirmamos que salvamos localmente
+    
+    // Tentar salvar em modo de emergência
+    try {
+      const grupoEmergencia = { id: grupoId, codigo };
+      localStorage.setItem(`grupo_emergency_${grupoId}`, JSON.stringify(grupoEmergencia));
+    } catch (emergencyErr) {
+      console.error('Falha crítica ao salvar código em modo emergencial:', emergencyErr);
+    }
+    
     return false;
   }
 };
 
 /**
- * Obtém grupos de estudo do localStorage
+ * Obtém grupos de estudo do localStorage com múltiplas camadas de recuperação
+ * para garantir que nenhum grupo desapareça
  */
 const obterGruposLocalStorage = (): GrupoEstudo[] => {
   try {
+    // Obter da fonte principal
     const gruposStr = localStorage.getItem('grupos_estudo');
-    return gruposStr ? JSON.parse(gruposStr) : [];
+    const grupos = gruposStr ? JSON.parse(gruposStr) : [];
+    
+    if (grupos.length > 0) {
+      return grupos;
+    }
+    
+    // Se não encontrou grupos na fonte principal, tentar fonte alternativa
+    const gruposAltStr = localStorage.getItem(STORAGE_KEY);
+    const gruposAlt = gruposAltStr ? JSON.parse(gruposAltStr) : [];
+    
+    if (gruposAlt.length > 0) {
+      // Sincronizar com o localStorage principal
+      localStorage.setItem('grupos_estudo', gruposAltStr);
+      return gruposAlt;
+    }
+    
+    // Verificar backup da sessão
+    try {
+      const gruposSessaoStr = sessionStorage.getItem(`${STORAGE_KEY}_session`);
+      if (gruposSessaoStr) {
+        const gruposSessao = JSON.parse(gruposSessaoStr);
+        if (gruposSessao.length > 0) {
+          // Sincronizar com ambos os locais
+          localStorage.setItem('grupos_estudo', gruposSessaoStr);
+          localStorage.setItem(STORAGE_KEY, gruposSessaoStr);
+          return gruposSessao;
+        }
+      }
+    } catch (sessionErr) {
+      console.warn('Erro ao recuperar de sessionStorage:', sessionErr);
+    }
+    
+    // Verificar backups de emergência
+    const chavesEmergencia = Object.keys(localStorage).filter(
+      chave => chave.startsWith('grupo_backup_') || 
+               chave.startsWith('grupo_emergency_') || 
+               chave.startsWith('grupo_recuperado_')
+    );
+    
+    if (chavesEmergencia.length > 0) {
+      const gruposEmergencia: GrupoEstudo[] = [];
+      
+      for (const chave of chavesEmergencia) {
+        try {
+          const grupoStr = localStorage.getItem(chave);
+          if (grupoStr) {
+            const grupo = JSON.parse(grupoStr);
+            // Verificar se é um array ou objeto único
+            if (Array.isArray(grupo)) {
+              gruposEmergencia.push(...grupo);
+            } else if (grupo.id) {
+              gruposEmergencia.push(grupo);
+            }
+          }
+        } catch (emergencyErr) {
+          console.warn(`Erro ao recuperar de ${chave}:`, emergencyErr);
+        }
+      }
+      
+      if (gruposEmergencia.length > 0) {
+        // Deduplica os grupos
+        const gruposUnicos = gruposEmergencia.reduce((acc: GrupoEstudo[], grupo) => {
+          if (!acc.some(g => g.id === grupo.id)) {
+            acc.push(grupo);
+          }
+          return acc;
+        }, []);
+        
+        // Salvar os grupos recuperados no localStorage principal
+        localStorage.setItem('grupos_estudo', JSON.stringify(gruposUnicos));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(gruposUnicos));
+        
+        return gruposUnicos;
+      }
+    }
+    
+    return [];
   } catch (e) {
     console.error('Erro ao obter grupos do localStorage:', e);
+    
+    // Última tentativa: recuperar de qualquer chave que contenha "grupo"
+    try {
+      const todasChaves = Object.keys(localStorage);
+      const chavesGrupo = todasChaves.filter(chave => 
+        chave.includes('grupo') || chave.includes('STORAGE_KEY')
+      );
+      
+      for (const chave of chavesGrupo) {
+        try {
+          const conteudo = localStorage.getItem(chave);
+          if (conteudo) {
+            const dados = JSON.parse(conteudo);
+            if (Array.isArray(dados) && dados.length > 0 && dados[0].id) {
+              console.log('Grupos recuperados de fonte alternativa:', chave);
+              return dados;
+            }
+          }
+        } catch (parseErr) {
+          // Ignorar erros de parse
+        }
+      }
+    } catch (lastErr) {
+      console.error('Falha na recuperação de emergência:', lastErr);
+    }
+    
     return [];
   }
 };
@@ -97,8 +302,8 @@ export const gerarStringAleatoria = (comprimento = COMPRIMENTO_CODIGO, caractere
 export const verificarSeCodigoExiste = async (codigo: string): Promise<boolean> => {
   try {
     // Verificar primeiro em localStorage
-    const gruposLocais = obterGruposLocal();
-    const existeLocal = gruposLocais.some((grupo: any) => 
+    const gruposLocais = obterGruposLocalStorage();
+    const existeLocal = gruposLocais.some((grupo: GrupoEstudo) => 
       grupo.codigo && grupo.codigo.toUpperCase() === codigo.toUpperCase()
     );
     
