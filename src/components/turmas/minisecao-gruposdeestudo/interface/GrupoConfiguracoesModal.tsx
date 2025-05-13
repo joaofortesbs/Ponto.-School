@@ -254,10 +254,8 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
                   } catch (localError) {
                       console.error('Erro ao salvar no localStorage:', localError);
                   }
-              } com Supabase:', dbError);
-                  }
-              }
-
+              } 
+              
               // Sempre salvar localmente, independente do tipo de grupo (local ou remoto)
               // Isso garante redundância e persistência mesmo se houver problemas com o Supabase
               try {
