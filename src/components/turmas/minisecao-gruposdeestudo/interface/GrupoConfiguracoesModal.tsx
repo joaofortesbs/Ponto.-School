@@ -93,7 +93,7 @@ const handleSubmit = async () => {
       }
 
       // IMPORTANTE: Nunca gerar um novo código, apenas usar o existente ou recuperar se já existe
-      let codigoGrupo = grupo.codigo;
+      let codigoGrupo = grupo?.codigo || null;
 
       if (!codigoGrupo) {
         // Tentar recuperar o código de todas as fontes possíveis antes de gerar um novo
@@ -154,6 +154,11 @@ const handleSubmit = async () => {
       // Garantir que o código esteja em maiúsculas
       codigoGrupo = codigoGrupo?.toUpperCase();
 
+      // Verificar se grupo existe
+      if (!grupo || !grupo.id) {
+        throw new Error("Dados do grupo não encontrados ou inválidos");
+      }
+
       // Preparar o objeto atualizado preservando o código
       const grupoAtualizado = {
         ...grupo,
@@ -205,7 +210,18 @@ const handleSubmit = async () => {
       }, 1000);
     } catch (error) {
       console.error("Erro ao salvar configurações:", error);
-      setError(typeof error === 'string' ? error : 'Ocorreu um erro ao salvar as configurações. Tente novamente.');
+      
+      // Apresentar mensagem de erro mais específica e útil
+      let errorMessage = 'Ocorreu um erro ao salvar as configurações. Tente novamente.';
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      
+      setError(errorMessage);
+      mostrarNotificacaoErro(errorMessage);
     } finally {
       setSaving(false);
     }
