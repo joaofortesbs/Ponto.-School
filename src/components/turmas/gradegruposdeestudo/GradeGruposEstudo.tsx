@@ -52,9 +52,33 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
 
   // Carregar grupos do banco de dados e do armazenamento local
   useEffect(() => {
+    // Função para formatar os grupos no formato correto para exibição
+    const formatarGrupoParaExibicao = (grupo: any): GrupoEstudo => ({
+      id: grupo.id,
+      nome: grupo.nome,
+      descricao: grupo.descricao,
+      cor: grupo.cor || "#FF6B00", // Garantir uma cor padrão
+      membros: grupo.membros || 1,
+      topico: grupo.topico,
+      disciplina: grupo.disciplina || "",
+      icon: grupo.topico_icon,
+      dataCriacao: grupo.data_criacao || new Date().toISOString(),
+      tendencia: Math.random() > 0.7 ? "alta" : undefined, // Valor aleatório para demo
+      novoConteudo: Math.random() > 0.7, // Valor aleatório para demo
+      privado: grupo.privado,
+      visibilidade: grupo.visibilidade,
+      topico_nome: grupo.topico_nome,
+      topico_icon: grupo.topico_icon,
+      data_inicio: grupo.data_inicio,
+      codigo: grupo.codigo, // Importante: garantir que o código seja mantido
+      criador: grupo.criador || "você" // Garantir que o criador esteja definido
+    });
+
+    // Função principal para carregar os grupos
     const carregarGrupos = async () => {
       try {
         setLoading(true);
+        console.log("Iniciando carregamento de grupos de estudo");
 
         // Buscar os grupos do usuário atual do Supabase
         const { data: { session } } = await supabase.auth.getSession();
@@ -66,38 +90,32 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
           const gruposRemovidos = JSON.parse(gruposRemovidosStr);
 
           // Primeiro carregamos os grupos locais para exibição rápida
+          console.log("Buscando grupos do armazenamento local");
           const gruposLocais = obterGruposLocal()
             .filter(grupo => grupo.user_id === session.user.id)
             // Filtrar grupos que foram removidos
             .filter(grupo => !gruposRemovidos.includes(grupo.id));
 
+          console.log(`Encontrados ${gruposLocais.length} grupos locais válidos`);
+
           // Converter dados locais para o formato da interface
           if (gruposLocais.length > 0) {
-            const gruposLocaisFormatados: GrupoEstudo[] = gruposLocais.map((grupo: any) => ({
-              id: grupo.id,
-              nome: grupo.nome,
-              descricao: grupo.descricao,
-              cor: grupo.cor,
-              membros: grupo.membros || 1,
-              topico: grupo.topico,
-              disciplina: grupo.disciplina || "",
-              icon: grupo.topico_icon,
-              dataCriacao: grupo.data_criacao,
-              tendencia: Math.random() > 0.7 ? "alta" : undefined, // Valor aleatório para demo
-              novoConteudo: Math.random() > 0.7, // Valor aleatório para demo
-              privado: grupo.privado,
-              visibilidade: grupo.visibilidade,
-              topico_nome: grupo.topico_nome,
-              topico_icon: grupo.topico_icon,
-              data_inicio: grupo.data_inicio,
-              criador: grupo.criador || "você" // Garantir que o criador esteja definido
-            }));
+            const gruposLocaisFormatados: GrupoEstudo[] = gruposLocais.map(formatarGrupoParaExibicao);
 
             // Exibir primeiro os grupos locais enquanto carregamos do Supabase
             setGruposEstudo(gruposLocaisFormatados);
+            
+            // Força-tarefa crítica: fazer um backup adicional dos grupos no localStorage
+            try {
+              localStorage.setItem('ultimo_estado_grupos_exibidos', JSON.stringify(gruposLocaisFormatados));
+              console.log("Backup adicional dos grupos exibidos realizado");
+            } catch (backupError) {
+              console.error("Erro ao criar backup dos grupos exibidos:", backupError);
+            }
           }
 
           // Tentar buscar do Supabase
+          console.log("Tentando buscar grupos do Supabase");
           try {
             const { data, error } = await supabase
               .from('grupos_estudo')
@@ -107,80 +125,175 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
 
             if (error) {
               console.error("Erro ao buscar grupos de estudo do Supabase:", error);
-              // Continuar com os grupos locais já carregados
+              console.log("Continuando com os grupos locais já carregados");
 
               // Tentar sincronizar os grupos locais com o Supabase
               await sincronizarGruposLocais(session.user.id);
             } else {
-              console.log("Grupos carregados do Supabase:", data);
+              console.log(`Grupos carregados do Supabase: ${data.length}`);
 
               // Filtrar grupos do Supabase que não estão na lista de removidos
               const gruposSupabaseFiltrados = data.filter((grupo: any) => 
                 !gruposRemovidos.includes(grupo.id)
               );
 
+              console.log(`Após filtrar removidos: ${gruposSupabaseFiltrados.length} grupos do Supabase`);
+
               // Converter dados do banco para o formato da interface
-              const gruposFormatados: GrupoEstudo[] = gruposSupabaseFiltrados.map((grupo: any) => ({
-                id: grupo.id,
-                nome: grupo.nome,
-                descricao: grupo.descricao,
-                cor: grupo.cor,
-                membros: grupo.membros || 1,
-                topico: grupo.topico,
-                disciplina: grupo.disciplina || "",
-                icon: grupo.topico_icon,
-                dataCriacao: grupo.data_criacao,
-                tendencia: Math.random() > 0.7 ? "alta" : undefined, // Valor aleatório para demo
-                novoConteudo: Math.random() > 0.7, // Valor aleatório para demo
-                privado: grupo.privado,
-                visibilidade: grupo.visibilidade,
-                topico_nome: grupo.topico_nome,
-                topico_icon: grupo.topico_icon,
-                data_inicio: grupo.data_inicio,
-                criador: grupo.criador || "você" // Garantir que o criador esteja definido
-              }));
+              const gruposFormatados: GrupoEstudo[] = gruposSupabaseFiltrados.map(formatarGrupoParaExibicao);
 
               // Combinar grupos do Supabase com grupos locais que não estão no Supabase
               const gruposLocaisFiltrados = gruposLocais
-                .filter(grupoLocal => grupoLocal.id.startsWith('local_') && 
-                  !gruposSupabaseFiltrados.some((grupoRemoto: any) => grupoRemoto.id === grupoLocal.id))
-                .map((grupo: any) => ({
-                  id: grupo.id,
-                  nome: grupo.nome,
-                  descricao: grupo.descricao,
-                  cor: grupo.cor,
-                  membros: grupo.membros || 1,
-                  topico: grupo.topico,
-                  disciplina: grupo.disciplina || "",
-                  icon: grupo.topico_icon,
-                  dataCriacao: grupo.data_criacao,
-                  tendencia: Math.random() > 0.7 ? "alta" : undefined,
-                  novoConteudo: Math.random() > 0.7,
-                  privado: grupo.privado,
-                  visibilidade: grupo.visibilidade,
-                  topico_nome: grupo.topico_nome,
-                  topico_icon: grupo.topico_icon,
-                  data_inicio: grupo.data_inicio,
-                  criador: grupo.criador || "você" // Garantir que o criador esteja definido
-                }));
+                .filter(grupoLocal => {
+                  // Verificar se o grupo local não existe no Supabase OU 
+                  // se tem um código que não existe no Supabase (caso de atualizações locais)
+                  const naoExisteNoSupabase = !gruposSupabaseFiltrados.some(
+                    (grupoRemoto: any) => grupoRemoto.id === grupoLocal.id
+                  );
+                  
+                  // Verificar se existe no Supabase mas o código local é diferente (desatualizado no Supabase)
+                  const existeComCodigoDiferente = gruposSupabaseFiltrados.some(
+                    (grupoRemoto: any) => 
+                      grupoRemoto.id === grupoLocal.id && 
+                      grupoLocal.codigo && 
+                      (!grupoRemoto.codigo || grupoRemoto.codigo !== grupoLocal.codigo)
+                  );
+                  
+                  return (grupoLocal.id.startsWith('local_') && naoExisteNoSupabase) || existeComCodigoDiferente;
+                })
+                .map(formatarGrupoParaExibicao);
 
-              setGruposEstudo([...gruposFormatados, ...gruposLocaisFiltrados]);
+              console.log(`Grupos locais complementares: ${gruposLocaisFiltrados.length}`);
+
+              // Criar lista combinada de grupos
+              const gruposCombinados = [...gruposFormatados, ...gruposLocaisFiltrados];
+              
+              // VERIFICAÇÃO CRÍTICA: Garantir que nenhum grupo existente foi perdido
+              const gruposAtualmente = [...gruposEstudo];
+              const idsAtuais = new Set(gruposAtualmente.map(g => g.id));
+              
+              // Verificar se algum grupo importante está faltando na nova lista
+              const gruposFaltantes = gruposAtualmente.filter(grupoAtual => {
+                // Verificar se não existe na lista combinada
+                return !gruposCombinados.some(grupoCombinado => grupoCombinado.id === grupoAtual.id) &&
+                  // E não está na lista de removidos
+                  !gruposRemovidos.includes(grupoAtual.id);
+              });
+              
+              // Se encontramos grupos faltando, adicionar à lista combinada
+              if (gruposFaltantes.length > 0) {
+                console.warn(`Detectados ${gruposFaltantes.length} grupos que seriam perdidos! Recuperando...`);
+                gruposCombinados.push(...gruposFaltantes);
+                
+                // Registrar quais grupos foram recuperados
+                gruposFaltantes.forEach(grupo => console.log(`Recuperado grupo: ${grupo.nome} (${grupo.id})`));
+                
+                // Tentar salvar os grupos recuperados para garantir persistência
+                for (const grupo of gruposFaltantes) {
+                  try {
+                    // Importar dinamicamente para evitar problemas de referência circular
+                    const { salvarGrupoLocal } = await import('@/lib/gruposEstudoStorage');
+                    salvarGrupoLocal(grupo);
+                  } catch (saveError) {
+                    console.error(`Erro ao salvar grupo recuperado ${grupo.id}:`, saveError);
+                  }
+                }
+              }
+              
+              // Atualizar estado com a lista combinada
+              setGruposEstudo(gruposCombinados);
+              
+              // Força-tarefa crítica: fazer um backup adicional dos grupos no localStorage
+              try {
+                localStorage.setItem('ultimo_estado_grupos_exibidos', JSON.stringify(gruposCombinados));
+                console.log("Backup adicional dos grupos exibidos realizado após combinação");
+              } catch (backupError) {
+                console.error("Erro ao criar backup dos grupos exibidos após combinação:", backupError);
+              }
             }
           } catch (supabaseError) {
             console.error("Falha ao usar Supabase:", supabaseError);
+            
             // Já estamos usando os dados locais, então continuar com eles
+            // Verificar se temos um backup recente para usar em caso de falha
+            try {
+              const backupStr = localStorage.getItem('ultimo_estado_grupos_exibidos');
+              if (backupStr) {
+                const backupGrupos = JSON.parse(backupStr);
+                if (Array.isArray(backupGrupos) && backupGrupos.length > 0) {
+                  console.log(`Usando backup de ${backupGrupos.length} grupos devido a falha no Supabase`);
+                  setGruposEstudo(backupGrupos);
+                }
+              }
+            } catch (backupError) {
+              console.error("Erro ao usar backup de grupos:", backupError);
+            }
           }
         }
       } catch (error) {
         console.error("Erro ao carregar grupos de estudo:", error);
+        
+        // Tentativa final de recuperação - usar qualquer fonte disponível de dados
+        try {
+          // Tentar usar o último estado conhecido
+          const ultimoEstadoStr = localStorage.getItem('ultimo_estado_grupos_exibidos');
+          if (ultimoEstadoStr) {
+            const ultimoEstado = JSON.parse(ultimoEstadoStr);
+            if (Array.isArray(ultimoEstado) && ultimoEstado.length > 0) {
+              console.log("Recuperação de emergência do último estado exibido");
+              setGruposEstudo(ultimoEstado);
+            }
+          }
+        } catch (emergencyError) {
+          console.error("Falha na recuperação de emergência:", emergencyError);
+        }
       } finally {
         setLoading(false);
       }
     };
 
+    // Executar a função de carregamento
     carregarGrupos();
 
-    // Definir um intervalo para re-sincronização a cada 5 minutos
+    // Definir um intervalo para verificar a consistência dos dados a cada 30 segundos
+    const intervaloVerificacao = setInterval(() => {
+      // Verificar se algum grupo local tem código que não está no estado atual
+      const verificarConsistencia = async () => {
+        try {
+          // Verificar grupos no localStorage que possam ter sido atualizados
+          const gruposLocais = obterGruposLocal();
+          const gruposAtuais = [...gruposEstudo];
+          
+          let mudancasDetectadas = false;
+          
+          // Verificar se há grupos locais que foram atualizados mas não estão refletidos no estado
+          for (const grupoLocal of gruposLocais) {
+            const grupoAtual = gruposAtuais.find(g => g.id === grupoLocal.id);
+            
+            // Se o grupo não existe no estado atual ou o código é diferente
+            if (!grupoAtual || 
+                (grupoLocal.codigo && grupoAtual.codigo !== grupoLocal.codigo)) {
+              
+              console.log(`Inconsistência detectada no grupo ${grupoLocal.id}: código local=${grupoLocal.codigo}, código no estado=${grupoAtual?.codigo}`);
+              mudancasDetectadas = true;
+              break;
+            }
+          }
+          
+          // Se encontramos inconsistências, recarregar os dados
+          if (mudancasDetectadas) {
+            console.log("Inconsistências detectadas, recarregando grupos...");
+            carregarGrupos();
+          }
+        } catch (error) {
+          console.error("Erro ao verificar consistência dos dados:", error);
+        }
+      };
+      
+      verificarConsistencia();
+    }, 30000);
+
+    // Definir um intervalo maior para re-sincronização com o Supabase
     const intervaloSincronizacao = setInterval(async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -192,12 +305,62 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
       }
     }, 300000); // 5 minutos
 
-    // NÃO recarregar os grupos quando a página se torna visível novamente
-    // pois isso estava causando o problema de recarregamento indevido
-
+    // Definir uma verificação quando o componente for montado
+    const verificarGruposEspecificos = async () => {
+      try {
+        // Verificar se existem grupos específicos salvos em lugares alternativos
+        const allKeys = Object.keys(localStorage);
+        const grupoKeys = allKeys.filter(key => key.includes('grupo_') || key.includes('_grupo_'));
+        
+        if (grupoKeys.length > 0) {
+          console.log(`Encontrados ${grupoKeys.length} registros individuais de grupos`);
+          
+          const gruposRecuperados: any[] = [];
+          
+          for (const key of grupoKeys) {
+            try {
+              const grupoStr = localStorage.getItem(key);
+              if (grupoStr) {
+                const grupoObj = JSON.parse(grupoStr);
+                if (grupoObj && grupoObj.id && grupoObj.nome) {
+                  // Verificar se este grupo já foi adicionado
+                  if (!gruposRecuperados.some(g => g.id === grupoObj.id)) {
+                    gruposRecuperados.push(grupoObj);
+                  }
+                }
+              }
+            } catch (parseError) {
+              console.error(`Erro ao analisar grupo ${key}:`, parseError);
+            }
+          }
+          
+          if (gruposRecuperados.length > 0) {
+            console.log(`Recuperados ${gruposRecuperados.length} grupos individuais`);
+            
+            // Verificar se algum destes grupos não está no estado atual
+            const gruposAtuais = [...gruposEstudo];
+            const gruposNovos = gruposRecuperados.filter(
+              grupoRecuperado => !gruposAtuais.some(grupoAtual => grupoAtual.id === grupoRecuperado.id)
+            );
+            
+            if (gruposNovos.length > 0) {
+              console.log(`Adicionando ${gruposNovos.length} novos grupos recuperados ao estado`);
+              setGruposEstudo(prevGrupos => [...prevGrupos, ...gruposNovos.map(formatarGrupoParaExibicao)]);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Erro ao verificar grupos específicos:", error);
+      }
+    };
+    
+    // Executar a verificação após um breve atraso
+    setTimeout(verificarGruposEspecificos, 2000);
+    
     // Limpar listeners e intervalos quando o componente for desmontado
     return () => {
       clearInterval(intervaloSincronizacao);
+      clearInterval(intervaloVerificacao);
     };
   }, []); // Remover dependências para evitar recarregamentos desnecessários
 
