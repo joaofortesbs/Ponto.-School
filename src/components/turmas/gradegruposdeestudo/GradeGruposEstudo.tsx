@@ -252,21 +252,27 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
     }, []);
 
   // Filtra os grupos baseado no tópico selecionado e busca
-  const gruposFiltrados = gruposEstudo.filter(
-    (grupo) => {
-      const matchesSearch = grupo.nome.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                           (grupo.disciplina?.toLowerCase().includes(searchQuery.toLowerCase()) || false);
-      const matchesFilter = !selectedFilter || 
-        (selectedFilter === "tendencia-alta" && grupo.tendencia === "alta") ||
-        (selectedFilter === "novo-conteudo" && grupo.novoConteudo);
+  // Atualiza o estado gruposFiltrados em vez de criar uma nova constante
+  useEffect(() => {
+    const filtered = gruposEstudo.filter(
+      (grupo) => {
+        const matchesSearch = grupo.nome.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                            (grupo.disciplina?.toLowerCase().includes(searchQuery.toLowerCase()) || false);
+        const matchesFilter = !selectedFilter || 
+          (selectedFilter === "tendencia-alta" && grupo.tendencia === "alta") ||
+          (selectedFilter === "novo-conteudo" && grupo.novoConteudo);
 
-      // Melhorada lógica de filtragem por tópico
-      const matchesSelectedTopic = !selectedTopic || 
-        (grupo.topico && selectedTopic.toString() === grupo.topico);
+        // Melhorada lógica de filtragem por tópico
+        const matchesSelectedTopic = !selectedTopic || 
+          (grupo.topico && selectedTopic.toString() === grupo.topico);
 
-      return matchesSearch && matchesFilter && matchesSelectedTopic;
-    }
-  );
+        return matchesSearch && matchesFilter && matchesSelectedTopic;
+      }
+    );
+    
+    // Atualiza o estado gruposFiltrados já definido anteriormente
+    setGruposFiltrados(filtered);
+  }, [gruposEstudo, searchQuery, selectedFilter, selectedTopic]);
 
   // Detectar grupos em destaque (com tendência alta e novo conteúdo)
   const isGrupoFeatured = (grupo: GrupoEstudo) => {
