@@ -218,14 +218,14 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
           console.log("Novo código gerado:", novoCodigo);
 
           if (novoCodigo) {
+              // Criar uma cópia do objeto do grupo com o novo código para evitar problemas de referência
+              const grupoComCodigo = grupo ? { ...grupo, codigo: novoCodigo } : null;
+              
               // Atualizar o estado local
-              setGrupoAtualizado(prev => ({
+              setGrupoAtualizado(prev => prev ? {
                   ...prev,
                   codigo: novoCodigo
-              }));
-
-              // Atualizar o grupo original também para garantir que a UI seja atualizada
-              if (grupo) grupo.codigo = novoCodigo;
+              } : null);
 
               // Mostrar notificação de sucesso
               mostrarNotificacaoSucesso("Código permanente do grupo gerado com sucesso!");
@@ -249,21 +249,7 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
                       console.error('Erro na comunicação com o banco de dados:', dbError);
                       mostrarNotificacaoErro("Erro na comunicação com o servidor. O código foi salvo localmente.");
                   }
-              } else {
-                  // Salvar no localStorage para grupos locais
-                  try {
-                      const gruposLocal = JSON.parse(localStorage.getItem('grupos_estudo') || '[]');
-                      const indexGrupo = gruposLocal.findIndex((g: any) => g.id === grupo?.id);
-                      
-                      if (indexGrupo !== -1) {
-                          gruposLocal[indexGrupo].codigo = novoCodigo;
-                          localStorage.setItem('grupos_estudo', JSON.stringify(gruposLocal));
-                          console.log('Código salvo com sucesso no localStorage:', novoCodigo);
-                      }
-                  } catch (localError) {
-                      console.error('Erro ao salvar no localStorage:', localError);
-                  }
-              } 
+              }
               
               // Sempre salvar localmente, independente do tipo de grupo (local ou remoto)
               // Isso garante redundância e persistência mesmo se houver problemas com o Supabase
@@ -299,8 +285,9 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
               }
 
               // Forçar atualização da UI e dos componentes pais
-              if (grupo && onSave) {
-                  onSave({...grupo, codigo: novoCodigo});
+              // IMPORTANTE: Passar o objeto completo com o novo código, não apenas o código
+              if (grupo && onSave && grupoComCodigo) {
+                  onSave(grupoComCodigo);
               }
           }
       } catch (error) {

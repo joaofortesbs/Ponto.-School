@@ -403,25 +403,34 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
   // Função para salvar as alterações do grupo
   const handleSaveGroupSettings = async (grupoAtualizado: GrupoEstudo) => {
     try {
+      console.log("Salvando alterações do grupo:", grupoAtualizado);
+      
+      // Garantir que o objeto atualizado preserva todas as propriedades originais
+      const grupoParaSalvar = grupoAtualizado.id ? {
+        ...gruposEstudo.find(g => g.id === grupoAtualizado.id) || {},
+        ...grupoAtualizado
+      } : grupoAtualizado;
+      
       // Atualizar a lista de grupos
       setGruposEstudo(prevGrupos => 
         prevGrupos.map(grupo => 
-          grupo.id === grupoAtualizado.id ? grupoAtualizado : grupo
+          grupo.id === grupoParaSalvar.id ? grupoParaSalvar : grupo
         )
       );
 
       // Atualizar no armazenamento local
       const gruposLocais = obterGruposLocal();
       const gruposAtualizados = gruposLocais.map((grupo: any) => 
-        grupo.id === grupoAtualizado.id ? {
+        grupo.id === grupoParaSalvar.id ? {
           ...grupo,
-          nome: grupoAtualizado.nome,
-          descricao: grupoAtualizado.descricao,
-          disciplina: grupoAtualizado.disciplina,
-          cor: grupoAtualizado.cor,
-          privado: grupoAtualizado.privado,
-          visibilidade: grupoAtualizado.visibilidade,
-          data_inicio: grupoAtualizado.data_inicio
+          nome: grupoParaSalvar.nome,
+          descricao: grupoParaSalvar.descricao,
+          disciplina: grupoParaSalvar.disciplina,
+          cor: grupoParaSalvar.cor,
+          privado: grupoParaSalvar.privado,
+          visibilidade: grupoParaSalvar.visibilidade,
+          data_inicio: grupoParaSalvar.data_inicio,
+          codigo: grupoParaSalvar.codigo // Garantir que o código seja preservado
         } : grupo
       );
 
@@ -432,6 +441,27 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
         sessionStorage.setItem('epictus_grupos_estudo_session', JSON.stringify(gruposAtualizados));
       } catch (sessionError) {
         console.error("Erro ao atualizar backup na sessão:", sessionError);
+      }
+      
+      // Implementar redundância adicional com a função salvarGrupoLocal
+      try {
+        const grupoLocalAtualizado = gruposLocais.find((g: any) => g.id === grupoParaSalvar.id);
+        if (grupoLocalAtualizado) {
+          const grupoComDadosAtualizados = {
+            ...grupoLocalAtualizado,
+            nome: grupoParaSalvar.nome,
+            descricao: grupoParaSalvar.descricao,
+            disciplina: grupoParaSalvar.disciplina,
+            cor: grupoParaSalvar.cor,
+            privado: grupoParaSalvar.privado,
+            visibilidade: grupoParaSalvar.visibilidade,
+            data_inicio: grupoParaSalvar.data_inicio,
+            codigo: grupoParaSalvar.codigo
+          };
+          salvarGrupoLocal(grupoComDadosAtualizados);
+        }
+      } catch (error) {
+        console.error("Erro na redundância de salvamento:", error);
       }
 
       // Fechar o modal

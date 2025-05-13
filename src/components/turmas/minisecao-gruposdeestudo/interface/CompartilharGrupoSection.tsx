@@ -26,11 +26,29 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
     } else if (onGerarCodigo) {
       // Se não houver código e existir a função para gerar, chamá-la automaticamente
       console.log("Não há código definido, gerando automaticamente...");
+      // Usar um setTimeout mais longo para garantir que o componente está completamente montado
       setTimeout(() => {
-        onGerarCodigo();
-      }, 500); // Pequeno atraso para garantir que a interface foi renderizada
+        if (onGerarCodigo) {
+          onGerarCodigo();
+        }
+      }, 800); // Aumentado para 800ms para garantir que a interface foi renderizada completamente
     }
   }, [grupoCodigo, onGerarCodigo]);
+  
+  // Efeito adicional para verificar o código após a montagem completa do componente
+  useEffect(() => {
+    const verificarCodigo = () => {
+      if (!grupoCodigo && onGerarCodigo) {
+        console.log("Verificação secundária: código não encontrado, gerando...");
+        onGerarCodigo();
+      }
+    };
+    
+    // Verificar após um tempo maior para garantir que todos os estados foram atualizados
+    const timer = setTimeout(verificarCodigo, 1500);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   const formattedCodigo = codigoLocalExibido && codigoLocalExibido.length > 4 
     ? `${codigoLocalExibido.substring(0, 4)} ${codigoLocalExibido.substring(4)}`
