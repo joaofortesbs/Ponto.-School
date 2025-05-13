@@ -48,6 +48,8 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
       console.error('Erro ao compartilhar:', error);
     }
   };
+    }
+  };
 
   const handleGerarCodigo = async () => {
     if (onGerarCodigo) {

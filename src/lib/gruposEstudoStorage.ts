@@ -25,6 +25,55 @@ export interface GrupoEstudo {
 
 // Caracteres permitidos para códigos de grupo (sem caracteres ambíguos como I, O, 0, 1)
 const CARACTERES_PERMITIDOS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+/**
+ * Salva o código de um grupo tanto no banco de dados quanto no localStorage como backup
+ * @param grupoId - ID do grupo
+ * @param codigo - Código de convite gerado
+ * @returns boolean indicando se conseguiu salvar no servidor
+ */
+export const salvarCodigoGrupo = async (grupoId: string, codigo: string): Promise<boolean> => {
+  // Primeiro salva no localStorage como backup
+  try {
+    const grupos = obterGruposLocalStorage();
+    const grupoIndex = grupos.findIndex(g => g.id === grupoId);
+    
+    if (grupoIndex >= 0) {
+      grupos[grupoIndex].codigo = codigo;
+      localStorage.setItem('grupos_estudo', JSON.stringify(grupos));
+    }
+    
+    // Tenta salvar no Supabase
+    const { error } = await supabase
+      .from('grupos_estudo')
+      .update({ codigo })
+      .eq('id', grupoId);
+    
+    if (error) {
+      console.error('Erro ao atualizar código no Supabase:', error);
+      return false;
+    }
+    
+    return true;
+  } catch (err) {
+    console.error('Erro ao salvar código:', err);
+    // Mesmo com erro, confirmamos que salvamos localmente
+    return false;
+  }
+};
+
+/**
+ * Obtém grupos de estudo do localStorage
+ */
+const obterGruposLocalStorage = (): GrupoEstudo[] => {
+  try {
+    const gruposStr = localStorage.getItem('grupos_estudo');
+    return gruposStr ? JSON.parse(gruposStr) : [];
+  } catch (e) {
+    console.error('Erro ao obter grupos do localStorage:', e);
+    return [];
+  }
+};";
 const COMPRIMENTO_CODIGO = 7; // Código com 7 caracteres conforme a especificação
 
 /**
