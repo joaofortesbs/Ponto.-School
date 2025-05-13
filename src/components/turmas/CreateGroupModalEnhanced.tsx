@@ -22,8 +22,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/lib/supabase";
 import { criarGrupo, salvarGrupoLocal, gerarCodigoUnicoGrupo } from "@/lib/gruposEstudoStorage";
-import { gerarCodigoUnico } from "@/lib/grupoCodigoUtils";
-import { Copy } from "lucide-react";
 
 interface CreateGroupModalProps {
   isOpen: boolean;
@@ -80,9 +78,6 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
   const [convidadosInfo, setConvidadosInfo] = useState<any[]>([]);
   const [showCodeEntry, setShowCodeEntry] = useState(false);
   const [groupCode, setGroupCode] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [copiado, setCopiado] = useState(false);
-  const [grupoCriado, setGrupoCriado] = useState<any>(null);
 
   // Filtrar usuários baseado no termo de busca
   const filteredUsuarios = usuariosDisponiveis.filter(usuario => 
@@ -212,8 +207,6 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
       return;
     }
 
-    setIsLoading(true);
-
     try {
       // Obter a sessão do usuário atual
       const { data: { session } } = await supabase.auth.getSession();
@@ -223,8 +216,34 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
         return;
       }
 
-      // Gerar código único para o grupo
-      const codigo = await gerarCodigoUnico();
+      // Criar um ID temporário para o grupo antes de salvá-lo
+      const grupoTempId = crypto.randomUUID();
+
+      // Gerar um código único para o grupo
+      const { gerarCodigoUnicoGrupo, salvarCodigoGrupo } = await import('@/lib/gruposEstudoStorage');
+      let codigoGrupo = await gerarCodigoUnicoGrupo(grupoTempId);
+
+      // Garantir que o código está em maiúsculas
+      codigoGrupo = codigoGrupo.toUpperCase();
+
+      console.log("Código único gerado para novo grupo:", codigoGrupo);
+
+      // Salvar o código em múltiplos locais para máxima persistência
+      try {
+        // Storage dedicado para códigos (principal)
+        const CODIGOS_STORAGE_KEY = 'epictus_codigos_grupo';
+        const codigosGrupos = JSON.parse(localStorage.getItem(CODIGOS_STORAGE_KEY) || '{}');
+        codigosGrupos[grupoTempId] = codigoGrupo;
+        localStorage.setItem(CODIGOS_STORAGE_KEY, JSON.stringify(codigosGrupos));
+
+        // SessionStorage para recuperação temporária
+        sessionStorage.setItem(`grupo_codigo_${grupoTempId}`, codigoGrupo);
+        sessionStorage.setItem(`novo_grupo_codigo_${codigoGrupo}`, codigoGrupo);
+
+        console.log("Código armazenado em múltiplos locais para garantir persistência");
+      } catch (e) {
+        console.error("Erro ao salvar código em storages:", e);
+      }
 
       // Preparar dados para criação do grupo
       const novoGrupo = {
@@ -245,7 +264,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
         atividades: formData.atividades,
         convidados: formData.convidados,
         convidados_info: convidadosInfo,
-        codigo: codigo, // Código único gerado
+        codigo: codigoGrupo, // Código único gerado
         cor: "#FF6B00", // Cor padrão
         membros: 1, // Inicialmente, apenas o criador é membro
         data_criacao: new Date().toISOString()
@@ -274,7 +293,6 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
           console.log("Grupo salvo localmente");
         } else {
           console.log("Grupo criado com sucesso no Supabase:", data);
-           setGrupoCriado(data);
         }
       } catch (supabaseError) {
         console.error("Erro ao acessar Supabase:", supabaseError);
@@ -294,24 +312,10 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
       onSubmit(novoGrupo);
 
       // Fechar o modal após submissão bem-sucedida
-      //onClose();
+      onClose();
     } catch (error) {
       console.error("Erro ao criar grupo:", error);
       alert(`Erro ao criar grupo: ${error instanceof Error ? error.message : "Tente novamente mais tarde."}`);
-    } finally {
-       setIsLoading(false);
-    }
-  };
-
-   const handleCopiarCodigo = () => {
-    if (formData?.codigo) {
-      navigator.clipboard.writeText(formData?.codigo);
-      setCopiado(true);
-      alert("Código copiado para a área de transferência!");
-
-      setTimeout(() => {
-        setCopiado(false);
-      }, 3000);
     }
   };
 
@@ -342,13 +346,8 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
       setActiveTab("informacoes");
       setShowCodeEntry(false);
       setGroupCode("");
-      setGrupoCriado(null);
     }
   }, [isOpen]);
-
-  const handleFechar = () => {
-        onClose();
-    }
 
   // Limpar URLs de objeto quando componente desmontar
   useEffect(() => {
@@ -375,73 +374,25 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
             <div>
               <h2 className="text-2xl font-bold text-white flex items-center">
                 <Users className="h-6 w-6 mr-3 text-[#FF6B00]" />
-                {grupoCriado ? "Grupo Criado com Sucesso!" : "Novo Grupo de Estudo"}
+                Novo Grupo de Estudo
               </h2>
               <p className="text-white/70 text-sm mt-1">
                 {showCodeEntry 
                   ? "Digite o código único do grupo que deseja participar" 
-                  : grupoCriado
-                     ? "Seu grupo foi criado! Compartilhe o código abaixo para convidar outras pessoas."
-                     : "Preencha os detalhes do seu novo grupo. Você poderá editá-los posteriormente."}
+                  : "Preencha os detalhes do seu novo grupo. Você poderá editá-los posteriormente."}
               </p>
             </div>
             <Button
               variant="ghost"
               size="icon"
               className="absolute top-4 right-4 h-9 w-9 rounded-full text-white/80 hover:text-white hover:bg-white/20"
-              onClick={handleFechar}
+              onClick={onClose}
             >
               <X className="h-5 w-5" />
             </Button>
           </div>
 
-           {grupoCriado ? (
-            <div className="space-y-6 py-4 p-6">
-                <div className="space-y-2 text-center">
-                  <h3 className="font-semibold text-lg text-white">{formData.nome}</h3>
-                  {formData.descricao && (
-                    <p className="text-sm text-gray-500">{formData.descricao}</p>
-                  )}
-                </div>
-
-                <div className="bg-[#1E293B]/50 rounded-lg p-4 border border-[#1E293B]">
-                  <label className="block mb-2 text-sm text-white/70">Código de Convite</label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      value={formData.codigo}
-                      readOnly
-                      className="font-mono text-lg text-center uppercase bg-[#0F172A] text-white border-[#1E293B]"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={handleCopiarCodigo}
-                      className="flex-shrink-0 border-[#1E293B] text-white hover:bg-[#1E293B] hover:text-white"
-                      title="Copiar código"
-                    >
-                      {copiado ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
-                    </Button>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-2">
-                    Compartilhe este código para que outros usuários possam entrar no grupo.
-                    {formData.privacidade === "Privado (apenas por convite)" && " Como este é um grupo privado, apenas quem tiver o código poderá entrar."}
-                  </p>
-                </div>
-
-                <div className="flex justify-end gap-3 mt-6">
-                  <Button
-                      type="button"
-                      variant="outline"
-                      onClick={handleFechar}
-                      className="border-[#1E293B] text-white hover:bg-[#1E293B] hover:text-white"
-                    >
-                    Concluir
-                  </Button>
-                </div>
-              </div>
-
-          ) : showCodeEntry ? (
+          {showCodeEntry ? (
             <div className="p-6">
               <div className="bg-[#1E293B]/50 rounded-lg p-6 border border-[#1E293B] mb-6">
                 <div className="flex items-center gap-3 mb-4">
@@ -1035,7 +986,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={handleFechar}
+                  onClick={onClose}
                   className="border-[#1E293B] text-white hover:bg-[#1E293B] hover:text-white"
                 >
                   Cancelar
