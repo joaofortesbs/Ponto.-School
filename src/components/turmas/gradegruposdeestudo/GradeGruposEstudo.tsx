@@ -456,26 +456,40 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
     try {
       console.log("Dados do formulário:", formData);
 
-      // Apenas receber o formData - o modal já está salvando o grupo
-      console.log("Grupo criado com sucesso:", formData);
-
-      // Atualizar lista de grupos - remover duplicatas verificando por ID ou nome
-      const todosGrupos = await obterTodosGrupos();
+      // Obter sessão do usuário atual
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error("Usuário não autenticado");
+      }
+      
+      // Atualizar lista de grupos carregando novamente do banco e localStorage
+      const todosGrupos = await obterTodosGrupos(session.user.id);
+      console.log("Grupos atualizados após criação:", todosGrupos.length);
 
       // Mapear grupos para o formato correto
       const gruposMapeados = todosGrupos.map(grupo => ({
-        ...grupo,
+        id: grupo.id,
+        nome: grupo.nome,
+        descricao: grupo.descricao,
+        cor: grupo.cor,
+        membros: grupo.membros || 1,
+        topico: grupo.topico,
         disciplina: grupo.disciplina || "",
-        novoConteudo: Boolean(grupo.novoConteudo || Math.random() > 0.7),
-        tendencia: grupo.tendencia || (Math.random() > 0.7 ? "alta" : undefined)
+        icon: grupo.topico_icon,
+        dataCriacao: grupo.data_criacao,
+        tendencia: Math.random() > 0.7 ? "alta" : undefined, // Valor aleatório para demo
+        novoConteudo: Math.random() > 0.7, // Valor aleatório para demo
+        privado: grupo.privado,
+        visibilidade: grupo.visibilidade,
+        topico_nome: grupo.topico_nome,
+        topico_icon: grupo.topico_icon,
+        data_inicio: grupo.data_inicio,
+        criador: grupo.criador || "você" // Garantir que o criador esteja definido
       }));
 
-      // Remover duplicatas baseado no nome do grupo
-      const gruposFiltrados = gruposMapeados.filter((grupo, index, self) => 
-        index === self.findIndex((g) => g.nome === grupo.nome)
-      );
-
-      setGruposEstudo(gruposFiltrados);
+      // Atualizar a lista de grupos no estado
+      setGruposEstudo(gruposMapeados);
 
       // Fechar modal
       setShowCreateGroupModal(false);
