@@ -1,44 +1,105 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Share, Check, Copy, Key } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { useToast } from "@/components/ui/use-toast"
+import { gerarCodigoUnicoGrupo, obterGruposLocal } from '@/lib/utils';
+import { supabase } from '@/lib/supabase';
+import { GrupoEstudo } from '@/types';
 
 interface CompartilharGrupoSectionProps {
-  grupoCodigo: string;
-  grupoNome: string;
-  onGerarCodigo?: () => Promise<void>;
+  grupo: GrupoEstudo;
+  onUpdateGrupo?: (grupo: GrupoEstudo) => void;
 }
 
-const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({ 
-  grupoCodigo, 
-  grupoNome,
-  onGerarCodigo
-}) => {
-  const [copiado, setCopiado] = useState(false);
-  const [codigoGerado, setCodigoGerado] = useState(!!grupoCodigo);
+export function CompartilharGrupoSection({ grupo, onUpdateGrupo }: { grupo: GrupoEstudo, onUpdateGrupo?: (grupo: GrupoEstudo) => void }) {
+  const [codigoGrupo, setCodigoGrupo] = useState<string | null>(grupo?.codigo || null);
+  const [isCopied, setIsCopied] = useState(false);
+  const [isGeneratingCode, setIsGeneratingCode] = useState(false);
+  const { toast } = useToast();
 
-  const formattedCodigo = grupoCodigo && grupoCodigo.length > 4 
-    ? `${grupoCodigo.substring(0, 4)} ${grupoCodigo.substring(4)}`
-    : grupoCodigo || "SEM CÓDIGO";
+  // Atualizar código quando o grupo mudar
+  useEffect(() => {
+    if (grupo?.codigo) {
+      setCodigoGrupo(grupo.codigo);
+    }
+  }, [grupo?.codigo]);
+
+  const handleGenerateCode = async () => {
+    setIsGeneratingCode(true);
+    try {
+      const codigoUnico = await gerarCodigoUnicoGrupo();
+
+      // Primeiro salvar no localStorage para garantir persistência imediata
+      const gruposLocal = obterGruposLocal();
+      const indexGrupo = gruposLocal.findIndex(g => g.id === grupo.id);
+      if (indexGrupo >= 0) {
+        gruposLocal[indexGrupo].codigo = codigoUnico;
+        localStorage.setItem('epictus_grupos_estudo', JSON.stringify(gruposLocal));
+        console.log('Código salvo localmente primeiro:', codigoUnico);
+      }
+
+      // Atualizar o estado local
+      setCodigoGrupo(codigoUnico);
+
+      // Atualizar grupo no estado global
+      const grupoAtualizado = { ...grupo, codigo: codigoUnico };
+      if (typeof onUpdateGrupo === 'function') {
+        onUpdateGrupo(grupoAtualizado);
+      }
+
+      // Tentar salvar no Supabase
+      const { error } = await supabase
+        .from('grupos_estudo')
+        .update({ codigo: codigoUnico })
+        .eq('id', grupo.id);
+
+      if (error) {
+        console.error('Erro ao salvar código no servidor:', error);
+        toast({
+          title: "Aviso",
+          description: "O código foi gerado e salvo localmente. Sincronizará com o servidor mais tarde.",
+          variant: "default"
+        });
+      } else {
+        toast({
+          title: "Código gerado com sucesso!",
+          description: "Compartilhe este código para convidar pessoas para o grupo.",
+          variant: "default"
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao gerar código:', error);
+      toast({
+        title: "Erro ao gerar código",
+        description: "Não foi possível gerar um código único. Tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsGeneratingCode(false);
+    }
+  };
 
   const handleCopiarCodigo = () => {
     // Garantir que copiamos o código sem formatação (sem espaços)
-    navigator.clipboard.writeText(grupoCodigo)
-      .then(() => {
-        setCopiado(true);
-        setTimeout(() => setCopiado(false), 2000);
-      })
-      .catch(err => {
-        console.error('Erro ao copiar código:', err);
-      });
+    if (codigoGrupo) {
+      navigator.clipboard.writeText(codigoGrupo)
+        .then(() => {
+          setIsCopied(true);
+          setTimeout(() => setIsCopied(false), 2000);
+        })
+        .catch(err => {
+          console.error('Erro ao copiar código:', err);
+        });
+    }
   };
 
   const handleCompartilhar = async () => {
     try {
-      if (navigator.share) {
+      if (codigoGrupo && navigator.share) {
         await navigator.share({
-          title: `Grupo de Estudos: ${grupoNome}`,
-          text: `Entre no meu grupo de estudos "${grupoNome}" usando o código: ${grupoCodigo}`,
+          title: `Grupo de Estudos: ${grupo.nome}`,
+          text: `Entre no meu grupo de estudos "${grupo.nome}" usando o código: ${codigoGrupo}`,
           url: window.location.href,
         });
       } else {
@@ -49,16 +110,9 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
     }
   };
 
-  const handleGerarCodigo = async () => {
-    if (onGerarCodigo) {
-      await onGerarCodigo();
-      setCodigoGerado(true);
-      // Forçar re-renderização com um pequeno atraso para garantir que a UI seja atualizada
-      setTimeout(() => {
-        console.log("Código gerado e atualizado:", grupoCodigo);
-      }, 300);
-    }
-  };
+  const formattedCodigo = codigoGrupo && codigoGrupo.length > 4
+    ? `${codigoGrupo.substring(0, 4)} ${codigoGrupo.substring(4)}`
+    : codigoGrupo || "SEM CÓDIGO";
 
   return (
     <div className="space-y-6">
@@ -86,24 +140,25 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
                 onClick={handleCopiarCodigo}
                 variant="ghost"
                 className="h-9 rounded-l-none rounded-r-md border border-l-0 border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700"
-                disabled={!grupoCodigo}
+                disabled={!codigoGrupo}
               >
-                {copiado ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                {isCopied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
               </Button>
             </div>
             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              {grupoCodigo ? "Este código permanente é usado para convidar pessoas para o seu grupo. O código é único, inalterável e insensível a maiúsculas e minúsculas." : "Um código único e permanente será gerado para este grupo quando você clicar no botão 'Gerar código do grupo'."}
+              {codigoGrupo ? "Este código permanente é usado para convidar pessoas para o seu grupo. O código é único, inalterável e insensível a maiúsculas e minúsculas." : "Um código único e permanente será gerado para este grupo quando você clicar no botão 'Gerar código do grupo'."}
             </p>
           </div>
 
-          {!grupoCodigo && (
+          {!codigoGrupo && (
             <div className="pt-2">
               <Button
-                onClick={handleGerarCodigo}
+                onClick={handleGenerateCode}
                 variant="secondary"
                 className="w-full justify-center"
+                disabled={isGeneratingCode}
               >
-                Gerar código do grupo
+                {isGeneratingCode ? "Gerando código..." : "Gerar código do grupo"}
               </Button>
             </div>
           )}
@@ -113,7 +168,7 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
               onClick={handleCompartilhar}
               variant="outline"
               className="w-full justify-center border-[#FF6B00] text-[#FF6B00] hover:bg-[#FF6B00]/10"
-              disabled={!grupoCodigo}
+              disabled={!codigoGrupo}
             >
               <Share className="h-4 w-4 mr-2" />
               Compartilhar grupo
@@ -133,5 +188,3 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
     </div>
   );
 };
-
-export default CompartilharGrupoSection;

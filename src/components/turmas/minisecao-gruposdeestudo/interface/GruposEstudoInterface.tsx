@@ -104,6 +104,32 @@ const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className
     // Implementar navegação ou abertura de modal aqui
   };
 
+  // Função para atualizar grupos quando são modificados
+  const handleUpdateGrupo = (grupoAtualizado: GrupoEstudo) => {
+    console.log('Atualizando grupo:', grupoAtualizado);
+    const newGrupos = gruposEstudo.map(g => g.id === grupoAtualizado.id ? grupoAtualizado : g);
+    setDisplayedGroups(newGrupos);
+  
+    // Garantir que o localStorage também está atualizado
+    const obterGruposLocal = () => {
+        try {
+            const gruposLocalString = localStorage.getItem('epictus_grupos_estudo');
+            return gruposLocalString ? JSON.parse(gruposLocalString) : [];
+        } catch (error) {
+            console.error("Erro ao obter grupos do localStorage:", error);
+            return [];
+        }
+    };
+  
+    const gruposLocal = obterGruposLocal();
+    const indexGrupo = gruposLocal.findIndex(g => g.id === grupoAtualizado.id);
+    if (indexGrupo >= 0) {
+      gruposLocal[indexGrupo] = { ...gruposLocal[indexGrupo], ...grupoAtualizado };
+      localStorage.setItem('epictus_grupos_estudo', JSON.stringify(gruposLocal));
+      console.log('Grupo atualizado no localStorage');
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3">

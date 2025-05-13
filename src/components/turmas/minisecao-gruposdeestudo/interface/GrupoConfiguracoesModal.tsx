@@ -200,23 +200,23 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
               mostrarNotificacaoSucesso("Este grupo já possui um código permanente!");
               return;
           }
-  
+
           // Gerar um código único para o grupo
           const { gerarCodigoUnicoGrupo } = await import('@/lib/gruposEstudoStorage');
           const novoCodigo = await gerarCodigoUnicoGrupo();
-          
+
           console.log("Novo código gerado:", novoCodigo);
-  
+
           if (novoCodigo) {
               // Atualizar o estado local
               setGrupoAtualizado(prev => ({
                   ...prev,
                   codigo: novoCodigo
               }));
-              
+
               // Atualizar o grupo original também para garantir que a UI seja atualizada
               if (grupo) grupo.codigo = novoCodigo;
-              
+
               // Mostrar notificação de sucesso
               mostrarNotificacaoSucesso("Código permanente do grupo gerado com sucesso!");
 
@@ -227,7 +227,7 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
                           .from('grupos_estudo')
                           .update({ codigo: novoCodigo })
                           .eq('id', grupo.id);
-      
+
                       if (error) {
                           console.error('Erro ao salvar código no banco de dados:', error);
                           // Mostrar notificação de erro
@@ -239,22 +239,22 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
                       console.error('Erro na comunicação com Supabase:', dbError);
                   }
               }
-              
+
               // Sempre salvar localmente, independente do tipo de grupo (local ou remoto)
               // Isso garante redundância e persistência mesmo se houver problemas com o Supabase
               try {
                   const { obterGruposLocal, salvarGrupoLocal } = await import('@/lib/gruposEstudoStorage');
                   const gruposLocais = obterGruposLocal();
-                  
+
                   // Atualizar o grupo nos grupos locais
                   const grupoExistente = gruposLocais.find((g: any) => g.id === grupo?.id);
-                  
+
                   if (grupoExistente) {
                       // Atualizar grupo existente
                       const gruposAtualizados = gruposLocais.map((g: any) => 
                           g.id === grupo?.id ? {...g, codigo: novoCodigo} : g
                       );
-                      
+
                       // Salvar os grupos atualizados no localStorage
                       localStorage.setItem('epictus_grupos_estudo', JSON.stringify(gruposAtualizados));
                       console.log('Código do grupo atualizado no localStorage:', novoCodigo);
@@ -264,7 +264,7 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
                       localStorage.setItem('epictus_grupos_estudo', JSON.stringify(gruposLocais));
                       console.log('Novo grupo com código adicionado ao localStorage:', novoCodigo);
                   }
-                  
+
                   // Utilizar também a função específica para garantir redundância
                   if (grupo) {
                       salvarGrupoLocal({...grupo, codigo: novoCodigo});
@@ -272,7 +272,7 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
               } catch (localError) {
                   console.error("Erro ao atualizar grupo localmente:", localError);
               }
-              
+
               // Forçar atualização da UI e dos componentes pais
               if (grupo && onSave) {
                   onSave({...grupo, codigo: novoCodigo});
@@ -283,7 +283,7 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
           mostrarNotificacaoErro("Erro ao gerar código. Tente novamente.");
       }
   };
-  
+
   // Adicionar função de notificação de erro
   const mostrarNotificacaoErro = (mensagem: string) => {
       const element = document.createElement('div');
