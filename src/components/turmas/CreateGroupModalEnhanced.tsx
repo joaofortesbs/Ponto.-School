@@ -221,7 +221,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
       // Criar um ID temporário para o grupo antes de salvá-lo
       const grupoTempId = crypto.randomUUID();
 
-      // Gerar um código único para o grupo usando o novo utilitário
+      // Gerar um código único para o grupo
       const { gerarCodigoGrupo, verificarCodigoExistente } = await import('@/lib/grupoCodigoUtils');
       
       // Gerar um código inicial - PERMANENTE e ÚNICO
@@ -242,7 +242,8 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
       if (tentativas >= MAX_TENTATIVAS) {
         console.error("Não foi possível gerar um código único após várias tentativas.");
         // Usar um código baseado em timestamp para garantir unicidade
-        codigoGrupo = `${grupoTempId.substring(0, 7)}`;
+        const timestamp = Date.now().toString(36).substring(0, 4).toUpperCase();
+        codigoGrupo = `G${timestamp}${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
       }
 
       console.log("Código único PERMANENTE gerado para novo grupo:", codigoGrupo);

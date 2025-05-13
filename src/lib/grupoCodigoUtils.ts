@@ -11,6 +11,13 @@ const CARACTERES_PERMITIDOS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const COMPRIMENTO_CODIGO = 7;
 
 /**
+ * Caracteres permitidos para geração de códigos únicos
+ * Evitamos caracteres ambíguos como I, O, 0, 1
+ */
+const CARACTERES_PERMITIDOS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const COMPRIMENTO_CODIGO = 7;
+
+/**
  * Gera um código único para um grupo de estudo
  * @returns Código único de 7 caracteres
  */
@@ -22,6 +29,14 @@ export const gerarCodigoGrupo = (): string => {
     );
   }
   return codigo;
+};
+
+/**
+ * Função auxiliar para gerar código único consistente
+ * Usada por várias partes do sistema
+ */
+export const gerarCodigoUnico = (): string => {
+  return gerarCodigoGrupo();
 };
 
 /**

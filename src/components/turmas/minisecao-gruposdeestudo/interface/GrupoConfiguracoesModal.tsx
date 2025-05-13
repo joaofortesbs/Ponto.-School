@@ -101,41 +101,37 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
           return;
         }
 
-        let codGrupo = grupo.codigo || await gerarCodigoUnicoGrupo(grupo.id);
+        // Gerar novo código
+        const { gerarCodigoGrupo, verificarCodigoExistente } = await import('@/lib/grupoCodigoUtils');
+        let novoCodigo = gerarCodigoGrupo();
 
-        if (regenerarCodigo || !codGrupo) {
-          // Gerar novo código
-          const { gerarCodigoGrupo, verificarCodigoExistente } = await import('@/lib/grupoCodigoUtils');
-          let novoCodigo = gerarCodigoGrupo();
+        // Verificar se o código já existe
+        let codigoExiste = await verificarCodigoExistente(novoCodigo);
+        let tentativas = 0;
+        const MAX_TENTATIVAS = 5;
 
-          // Verificar se o código já existe
-          let codigoExiste = await verificarCodigoExistente(novoCodigo);
-          let tentativas = 0;
-          const MAX_TENTATIVAS = 5;
+        while (codigoExiste && tentativas < MAX_TENTATIVAS) {
+          novoCodigo = gerarCodigoGrupo();
+          codigoExiste = await verificarCodigoExistente(novoCodigo);
+          tentativas++;
+        }
 
-          while (codigoExiste && tentativas < MAX_TENTATIVAS) {
-            novoCodigo = gerarCodigoGrupo();
-            codigoExiste = await verificarCodigoExistente(novoCodigo);
-            tentativas++;
-          }
+        // Atualizar no Supabase e no armazenamento local de persistência
+        const atualizado = await atualizarCodigoGrupo(grupo.id, novoCodigo);
 
-          // Atualizar no Supabase e no armazenamento local de persistência
-          const atualizado = await atualizarCodigoGrupo(grupo.id, novoCodigo);
+        if (atualizado) {
+          // Definir como permanente
+          localStorage.setItem(`grupo_codigo_gerado_${grupo.id}`, "true");
+          localStorage.setItem(`codigo_permanente_${novoCodigo}`, grupo.id);
 
-          if (atualizado) {
-            // Definir como permanente
-            localStorage.setItem(`grupo_codigo_gerado_${grupo.id}`, "true");
-            localStorage.setItem(`codigo_permanente_${novoCodigo}`, grupo.id);
+          setGrupoAtualizado(prev => ({
+            ...prev,
+            codigo: novoCodigo
+          }));
 
-            setGrupoAtualizado(prev => ({
-              ...prev,
-              codigo: novoCodigo
-            }));
-
-            mostrarNotificacao("sucesso", "Código único gerado com sucesso! Este código é permanente.");
-          } else {
-            mostrarNotificacao("info", "O código não pôde ser atualizado pois já existe um código permanente.");
-          }
+          mostrarNotificacao("sucesso", "Código único gerado com sucesso! Este código é permanente.");
+        } else {
+          mostrarNotificacao("info", "O código não pôde ser atualizado pois já existe um código permanente.");
         }
       }
     } catch (error) {
