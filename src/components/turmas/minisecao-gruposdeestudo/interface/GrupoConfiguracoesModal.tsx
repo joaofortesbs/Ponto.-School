@@ -102,7 +102,6 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
         }
 
         // Gerar novo código
-        const { gerarCodigoGrupo, verificarCodigoExistente } = await import('@/lib/grupoCodigoUtils');
         let novoCodigo = gerarCodigoGrupo();
 
         // Verificar se o código já existe

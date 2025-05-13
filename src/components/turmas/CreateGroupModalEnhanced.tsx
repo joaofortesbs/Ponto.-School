@@ -221,7 +221,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
       // Criar um ID temporário para o grupo antes de salvá-lo
       const grupoTempId = crypto.randomUUID();
 
-      // Gerar um código único para o grupo
+      // Importar diretamente das funções do módulo
       const { gerarCodigoGrupo, verificarCodigoExistente } = await import('@/lib/grupoCodigoUtils');
       
       // Gerar um código inicial - PERMANENTE e ÚNICO

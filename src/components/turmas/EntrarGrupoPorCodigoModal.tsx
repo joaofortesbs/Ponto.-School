@@ -10,7 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { buscarGrupoPorCodigo, entrarEmGrupoPorCodigo } from "@/lib/grupoCodigoUtils";
+import { buscarGrupoPorCodigo, entrarEmGrupoPorCodigo, verificarCodigoExistente } from "@/lib/grupoCodigoUtils";
 
 interface EntrarGrupoPorCodigoModalProps {
   isOpen: boolean;
