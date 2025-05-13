@@ -31,41 +31,61 @@ const EntrarGrupoPorCodigoForm: React.FC = () => {
       // Normalizar o código (remover espaços e converter para maiúsculas)
       const codigoNormalizado = codigo.trim().toUpperCase();
       
+      console.log("Iniciando busca de grupo com código:", codigoNormalizado);
+      
+      // Obter a sessão atual do usuário para todas as operações
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Autenticação necessária",
+          description: "Você precisa estar logado para entrar em um grupo.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+      
       // 1. VERIFICAR COM O SERVIDOR DE CÓDIGOS
+      let grupoEncontrado = null;
+      let grupoId = null;
+      
       try {
-        const resposta = await fetch(`/api/codigos-grupo/verificar/${codigoNormalizado}`);
+        console.log("Tentando verificar código com o servidor dedicado...");
+        const resposta = await fetch(`/api/codigos-grupo/verificar/${codigoNormalizado}`, {
+          method: 'GET',
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        });
+        
+        if (!resposta.ok) {
+          console.error(`Erro na resposta do servidor: ${resposta.status} - ${resposta.statusText}`);
+          throw new Error(`Erro na resposta do servidor: ${resposta.status}`);
+        }
+        
         const resultado = await resposta.json();
+        console.log("Resposta do servidor de códigos:", resultado);
         
         if (!resultado.sucesso || !resultado.existe) {
-          toast({
-            title: "Código inválido",
-            description: "O código informado não corresponde a nenhum grupo.",
-            variant: "destructive",
-          });
-          setIsLoading(false);
-          return;
+          console.log("Código não encontrado no servidor dedicado");
+          throw new Error("Código não encontrado no servidor");
         }
+        
+        // Salvar o ID do grupo para uso posterior
+        grupoId = resultado.grupoId;
         
         // Verificar se o grupo é privado
         if (resultado.privado) {
-          // Obter a sessão atual do usuário
-          const { data: { user } } = await supabase.auth.getUser();
-          
-          if (!user) {
-            toast({
-              title: "Autenticação necessária",
-              description: "Você precisa estar logado para entrar em um grupo.",
-              variant: "destructive",
-            });
-            setIsLoading(false);
-            return;
-          }
+          console.log("Grupo é privado, validando acesso...");
           
           // Validar acesso ao grupo privado
           const validacaoResposta = await fetch('/api/codigos-grupo/validar-acesso', {
             method: 'POST',
             headers: {
-              'Content-Type': 'application/json'
+              'Content-Type': 'application/json',
+              'Cache-Control': 'no-cache'
             },
             body: JSON.stringify({
               codigo: codigoNormalizado,
@@ -74,6 +94,7 @@ const EntrarGrupoPorCodigoForm: React.FC = () => {
           });
           
           const validacaoDados = await validacaoResposta.json();
+          console.log("Resposta de validação de acesso:", validacaoDados);
           
           if (!validacaoDados.sucesso || !validacaoDados.acesso) {
             toast({
@@ -86,50 +107,71 @@ const EntrarGrupoPorCodigoForm: React.FC = () => {
           }
         }
         
-        // 2. OBTER DADOS DO GRUPO E ADICIONAR USUÁRIO
-        const grupoId = resultado.grupoId;
-        
-        // Obter informações completas do grupo usando o obterGrupoPorCodigo
-        const grupo = await obterGrupoPorCodigo(codigoNormalizado);
-        
-        if (!grupo) {
-          toast({
-            title: "Erro ao obter grupo",
-            description: "Não foi possível encontrar os detalhes do grupo. Tente novamente.",
-            variant: "destructive",
-          });
-          setIsLoading(false);
-          return;
-        }
-        
-        // Adicionar o usuário ao grupo
-        const sucesso = await adicionarUsuarioAoGrupo(grupo.id, codigoNormalizado);
-        
-        if (!sucesso) {
-          toast({
-            title: "Erro ao entrar no grupo",
-            description: "Não foi possível adicionar você ao grupo. Tente novamente.",
-            variant: "destructive",
-          });
-          setIsLoading(false);
-          return;
-        }
-        
-        // Sucesso! Navegar para a página do grupo
-        toast({
-          title: "Grupo encontrado!",
-          description: `Você entrou no grupo "${grupo.nome}"`,
-        });
-        
-        navigate(`/turmas/grupos/${grupo.id}`);
+        console.log("Acesso verificado com sucesso, buscando detalhes do grupo...");
       } catch (serverError) {
         console.error("Erro ao comunicar com servidor de códigos:", serverError);
+        // Continuamos para o fallback
+      }
+      
+      // 2. OBTER DADOS COMPLETOS DO GRUPO
+      try {
+        // Se temos o ID do grupo, tentar buscar diretamente no Supabase
+        if (grupoId) {
+          console.log("Buscando grupo por ID no Supabase:", grupoId);
+          
+          try {
+            const { data, error } = await supabase
+              .from('grupos_estudo')
+              .select('*')
+              .eq('id', grupoId)
+              .single();
+              
+            if (error) {
+              console.error("Erro ao buscar grupo no Supabase:", error);
+            } else if (data) {
+              console.log("Grupo encontrado no Supabase:", data);
+              grupoEncontrado = data;
+            }
+          } catch (supabaseError) {
+            console.error("Erro ao acessar Supabase:", supabaseError);
+          }
+        }
         
-        // 3. FALLBACK: Usar a lógica anterior como backup caso o servidor falhe
-        // Obter grupo diretamente por código usando a função que faz fallback para fontes locais
-        const grupo = await obterGrupoPorCodigo(codigoNormalizado);
+        // Se ainda não encontramos, tentar pelo código
+        if (!grupoEncontrado) {
+          console.log("Buscando grupo por código usando a função auxiliar...");
+          
+          // Usar a função obterGrupoPorCodigo que tenta várias fontes
+          grupoEncontrado = await obterGrupoPorCodigo(codigoNormalizado);
+          
+          if (grupoEncontrado) {
+            console.log("Grupo encontrado via obterGrupoPorCodigo:", grupoEncontrado);
+          } else {
+            console.error("Grupo não encontrado em nenhuma fonte");
+            
+            // Última tentativa: buscar diretamente no Supabase pelo código
+            try {
+              console.log("Última tentativa: buscar diretamente no Supabase pelo código");
+              const { data, error } = await supabase
+                .from('grupos_estudo')
+                .select('*')
+                .eq('codigo', codigoNormalizado)
+                .single();
+                
+              if (!error && data) {
+                grupoEncontrado = data;
+                console.log("Grupo encontrado diretamente no Supabase:", data);
+              } else {
+                console.error("Erro ou nenhum resultado do Supabase:", error);
+              }
+            } catch (finalError) {
+              console.error("Erro na tentativa final:", finalError);
+            }
+          }
+        }
         
-        if (!grupo) {
+        // Se ainda não encontramos o grupo, mostrar erro
+        if (!grupoEncontrado) {
           toast({
             title: "Código inválido",
             description: "O código informado não corresponde a nenhum grupo.",
@@ -139,26 +181,15 @@ const EntrarGrupoPorCodigoForm: React.FC = () => {
           return;
         }
         
-        // Obter a sessão atual do usuário
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (!user) {
-          toast({
-            title: "Autenticação necessária",
-            description: "Você precisa estar logado para entrar em um grupo.",
-            variant: "destructive",
-          });
-          setIsLoading(false);
-          return;
-        }
-        
-        // Verificar privacidade do grupo no modo fallback
-        if (grupo.privado || grupo.visibilidade === "Privado (apenas por convite)") {
-          // Verificar se o usuário já é membro ou está na lista de convidados
-          const convidados = grupo.convidados || [];
-          const membrosIds = grupo.membros_ids || [];
+        // 3. VERIFICAR PRIVACIDADE DO GRUPO
+        if (grupoEncontrado.privado || grupoEncontrado.visibilidade === "Privado (apenas por convite)") {
+          console.log("Verificando acesso ao grupo privado no modo fallback...");
           
-          if (!convidados.includes(user.id) && !membrosIds.includes(user.id) && grupo.user_id !== user.id) {
+          // Verificar se o usuário já é membro ou está na lista de convidados
+          const convidados = grupoEncontrado.convidados || [];
+          const membrosIds = grupoEncontrado.membros_ids || [];
+          
+          if (!convidados.includes(user.id) && !membrosIds.includes(user.id) && grupoEncontrado.user_id !== user.id) {
             toast({
               title: "Acesso restrito",
               description: "Este grupo é privado e requer convite do administrador.",
@@ -169,10 +200,12 @@ const EntrarGrupoPorCodigoForm: React.FC = () => {
           }
         }
         
-        // Adicionar o usuário ao grupo usando a função que gerencia todo o processo
-        const sucesso = await adicionarUsuarioAoGrupo(grupo.id, codigoNormalizado);
+        // 4. ADICIONAR USUÁRIO AO GRUPO
+        console.log("Adicionando usuário ao grupo:", grupoEncontrado.id);
+        const sucesso = await adicionarUsuarioAoGrupo(grupoEncontrado.id, codigoNormalizado);
         
         if (!sucesso) {
+          console.error("Falha ao adicionar usuário ao grupo");
           toast({
             title: "Erro ao entrar no grupo",
             description: "Não foi possível adicionar você ao grupo. Tente novamente.",
@@ -182,13 +215,23 @@ const EntrarGrupoPorCodigoForm: React.FC = () => {
           return;
         }
         
-        // Navigar para a página do grupo
+        console.log("Usuário adicionado com sucesso ao grupo");
+        
+        // 5. SUCESSO! NAVEGAR PARA A PÁGINA DO GRUPO
         toast({
           title: "Grupo encontrado!",
-          description: `Você entrou no grupo "${grupo.nome}"`,
+          description: `Você entrou no grupo "${grupoEncontrado.nome}"`,
         });
         
-        navigate(`/turmas/grupos/${grupo.id}`);
+        navigate(`/turmas/grupos/${grupoEncontrado.id}`);
+      } catch (error) {
+        console.error("Erro ao processar detalhes do grupo:", error);
+        toast({
+          title: "Erro inesperado",
+          description: "Ocorreu um erro ao processar os detalhes do grupo. Tente novamente.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
       }
     } catch (error) {
       console.error("Erro ao processar entrada no grupo:", error);
@@ -197,7 +240,6 @@ const EntrarGrupoPorCodigoForm: React.FC = () => {
         description: "Ocorreu um erro ao tentar entrar no grupo. Tente novamente.",
         variant: "destructive",
       });
-    } finally {
       setIsLoading(false);
     }
   };

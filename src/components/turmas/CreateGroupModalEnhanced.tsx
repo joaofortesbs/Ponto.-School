@@ -157,57 +157,82 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
     try {
       // Normalizar o código (remover espaços e converter para maiúsculas)
       const codigoNormalizado = groupCode.trim().toUpperCase();
-      
+      console.log("Tentando entrar no grupo com código:", codigoNormalizado);
+
       // Obter a sessão do usuário atual
       const { data: { session } } = await supabase.auth.getSession();
 
       if (!session) {
-        alert("Você precisa estar logado para entrar em um grupo de estudo.");
+        alert("Você precisa estar logado para entrar em um grupo de estudos.");
         return;
       }
 
+      console.log("Usuário autenticado:", session.user.id);
+
+      // Importar funções necessárias
+      const { verificarSeCodigoExiste, obterGrupoPorCodigo, adicionarUsuarioAoGrupo } = await import('@/lib/gruposEstudoStorage');
+
       // Verificar se o código existe usando a função dedicada
-      const { verificarSeCodigoExiste, obterGrupoPorCodigo } = await import('@/lib/gruposEstudoStorage');
+      console.log("Verificando se o código existe...");
       const codigoExiste = await verificarSeCodigoExiste(codigoNormalizado);
-      
+
       if (!codigoExiste) {
+        console.error("Código não encontrado em nenhuma fonte");
         alert("Código de grupo inválido ou grupo não encontrado.");
         return;
       }
-      
+
+      console.log("Código validado, buscando detalhes do grupo...");
+
       // Obter o grupo pelo código
       const grupo = await obterGrupoPorCodigo(codigoNormalizado);
-      
+
       if (!grupo) {
+        console.error("Não foi possível obter detalhes do grupo");
         alert("Não foi possível encontrar o grupo com este código.");
         return;
       }
-      
+
+      console.log("Grupo encontrado:", grupo);
+
       // Verificar privacidade do grupo
       if (grupo.privado || grupo.visibilidade === "Privado (apenas por convite)") {
+        console.log("Grupo é privado, verificando permissões...");
+
         // Verificar se o usuário já é membro ou está na lista de convidados
         const convidados = grupo.convidados || [];
         const membrosIds = grupo.membros_ids || [];
-        
+
+        console.log("Membros:", membrosIds);
+        console.log("Convidados:", convidados);
+        console.log("Criador:", grupo.user_id);
+
         if (!convidados.includes(session.user.id) && !membrosIds.includes(session.user.id) && grupo.user_id !== session.user.id) {
+          console.error("Usuário não tem permissão para entrar no grupo privado");
           alert("Este grupo é privado e requer convite do administrador.");
           return;
         }
+
+        console.log("Usuário tem permissão para entrar no grupo privado");
       }
-      
+
       // Adicionar usuário ao grupo usando a função dedicada
-      const { adicionarUsuarioAoGrupo } = await import('@/lib/gruposEstudoStorage');
-      const sucesso = await adicionarUsuarioAoGrupo(grupo.id);
-      
+      console.log("Adicionando usuário ao grupo...");
+      const sucesso = await adicionarUsuarioAoGrupo(grupo.id, codigoNormalizado);
+
       if (sucesso) {
-        alert(`Você foi adicionado ao grupo: ${grupo.nome}`);
+        console.log("Usuário adicionado com sucesso ao grupo!");
+        alert(`Você foi adicionado ao grupo "${grupo.nome}"`);
         onClose();
+        // Redirecionar para a página do grupo
+        window.location.href = `/turmas/grupos/${grupo.id}`;
       } else {
-        alert("Ocorreu um erro ao entrar no grupo. Tente novamente.");
+        console.error("Falha ao adicionar usuário ao grupo");
+        alert("Erro ao entrar no grupo. Por favor, tente novamente.");
       }
     } catch (error) {
       console.error("Erro ao entrar no grupo:", error);
-      alert("Ocorreu um erro ao tentar entrar no grupo. Tente novamente mais tarde.");
+      alert("Ocorreu um erro ao processar sua solicitação.");
     }
   };
 
@@ -267,7 +292,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
       } catch (e) {
         console.error("Erro ao salvar código em storages:", e);
       }
-      
+
       // Preparar dados para criação do grupo
       const novoGrupo = {
         user_id: session.user.id,
@@ -725,7 +750,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
                         onValueChange={(value) => handleSelectChange("maxMembros", value)}
                       >
                         <SelectTrigger className="w-full border-[#1E293B] bg-[#0F172A] text-white">
-                          <SelectValue placeholder="Selecione o limite" />
+                          <SelectValue placeholderholder="Selecione o limite" />
                         </SelectTrigger>
                         <SelectContent className="bg-[#1E293B] text-white border-[#1E293B]">
                           <SelectItem value="5 membros">5 membros</SelectItem>

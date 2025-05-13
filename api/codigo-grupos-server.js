@@ -148,10 +148,13 @@ app.get('/api/codigos-grupo/verificar/:codigo', (req, res) => {
     const { codigo } = req.params;
     const codigoNormalizado = codigo.trim().toUpperCase();
     
+    console.log('API: Verificando existência do código:', codigoNormalizado);
+    
     const db = loadDb();
     const codigoInfo = db.codigos.find(c => c.codigo === codigoNormalizado);
     
     if (codigoInfo) {
+      console.log('API: Código encontrado, grupo:', codigoInfo.grupoId, 'nome:', codigoInfo.nome);
       return res.json({
         sucesso: true,
         existe: true,
@@ -160,6 +163,11 @@ app.get('/api/codigos-grupo/verificar/:codigo', (req, res) => {
         nome: codigoInfo.nome
       });
     } else {
+      console.log('API: Código não encontrado no banco de dados');
+      
+      // Se não encontrou no banco de dados local, podemos verificar no Supabase 
+      // através de uma chamada especial (implementar conforme necessidade futura)
+      
       return res.json({
         sucesso: true,
         existe: false
@@ -179,7 +187,10 @@ app.post('/api/codigos-grupo/validar-acesso', (req, res) => {
   try {
     const { codigo, userId } = req.body;
     
+    console.log('API: Validando acesso - código:', codigo, 'userId:', userId);
+    
     if (!codigo || !userId) {
+      console.log('API: Erro - código ou userId ausente');
       return res.status(400).json({
         sucesso: false,
         mensagem: 'Código e userId são obrigatórios'
@@ -191,14 +202,22 @@ app.post('/api/codigos-grupo/validar-acesso', (req, res) => {
     const codigoInfo = db.codigos.find(c => c.codigo === codigoNormalizado);
     
     if (!codigoInfo) {
+      console.log('API: Código não encontrado no banco de dados');
+      
+      // Em um servidor de produção, poderíamos fazer uma verificação secundária no Supabase
+      // Para esta implementação, retornamos que o código não é válido
+      
       return res.json({
         sucesso: false,
         mensagem: 'Código de grupo inválido'
       });
     }
     
+    console.log('API: Código encontrado, verificando acesso - grupoId:', codigoInfo.grupoId);
+    
     // Se o grupo não é privado ou se o usuário é o criador, permitir acesso
     if (!codigoInfo.privado || codigoInfo.criadorId === userId) {
+      console.log('API: Acesso permitido - grupo não é privado ou usuário é o criador');
       return res.json({
         sucesso: true,
         acesso: true,
@@ -208,7 +227,8 @@ app.post('/api/codigos-grupo/validar-acesso', (req, res) => {
     }
     
     // Verificar se o usuário está na lista de membros permitidos
-    if (codigoInfo.membrosPermitidos.includes(userId)) {
+    if (codigoInfo.membrosPermitidos && codigoInfo.membrosPermitidos.includes(userId)) {
+      console.log('API: Acesso permitido - usuário está na lista de membros permitidos');
       return res.json({
         sucesso: true,
         acesso: true,
@@ -218,6 +238,7 @@ app.post('/api/codigos-grupo/validar-acesso', (req, res) => {
     }
     
     // Acesso negado para grupos privados
+    console.log('API: Acesso negado - grupo é privado e usuário não tem permissão');
     return res.json({
       sucesso: true,
       acesso: false,
@@ -300,18 +321,23 @@ app.get('/api/codigos-grupo/:codigo', (req, res) => {
     const { codigo } = req.params;
     const codigoNormalizado = codigo.trim().toUpperCase();
     
+    console.log('API: Solicitação de informações para o código:', codigoNormalizado);
+    
     const db = loadDb();
     const codigoInfo = db.codigos.find(c => c.codigo === codigoNormalizado);
     
     if (codigoInfo) {
+      console.log('API: Código encontrado no banco de dados:', codigoInfo.id);
       // Não retornar a lista completa de membros permitidos por questões de privacidade
       const { membrosPermitidos, ...infoPublica } = codigoInfo;
       
       return res.json({
         sucesso: true,
-        grupo: infoPublica
+        grupo: infoPublica,
+        grupoId: codigoInfo.grupoId
       });
     } else {
+      console.log('API: Código não encontrado no banco de dados');
       return res.status(404).json({
         sucesso: false,
         mensagem: 'Código não encontrado'
@@ -319,6 +345,40 @@ app.get('/api/codigos-grupo/:codigo', (req, res) => {
     }
   } catch (error) {
     console.error('Erro ao obter informações do grupo:', error);
+    return res.status(500).json({
+      sucesso: false,
+      mensagem: 'Erro interno do servidor'
+    });
+  }
+});
+
+// Rota para busca direta pelo ID do grupo
+app.get('/api/codigos-grupo/grupo/:grupoId', (req, res) => {
+  try {
+    const { grupoId } = req.params;
+    
+    console.log('API: Buscando código para o grupoId:', grupoId);
+    
+    const db = loadDb();
+    const codigoInfo = db.codigos.find(c => c.grupoId === grupoId);
+    
+    if (codigoInfo) {
+      console.log('API: Código encontrado para o grupoId:', codigoInfo.codigo);
+      return res.json({
+        sucesso: true,
+        codigo: codigoInfo.codigo,
+        grupoId: codigoInfo.grupoId,
+        privado: codigoInfo.privado
+      });
+    } else {
+      console.log('API: Nenhum código encontrado para o grupoId');
+      return res.status(404).json({
+        sucesso: false,
+        mensagem: 'Nenhum código encontrado para este grupo'
+      });
+    }
+  } catch (error) {
+    console.error('Erro ao buscar código pelo grupoId:', error);
     return res.status(500).json({
       sucesso: false,
       mensagem: 'Erro interno do servidor'

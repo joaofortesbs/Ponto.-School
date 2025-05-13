@@ -139,16 +139,32 @@ export const verificarSeCodigoExiste = async (codigo: string): Promise<boolean> 
     // Normalizar o código (maiúsculas e sem espaços)
     codigo = codigo.trim().toUpperCase();
     
+    console.log('Verificando se código existe:', codigo);
+    
     // 1. VERIFICAR NO SERVIDOR DEDICADO
     try {
-      const resposta = await fetch(`/api/codigos-grupo/verificar/${codigo}`);
+      console.log('Tentando verificar no servidor dedicado...');
+      const resposta = await fetch(`/api/codigos-grupo/verificar/${codigo}`, {
+        method: 'GET',
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
+      
+      if (!resposta.ok) {
+        console.error(`Resposta não-ok do servidor (${resposta.status}): ${resposta.statusText}`);
+        throw new Error(`Servidor retornou status ${resposta.status}`);
+      }
+      
       const dados = await resposta.json();
       
       if (dados.sucesso) {
         console.log('Verificação de código realizada no servidor:', dados.existe);
         return dados.existe;
       } else {
-        throw new Error("Erro na resposta do servidor");
+        console.error('Resposta do servidor sem sucesso:', dados);
+        throw new Error("Erro na resposta do servidor: " + (dados.mensagem || 'Sem detalhes'));
       }
     } catch (serverError) {
       console.error('Erro ao verificar código no servidor dedicado:', serverError);
@@ -159,13 +175,21 @@ export const verificarSeCodigoExiste = async (codigo: string): Promise<boolean> 
       // Verificar primeiro no storage dedicado para códigos
       try {
         const CODIGOS_STORAGE_KEY = 'epictus_codigos_grupo';
-        const codigosGrupos = JSON.parse(localStorage.getItem(CODIGOS_STORAGE_KEY) || '{}');
+        const codigosGruposText = localStorage.getItem(CODIGOS_STORAGE_KEY);
         
-        // Verificar se algum grupo tem este código
-        const codigosExistentes = Object.values(codigosGrupos);
-        if (codigosExistentes.includes(codigo)) {
-          console.log('Código encontrado no storage dedicado:', codigo);
-          return true;
+        if (codigosGruposText) {
+          const codigosGrupos = JSON.parse(codigosGruposText);
+          
+          // Verificar se algum grupo tem este código
+          const codigosExistentes = Object.values(codigosGrupos);
+          console.log('Códigos existentes no storage local:', codigosExistentes);
+          
+          if (codigosExistentes.includes(codigo)) {
+            console.log('Código encontrado no storage dedicado:', codigo);
+            return true;
+          }
+        } else {
+          console.log('Nenhum código encontrado no storage dedicado');
         }
       } catch (storageError) {
         console.error('Erro ao verificar storage dedicado:', storageError);
@@ -173,9 +197,13 @@ export const verificarSeCodigoExiste = async (codigo: string): Promise<boolean> 
       
       // Verificar em localStorage
       const gruposLocais = obterGruposLocal();
-      const existeLocal = gruposLocais.some((grupo: any) => 
-        grupo.codigo && grupo.codigo.toUpperCase() === codigo
-      );
+      console.log('Verificando em', gruposLocais.length, 'grupos locais');
+      
+      const existeLocal = gruposLocais.some((grupo: any) => {
+        const match = grupo.codigo && grupo.codigo.toUpperCase() === codigo;
+        if (match) console.log('Código encontrado no grupo local:', grupo);
+        return match;
+      });
       
       if (existeLocal) {
         console.log('Código existe localmente:', codigo);
@@ -184,6 +212,7 @@ export const verificarSeCodigoExiste = async (codigo: string): Promise<boolean> 
       
       // Verificar no Supabase como último recurso
       try {
+        console.log('Tentando verificar no Supabase...');
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session) {
@@ -198,13 +227,18 @@ export const verificarSeCodigoExiste = async (codigo: string): Promise<boolean> 
             return false;
           }
           
-          return data && data.length > 0;
+          const encontrado = data && data.length > 0;
+          console.log('Resultado da verificação no Supabase:', encontrado ? 'Encontrado' : 'Não encontrado');
+          return encontrado;
+        } else {
+          console.log('Sem sessão ativa, não é possível verificar no Supabase');
         }
       } catch (error) {
         console.error('Erro ao comunicar com Supabase:', error);
       }
     }
     
+    console.log('Nenhum resultado encontrado para o código', codigo);
     return false;
   } catch (error) {
     console.error('Erro ao verificar se código existe:', error);
@@ -222,23 +256,29 @@ export const obterGrupoPorCodigo = async (codigo: string): Promise<GrupoEstudo |
     // Normalizar o código
     codigo = codigo.trim().toUpperCase();
     
+    console.log('Buscando grupo com código:', codigo);
+    
+    // Obter a sessão do usuário atual para validação de acesso
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      console.error('Usuário não autenticado ao buscar grupo por código');
+      return null;
+    }
+    
+    const userId = session.user.id;
+    console.log('Usuário autenticado:', userId);
+    
     // 1. VERIFICAR NO SERVIDOR DEDICADO
     try {
-      // Obter a sessão do usuário atual para validação de acesso
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        console.error('Usuário não autenticado ao buscar grupo por código');
-        return null;
-      }
-      
-      const userId = session.user.id;
+      console.log('Tentando validar acesso através do servidor dedicado...');
       
       // Primeira etapa: verificar se o código existe e se temos acesso
       const validacaoResposta = await fetch('/api/codigos-grupo/validar-acesso', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache'
         },
         body: JSON.stringify({
           codigo,
@@ -246,7 +286,13 @@ export const obterGrupoPorCodigo = async (codigo: string): Promise<GrupoEstudo |
         })
       });
       
+      if (!validacaoResposta.ok) {
+        console.error(`Erro na resposta de validação: ${validacaoResposta.status} - ${validacaoResposta.statusText}`);
+        throw new Error(`Erro na resposta do servidor: ${validacaoResposta.status}`);
+      }
+      
       const validacaoDados = await validacaoResposta.json();
+      console.log('Resposta de validação:', validacaoDados);
       
       if (!validacaoDados.sucesso || !validacaoDados.acesso) {
         console.log('Acesso negado ao grupo pelo servidor:', validacaoDados.mensagem);
@@ -255,11 +301,19 @@ export const obterGrupoPorCodigo = async (codigo: string): Promise<GrupoEstudo |
       
       // Se temos acesso, obter os detalhes do grupo
       const grupoId = validacaoDados.grupoId;
+      console.log('Código validado, obtido ID do grupo:', grupoId);
+      
+      if (!grupoId) {
+        console.error('Validação sem ID do grupo');
+        throw new Error('Validação sem ID do grupo');
+      }
       
       // Agora buscar os detalhes completos do grupo (pelo seu ID)
       try {
         // Verificar primeiro no armazenamento local para resposta rápida
         const gruposLocais = obterGruposLocal();
+        console.log('Verificando em', gruposLocais.length, 'grupos locais');
+        
         const grupoLocal = gruposLocais.find(grupo => grupo.id === grupoId);
         
         if (grupoLocal) {
@@ -268,6 +322,7 @@ export const obterGrupoPorCodigo = async (codigo: string): Promise<GrupoEstudo |
         }
         
         // Se não encontrado localmente, buscar no Supabase
+        console.log('Buscando no Supabase pelo ID:', grupoId);
         const { data, error } = await supabase
           .from('grupos_estudo')
           .select('*')
@@ -276,16 +331,20 @@ export const obterGrupoPorCodigo = async (codigo: string): Promise<GrupoEstudo |
         
         if (error) {
           console.error('Erro ao buscar grupo por ID no Supabase:', error);
-          return null;
+          throw new Error(`Erro Supabase: ${error.message}`);
         }
         
         if (data) {
+          console.log('Grupo encontrado no Supabase:', data);
           // Salvar localmente para acesso futuro mais rápido
           salvarGrupoLocal(data);
           return data;
+        } else {
+          console.error('Nenhum dado retornado do Supabase para o ID:', grupoId);
         }
       } catch (e) {
         console.error('Erro ao obter detalhes do grupo após validação:', e);
+        throw e;
       }
     } catch (serverError) {
       console.error('Erro ao comunicar com o servidor de códigos:', serverError);
@@ -293,43 +352,106 @@ export const obterGrupoPorCodigo = async (codigo: string): Promise<GrupoEstudo |
       // 2. FALLBACK PARA FONTES LOCAIS SE O SERVIDOR FALHAR
       console.log('Recorrendo a fontes locais para buscar grupo por código...');
       
+      // Verificar primeiro se o código existe em qualquer fonte
+      const codigoExiste = await verificarSeCodigoExiste(codigo);
+      
+      if (!codigoExiste) {
+        console.log('Código não existe em nenhuma fonte');
+        return null;
+      }
+      
       // Verificar primeiro no localStorage
       const gruposLocais = obterGruposLocal();
-      const grupoLocal = gruposLocais.find(grupo => 
-        grupo.codigo && grupo.codigo.toUpperCase() === codigo
-      );
+      console.log('Buscando em', gruposLocais.length, 'grupos locais');
+      
+      const grupoLocal = gruposLocais.find(grupo => {
+        if (grupo.codigo && grupo.codigo.toUpperCase() === codigo) {
+          console.log('Encontrou grupo local com código correspondente:', grupo);
+          return true;
+        }
+        return false;
+      });
       
       if (grupoLocal) {
         console.log('Grupo encontrado localmente pelo código:', codigo);
         return grupoLocal;
       }
       
+      // Verificar no storage dedicado para códigos
+      try {
+        const CODIGOS_STORAGE_KEY = 'epictus_codigos_grupo';
+        const codigosGruposText = localStorage.getItem(CODIGOS_STORAGE_KEY);
+        
+        if (codigosGruposText) {
+          const codigosGrupos = JSON.parse(codigosGruposText);
+          
+          // Buscar o ID do grupo pelo código
+          let grupoIdEncontrado = null;
+          
+          Object.entries(codigosGrupos).forEach(([id, codigoSalvo]) => {
+            if (codigoSalvo === codigo) {
+              grupoIdEncontrado = id;
+            }
+          });
+          
+          if (grupoIdEncontrado) {
+            console.log('ID do grupo encontrado no storage dedicado:', grupoIdEncontrado);
+            
+            // Buscar o grupo pelo ID no localStorage
+            const grupoLocalPorId = gruposLocais.find(g => g.id === grupoIdEncontrado);
+            
+            if (grupoLocalPorId) {
+              console.log('Grupo encontrado localmente pelo ID do storage dedicado');
+              return grupoLocalPorId;
+            }
+            
+            // Se não encontrado no local, buscar no Supabase pelo ID
+            console.log('Buscando no Supabase com ID do storage dedicado');
+            const { data, error } = await supabase
+              .from('grupos_estudo')
+              .select('*')
+              .eq('id', grupoIdEncontrado)
+              .single();
+              
+            if (!error && data) {
+              console.log('Grupo encontrado no Supabase pelo ID do storage dedicado');
+              salvarGrupoLocal(data);
+              return data;
+            }
+          }
+        }
+      } catch (storageError) {
+        console.error('Erro ao verificar no storage dedicado:', storageError);
+      }
+      
       // Verificar no Supabase como último recurso
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        console.error('Usuário não autenticado ao buscar grupo por código');
-        return null;
-      }
-      
-      const { data, error } = await supabase
-        .from('grupos_estudo')
-        .select('*')
-        .eq('codigo', codigo)
-        .single();
-      
-      if (error) {
-        console.error('Erro ao buscar grupo por código no Supabase:', error);
-        return null;
-      }
-      
-      if (data) {
-        // Salvar localmente para acesso futuro mais rápido
-        salvarGrupoLocal(data);
-        return data;
+      console.log('Tentando última verificação no Supabase pelo código...');
+      try {  
+        const { data, error } = await supabase
+          .from('grupos_estudo')
+          .select('*')
+          .eq('codigo', codigo)
+          .single();
+        
+        if (error) {
+          console.error('Erro ao buscar grupo por código no Supabase:', error);
+          return null;
+        }
+        
+        if (data) {
+          console.log('Grupo encontrado no Supabase pelo código:', data);
+          // Salvar localmente para acesso futuro mais rápido
+          salvarGrupoLocal(data);
+          return data;
+        } else {
+          console.log('Nenhum grupo encontrado no Supabase com o código:', codigo);
+        }
+      } catch (supabaseError) {
+        console.error('Erro na consulta final ao Supabase:', supabaseError);
       }
     }
     
+    console.log('Nenhum grupo encontrado com o código fornecido');
     return null;
   } catch (error) {
     console.error('Erro ao obter grupo por código:', error);
