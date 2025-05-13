@@ -78,152 +78,63 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
     }
   };
 
-  // Função para gerar ou atualizar o código do grupo
+  // Função para gerar/regenerar o código do grupo
   const handleGerarCodigo = async () => {
+    setIsGeneratingCode(true);
     try {
-      setIsGeneratingCode(true);
+      // Verificar se já existe um código
+      if (grupo && grupo.id) {
+        // Verificar se o código já foi definido como permanente
+        const CODIGOS_STORAGE_KEY = 'epictus_codigos_grupo';
+        const codigosGrupos = JSON.parse(localStorage.getItem(CODIGOS_STORAGE_KEY) || '{}');
+        const codigoPermanente = localStorage.getItem(`grupo_codigo_gerado_${grupo.id}`) === "true";
 
-      // 1. Verificar se já existe um código no estado atual
-      if (grupoAtualizado.codigo) {
-        mostrarNotificacaoSucesso("Este grupo já possui um código permanente!");
-        return;
-      }
+        if (codigoPermanente && codigosGrupos[grupo.id]) {
+          // Código já é permanente, não permitir regeneração
+          setGrupoAtualizado(prev => ({
+            ...prev,
+            codigo: codigosGrupos[grupo.id]
+          }));
 
-      // 2. Verificar se o grupo originalmente já tinha um código
-      if (grupo && grupo.codigo) {
-        // Se já existe código no objeto original, apenas exibe notificação e atualiza UI
-        mostrarNotificacaoSucesso("Este grupo já possui um código único permanente!");
+          mostrarNotificacao("info", "O código deste grupo já foi definido como permanente e não pode ser alterado.");
+          console.log("Código permanente existente:", codigosGrupos[grupo.id]);
+          return;
+        }
 
-        // Mesmo que o estado não tenha o código, atualizamos para garantir consistência
-        setGrupoAtualizado(prev => ({
-          ...prev,
-          codigo: grupo.codigo
-        }));
+        let codGrupo = grupo.codigo || await gerarCodigoUnicoGrupo(grupo.id);
 
-        return;
-      }
+        if (regenerarCodigo || !codGrupo) {
+          // Gerar novo código
+          const { gerarCodigoGrupo, verificarCodigoExistente } = await import('@/lib/grupoCodigoUtils');
+          let novoCodigo = gerarCodigoGrupo();
 
-      // 3. Verificar no armazenamento dedicado de códigos (mais confiável)
-      if (grupo?.id) {
-        try {
-          const CODIGOS_STORAGE_KEY = 'epictus_codigos_grupo';
-          const codigosGrupos = JSON.parse(localStorage.getItem(CODIGOS_STORAGE_KEY) || '{}');
+          // Verificar se o código já existe
+          let codigoExiste = await verificarCodigoExistente(novoCodigo);
+          let tentativas = 0;
+          const MAX_TENTATIVAS = 5;
 
-          if (codigosGrupos[grupo.id]) {
-            mostrarNotificacaoSucesso("Código único recuperado do armazenamento permanente!");
+          while (codigoExiste && tentativas < MAX_TENTATIVAS) {
+            novoCodigo = gerarCodigoGrupo();
+            codigoExiste = await verificarCodigoExistente(novoCodigo);
+            tentativas++;
+          }
 
-            // Atualizar o estado local para a UI
+          // Atualizar no Supabase e no armazenamento local de persistência
+          const atualizado = await atualizarCodigoGrupo(grupo.id, novoCodigo);
+
+          if (atualizado) {
+            // Definir como permanente
+            localStorage.setItem(`grupo_codigo_gerado_${grupo.id}`, "true");
+            localStorage.setItem(`codigo_permanente_${novoCodigo}`, grupo.id);
+
             setGrupoAtualizado(prev => ({
               ...prev,
-              codigo: codigosGrupos[grupo.id]
+              codigo: novoCodigo
             }));
 
-            // Atualizar o grupo original para manter consistência
-            onSave({...grupo, codigo: codigosGrupos[grupo.id]});
-            return;
-          }
-        } catch (e) {
-          console.error("Erro ao verificar storage dedicado de códigos:", e);
-        }
-      }
-
-      // 4. Verificar na API e banco de dados
-      if (grupo?.id) {
-        try {
-          const { data: grupoExistente, error } = await supabase
-            .from('grupos_estudo')
-            .select('codigo')
-            .eq('id', grupo.id)
-            .single();
-
-          if (!error && grupoExistente && grupoExistente.codigo) {
-            mostrarNotificacaoSucesso("Código recuperado do banco de dados!");
-
-            // Atualizar o estado local
-            setGrupoAtualizado(prev => ({
-              ...prev,
-              codigo: grupoExistente.codigo
-            }));
-
-            // Atualizar o grupo original
-            onSave({...grupo, codigo: grupoExistente.codigo});
-
-            // Adicionar ao armazenamento dedicado para maior confiabilidade futura
-            try {
-              const CODIGOS_STORAGE_KEY = 'epictus_codigos_grupo';
-              const codigosGrupos = JSON.parse(localStorage.getItem(CODIGOS_STORAGE_KEY) || '{}');
-              codigosGrupos[grupo.id] = grupoExistente.codigo;
-              localStorage.setItem(CODIGOS_STORAGE_KEY, JSON.stringify(codigosGrupos));
-              console.log("Código existente adicionado ao armazenamento dedicado:", grupoExistente.codigo);
-            } catch (storageError) {
-              console.error("Erro ao adicionar código existente ao armazenamento dedicado:", storageError);
-            }
-
-            return;
-          }
-        } catch (apiError) {
-          console.error("Erro ao verificar código no banco de dados:", apiError);
-        }
-      }
-
-      // 5. Se realmente não existir código, só então gerar um novo
-      // Gerar um novo código único
-      let novoCodigo = gerarCodigoGrupo();
-
-      // Verificar se o código já existe no sistema
-      let codigoExiste = await verificarCodigoExistente(novoCodigo);
-
-      // Se o código já existir, gerar outro até encontrar um único
-      let tentativas = 0;
-      const MAX_TENTATIVAS = 5; // Limitar o número de tentativas para evitar loop infinito
-
-      while (codigoExiste && tentativas < MAX_TENTATIVAS) {
-        novoCodigo = gerarCodigoGrupo();
-        codigoExiste = await verificarCodigoExistente(novoCodigo);
-        tentativas++;
-      }
-
-      if (tentativas >= MAX_TENTATIVAS) {
-        mostrarNotificacao("erro", "Não foi possível gerar um código único. Tente novamente mais tarde.");
-        return;
-      }
-
-      // Atualizar o estado local
-      setGrupoAtualizado(prev => ({
-        ...prev,
-        codigo: novoCodigo
-      }));
-
-      // Se o grupo já tem um ID, atualizar o código no banco de dados
-      if (grupo?.id) {
-        // Atualizar no banco de dados
-        const { error } = await supabase
-          .from('grupos_estudo')
-          .update({ codigo: novoCodigo })
-          .eq('id', grupo.id);
-
-        if (error) {
-          console.error("Erro ao salvar código no banco de dados:", error);
-          mostrarNotificacao("erro", "Ocorreu um erro ao salvar o código. Tente novamente.");
-        } else {
-          // Atualizar o grupo original
-          onSave({...grupo, codigo: novoCodigo});
-
-          // Mostrar notificação de sucesso
-          mostrarNotificacaoSucesso("Código gerado com sucesso!");
-
-          // Usar a função de salvamento dedicada para garantir persistência
-          await atualizarCodigoGrupo(grupo.id, novoCodigo);
-
-          // Adicionar ao armazenamento dedicado para maior confiabilidade
-          try {
-            const CODIGOS_STORAGE_KEY = 'epictus_codigos_grupo';
-            const codigosGrupos = JSON.parse(localStorage.getItem(CODIGOS_STORAGE_KEY) || '{}');
-            codigosGrupos[grupo.id] = novoCodigo;
-            localStorage.setItem(CODIGOS_STORAGE_KEY, JSON.stringify(codigosGrupos));
-            console.log("Novo código adicionado ao armazenamento dedicado:", novoCodigo);
-          } catch (storageError) {
-            console.error("Erro ao adicionar novo código ao armazenamento dedicado:", storageError);
+            mostrarNotificacao("sucesso", "Código único gerado com sucesso! Este código é permanente.");
+          } else {
+            mostrarNotificacao("info", "O código não pôde ser atualizado pois já existe um código permanente.");
           }
         }
       }

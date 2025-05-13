@@ -234,6 +234,16 @@ export const entrarEmGrupoPorCodigo = async (
 export const atualizarCodigoGrupo = async (grupoId: string, codigo: string): Promise<boolean> => {
   if (!grupoId || !codigo) return false;
   
+  // VERIFICAR SE O CÓDIGO JÁ FOI DEFINIDO COMO PERMANENTE
+  const CODIGOS_STORAGE_KEY = 'epictus_codigos_grupo';
+  const codigosGrupos = JSON.parse(localStorage.getItem(CODIGOS_STORAGE_KEY) || '{}');
+  
+  // Se o grupo já possui um código e a flag de permanente está definida, não permitir alteração
+  if (codigosGrupos[grupoId] && localStorage.getItem(`grupo_codigo_gerado_${grupoId}`) === "true") {
+    console.log(`Código do grupo ${grupoId} já está definido como permanente e não pode ser alterado.`);
+    return false;
+  }
+  
   // Normalizar o código
   const codigoNormalizado = codigo.trim().toUpperCase();
   
@@ -264,10 +274,12 @@ export const atualizarCodigoGrupo = async (grupoId: string, codigo: string): Pro
       gruposLocais[grupoIndex].codigo = codigoNormalizado;
       
       // Armazenar no storage dedicado
-      const CODIGOS_STORAGE_KEY = 'epictus_codigos_grupo';
-      const codigosGrupos = JSON.parse(localStorage.getItem(CODIGOS_STORAGE_KEY) || '{}');
       codigosGrupos[grupoId] = codigoNormalizado;
       localStorage.setItem(CODIGOS_STORAGE_KEY, JSON.stringify(codigosGrupos));
+      
+      // Definir este código como permanente
+      localStorage.setItem(`grupo_codigo_gerado_${grupoId}`, "true");
+      localStorage.setItem(`codigo_permanente_${codigoNormalizado}`, grupoId);
       
       // Atualizar o localStorage de grupos
       localStorage.setItem('epictus_grupos_estudo', JSON.stringify(gruposLocais));

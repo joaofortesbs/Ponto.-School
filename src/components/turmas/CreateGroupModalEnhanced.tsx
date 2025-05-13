@@ -224,7 +224,7 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
       // Gerar um código único para o grupo usando o novo utilitário
       const { gerarCodigoGrupo, verificarCodigoExistente } = await import('@/lib/grupoCodigoUtils');
       
-      // Gerar um código inicial
+      // Gerar um código inicial - PERMANENTE e ÚNICO
       let codigoGrupo = gerarCodigoGrupo();
       
       // Verificar se o código já existe e gerar outro se necessário
@@ -241,12 +241,14 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
       
       if (tentativas >= MAX_TENTATIVAS) {
         console.error("Não foi possível gerar um código único após várias tentativas.");
+        // Usar um código baseado em timestamp para garantir unicidade
         codigoGrupo = `${grupoTempId.substring(0, 7)}`;
       }
 
-      console.log("Código único gerado para novo grupo:", codigoGrupo);
+      console.log("Código único PERMANENTE gerado para novo grupo:", codigoGrupo);
 
-      // Salvar o código em múltiplos locais para máxima persistência
+      // ===== PERSISTÊNCIA PERMANENTE DO CÓDIGO =====
+      // Este código será gerado UMA VEZ e NUNCA mais será alterado
       try {
         // Storage dedicado para códigos (principal)
         const CODIGOS_STORAGE_KEY = 'epictus_codigos_grupo';
@@ -257,10 +259,14 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
         // SessionStorage para recuperação temporária
         sessionStorage.setItem(`grupo_codigo_${grupoTempId}`, codigoGrupo);
         sessionStorage.setItem(`novo_grupo_codigo_${codigoGrupo}`, codigoGrupo);
+        
+        // Flag para indicar que este código já foi gerado - NUNCA regenerar
+        localStorage.setItem(`grupo_codigo_gerado_${grupoTempId}`, "true");
+        localStorage.setItem(`codigo_permanente_${codigoGrupo}`, grupoTempId);
 
-        console.log("Código armazenado em múltiplos locais para garantir persistência");
+        console.log("Código permanente armazenado em múltiplos locais para garantir persistência");
       } catch (e) {
-        console.error("Erro ao salvar código em storages:", e);
+        console.error("Erro ao salvar código permanente em storages:", e);
       }
 
       // Preparar dados para criação do grupo
