@@ -1,540 +1,195 @@
-import React, { useState } from "react";
-import { motion } from "framer-motion";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Settings, Users, BookOpen, Calendar, Lock, Shield, 
-  Edit3, Eye, UserPlus, Bell, MessageSquare, Image, 
-  Brush, CheckCircle, X, Save, ChevronRight, AlertCircle, Share2
-} from "lucide-react";
-import { HexColorPicker } from "react-colorful";
-import { supabase } from "@/lib/supabase";
-import CompartilharGrupoSection from "./CompartilharGrupoSection";
-import { verificarSeCodigoExiste, salvarCodigoGrupo } from "@/lib/gruposEstudoStorage";
-import { useToast } from "@/components/ui/use-toast"; // Import useToast
+import React, { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+
+import CompartilharGrupoSection from './CompartilharGrupoSection';
+import GrupoSairModal from './GrupoSairModal';
 
 interface GrupoConfiguracoesModalProps {
   isOpen: boolean;
   onClose: () => void;
-  grupo: {
-    id: string;
-    nome: string;
-    descricao?: string;
-    cor: string;
-    membros: number;
-    disciplina?: string;
-    privado?: boolean;
-    visibilidade?: string;
-    data_inicio?: string;
-    criador?: string;
-    codigo?: string; // Adicionado o campo codigo
-  } | null;
-  onSave: (grupoAtualizado: any) => void;
+  grupo: any;
+  onSalvar: (grupoAtualizado: any) => void;
+  onSair: (grupoId: string) => void;
+  onGerarCodigo: (grupoId: string) => Promise<string | null>;
 }
 
 const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
   isOpen,
   onClose,
   grupo,
-  onSave
+  onSalvar,
+  onSair,
+  onGerarCodigo
 }) => {
-  // Estados para os campos editáveis
-  const [nome, setNome] = useState(grupo?.nome || "");
-  const [descricao, setDescricao] = useState(grupo?.descricao || "");
-  const [disciplina, setDisciplina] = useState(grupo?.disciplina || "");
-  const [cor, setCor] = useState(grupo?.cor || "#FF6B00");
-  const [privado, setPrivado] = useState(grupo?.privado || false);
-  const [visibilidade, setVisibilidade] = useState(grupo?.visibilidade || "todos");
-  const [dataInicio, setDataInicio] = useState(grupo?.data_inicio || "");
-  const [showColorPicker, setShowColorPicker] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState("informacoes");
-   const [grupoAtualizado, setGrupoAtualizado] = useState(grupo); // Usar estado para o grupo atualizado
-    const { toast } = useToast(); // Initialize toast
+  const [grupoAtualizado, setGrupoAtualizado] = useState({ ...grupo });
+  const [activeTab, setActiveTab] = useState('informacoes');
+  const [showSairModal, setShowSairModal] = useState(false);
 
-  // Opções de visibilidade
-  const opcoesVisibilidade = [
-    { value: "todos", label: "Todos podem visualizar" },
-    { value: "membros", label: "Apenas membros" },
-    { value: "convite", label: "Apenas por convite" }
-  ];
-
-  // Reset form quando o modal abrir com novo grupo
-  React.useEffect(() => {
-    if (grupo) {
-      setNome(grupo.nome || "");
-      setDescricao(grupo.descricao || "");
-      setDisciplina(grupo.disciplina || "");
-      setCor(grupo.cor || "#FF6B00");
-      setPrivado(grupo.privado || false);
-      setVisibilidade(grupo.visibilidade || "todos");
-      setDataInicio(grupo.data_inicio || "");
-        setGrupoAtualizado(grupo); // Inicializar o estado do grupo atualizado
+  useEffect(() => {
+    if (isOpen) {
+      setGrupoAtualizado({ ...grupo });
     }
-  }, [grupo, isOpen]);
+  }, [isOpen, grupo]);
 
-  const handleSubmit = async () => {
-    if (!grupo) return;
-
-    try {
-      setSaving(true);
-      setError(null);
-
-      // Validar campos obrigatórios
-      if (!nome.trim()) {
-        setError("O nome do grupo é obrigatório");
-        setSaving(false);
-        return;
-      }
-
-      // Verificar se é necessário gerar um novo código para o grupo
-      let codigoGrupo = grupo.codigo;
-      if (!codigoGrupo) {
-        try {
-          // Importar a função de geração de código do módulo gruposEstudoStorage
-          const { gerarCodigoUnicoGrupo } = await import('@/lib/gruposEstudoStorage');
-          codigoGrupo = await gerarCodigoUnicoGrupo();
-          console.log("Código gerado para o grupo:", codigoGrupo);
-        } catch (error) {
-          console.error("Erro ao gerar código para o grupo:", error);
-          // Fallback para código simples se ocorrer erro
-          const CARACTERES_PERMITIDOS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-          codigoGrupo = Array(7).fill(0).map(() => 
-            CARACTERES_PERMITIDOS.charAt(Math.floor(Math.random() * CARACTERES_PERMITIDOS.length))
-          ).join('');
-        }
-      }
-
-      const grupoAtualizado = {
-        ...grupo,
-        nome,
-        descricao,
-        disciplina,
-        cor,
-        privado,
-        visibilidade,
-        data_inicio: dataInicio,
-        codigo: codigoGrupo
-      };
-
-      // Primeiro atualizar localmente para feedback imediato
-      onSave(grupoAtualizado);
-
-      // Se for um grupo local, apenas atualizar via callback
-      if (grupo.id.startsWith('local_')) {
-        // Atualizar no armazenamento local
-        try {
-          const { obterGruposLocal, salvarGrupoLocal } = await import('@/lib/gruposEstudoStorage');
-          const gruposLocais = obterGruposLocal();
-          const gruposAtualizados = gruposLocais.map((g: any) => 
-            g.id === grupo.id ? grupoAtualizado : g
-          );
-
-          // Salvar os grupos atualizados no localStorage
-          localStorage.setItem('epictus_grupos_estudo', JSON.stringify(gruposAtualizados));
-
-          // Atualizar também via função específica (redundância para segurança)
-          salvarGrupoLocal(grupoAtualizado);
-
-          console.log("Grupo local atualizado com sucesso:", grupoAtualizado);
-        } catch (localError) {
-          console.error("Erro ao atualizar grupo localmente:", localError);
-        }
-      } else {
-        // Atualizar no Supabase para grupos não-locais
-        try {
-          const { data: { session } } = await supabase.auth.getSession();
-
-          if (session) {
-            const { error } = await supabase
-              .from('grupos_estudo')
-              .update({
-                nome,
-                descricao,
-                disciplina,
-                cor,
-                privado,
-                visibilidade,
-                data_inicio: dataInicio,
-                codigo: codigoGrupo
-              })
-              .eq('id', grupo.id);
-
-            if (error) {
-              console.error("Erro ao atualizar grupo no Supabase:", error);
-              // Não impedimos o fluxo aqui, pois já salvamos localmente
-            } else {
-              console.log("Grupo atualizado no Supabase com sucesso");
-            }
-          }
-        } catch (supabaseError) {
-          console.error("Erro ao comunicar com Supabase:", supabaseError);
-          // Já salvamos localmente, então continuamos o fluxo
-        }
-      }
-
-      // Mostrar animação de sucesso
-      mostrarNotificacaoSucesso("Grupo atualizado com sucesso!");
-
-      // Fechar modal após sucesso
-      setTimeout(() => {
-        onClose();
-        setSaving(false);
-      }, 500);
-    } catch (error) {
-      console.error("Erro ao salvar grupo:", error);
-      setError("Ocorreu um erro ao salvar as alterações. Tente novamente.");
-      setSaving(false);
-    }
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setGrupoAtualizado(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
-    const handleGerarCodigo = async (codigo?: string) => {
-      try {
-        if (!grupo) return;
-  
-        // Se recebemos um código do componente filho, usamos ele
-        if (codigo) {
-          // Atualizar o grupo local com o novo código
-          const grupoAtualizado = { ...grupo, codigo };
-          setGrupoAtualizado(grupoAtualizado);
-  
-          // Notificar sobre o sucesso
-          toast({
-            title: "Código gerado com sucesso",
-            description: "O código do grupo foi criado e já pode ser compartilhado.",
-            variant: "success",
-          });
-  
-          console.log("Código gerado para o grupo:", codigo);
-          return;
-        }
-  
-        // Caso não tenhamos recebido um código, geramos um novo
-        const novoCodigoResponse = await gerarCodigoUnicoGrupo();
-  
-        if (novoCodigoResponse) {
-          // Salvar o código no banco de dados
-          const sucesso = await salvarCodigoGrupo(grupo.id, novoCodigoResponse);
-  
-          // Atualizar o grupo local com o novo código
-          const grupoAtualizado = { ...grupo, codigo: novoCodigoResponse };
-          setGrupoAtualizado(grupoAtualizado);
-  
-          toast({
-            title: sucesso ? "Código gerado com sucesso" : "Código salvo localmente",
-            description: sucesso 
-              ? "O código do grupo foi criado e já pode ser compartilhado." 
-              : "O código foi criado e salvo localmente por enquanto.",
-            variant: sucesso ? "success" : "warning",
-          });
-  
-          console.log("Código gerado para o grupo:", novoCodigoResponse);
-        }
-      } catch (error) {
-        console.error("Erro ao gerar código:", error);
-        toast({
-          title: "Erro ao gerar código",
-          description: "Não foi possível gerar um código para o grupo. Tente novamente.",
-          variant: "destructive",
-        });
-      }
-    };
-
-  // Adicionar função de notificação de erro
-  const mostrarNotificacaoErro = (mensagem: string) => {
-      const element = document.createElement('div');
-      element.style.position = 'fixed';
-      element.style.top = '20px';
-      element.style.left = '50%';
-      element.style.transform = 'translateX(-50%)';
-      element.style.padding = '12px 24px';
-      element.style.background = 'linear-gradient(135deg, #D32F2F, #B71C1C)';
-      element.style.color = 'white';
-      element.style.borderRadius = '8px';
-      element.style.zIndex = '9999';
-      element.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.15)';
-      element.style.display = 'flex';
-      element.style.alignItems = 'center';
-      element.style.gap = '8px';
-
-      const icon = document.createElement('span');
-      icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`;
-
-      const text = document.createElement('span');
-      text.textContent = mensagem;
-      text.style.fontWeight = '500';
-
-      element.appendChild(icon);
-      element.appendChild(text);
-      document.body.appendChild(element);
-
-      // Efeito de entrada
-      element.animate([
-        { opacity: 0, transform: 'translate(-50%, -20px)' },
-        { opacity: 1, transform: 'translate(-50%, 0)' }
-      ], {
-        duration: 300,
-        easing: 'ease-out'
-      });
-
-      // Remover após 3 segundos com efeito de saída
-      setTimeout(() => {
-        element.animate([
-          { opacity: 1, transform: 'translate(-50%, 0)' },
-          { opacity: 0, transform: 'translate(-50%, -20px)' }
-        ], {
-          duration: 300,
-          easing: 'ease-in'
-        }).onfinish = () => document.body.removeChild(element);
-      }, 3000);
+  const handleSwitchChange = (name: string, checked: boolean) => {
+    setGrupoAtualizado(prev => ({
+      ...prev,
+      [name]: checked
+    }));
   };
 
-  // Função para mostrar notificação de sucesso
-  const mostrarNotificacaoSucesso = (mensagem: string) => {
-    const element = document.createElement('div');
-    element.style.position = 'fixed';
-    element.style.top = '20px';
-    element.style.left = '50%';
-    element.style.transform = 'translateX(-50%)';
-    element.style.padding = '12px 24px';
-    element.style.background = 'linear-gradient(135deg, #4CAF50, #2E7D32)';
-    element.style.color = 'white';
-    element.style.borderRadius = '8px';
-    element.style.zIndex = '9999';
-    element.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.15)';
-    element.style.display = 'flex';
-    element.style.alignItems = 'center';
-    element.style.gap = '8px';
+  const handleSalvar = () => {
+    onSalvar(grupoAtualizado);
+    onClose();
+  };
 
-    const icon = document.createElement('span');
-    icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`;
+  const handleConfirmarSair = () => {
+    onSair(grupo.id);
+    setShowSairModal(false);
+    onClose();
+  };
 
-    const text = document.createElement('span');
-    text.textContent = mensagem;
-    text.style.fontWeight = '500';
-
-    element.appendChild(icon);
-    element.appendChild(text);
-    document.body.appendChild(element);
-
-    // Efeito de entrada
-    element.animate([
-      { opacity: 0, transform: 'translate(-50%, -20px)' },
-      { opacity: 1, transform: 'translate(-50%, 0)' }
-    ], {
-      duration: 300,
-      easing: 'ease-out'
-    });
-
-    // Remover após 3 segundos com efeito de saída
-    setTimeout(() => {
-      element.animate([
-        { opacity: 1, transform: 'translate(-50%, 0)' },
-        { opacity: 0, transform: 'translate(-50%, -20px)' }
-      ], {
-        duration: 300,
-        easing: 'ease-in'
-      }).onfinish = () => document.body.removeChild(element);
-    }, 3000);
+  const handleGerarCodigo = async (grupoId: string) => {
+    return await onGerarCodigo(grupoId);
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-xl bg-gradient-to-br from-white/95 to-white/90 dark:from-[#0A2540]/95 dark:to-[#071a2e]/90 backdrop-blur-xl border-0 shadow-2xl rounded-2xl p-0 overflow-hidden">
-        {/* Decorative gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-tr from-[#FF6B00]/10 via-transparent to-[#FF8C40]/5 dark:from-[#FF6B00]/10 dark:via-transparent dark:to-[#FF8C40]/5 rounded-2xl pointer-events-none"></div>
+    <>
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-orange-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              Configurações do Grupo
+            </DialogTitle>
+          </DialogHeader>
 
-        {/* Header */}
-        <DialogHeader className="p-6 pb-2 relative z-10">
-          <div className="flex items-center gap-3">
-            <div 
-              className="h-10 w-10 rounded-lg flex items-center justify-center text-white shadow-lg" 
-              style={{ backgroundColor: cor }}
-            >
-              <Settings className="h-5 w-5" />
-            </div>
-            <div>
-              <DialogTitle className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#001427] to-[#323232] dark:from-white dark:to-white/80">
-                Configurações do Grupo
-              </DialogTitle>
-              <DialogDescription className="text-gray-500 dark:text-gray-400 mt-1">
-                {grupo?.nome || "Carregando..."}
-              </DialogDescription>
-            </div>
-          </div>
-        </DialogHeader>
-
-        {/* Tabs Navigation */}
-        <div className="px-6 pt-2">
-          <Tabs defaultValue="informacoes" value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid grid-cols-4 mb-6">
-              <TabsTrigger value="informacoes" className="data-[state=active]:bg-[#FF6B00] data-[state=active]:text-white">
-                <Edit3 className="h-4 w-4 mr-2" />
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="w-full mb-6">
+              <TabsTrigger value="informacoes" className="flex-1">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
                 Informações
               </TabsTrigger>
-              <TabsTrigger value="privacidade" className="data-[state=active]:bg-[#FF6B00] data-[state=active]:text-white">
-                <Shield className="h-4 w-4 mr-2" />
+              <TabsTrigger value="privacidade" className="flex-1">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
                 Privacidade
               </TabsTrigger>
-              <TabsTrigger value="membros" className="data-[state=active]:bg-[#FF6B00] data-[state=active]:text-white">
-                <Users className="h-4 w-4 mr-2" />
+              <TabsTrigger value="membros" className="flex-1">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
                 Membros
               </TabsTrigger>
-              <TabsTrigger value="compartilhar" className="data-[state=active]:bg-[#FF6B00] data-[state=active]:text-white">
-                <Share2 className="h-4 w-4 mr-2" />
+              <TabsTrigger value="compartilhar" className="flex-1">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
                 Compartilhar
               </TabsTrigger>
             </TabsList>
 
-            {/* Informações Básicas */}
-            <TabsContent value="informacoes" className="space-y-4 focus:outline-none">
+            <TabsContent value="informacoes" className="space-y-4">
               <div className="space-y-4">
-                <div>
-                  <Label htmlFor="nome" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                    Nome do grupo
-                  </Label>
+                <div className="space-y-2">
+                  <Label htmlFor="nome">Nome do grupo</Label>
                   <Input
                     id="nome"
-                    value={nome}
-                    onChange={(e) => setNome(e.target.value)}
-                    placeholder="Digite o nome do grupo"
-                    className="w-full border-gray-300 dark:border-gray-700 focus:ring-[#FF6B00] focus:border-[#FF6B00]"
+                    name="nome"
+                    value={grupoAtualizado.nome || ''}
+                    onChange={handleInputChange}
                   />
                 </div>
-
-                <div>
-                  <Label htmlFor="descricao" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                    Descrição
-                  </Label>
+                <div className="space-y-2">
+                  <Label htmlFor="descricao">Descrição</Label>
                   <Textarea
                     id="descricao"
-                    value={descricao}
-                    onChange={(e) => setDescricao(e.target.value)}
-                    placeholder="Descreva o propósito do grupo..."
-                    className="w-full border-gray-300 dark:border-gray-700 focus:ring-[#FF6B00] focus:border-[#FF6B00]"
-                    rows={3}
+                    name="descricao"
+                    rows={4}
+                    value={grupoAtualizado.descricao || ''}
+                    onChange={handleInputChange}
                   />
                 </div>
-
-                <div>
-                  <Label htmlFor="disciplina" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                    Disciplina
-                  </Label>
+                <div className="space-y-2">
+                  <Label htmlFor="topicos">Tópicos (separados por vírgula)</Label>
                   <Input
-                    id="disciplina"
-                    value={disciplina}
-                    onChange={(e) => setDisciplina(e.target.value)}
-                    placeholder="Ex: Matemática, Física, História..."
-                    className="w-full border-gray-300 dark:border-gray-700 focus:ring-[#FF6B00] focus:border-[#FF6B00]"
+                    id="topicos"
+                    name="topicos"
+                    value={Array.isArray(grupoAtualizado.topicos) ? grupoAtualizado.topicos.join(', ') : grupoAtualizado.topicos || ''}
+                    onChange={(e) => {
+                      const topicosArray = e.target.value.split(',').map(t => t.trim()).filter(Boolean);
+                      setGrupoAtualizado(prev => ({
+                        ...prev,
+                        topicos: topicosArray
+                      }));
+                    }}
                   />
-                </div>
-
-                <div>
-                  <Label htmlFor="dataInicio" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                    Data de início
-                  </Label>
-                  <Input
-                    id="dataInicio"
-                    type="date"
-                    value={dataInicio}
-                    onChange={(e) => setDataInicio(e.target.value)}
-                    className="w-full border-gray-300 dark:border-gray-700 focus:ring-[#FF6B00] focus:border-[#FF6B00]"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="cor" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                    Cor do grupo
-                  </Label>
-                  <div className="flex items-center gap-3">
-                    <div 
-                      className="h-10 w-10 rounded-lg cursor-pointer border border-gray-300 dark:border-gray-700"
-                      style={{ backgroundColor: cor }}
-                      onClick={() => setShowColorPicker(!showColorPicker)}
-                    />
-                    <Input
-                      id="cor"
-                      value={cor}
-                      onChange={(e) => setCor(e.target.value)}
-                      className="flex-1 border-gray-300 dark:border-gray-700 focus:ring-[#FF6B00] focus:border-[#FF6B00]"
-                    />
-                  </div>
-
-                  {showColorPicker && (
-                    <div className="mt-2 p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
-                      <HexColorPicker color={cor} onChange={setCor} />
-                      <div className="flex justify-end mt-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setShowColorPicker(false)}
-                          className="text-xs"
-                        >
-                          Fechar
-                        </Button>
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
             </TabsContent>
 
-            {/* Privacidade */}
-            <TabsContent value="privacidade" className="space-y-4 focus:outline-none">
+            <TabsContent value="privacidade" className="space-y-4">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">Grupo privado</h3>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      Apenas pessoas convidadas podem entrar no grupo
-                    </p>
+                  <div className="space-y-0.5">
+                    <Label htmlFor="privado">Grupo privado</Label>
+                    <div className="text-sm text-muted-foreground">
+                      Apenas membros convidados podem participar
+                    </div>
                   </div>
                   <Switch
-                    checked={privado}
-                    onCheckedChange={setPrivado}
-                    className="data-[state=checked]:bg-[#FF6B00]"
+                    id="privado"
+                    checked={grupoAtualizado.privado || false}
+                    onCheckedChange={(checked) => handleSwitchChange('privado', checked)}
                   />
                 </div>
-
-                <div className="space-y-3 pt-2">
-                  <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">Visibilidade do grupo</h3>
-                  <div className="space-y-3">
-                    {opcoesVisibilidade.map((opcao) => (
-                      <div key={opcao.value} className="flex items-center gap-3">
-                        <Button
-                          type="button"
-                          variant={visibilidade === opcao.value ? "default" : "outline"}
-                          className={`w-full justify-start ${visibilidade === opcao.value ? 'bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white' : ''}`}
-                          onClick={() => setVisibilidade(opcao.value)}
-                        >
-                          {visibilidade === opcao.value && <CheckCircle className="h-4 w-4 mr-2" />}
-                          {visibilidade !== opcao.value && (
-                            opcao.value === "todos" ? <Eye className="h-4 w-4 mr-2" /> :
-                            opcao.value === "membros" ? <Users className="h-4 w-4 mr-2" /> :
-                            <Lock className="h-4 w-4 mr-2" />
-                          )}
-                          {opcao.label}
-                        </Button>
-                      </div>
-                    ))}
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="moderacao">Moderação de novos membros</Label>
+                    <div className="text-sm text-muted-foreground">
+                      Aprovar membros antes de entrarem
+                    </div>
                   </div>
+                  <Switch
+                    id="moderacao"
+                    checked={grupoAtualizado.moderacao || false}
+                    onCheckedChange={(checked) => handleSwitchChange('moderacao', checked)}
+                  />
                 </div>
+              </div>
+            </TabsContent>
 
-                <div className="pt-2">
-                  <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg border border-yellow-200 dark:border-yellow-800/30">
-                    <div className="flex items-start">
-                      <AlertCircle className="h-5 w-5 text-yellow-500 dark:text-yellow-400 mr-2 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <h4 className="text-sm font-medium text-yellow-800 dark:text-yellow-300">Observação</h4>
-                        <p className="text-xs text-yellow-700 dark:text-yellow-400 mt-1">
-                          Alterar a privacidade do grupo não afeta os membros atuais, apenas novos convites e solicitações.
-                        </p>
+            <TabsContent value="membros" className="space-y-4">
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">Gerenciamento de membros em desenvolvimento.</p>
+                <div className="rounded-md bg-blue-50 dark:bg-blue-900/20 p-4">
+                  <div className="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div className="ml-3">
+                      <div className="text-sm text-blue-700 dark:text-blue-400">
+                        O gerenciamento avançado de membros estará disponível em breve.
                       </div>
                     </div>
                   </div>
@@ -542,150 +197,35 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
               </div>
             </TabsContent>
 
-            {/* Membros */}
-            <TabsContent value="membros" className="space-y-4 focus:outline-none">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">Membros do grupo ({grupo?.membros || 0})</h3>
-                <Button size="sm" variant="outline" className="text-xs flex items-center gap-1 text-[#FF6B00] border-[#FF6B00] hover:bg-[#FF6B00]/10">
-                  <UserPlus className="h-3.5 w-3.5 mr-1" /> Convidar
-                </Button>
-              </div>
-
-              <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
-                {/* Lista de membros simulada */}
-                {[...Array(Math.max(1, grupo?.membros || 1))].map((_, index) => (
-                  <div key={index} className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className="h-9 w-9 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center">
-                        <Users className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                          {index === 0 ? 'Você' : `Membro ${index + 1}`}
-                        </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                          {index === 0 ? '(Criador)' : 'Membro desde 15/05/2023'}
-                        </div>
-                      </div>
-                    </div>
-
-                    {index === 0 ? (
-                      <div className="text-xs font-medium text-[#FF6B00] bg-[#FF6B00]/10 px-2 py-1 rounded">Criador</div>
-                    ) : (
-                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-full">
-                        <ChevronRight className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                ))}
-
-                {/* Seção para mostrar quando não há membros */}
-                {(!grupo?.membros || grupo.membros <= 1) && (
-                  <div className="text-center py-8 bg-gray-50 dark:bg-gray-800/20 rounded-lg border border-dashed border-gray-300 dark:border-gray-700">
-                    <Users className="h-10 w-10 mx-auto text-gray-400 dark:text-gray-600 mb-2" />
-                    <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">Nenhum outro membro</h3>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-xs mx-auto">
-                      Convide pessoas para participar do seu grupo de estudos e colaborarem com você.
-                    </p>
-                    <Button size="sm" variant="outline" className="mt-4 text-xs text-[#FF6B00] border-[#FF6B00] hover:bg-[#FF6B00]/10">
-                      <UserPlus className="h-3.5 w-3.5 mr-1" /> Convidar pessoas
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </TabsContent>
-
-             {/* Compartilhar */}
-            <TabsContent value="compartilhar" className="space-y-4 focus:outline-none">
+            <TabsContent value="compartilhar" className="space-y-4">
               <CompartilharGrupoSection 
-                grupoCodigo={grupo?.codigo || ""} 
-                grupoNome={grupo?.nome || ""} 
-                grupoId={grupo?.id}
+                grupo={grupo} 
                 onGerarCodigo={handleGerarCodigo}
               />
-              {!grupo?.codigo && (
-                <p className="text-amber-500 text-sm">
-                  Aviso: Clique em "Gerar código do grupo" para criar um código permanente e único para este grupo.
-                </p>
-              )}
-              {grupo?.codigo && (
-                <p className="text-green-500 text-sm">
-                  Este grupo já possui um código permanente que não pode ser alterado ou perdido.
-                </p>
-              )}
-
-              <div className="mb-4">
-        <label className="block text-sm font-medium text-white/70 mb-1">
-          Código Único do Grupo
-        </label>
-        <div className="flex items-center">
-          {grupo?.codigo ? (
-            <span className="inline-block bg-[#1E293B] text-white px-3 py-2 rounded-md font-mono text-sm tracking-wider uppercase font-bold">
-              {grupo.codigo.length >= 4 ? 
-                `${grupo.codigo.substring(0, 4)} ${grupo.codigo.substring(4)}` : 
-                grupo.codigo}
-            </span>
-          ) : (
-            <span className="inline-block bg-[#1E293B] text-white/60 px-3 py-2 rounded-md font-mono text-sm">
-              SEM CÓDIGO
-            </span>
-          )}
-        </div>
-        <p className="text-xs text-gray-400 mt-1">
-          {grupo?.codigo ? 
-            "Este código é usado para convidar pessoas para o seu grupo. O código é insensível a maiúsculas e minúsculas." :
-            "Um código único será gerado para este grupo quando você salvar as alterações."}
-        </p>
-      </div>
             </TabsContent>
           </Tabs>
-        </div>
 
-        {/* Error message */}
-        {error && (
-          <div className="px-6 pt-2">
-            <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-200 dark:border-red-800/30">
-              <div className="flex items-center">
-                <X className="h-4 w-4 text-red-500 mr-2 flex-shrink-0" />
-                <span className="text-sm text-red-700 dark:text-red-400">{error}</span>
-              </div>
-            </div>
-          </div>
-        )}
+          <DialogFooter className="mt-6 flex flex-col sm:flex-row gap-2">
+            <Button variant="outline" className="sm:mr-auto" onClick={() => setShowSairModal(true)}>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              Sair do grupo
+            </Button>
+            <Button variant="outline" onClick={onClose}>Cancelar</Button>
+            <Button onClick={handleSalvar}>Salvar alterações</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-        {/* Footer with actions */}
-        <div className="p-6 pt-4 flex justify-end gap-3 relative z-10">
-          <Button
-            variant="outline"
-            onClick={onClose}
-            className="bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 border-gray-300 dark:border-gray-700"
-          >
-            Cancelar
-          </Button>
-
-          <motion.button
-            whileHover={{ scale: 1.02, boxShadow: "0 10px 25px -5px rgba(255, 107, 0, 0.2)" }}
-            whileTap={{ scale: 0.98 }}
-            onClick={handleSubmit}
-            disabled={saving}
-            className={`h-10 px-4 py-2 rounded-lg flex items-center gap-2 font-medium text-white bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF6B00]/90 hover:to-[#FF8C40]/90 active:from-[#E55A00] active:to-[#FF7D30] focus:ring-2 focus:ring-[#FF6B00]/50 focus:outline-none transition-all ${saving ? 'opacity-70 cursor-not-allowed' : ''}`}
-          >
-            {saving ? (
-              <>
-                <div className="animate-spin h-4 w-4 border-2 border-white/20 border-t-white rounded-full" />
-                <span>Salvando...</span>
-              </>
-            ) : (
-              <>
-                <Save className="h-4 w-4" />
-                <span>Salvar alterações</span>
-              </>
-            )}
-          </motion.button>
-        </div>
-      </DialogContent>
-    </Dialog>
+      <GrupoSairModal 
+        isOpen={showSairModal} 
+        onClose={() => setShowSairModal(false)} 
+        onConfirmar={handleConfirmarSair} 
+        grupoNome={grupo?.nome || 'este grupo'} 
+      />
+    </>
   );
 };
 
-export default GrupoConfiguraçõesModal;
+export default GrupoConfiguracoesModal;

@@ -1,4 +1,3 @@
-
 /**
  * Sistema simples de armazenamento para grupos de estudo
  * Usa localStorage como fallback quando o banco de dados falha
@@ -37,23 +36,23 @@ export const salvarCodigoGrupo = async (grupoId: string, codigo: string): Promis
   try {
     const grupos = obterGruposLocalStorage();
     const grupoIndex = grupos.findIndex(g => g.id === grupoId);
-    
+
     if (grupoIndex >= 0) {
       grupos[grupoIndex].codigo = codigo;
       localStorage.setItem('grupos_estudo', JSON.stringify(grupos));
     }
-    
+
     // Tenta salvar no Supabase
     const { error } = await supabase
       .from('grupos_estudo')
       .update({ codigo })
       .eq('id', grupoId);
-    
+
     if (error) {
       console.error('Erro ao atualizar código no Supabase:', error);
       return false;
     }
-    
+
     return true;
   } catch (err) {
     console.error('Erro ao salvar código:', err);
@@ -101,34 +100,34 @@ export const verificarSeCodigoExiste = async (codigo: string): Promise<boolean> 
     const existeLocal = gruposLocais.some((grupo: any) => 
       grupo.codigo && grupo.codigo.toUpperCase() === codigo.toUpperCase()
     );
-    
+
     if (existeLocal) {
       console.log('Código já existe localmente:', codigo);
       return true;
     }
-    
+
     // Verificar no Supabase
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      
+
       if (session) {
         const { data, error } = await supabase
           .from('grupos_estudo')
           .select('id')
           .eq('codigo', codigo.toUpperCase())
           .limit(1);
-        
+
         if (error) {
           console.error('Erro ao verificar código no Supabase:', error);
           return false;
         }
-        
+
         return data && data.length > 0;
       }
     } catch (error) {
       console.error('Erro ao comunicar com Supabase:', error);
     }
-    
+
     return false;
   } catch (error) {
     console.error('Erro ao verificar se código existe:', error);
@@ -146,17 +145,17 @@ export const gerarCodigoUnicoGrupo = async (): Promise<string> => {
     let tentativas = 0;
     let codigoGrupo: string;
     let codigoJaExiste = false;
-    
+
     do {
       // Gerar um novo código
       codigoGrupo = gerarCodigoUnico();
-      
+
       // Verificar se já existe
       codigoJaExiste = await verificarSeCodigoExiste(codigoGrupo);
-      
+
       // Incrementar contador de tentativas
       tentativas++;
-      
+
       // Se já tentamos muitas vezes, adicionar timestamp no final para garantir unicidade
       if (tentativas >= MAX_TENTATIVAS) {
         const timestamp = Date.now().toString(36).substring(0, 2).toUpperCase();
@@ -164,7 +163,7 @@ export const gerarCodigoUnicoGrupo = async (): Promise<string> => {
         break;
       }
     } while (codigoJaExiste);
-    
+
     // Garantir que o código está em formato correto
     codigoGrupo = codigoGrupo.toUpperCase();
 
@@ -184,7 +183,7 @@ export const gerarCodigoUnicoGrupo = async (): Promise<string> => {
         codigoGrupo = codigoGrupo.substring(0, 7);
       }
     }
-    
+
     console.log(`Código único gerado após ${tentativas} tentativa(s):`, codigoGrupo);
     return codigoGrupo;
   } catch (error) {
