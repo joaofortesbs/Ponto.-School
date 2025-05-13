@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Share, Check, Copy, Key } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -16,24 +16,14 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
 }) => {
   const [copiado, setCopiado] = useState(false);
   const [codigoGerado, setCodigoGerado] = useState(!!grupoCodigo);
-  // Estado local para rastrear código após a atualização
-  const [codigoAtual, setCodigoAtual] = useState(grupoCodigo);
 
-  // Atualizar código atual quando a prop grupoCodigo mudar
-  useEffect(() => {
-    if (grupoCodigo && grupoCodigo !== codigoAtual) {
-      setCodigoAtual(grupoCodigo);
-      setCodigoGerado(!!grupoCodigo);
-    }
-  }, [grupoCodigo]);
-
-  const formattedCodigo = codigoAtual && codigoAtual.length > 4 
-    ? `${codigoAtual.substring(0, 4)} ${codigoAtual.substring(4)}`
-    : codigoAtual || "SEM CÓDIGO";
+  const formattedCodigo = grupoCodigo && grupoCodigo.length > 4 
+    ? `${grupoCodigo.substring(0, 4)} ${grupoCodigo.substring(4)}`
+    : grupoCodigo || "SEM CÓDIGO";
 
   const handleCopiarCodigo = () => {
     // Garantir que copiamos o código sem formatação (sem espaços)
-    navigator.clipboard.writeText(codigoAtual || "")
+    navigator.clipboard.writeText(grupoCodigo)
       .then(() => {
         setCopiado(true);
         setTimeout(() => setCopiado(false), 2000);
@@ -48,7 +38,7 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
       if (navigator.share) {
         await navigator.share({
           title: `Grupo de Estudos: ${grupoNome}`,
-          text: `Entre no meu grupo de estudos "${grupoNome}" usando o código: ${codigoAtual}`,
+          text: `Entre no meu grupo de estudos "${grupoNome}" usando o código: ${grupoCodigo}`,
           url: window.location.href,
         });
       } else {
@@ -61,20 +51,12 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
 
   const handleGerarCodigo = async () => {
     if (onGerarCodigo) {
-      try {
-        await onGerarCodigo();
-        setCodigoGerado(true);
-        
-        // Forçar re-renderização com um pequeno atraso para garantir que a UI seja atualizada
-        setTimeout(() => {
-          if (grupoCodigo) {
-            setCodigoAtual(grupoCodigo);
-            console.log("Código gerado e atualizado:", grupoCodigo);
-          }
-        }, 300);
-      } catch (error) {
-        console.error("Erro ao gerar código:", error);
-      }
+      await onGerarCodigo();
+      setCodigoGerado(true);
+      // Forçar re-renderização com um pequeno atraso para garantir que a UI seja atualizada
+      setTimeout(() => {
+        console.log("Código gerado e atualizado:", grupoCodigo);
+      }, 300);
     }
   };
 

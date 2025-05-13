@@ -46,20 +46,15 @@ export const gerarStringAleatoria = (comprimento = COMPRIMENTO_CODIGO, caractere
  * Nota: Trata códigos como não sensíveis a maiúsculas/minúsculas
  */
 export const verificarSeCodigoExiste = async (codigo: string): Promise<boolean> => {
-  if (!codigo) return false;
-  
-  // Normalizar o código para garantir comparação consistente
-  const codigoNormalizado = codigo.trim().toUpperCase();
-  
   try {
     // Verificar primeiro em localStorage
     const gruposLocais = obterGruposLocal();
     const existeLocal = gruposLocais.some((grupo: any) => 
-      grupo.codigo && grupo.codigo.trim().toUpperCase() === codigoNormalizado
+      grupo.codigo && grupo.codigo.toUpperCase() === codigo.toUpperCase()
     );
     
     if (existeLocal) {
-      console.log('Código já existe localmente:', codigoNormalizado);
+      console.log('Código já existe localmente:', codigo);
       return true;
     }
     
@@ -71,20 +66,18 @@ export const verificarSeCodigoExiste = async (codigo: string): Promise<boolean> 
         const { data, error } = await supabase
           .from('grupos_estudo')
           .select('id')
-          .ilike('codigo', codigoNormalizado)  // Case insensitive
+          .eq('codigo', codigo.toUpperCase())
           .limit(1);
         
         if (error) {
           console.error('Erro ao verificar código no Supabase:', error);
-          // Não considerar como erro; continuar com verificação local
-        } else if (data && data.length > 0) {
-          console.log('Código já existe no Supabase:', codigoNormalizado);
-          return true;
+          return false;
         }
+        
+        return data && data.length > 0;
       }
     } catch (error) {
       console.error('Erro ao comunicar com Supabase:', error);
-      // Não bloquear a operação se houver erro com Supabase
     }
     
     return false;
@@ -100,7 +93,7 @@ export const verificarSeCodigoExiste = async (codigo: string): Promise<boolean> 
 export const gerarCodigoUnicoGrupo = async (): Promise<string> => {
   try {
     // Número máximo de tentativas para evitar loops infinitos
-    const MAX_TENTATIVAS = 15;
+    const MAX_TENTATIVAS = 10;
     let tentativas = 0;
     let codigoGrupo: string;
     let codigoJaExiste = false;
@@ -119,12 +112,6 @@ export const gerarCodigoUnicoGrupo = async (): Promise<string> => {
       if (tentativas >= MAX_TENTATIVAS) {
         const timestamp = Date.now().toString(36).substring(0, 2).toUpperCase();
         codigoGrupo = codigoGrupo.substring(0, 5) + timestamp;
-        // Verificar uma última vez se este código específico com timestamp já existe
-        codigoJaExiste = await verificarSeCodigoExiste(codigoGrupo);
-        if (codigoJaExiste) {
-          // Se mesmo com timestamp ainda existe, adicionar um número aleatório extra
-          codigoGrupo = codigoGrupo.substring(0, 6) + Math.floor(Math.random() * 10);
-        }
         break;
       }
     } while (codigoJaExiste);
@@ -150,24 +137,11 @@ export const gerarCodigoUnicoGrupo = async (): Promise<string> => {
     }
     
     console.log(`Código único gerado após ${tentativas} tentativa(s):`, codigoGrupo);
-    
-    // Realizar uma última verificação e salvar no cache local para futura verificação
-    try {
-      // Salvar em armazenamento temporário para evitar duplicação durante a mesma sessão
-      const codigosGeradosKey = 'codigos_gerados_temp';
-      const codigosGerados = JSON.parse(sessionStorage.getItem(codigosGeradosKey) || '[]');
-      codigosGerados.push(codigoGrupo);
-      sessionStorage.setItem(codigosGeradosKey, JSON.stringify(codigosGerados));
-    } catch (cacheError) {
-      console.error("Erro ao cache de códigos gerados:", cacheError);
-    }
-    
     return codigoGrupo;
   } catch (error) {
     console.error("Erro ao gerar código único para grupo:", error);
     // Garantir que sempre retornamos um código, mesmo em caso de erro
-    const fallbackCode = `GE${Math.random().toString(36).substring(2, 5).toUpperCase()}`;
-    return fallbackCode.padEnd(7, '0').substring(0, 7);
+    return `GE${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
   }
 };
 

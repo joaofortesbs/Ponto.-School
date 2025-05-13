@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -202,66 +202,80 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
           }
   
           // Gerar um código único para o grupo
-          const { gerarCodigoUnicoGrupo, salvarGrupoLocal, obterGruposLocal } = await import('@/lib/gruposEstudoStorage');
+          const { gerarCodigoUnicoGrupo } = await import('@/lib/gruposEstudoStorage');
           const novoCodigo = await gerarCodigoUnicoGrupo();
           
           console.log("Novo código gerado:", novoCodigo);
   
           if (novoCodigo) {
-              // Criar cópia do grupo atualizado com o novo código
-              const grupoComCodigo = grupo ? {...grupo, codigo: novoCodigo} : null;
-              
               // Atualizar o estado local
-              setGrupoAtualizado(prev => grupoComCodigo || prev);
+              setGrupoAtualizado(prev => ({
+                  ...prev,
+                  codigo: novoCodigo
+              }));
+              
+              // Atualizar o grupo original também para garantir que a UI seja atualizada
+              if (grupo) grupo.codigo = novoCodigo;
               
               // Mostrar notificação de sucesso
               mostrarNotificacaoSucesso("Código permanente do grupo gerado com sucesso!");
 
-              // Primeiro salvar localmente para garantir persistência
-              if (grupoComCodigo) {
-                  try {
-                      // Salvar usando a função específica para evitar duplicação
-                      salvarGrupoLocal(grupoComCodigo);
-                      console.log('Código do grupo salvo localmente:', novoCodigo);
-                  } catch (localError) {
-                      console.error("Erro ao salvar grupo localmente:", localError);
-                  }
-              }
-
               // Atualizar no Supabase se for um grupo remoto
               if (grupo?.id && !grupo.id.startsWith('local_')) {
                   try {
-                      const { data: { session } } = await supabase.auth.getSession();
-                      
-                      if (session) {
-                          const { error } = await supabase
-                              .from('grupos_estudo')
-                              .update({ codigo: novoCodigo })
-                              .eq('id', grupo.id)
-                              .eq('user_id', session.user.id);
-          
-                          if (error) {
-                              console.error('Erro ao salvar código no banco de dados:', error);
-                              // Mostrar notificação de erro, mas continuar pois já salvamos localmente
-                              mostrarNotificacaoErro("Erro ao salvar código no servidor. O código foi salvo localmente.");
-                          } else {
-                              console.log('Código salvo com sucesso no Supabase:', novoCodigo);
-                          }
+                      const { error } = await supabase
+                          .from('grupos_estudo')
+                          .update({ codigo: novoCodigo })
+                          .eq('id', grupo.id);
+      
+                      if (error) {
+                          console.error('Erro ao salvar código no banco de dados:', error);
+                          // Mostrar notificação de erro
+                          mostrarNotificacaoErro("Erro ao salvar código no servidor. O código foi salvo localmente.");
+                      } else {
+                          console.log('Código salvo com sucesso no Supabase:', novoCodigo);
                       }
                   } catch (dbError) {
                       console.error('Erro na comunicação com Supabase:', dbError);
                   }
               }
               
-              // Forçar atualização da UI e dos componentes pais
-              if (grupo && onSave) {
-                  // Atualizar referência do grupo original para UI
-                  if (grupo) {
-                      grupo.codigo = novoCodigo;
+              // Sempre salvar localmente, independente do tipo de grupo (local ou remoto)
+              // Isso garante redundância e persistência mesmo se houver problemas com o Supabase
+              try {
+                  const { obterGruposLocal, salvarGrupoLocal } = await import('@/lib/gruposEstudoStorage');
+                  const gruposLocais = obterGruposLocal();
+                  
+                  // Atualizar o grupo nos grupos locais
+                  const grupoExistente = gruposLocais.find((g: any) => g.id === grupo?.id);
+                  
+                  if (grupoExistente) {
+                      // Atualizar grupo existente
+                      const gruposAtualizados = gruposLocais.map((g: any) => 
+                          g.id === grupo?.id ? {...g, codigo: novoCodigo} : g
+                      );
+                      
+                      // Salvar os grupos atualizados no localStorage
+                      localStorage.setItem('epictus_grupos_estudo', JSON.stringify(gruposAtualizados));
+                      console.log('Código do grupo atualizado no localStorage:', novoCodigo);
+                  } else if (grupo) {
+                      // Adicionar novo grupo com código
+                      gruposLocais.push({...grupo, codigo: novoCodigo});
+                      localStorage.setItem('epictus_grupos_estudo', JSON.stringify(gruposLocais));
+                      console.log('Novo grupo com código adicionado ao localStorage:', novoCodigo);
                   }
                   
-                  // Notificar componente pai sobre a mudança
-                  onSave(grupoComCodigo || {...grupo, codigo: novoCodigo});
+                  // Utilizar também a função específica para garantir redundância
+                  if (grupo) {
+                      salvarGrupoLocal({...grupo, codigo: novoCodigo});
+                  }
+              } catch (localError) {
+                  console.error("Erro ao atualizar grupo localmente:", localError);
+              }
+              
+              // Forçar atualização da UI e dos componentes pais
+              if (grupo && onSave) {
+                  onSave({...grupo, codigo: novoCodigo});
               }
           }
       } catch (error) {
