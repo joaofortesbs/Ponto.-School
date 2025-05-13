@@ -116,8 +116,6 @@ const obterGruposLocalStorage = (): GrupoEstudo[] => {
   }
 };
 
-const COMPRIMENTO_CODIGO = 7; // Código com 7 caracteres conforme a especificação
-
 /**
  * Gera uma string aleatória para ser usada como código de grupo
  */

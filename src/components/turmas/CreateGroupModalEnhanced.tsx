@@ -267,35 +267,6 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
       } catch (e) {
         console.error("Erro ao salvar código em storages:", e);
       }
-
-      // Gerar um ID temporário para o grupo
-      const grupoTempId = crypto.randomUUID();
-      
-      // Gerar um código único para o grupo
-      const { gerarCodigoUnicoGrupo } = await import('@/lib/gruposEstudoStorage');
-      let codigoGrupo = await gerarCodigoUnicoGrupo(grupoTempId);
-      
-      // Garantir que o código está em maiúsculas
-      codigoGrupo = codigoGrupo.toUpperCase();
-      
-      console.log("Código único gerado para novo grupo:", codigoGrupo);
-      
-      // Salvar o código em múltiplos locais para máxima persistência
-      try {
-        // Storage dedicado para códigos (principal)
-        const CODIGOS_STORAGE_KEY = 'epictus_codigos_grupo';
-        const codigosGrupos = JSON.parse(localStorage.getItem(CODIGOS_STORAGE_KEY) || '{}');
-        codigosGrupos[grupoTempId] = codigoGrupo;
-        localStorage.setItem(CODIGOS_STORAGE_KEY, JSON.stringify(codigosGrupos));
-        
-        // SessionStorage para recuperação temporária
-        sessionStorage.setItem(`grupo_codigo_${grupoTempId}`, codigoGrupo);
-        sessionStorage.setItem(`novo_grupo_codigo_${codigoGrupo}`, codigoGrupo);
-        
-        console.log("Código armazenado em múltiplos locais para garantir persistência");
-      } catch (e) {
-        console.error("Erro ao salvar código em storages:", e);
-      }
       
       // Preparar dados para criação do grupo
       const novoGrupo = {
