@@ -52,27 +52,10 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
   const handleGerarCodigo = async () => {
     if (onGerarCodigo) {
       try {
-        // Gerar código único para o grupo
-        const codigo = await gerarCodigoUnicoGrupo();
-
-        // Atualizar o grupo com o novo código
-        if (grupo && codigo) {
-          const sucesso = await salvarCodigoGrupo(grupo.id, codigo);
-
-          if (sucesso) {
-            // Atualizar o estado local
-            setCodigoGrupo(codigo);
-            setCopiedCode(false);
-
-            // Notificar o componente pai
-            onGerarCodigo(codigo);
-          } else {
-            setError("Erro ao salvar código no servidor. O código foi salvo localmente.");
-          }
-        }
+        // Chamar a função de gerar código do componente pai
+        await onGerarCodigo();
       } catch (error) {
         console.error('Erro ao gerar código:', error);
-        setError("Não foi possível gerar um código. Tente novamente.");
       }
     }
   };
