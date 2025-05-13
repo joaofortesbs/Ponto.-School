@@ -4,9 +4,8 @@ import { Button } from "@/components/ui/button";
 import { 
   X, Users, Plus, Key, BookOpen, Calendar, Clock, 
   Search, Upload, Info, Settings, UserPlus, BookmarkIcon,
-  Sparkles, Check, RefreshCw, ArrowRight
+  Sparkles, Check
 } from "lucide-react";
-import EntrarGrupoPorCodigoModal from "./EntrarGrupoPorCodigoModal";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -79,7 +78,6 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
   const [convidadosInfo, setConvidadosInfo] = useState<any[]>([]);
   const [showCodeEntry, setShowCodeEntry] = useState(false);
   const [groupCode, setGroupCode] = useState("");
-  const [isEntrarPorCodigoModalOpen, setIsEntrarPorCodigoModalOpen] = useState(false);
 
   // Filtrar usuários baseado no termo de busca
   const filteredUsuarios = usuariosDisponiveis.filter(usuario => 
@@ -221,28 +219,12 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
       // Criar um ID temporário para o grupo antes de salvá-lo
       const grupoTempId = crypto.randomUUID();
 
-      // Gerar um código único para o grupo usando o novo utilitário
-      const { gerarCodigoGrupo, verificarCodigoExistente } = await import('@/lib/grupoCodigoUtils');
-      
-      // Gerar um código inicial
-      let codigoGrupo = gerarCodigoGrupo();
-      
-      // Verificar se o código já existe e gerar outro se necessário
-      let codigoExiste = await verificarCodigoExistente(codigoGrupo);
-      let tentativas = 0;
-      const MAX_TENTATIVAS = 5;
-      
-      while (codigoExiste && tentativas < MAX_TENTATIVAS) {
-        console.log(`Código ${codigoGrupo} já existe, gerando outro...`);
-        codigoGrupo = gerarCodigoGrupo();
-        codigoExiste = await verificarCodigoExistente(codigoGrupo);
-        tentativas++;
-      }
-      
-      if (tentativas >= MAX_TENTATIVAS) {
-        console.error("Não foi possível gerar um código único após várias tentativas.");
-        codigoGrupo = `${grupoTempId.substring(0, 7)}`;
-      }
+      // Gerar um código único para o grupo
+      const { gerarCodigoUnicoGrupo, salvarCodigoGrupo } = await import('@/lib/gruposEstudoStorage');
+      let codigoGrupo = await gerarCodigoUnicoGrupo(grupoTempId);
+
+      // Garantir que o código está em maiúsculas
+      codigoGrupo = codigoGrupo.toUpperCase();
 
       console.log("Código único gerado para novo grupo:", codigoGrupo);
 
@@ -411,10 +393,59 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
           </div>
 
           {showCodeEntry ? (
-            <EntrarGrupoPorCodigoModal
-              isOpen={true}
-              onClose={() => setShowCodeEntry(false)}
-            />
+            <div className="p-6">
+              <div className="bg-[#1E293B]/50 rounded-lg p-6 border border-[#1E293B] mb-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="bg-[#FF6B00]/20 p-3 rounded-full">
+                    <Key className="h-6 w-6 text-[#FF6B00]" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-white">Adicionar Grupo por Código</h3>
+                    <p className="text-sm text-gray-400">
+                      Digite o código único do grupo que você deseja participar
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label htmlFor="grupoCodigo" className="block text-sm font-medium text-white/70 mb-2">
+                      Código do Grupo <span className="text-[#FF6B00]">*</span>
+                    </label>
+                    <Input
+                      id="grupoCodigo"
+                      value={groupCode}
+                      onChange={(e) => setGroupCode(e.target.value.toUpperCase())}
+                      placeholder="Ex: ABC1234"
+                      className="w-full border-[#1E293B] bg-[#0F172A] text-white placeholder:text-gray-500 focus:border-[#FF6B00] uppercase tracking-wider text-center text-lg font-mono"
+                      maxLength={7}
+                    />
+                    <p className="text-xs text-gray-500 mt-2">
+                      O código do grupo é um identificador único de 7 caracteres fornecido pelo criador do grupo.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowCodeEntry(false)}
+                  className="border-[#1E293B] text-white hover:bg-[#1E293B] hover:text-white"
+                >
+                  Voltar
+                </Button>
+                <Button
+                  type="button"
+                  className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
+                  onClick={handleJoinGroupByCode}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Entrar no Grupo
+                </Button>
+              </div>
+            </div>
           ) : (
             <form onSubmit={handleSubmit} className="p-6">
               <TabsList className="grid grid-cols-4 gap-2 mb-6 bg-transparent">
@@ -963,11 +994,10 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setIsEntrarPorCodigoModalOpen(true)}
+                  onClick={handleShowCodeEntry}
                   className="border-[#1E293B] text-white hover:bg-[#1E293B] hover:text-white"
                 >
-                  <Key className="h-4 w-4 mr-2" />
-                  Entrar com Código
+                  Adicionar Grupo
                 </Button>
                 <Button
                   type="submit"
@@ -981,12 +1011,6 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
           )}
         </motion.div>
       </div>
-      
-      {/* Modal para entrar em grupo por código */}
-      <EntrarGrupoPorCodigoModal 
-        isOpen={isEntrarPorCodigoModalOpen}
-        onClose={() => setIsEntrarPorCodigoModalOpen(false)}
-      />
     </AnimatePresence>
   );
 };
