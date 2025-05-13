@@ -91,21 +91,45 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
         return;
       }
 
-      // Verificar se é necessário gerar um novo código para o grupo
+      // Manter o código atual do grupo, jamais gerar um novo se já existir
       let codigoGrupo = grupo.codigo;
       if (!codigoGrupo) {
         try {
-          // Importar a função de geração de código do módulo gruposEstudoStorage
-          const { gerarCodigoUnicoGrupo } = await import('@/lib/gruposEstudoStorage');
-          codigoGrupo = await gerarCodigoUnicoGrupo();
-          console.log("Código gerado para o grupo:", codigoGrupo);
+          // IMPORTANTE: Verificar em múltiplas camadas se o grupo já possui um código
+          
+          // 1. Verificar no armazenamento dedicado para códigos (mais confiável)
+          const CODIGOS_STORAGE_KEY = 'epictus_codigos_grupo';
+          const codigosGrupos = JSON.parse(localStorage.getItem(CODIGOS_STORAGE_KEY) || '{}');
+          
+          if (grupo.id && codigosGrupos[grupo.id]) {
+            console.log("Recuperado código existente do storage dedicado:", codigosGrupos[grupo.id]);
+            codigoGrupo = codigosGrupos[grupo.id];
+          } else {
+            // 2. Verificar no localStorage via obterGruposLocal
+            const { obterGruposLocal, gerarCodigoUnicoGrupo } = await import('@/lib/gruposEstudoStorage');
+            const grupos = obterGruposLocal();
+            const grupoExistente = grupos.find(g => g.id === grupo.id);
+            
+            if (grupoExistente?.codigo) {
+              console.log("Recuperado código existente do localStorage:", grupoExistente.codigo);
+              codigoGrupo = grupoExistente.codigo;
+            } else {
+              // 3. Só gerar um novo código se realmente não existir em nenhum lugar
+              console.log("Nenhum código encontrado, gerando um novo...");
+              codigoGrupo = await gerarCodigoUnicoGrupo(grupo.id);
+              console.log("Novo código gerado para o grupo:", codigoGrupo);
+            }
+          }
         } catch (error) {
-          console.error("Erro ao gerar código para o grupo:", error);
-          // Fallback para código simples se ocorrer erro
-          const CARACTERES_PERMITIDOS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-          codigoGrupo = Array(7).fill(0).map(() => 
-            CARACTERES_PERMITIDOS.charAt(Math.floor(Math.random() * CARACTERES_PERMITIDOS.length))
-          ).join('');
+          console.error("Erro ao recuperar/gerar código para o grupo:", error);
+          // Fallback para código simples se ocorrer erro apenas se não existir nenhum código
+          if (!codigoGrupo) {
+            const CARACTERES_PERMITIDOS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+            codigoGrupo = Array(7).fill(0).map(() => 
+              CARACTERES_PERMITIDOS.charAt(Math.floor(Math.random() * CARACTERES_PERMITIDOS.length))
+            ).join('');
+            console.log("Código de fallback gerado:", codigoGrupo);
+          }
         }
       }
 
