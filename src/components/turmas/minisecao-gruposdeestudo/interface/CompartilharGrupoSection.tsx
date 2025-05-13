@@ -21,9 +21,16 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
   useEffect(() => {
     if (grupoCodigo) {
       setCodigoLocalExibido(grupoCodigo);
+      setCopiado(false);
       console.log("Código do grupo atualizado no componente:", grupoCodigo);
+    } else if (onGerarCodigo) {
+      // Se não houver código e existir a função para gerar, chamá-la automaticamente
+      console.log("Não há código definido, gerando automaticamente...");
+      setTimeout(() => {
+        onGerarCodigo();
+      }, 500); // Pequeno atraso para garantir que a interface foi renderizada
     }
-  }, [grupoCodigo]);
+  }, [grupoCodigo, onGerarCodigo]);
 
   const formattedCodigo = codigoLocalExibido && codigoLocalExibido.length > 4 
     ? `${codigoLocalExibido.substring(0, 4)} ${codigoLocalExibido.substring(4)}`

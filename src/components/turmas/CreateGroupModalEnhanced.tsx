@@ -236,6 +236,12 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
             console.log("Código básico de último recurso gerado:", codigoGrupo);
           }
         }
+        
+        // Certificar-se de que o código está definido, mesmo que com um valor padrão
+        if (!codigoGrupo) {
+          codigoGrupo = "TMP" + Date.now().toString().substring(8, 12);
+          console.log("Código de último recurso gerado:", codigoGrupo);
+        }
 
       // Garantir que o código esteja em maiúsculas e tenha o comprimento correto
       codigoGrupo = codigoGrupo.toUpperCase();

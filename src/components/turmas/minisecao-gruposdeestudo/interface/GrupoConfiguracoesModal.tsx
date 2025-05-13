@@ -73,7 +73,16 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
       setPrivado(grupo.privado || false);
       setVisibilidade(grupo.visibilidade || "todos");
       setDataInicio(grupo.data_inicio || "");
-        setGrupoAtualizado(grupo); // Inicializar o estado do grupo atualizado
+      setGrupoAtualizado(grupo); // Inicializar o estado do grupo atualizado
+      
+      // Se o grupo já tiver um código, mostrar notificação
+      if (grupo.codigo) {
+        console.log("Grupo já possui código:", grupo.codigo);
+      } else {
+        console.log("Grupo não possui código, será gerado automaticamente");
+        // Se o grupo não tiver código, gerar um ao abrir as configurações
+        handleGerarCodigo();
+      }
     }
   }, [grupo, isOpen]);
 
