@@ -202,14 +202,24 @@ const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className
               ))
             ) : (
               <motion.div 
-                className="col-span-full text-center py-12 text-gray-500"
+                className="col-span-full text-center py-12 text-gray-500 dark:text-white/70"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.3 }}
               >
                 {searchTerm 
                   ? "Nenhum grupo encontrado com os termos da busca."
-                  : "Você ainda não tem grupos de estudo. Crie um novo grupo para começar!"}
+                  : (
+                    <div className="flex flex-col items-center">
+                      <p className="mb-4">Você ainda não tem grupos de estudo. Crie um novo grupo para começar!</p>
+                      <Button 
+                        className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white"
+                        onClick={() => document.querySelector('.interface-selector')?.click()}
+                      >
+                        <Plus className="h-4 w-4 mr-2" /> Criar Grupo de Estudos
+                      </Button>
+                    </div>
+                  )}
               </motion.div>
             )}
           </div>
