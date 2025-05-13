@@ -140,46 +140,86 @@ export const verificarSeCodigoExiste = async (codigo: string): Promise<boolean> 
 /**
  * Gera um código único para o grupo de estudos
  * O código é gerado apenas uma vez para cada grupo e persistido
+ * Uma vez gerado, o mesmo código será sempre retornado
  */
 export const gerarCodigoUnicoGrupo = async (grupoId?: string): Promise<string> => {
   try {
-    // Se um grupoId foi fornecido, verificar se já existe um código associado a ele
-    if (grupoId) {
-      // Verificar se o grupo já tem um código no localStorage
-      const grupos = obterGruposLocal();
-      const grupoExistente = grupos.find(g => g.id === grupoId);
-      
-      if (grupoExistente && grupoExistente.codigo) {
-        console.log(`Utilizando código existente para o grupo:`, grupoExistente.codigo);
-        return grupoExistente.codigo;
+    // Se um grupoId não foi fornecido, gerar apenas um código temporário
+    // Este código não será salvo e é apenas para visualização
+    if (!grupoId) {
+      console.log("Gerando código temporário de exemplo (não persistente)");
+      let codigoTemp = gerarCodigoUnico().toUpperCase();
+      if (codigoTemp.length !== 7) {
+        codigoTemp = codigoTemp.padEnd(7, 'A').substring(0, 7);
       }
+      return codigoTemp;
+    }
+    
+    // VERIFICAÇÃO EM MÚLTIPLAS CAMADAS:
+    // 1. Primeiro verificar no localStorage
+    const grupos = obterGruposLocal();
+    const grupoExistente = grupos.find(g => g.id === grupoId);
+    
+    if (grupoExistente && grupoExistente.codigo) {
+      console.log(`Código existente encontrado no localStorage:`, grupoExistente.codigo);
       
-      // Verificar no Supabase se o grupo já tem um código
+      // Garantir que o código também existe no Supabase (sincronização silenciosa)
       try {
         const { data, error } = await supabase
           .from('grupos_estudo')
           .select('codigo')
           .eq('id', grupoId)
           .single();
+        
+        if (error || !data || !data.codigo) {
+          // Se não existir no Supabase, sincronizar silenciosamente
+          await supabase
+            .from('grupos_estudo')
+            .update({ codigo: grupoExistente.codigo })
+            .eq('id', grupoId);
           
-        if (!error && data && data.codigo) {
-          console.log(`Código encontrado no banco de dados:`, data.codigo);
-          return data.codigo;
+          console.log(`Código sincronizado com Supabase:`, grupoExistente.codigo);
         }
-      } catch (supabaseError) {
-        console.error('Erro ao buscar código existente no Supabase:', supabaseError);
+      } catch (e) {
+        console.error("Erro na sincronização silenciosa:", e);
       }
+      
+      return grupoExistente.codigo;
     }
     
-    // Se não encontrar um código existente, gerar um novo
-    let codigoGrupo = gerarCodigoUnico();
+    // 2. Se não encontrou no localStorage, verificar no Supabase
+    try {
+      const { data, error } = await supabase
+        .from('grupos_estudo')
+        .select('codigo')
+        .eq('id', grupoId)
+        .single();
+        
+      if (!error && data && data.codigo) {
+        console.log(`Código encontrado no banco de dados:`, data.codigo);
+        
+        // Atualizar também o localStorage para futuras consultas
+        const grupoIndex = grupos.findIndex(g => g.id === grupoId);
+        if (grupoIndex >= 0) {
+          grupos[grupoIndex].codigo = data.codigo;
+          localStorage.setItem('epictus_grupos_estudo', JSON.stringify(grupos));
+          console.log(`Código do Supabase atualizado no localStorage:`, data.codigo);
+        }
+        
+        return data.codigo;
+      }
+    } catch (supabaseError) {
+      console.error('Erro ao buscar código existente no Supabase:', supabaseError);
+    }
     
-    // Garantir que o código está em formato correto
-    codigoGrupo = codigoGrupo.toUpperCase();
-
+    // 3. Se chegou aqui, significa que o código realmente não existe e precisa ser gerado
+    console.log(`Nenhum código encontrado para o grupo ${grupoId}, gerando um novo...`);
+    
+    // Gerar novo código único
+    let codigoGrupo = gerarCodigoUnico().toUpperCase();
+    
     // Verificar se o código tem o comprimento esperado (7 caracteres)
     if (codigoGrupo.length !== 7) {
-      // Ajustar o código para ter 7 caracteres se necessário
       if (codigoGrupo.length < 7) {
         // Adicionar caracteres aleatórios até completar 7
         while (codigoGrupo.length < 7) {
@@ -187,54 +227,74 @@ export const gerarCodigoUnicoGrupo = async (grupoId?: string): Promise<string> =
             Math.floor(Math.random() * CARACTERES_PERMITIDOS.length)
           );
         }
-      } else if (codigoGrupo.length > 7) {
+      } else {
         // Truncar para 7 caracteres
         codigoGrupo = codigoGrupo.substring(0, 7);
       }
     }
     
     // Adicionar um timestamp parcial para garantir unicidade
-    // Usamos apenas os últimos 2 caracteres para manter o comprimento total de 7
+    // Últimos 2 caracteres do timestamp convertido para base 36 (alfanumérico)
     const timestamp = Date.now().toString(36).substring(0, 2).toUpperCase();
     codigoGrupo = codigoGrupo.substring(0, 5) + timestamp;
     
-    // Se um grupoId foi fornecido e o código foi gerado, salvar o código para este grupo
-    if (grupoId) {
-      // Salvar no localStorage
-      const grupos = obterGruposLocal();
-      const grupoIndex = grupos.findIndex(g => g.id === grupoId);
-      
-      if (grupoIndex >= 0) {
-        grupos[grupoIndex].codigo = codigoGrupo;
-        localStorage.setItem('epictus_grupos_estudo', JSON.stringify(grupos));
-        console.log(`Código ${codigoGrupo} salvo localmente para o grupo ${grupoId}`);
+    // PERSISTÊNCIA EM MÚLTIPLAS CAMADAS:
+    // 1. Salvar no localStorage
+    const grupoIndex = grupos.findIndex(g => g.id === grupoId);
+    if (grupoIndex >= 0) {
+      grupos[grupoIndex].codigo = codigoGrupo;
+      localStorage.setItem('epictus_grupos_estudo', JSON.stringify(grupos));
+      console.log(`Código ${codigoGrupo} persistido no localStorage para o grupo ${grupoId}`);
+    }
+    
+    // 2. Salvar no Supabase
+    try {
+      const { error } = await supabase
+        .from('grupos_estudo')
+        .update({ codigo: codigoGrupo })
+        .eq('id', grupoId);
+        
+      if (error) {
+        console.error('Erro ao salvar código no Supabase:', error);
+      } else {
+        console.log(`Código ${codigoGrupo} persistido no Supabase para o grupo ${grupoId}`);
       }
-      
-      // Tentar salvar no Supabase
+    } catch (supabaseError) {
+      console.error('Erro ao acessar Supabase para salvar código:', supabaseError);
+    }
+    
+    // 3. Cópia de segurança adicional no sessionStorage (para recuperação em caso de falhas)
+    try {
+      const backupKey = `grupo_codigo_${grupoId}`;
+      sessionStorage.setItem(backupKey, codigoGrupo);
+    } catch (e) {
+      console.error("Erro ao criar backup no sessionStorage:", e);
+    }
+    
+    console.log(`Novo código único gerado e persistido:`, codigoGrupo);
+    return codigoGrupo;
+  } catch (error) {
+    console.error("Erro crítico ao gerar/recuperar código único para grupo:", error);
+    
+    // MECANISMO DE RECUPERAÇÃO DE EMERGÊNCIA:
+    // 1. Tentar recuperar do sessionStorage
+    if (grupoId) {
       try {
-        const { error } = await supabase
-          .from('grupos_estudo')
-          .update({ codigo: codigoGrupo })
-          .eq('id', grupoId);
-          
-        if (error) {
-          console.error('Erro ao salvar código no Supabase:', error);
-        } else {
-          console.log(`Código ${codigoGrupo} salvo no Supabase para o grupo ${grupoId}`);
+        const backupKey = `grupo_codigo_${grupoId}`;
+        const backupCodigo = sessionStorage.getItem(backupKey);
+        if (backupCodigo) {
+          console.log("Recuperado código de backup do sessionStorage:", backupCodigo);
+          return backupCodigo;
         }
-      } catch (supabaseError) {
-        console.error('Erro ao acessar Supabase para salvar código:', supabaseError);
+      } catch (e) {
+        console.error("Erro na tentativa de recuperação do sessionStorage:", e);
       }
     }
     
-    console.log(`Código único gerado automaticamente:`, codigoGrupo);
-    return codigoGrupo;
-  } catch (error) {
-    console.error("Erro ao gerar código único para grupo:", error);
-    // Garantir que sempre retornamos um código, mesmo em caso de erro
+    // 2. Último recurso: gerar código de emergência
     const codigoEmergencia = `GE${Math.random().toString(36).substring(2, 5).toUpperCase()}`;
     
-    // Se um grupoId foi fornecido, tentar salvar este código de emergência
+    // Tentar salvar para que não precise gerar novo código na próxima vez
     if (grupoId) {
       try {
         const grupos = obterGruposLocal();
@@ -243,7 +303,12 @@ export const gerarCodigoUnicoGrupo = async (grupoId?: string): Promise<string> =
         if (grupoIndex >= 0) {
           grupos[grupoIndex].codigo = codigoEmergencia;
           localStorage.setItem('epictus_grupos_estudo', JSON.stringify(grupos));
+          console.log("Código de emergência salvo no localStorage:", codigoEmergencia);
         }
+        
+        // Tentar também salvar no sessionStorage como backup
+        const backupKey = `grupo_codigo_${grupoId}`;
+        sessionStorage.setItem(backupKey, codigoEmergencia);
       } catch (saveError) {
         console.error('Erro ao salvar código de emergência:', saveError);
       }

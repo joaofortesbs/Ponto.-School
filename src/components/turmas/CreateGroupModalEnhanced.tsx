@@ -216,14 +216,24 @@ const CreateGroupModalEnhanced: React.FC<CreateGroupModalProps> = ({
         return;
       }
 
+      // Criar um ID temporário para o grupo antes de salvá-lo
+      const grupoTempId = crypto.randomUUID();
+      
       // Gerar um código único para o grupo usando a função atualizada
       const { gerarCodigoUnicoGrupo } = await import('@/lib/gruposEstudoStorage');
-      let codigoGrupo = await gerarCodigoUnicoGrupo();
+      let codigoGrupo = await gerarCodigoUnicoGrupo(grupoTempId);
       
       // Garantir que o código está em maiúsculas
       codigoGrupo = codigoGrupo.toUpperCase();
       
-      console.log("Código único gerado automaticamente:", codigoGrupo);
+      console.log("Código único gerado para novo grupo:", codigoGrupo);
+      
+      // Salvar o código no localStorage temporariamente para recuperação futura
+      try {
+        sessionStorage.setItem(`novo_grupo_codigo_${codigoGrupo}`, codigoGrupo);
+      } catch (e) {
+        console.error("Erro ao salvar código temporário:", e);
+      }
 
       // Preparar dados para criação do grupo
       const novoGrupo = {

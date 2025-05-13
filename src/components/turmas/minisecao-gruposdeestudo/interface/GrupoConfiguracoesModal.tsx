@@ -192,29 +192,67 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
     }
   };
 
-    // Função para gerar um código único para o grupo - SEM PERSISTÊNCIA
-    // Agora apenas usado como fallback se não existir código
+    // Função para gerar um código único para o grupo e garantir que seja permanente
     const handleGerarCodigo = async () => {
       try {
-          // Verificar se o grupo já tem um código na UI
+          // Sistema de verificação dupla para evitar geração de códigos duplicados
+          
+          // 1. Verificar se o grupo já tem um código na UI atual
           if (grupoAtualizado?.codigo) {
-              // Se já existe um código, mostrar notificação e não gerar um novo
-              mostrarNotificacaoSucesso("Este grupo já possui um código!");
+              // Se já existe um código na interface, mostrar notificação e não gerar um novo
+              mostrarNotificacaoSucesso("Este grupo já possui um código permanente!");
               return;
           }
 
-          // Verificar se o grupo já tem um código
+          // 2. Verificar se o grupo originalmente já tinha um código
           if (grupo && grupo.codigo) {
-              // Se já existe código, apenas exibe uma notificação
+              // Se já existe código no objeto original, apenas exibe notificação e atualiza UI
               mostrarNotificacaoSucesso("Este grupo já possui um código único permanente!");
+              
+              // Mesmo que o estado não tenha o código, atualizamos para garantir consistência
+              setGrupoAtualizado(prev => ({
+                  ...prev,
+                  codigo: grupo.codigo
+              }));
+              
               return;
           }
 
-          // Gerar um código único para o grupo e garantir que seja persistido
-          const { gerarCodigoUnicoGrupo } = await import('@/lib/gruposEstudoStorage');
-          const novoCodigo = await gerarCodigoUnicoGrupo(grupo?.id);
+          // 3. Verificar código diretamente no armazenamento antes de tentar gerar
+          if (grupo?.id) {
+              const { obterGruposLocal } = await import('@/lib/gruposEstudoStorage');
+              const grupos = obterGruposLocal();
+              const grupoExistente = grupos.find(g => g.id === grupo.id);
+              
+              if (grupoExistente?.codigo) {
+                  mostrarNotificacaoSucesso("Código único recuperado do armazenamento!");
+                  
+                  // Atualizar o estado da UI com o código encontrado
+                  setGrupoAtualizado(prev => ({
+                      ...prev,
+                      codigo: grupoExistente.codigo
+                  }));
+                  
+                  // Atualizar o grupo original para manter consistência
+                  if (grupo) grupo.codigo = grupoExistente.codigo;
+                  
+                  // Forçar atualização da UI e persistir a alteração
+                  if (grupo && onSave) {
+                      onSave({...grupo, codigo: grupoExistente.codigo});
+                  }
+                  
+                  return;
+              }
+          }
 
-          console.log("Novo código gerado e armazenado:", novoCodigo);
+          // 4. Se realmente não existir código, só então gerar um novo
+          const { gerarCodigoUnicoGrupo } = await import('@/lib/gruposEstudoStorage');
+          
+          // Mostrar notificação de que o processo começou
+          mostrarNotificacaoSucesso("Gerando código permanente...");
+          
+          const novoCodigo = await gerarCodigoUnicoGrupo(grupo?.id);
+          console.log("Novo código único gerado e armazenado:", novoCodigo);
 
           if (novoCodigo) {
               // Atualizar o estado local para a UI
@@ -223,15 +261,21 @@ const GrupoConfiguracoesModal: React.FC<GrupoConfiguracoesModalProps> = ({
                   codigo: novoCodigo
               }));
 
-              // Atualizar o grupo original também para garantir que a UI seja atualizada
+              // Atualizar o grupo original para manter consistência
               if (grupo) grupo.codigo = novoCodigo;
 
               // Mostrar notificação de sucesso
               mostrarNotificacaoSucesso("Código permanente do grupo gerado com sucesso!");
               
-              // Força atualização da UI e persiste a alteração
+              // Forçar atualização da UI e persistir a alteração
               if (grupo && onSave) {
                   onSave({...grupo, codigo: novoCodigo});
+              }
+              
+              // Salvamento adicional para garantir persistência
+              if (grupo?.id) {
+                  const { salvarCodigoGrupo } = await import('@/lib/gruposEstudoStorage');
+                  await salvarCodigoGrupo(grupo.id, novoCodigo);
               }
           }
       } catch (error) {

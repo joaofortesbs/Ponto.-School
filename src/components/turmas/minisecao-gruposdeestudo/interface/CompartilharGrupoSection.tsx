@@ -19,13 +19,22 @@ const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({
 
   // Verificar se já temos código ao inicializar o componente
   useEffect(() => {
-    setCodigoGerado(!!grupoCodigo);
+    // Atualizar o estado de código gerado apenas se temos um código válido
+    const temCodigo = !!grupoCodigo && grupoCodigo.trim() !== "" && grupoCodigo !== "SEM CÓDIGO";
+    setCodigoGerado(temCodigo);
 
     // Se não temos código mas temos a função para gerar, gerar automaticamente
-    if (!grupoCodigo && onGerarCodigo && !codigoGerado) {
-      handleGerarCodigo();
+    // apenas na primeira renderização para evitar loops de geração
+    if (!temCodigo && onGerarCodigo && !codigoGerado) {
+      console.log("Inicializando geração automática de código do grupo");
+      // Usar setTimeout para garantir que a geração ocorra após a renderização completa
+      const timer = setTimeout(() => {
+        handleGerarCodigo();
+      }, 500);
+      
+      return () => clearTimeout(timer);
     }
-  }, [grupoCodigo, onGerarCodigo, codigoGerado]);
+  }, [grupoCodigo]); // Dependência reduzida para evitar loops
 
   const formattedCodigo = grupoCodigo && grupoCodigo.length > 4 
     ? `${grupoCodigo.substring(0, 4)} ${grupoCodigo.substring(4)}`
