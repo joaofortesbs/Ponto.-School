@@ -1,25 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Filter, GraduationCap, Users2 } from "lucide-react";
+import { Plus, Search, Filter, GraduationCap, Users2, RefreshCcw } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { motion } from "framer-motion";
-import { gruposEstudo } from "@/components/estudos/data/gruposEstudo";
+import { motion, AnimatePresence } from "framer-motion";
+import { obterTodosGrupos, GrupoEstudo } from "@/lib/gruposEstudoStorage";
+import { supabase } from "@/lib/supabase";
 
 interface GruposEstudoInterfaceProps {
   className?: string;
-}
-
-interface GrupoEstudo {
-  id: string;
-  nome: string;
-  descricao: string;
-  materia: string;
-  membros: number;
-  proximoEncontro?: string;
-  imagem?: string;
-  isPublico: boolean;
-  criador: string;
-  tags: string[];
 }
 
 const GrupoEstudoCard = ({ 
@@ -36,7 +24,9 @@ const GrupoEstudoCard = ({
       onClick={() => onClick(grupo.id)}
     >
       <div className="flex items-start gap-3">
-        <div className="h-12 w-12 bg-gradient-to-br from-[#FF6B00]/20 to-[#FF8C40]/20 rounded-lg flex items-center justify-center">
+        <div className="h-12 w-12 bg-gradient-to-br from-[#FF6B00]/20 to-[#FF8C40]/20 rounded-lg flex items-center justify-center"
+          style={{ backgroundColor: grupo.cor ? `${grupo.cor}20` : undefined }}
+        >
           <GraduationCap className="h-6 w-6 text-[#FF6B00]" />
         </div>
         <div className="flex-1">
@@ -44,20 +34,20 @@ const GrupoEstudoCard = ({
             {grupo.nome}
           </h3>
           <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mt-1">
-            {grupo.descricao}
+            {grupo.descricao || "Sem descrição"}
           </p>
           <div className="flex items-center justify-between mt-3">
             <div className="flex items-center gap-1">
               <Users2 className="h-4 w-4 text-[#FF6B00]" />
-              <span className="text-xs text-gray-600 dark:text-gray-400">{grupo.membros} membros</span>
+              <span className="text-xs text-gray-600 dark:text-gray-400">{grupo.membros || 1} membros</span>
             </div>
             <div className="text-xs text-[#FF6B00]">
-              {grupo.materia}
+              {grupo.disciplina || grupo.topico || "Geral"}
             </div>
           </div>
-          {grupo.proximoEncontro && (
-            <div className="mt-2 text-xs text-gray-600 dark:text-gray-400">
-              Próximo encontro: {grupo.proximoEncontro}
+          {grupo.codigo && (
+            <div className="mt-2 text-xs font-mono bg-gray-100 dark:bg-gray-800 rounded px-2 py-1 inline-block">
+              Código: {grupo.codigo}
             </div>
           )}
         </div>
@@ -69,25 +59,54 @@ const GrupoEstudoCard = ({
 const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("todos");
-  const [displayedGroups, setDisplayedGroups] = useState(gruposEstudo);
+  const [meusGrupos, setMeusGrupos] = useState<GrupoEstudo[]>([]);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
+  // Carregar o ID do usuário e os grupos
   useEffect(() => {
-    let filtered = gruposEstudo;
+    const carregarUsuarioEGrupos = async () => {
+      setIsLoading(true);
+      
+      try {
+        // Obter a sessão do usuário
+        const { data } = await supabase.auth.getSession();
+        const uid = data.session?.user?.id;
+        
+        if (uid) {
+          setUserId(uid);
+          
+          // Carregar grupos com o userId
+          const grupos = await obterTodosGrupos(uid);
+          console.log(`Carregados ${grupos.length} grupos de estudo`);
+          setMeusGrupos(grupos);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar grupos:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    carregarUsuarioEGrupos();
+  }, [refreshKey]);
 
-    // Filtrar por termo de busca
-    if (searchTerm) {
-      filtered = filtered.filter(
-        (grupo) =>
-          grupo.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          grupo.materia.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          grupo.descricao.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-
-    setDisplayedGroups(filtered);
-  }, [searchTerm, selectedFilter]);
+  // Filtrar os grupos com base na busca
+  const gruposFiltrados = React.useMemo(() => {
+    if (!meusGrupos || meusGrupos.length === 0) return [];
+    
+    return meusGrupos.filter(grupo => {
+      // Garantir que todos os campos existem antes de verificar
+      const nomeMatch = grupo.nome && grupo.nome.toLowerCase().includes(searchTerm.toLowerCase());
+      const descricaoMatch = grupo.descricao && grupo.descricao.toLowerCase().includes(searchTerm.toLowerCase());
+      const disciplinaMatch = grupo.disciplina && grupo.disciplina.toLowerCase().includes(searchTerm.toLowerCase());
+      const topicoMatch = grupo.topico && grupo.topico.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      return nomeMatch || descricaoMatch || disciplinaMatch || topicoMatch;
+    });
+  }, [meusGrupos, searchTerm]);
 
   // Função para lidar com clique no grupo com debounce para evitar múltiplos cliques
   const handleGroupClick = (id: string) => {
@@ -102,6 +121,11 @@ const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className
     }, 300);
 
     // Implementar navegação ou abertura de modal aqui
+  };
+
+  // Função para atualizar a lista de grupos
+  const handleRefresh = () => {
+    setRefreshKey(prev => prev + 1);
   };
 
   return (
@@ -121,6 +145,17 @@ const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className
             variant="outline"
             size="sm"
             className="text-gray-600 dark:text-gray-400 border-[#FF6B00]/10 dark:border-[#FF6B00]/20 h-9 interface-selector"
+            onClick={handleRefresh}
+          >
+            <span className="interface-selector-icon">
+              <RefreshCcw className="h-4 w-4" />
+            </span>
+            <span className="interface-selector-text">Atualizar</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-gray-600 dark:text-gray-400 border-[#FF6B00]/10 dark:border-[#FF6B00]/20 h-9 interface-selector"
           >
             <span className="interface-selector-icon">
               <Filter className="h-4 w-4" />
@@ -136,39 +171,52 @@ const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4 mt-4 overflow-x-auto">
-        {displayedGroups.map((grupo, index) => (
-          <motion.div
-            key={grupo.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ 
-              duration: 0.25, 
-              ease: "easeOut", 
-              delay: index * 0.05, // Escalonar a animação para cada card
-              staggerChildren: 0.05 
-            }}
-            className="animate-smooth-hover"
-            layout="position"
-            layoutId={`grupo-${grupo.id}`}
-          >
-            <GrupoEstudoCard grupo={grupo} onClick={handleGroupClick} />
-          </motion.div>
-        ))}
-
-        {displayedGroups.length === 0 && (
+      <AnimatePresence>
+        {isLoading ? (
           <motion.div 
-            className="col-span-3 text-center py-8 text-gray-500"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
+            exit={{ opacity: 0 }}
+            className="flex justify-center items-center py-20"
           >
-            Nenhum grupo encontrado com os filtros selecionados.
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#FF6B00]"></div>
           </motion.div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-4">
+            {gruposFiltrados.length > 0 ? (
+              gruposFiltrados.map((grupo, index) => (
+                <motion.div
+                  key={`${grupo.id}-${index}`}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ 
+                    duration: 0.25, 
+                    ease: "easeOut", 
+                    delay: index * 0.05,
+                  }}
+                  className="animate-smooth-hover"
+                  layout="position"
+                >
+                  <GrupoEstudoCard grupo={grupo} onClick={handleGroupClick} />
+                </motion.div>
+              ))
+            ) : (
+              <motion.div 
+                className="col-span-full text-center py-12 text-gray-500"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3 }}
+              >
+                {searchTerm 
+                  ? "Nenhum grupo encontrado com os termos da busca."
+                  : "Você ainda não tem grupos de estudo. Crie um novo grupo para começar!"}
+              </motion.div>
+            )}
+          </div>
         )}
-      </div>
+      </AnimatePresence>
 
-      {displayedGroups.length > 6 && (
+      {gruposFiltrados.length > 8 && (
         <div className="flex justify-center mt-6">
           <Button variant="outline" className="text-[#FF6B00] border-[#FF6B00] hover:bg-[#FF6B00]/10">
             Ver todos os grupos
