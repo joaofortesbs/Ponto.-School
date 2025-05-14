@@ -1,366 +1,294 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Share, Check, Copy, Key, Link } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { toast } from '@/components/ui/use-toast';
-import { useToast } from '@/components/ui/use-toast';
-import { supabase } from '@/lib/supabase';
+import React, { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Copy, CheckCircle2, Share2, RefreshCw } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { toast } from "@/components/ui/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { gerarCodigoGrupo, atualizarCodigoGrupo } from "@/lib/grupoCodigoUtils";
 
 interface CompartilharGrupoSectionProps {
-  grupoCodigo: string;
-  grupoNome: string;
-  grupoId?: string; // Adicionado para recuperação direta
-  onGerarCodigo?: () => Promise<void>;
+  grupoId: string;
+  className?: string;
 }
 
-const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({ 
-  grupoCodigo, 
-  grupoNome,
-  grupoId,
-  onGerarCodigo
-}) => {
-  const [copiado, setCopiado] = useState(false);
-  const [codigoGerado, setCodigoGerado] = useState(!!grupoCodigo);
-  const [codigoLocal, setCodigoLocal] = useState(grupoCodigo);
-  const gerouCodigoRef = useRef(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
+const CompartilharGrupoSection: React.FC<CompartilharGrupoSectionProps> = ({ grupoId, className }) => {
+  const [codigoLocal, setCodigoLocal] = useState<string>("");
+  const [codigoGerado, setCodigoGerado] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isCopied, setIsCopied] = useState(false);
+  const [isGeneratingCode, setIsGeneratingCode] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Tentar recuperar código do armazenamento dedicado
-  useEffect(() => {
-    const recuperarOuGerarCodigo = async () => {
-      setIsLoading(true);
+  // Função para recuperar o código do grupo
+  const recuperarCodigo = async () => {
+    setIsLoading(true);
+    setError(null);
 
+    try {
+      if (!grupoId) {
+        setError("ID do grupo não encontrado");
+        setIsLoading(false);
+        return;
+      }
+
+      // 1. Verificar primeiro no armazenamento dedicado para códigos
       try {
-        if (grupoId) {
-          // Usar a função centralizada para recuperar o código em todas as camadas
-          const { obterGrupoPorId, gerarCodigoUnicoGrupo, salvarCodigoGrupo } = await import('@/lib/gruposEstudoStorage');
+        const CODIGOS_STORAGE_KEY = 'epictus_codigos_grupo';
+        const codigosGrupos = JSON.parse(localStorage.getItem(CODIGOS_STORAGE_KEY) || '{}');
 
-          // Estratégia multinível para recuperar código:
+        if (codigosGrupos[grupoId]) {
+          console.log("Recuperado código do storage dedicado:", codigosGrupos[grupoId]);
+          setCodigoLocal(codigosGrupos[grupoId]);
+          setCodigoGerado(true);
+          setIsLoading(false);
+          return;
+        }
+      } catch (e) {
+        console.error("Erro ao verificar storage dedicado:", e);
+      }
 
-          // 1. Verificar primeiro no armazenamento dedicado para códigos (mais confiável)
+      // 2. Verificar no grupo armazenado localmente
+      try {
+        const { obterGruposLocal } = await import('@/lib/gruposEstudoStorage');
+        const grupos = obterGruposLocal();
+        const grupoExistente = grupos.find(g => g.id === grupoId);
+
+        if (grupoExistente?.codigo) {
+          console.log("Recuperado código do localStorage:", grupoExistente.codigo);
+          setCodigoLocal(grupoExistente.codigo);
+          setCodigoGerado(true);
+
+          // Salvar no armazenamento dedicado para futuras recuperações
           try {
             const CODIGOS_STORAGE_KEY = 'epictus_codigos_grupo';
             const codigosGrupos = JSON.parse(localStorage.getItem(CODIGOS_STORAGE_KEY) || '{}');
-
-            if (codigosGrupos[grupoId]) {
-              console.log("Recuperado código do storage dedicado:", codigosGrupos[grupoId]);
-              setCodigoLocal(codigosGrupos[grupoId]);
-              setCodigoGerado(true);
-              setIsLoading(false);
-              return;
-            }
+            codigosGrupos[grupoId] = grupoExistente.codigo;
+            localStorage.setItem(CODIGOS_STORAGE_KEY, JSON.stringify(codigosGrupos));
           } catch (e) {
-            console.error("Erro ao verificar storage dedicado:", e);
+            console.error("Erro ao salvar no armazenamento dedicado:", e);
           }
 
-          // 2. Verificar no grupo armazenado localmente
-          try {
-            const { obterGruposLocal } = await import('@/lib/gruposEstudoStorage');
-            const grupos = obterGruposLocal();
-            const grupoExistente = grupos.find(g => g.id === grupoId);
-
-            if (grupoExistente?.codigo) {
-              console.log("Recuperado código do localStorage:", grupoExistente.codigo);
-              setCodigoLocal(grupoExistente.codigo);
-              setCodigoGerado(true);
-
-              // Salvar no armazenamento dedicado para futuras recuperações
-              try {
-                const CODIGOS_STORAGE_KEY = 'epictus_codigos_grupo';
-                const codigosGrupos = JSON.parse(localStorage.getItem(CODIGOS_STORAGE_KEY) || '{}');
-                codigosGrupos[grupoId] = grupoExistente.codigo;
-                localStorage.setItem(CODIGOS_STORAGE_KEY, JSON.stringify(codigosGrupos));
-              } catch (e) {
-                console.error("Erro ao salvar no armazenamento dedicado:", e);
-              }
-
-              setIsLoading(false);
-              return;
-            }
-          } catch (e) {
-            console.error("Erro ao verificar grupos no localStorage:", e);
-          }
-
-          // 3. Verificar no Supabase
-          try {
-            const { data, error } = await supabase
-              .from('grupos_estudo')
-              .select('codigo')
-              .eq('id', grupoId)
-              .single();
-
-            if (!error && data?.codigo) {
-              console.log("Recuperado código do Supabase:", data.codigo);
-              setCodigoLocal(data.codigo);
-              setCodigoGerado(true);
-
-              // Propagar para camadas de armazenamento local
-              await salvarCodigoGrupo(grupoId, data.codigo);
-
-              setIsLoading(false);
-              return;
-            }
-          } catch (supabaseError) {
-            console.error("Erro ao verificar código no Supabase:", supabaseError);
-          }
-
-          // 4. Se chegou aqui, não encontrou código existente. Gerar um novo.
-          if (onGerarCodigo) {
-            const novoCodigo = await onGerarCodigo();
-            console.log("Novo código gerado via callback:", novoCodigo);
-            setCodigoLocal(novoCodigo);
-            setCodigoGerado(true);
-          } else {
-            // Gerar internamente se não houver callback
-            const codigo = await gerarCodigoUnicoGrupo(grupoId);
-            console.log("Novo código gerado internamente:", codigo);
-            setCodigoLocal(codigo);
-            setCodigoGerado(true);
-
-            // Atualizar no Supabase
-            try {
-              await supabase
-                .from('grupos_estudo')
-                .update({ codigo })
-                .eq('id', grupoId);
-
-              console.log("Código atualizado no Supabase");
-            } catch (e) {
-              console.error("Erro ao atualizar código no Supabase:", e);
-            }
-          }
+          setIsLoading(false);
+          return;
         }
-      } catch (error) {
-        console.error("Erro ao recuperar ou gerar código:", error);
-        toast({
-          title: "Erro ao gerar código",
-          description: "Não foi possível gerar um código para o grupo. Tente novamente.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
+      } catch (e) {
+        console.error("Erro ao verificar localStorage:", e);
       }
-    };
 
-    recuperarOuGerarCodigo();
-  }, [grupoId]);
+      // 3. Buscar do Supabase como último recurso
+      const { data, error } = await supabase
+        .from('grupos_estudo')
+        .select('codigo')
+        .eq('id', grupoId)
+        .single();
 
-  // Verificar se já temos código ao inicializar o componente
-  useEffect(() => {
-    // Atualizar o estado de código gerado apenas se temos um código válido
-    const temCodigo = !!grupoCodigo && grupoCodigo.trim() !== "" && grupoCodigo !== "SEM CÓDIGO";
+      if (error) {
+        console.error("Erro ao buscar código do grupo:", error);
+        setError("Não foi possível recuperar o código do grupo");
+      } else if (data && data.codigo) {
+        setCodigoLocal(data.codigo);
+        setCodigoGerado(true);
 
-    if (temCodigo) {
-      setCodigoLocal(grupoCodigo);
-      setCodigoGerado(true);
-    } else if (codigoLocal && codigoLocal.trim() !== "" && codigoLocal !== "SEM CÓDIGO") {
-      // Se já recuperamos um código localmente, manter esse
-      setCodigoGerado(true);
-    } else if (!gerouCodigoRef.current && onGerarCodigo && !codigoGerado) {
-      // Se não temos código mas temos a função para gerar, gerar automaticamente
-      // apenas uma vez para evitar loops de geração
-      console.log("Inicializando geração automática de código do grupo");
-      gerouCodigoRef.current = true;
-
-      // Usar setTimeout para garantir que a geração ocorra após a renderização completa
-      const timer = setTimeout(() => {
-        handleGerarCodigo();
-      }, 500);
-
-      return () => clearTimeout(timer);
-    }
-  }, [grupoCodigo, codigoLocal]); // Dependências ajustadas
-
-  const formattedCodigo = codigoLocal && codigoLocal.length > 4 
-    ? `${codigoLocal.substring(0, 4)} ${codigoLocal.substring(4)}`
-    : codigoLocal || "SEM CÓDIGO";
-
-  // Função para copiar apenas o código
-  const copiarCodigoGrupo = () => {
-    if (codigoLocal) {
-      // Copiar apenas o código para a área de transferência
-      navigator.clipboard.writeText(codigoLocal)
-        .then(() => {
-          setCopiado(true);
-          toast({
-            title: "Código copiado!",
-            description: "O código do grupo foi copiado para a área de transferência.",
-          });
-
-          // Resetar estado após 3 segundos
-          setTimeout(() => {
-            setCopiado(false);
-          }, 3000);
-        })
-        .catch(err => {
-          console.error('Erro ao copiar código:', err);
-          toast({
-            title: "Erro ao copiar",
-            description: "Não foi possível copiar o código. Tente novamente.",
-            variant: "destructive",
-          });
-        });
-    }
-  };
-
-  // Função para copiar o link completo de convite
-  const copiarLinkConvite = () => {
-    if (codigoLocal) {
-      // Criar link de convite com o código
-      const linkConvite = `${window.location.origin}/turmas/grupos/join?codigo=${codigoLocal}`;
-
-      // Copiar para a área de transferência
-      navigator.clipboard.writeText(linkConvite)
-        .then(() => {
-          setCopiado(true);
-          toast({
-            title: "Link copiado!",
-            description: "O link de convite foi copiado para a área de transferência.",
-          });
-
-          // Resetar estado após 3 segundos
-          setTimeout(() => {
-            setCopiado(false);
-          }, 3000);
-        })
-        .catch(err => {
-          console.error('Erro ao copiar link:', err);
-          toast({
-            title: "Erro ao copiar",
-            description: "Não foi possível copiar o link. Tente novamente.",
-            variant: "destructive",
-          });
-        });
-    }
-  };
-
-  const handleCopiarCodigo = () => {
-    // Garantir que copiamos o código sem formatação (sem espaços)
-    navigator.clipboard.writeText(codigoLocal || grupoCodigo)
-      .then(() => {
-        setCopiado(true);
-        setTimeout(() => setCopiado(false), 2000);
-      })
-      .catch(err => {
-        console.error('Erro ao copiar código:', err);
-      });
-  };
-
-  const handleCompartilhar = async () => {
-    try {
-      if (navigator.share) {
-        await navigator.share({
-          title: `Grupo de Estudos: ${grupoNome}`,
-          text: `Entre no meu grupo de estudos "${grupoNome}" usando o código: ${codigoLocal || grupoCodigo}`,
-          url: window.location.href,
-        });
-      } else {
-        handleCopiarCodigo();
-      }
-    } catch (error) {
-      console.error('Erro ao compartilhar:', error);
-    }
-  };
-
-  const handleGerarCodigo = async () => {
-    if (onGerarCodigo) {
-      await onGerarCodigo();
-      setCodigoGerado(true);
-
-      // Atualizar código local após geração
-      if (grupoId) {
+        // Salvar para acesso futuro mais rápido
         try {
-          // Verificar no armazenamento dedicado após a geração
           const CODIGOS_STORAGE_KEY = 'epictus_codigos_grupo';
           const codigosGrupos = JSON.parse(localStorage.getItem(CODIGOS_STORAGE_KEY) || '{}');
-
-          if (codigosGrupos[grupoId]) {
-            console.log("Recuperado código recém-gerado do armazenamento dedicado:", codigosGrupos[grupoId]);
-            setCodigoLocal(codigosGrupos[grupoId]);
-          } else if (grupoCodigo && grupoCodigo !== "SEM CÓDIGO") {
-            // Se o código foi atualizado mas não está no armazenamento dedicado
-            setCodigoLocal(grupoCodigo);
-
-            // Salvar no armazenamento dedicado
-            try {
-              codigosGrupos[grupoId] = grupoCodigo;
-              localStorage.setItem(CODIGOS_STORAGE_KEY, JSON.stringify(codigosGrupos));
-              console.log("Código recém-gerado salvo no armazenamento dedicado:", grupoCodigo);
-            } catch (e) {
-              console.error("Erro ao salvar código recém-gerado no armazenamento dedicado:", e);
-            }
-          }
+          codigosGrupos[grupoId] = data.codigo;
+          localStorage.setItem(CODIGOS_STORAGE_KEY, JSON.stringify(codigosGrupos));
         } catch (e) {
-          console.error("Erro ao atualizar código após geração:", e);
-          setCodigoLocal(grupoCodigo); // Fallback para o código recebido por props
+          console.error("Erro ao salvar no armazenamento dedicado:", e);
         }
-      } else {
-        // Se não temos grupoId, usar o código recebido por props
-        setCodigoLocal(grupoCodigo);
+      }
+    } catch (error) {
+      console.error("Erro ao recuperar código:", error);
+      setError("Ocorreu um erro inesperado");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Recuperar o código ao carregar o componente
+  useEffect(() => {
+    recuperarCodigo();
+  }, [grupoId]);
+
+  // Função para copiar o código para a área de transferência
+  const handleCopyCode = async () => {
+    if (codigoLocal) {
+      try {
+        await navigator.clipboard.writeText(codigoLocal);
+        setIsCopied(true);
+        toast({
+          title: "Código copiado!",
+          description: "O código foi copiado para a área de transferência.",
+        });
+
+        // Resetar o estado após 2 segundos
+        setTimeout(() => {
+          setIsCopied(false);
+        }, 2000);
+      } catch (err) {
+        console.error("Erro ao copiar código:", err);
+        toast({
+          title: "Erro",
+          description: "Não foi possível copiar o código. Tente manualmente.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+  // Função para compartilhar o código via outras plataformas
+  const handleShareCode = async () => {
+    if (codigoLocal && navigator.share) {
+      try {
+        await navigator.share({
+          title: "Grupo de Estudos - Código de Convite",
+          text: `Use este código para entrar no grupo: ${codigoLocal}`,
+        });
+      } catch (err) {
+        console.error("Erro ao compartilhar:", err);
+      }
+    } else {
+      // Fallback para dispositivos sem suporte à Web Share API
+      handleCopyCode();
+    }
+  };
+
+  // Função para gerar um novo código
+  const handleGerarCodigo = async () => {
+    try {
+      setIsGeneratingCode(true);
+      setError(null);
+
+      // Se já tiver um código, não permitir gerar outro
+      if (codigoGerado && codigoLocal) {
+        toast({
+          title: "Código já existe",
+          description: "Este grupo já possui um código permanente que não pode ser alterado.",
+        });
+        setIsGeneratingCode(false);
+        return;
       }
 
-      console.log("Código gerado automaticamente:", codigoLocal || grupoCodigo);
+      // Gerar novo código
+      const novoCodigo = gerarCodigoGrupo();
+
+      // Atualizar no banco de dados
+      const { error } = await supabase
+        .from('grupos_estudo')
+        .update({ codigo: novoCodigo })
+        .eq('id', grupoId);
+
+      if (error) {
+        console.error("Erro ao salvar código no banco de dados:", error);
+        setError("Ocorreu um erro ao gerar o código. Tente novamente.");
+      } else {
+        // Atualizar estado local
+        setCodigoLocal(novoCodigo);
+        setCodigoGerado(true);
+
+        // Atualizar armazenamento dedicado
+        await atualizarCodigoGrupo(grupoId, novoCodigo);
+
+        toast({
+          title: "Código gerado com sucesso!",
+          description: "Seu grupo agora tem um código único de convite.",
+        });
+      }
+    } catch (error) {
+      console.error("Erro ao gerar código:", error);
+      setError("Ocorreu um erro inesperado. Tente novamente mais tarde.");
+    } finally {
+      setIsGeneratingCode(false);
     }
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Compartilhar grupo
-        </h3>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-          Compartilhe o código do grupo para que outras pessoas possam encontrá-lo e solicitar participação.
-        </p>
-      </div>
+    <div className={`bg-[#1E293B]/50 rounded-lg p-4 border border-[#1E293B] ${className || ""}`}>
+      <h3 className="text-base font-semibold text-white mb-2 flex items-center">
+        <Share2 className="h-4 w-4 mr-2 text-[#FF6B00]" />
+        Compartilhar Grupo
+      </h3>
 
-      <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-        <div className="flex flex-col space-y-4">
-          <div>
-            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 flex items-center">
-              Código do grupo
-              <span className="ml-2 px-1.5 py-0.5 bg-green-500/20 text-green-500 rounded-md text-xs font-medium">Permanente</span>
-            </label>
-            <div className="flex items-center">
-              <span className="bg-white dark:bg-gray-900 py-2 px-3 text-sm font-mono rounded-l-md border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-gray-200 flex-1 font-bold tracking-wider">
-                {formattedCodigo}
-              </span>
-              <Button
-                onClick={handleCopiarCodigo}
-                variant="ghost"
-                className="h-9 rounded-l-none rounded-r-md border border-l-0 border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700"
-                disabled={!codigoLocal && !grupoCodigo}
-              >
-                {copiado ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
-              </Button>
-            </div>
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              {(codigoLocal || grupoCodigo) ? "Este código permanente é usado para convidar pessoas para o seu grupo. O código é único, inalterável e insensível a maiúsculas e minúsculas." : "Um código único e permanente será gerado para este grupo quando você clicar no botão 'Gerar código do grupo'."}
-            </p>
-          </div>
-
-          {!codigoLocal && !grupoCodigo && (
-            <div className="pt-2">
-              <Button
-                onClick={handleGerarCodigo}
-                variant="secondary"
-                className="w-full justify-center"
-                disabled={isLoading}
-              >
-                {isLoading ? "Gerando código..." : "Gerar código do grupo"}
-              </Button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {codigoLocal && (
-        <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
-          <p>Apenas pessoas com o código podem solicitar entrada no grupo.</p>
-          <p>Configure as opções de privacidade do grupo na aba "Privacidade".</p>
-        </div>
+      {error && (
+        <Alert className="mb-3 bg-red-900/20 text-red-400 border-red-900">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
+
+      <div className="space-y-3">
+        {isLoading ? (
+          <div className="flex justify-center p-3">
+            <div className="h-5 w-5 border-2 border-[#FF6B00] border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : (
+          <>
+            {codigoGerado && codigoLocal ? (
+              <div className="space-y-3">
+                <p className="text-sm text-gray-400">
+                  Compartilhe este código único para que outros possam entrar diretamente no grupo:
+                </p>
+
+                <div className="flex items-center gap-2">
+                  <div className="bg-[#1E293B] rounded px-3 py-2 font-mono text-white tracking-wider flex-1 text-center uppercase">
+                    {codigoLocal.length >= 4 ? 
+                      `${codigoLocal.substring(0, 4)} ${codigoLocal.substring(4)}` : 
+                      codigoLocal}
+                  </div>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="outline"
+                    className="h-10 w-10 border-[#1E293B] text-white hover:bg-[#1E293B]"
+                    onClick={handleCopyCode}
+                  >
+                    {isCopied ? (
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+
+                <div className="flex justify-center">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="border-[#1E293B] text-white hover:bg-[#1E293B]"
+                    onClick={handleShareCode}
+                  >
+                    <Share2 className="h-4 w-4 mr-2" />
+                    Compartilhar
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-sm text-gray-400">
+                  Gere um código único para compartilhar este grupo com outros estudantes:
+                </p>
+
+                <div className="flex justify-center">
+                  <Button
+                    type="button"
+                    className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
+                    onClick={handleGerarCodigo}
+                    disabled={isGeneratingCode}
+                  >
+                    {isGeneratingCode ? (
+                      <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                    ) : (
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                    )}
+                    Gerar Código de Convite
+                  </Button>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 };

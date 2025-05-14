@@ -128,15 +128,6 @@ mode = "sequential"
 task = "shell.exec"
 args = "node scripts/setup-simple-db.js"
 
-[[workflows.workflow]]
-name = "Servidor de Códigos de Grupo"
-author = 42059808
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "node scripts/codigo-grupos-server.js"
-
 [auth]
 pageEnabled = false
 buttonEnabled = false

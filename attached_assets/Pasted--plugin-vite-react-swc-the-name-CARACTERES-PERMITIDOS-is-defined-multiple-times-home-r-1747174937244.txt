@@ -1,0 +1,50 @@
+[plugin:vite:react-swc] × the name `CARACTERES_PERMITIDOS` is defined multiple times
+    ╭─[/home/runner/workspace/src/lib/grupoCodigoUtils.ts:7:1]
+  7 │ import { salvarGrupoLocal, obterGruposLocal } from './gruposEstudoStorage';
+  8 │ 
+  9 │ // Caracteres permitidos para códigos de grupo (sem caracteres ambíguos como I, O, 0, 1)
+ 10 │ const CARACTERES_PERMITIDOS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    ·       ──────────┬──────────
+    ·                 ╰── previous definition of `CARACTERES_PERMITIDOS` here
+ 11 │ const COMPRIMENTO_CODIGO = 7;
+ 12 │ 
+ 13 │ /**
+ 14 │  * Caracteres permitidos para geração de códigos únicos
+ 15 │  * Evitamos caracteres ambíguos como I, O, 0, 1
+ 16 │  */
+ 17 │ const CARACTERES_PERMITIDOS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    ·       ──────────┬──────────
+    ·                 ╰── `CARACTERES_PERMITIDOS` redefined here
+ 18 │ const COMPRIMENTO_CODIGO = 7;
+ 19 │ 
+ 20 │ /**
+    ╰────
+
+  × the name `COMPRIMENTO_CODIGO` is defined multiple times
+    ╭─[/home/runner/workspace/src/lib/grupoCodigoUtils.ts:8:1]
+  8 │ 
+  9 │ // Caracteres permitidos para códigos de grupo (sem caracteres ambíguos como I, O, 0, 1)
+ 10 │ const CARACTERES_PERMITIDOS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+ 11 │ const COMPRIMENTO_CODIGO = 7;
+    ·       ─────────┬────────
+    ·                ╰── previous definition of `COMPRIMENTO_CODIGO` here
+ 12 │ 
+ 13 │ /**
+ 14 │  * Caracteres permitidos para geração de códigos únicos
+ 15 │  * Evitamos caracteres ambíguos como I, O, 0, 1
+ 16 │  */
+ 17 │ const CARACTERES_PERMITIDOS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+ 18 │ const COMPRIMENTO_CODIGO = 7;
+    ·       ─────────┬────────
+    ·                ╰── `COMPRIMENTO_CODIGO` redefined here
+ 19 │ 
+ 20 │ /**
+ 21 │  * Gera um código único para um grupo de estudo
+    ╰────
+/home/runner/workspace/src/lib/grupoCodigoUtils.ts:7:1
+43 |   * Verifica se um código de grupo já existe
+44 |   * @param codigo - Código a ser verificado
+45 |   * @returns Boolean indicando se o código existe
+   |                      ^
+46 |   */
+47 |  export const verificarCodigoExistente = async (codigo: string): Promise<boolean> => {

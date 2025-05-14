@@ -25,7 +25,6 @@ export interface GrupoEstudo {
 
 // Caracteres permitidos para códigos de grupo (sem caracteres ambíguos como I, O, 0, 1)
 const CARACTERES_PERMITIDOS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-const COMPRIMENTO_CODIGO = 7; // Código com 7 caracteres
 
 /**
  * Salva o código de um grupo em múltiplas camadas de armazenamento para garantir persistência
@@ -116,6 +115,8 @@ const obterGruposLocalStorage = (): GrupoEstudo[] => {
   }
 };
 
+const COMPRIMENTO_CODIGO = 7; // Código com 7 caracteres conforme a especificação
+
 /**
  * Gera uma string aleatória para ser usada como código de grupo
  */
@@ -131,114 +132,44 @@ export const gerarStringAleatoria = (comprimento = COMPRIMENTO_CODIGO, caractere
 };
 
 /**
- * Verifica se um código de grupo já existe usando o servidor dedicado
+ * Verifica se um código de grupo já existe no armazenamento
  * Nota: Trata códigos como não sensíveis a maiúsculas/minúsculas
  */
 export const verificarSeCodigoExiste = async (codigo: string): Promise<boolean> => {
   try {
-    // Normalizar o código (maiúsculas e sem espaços)
-    codigo = codigo.trim().toUpperCase();
+    // Verificar primeiro em localStorage
+    const gruposLocais = obterGruposLocal();
+    const existeLocal = gruposLocais.some((grupo: any) => 
+      grupo.codigo && grupo.codigo.toUpperCase() === codigo.toUpperCase()
+    );
     
-    console.log('Verificando se código existe:', codigo);
-    
-    // 1. VERIFICAR NO SERVIDOR DEDICADO
-    try {
-      console.log('Tentando verificar no servidor dedicado...');
-      const resposta = await fetch(`/api/codigos-grupo/verificar/${codigo}`, {
-        method: 'GET',
-        headers: {
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
-        }
-      });
-      
-      if (!resposta.ok) {
-        console.error(`Resposta não-ok do servidor (${resposta.status}): ${resposta.statusText}`);
-        throw new Error(`Servidor retornou status ${resposta.status}`);
-      }
-      
-      const dados = await resposta.json();
-      
-      if (dados.sucesso) {
-        console.log('Verificação de código realizada no servidor:', dados.existe);
-        return dados.existe;
-      } else {
-        console.error('Resposta do servidor sem sucesso:', dados);
-        throw new Error("Erro na resposta do servidor: " + (dados.mensagem || 'Sem detalhes'));
-      }
-    } catch (serverError) {
-      console.error('Erro ao verificar código no servidor dedicado:', serverError);
-      
-      // 2. FALLBACK PARA FONTES LOCAIS SE O SERVIDOR FALHAR
-      console.log('Recorrendo a fontes locais para verificação do código...');
-      
-      // Verificar primeiro no storage dedicado para códigos
-      try {
-        const CODIGOS_STORAGE_KEY = 'epictus_codigos_grupo';
-        const codigosGruposText = localStorage.getItem(CODIGOS_STORAGE_KEY);
-        
-        if (codigosGruposText) {
-          const codigosGrupos = JSON.parse(codigosGruposText);
-          
-          // Verificar se algum grupo tem este código
-          const codigosExistentes = Object.values(codigosGrupos);
-          console.log('Códigos existentes no storage local:', codigosExistentes);
-          
-          if (codigosExistentes.includes(codigo)) {
-            console.log('Código encontrado no storage dedicado:', codigo);
-            return true;
-          }
-        } else {
-          console.log('Nenhum código encontrado no storage dedicado');
-        }
-      } catch (storageError) {
-        console.error('Erro ao verificar storage dedicado:', storageError);
-      }
-      
-      // Verificar em localStorage
-      const gruposLocais = obterGruposLocal();
-      console.log('Verificando em', gruposLocais.length, 'grupos locais');
-      
-      const existeLocal = gruposLocais.some((grupo: any) => {
-        const match = grupo.codigo && grupo.codigo.toUpperCase() === codigo;
-        if (match) console.log('Código encontrado no grupo local:', grupo);
-        return match;
-      });
-      
-      if (existeLocal) {
-        console.log('Código existe localmente:', codigo);
-        return true;
-      }
-      
-      // Verificar no Supabase como último recurso
-      try {
-        console.log('Tentando verificar no Supabase...');
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (session) {
-          const { data, error } = await supabase
-            .from('grupos_estudo')
-            .select('id')
-            .eq('codigo', codigo)
-            .limit(1);
-          
-          if (error) {
-            console.error('Erro ao verificar código no Supabase:', error);
-            return false;
-          }
-          
-          const encontrado = data && data.length > 0;
-          console.log('Resultado da verificação no Supabase:', encontrado ? 'Encontrado' : 'Não encontrado');
-          return encontrado;
-        } else {
-          console.log('Sem sessão ativa, não é possível verificar no Supabase');
-        }
-      } catch (error) {
-        console.error('Erro ao comunicar com Supabase:', error);
-      }
+    if (existeLocal) {
+      console.log('Código já existe localmente:', codigo);
+      return true;
     }
     
-    console.log('Nenhum resultado encontrado para o código', codigo);
+    // Verificar no Supabase
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session) {
+        const { data, error } = await supabase
+          .from('grupos_estudo')
+          .select('id')
+          .eq('codigo', codigo.toUpperCase())
+          .limit(1);
+        
+        if (error) {
+          console.error('Erro ao verificar código no Supabase:', error);
+          return false;
+        }
+        
+        return data && data.length > 0;
+      }
+    } catch (error) {
+      console.error('Erro ao comunicar com Supabase:', error);
+    }
+    
     return false;
   } catch (error) {
     console.error('Erro ao verificar se código existe:', error);
@@ -247,7 +178,7 @@ export const verificarSeCodigoExiste = async (codigo: string): Promise<boolean> 
 };
 
 /**
- * Obtém um grupo pelo seu código único usando o servidor dedicado
+ * Obtém um grupo pelo seu código único
  * @param codigo - Código único do grupo
  * @returns O grupo encontrado ou null
  */
@@ -256,9 +187,18 @@ export const obterGrupoPorCodigo = async (codigo: string): Promise<GrupoEstudo |
     // Normalizar o código
     codigo = codigo.trim().toUpperCase();
     
-    console.log('Buscando grupo com código:', codigo);
+    // Verificar primeiro no localStorage
+    const gruposLocais = obterGruposLocal();
+    const grupoLocal = gruposLocais.find(grupo => 
+      grupo.codigo && grupo.codigo.toUpperCase() === codigo
+    );
     
-    // Obter a sessão do usuário atual para validação de acesso
+    if (grupoLocal) {
+      console.log('Grupo encontrado localmente pelo código:', codigo);
+      return grupoLocal;
+    }
+    
+    // Verificar no Supabase
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session) {
@@ -266,192 +206,23 @@ export const obterGrupoPorCodigo = async (codigo: string): Promise<GrupoEstudo |
       return null;
     }
     
-    const userId = session.user.id;
-    console.log('Usuário autenticado:', userId);
+    const { data, error } = await supabase
+      .from('grupos_estudo')
+      .select('*')
+      .eq('codigo', codigo)
+      .single();
     
-    // 1. VERIFICAR NO SERVIDOR DEDICADO
-    try {
-      console.log('Tentando validar acesso através do servidor dedicado...');
-      
-      // Primeira etapa: verificar se o código existe e se temos acesso
-      const validacaoResposta = await fetch('/api/codigos-grupo/validar-acesso', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache'
-        },
-        body: JSON.stringify({
-          codigo,
-          userId
-        })
-      });
-      
-      if (!validacaoResposta.ok) {
-        console.error(`Erro na resposta de validação: ${validacaoResposta.status} - ${validacaoResposta.statusText}`);
-        throw new Error(`Erro na resposta do servidor: ${validacaoResposta.status}`);
-      }
-      
-      const validacaoDados = await validacaoResposta.json();
-      console.log('Resposta de validação:', validacaoDados);
-      
-      if (!validacaoDados.sucesso || !validacaoDados.acesso) {
-        console.log('Acesso negado ao grupo pelo servidor:', validacaoDados.mensagem);
-        return null;
-      }
-      
-      // Se temos acesso, obter os detalhes do grupo
-      const grupoId = validacaoDados.grupoId;
-      console.log('Código validado, obtido ID do grupo:', grupoId);
-      
-      if (!grupoId) {
-        console.error('Validação sem ID do grupo');
-        throw new Error('Validação sem ID do grupo');
-      }
-      
-      // Agora buscar os detalhes completos do grupo (pelo seu ID)
-      try {
-        // Verificar primeiro no armazenamento local para resposta rápida
-        const gruposLocais = obterGruposLocal();
-        console.log('Verificando em', gruposLocais.length, 'grupos locais');
-        
-        const grupoLocal = gruposLocais.find(grupo => grupo.id === grupoId);
-        
-        if (grupoLocal) {
-          console.log('Grupo encontrado localmente pelo ID:', grupoId);
-          return grupoLocal;
-        }
-        
-        // Se não encontrado localmente, buscar no Supabase
-        console.log('Buscando no Supabase pelo ID:', grupoId);
-        const { data, error } = await supabase
-          .from('grupos_estudo')
-          .select('*')
-          .eq('id', grupoId)
-          .single();
-        
-        if (error) {
-          console.error('Erro ao buscar grupo por ID no Supabase:', error);
-          throw new Error(`Erro Supabase: ${error.message}`);
-        }
-        
-        if (data) {
-          console.log('Grupo encontrado no Supabase:', data);
-          // Salvar localmente para acesso futuro mais rápido
-          salvarGrupoLocal(data);
-          return data;
-        } else {
-          console.error('Nenhum dado retornado do Supabase para o ID:', grupoId);
-        }
-      } catch (e) {
-        console.error('Erro ao obter detalhes do grupo após validação:', e);
-        throw e;
-      }
-    } catch (serverError) {
-      console.error('Erro ao comunicar com o servidor de códigos:', serverError);
-      
-      // 2. FALLBACK PARA FONTES LOCAIS SE O SERVIDOR FALHAR
-      console.log('Recorrendo a fontes locais para buscar grupo por código...');
-      
-      // Verificar primeiro se o código existe em qualquer fonte
-      const codigoExiste = await verificarSeCodigoExiste(codigo);
-      
-      if (!codigoExiste) {
-        console.log('Código não existe em nenhuma fonte');
-        return null;
-      }
-      
-      // Verificar primeiro no localStorage
-      const gruposLocais = obterGruposLocal();
-      console.log('Buscando em', gruposLocais.length, 'grupos locais');
-      
-      const grupoLocal = gruposLocais.find(grupo => {
-        if (grupo.codigo && grupo.codigo.toUpperCase() === codigo) {
-          console.log('Encontrou grupo local com código correspondente:', grupo);
-          return true;
-        }
-        return false;
-      });
-      
-      if (grupoLocal) {
-        console.log('Grupo encontrado localmente pelo código:', codigo);
-        return grupoLocal;
-      }
-      
-      // Verificar no storage dedicado para códigos
-      try {
-        const CODIGOS_STORAGE_KEY = 'epictus_codigos_grupo';
-        const codigosGruposText = localStorage.getItem(CODIGOS_STORAGE_KEY);
-        
-        if (codigosGruposText) {
-          const codigosGrupos = JSON.parse(codigosGruposText);
-          
-          // Buscar o ID do grupo pelo código
-          let grupoIdEncontrado = null;
-          
-          Object.entries(codigosGrupos).forEach(([id, codigoSalvo]) => {
-            if (codigoSalvo === codigo) {
-              grupoIdEncontrado = id;
-            }
-          });
-          
-          if (grupoIdEncontrado) {
-            console.log('ID do grupo encontrado no storage dedicado:', grupoIdEncontrado);
-            
-            // Buscar o grupo pelo ID no localStorage
-            const grupoLocalPorId = gruposLocais.find(g => g.id === grupoIdEncontrado);
-            
-            if (grupoLocalPorId) {
-              console.log('Grupo encontrado localmente pelo ID do storage dedicado');
-              return grupoLocalPorId;
-            }
-            
-            // Se não encontrado no local, buscar no Supabase pelo ID
-            console.log('Buscando no Supabase com ID do storage dedicado');
-            const { data, error } = await supabase
-              .from('grupos_estudo')
-              .select('*')
-              .eq('id', grupoIdEncontrado)
-              .single();
-              
-            if (!error && data) {
-              console.log('Grupo encontrado no Supabase pelo ID do storage dedicado');
-              salvarGrupoLocal(data);
-              return data;
-            }
-          }
-        }
-      } catch (storageError) {
-        console.error('Erro ao verificar no storage dedicado:', storageError);
-      }
-      
-      // Verificar no Supabase como último recurso
-      console.log('Tentando última verificação no Supabase pelo código...');
-      try {  
-        const { data, error } = await supabase
-          .from('grupos_estudo')
-          .select('*')
-          .eq('codigo', codigo)
-          .single();
-        
-        if (error) {
-          console.error('Erro ao buscar grupo por código no Supabase:', error);
-          return null;
-        }
-        
-        if (data) {
-          console.log('Grupo encontrado no Supabase pelo código:', data);
-          // Salvar localmente para acesso futuro mais rápido
-          salvarGrupoLocal(data);
-          return data;
-        } else {
-          console.log('Nenhum grupo encontrado no Supabase com o código:', codigo);
-        }
-      } catch (supabaseError) {
-        console.error('Erro na consulta final ao Supabase:', supabaseError);
-      }
+    if (error) {
+      console.error('Erro ao buscar grupo por código no Supabase:', error);
+      return null;
     }
     
-    console.log('Nenhum grupo encontrado com o código fornecido');
+    if (data) {
+      // Salvar localmente para acesso futuro mais rápido
+      salvarGrupoLocal(data);
+      return data;
+    }
+    
     return null;
   } catch (error) {
     console.error('Erro ao obter grupo por código:', error);
@@ -461,12 +232,10 @@ export const obterGrupoPorCodigo = async (codigo: string): Promise<GrupoEstudo |
 
 /**
  * Adiciona o usuário atual a um grupo específico
- * Integra com o servidor de códigos para garantir acesso aos grupos privados
  * @param grupoId - ID do grupo
- * @param codigo - Código do grupo (opcional, se disponível)
  * @returns true se o usuário foi adicionado com sucesso
  */
-export const adicionarUsuarioAoGrupo = async (grupoId: string, codigo?: string): Promise<boolean> => {
+export const adicionarUsuarioAoGrupo = async (grupoId: string): Promise<boolean> => {
   try {
     // Obter dados do usuário atual
     const { data: { user } } = await supabase.auth.getUser();
@@ -474,36 +243,6 @@ export const adicionarUsuarioAoGrupo = async (grupoId: string, codigo?: string):
     if (!user) {
       console.error('Usuário não autenticado ao tentar entrar no grupo');
       return false;
-    }
-    
-    // Se o código foi fornecido, validar o acesso pelo servidor primeiro
-    if (codigo) {
-      try {
-        const codigoNormalizado = codigo.trim().toUpperCase();
-        
-        const validacaoResposta = await fetch('/api/codigos-grupo/validar-acesso', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            codigo: codigoNormalizado,
-            userId: user.id
-          })
-        });
-        
-        const validacaoDados = await validacaoResposta.json();
-        
-        if (!validacaoDados.sucesso || !validacaoDados.acesso) {
-          console.error('Acesso negado pelo servidor de códigos:', validacaoDados.mensagem);
-          return false;
-        }
-        
-        console.log('Acesso ao grupo validado pelo servidor de códigos');
-      } catch (serverError) {
-        console.error('Erro ao validar acesso com o servidor de códigos:', serverError);
-        // Continuamos com o fluxo normal como fallback
-      }
     }
     
     // Obter o grupo do Supabase
@@ -515,42 +254,7 @@ export const adicionarUsuarioAoGrupo = async (grupoId: string, codigo?: string):
     
     if (error || !grupo) {
       console.error('Erro ao obter grupo para adicionar usuário:', error);
-      
-      // Tentar obter do armazenamento local como fallback
-      const gruposLocais = obterGruposLocal();
-      const grupoLocal = gruposLocais.find(g => g.id === grupoId);
-      
-      if (!grupoLocal) {
-        return false;
-      }
-      
-      // Se encontrou localmente, usar este
-      // Verificar se o usuário já é membro
-      const membrosIdsLocal = grupoLocal.membros_ids || [];
-      if (membrosIdsLocal.includes(user.id) || grupoLocal.user_id === user.id) {
-        return true; // Já é membro
-      }
-      
-      // Adicionar localmente
-      const novosMembrosIdsLocal = [...membrosIdsLocal, user.id];
-      grupoLocal.membros_ids = novosMembrosIdsLocal;
-      grupoLocal.membros = (grupoLocal.membros || 1) + 1;
-      
-      // Salvar localmente e marcar para sincronização posterior
-      salvarGrupoLocal(grupoLocal);
-      
-      // Marcar para sincronização quando o servidor estiver disponível
-      try {
-        const gruposPendentes = JSON.parse(localStorage.getItem('epictus_grupos_pendentes_sync') || '[]');
-        if (!gruposPendentes.includes(grupoId)) {
-          gruposPendentes.push(grupoId);
-          localStorage.setItem('epictus_grupos_pendentes_sync', JSON.stringify(gruposPendentes));
-        }
-      } catch (e) {
-        console.error('Erro ao marcar grupo para sincronização:', e);
-      }
-      
-      return true;
+      return false;
     }
     
     // Verificar se o usuário já é membro do grupo
@@ -573,56 +277,8 @@ export const adicionarUsuarioAoGrupo = async (grupoId: string, codigo?: string):
       .eq('id', grupoId);
     
     if (updateError) {
-      console.error('Erro ao adicionar usuário ao grupo no Supabase:', updateError);
-      
-      // Ainda atualiza localmente mesmo com erro no Supabase
-      grupo.membros_ids = novosMembrosIds;
-      grupo.membros = (grupo.membros || 1) + 1;
-      salvarGrupoLocal(grupo);
-      
-      // Marcar para sincronização posterior
-      try {
-        const gruposPendentes = JSON.parse(localStorage.getItem('epictus_grupos_pendentes_sync') || '[]');
-        if (!gruposPendentes.includes(grupoId)) {
-          gruposPendentes.push(grupoId);
-          localStorage.setItem('epictus_grupos_pendentes_sync', JSON.stringify(gruposPendentes));
-        }
-      } catch (e) {
-        console.error('Erro ao marcar grupo para sincronização após falha:', e);
-      }
-      
-      return true; // Retornamos true pois o usuário foi adicionado localmente
-    }
-    
-    // Se o grupo é privado, notificar o servidor de códigos
-    if (grupo.privado || grupo.visibilidade === "Privado (apenas por convite)") {
-      try {
-        // Obter o código do grupo
-        let codigoGrupo = grupo.codigo;
-        
-        if (!codigoGrupo) {
-          // Se não tiver código, obter através da função principal
-          codigoGrupo = await gerarCodigoUnicoGrupo(grupoId);
-        }
-        
-        // Notificar o servidor sobre o novo membro permitido
-        await fetch('/api/codigos-grupo/adicionar-membro', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            grupoId,
-            userId: user.id,
-            adminId: grupo.user_id
-          })
-        });
-        
-        console.log('Servidor de códigos notificado sobre novo membro');
-      } catch (serverError) {
-        console.error('Erro ao notificar servidor de códigos sobre novo membro:', serverError);
-        // Não bloqueamos o fluxo por falha nesta notificação
-      }
+      console.error('Erro ao adicionar usuário ao grupo:', updateError);
+      return false;
     }
     
     // Atualizar grupo local
@@ -638,7 +294,7 @@ export const adicionarUsuarioAoGrupo = async (grupoId: string, codigo?: string):
 };
 
 /**
- * Gera um código único para o grupo de estudos usando o servidor dedicado
+ * Gera um código único para o grupo de estudos
  * O código é gerado apenas uma vez para cada grupo e persistido
  * Uma vez gerado, o mesmo código será sempre retornado
  */
@@ -655,230 +311,252 @@ export const gerarCodigoUnicoGrupo = async (grupoId?: string): Promise<string> =
       return codigoTemp;
     }
     
-    // 1. VERIFICAR NA CACHE LOCAL PRIMEIRO (para resposta rápida em caso de reconexão)
+    // VERIFICAÇÃO DIRETA NO STORAGE LOCAL DEDICADO PARA CÓDIGOS
+    // Esta é uma verificação separada do armazenamento de grupos
     const CODIGOS_STORAGE_KEY = 'epictus_codigos_grupo';
     
     try {
       // Verificar no storage dedicado para códigos
       const codigosGrupos = JSON.parse(localStorage.getItem(CODIGOS_STORAGE_KEY) || '{}');
       
-      // Se já existe um código para este grupo, retornar da cache enquanto valida com o servidor
+      // Se já existe um código para este grupo, retornar
       if (codigosGrupos[grupoId]) {
-        const codigoCache = codigosGrupos[grupoId];
-        console.log(`Código encontrado na cache local:`, codigoCache);
-        
-        // Em paralelo, verificar com o servidor se o código ainda é válido
-        setTimeout(async () => {
-          try {
-            const resposta = await fetch(`/api/codigos-grupo/verificar/${codigoCache}`);
-            const dados = await resposta.json();
-            
-            // Se o código não existe mais no servidor, vamos apagá-lo da cache
-            if (!dados.existe) {
-              const codigosAtualizados = JSON.parse(localStorage.getItem(CODIGOS_STORAGE_KEY) || '{}');
-              delete codigosAtualizados[grupoId];
-              localStorage.setItem(CODIGOS_STORAGE_KEY, JSON.stringify(codigosAtualizados));
-              console.log(`Código removido da cache por não existir mais no servidor:`, codigoCache);
-            }
-          } catch (e) {
-            console.error("Erro ao validar código com o servidor:", e);
-          }
-        }, 100);
-        
-        return codigoCache;
+        console.log(`Código permanente existente encontrado no storage dedicado:`, codigosGrupos[grupoId]);
+        return codigosGrupos[grupoId];
       }
     } catch (e) {
-      console.error("Erro ao verificar cache local de códigos:", e);
+      console.error("Erro ao verificar storage dedicado de códigos:", e);
     }
     
-    // 2. TENTAR CONSULTAR O SERVIDOR DEDICADO
-    try {
-      // Obter a sessão do usuário atual para o userId
-      const { data: { session } } = await supabase.auth.getSession();
-      const userId = session?.user?.id;
+    // VERIFICAÇÃO EM MÚLTIPLAS CAMADAS (FALLBACK):
+    // 1. Verificar no localStorage de grupos
+    const grupos = obterGruposLocal();
+    const grupoExistente = grupos.find(g => g.id === grupoId);
+    
+    if (grupoExistente && grupoExistente.codigo) {
+      console.log(`Código existente encontrado no localStorage:`, grupoExistente.codigo);
       
-      if (!userId) {
-        throw new Error("Usuário não autenticado");
-      }
-      
-      // Obter as informações do grupo para enviar ao servidor
-      let nomeGrupo = "";
-      let privado = false;
-      
+      // Salvar também no storage dedicado
       try {
-        const grupos = obterGruposLocal();
-        const grupoExistente = grupos.find(g => g.id === grupoId);
-        
-        if (grupoExistente) {
-          nomeGrupo = grupoExistente.nome || "Grupo de Estudo";
-          privado = grupoExistente.privado || grupoExistente.visibilidade === "Privado (apenas por convite)";
-        }
+        const codigosGrupos = JSON.parse(localStorage.getItem(CODIGOS_STORAGE_KEY) || '{}');
+        codigosGrupos[grupoId] = grupoExistente.codigo;
+        localStorage.setItem(CODIGOS_STORAGE_KEY, JSON.stringify(codigosGrupos));
+        console.log(`Código salvo no storage dedicado:`, grupoExistente.codigo);
       } catch (e) {
-        console.error("Erro ao obter informações do grupo local:", e);
+        console.error("Erro ao salvar no storage dedicado:", e);
       }
       
-      // Solicitar o código ao servidor dedicado
-      const resposta = await fetch('/api/codigos-grupo', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          grupoId,
-          userId,
-          nome: nomeGrupo,
-          privado
-        })
-      });
-      
-      const dados = await resposta.json();
-      
-      if (dados.sucesso && dados.codigo) {
-        const codigoServidor = dados.codigo;
-        
-        // Salvar código na cache local para acesso mais rápido
-        try {
-          const codigosGrupos = JSON.parse(localStorage.getItem(CODIGOS_STORAGE_KEY) || '{}');
-          codigosGrupos[grupoId] = codigoServidor;
-          localStorage.setItem(CODIGOS_STORAGE_KEY, JSON.stringify(codigosGrupos));
-          console.log(`Código ${codigoServidor} do servidor salvo na cache local`);
-        } catch (e) {
-          console.error("Erro ao salvar código do servidor na cache:", e);
-        }
-        
-        // Atualizar código no grupo local
-        try {
-          const grupos = obterGruposLocal();
-          const grupoIndex = grupos.findIndex(g => g.id === grupoId);
-          
-          if (grupoIndex >= 0) {
-            grupos[grupoIndex].codigo = codigoServidor;
-            localStorage.setItem('epictus_grupos_estudo', JSON.stringify(grupos));
-            console.log(`Código do servidor atualizado no localStorage:`, codigoServidor);
-          }
-        } catch (e) {
-          console.error("Erro ao atualizar grupo local com código do servidor:", e);
-        }
-        
-        // Sincronizar com Supabase em segundo plano
-        try {
-          const { error } = await supabase
-            .from('grupos_estudo')
-            .update({ codigo: codigoServidor })
-            .eq('id', grupoId);
-            
-          if (error) {
-            console.error('Erro ao sincronizar código com Supabase:', error);
-          } else {
-            console.log(`Código ${codigoServidor} sincronizado com Supabase`);
-          }
-        } catch (e) {
-          console.error("Erro ao sincronizar com Supabase:", e);
-        }
-        
-        console.log(`Código obtido do servidor dedicado:`, codigoServidor);
-        return codigoServidor;
-      } else {
-        console.error("Erro na resposta do servidor de códigos:", dados);
-        throw new Error("Erro ao obter código do servidor");
-      }
-    } catch (serverError) {
-      console.error("Erro ao comunicar com o servidor de códigos:", serverError);
-      
-      // 3. FALLBACK PARA FONTES LOCAIS DE DADOS
-      // Se o servidor falhar, recorrer às fontes locais
-      console.log("Recorrendo a fontes locais de dados como fallback...");
-      
-      // Verificar primeiro no localStorage de grupos
-      try {
-        const grupos = obterGruposLocal();
-        const grupoExistente = grupos.find(g => g.id === grupoId);
-        
-        if (grupoExistente && grupoExistente.codigo) {
-          console.log(`Código existente encontrado no localStorage:`, grupoExistente.codigo);
-          
-          // Salvar também no storage dedicado
-          try {
-            const codigosGrupos = JSON.parse(localStorage.getItem(CODIGOS_STORAGE_KEY) || '{}');
-            codigosGrupos[grupoId] = grupoExistente.codigo;
-            localStorage.setItem(CODIGOS_STORAGE_KEY, JSON.stringify(codigosGrupos));
-          } catch (e) {
-            console.error("Erro ao salvar no storage dedicado:", e);
-          }
-          
-          return grupoExistente.codigo;
-        }
-      } catch (e) {
-        console.error("Erro ao verificar grupos locais:", e);
-      }
-      
-      // Verificar no Supabase como fallback secundário
+      // Garantir que o código também existe no Supabase (sincronização silenciosa)
       try {
         const { data, error } = await supabase
           .from('grupos_estudo')
           .select('codigo')
           .eq('id', grupoId)
           .single();
+        
+        if (error || !data || !data.codigo) {
+          // Se não existir no Supabase, sincronizar silenciosamente
+          await supabase
+            .from('grupos_estudo')
+            .update({ codigo: grupoExistente.codigo })
+            .eq('id', grupoId);
           
-        if (!error && data && data.codigo) {
-          console.log(`Código encontrado no banco de dados:`, data.codigo);
+          console.log(`Código sincronizado com Supabase:`, grupoExistente.codigo);
+        }
+      } catch (e) {
+        console.error("Erro na sincronização silenciosa:", e);
+      }
+      
+      return grupoExistente.codigo;
+    }
+    
+    // 2. Se não encontrou no localStorage, verificar no Supabase
+    try {
+      const { data, error } = await supabase
+        .from('grupos_estudo')
+        .select('codigo')
+        .eq('id', grupoId)
+        .single();
+        
+      if (!error && data && data.codigo) {
+        console.log(`Código encontrado no banco de dados:`, data.codigo);
+        
+        // Salvar no storage dedicado
+        try {
+          const codigosGrupos = JSON.parse(localStorage.getItem(CODIGOS_STORAGE_KEY) || '{}');
+          codigosGrupos[grupoId] = data.codigo;
+          localStorage.setItem(CODIGOS_STORAGE_KEY, JSON.stringify(codigosGrupos));
+          console.log(`Código do Supabase salvo no storage dedicado:`, data.codigo);
+        } catch (e) {
+          console.error("Erro ao salvar no storage dedicado:", e);
+        }
+        
+        // Atualizar também o localStorage de grupos para futuras consultas
+        const grupoIndex = grupos.findIndex(g => g.id === grupoId);
+        if (grupoIndex >= 0) {
+          grupos[grupoIndex].codigo = data.codigo;
+          localStorage.setItem('epictus_grupos_estudo', JSON.stringify(grupos));
+          console.log(`Código do Supabase atualizado no localStorage:`, data.codigo);
+        }
+        
+        return data.codigo;
+      }
+    } catch (supabaseError) {
+      console.error('Erro ao buscar código existente no Supabase:', supabaseError);
+    }
+    
+    // 3. Verificar no sessionStorage (mecanismo de recuperação)
+    try {
+      const backupKey = `grupo_codigo_${grupoId}`;
+      const sessionCodigo = sessionStorage.getItem(backupKey);
+      if (sessionCodigo) {
+        console.log(`Código recuperado do sessionStorage:`, sessionCodigo);
+        
+        // Salvar nos storages permanentes
+        try {
+          // Salvar no storage dedicado
+          const codigosGrupos = JSON.parse(localStorage.getItem(CODIGOS_STORAGE_KEY) || '{}');
+          codigosGrupos[grupoId] = sessionCodigo;
+          localStorage.setItem(CODIGOS_STORAGE_KEY, JSON.stringify(codigosGrupos));
           
-          // Salvar na cache local
-          try {
-            const codigosGrupos = JSON.parse(localStorage.getItem(CODIGOS_STORAGE_KEY) || '{}');
-            codigosGrupos[grupoId] = data.codigo;
-            localStorage.setItem(CODIGOS_STORAGE_KEY, JSON.stringify(codigosGrupos));
-          } catch (e) {
-            console.error("Erro ao salvar código do Supabase na cache:", e);
+          // Atualizar grupo no localStorage
+          const grupoIndex = grupos.findIndex(g => g.id === grupoId);
+          if (grupoIndex >= 0) {
+            grupos[grupoIndex].codigo = sessionCodigo;
+            localStorage.setItem('epictus_grupos_estudo', JSON.stringify(grupos));
           }
           
-          return data.codigo;
+          console.log(`Código do sessionStorage propagado para storages permanentes:`, sessionCodigo);
+        } catch (e) {
+          console.error("Erro ao salvar código do sessionStorage nos storages permanentes:", e);
         }
-      } catch (e) {
-        console.error("Erro ao verificar no Supabase:", e);
-      }
-      
-      // Se chegou aqui, gerar um código offline e sincronizar posteriormente
-      console.log("Gerando código offline como último recurso...");
-      let codigoOffline = gerarCodigoUnico().toUpperCase();
-      
-      // Normalizar para 7 caracteres
-      if (codigoOffline.length !== 7) {
-        if (codigoOffline.length < 7) {
-          codigoOffline = codigoOffline.padEnd(7, 'A');
-        } else {
-          codigoOffline = codigoOffline.substring(0, 7);
-        }
-      }
-      
-      // Marcar como offline adicionando "OFF" no início (será substituído quando online)
-      const codigoFinal = codigoOffline;
-      
-      // Salvar na cache local
-      try {
-        const codigosGrupos = JSON.parse(localStorage.getItem(CODIGOS_STORAGE_KEY) || '{}');
-        codigosGrupos[grupoId] = codigoFinal;
-        localStorage.setItem(CODIGOS_STORAGE_KEY, JSON.stringify(codigosGrupos));
         
-        // Marcar para sincronização posterior
-        const pendentesSync = JSON.parse(localStorage.getItem('epictus_codigos_pendentes_sync') || '[]');
-        if (!pendentesSync.includes(grupoId)) {
-          pendentesSync.push(grupoId);
-          localStorage.setItem('epictus_codigos_pendentes_sync', JSON.stringify(pendentesSync));
-        }
-      } catch (e) {
-        console.error("Erro ao salvar código offline na cache:", e);
+        return sessionCodigo;
       }
-      
-      return codigoFinal;
+    } catch (e) {
+      console.error("Erro ao verificar sessionStorage:", e);
     }
+    
+    // 4. Se chegou aqui, significa que o código realmente não existe e precisa ser gerado
+    console.log(`Nenhum código encontrado para o grupo ${grupoId}, gerando um novo...`);
+    
+    // Gerar novo código único
+    let codigoGrupo = gerarCodigoUnico().toUpperCase();
+    
+    // Verificar se o código tem o comprimento esperado (7 caracteres)
+    if (codigoGrupo.length !== 7) {
+      if (codigoGrupo.length < 7) {
+        // Adicionar caracteres aleatórios até completar 7
+        while (codigoGrupo.length < 7) {
+          codigoGrupo += CARACTERES_PERMITIDOS.charAt(
+            Math.floor(Math.random() * CARACTERES_PERMITIDOS.length)
+          );
+        }
+      } else {
+        // Truncar para 7 caracteres
+        codigoGrupo = codigoGrupo.substring(0, 7);
+      }
+    }
+    
+    // Adicionar um timestamp parcial para garantir unicidade
+    // Últimos 2 caracteres do timestamp convertido para base 36 (alfanumérico)
+    const timestamp = Date.now().toString(36).substring(0, 2).toUpperCase();
+    codigoGrupo = codigoGrupo.substring(0, 5) + timestamp;
+    
+    // PERSISTÊNCIA EM MÚLTIPLAS CAMADAS:
+    // 1. Salvar no storage dedicado (principal)
+    try {
+      const codigosGrupos = JSON.parse(localStorage.getItem(CODIGOS_STORAGE_KEY) || '{}');
+      codigosGrupos[grupoId] = codigoGrupo;
+      localStorage.setItem(CODIGOS_STORAGE_KEY, JSON.stringify(codigosGrupos));
+      console.log(`Código ${codigoGrupo} persistido no storage dedicado para o grupo ${grupoId}`);
+    } catch (e) {
+      console.error("Erro ao salvar no storage dedicado:", e);
+    }
+    
+    // 2. Salvar no localStorage de grupos (secundário)
+    const grupoIndex = grupos.findIndex(g => g.id === grupoId);
+    if (grupoIndex >= 0) {
+      grupos[grupoIndex].codigo = codigoGrupo;
+      localStorage.setItem('epictus_grupos_estudo', JSON.stringify(grupos));
+      console.log(`Código ${codigoGrupo} persistido no localStorage para o grupo ${grupoId}`);
+    }
+    
+    // 3. Salvar no Supabase
+    try {
+      const { error } = await supabase
+        .from('grupos_estudo')
+        .update({ codigo: codigoGrupo })
+        .eq('id', grupoId);
+        
+      if (error) {
+        console.error('Erro ao salvar código no Supabase:', error);
+      } else {
+        console.log(`Código ${codigoGrupo} persistido no Supabase para o grupo ${grupoId}`);
+      }
+    } catch (supabaseError) {
+      console.error('Erro ao acessar Supabase para salvar código:', supabaseError);
+    }
+    
+    // 4. Cópia de segurança adicional no sessionStorage (para recuperação em caso de falhas)
+    try {
+      const backupKey = `grupo_codigo_${grupoId}`;
+      sessionStorage.setItem(backupKey, codigoGrupo);
+    } catch (e) {
+      console.error("Erro ao criar backup no sessionStorage:", e);
+    }
+    
+    console.log(`Novo código único gerado e persistido em todos os storages:`, codigoGrupo);
+    return codigoGrupo;
   } catch (error) {
     console.error("Erro crítico ao gerar/recuperar código único para grupo:", error);
     
-    // MECANISMO DE RECUPERAÇÃO DE EMERGÊNCIA
-    // Gerar código de emergência
+    // MECANISMO DE RECUPERAÇÃO DE EMERGÊNCIA:
+    // 1. Tentar recuperar do sessionStorage
+    if (grupoId) {
+      try {
+        const backupKey = `grupo_codigo_${grupoId}`;
+        const backupCodigo = sessionStorage.getItem(backupKey);
+        if (backupCodigo) {
+          console.log("Recuperado código de backup do sessionStorage:", backupCodigo);
+          return backupCodigo;
+        }
+      } catch (e) {
+        console.error("Erro na tentativa de recuperação do sessionStorage:", e);
+      }
+    }
+    
+    // 2. Último recurso: gerar código de emergência
     const codigoEmergencia = `GE${Math.random().toString(36).substring(2, 5).toUpperCase()}`;
-    console.log("Gerando código de emergência:", codigoEmergencia);
+    
+    // Tentar salvar para que não precise gerar novo código na próxima vez
+    if (grupoId) {
+      const CODIGOS_STORAGE_KEY = 'epictus_codigos_grupo';
+      
+      try {
+        // Salvar no storage dedicado
+        const codigosGrupos = JSON.parse(localStorage.getItem(CODIGOS_STORAGE_KEY) || '{}');
+        codigosGrupos[grupoId] = codigoEmergencia;
+        localStorage.setItem(CODIGOS_STORAGE_KEY, JSON.stringify(codigosGrupos));
+        
+        // Salvar também no localStorage de grupos
+        const grupos = obterGruposLocal();
+        const grupoIndex = grupos.findIndex(g => g.id === grupoId);
+        
+        if (grupoIndex >= 0) {
+          grupos[grupoIndex].codigo = codigoEmergencia;
+          localStorage.setItem('epictus_grupos_estudo', JSON.stringify(grupos));
+        }
+        
+        // Tentar também salvar no sessionStorage como backup
+        const backupKey = `grupo_codigo_${grupoId}`;
+        sessionStorage.setItem(backupKey, codigoEmergencia);
+        
+        console.log("Código de emergência salvo em todos os storages:", codigoEmergencia);
+      } catch (saveError) {
+        console.error('Erro ao salvar código de emergência:', saveError);
+      }
+    }
     
     return codigoEmergencia;
   }
@@ -1122,26 +800,8 @@ export const criarGrupo = async (dados: Omit<GrupoEstudo, 'id'>): Promise<GrupoE
 /**
  * Obtém todos os grupos de estudo (do Supabase + localStorage)
  */
-export const obterTodosGrupos = async (userId?: string): Promise<GrupoEstudo[]> => {
+export const obterTodosGrupos = async (userId: string): Promise<GrupoEstudo[]> => {
   try {
-    // Se não foi fornecido um userId, tentar obter o usuário atual
-    if (!userId) {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        userId = user?.id;
-        
-        if (!userId) {
-          console.error('Não foi possível obter o ID do usuário atual');
-          // Retornar grupos locais sem filtro de usuário como fallback
-          return obterGruposLocal();
-        }
-      } catch (error) {
-        console.error('Erro ao obter usuário atual:', error);
-        // Retornar grupos locais sem filtro de usuário como fallback
-        return obterGruposLocal();
-      }
-    }
-
     // Obter a lista de grupos removidos
     const gruposRemovidosKey = 'grupos_removidos';
     const gruposRemovidosStr = localStorage.getItem(gruposRemovidosKey) || '[]';
@@ -1149,16 +809,8 @@ export const obterTodosGrupos = async (userId?: string): Promise<GrupoEstudo[]> 
 
     // Primeiro, garantir que temos os grupos locais (failsafe), excluindo os removidos
     let gruposLocais = obterGruposLocal()
+      .filter(grupo => grupo.user_id === userId)
       .filter(grupo => !gruposRemovidos.includes(grupo.id));
-      
-    // Filtrar por userId apenas se o parâmetro foi fornecido (para permitir visualizar todos os grupos)
-    if (userId) {
-      // Incluir grupos onde o usuário é criador OU membro
-      gruposLocais = gruposLocais.filter(grupo => 
-        grupo.user_id === userId || 
-        (grupo.membros_ids && grupo.membros_ids.includes(userId))
-      );
-    }
 
     // Tentar obter backup da sessão
     try {
