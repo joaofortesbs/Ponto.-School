@@ -5,7 +5,6 @@ import { X, Key, AlertCircle, Check, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase";
 import { verificarCodigoExiste } from "@/lib/grupoCodigoUtils";
-import BuscarGruposPorCodigoModal from "./minisecao-gruposdeestudo/interface/BuscarGruposPorCodigoModal";
 
 interface EntrarGrupoPorCodigoModalProps {
   isOpen: boolean;
@@ -178,20 +177,12 @@ const EntrarGrupoPorCodigoModal: React.FC<EntrarGrupoPorCodigoModalProps> = ({
     }
   };
 
-  // Handler para quando um grupo for selecionado no modal de busca
-  const handleSelectGrupo = (codigo: string) => {
-    setGroupCode(codigo);
-    // Opcionalmente, podemos acionar a entrada automática
-    // handleJoinGroupByCode();
-  };
-
   // Reset form when modal closes
   React.useEffect(() => {
     if (!isOpen) {
       setGroupCode("");
       setError(null);
       setSuccess(null);
-      setShowBuscarModal(false);
     }
   }, [isOpen]);
 
@@ -319,13 +310,6 @@ const EntrarGrupoPorCodigoModal: React.FC<EntrarGrupoPorCodigoModalProps> = ({
           </div>
         </motion.div>
       </div>
-
-      {/* Modal de busca de grupos por código */}
-      <BuscarGruposPorCodigoModal 
-        isOpen={showBuscarModal}
-        onClose={() => setShowBuscarModal(false)}
-        onSelectGrupo={handleSelectGrupo}
-      />
     </AnimatePresence>
   );
 };
