@@ -633,8 +633,6 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
     }, 4000);
   };
 
-  const [modalAddGruposOpen, setModalAddGruposOpen] = useState(false);
-
   return (
     <div className="mt-8">
       {/* Modal de criação de grupo */}
@@ -758,7 +756,7 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
                   </button>
 
                   <button 
-                                        className="text-white/80 hover:text-[#FF6B00] transition-colors p-1 rounded-full"
+                    className="text-white/80 hover:text-[#FF6B00] transition-colors p-1 rounded-full"
                     title="Configurações do Grupo"
                     onClick={(e) => handleGroupSettings(e, grupo)}
                   >
