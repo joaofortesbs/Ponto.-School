@@ -247,16 +247,6 @@ const EntrarGrupoPorCodigoModal: React.FC<EntrarGrupoPorCodigoModalProps> = ({
                   <label htmlFor="grupoCodigo" className="block text-sm font-medium text-white/70">
                     Código do Grupo <span className="text-[#FF6B00]">*</span>
                   </label>
-                  <Button 
-                    type="button" 
-                    variant="ghost" 
-                    size="sm"
-                    className="text-[#FF6B00] hover:text-[#FF7A1A] hover:bg-[#FF6B00]/10 text-xs h-7"
-                    onClick={() => setShowBuscarModal(true)}
-                  >
-                    <Search className="h-3 w-3 mr-1" />
-                    Buscar grupos
-                  </Button>
                 </div>
                 <Input
                   id="grupoCodigo"
@@ -266,6 +256,17 @@ const EntrarGrupoPorCodigoModal: React.FC<EntrarGrupoPorCodigoModalProps> = ({
                   className="w-full border-[#1E293B] bg-[#0F172A] text-white placeholder:text-gray-500 focus:border-[#FF6B00] uppercase tracking-wider text-center text-lg font-mono"
                   maxLength={7}
                 />
+                <div className="flex justify-center mt-3">
+                  <Button 
+                    type="button" 
+                    variant="outline"
+                    className="text-[#FF6B00] border-[#FF6B00] hover:bg-[#FF6B00]/10 hover:text-[#FF7A1A] w-full"
+                    onClick={() => setShowBuscarModal(true)}
+                  >
+                    <Search className="h-4 w-4 mr-2" />
+                    Buscar grupos
+                  </Button>
+                </div>
                 <p className="text-xs text-gray-500 mt-2">
                   O código do grupo é um identificador único de 7 caracteres fornecido pelo criador do grupo.
                 </p>
