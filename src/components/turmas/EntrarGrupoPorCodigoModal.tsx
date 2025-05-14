@@ -12,41 +12,6 @@ interface EntrarGrupoPorCodigoModalProps {
   onSuccess?: (grupoId: string) => void;
 }
 
-interface BuscarGruposPorCodigoModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSelectGrupo: (codigo: string) => void;
-}
-
-const BuscarGruposPorCodigoModal: React.FC<BuscarGruposPorCodigoModalProps> = ({
-  isOpen,
-  onClose,
-  onSelectGrupo
-}) => {
-  if (!isOpen) return null;
-
-  // Placeholder implementation
-  return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.9 }}
-        transition={{ type: "spring", damping: 25, stiffness: 300 }}
-        className="bg-[#0F172A] dark:bg-[#0F172A] rounded-xl overflow-hidden w-[450px] max-w-full shadow-xl relative"
-      >
-        <div className="sticky top-0 z-10 bg-gradient-to-r from-[#0F172A] to-[#0F172A] border-b border-[#1E293B] p-6">
-          <h2 className="text-2xl font-bold text-white">Buscar Grupos (Placeholder)</h2>
-        </div>
-        <div className="p-6">
-          <p className="text-white">Funcionalidade de busca de grupos em desenvolvimento...</p>
-          <Button onClick={onClose}>Fechar</Button>
-        </div>
-      </motion.div>
-    </div>
-  );
-};
-
 const EntrarGrupoPorCodigoModal: React.FC<EntrarGrupoPorCodigoModalProps> = ({
   isOpen,
   onClose,
@@ -269,23 +234,20 @@ const EntrarGrupoPorCodigoModal: React.FC<EntrarGrupoPorCodigoModalProps> = ({
 
               <div className="space-y-4">
                 <div>
-                <label htmlFor="grupoCodigo" className="block text-sm font-medium text-white/70 mb-2">
-                  Código do Grupo <span className="text-[#FF6B00]">*</span>
-                </label>
-                <Input
-                  id="grupoCodigo"
-                  value={groupCode}
-                  onChange={handleCodeChange}
-                  placeholder="Ex: ABC1234"
-                  className="w-full border-[#1E293B] bg-[#0F172A] text-white placeholder:text-gray-500 focus:border-[#FF6B00] uppercase tracking-wider text-center text-lg font-mono"
-                  maxLength={7}
-                />
-</old_str>
-<new_str>
                 <div className="flex justify-between items-center mb-2">
                   <label htmlFor="grupoCodigo" className="block text-sm font-medium text-white/70">
                     Código do Grupo <span className="text-[#FF6B00]">*</span>
                   </label>
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="sm"
+                    className="text-[#FF6B00] hover:text-[#FF7A1A] hover:bg-[#FF6B00]/10 text-xs h-7"
+                    onClick={() => setShowBuscarModal(true)}
+                  >
+                    <Search className="h-3 w-3 mr-1" />
+                    Buscar grupos
+                  </Button>
                 </div>
                 <Input
                   id="grupoCodigo"
@@ -316,7 +278,7 @@ const EntrarGrupoPorCodigoModal: React.FC<EntrarGrupoPorCodigoModalProps> = ({
               </div>
             )}
 
-            <div className="flex justify-between gap-3">
+            <div className="flex justify-end gap-3">
               <Button
                 type="button"
                 variant="outline"
@@ -324,52 +286,30 @@ const EntrarGrupoPorCodigoModal: React.FC<EntrarGrupoPorCodigoModalProps> = ({
                 className="border-[#1E293B] text-white hover:bg-[#1E293B] hover:text-white"
                 disabled={isProcessing}
               >
-                Voltar
+                Cancelar
               </Button>
-              <div className="flex gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="border-[#1E293B] text-white hover:bg-[#1E293B]/50 flex items-center"
-                  onClick={() => setShowBuscarModal(true)}
-                  disabled={true} /* Inativo por enquanto, conforme solicitado */
-                >
-                  <Search className="h-4 w-4 mr-2" />
-                  Buscar Grupos
-                </Button>
-                <Button
-                  type="button"
-                  className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
-                  onClick={handleJoinGroupByCode}
-                  disabled={isProcessing || !groupCode.trim()}
-                >
-                  {isProcessing ? (
-                    <>
-                      <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
-                      Processando...
-                    </>
-                  ) : (
-                    <>
-                      <Key className="h-4 w-4 mr-2" />
-                      Entrar no Grupo
-                    </>
-                  )}
-                </Button>
-              </div>
+              <Button
+                type="button"
+                className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
+                onClick={handleJoinGroupByCode}
+                disabled={isProcessing || !groupCode.trim()}
+              >
+                {isProcessing ? (
+                  <>
+                    <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                    Processando...
+                  </>
+                ) : (
+                  <>
+                    <Key className="h-4 w-4 mr-2" />
+                    Entrar no Grupo
+                  </>
+                )}
+              </Button>
             </div>
           </div>
         </motion.div>
       </div>
-
-      {/* Modal de Busca de Grupos */}
-      <BuscarGruposPorCodigoModal
-        isOpen={showBuscarModal}
-        onClose={() => setShowBuscarModal(false)}
-        onSelectGrupo={(codigo) => {
-          setGroupCode(codigo);
-          setShowBuscarModal(false);
-        }}
-      />
     </AnimatePresence>
   );
 };
