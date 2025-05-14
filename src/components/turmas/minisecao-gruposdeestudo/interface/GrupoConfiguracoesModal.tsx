@@ -191,33 +191,59 @@ const handleSubmit = async () => {
 
       // Atualizar no armazenamento local
       try {
-        const gruposModule = await import('@/lib/gruposEstudoStorage');
+        const { obterGruposLocal } = await import('@/lib/gruposEstudoStorage');
+        const gruposAtuais = obterGruposLocal();
         
-        // Verificar se a função existe antes de chamá-la
-        if (typeof gruposModule.atualizarGrupoLocal === 'function') {
-          await gruposModule.atualizarGrupoLocal(grupoAtualizado);
+        // Verificar se o grupo já existe e atualizá-lo preservando o restante
+        const grupoIndex = gruposAtuais.findIndex(g => g.id === grupoAtualizado.id);
+        
+        if (grupoIndex >= 0) {
+          // Atualizar o grupo existente
+          gruposAtuais[grupoIndex] = {
+            ...gruposAtuais[grupoIndex],
+            ...grupoAtualizado
+          };
         } else {
-          // Implementação manual de fallback caso a função não exista
-          console.log("Usando método alternativo para atualizar grupo local...");
-          const GRUPOS_STORAGE_KEY = 'epictus_grupos_estudo';
-          const gruposAtuais = JSON.parse(localStorage.getItem(GRUPOS_STORAGE_KEY) || '[]');
-          const gruposAtualizados = gruposAtuais.map(g => g.id === grupoAtualizado.id ? grupoAtualizado : g);
-          localStorage.setItem(GRUPOS_STORAGE_KEY, JSON.stringify(gruposAtualizados));
-          
-          // Atualizar também na sessão
-          try {
-            sessionStorage.setItem('epictus_grupos_estudo_session', JSON.stringify(gruposAtualizados));
-          } catch (e) {
-            console.error("Erro ao salvar na sessão:", e);
-          }
+          // Adicionar o grupo se não existir
+          gruposAtuais.push(grupoAtualizado);
+        }
+        
+        // Salvar todos os grupos de volta
+        const GRUPOS_STORAGE_KEY = 'epictus_grupos_estudo';
+        localStorage.setItem(GRUPOS_STORAGE_KEY, JSON.stringify(gruposAtuais));
+        
+        // Atualizar também na sessão para recuperação rápida
+        try {
+          sessionStorage.setItem('epictus_grupos_estudo_session', JSON.stringify(gruposAtuais));
+          console.log("Grupo atualizado com sucesso no localStorage e sessionStorage");
+        } catch (e) {
+          console.error("Erro ao salvar na sessão:", e);
         }
       } catch (storageError) {
         console.error("Erro ao atualizar armazenamento local:", storageError);
-        // Implementação de fallback direto
-        const GRUPOS_STORAGE_KEY = 'epictus_grupos_estudo';
-        const gruposAtuais = JSON.parse(localStorage.getItem(GRUPOS_STORAGE_KEY) || '[]');
-        const gruposAtualizados = gruposAtuais.map(g => g.id === grupoAtualizado.id ? grupoAtualizado : g);
-        localStorage.setItem(GRUPOS_STORAGE_KEY, JSON.stringify(gruposAtualizados));
+        
+        // Implementação de fallback direta caso o import falhe
+        try {
+          const GRUPOS_STORAGE_KEY = 'epictus_grupos_estudo';
+          const gruposAtuais = JSON.parse(localStorage.getItem(GRUPOS_STORAGE_KEY) || '[]');
+          
+          // Mesmo processo de atualização como acima
+          const grupoIndex = gruposAtuais.findIndex(g => g.id === grupoAtualizado.id);
+          
+          if (grupoIndex >= 0) {
+            gruposAtuais[grupoIndex] = {
+              ...gruposAtuais[grupoIndex],
+              ...grupoAtualizado
+            };
+          } else {
+            gruposAtuais.push(grupoAtualizado);
+          }
+          
+          localStorage.setItem(GRUPOS_STORAGE_KEY, JSON.stringify(gruposAtuais));
+          console.log("Grupo atualizado com fallback no localStorage");
+        } catch (fallbackError) {
+          console.error("Erro crítico ao tentar salvar grupo:", fallbackError);
+        }
       }
 
       // Atualizar o estado local para refletir as mudanças
