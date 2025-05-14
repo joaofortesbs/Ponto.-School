@@ -1,4 +1,3 @@
-
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App.tsx";
@@ -6,11 +5,6 @@ import "./index.css";
 import { BrowserRouter } from "react-router-dom";
 import './lib/username-initializer.ts'
 import { preInitializeWebNodes } from './lib/web-persistence.ts'
-
-// Garantir que a inicialização não cause problemas de renderização
-window.addEventListener('DOMContentLoaded', () => {
-  console.log("DOM carregado completamente, verificando inicialização da aplicação");
-});
 
 // PRIORIDADE MÁXIMA: Inicializar teias antes de qualquer outro código
 // Esta função é executada imediatamente, antes mesmo da montagem do React
@@ -86,56 +80,6 @@ window.addEventListener('unhandledrejection', (event) => {
 });
 
 console.log("Iniciando aplicação...");
-
-// Componente ErrorBoundary para capturar erros durante a renderização
-class ErrorBoundary extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError() {
-    return { hasError: true };
-  }
-
-  componentDidCatch(error, errorInfo) {
-    console.error("Erro capturado pelo ErrorBoundary:", error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div style={{
-          fontFamily: 'system-ui, sans-serif',
-          padding: '2rem',
-          textAlign: 'center',
-          background: 'linear-gradient(135deg, rgba(0,20,39,1) 0%, rgba(41,51,92,1) 100%)',
-          minHeight: '100vh',
-          color: 'white'
-        }}>
-          <h1>Algo deu errado</h1>
-          <p>Ocorreu um erro ao renderizar a aplicação. Tente recarregar a página.</p>
-          <button 
-            onClick={() => window.location.reload()}
-            style={{
-              padding: '0.5rem 1rem',
-              marginTop: '1rem',
-              cursor: 'pointer',
-              background: '#FF6B00',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px'
-            }}
-          >
-            Recarregar
-          </button>
-        </div>
-      );
-    }
-
-    return this.props.children;
-  }
-}
 
 // Inicializar a aplicação com otimização de renderização
 const initializeApp = () => {
@@ -222,6 +166,56 @@ const initializeApp = () => {
     }
   }
 };
+
+// Componente ErrorBoundary para capturar erros durante a renderização
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error("Erro capturado pelo ErrorBoundary:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{
+          fontFamily: 'system-ui, sans-serif',
+          padding: '2rem',
+          textAlign: 'center',
+          background: 'linear-gradient(135deg, rgba(0,20,39,1) 0%, rgba(41,51,92,1) 100%)',
+          minHeight: '100vh',
+          color: 'white'
+        }}>
+          <h1>Algo deu errado</h1>
+          <p>Ocorreu um erro ao renderizar a aplicação. Tente recarregar a página.</p>
+          <button 
+            onClick={() => window.location.reload()}
+            style={{
+              padding: '0.5rem 1rem',
+              marginTop: '1rem',
+              cursor: 'pointer',
+              background: '#FF6B00',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px'
+            }}
+          >
+            Recarregar
+          </button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 // Inicializar a aplicação
 initializeApp();

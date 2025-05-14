@@ -18,7 +18,6 @@ export default defineConfig({
   plugins: [
     react({
       plugins: conditionalPlugins,
-      jsxImportSource: "react",
     }),
     tempo(),
   ],

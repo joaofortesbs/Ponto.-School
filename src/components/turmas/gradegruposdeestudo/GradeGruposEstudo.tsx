@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import CreateGroupModalEnhanced from "../CreateGroupModalEnhanced";
 import GrupoSairModal from "../minisecao-gruposdeestudo/interface/GrupoSairModal";
 import GrupoConfiguracoesModal from "../minisecao-gruposdeestudo/interface/GrupoConfiguracoesModal";
-import AdicionarGruposModal from "../modaladicionargruposviacódigo/AdicionarGruposModal";
 import { supabase } from "@/lib/supabase";
 import { criarGrupo, sincronizarGruposLocais, obterTodosGrupos, obterGruposLocal, salvarGrupoLocal, removerGrupoLocal } from '@/lib/gruposEstudoStorage';
 
@@ -46,7 +45,6 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
   const [gruposEstudo, setGruposEstudo] = useState<GrupoEstudo[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
-  const [showAdicionarGruposModal, setShowAdicionarGruposModal] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [sairModalOpen, setSairModalOpen] = useState(false);
   const [configModalOpen, setConfigModalOpen] = useState(false);
@@ -671,17 +669,6 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
         grupo={selectedGrupo}
         onSave={handleSaveGroupSettings}
       />
-
-      {/* Modal para adicionar grupos */}
-      <AdicionarGruposModal
-        isOpen={showAdicionarGruposModal}
-        onClose={() => setShowAdicionarGruposModal(false)}
-        onGrupoAdicionado={(grupo) => {
-          // Atualizar a lista após adicionar um grupo
-          setGruposEstudo(prevGrupos => [...prevGrupos, grupo]);
-          setShowAdicionarGruposModal(false);
-        }}
-      />
       {/* Cabeçalho da grade */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
@@ -693,20 +680,12 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
             {gruposFiltrados.length} grupos
           </Badge>
         </div>
-        <div className="flex gap-3">
-          <Button 
-            onClick={() => setShowAdicionarGruposModal(true)}
-            className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-medium rounded-xl shadow-md hover:shadow-lg transition-all duration-300 border border-[#FF6B00]/20 py-2 px-4 h-10"
-          >
-            <Search className="h-4 w-4 mr-2" /> Adicionar Grupos
-          </Button>
-          <Button 
-            onClick={abrirModalCriarGrupo}
-            className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF6B00]/90 hover:to-[#FF8C40]/90 text-white text-sm rounded-xl shadow-md"
-          >
-            <Plus className="h-4 w-4 mr-1" /> Criar Grupo
-          </Button>
-        </div>
+        <Button 
+          onClick={abrirModalCriarGrupo}
+          className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF6B00]/90 hover:to-[#FF8C40]/90 text-white text-sm rounded-xl shadow-md"
+        >
+          <Plus className="h-4 w-4 mr-1" /> Criar Grupo
+        </Button>
       </div>
 
       {/* Lista de grupos */}
