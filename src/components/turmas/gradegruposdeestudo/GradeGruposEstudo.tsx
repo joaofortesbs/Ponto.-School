@@ -680,12 +680,20 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
             {gruposFiltrados.length} grupos
           </Badge>
         </div>
-        <Button 
-          onClick={abrirModalCriarGrupo}
-          className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF6B00]/90 hover:to-[#FF8C40]/90 text-white text-sm rounded-xl shadow-md"
-        >
-          <Plus className="h-4 w-4 mr-1" /> Criar Grupo
-        </Button>
+        <div className="flex gap-3">
+          <Button 
+            disabled={true}
+            className="bg-gray-700/80 hover:bg-gray-700 text-white text-sm rounded-xl shadow-md"
+          >
+            <Search className="h-4 w-4 mr-1" /> Buscar Grupos
+          </Button>
+          <Button 
+            onClick={abrirModalCriarGrupo}
+            className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF6B00]/90 hover:to-[#FF8C40]/90 text-white text-sm rounded-xl shadow-md"
+          >
+            <Plus className="h-4 w-4 mr-1" /> Criar Grupo
+          </Button>
+        </div>
       </div>
 
       {/* Lista de grupos */}
