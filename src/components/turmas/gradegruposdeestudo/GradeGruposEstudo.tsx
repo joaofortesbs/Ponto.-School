@@ -8,6 +8,9 @@ import GrupoSairModal from "../minisecao-gruposdeestudo/interface/GrupoSairModal
 import GrupoConfiguracoesModal from "../minisecao-gruposdeestudo/interface/GrupoConfiguracoesModal";
 import { supabase } from "@/lib/supabase";
 import { criarGrupo, sincronizarGruposLocais, obterTodosGrupos, obterGruposLocal, salvarGrupoLocal, removerGrupoLocal } from '@/lib/gruposEstudoStorage';
+import { useAuth } from "@/hooks/useAuth";
+import GrupoEstudoCard from "../minisecao-gruposdeestudo/interface/GrupoEstudoCard";
+import { toast } from "@/components/ui/use-toast";
 
 interface GrupoEstudo {
   id: string;
@@ -35,6 +38,12 @@ interface GradeGruposEstudoProps {
   searchQuery?: string;
 }
 
+interface GrupoAdicionadoEvent extends Event {
+  detail?: {
+    grupo: any;
+  };
+}
+
 const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({ 
   selectedTopic, 
   topicosEstudo,
@@ -49,31 +58,80 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
   const [sairModalOpen, setSairModalOpen] = useState(false);
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [selectedGrupo, setSelectedGrupo] = useState<GrupoEstudo | null>(null);
+  const { user } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Carregar grupos do banco de dados e do armazenamento local
-  useEffect(() => {
-    const carregarGrupos = async () => {
-      try {
-        setLoading(true);
+  const carregarGrupos = async () => {
+    if (!user?.id) return;
 
-        // Buscar os grupos do usuário atual do Supabase
-        const { data: { session } } = await supabase.auth.getSession();
+    try {
+      setIsLoading(true);
 
-        if (session) {
-          // Obter a lista de grupos removidos do localStorage para filtragem
-          const gruposRemovidosKey = 'grupos_removidos';
-          const gruposRemovidosStr = localStorage.getItem(gruposRemovidosKey) || '[]';
-          const gruposRemovidos = JSON.parse(gruposRemovidosStr);
+      // Buscar os grupos do usuário atual do Supabase
+      const { data: { session } } = await supabase.auth.getSession();
 
-          // Primeiro carregamos os grupos locais para exibição rápida
-          const gruposLocais = obterGruposLocal()
-            .filter(grupo => grupo.user_id === session.user.id)
-            // Filtrar grupos que foram removidos
-            .filter(grupo => !gruposRemovidos.includes(grupo.id));
+      if (session) {
+        // Obter a lista de grupos removidos do localStorage para filtragem
+        const gruposRemovidosKey = 'grupos_removidos';
+        const gruposRemovidosStr = localStorage.getItem(gruposRemovidosKey) || '[]';
+        const gruposRemovidos = JSON.parse(gruposRemovidosStr);
 
-          // Converter dados locais para o formato da interface
-          if (gruposLocais.length > 0) {
-            const gruposLocaisFormatados: GrupoEstudo[] = gruposLocais.map((grupo: any) => ({
+        // Primeiro carregamos os grupos locais para exibição rápida
+        const gruposLocais = obterGruposLocal()
+          .filter(grupo => grupo.user_id === session.user.id)
+          // Filtrar grupos que foram removidos
+          .filter(grupo => !gruposRemovidos.includes(grupo.id));
+
+        // Converter dados locais para o formato da interface
+        if (gruposLocais.length > 0) {
+          const gruposLocaisFormatados: GrupoEstudo[] = gruposLocais.map((grupo: any) => ({
+            id: grupo.id,
+            nome: grupo.nome,
+            descricao: grupo.descricao,
+            cor: grupo.cor,
+            membros: grupo.membros || 1,
+            topico: grupo.topico,
+            disciplina: grupo.disciplina || "",
+            icon: grupo.topico_icon,
+            dataCriacao: grupo.data_criacao,
+            tendencia: Math.random() > 0.7 ? "alta" : undefined, // Valor aleatório para demo
+            novoConteudo: Math.random() > 0.7, // Valor aleatório para demo
+            privado: grupo.privado,
+            visibilidade: grupo.visibilidade,
+            topico_nome: grupo.topico_nome,
+            topico_icon: grupo.topico_icon,
+            data_inicio: grupo.data_inicio,
+            criador: grupo.criador || "você" // Garantir que o criador esteja definido
+          }));
+
+          // Exibir primeiro os grupos locais enquanto carregamos do Supabase
+          setGruposEstudo(gruposLocaisFormatados);
+        }
+
+        // Tentar buscar do Supabase
+        try {
+          const { data, error } = await supabase
+            .from('grupos_estudo')
+            .select('*')
+            .eq('user_id', session.user.id)
+            .order('data_criacao', { ascending: false });
+
+          if (error) {
+            console.error("Erro ao buscar grupos de estudo do Supabase:", error);
+            // Continuar com os grupos locais já carregados
+
+            // Tentar sincronizar os grupos locais com o Supabase
+            await sincronizarGruposLocais(session.user.id);
+          } else {
+            console.log("Grupos carregados do Supabase:", data);
+
+            // Filtrar grupos do Supabase que não estão na lista de removidos
+            const gruposSupabaseFiltrados = data.filter((grupo: any) => 
+              !gruposRemovidos.includes(grupo.id)
+            );
+
+            // Converter dados do banco para o formato da interface
+            const gruposFormatados: GrupoEstudo[] = gruposSupabaseFiltrados.map((grupo: any) => ({
               id: grupo.id,
               nome: grupo.nome,
               descricao: grupo.descricao,
@@ -93,34 +151,11 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
               criador: grupo.criador || "você" // Garantir que o criador esteja definido
             }));
 
-            // Exibir primeiro os grupos locais enquanto carregamos do Supabase
-            setGruposEstudo(gruposLocaisFormatados);
-          }
-
-          // Tentar buscar do Supabase
-          try {
-            const { data, error } = await supabase
-              .from('grupos_estudo')
-              .select('*')
-              .eq('user_id', session.user.id)
-              .order('data_criacao', { ascending: false });
-
-            if (error) {
-              console.error("Erro ao buscar grupos de estudo do Supabase:", error);
-              // Continuar com os grupos locais já carregados
-
-              // Tentar sincronizar os grupos locais com o Supabase
-              await sincronizarGruposLocais(session.user.id);
-            } else {
-              console.log("Grupos carregados do Supabase:", data);
-
-              // Filtrar grupos do Supabase que não estão na lista de removidos
-              const gruposSupabaseFiltrados = data.filter((grupo: any) => 
-                !gruposRemovidos.includes(grupo.id)
-              );
-
-              // Converter dados do banco para o formato da interface
-              const gruposFormatados: GrupoEstudo[] = gruposSupabaseFiltrados.map((grupo: any) => ({
+            // Combinar grupos do Supabase com grupos locais que não estão no Supabase
+            const gruposLocaisFiltrados = gruposLocais
+              .filter(grupoLocal => grupoLocal.id.startsWith('local_') && 
+                !gruposSupabaseFiltrados.some((grupoRemoto: any) => grupoRemoto.id === grupoLocal.id))
+              .map((grupo: any) => ({
                 id: grupo.id,
                 nome: grupo.nome,
                 descricao: grupo.descricao,
@@ -130,8 +165,8 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
                 disciplina: grupo.disciplina || "",
                 icon: grupo.topico_icon,
                 dataCriacao: grupo.data_criacao,
-                tendencia: Math.random() > 0.7 ? "alta" : undefined, // Valor aleatório para demo
-                novoConteudo: Math.random() > 0.7, // Valor aleatório para demo
+                tendencia: Math.random() > 0.7 ? "alta" : undefined,
+                novoConteudo: Math.random() > 0.7,
                 privado: grupo.privado,
                 visibilidade: grupo.visibilidade,
                 topico_nome: grupo.topico_nome,
@@ -140,66 +175,71 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
                 criador: grupo.criador || "você" // Garantir que o criador esteja definido
               }));
 
-              // Combinar grupos do Supabase com grupos locais que não estão no Supabase
-              const gruposLocaisFiltrados = gruposLocais
-                .filter(grupoLocal => grupoLocal.id.startsWith('local_') && 
-                  !gruposSupabaseFiltrados.some((grupoRemoto: any) => grupoRemoto.id === grupoLocal.id))
-                .map((grupo: any) => ({
-                  id: grupo.id,
-                  nome: grupo.nome,
-                  descricao: grupo.descricao,
-                  cor: grupo.cor,
-                  membros: grupo.membros || 1,
-                  topico: grupo.topico,
-                  disciplina: grupo.disciplina || "",
-                  icon: grupo.topico_icon,
-                  dataCriacao: grupo.data_criacao,
-                  tendencia: Math.random() > 0.7 ? "alta" : undefined,
-                  novoConteudo: Math.random() > 0.7,
-                  privado: grupo.privado,
-                  visibilidade: grupo.visibilidade,
-                  topico_nome: grupo.topico_nome,
-                  topico_icon: grupo.topico_icon,
-                  data_inicio: grupo.data_inicio,
-                  criador: grupo.criador || "você" // Garantir que o criador esteja definido
-                }));
-
-              setGruposEstudo([...gruposFormatados, ...gruposLocaisFiltrados]);
-            }
-          } catch (supabaseError) {
-            console.error("Falha ao usar Supabase:", supabaseError);
-            // Já estamos usando os dados locais, então continuar com eles
+            setGruposEstudo([...gruposFormatados, ...gruposLocaisFiltrados]);
           }
+        } catch (supabaseError) {
+          console.error("Falha ao usar Supabase:", supabaseError);
+          // Já estamos usando os dados locais, então continuar com eles
         }
-      } catch (error) {
-        console.error("Erro ao carregar grupos de estudo:", error);
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (error) {
+      console.error("Erro ao carregar grupos de estudo:", error);
+      toast({
+        title: "Erro ao carregar grupos",
+        description: "Não foi possível carregar seus grupos de estudo.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+      setLoading(false);
+    }
+  };
 
+  // Manusear evento de grupo adicionado (para atualização imediata)
+  const handleGrupoAdicionado = (event: GrupoAdicionadoEvent) => {
+    if (event.detail?.grupo) {
+      console.log("Evento recebido: Grupo adicionado", event.detail.grupo);
+      // Adicionar o novo grupo à lista se ele ainda não estiver presente
+      setGruposEstudo(gruposAtuais => {
+        // Verificar se o grupo já existe na lista
+        const grupoExistente = gruposAtuais.find(g => g.id === event.detail?.grupo.id);
+
+        if (grupoExistente) {
+          console.log("Grupo já existe na lista, atualizando propriedades");
+          // Se o grupo já existe, retornar a lista atualizada com as novas propriedades
+          return gruposAtuais.map(g => 
+            g.id === event.detail?.grupo.id ? { ...g, ...event.detail.grupo } : g
+          );
+        } else {
+          console.log("Adicionando novo grupo à lista");
+          // Se o grupo não existe, adicioná-lo à lista
+          return [...gruposAtuais, event.detail?.grupo];
+        }
+      });
+
+      // Mostrar notificação de sucesso
+      toast({
+        title: "Grupo adicionado",
+        description: `O grupo "${event.detail.grupo.nome}" foi adicionado com sucesso.`,
+        variant: "default",
+      });
+    } else {
+      // Se não houver detalhes do grupo no evento, recarregar todos os grupos
+      console.log("Evento recebido sem detalhes do grupo, recarregando todos...");
+      carregarGrupos();
+    }
+  };
+
+  useEffect(() => {
     carregarGrupos();
 
-    // Definir um intervalo para re-sincronização a cada 5 minutos
-    const intervaloSincronizacao = setInterval(async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          await sincronizarGruposLocais(session.user.id);
-        }
-      } catch (error) {
-        console.error("Erro na sincronização automática:", error);
-      }
-    }, 300000); // 5 minutos
+    // Adicionar evento para atualizar quando um grupo for adicionado
+    window.addEventListener('grupoAdicionado', handleGrupoAdicionado as EventListener);
 
-    // NÃO recarregar os grupos quando a página se torna visível novamente
-    // pois isso estava causando o problema de recarregamento indevido
-
-    // Limpar listeners e intervalos quando o componente for desmontado
     return () => {
-      clearInterval(intervaloSincronizacao);
+      window.removeEventListener('grupoAdicionado', handleGrupoAdicionado as EventListener);
     };
-  }, []); // Remover dependências para evitar recarregamentos desnecessários
+  }, [user?.id]);
 
   // Filtrar grupos baseado no tópico selecionado e busca
   const gruposFiltrados = gruposEstudo.filter(
@@ -451,34 +491,13 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
     setShowCreateGroupModal(true);
   };
 
-  // Atualizar a lista de grupos quando um novo grupo é adicionado via código
-  useEffect(() => {
-    const handleGrupoAdicionado = async (event: CustomEvent) => {
-      try {
-        console.log("Evento grupoAdicionado recebido:", event.detail.grupo);
-        // Recarregar todos os grupos para garantir que temos a lista atualizada
-        await carregarGruposEstudo();
-      } catch (error) {
-        console.error("Erro ao processar evento grupoAdicionado:", error);
-      }
-    };
-
-    // Adicionar ouvinte de evento
-    window.addEventListener('grupoAdicionado', handleGrupoAdicionado as EventListener);
-
-    // Remover ouvinte quando componente for desmontado
-    return () => {
-      window.removeEventListener('grupoAdicionado', handleGrupoAdicionado as EventListener);
-    };
-  }, []);
-
   // Função para carregar grupos de estudo
   const carregarGruposEstudo = async () => {
     try {
       setIsLoading(true);
       // Obter todos os grupos e garantir que eles são filtrados corretamente
       const todosGrupos = await obterTodosGrupos();
-      
+
       // Mapear grupos para o formato correto
       const gruposMapeados = todosGrupos.map(grupo => ({
         ...grupo,
@@ -680,6 +699,14 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
       }, 500);
     }, 4000);
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center py-10">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#FF6B00]" />
+      </div>
+    );
+  }
 
   return (
     <div className="mt-8">
