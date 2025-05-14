@@ -1,403 +1,236 @@
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { verificarSeCodigoExiste } from '@/lib/gruposEstudoStorage';
+import { supabase } from '@/lib/supabase';
+import { notificationService } from '@/lib/notifications-service';
 
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { supabase } from "@/lib/supabase";
-import { KeyRound, ArrowRight, Send, AlertCircle, Check, X, Info, Shield } from "lucide-react";
-import { toast } from "@/components/ui/use-toast";
-import { 
-  obterGrupoPorCodigo, 
-  adicionarUsuarioAoGrupo, 
-  salvarGrupoLocal,
-  verificarSeCodigoExiste
-} from "@/lib/gruposEstudoStorage";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+interface EntrarGrupoPorCodigoFormProps {
+  onClose: () => void;
+  onGrupoAdicionado?: () => void;
+}
 
-const EntrarGrupoPorCodigoForm: React.FC = () => {
-  const [codigo, setCodigo] = useState("");
+export default function EntrarGrupoPorCodigoForm({ onClose, onGrupoAdicionado }: EntrarGrupoPorCodigoFormProps) {
+  const [codigo, setCodigo] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [grupoVerificado, setGrupoVerificado] = useState<any>(null);
-  const [status, setStatus] = useState<"idle" | "loading" | "notFound" | "alreadyMember" | "private" | "success">("idle");
-  const [mensagemSolicitacao, setMensagemSolicitacao] = useState("");
-
-  // Verificar status do código
-  const verificarCodigo = async () => {
-    if (!codigo.trim()) {
-      toast({
-        title: "Código obrigatório",
-        description: "Por favor, digite o código do grupo.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setIsLoading(true);
-    setStatus("loading");
-    
-    try {
-      // Normalizar o código (remover espaços e converter para maiúsculas)
-      const codigoNormalizado = codigo.trim().toUpperCase();
-      
-      console.log("Verificando código:", codigoNormalizado);
-      
-      // Obter a sessão atual do usuário para todas as operações
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        toast({
-          title: "Autenticação necessária",
-          description: "Você precisa estar logado para entrar em um grupo.",
-          variant: "destructive",
-        });
-        setIsLoading(false);
-        setStatus("idle");
-        return;
-      }
-      
-      // 1. Verificar se o código existe
-      const codigoExiste = await verificarSeCodigoExiste(codigoNormalizado);
-      
-      if (!codigoExiste) {
-        console.log("Código não encontrado");
-        setStatus("notFound");
-        setIsLoading(false);
-        return;
-      }
-      
-      // 2. Obter detalhes do grupo
-      const grupoEncontrado = await obterGrupoPorCodigo(codigoNormalizado);
-      
-      if (!grupoEncontrado) {
-        console.log("Grupo não encontrado com o código fornecido");
-        setStatus("notFound");
-        setIsLoading(false);
-        return;
-      }
-      
-      setGrupoVerificado(grupoEncontrado);
-      console.log("Grupo encontrado:", grupoEncontrado);
-      
-      // 3. Verificar se o usuário já é membro
-      const membrosIds = grupoEncontrado.membros_ids || [];
-      
-      if (membrosIds.includes(user.id) || grupoEncontrado.user_id === user.id) {
-        console.log("Usuário já é membro do grupo");
-        setStatus("alreadyMember");
-        setIsLoading(false);
-        return;
-      }
-      
-      // 4. Verificar se o grupo é privado
-      if (grupoEncontrado.privado || grupoEncontrado.visibilidade === "Privado (apenas por convite)") {
-        console.log("Grupo é privado");
-        
-        // Verificar se o usuário está na lista de convidados
-        const convidados = grupoEncontrado.convidados || [];
-        
-        if (!convidados.includes(user.id) && grupoEncontrado.user_id !== user.id) {
-          console.log("Usuário não está na lista de convidados");
-          setStatus("private");
-          setIsLoading(false);
-          return;
-        }
-      }
-      
-      // Se chegou aqui, o usuário pode entrar no grupo
-      setStatus("success");
-      setIsLoading(false);
-      
-    } catch (error) {
-      console.error("Erro ao verificar código:", error);
-      toast({
-        title: "Erro ao verificar código",
-        description: "Ocorreu um erro ao verificar o código do grupo. Tente novamente.",
-        variant: "destructive",
-      });
-      setStatus("idle");
-      setIsLoading(false);
-    }
-  };
-
-  // Realizar entrada no grupo
-  const entrarNoGrupo = async () => {
-    if (!grupoVerificado) return;
-    
-    setIsLoading(true);
-    
-    try {
-      console.log("Adicionando usuário ao grupo:", grupoVerificado.id);
-      const sucesso = await adicionarUsuarioAoGrupo(grupoVerificado.id, codigo.trim().toUpperCase());
-      
-      if (!sucesso) {
-        throw new Error("Falha ao adicionar usuário ao grupo");
-      }
-      
-      // Disparar evento de atualização
-      const grupoAdicionadoEvent = new CustomEvent('grupoAdicionado', { 
-        detail: { 
-          grupo: grupoVerificado 
-        }
-      });
-      window.dispatchEvent(grupoAdicionadoEvent);
-      
-      // Salvar o grupo localmente
-      salvarGrupoLocal(grupoVerificado);
-      
-      toast({
-        title: "Sucesso!",
-        description: `Você entrou no grupo "${grupoVerificado.nome}"`,
-      });
-      
-      // Resetar estado
-      setCodigo("");
-      setGrupoVerificado(null);
-      setStatus("idle");
-      
-    } catch (error) {
-      console.error("Erro ao entrar no grupo:", error);
-      toast({
-        title: "Erro ao entrar no grupo",
-        description: "Ocorreu um erro ao tentar entrar no grupo. Tente novamente.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Enviar solicitação para grupo privado
-  const enviarSolicitacao = async () => {
-    if (!grupoVerificado) return;
-    
-    setIsLoading(true);
-    
-    try {
-      // Obter a sessão atual do usuário
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        throw new Error("Usuário não autenticado");
-      }
-      
-      // Adicionar usuário à lista de solicitações pendentes do grupo
-      const { error } = await supabase
-        .from('grupos_solicitacoes')
-        .insert({
-          grupo_id: grupoVerificado.id,
-          user_id: user.id,
-          mensagem: mensagemSolicitacao,
-          status: 'pendente',
-          data_solicitacao: new Date().toISOString()
-        });
-      
-      if (error) {
-        throw error;
-      }
-      
-      toast({
-        title: "Solicitação enviada",
-        description: `Sua solicitação para entrar no grupo "${grupoVerificado.nome}" foi enviada. Aguarde a aprovação do administrador.`,
-      });
-      
-      // Resetar estado
-      setCodigo("");
-      setGrupoVerificado(null);
-      setStatus("idle");
-      setMensagemSolicitacao("");
-      
-    } catch (error) {
-      console.error("Erro ao enviar solicitação:", error);
-      
-      // Em caso de erro, salvar solicitação localmente para tentar sincronizar depois
-      try {
-        const solicitacoesPendentes = JSON.parse(localStorage.getItem('epictus_solicitacoes_pendentes') || '[]');
-        solicitacoesPendentes.push({
-          grupo_id: grupoVerificado.id,
-          grupo_nome: grupoVerificado.nome,
-          mensagem: mensagemSolicitacao,
-          data_solicitacao: new Date().toISOString()
-        });
-        localStorage.setItem('epictus_solicitacoes_pendentes', JSON.stringify(solicitacoesPendentes));
-        
-        toast({
-          title: "Solicitação salva localmente",
-          description: "Sua solicitação foi salva e será enviada quando a conexão for restabelecida.",
-        });
-      } catch (e) {
-        console.error("Erro ao salvar solicitação localmente:", e);
-        toast({
-          title: "Erro ao enviar solicitação",
-          description: "Ocorreu um erro ao tentar enviar sua solicitação. Tente novamente mais tarde.",
-          variant: "destructive",
-        });
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Renderizar componentes de status
-  const renderStatusMessage = () => {
-    switch (status) {
-      case "notFound":
-        return (
-          <Alert variant="destructive" className="mt-3 animate-in fade-in-50">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Grupo não encontrado</AlertTitle>
-            <AlertDescription>
-              O código "{codigo.toUpperCase()}" não corresponde a nenhum grupo existente.
-            </AlertDescription>
-          </Alert>
-        );
-        
-      case "alreadyMember":
-        return (
-          <Alert className="mt-3 animate-in fade-in-50 border-amber-500 text-amber-500">
-            <Info className="h-4 w-4" />
-            <AlertTitle>Você já faz parte deste grupo</AlertTitle>
-            <AlertDescription>
-              Você já é membro do grupo "{grupoVerificado?.nome}".
-            </AlertDescription>
-          </Alert>
-        );
-        
-      case "private":
-        return (
-          <div className="mt-3 space-y-3 animate-in fade-in-50">
-            <Alert variant="default" className="border-[#FF6B00]">
-              <Shield className="h-4 w-4" />
-              <AlertTitle>Grupo privado</AlertTitle>
-              <AlertDescription>
-                O grupo "{grupoVerificado?.nome}" é privado e requer autorização do administrador.
-              </AlertDescription>
-            </Alert>
-            
-            <div className="p-3 border border-[#1E293B] rounded-lg bg-[#0F172A]">
-              <h4 className="text-sm font-medium text-white mb-2">Enviar solicitação de acesso</h4>
-              <textarea
-                value={mensagemSolicitacao}
-                onChange={(e) => setMensagemSolicitacao(e.target.value)}
-                placeholder="Deixe uma mensagem para o administrador do grupo (opcional)"
-                className="w-full h-20 p-2 text-sm bg-[#1E293B] border-[#1E293B] rounded-md text-white focus:border-[#FF6B00] resize-none mb-2"
-              />
-              <Button
-                type="button"
-                className="w-full bg-[#FF6B00] hover:bg-[#FF6B00]/90"
-                onClick={enviarSolicitacao}
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <>
-                    <Send className="h-4 w-4 mr-1" /> Enviar solicitação
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-        );
-        
-      case "success":
-        return (
-          <div className="mt-3 space-y-3 animate-in fade-in-50">
-            <Alert className="border-green-500">
-              <Check className="h-4 w-4 text-green-500" />
-              <AlertTitle className="text-green-500">Grupo encontrado!</AlertTitle>
-              <AlertDescription>
-                <div className="text-gray-300 mb-2">
-                  Você pode entrar no grupo "{grupoVerificado?.nome}".
-                </div>
-                <Button
-                  type="button"
-                  className="w-full bg-green-500 hover:bg-green-600 text-white"
-                  onClick={entrarNoGrupo}
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <>
-                      <Check className="h-4 w-4 mr-1" /> Confirmar entrada
-                    </>
-                  )}
-                </Button>
-              </AlertDescription>
-            </Alert>
-          </div>
-        );
-        
-      default:
-        return null;
-    }
-  };
+  const [erro, setErro] = useState<string | null>(null);
+  const [grupoInfo, setGrupoInfo] = useState<any>(null);
+  const [isPrivado, setIsPrivado] = useState(false);
+  const [isEnviandoSolicitacao, setIsEnviandoSolicitacao] = useState(false);
+  const [jaPertenceAoGrupo, setJaPertenceAoGrupo] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await verificarCodigo();
+    setErro(null);
+    setGrupoInfo(null);
+    setIsPrivado(false);
+    setJaPertenceAoGrupo(false);
+
+    if (!codigo.trim()) {
+      setErro('Por favor, insira um código de grupo válido');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      // Verificar se o código existe no servidor
+      const response = await fetch('/api/verificar-codigo-grupo', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ codigo }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.existe) {
+        // O código existe, verificar outras condições
+        const { user } = await supabase.auth.getUser();
+
+        if (!user) {
+          setErro('Você precisa estar logado para entrar em um grupo');
+          setIsLoading(false);
+          return;
+        }
+
+        // Verificar se o grupo é privado
+        if (data.privado) {
+          setIsPrivado(true);
+          setGrupoInfo(data.grupo);
+          setIsLoading(false);
+          return;
+        }
+
+        // Verificar se o usuário já pertence ao grupo
+        if (data.jaPertence) {
+          setJaPertenceAoGrupo(true);
+          setGrupoInfo(data.grupo);
+          setIsLoading(false);
+          return;
+        }
+
+        // Adicionar o usuário ao grupo
+        const addResponse = await fetch('/api/adicionar-usuario-ao-grupo', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            codigo, 
+            userId: user.id 
+          }),
+        });
+
+        const addData = await addResponse.json();
+
+        if (addResponse.ok) {
+          setIsLoading(false);
+
+          // Mostrar notificação de sucesso
+          notificationService.success(
+            `Você foi adicionado ao grupo "${addData.grupo.nome}" com sucesso!`,
+            'Grupo adicionado'
+          );
+
+          if (onGrupoAdicionado) {
+            onGrupoAdicionado();
+          }
+          onClose();
+        } else {
+          setErro(addData.mensagem || 'Erro ao adicionar você ao grupo');
+          setIsLoading(false);
+        }
+      } else {
+        // O código não existe
+        setErro(data.mensagem || 'Código de grupo não encontrado');
+        setIsLoading(false);
+      }
+    } catch (error) {
+      console.error('Erro ao verificar código de grupo:', error);
+      setErro('Erro ao verificar o código. Tente novamente.');
+      setIsLoading(false);
+    }
   };
 
-  const resetForm = () => {
-    setCodigo("");
-    setGrupoVerificado(null);
-    setStatus("idle");
-    setMensagemSolicitacao("");
+  const enviarSolicitacao = async () => {
+    if (!grupoInfo || !grupoInfo.id) return;
+
+    setIsEnviandoSolicitacao(true);
+
+    try {
+      const { user } = await supabase.auth.getUser();
+
+      if (!user) {
+        setErro('Você precisa estar logado para enviar solicitações');
+        setIsEnviandoSolicitacao(false);
+        return;
+      }
+
+      const response = await fetch('/api/solicitar-entrada-grupo', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          grupoId: grupoInfo.id,
+          userId: user.id
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        notificationService.success(
+          `Solicitação enviada com sucesso para o grupo "${grupoInfo.nome}"`,
+          'Solicitação enviada'
+        );
+        onClose();
+      } else {
+        setErro(data.mensagem || 'Erro ao enviar solicitação');
+      }
+    } catch (error) {
+      console.error('Erro ao enviar solicitação:', error);
+      setErro('Erro ao enviar solicitação. Tente novamente.');
+    } finally {
+      setIsEnviandoSolicitacao(false);
+    }
+  };
+
+  const handleCodigoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Formatar código para maiúsculas e remover espaços
+    const valorFormatado = e.target.value.toUpperCase().replace(/\s/g, '');
+    setCodigo(valorFormatado);
+
+    // Limpar erro e estados ao digitar
+    if (erro) setErro(null);
+    if (grupoInfo) setGrupoInfo(null);
+    if (isPrivado) setIsPrivado(false);
+    if (jaPertenceAoGrupo) setJaPertenceAoGrupo(false);
   };
 
   return (
-    <div className="flex flex-col">
-      <form onSubmit={handleSubmit} className="flex flex-col space-y-3">
-        <div className="flex items-center space-x-2">
-          <div className="relative flex-1">
-            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-              <KeyRound className="h-4 w-4" />
-            </div>
-            <Input
-              value={codigo}
-              onChange={(e) => setCodigo(e.target.value.toUpperCase())}
-              placeholder="Digite o código do grupo"
-              className="pl-9 bg-[#1E293B] border-[#1E293B] text-white focus:border-[#FF6B00] font-mono uppercase"
-              maxLength={7}
-              disabled={status !== "idle" && status !== "notFound"}
-            />
-          </div>
-          {status === "idle" || status === "notFound" ? (
-            <Button 
-              type="submit" 
-              className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
-              disabled={isLoading || !codigo.trim()}
-            >
-              {isLoading ? (
-                <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <>
-                  <ArrowRight className="h-4 w-4 mr-1" /> Verificar
-                </>
-              )}
-            </Button>
-          ) : (
-            <Button
-              type="button"
-              variant="outline"
-              className="border-[#1E293B] text-white hover:bg-[#1E293B]"
-              onClick={resetForm}
-              disabled={isLoading}
-            >
-              <X className="h-4 w-4 mr-1" /> Cancelar
-            </Button>
-          )}
-        </div>
-        
-        {status === "idle" && (
-          <p className="text-xs text-gray-400">
-            Digite o código de convite do grupo para encontrá-lo automaticamente.
+    <div className="flex flex-col p-4">
+      <h2 className="text-lg font-semibold mb-4">Entrar em Grupo com Código</h2>
+
+      {jaPertenceAoGrupo && grupoInfo ? (
+        <div className="bg-amber-50 border border-amber-200 rounded-md p-4 mb-4">
+          <h3 className="text-amber-700 font-medium">Você já pertence ao grupo</h3>
+          <p className="text-amber-600 mt-2">
+            Você já é membro do grupo "{grupoInfo.nome}".
           </p>
-        )}
-      </form>
-      
-      {renderStatusMessage()}
+          <div className="mt-4 flex justify-end">
+            <Button onClick={onClose}>Fechar</Button>
+          </div>
+        </div>
+      ) : isPrivado && grupoInfo ? (
+        <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-4">
+          <h3 className="text-blue-700 font-medium">Grupo Privado</h3>
+          <p className="text-blue-600 mt-2">
+            O grupo "{grupoInfo.nome}" é privado. Você pode enviar uma solicitação para participar.
+          </p>
+          <div className="mt-4 flex justify-end gap-2">
+            <Button variant="outline" onClick={onClose} disabled={isEnviandoSolicitacao}>
+              Cancelar
+            </Button>
+            <Button 
+              onClick={enviarSolicitacao} 
+              disabled={isEnviandoSolicitacao}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {isEnviandoSolicitacao ? 'Enviando...' : 'Enviar Solicitação'}
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <label htmlFor="codigo" className="text-sm font-medium">
+              Código do Grupo
+            </label>
+            <Input
+              id="codigo"
+              value={codigo}
+              onChange={handleCodigoChange}
+              placeholder="Digite o código (ex: ABC123)"
+              className="w-full"
+              maxLength={10}
+              autoComplete="off"
+            />
+            {erro && <p className="text-sm text-red-500">{erro}</p>}
+          </div>
+
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={onClose} disabled={isLoading}>
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={isLoading || !codigo.trim()}>
+              {isLoading ? 'Verificando...' : 'Entrar no Grupo'}
+            </Button>
+          </div>
+        </form>
+      )}
     </div>
   );
-};
-
-export default EntrarGrupoPorCodigoForm;
+}

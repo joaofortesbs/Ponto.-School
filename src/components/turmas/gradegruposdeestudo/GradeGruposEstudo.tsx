@@ -648,26 +648,31 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
     }
   };
 
-  // Função auxiliar para mostrar notificação de sucesso
+  // Função auxiliar para mostrar notificação de sucesso usando o serviço de notificações
   const mostrarNotificacaoSucesso = (mensagem: string) => {
-    const element = document.createElement('div');
-    element.style.position = 'fixed';
-    element.style.top = '20px';
-    element.style.left = '50%';
-    element.style.transform = 'translateX(-50%)';
-    element.style.padding = '10px 20px';
-    element.style.background = '#4CAF50';
-    element.style.color = 'white';
-    element.style.borderRadius = '4px';
-    element.style.zIndex = '9999';
-    element.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
-    element.textContent = mensagem;
-    document.body.appendChild(element);
+    import('@/lib/notifications-service').then(module => {
+      const { notificationService } = module;
+      notificationService.success(mensagem);
+    }).catch(error => {
+      console.error('Erro ao importar serviço de notificações:', error);
+      // Fallback para notificação nativa em caso de erro
+      const element = document.createElement('div');
+      element.style.position = 'fixed';
+      element.style.top = '20px';
+      element.style.left = '50%';
+      element.style.transform = 'translateX(-50%)';
+      element.style.padding = '10px 20px';
+      element.style.background = '#4CAF50';
+      element.style.color = 'white';
+      element.style.borderRadius = '4px';
+      element.style.zIndex = '9999';
+      element.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+      element.textContent = mensagem;
+      document.body.appendChild(element);
 
-    // Remover após 3 segundos
-    setTimeout(() => {
-      element.style.opacity = '0';
-      element.style.transition = 'opacity 0.5s';
+      // Remover após 3 segundos
+      setTimeout(() => {
+        element.style.opacity = '0';ement.style.transition = 'opacity 0.5s';
       setTimeout(() => {
         document.body.removeChild(element);
       }, 500);

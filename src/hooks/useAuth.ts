@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { User, Session, AuthError } from '@supabase/supabase-js';
+import { setWebPersistence, getWebPersistence } from '@/lib/web-persistence';
 
 interface AuthState {
   user: User | null;
@@ -40,8 +41,48 @@ export function useAuth() {
 
   // Verificar o estado de autenticação atual
   useEffect(() => {
+    let unsubscribe: (() => void) | null = null;
+    let isPageUnloading = false;
+
+    // Salvar estado de autenticação em localStorage para persistência
+    const saveAuthStateToStorage = (user: User | null, session: Session | null) => {
+      if (user) {
+        localStorage.setItem('auth_status', 'authenticated');
+        localStorage.setItem('auth_cache_time', Date.now().toString());
+        localStorage.setItem('auth_checked', 'true');
+      }
+    };
+
+    // Manipulador para quando a página perde foco
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        // Quando a página fica oculta, salva o estado atual de autenticação
+        if (authState.user) {
+          saveAuthStateToStorage(authState.user, authState.session);
+        }
+      }
+    };
+
+    // Manipulador para quando a página está prestes a ser fechada ou recarregada
+    const handleBeforeUnload = () => {
+      isPageUnloading = true;
+      if (authState.user) {
+        saveAuthStateToStorage(authState.user, authState.session);
+      }
+    };
+
     const checkAuth = async () => {
       try {
+        // Primeiro, verifique se temos um estado de autenticação armazenado
+        const authStatus = localStorage.getItem('auth_status');
+        const authChecked = localStorage.getItem('auth_checked');
+        
+        // Se temos um status salvo e estamos carregando inicialmente, use-o temporariamente
+        if (authStatus === 'authenticated' && authChecked === 'true' && authState.isLoading) {
+          // Definir isAuthenticated como true, mas ainda continuar verificando
+          setAuth(authState.user, authState.session, true);
+        }
+        
         const { data, error } = await supabase.auth.getSession();
         
         if (error) throw error;
@@ -49,25 +90,28 @@ export function useAuth() {
         const { session } = data;
         const user = session?.user || null;
         
+        // Atualizar o estado de autenticação e salvar no localStorage
         setAuth(user, session, false);
+        saveAuthStateToStorage(user, session);
         
         // Configurar o listener para mudanças na autenticação
         const { data: authListener } = supabase.auth.onAuthStateChange(
           async (event, newSession) => {
             const user = newSession?.user || null;
             setAuth(user, newSession, false);
+            saveAuthStateToStorage(user, newSession);
             
             // Redirecionar com base no evento de autenticação
             if (event === 'SIGNED_IN' && user) {
               navigate('/dashboard');
-            } else if (event === 'SIGNED_OUT') {
+            } else if (event === 'SIGNED_OUT' && !isPageUnloading) {
               navigate('/login');
             }
           }
         );
         
-        // Limpar o listener quando o componente for desmontado
-        return () => {
+        // Armazenar a função de cancelamento da inscrição
+        unsubscribe = () => {
           authListener.subscription.unsubscribe();
         };
       } catch (error) {
@@ -76,8 +120,19 @@ export function useAuth() {
       }
     };
     
+    // Adicionar ouvintes de eventos
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
     checkAuth();
-  }, [navigate, setAuth]);
+    
+    // Limpar ouvintes e inscrições quando o componente for desmontado
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      if (unsubscribe) unsubscribe();
+    };
+  }, [navigate, setAuth, authState.user, authState.session, authState.isLoading]);
 
   // Função de login
   const login = useCallback(async (email: string, password: string) => {
@@ -89,6 +144,12 @@ export function useAuth() {
       
       const { user, session } = data;
       setAuth(user, session, false);
+      
+      // Salvar estado de autenticação
+      localStorage.setItem('auth_status', 'authenticated');
+      localStorage.setItem('auth_cache_time', Date.now().toString());
+      localStorage.setItem('auth_checked', 'true');
+      
       return { user, error: null };
     } catch (error) {
       console.error('Erro no login:', error);
@@ -114,6 +175,14 @@ export function useAuth() {
       
       const { user, session } = data;
       setAuth(user, session, false);
+      
+      // Salvar estado de autenticação
+      if (user) {
+        localStorage.setItem('auth_status', 'authenticated');
+        localStorage.setItem('auth_cache_time', Date.now().toString());
+        localStorage.setItem('auth_checked', 'true');
+      }
+      
       return { user, error: null };
     } catch (error) {
       console.error('Erro no registro:', error);
@@ -126,6 +195,12 @@ export function useAuth() {
   const logout = useCallback(async () => {
     try {
       setAuth(null, null, true, null);
+      
+      // Limpar dados de autenticação do localStorage
+      localStorage.removeItem('auth_status');
+      localStorage.removeItem('auth_checked');
+      localStorage.removeItem('auth_cache_time');
+      
       const { error } = await supabase.auth.signOut();
       
       if (error) throw error;
