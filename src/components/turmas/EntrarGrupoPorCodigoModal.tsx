@@ -202,7 +202,7 @@ const EntrarGrupoPorCodigoModal: React.FC<EntrarGrupoPorCodigoModalProps> = ({
             <div>
               <h2 className="text-2xl font-bold text-white flex items-center">
                 <Key className="h-6 w-6 mr-3 text-[#FF6B00]" />
-                Entrar em Grupo de Estudo
+                Novo Grupo de Estudo
               </h2>
               <p className="text-white/70 text-sm mt-1">
                 Digite o código único do grupo que deseja participar
@@ -225,7 +225,7 @@ const EntrarGrupoPorCodigoModal: React.FC<EntrarGrupoPorCodigoModalProps> = ({
                   <Key className="h-6 w-6 text-[#FF6B00]" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-white">Adicionar Grupo por Código</h3>
+                  <h3 className="text-lg font-semibold text-white">Entrar em Grupo</h3>
                   <p className="text-sm text-gray-400">
                     Digite o código único do grupo que você deseja participar
                   </p>
@@ -234,21 +234,6 @@ const EntrarGrupoPorCodigoModal: React.FC<EntrarGrupoPorCodigoModalProps> = ({
 
               <div className="space-y-4">
                 <div>
-                <div className="flex justify-between items-center mb-2">
-                  <label htmlFor="grupoCodigo" className="block text-sm font-medium text-white/70">
-                    Código do Grupo <span className="text-[#FF6B00]">*</span>
-                  </label>
-                  <Button 
-                    type="button" 
-                    variant="ghost" 
-                    size="sm"
-                    className="text-[#FF6B00] hover:text-[#FF7A1A] hover:bg-[#FF6B00]/10 text-xs h-7"
-                    onClick={() => setShowBuscarModal(true)}
-                  >
-                    <Search className="h-3 w-3 mr-1" />
-                    Buscar grupos
-                  </Button>
-                </div>
                 <Input
                   id="grupoCodigo"
                   value={groupCode}
