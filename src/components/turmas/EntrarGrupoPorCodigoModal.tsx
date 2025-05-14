@@ -269,20 +269,23 @@ const EntrarGrupoPorCodigoModal: React.FC<EntrarGrupoPorCodigoModalProps> = ({
 
               <div className="space-y-4">
                 <div>
+                <label htmlFor="grupoCodigo" className="block text-sm font-medium text-white/70 mb-2">
+                  Código do Grupo <span className="text-[#FF6B00]">*</span>
+                </label>
+                <Input
+                  id="grupoCodigo"
+                  value={groupCode}
+                  onChange={handleCodeChange}
+                  placeholder="Ex: ABC1234"
+                  className="w-full border-[#1E293B] bg-[#0F172A] text-white placeholder:text-gray-500 focus:border-[#FF6B00] uppercase tracking-wider text-center text-lg font-mono"
+                  maxLength={7}
+                />
+</old_str>
+<new_str>
                 <div className="flex justify-between items-center mb-2">
                   <label htmlFor="grupoCodigo" className="block text-sm font-medium text-white/70">
                     Código do Grupo <span className="text-[#FF6B00]">*</span>
                   </label>
-                  <Button 
-                    type="button" 
-                    variant="ghost" 
-                    size="sm"
-                    className="text-[#FF6B00] hover:text-[#FF7A1A] hover:bg-[#FF6B00]/10 text-xs h-7"
-                    onClick={() => setShowBuscarModal(true)}
-                  >
-                    <Search className="h-3 w-3 mr-1" />
-                    Buscar grupos
-                  </Button>
                 </div>
                 <Input
                   id="grupoCodigo"
@@ -321,7 +324,7 @@ const EntrarGrupoPorCodigoModal: React.FC<EntrarGrupoPorCodigoModalProps> = ({
                 className="border-[#1E293B] text-white hover:bg-[#1E293B] hover:text-white"
                 disabled={isProcessing}
               >
-                Cancelar
+                Voltar
               </Button>
               <div className="flex gap-3">
                 <Button
@@ -329,7 +332,7 @@ const EntrarGrupoPorCodigoModal: React.FC<EntrarGrupoPorCodigoModalProps> = ({
                   variant="outline"
                   className="border-[#1E293B] text-white hover:bg-[#1E293B]/50 flex items-center"
                   onClick={() => setShowBuscarModal(true)}
-                  disabled={true} {/* Inativo por enquanto, conforme solicitado */}
+                  disabled={true} /* Inativo por enquanto, conforme solicitado */
                 >
                   <Search className="h-4 w-4 mr-2" />
                   Buscar Grupos
