@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { verificarSeCodigoExiste } from "@/lib/grupoCodigoUtils";
+import { verificarSeCodigoExiste, buscarGrupoPorCodigo } from "@/lib/grupoCodigoUtils";
 import { supabase } from "@/lib/supabase";
+import { pesquisarCodigosGrupos } from "@/lib/codigosGruposService";
 import GrupoEstudoCard from "../components/GrupoEstudoCard";
 
 interface GrupoEstudo {
@@ -28,6 +29,7 @@ interface GrupoEstudo {
   topico_icon?: string;
   data_inicio?: string;
   criador?: string;
+  codigo?: string;
 }
 
 interface AdicionarGruposModalProps {
@@ -69,56 +71,34 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
       setIsSearching(true);
       setErrorMessage(null);
       
-      // Simular chamada ao backend para buscar grupos
-      // Em produção, isso seria substituído por uma chamada real à API ou Supabase
+      // Buscar grupos do banco de dados usando o serviço de pesquisa
+      const resultado = await pesquisarCodigosGrupos(searchTerm.trim());
       
-      setTimeout(() => {
-        // Dados simulados para demonstração
-        const gruposSimulados: GrupoEstudo[] = [
-          {
-            id: `search-result-1-${Date.now()}`,
-            nome: `Grupo de ${searchTerm} Avançado`,
-            descricao: `Grupo dedicado ao estudo avançado de ${searchTerm}`,
-            membros: Math.floor(Math.random() * 20) + 3,
-            disciplina: "Diversas",
-            cor: "#FF6B00",
-            icon: "📚",
-            dataCriacao: new Date().toISOString(),
-            tendencia: Math.random() > 0.5 ? "alta" : undefined,
-            novoConteudo: Math.random() > 0.7,
-            visibilidade: "público"
-          },
-          {
-            id: `search-result-2-${Date.now()}`,
-            nome: `Estudos de ${searchTerm}`,
-            descricao: `Grupo colaborativo para estudar ${searchTerm} e temas relacionados`,
-            membros: Math.floor(Math.random() * 15) + 2,
-            disciplina: "Matemática",
-            cor: "#FF8C40",
-            icon: "🧮",
-            dataCriacao: new Date().toISOString(),
-            tendencia: Math.random() > 0.7 ? "alta" : undefined,
-            novoConteudo: Math.random() > 0.6,
-            visibilidade: "privado"
-          },
-          {
-            id: `search-result-3-${Date.now()}`,
-            nome: `${searchTerm} para Iniciantes`,
-            descricao: `Grupo de estudo para quem está começando em ${searchTerm}`,
-            membros: Math.floor(Math.random() * 10) + 5,
-            disciplina: "Física",
-            cor: "#E85D04",
-            icon: "⚛️",
-            dataCriacao: new Date().toISOString(),
-            tendencia: Math.random() > 0.6 ? "alta" : undefined,
-            novoConteudo: Math.random() > 0.5,
-            visibilidade: "público"
-          }
-        ];
+      if (resultado.success && resultado.data) {
+        // Converter os resultados para o formato esperado pela interface
+        const gruposFormatados = resultado.data.map(grupo => ({
+          id: grupo.grupo_id || `grupo-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+          nome: grupo.nome,
+          descricao: grupo.descricao,
+          membros: grupo.membros || 1,
+          disciplina: grupo.disciplina || "Geral",
+          cor: grupo.cor || "#FF6B00",
+          icon: "📚", // Ícone padrão
+          dataCriacao: grupo.data_criacao || new Date().toISOString(),
+          tendencia: Math.random() > 0.7 ? "alta" : undefined, // Temporário até implementar lógica real
+          novoConteudo: grupo.ultima_atualizacao && new Date(grupo.ultima_atualizacao) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+          privado: grupo.privado,
+          visibilidade: grupo.visibilidade || (grupo.privado ? "privado" : "público"),
+          codigo: grupo.codigo
+        }));
         
-        setGruposEncontrados(gruposSimulados);
-        setIsSearching(false);
-      }, 1000);
+        setGruposEncontrados(gruposFormatados);
+      } else {
+        setErrorMessage("Não foi possível encontrar grupos. Tente novamente.");
+        console.error("Erro ao buscar grupos:", resultado.error);
+      }
+      
+      setIsSearching(false);
     } catch (error) {
       console.error("Erro ao buscar grupos:", error);
       setErrorMessage("Ocorreu um erro ao buscar grupos. Tente novamente.");
@@ -138,35 +118,37 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
       setErrorMessage(null);
       setSuccessMessage(null);
 
-      // Verificar se o código existe
-      const codigoExiste = await verificarSeCodigoExiste(codigo.trim());
+      // Verificar se o código existe e buscar dados do grupo
+      const resultado = await buscarGrupoPorCodigo(codigo.trim());
       
-      if (codigoExiste) {
-        // Simulação de obtenção dos dados do grupo
-        setTimeout(() => {
-          const novoGrupo: GrupoEstudo = {
-            id: `grupo-codigo-${Date.now()}`,
-            nome: `Grupo via Código ${codigo.substring(0, 4)}`,
-            descricao: "Grupo adicionado via código de convite",
-            membros: Math.floor(Math.random() * 15) + 2,
-            cor: "#FF6B00",
-            icon: "🔑",
-            dataCriacao: new Date().toISOString(),
-            tendencia: Math.random() > 0.7 ? "alta" : undefined,
-            novoConteudo: true,
-            visibilidade: "privado",
-            disciplina: "Especializado"
-          };
-          
-          onGrupoAdicionado(novoGrupo);
-          setSuccessMessage("Grupo adicionado com sucesso!");
-          setCodigo("");
-          setIsVerifyingCode(false);
-        }, 1500);
+      if (resultado.success && resultado.data) {
+        const grupoData = resultado.data;
+        
+        // Formatar dados do grupo para o formato esperado pela interface
+        const novoGrupo: GrupoEstudo = {
+          id: grupoData.id || grupoData.grupo_id,
+          nome: grupoData.nome,
+          descricao: grupoData.descricao || "Grupo adicionado via código de convite",
+          membros: grupoData.membros || 1,
+          disciplina: grupoData.disciplina || "Especializado",
+          cor: grupoData.cor || "#FF6B00",
+          icon: grupoData.icon || "🔑",
+          dataCriacao: grupoData.data_criacao || new Date().toISOString(),
+          tendencia: grupoData.membros > 10 ? "alta" : undefined,
+          novoConteudo: true,
+          privado: grupoData.privado,
+          visibilidade: grupoData.visibilidade || (grupoData.privado ? "privado" : "público"),
+          codigo: codigo.trim()
+        };
+        
+        onGrupoAdicionado(novoGrupo);
+        setSuccessMessage("Grupo adicionado com sucesso!");
+        setCodigo("");
       } else {
         setErrorMessage("Código inválido ou expirado. Verifique e tente novamente.");
-        setIsVerifyingCode(false);
       }
+      
+      setIsVerifyingCode(false);
     } catch (error) {
       console.error("Erro ao adicionar grupo via código:", error);
       setErrorMessage("Ocorreu um erro ao verificar o código. Tente novamente.");
@@ -414,7 +396,7 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
                         id="codigo"
                         placeholder="Ex: ABCD-1234-XYZ9"
                         value={codigo}
-                        onChange={(e) => setCodigo(e.target.value)}
+                        onChange={(e) => setCodigo(e.target.value.toUpperCase())}
                         className="bg-gray-800/30 border-gray-700/50 focus:border-[#FF6B00] px-4 py-3 rounded-xl h-12 shadow-inner font-medium text-base tracking-wide placeholder:text-gray-500"
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') adicionarGrupoViaCodigo();
