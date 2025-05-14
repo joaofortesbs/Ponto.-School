@@ -318,7 +318,6 @@ export const buscarGrupoComCodigo = async (codigo: string): Promise<any | null> 
     return null;
   }
 };
-import { supabase } from "./supabase";
 
 // Verifica se um código de grupo existe no banco de dados
 export const verificarSeCodigoExiste = async (codigo: string): Promise<boolean> => {
