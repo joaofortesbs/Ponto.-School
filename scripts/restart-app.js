@@ -3,8 +3,12 @@
 console.log("Iniciando reinicialização da aplicação...");
 
 // Função para verificar e corrigir problemas de CSS
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Verifica se o index.css está correto
 function fixIndexCss() {
@@ -37,12 +41,18 @@ function fixIndexCss() {
 function fixMainTsx() {
   try {
     const mainTsxPath = path.join(__dirname, '..', 'src', 'main.tsx');
-    const content = fs.readFileSync(mainTsxPath, 'utf8');
+    let content = fs.readFileSync(mainTsxPath, 'utf8');
     
-    // Verificar a definição da classe ErrorBoundary
-    // No caso de main.tsx, verificamos a correção manual
+    // Verificar se há duplicação da classe ErrorBoundary
+    if (content.includes('constructor(props)') && content.includes('constructor(props)')) {
+      console.log('Corrigindo duplicação de código no main.tsx...');
+      
+      // Substituir todo o conteúdo do arquivo por uma versão correta
+      const fixedContent = fs.readFileSync(path.join(__dirname, 'main.tsx.template'), 'utf8');
+      fs.writeFileSync(mainTsxPath, fixedContent);
+      console.log('main.tsx corrigido com sucesso!');
+    }
     
-    console.log('main.tsx verificado.');
     return true;
   } catch (error) {
     console.error('Erro ao verificar main.tsx:', error);
@@ -80,52 +90,55 @@ function fixViteConfig() {
   }
 }
 
-// Limpar o cache do navegador e dados temporários
-function cleanupTemporaryFiles() {
+// Limpar o cache do Vite
+function clearViteCache() {
   try {
-    const nodeModulesPath = path.join(__dirname, '..', 'node_modules', '.vite');
+    const cacheDirs = [
+      path.join(__dirname, '..', 'node_modules', '.vite'),
+      path.join(__dirname, '..', '.vite')
+    ];
     
-    if (fs.existsSync(nodeModulesPath)) {
-      console.log('Limpando cache do Vite...');
-      try {
-        fs.rmSync(nodeModulesPath, { recursive: true, force: true });
-        console.log('Cache do Vite limpo com sucesso!');
-      } catch (e) {
-        console.log('Aviso: Não foi possível remover o cache do Vite:', e.message);
+    cacheDirs.forEach(dir => {
+      if (fs.existsSync(dir)) {
+        fs.rmSync(dir, { recursive: true, force: true });
+        console.log(`Cache removido: ${dir}`);
       }
-    }
+    });
     
     return true;
   } catch (error) {
-    console.error('Erro ao limpar arquivos temporários:', error);
+    console.error('Erro ao limpar cache do Vite:', error);
     return false;
   }
 }
 
-// Executa todas as verificações e correções
-async function runAll() {
-  console.log('Iniciando verificações e correções...');
+// Executar todas as correções
+async function runAllFixes() {
+  console.log('Iniciando correções na aplicação...');
   
-  const results = [
-    fixIndexCss(),
-    fixMainTsx(),
-    fixViteConfig(),
-    cleanupTemporaryFiles()
-  ];
+  const cssFix = fixIndexCss();
+  const tsxFix = fixMainTsx();
+  const viteFix = fixViteConfig();
+  const cacheClear = clearViteCache();
   
-  const allSuccess = results.every(result => result);
-  
-  if (allSuccess) {
+  if (cssFix && tsxFix && viteFix && cacheClear) {
     console.log('Todas as correções foram aplicadas com sucesso!');
-    console.log('A aplicação está pronta para ser reiniciada. Execute "npm run dev" para iniciar.');
+    console.log('Aplicação pronta para ser reiniciada.');
     
-    // Se desejar reiniciar automaticamente a aplicação, descomente a linha abaixo
-    // require('child_process').execSync('npm run dev', { stdio: 'inherit' });
+    // Podemos adicionar aqui um comando para reiniciar o servidor Vite
+    // Por exemplo:
+    // const { execSync } = require('child_process');
+    // execSync('npm run dev', { stdio: 'inherit' });
+    
+    return true;
   } else {
-    console.log('Algumas correções não puderam ser aplicadas. Verifique os erros acima.');
+    console.error('Algumas correções falharam. Verifique os logs para mais detalhes.');
+    return false;
   }
 }
 
-runAll().catch(err => {
-  console.error('Erro durante o processo de correção:', err);
+// Executar o script
+runAllFixes().catch(err => {
+  console.error('Erro durante a execução do script:', err);
+  process.exit(1);
 });

@@ -221,53 +221,6 @@ const initializeApp = () => {
     }
   }
 };
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError() {
-    return { hasError: true };
-  }
-
-  componentDidCatch(error, errorInfo) {
-    console.error("Erro capturado pelo ErrorBoundary:", error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div style={{
-          fontFamily: 'system-ui, sans-serif',
-          padding: '2rem',
-          textAlign: 'center',
-          background: 'linear-gradient(135deg, rgba(0,20,39,1) 0%, rgba(41,51,92,1) 100%)',
-          minHeight: '100vh',
-          color: 'white'
-        }}>
-          <h1>Algo deu errado</h1>
-          <p>Ocorreu um erro ao renderizar a aplicação. Tente recarregar a página.</p>
-          <button 
-            onClick={() => window.location.reload()}
-            style={{
-              padding: '0.5rem 1rem',
-              marginTop: '1rem',
-              cursor: 'pointer',
-              background: '#FF6B00',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px'
-            }}
-          >
-            Recarregar
-          </button>
-        </div>
-      );
-    }
-
-    return this.props.children;
-  }
-}
 
 // Inicializar a aplicação
 initializeApp();
