@@ -119,6 +119,7 @@ export const salvarCodigoGrupo = async (grupoId: string, codigo: string): Promis
   try {
     // 1. Salvar no banco de dados central
     try {
+      // Primeiro buscar os dados do grupo
       const { data: grupoData, error: grupoError } = await supabase
         .from('grupos_estudo')
         .select('*')
@@ -127,17 +128,73 @@ export const salvarCodigoGrupo = async (grupoId: string, codigo: string): Promis
 
       if (!grupoError && grupoData) {
         // Atualizar o código no grupo
-        await supabase
+        const { error: updateError } = await supabase
           .from('grupos_estudo')
           .update({ codigo: codigoNormalizado })
           .eq('id', grupoId);
 
-        // Atualizar ou inserir na tabela de códigos
-        // O trigger deve fazer isso automaticamente, mas fazemos aqui como garantia
-        await salvarCodigoNoBanco(codigoNormalizado, {
-          ...grupoData,
-          codigo: codigoNormalizado
-        });
+        if (updateError) {
+          console.error('Erro ao atualizar código no grupo:', updateError);
+        } else {
+          console.log(`Código ${codigoNormalizado} atualizado com sucesso no grupo ${grupoId}`);
+        }
+
+        // Garantir que o código está na tabela central de códigos (independente do trigger)
+        const { error: codigoError } = await supabase
+          .from('codigos_grupos_estudo')
+          .upsert({
+            codigo: codigoNormalizado,
+            grupo_id: grupoId,
+            nome: grupoData.nome,
+            descricao: grupoData.descricao || '',
+            user_id: grupoData.user_id,
+            privado: grupoData.privado || false,
+            membros: grupoData.membros || 1,
+            visibilidade: grupoData.visibilidade || 'todos',
+            disciplina: grupoData.disciplina || '',
+            cor: grupoData.cor || '#FF6B00',
+            membros_ids: grupoData.membros_ids || [],
+            ultima_atualizacao: new Date().toISOString()
+          }, { onConflict: 'codigo' });
+
+        if (codigoError) {
+          console.error('Erro ao salvar na tabela central de códigos:', codigoError);
+        } else {
+          console.log(`Código ${codigoNormalizado} salvo com sucesso na tabela central`);
+        }
+      } else {
+        // Se não encontrar o grupo, tentar salvar o código com dados mínimos
+        console.warn(`Grupo ${grupoId} não encontrado. Tentando salvar código com dados mínimos.`);
+        
+        // Buscar informações básicas no localStorage
+        const grupos = JSON.parse(localStorage.getItem('epictus_grupos_estudo') || '[]');
+        const grupoLocal = grupos.find((g: any) => g.id === grupoId);
+        
+        if (grupoLocal) {
+          const { error: codigoMinError } = await supabase
+            .from('codigos_grupos_estudo')
+            .upsert({
+              codigo: codigoNormalizado,
+              grupo_id: grupoId,
+              nome: grupoLocal.nome || 'Grupo de Estudo',
+              descricao: grupoLocal.descricao || '',
+              user_id: grupoLocal.user_id,
+              privado: grupoLocal.privado || false,
+              membros: grupoLocal.membros || 1,
+              visibilidade: grupoLocal.visibilidade || 'todos',
+              disciplina: grupoLocal.disciplina || '',
+              cor: grupoLocal.cor || '#FF6B00',
+              membros_ids: grupoLocal.membros_ids || []
+            }, { onConflict: 'codigo' });
+            
+          if (codigoMinError) {
+            console.error('Erro ao salvar código mínimo na tabela central:', codigoMinError);
+          } else {
+            console.log(`Código ${codigoNormalizado} salvo com dados mínimos na tabela central`);
+          }
+        } else {
+          console.error(`Não foi possível encontrar informações para o grupo ${grupoId}`);
+        }
       }
     } catch (dbError) {
       console.error('Erro ao salvar código no banco de dados:', dbError);
@@ -447,10 +504,19 @@ export const criarGrupo = async (dados: Omit<GrupoEstudo, 'id'>): Promise<GrupoE
     let resultado: GrupoEstudo | null = null;
 
     try {
+      // Gerar um código único para o grupo antes da inserção
+      const codigo = await gerarCodigoUnico();
+      
+      // Adicionar o código ao objeto de dados
+      const dadosComCodigo = {
+        ...dados,
+        codigo: codigo.toUpperCase()
+      };
+
       // Tentar inserir no Supabase
       const { data, error } = await supabase
         .from('grupos_estudo')
-        .insert(dados)
+        .insert(dadosComCodigo)
         .select('*')
         .single();
 
@@ -458,6 +524,33 @@ export const criarGrupo = async (dados: Omit<GrupoEstudo, 'id'>): Promise<GrupoE
         console.log('Grupo criado com sucesso no Supabase:', data);
         grupoSalvoRemotamente = true;
         resultado = data;
+
+        // Garantir que o código seja salvo na tabela de códigos de grupos
+        try {
+          const { error: codigoError } = await supabase
+            .from('codigos_grupos_estudo')
+            .upsert({
+              codigo: data.codigo,
+              grupo_id: data.id,
+              nome: data.nome,
+              descricao: data.descricao || '',
+              user_id: data.user_id,
+              privado: data.privado || false,
+              membros: data.membros || 1,
+              visibilidade: data.visibilidade || 'todos',
+              disciplina: data.disciplina || '',
+              cor: data.cor || '#FF6B00',
+              membros_ids: data.membros_ids || []
+            }, { onConflict: 'codigo' });
+
+          if (codigoError) {
+            console.error('Erro ao salvar código na tabela central:', codigoError);
+          } else {
+            console.log(`Código ${data.codigo} salvo com sucesso na tabela central de códigos`);
+          }
+        } catch (codigoError) {
+          console.error('Erro ao processar salvamento do código:', codigoError);
+        }
 
         // Salvar também no storage local para acesso rápido
         salvarGrupoLocal(data);
@@ -473,16 +566,47 @@ export const criarGrupo = async (dados: Omit<GrupoEstudo, 'id'>): Promise<GrupoE
 
       // Gerar ID localmente
       const id = `local_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+      
+      // Gerar um código único para o grupo
+      const codigo = await gerarCodigoUnico();
 
       // Criar grupo para armazenamento local
       const grupoLocal: GrupoEstudo = {
         ...dados,
-        id
+        id,
+        codigo: codigo.toUpperCase()
       };
 
       // Salvar localmente (apenas uma vez)
       salvarGrupoLocal(grupoLocal);
       resultado = grupoLocal;
+
+      // Tentar salvar o código no banco de dados central, mesmo que o grupo seja local
+      try {
+        const { error: codigoError } = await supabase
+          .from('codigos_grupos_estudo')
+          .upsert({
+            codigo: codigo.toUpperCase(),
+            grupo_id: id,
+            nome: dados.nome,
+            descricao: dados.descricao || '',
+            user_id: dados.user_id,
+            privado: dados.privado || false,
+            membros: dados.membros || 1,
+            visibilidade: dados.visibilidade || 'todos',
+            disciplina: dados.disciplina || '',
+            cor: dados.cor || '#FF6B00',
+            membros_ids: dados.membros_ids || []
+          }, { onConflict: 'codigo' });
+
+        if (codigoError) {
+          console.error('Erro ao salvar código local na tabela central:', codigoError);
+        } else {
+          console.log(`Código ${codigo} de grupo local salvo com sucesso na tabela central`);
+        }
+      } catch (codigoError) {
+        console.error('Erro ao processar salvamento do código local:', codigoError);
+      }
 
       // Mostrar notificação sobre o armazenamento local
       const element = document.createElement('div');
