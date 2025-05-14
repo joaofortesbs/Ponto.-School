@@ -696,9 +696,9 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
         <div className="flex gap-3">
           <Button 
             onClick={() => setShowAdicionarGruposModal(true)}
-            className="bg-gradient-to-r from-[#3B82F6] to-[#2563EB] hover:from-[#3B82F6]/90 hover:to-[#2563EB]/90 text-white text-sm rounded-xl shadow-md"
+            className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-medium rounded-xl shadow-md hover:shadow-lg transition-all duration-300 border border-[#FF6B00]/20 py-2 px-4 h-10"
           >
-            <Search className="h-4 w-4 mr-1" /> Adicionar Grupos
+            <Search className="h-4 w-4 mr-2" /> Adicionar Grupos
           </Button>
           <Button 
             onClick={abrirModalCriarGrupo}
