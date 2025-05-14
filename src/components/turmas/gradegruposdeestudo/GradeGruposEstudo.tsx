@@ -672,11 +672,13 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
 
       // Remover após 3 segundos
       setTimeout(() => {
-        element.style.opacity = '0';ement.style.transition = 'opacity 0.5s';
-      setTimeout(() => {
-        document.body.removeChild(element);
-      }, 500);
-    }, 3000);
+        element.style.opacity = '0';
+        element.style.transition = 'opacity 0.5s';
+        setTimeout(() => {
+          document.body.removeChild(element);
+        }, 500);
+      }, 3000);
+    });
   };
 
   // Função auxiliar para mostrar notificação de erro
