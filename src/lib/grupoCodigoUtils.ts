@@ -525,11 +525,12 @@ export const criarGrupo = async (dados: Omit<GrupoEstudo, 'id'>): Promise<GrupoE
         grupoSalvoRemotamente = true;
         resultado = data;
 
-        // Garantir que o código seja salvo na tabela de códigos de grupos
+        // IMPORTANTE: Forçar inserção na tabela de códigos independente do trigger
         try {
+          // Inserir diretamente na tabela de códigos para garantir que os dados estejam lá
           const { error: codigoError } = await supabase
             .from('codigos_grupos_estudo')
-            .upsert({
+            .insert({
               codigo: data.codigo,
               grupo_id: data.id,
               nome: data.nome,
@@ -540,13 +541,39 @@ export const criarGrupo = async (dados: Omit<GrupoEstudo, 'id'>): Promise<GrupoE
               visibilidade: data.visibilidade || 'todos',
               disciplina: data.disciplina || '',
               cor: data.cor || '#FF6B00',
-              membros_ids: data.membros_ids || []
-            }, { onConflict: 'codigo' });
+              membros_ids: data.membros_ids || [],
+              data_criacao: new Date().toISOString()
+            });
 
           if (codigoError) {
-            console.error('Erro ao salvar código na tabela central:', codigoError);
+            console.error('Erro ao inserir na tabela de códigos:', codigoError);
+            
+            // Tentar upsert como fallback
+            const { error: upsertError } = await supabase
+              .from('codigos_grupos_estudo')
+              .upsert({
+                codigo: data.codigo,
+                grupo_id: data.id,
+                nome: data.nome,
+                descricao: data.descricao || '',
+                user_id: data.user_id,
+                privado: data.privado || false,
+                membros: data.membros || 1,
+                visibilidade: data.visibilidade || 'todos',
+                disciplina: data.disciplina || '',
+                cor: data.cor || '#FF6B00',
+                membros_ids: data.membros_ids || [],
+                data_criacao: new Date().toISOString(),
+                ultima_atualizacao: new Date().toISOString()
+              }, { onConflict: 'codigo' });
+              
+            if (upsertError) {
+              console.error('Erro ao fazer upsert na tabela de códigos:', upsertError);
+            } else {
+              console.log(`Código ${data.codigo} salvo com sucesso via upsert na tabela central`);
+            }
           } else {
-            console.log(`Código ${data.codigo} salvo com sucesso na tabela central de códigos`);
+            console.log(`Código ${data.codigo} inserido com sucesso na tabela central de códigos`);
           }
         } catch (codigoError) {
           console.error('Erro ao processar salvamento do código:', codigoError);
@@ -581,11 +608,12 @@ export const criarGrupo = async (dados: Omit<GrupoEstudo, 'id'>): Promise<GrupoE
       salvarGrupoLocal(grupoLocal);
       resultado = grupoLocal;
 
-      // Tentar salvar o código no banco de dados central, mesmo que o grupo seja local
+      // IMPORTANTE: Mesmo para grupos locais, garantir inserção na tabela central de códigos
       try {
-        const { error: codigoError } = await supabase
+        // Tentar inserção direta primeiro
+        const { error: insertError } = await supabase
           .from('codigos_grupos_estudo')
-          .upsert({
+          .insert({
             codigo: codigo.toUpperCase(),
             grupo_id: id,
             nome: dados.nome,
@@ -596,13 +624,39 @@ export const criarGrupo = async (dados: Omit<GrupoEstudo, 'id'>): Promise<GrupoE
             visibilidade: dados.visibilidade || 'todos',
             disciplina: dados.disciplina || '',
             cor: dados.cor || '#FF6B00',
-            membros_ids: dados.membros_ids || []
-          }, { onConflict: 'codigo' });
+            membros_ids: dados.membros_ids || [],
+            data_criacao: new Date().toISOString()
+          });
 
-        if (codigoError) {
-          console.error('Erro ao salvar código local na tabela central:', codigoError);
+        if (insertError) {
+          console.error('Erro ao inserir código na tabela central:', insertError);
+          
+          // Tentar upsert como fallback
+          const { error: upsertError } = await supabase
+            .from('codigos_grupos_estudo')
+            .upsert({
+              codigo: codigo.toUpperCase(),
+              grupo_id: id,
+              nome: dados.nome,
+              descricao: dados.descricao || '',
+              user_id: dados.user_id,
+              privado: dados.privado || false,
+              membros: dados.membros || 1,
+              visibilidade: dados.visibilidade || 'todos',
+              disciplina: dados.disciplina || '',
+              cor: dados.cor || '#FF6B00',
+              membros_ids: dados.membros_ids || [],
+              data_criacao: new Date().toISOString(),
+              ultima_atualizacao: new Date().toISOString()
+            }, { onConflict: 'codigo' });
+            
+          if (upsertError) {
+            console.error('Erro ao fazer upsert na tabela central:', upsertError);
+          } else {
+            console.log(`Código ${codigo} de grupo local salvo com sucesso na tabela central via upsert`);
+          }
         } else {
-          console.log(`Código ${codigo} de grupo local salvo com sucesso na tabela central`);
+          console.log(`Código ${codigo} de grupo local inserido com sucesso na tabela central`);
         }
       } catch (codigoError) {
         console.error('Erro ao processar salvamento do código local:', codigoError);

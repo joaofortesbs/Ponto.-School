@@ -68,24 +68,41 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
       setIsSearching(true);
       setErrorMessage(null);
 
-      // Realizar busca real no banco de dados de códigos de grupos
+      // Verificar se a tabela codigos_grupos_estudo existe e contém dados
+      const { count, error: countError } = await supabase
+        .from('codigos_grupos_estudo')
+        .select('*', { count: 'exact', head: true });
+
+      if (countError) {
+        console.error("Erro ao verificar tabela de códigos:", countError);
+        // Fallback: buscar direto em grupos_estudo
+        await buscarGruposEstudo();
+        return;
+      }
+
+      console.log(`A tabela de códigos contém ${count} registros`);
+
+      // Realizar busca aprimorada no banco de dados de códigos de grupos
       const { data, error } = await supabase
         .from('codigos_grupos_estudo')
         .select('*')
-        .or(`nome.ilike.%${searchTerm}%,descricao.ilike.%${searchTerm}%,disciplina.ilike.%${searchTerm}%`)
-        .order('data_criacao', { ascending: false })
+        .or(`nome.ilike.%${searchTerm}%,descricao.ilike.%${searchTerm}%,disciplina.ilike.%${searchTerm}%,codigo.ilike.%${searchTerm}%`)
+        .order('ultima_atualizacao', { ascending: false })
         .limit(20);
 
       if (error) {
-        console.error("Erro ao buscar grupos na base de dados:", error);
-        setErrorMessage("Ocorreu um erro ao buscar grupos. Tente novamente.");
-        setIsSearching(false);
+        console.error("Erro ao buscar grupos na base de dados de códigos:", error);
+        
+        // Fallback: buscar direto na tabela de grupos
+        await buscarGruposEstudo();
         return;
       }
 
       if (!data || data.length === 0) {
-        setGruposEncontrados([]);
-        setIsSearching(false);
+        console.log("Nenhum grupo encontrado na tabela de códigos, buscando na tabela de grupos...");
+        
+        // Fallback: buscar direto na tabela de grupos
+        await buscarGruposEstudo();
         return;
       }
 
@@ -98,23 +115,107 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
         disciplina: grupo.disciplina || "Geral",
         cor: grupo.cor || "#FF6B00",
         icon: "📚", // Usamos um ícone padrão, já que não temos no banco
-        dataCriacao: grupo.data_criacao,
+        dataCriacao: grupo.data_criacao || grupo.ultima_atualizacao || new Date().toISOString(),
         tendencia: Math.random() > 0.7 ? "alta" : undefined, // Aleatório por enquanto
         novoConteudo: Math.random() > 0.6, // Aleatório por enquanto
         visibilidade: grupo.privado ? "privado" : "público",
         topico_nome: grupo.topico_nome,
-        topico_icon: grupo.topico_icon
+        topico_icon: grupo.topico_icon,
+        codigo: grupo.codigo // Importante: incluir o código do grupo
       }));
 
       setGruposEncontrados(gruposEncontrados);
       setIsSearching(false);
 
-      console.log(`Encontrados ${gruposEncontrados.length} grupos relacionados a "${searchTerm}" no banco de dados`);
+      console.log(`Encontrados ${gruposEncontrados.length} grupos relacionados a "${searchTerm}" na tabela de códigos`);
 
     } catch (error) {
       console.error("Erro ao buscar grupos:", error);
       setErrorMessage("Ocorreu um erro ao buscar grupos. Tente novamente.");
       setIsSearching(false);
+    }
+  };
+
+  // Função auxiliar para buscar grupos na tabela principal como fallback
+  const buscarGruposEstudo = async () => {
+    try {
+      // Buscar na tabela de grupos_estudo diretamente
+      const { data: gruposData, error: gruposError } = await supabase
+        .from('grupos_estudo')
+        .select('*')
+        .or(`nome.ilike.%${searchTerm}%,descricao.ilike.%${searchTerm}%,codigo.ilike.%${searchTerm}%`)
+        .order('data_criacao', { ascending: false })
+        .limit(20);
+
+      if (gruposError) {
+        console.error("Erro ao buscar na tabela de grupos:", gruposError);
+        setErrorMessage("Ocorreu um erro ao buscar grupos. Tente novamente.");
+        setIsSearching(false);
+        setGruposEncontrados([]);
+        return;
+      }
+
+      if (!gruposData || gruposData.length === 0) {
+        console.log("Nenhum grupo encontrado em ambas as tabelas");
+        setGruposEncontrados([]);
+        setIsSearching(false);
+        return;
+      }
+
+      // Converter resultados para o formato esperado
+      const gruposEncontrados: GrupoEstudo[] = gruposData.map(grupo => ({
+        id: grupo.id,
+        nome: grupo.nome,
+        descricao: grupo.descricao || `Grupo de estudos sobre ${grupo.nome}`,
+        membros: grupo.membros || 1,
+        disciplina: grupo.disciplina || "Geral",
+        cor: grupo.cor || "#FF6B00",
+        icon: "📚", 
+        dataCriacao: grupo.data_criacao || new Date().toISOString(),
+        tendencia: Math.random() > 0.7 ? "alta" : undefined,
+        novoConteudo: Math.random() > 0.6,
+        visibilidade: grupo.privado ? "privado" : "público",
+        topico_nome: grupo.topico_nome,
+        topico_icon: grupo.topico_icon,
+        codigo: grupo.codigo
+      }));
+
+      // Para cada grupo encontrado, tentar salvar na tabela de códigos para sincronizar
+      for (const grupo of gruposData) {
+        if (grupo.codigo) {
+          try {
+            await supabase
+              .from('codigos_grupos_estudo')
+              .upsert({
+                codigo: grupo.codigo,
+                grupo_id: grupo.id,
+                nome: grupo.nome,
+                descricao: grupo.descricao || '',
+                user_id: grupo.user_id,
+                privado: grupo.privado || false,
+                membros: grupo.membros || 1,
+                visibilidade: grupo.visibilidade || 'todos',
+                disciplina: grupo.disciplina || '',
+                cor: grupo.cor || '#FF6B00',
+                membros_ids: grupo.membros_ids || [],
+                data_criacao: grupo.data_criacao,
+                ultima_atualizacao: new Date().toISOString()
+              }, { onConflict: 'codigo' });
+          } catch (syncError) {
+            console.error("Erro ao sincronizar grupo com tabela de códigos:", syncError);
+          }
+        }
+      }
+
+      setGruposEncontrados(gruposEncontrados);
+      setIsSearching(false);
+
+      console.log(`Encontrados ${gruposEncontrados.length} grupos relacionados a "${searchTerm}" na tabela de grupos_estudo`);
+    } catch (error) {
+      console.error("Erro ao buscar grupos na tabela principal:", error);
+      setErrorMessage("Ocorreu um erro ao buscar grupos. Tente novamente.");
+      setIsSearching(false);
+      setGruposEncontrados([]);
     }
   };
 
@@ -131,54 +232,104 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
       setSuccessMessage(null);
 
       const codigoNormalizado = codigo.trim().toUpperCase();
+      
+      console.log(`Verificando código: ${codigoNormalizado}`);
 
-      // Buscar o grupo diretamente na tabela de códigos
-      const { data, error } = await supabase
-        .from('codigos_grupos_estudo')
-        .select('*')
-        .eq('codigo', codigoNormalizado)
-        .single();
+      // ETAPA 1: Buscar na tabela específica de códigos
+      let grupoEncontrado = null;
+      try {
+        const { data, error } = await supabase
+          .from('codigos_grupos_estudo')
+          .select('*')
+          .eq('codigo', codigoNormalizado)
+          .maybeSingle();
 
-      if (error || !data) {
-        console.error("Erro ao verificar código ou código não encontrado:", error);
+        if (!error && data) {
+          console.log("Grupo encontrado na tabela de códigos:", data);
+          grupoEncontrado = data;
+        } else {
+          console.log("Código não encontrado na tabela de códigos:", error);
+        }
+      } catch (codigosError) {
+        console.error("Erro ao buscar na tabela de códigos:", codigosError);
+      }
+
+      // ETAPA 2: Se não encontrou na tabela de códigos, buscar diretamente na tabela de grupos
+      if (!grupoEncontrado) {
+        try {
+          const { data, error } = await supabase
+            .from('grupos_estudo')
+            .select('*')
+            .eq('codigo', codigoNormalizado)
+            .maybeSingle();
+
+          if (!error && data) {
+            console.log("Grupo encontrado diretamente na tabela grupos_estudo:", data);
+            grupoEncontrado = data;
+            
+            // Sincronizar com a tabela de códigos para futuras buscas
+            try {
+              const { error: syncError } = await supabase
+                .from('codigos_grupos_estudo')
+                .insert({
+                  codigo: codigoNormalizado,
+                  grupo_id: data.id,
+                  nome: data.nome,
+                  descricao: data.descricao || '',
+                  user_id: data.user_id,
+                  privado: data.privado || false,
+                  membros: data.membros || 1,
+                  visibilidade: data.visibilidade || 'todos',
+                  disciplina: data.disciplina || '',
+                  cor: data.cor || '#FF6B00',
+                  membros_ids: data.membros_ids || [],
+                  data_criacao: data.data_criacao,
+                  ultima_atualizacao: new Date().toISOString()
+                });
+                
+              if (syncError && syncError.code !== '23505') { // Ignorar erro de chave duplicada
+                console.error("Erro ao sincronizar com tabela de códigos:", syncError);
+              }
+            } catch (syncError) {
+              console.error("Erro ao sincronizar grupo com tabela de códigos:", syncError);
+            }
+          } else {
+            console.log("Código não encontrado na tabela de grupos:", error);
+          }
+        } catch (gruposError) {
+          console.error("Erro ao buscar na tabela de grupos:", gruposError);
+        }
+      }
+
+      // Se não encontrou o grupo em nenhuma das tabelas
+      if (!grupoEncontrado) {
         setErrorMessage("Código inválido ou expirado. Verifique e tente novamente.");
         setIsVerifyingCode(false);
         return;
       }
 
-      // Buscar informações mais completas do grupo na tabela principal
-      const { data: grupoData, error: grupoError } = await supabase
-        .from('grupos_estudo')
-        .select('*')
-        .eq('id', data.grupo_id)
-        .single();
-
-      // Se houver erro na busca de dados complementares, usamos os dados da tabela de códigos
-      const grupoFinal = !grupoError && grupoData ? grupoData : data;
-
       // Construir objeto do grupo com os dados obtidos
       const novoGrupo: GrupoEstudo = {
-        id: grupoFinal.grupo_id || data.grupo_id,
-        nome: grupoFinal.nome || data.nome,
-        descricao: grupoFinal.descricao || data.descricao || `Grupo acessado via código ${codigoNormalizado}`,
-        membros: grupoFinal.membros || data.membros || 1,
-        disciplina: grupoFinal.disciplina || data.disciplina || "Geral",
-        cor: grupoFinal.cor || data.cor || "#FF6B00",
-        icon: grupoFinal.icon || "🔑",
-        dataCriacao: grupoFinal.data_criacao || data.data_criacao || new Date().toISOString(),
-        tendencia: grupoFinal.tendencia || undefined,
+        id: grupoEncontrado.id || grupoEncontrado.grupo_id,
+        nome: grupoEncontrado.nome || 'Grupo sem nome',
+        descricao: grupoEncontrado.descricao || `Grupo acessado via código ${codigoNormalizado}`,
+        membros: grupoEncontrado.membros || 1,
+        disciplina: grupoEncontrado.disciplina || "Geral",
+        cor: grupoEncontrado.cor || "#FF6B00",
+        icon: "🔑",
+        dataCriacao: grupoEncontrado.data_criacao || new Date().toISOString(),
         novoConteudo: true, // Destacamos como novo
-        privado: grupoFinal.privado || data.privado || false,
-        visibilidade: (grupoFinal.privado || data.privado) ? "privado" : "público",
-        topico_nome: grupoFinal.topico_nome || data.topico_nome,
-        topico_icon: grupoFinal.topico_icon || data.topico_icon,
-        criador: grupoFinal.user_id || data.user_id
+        privado: grupoEncontrado.privado || false,
+        visibilidade: grupoEncontrado.privado ? "privado" : "público",
+        topico_nome: grupoEncontrado.topico_nome,
+        topico_icon: grupoEncontrado.topico_icon,
+        criador: grupoEncontrado.user_id,
+        codigo: codigoNormalizado // Importante: incluir o código
       };
 
       console.log(`Grupo encontrado via código ${codigoNormalizado}:`, novoGrupo);
 
-      // Adicionar o usuário como membro do grupo (em um cenário real, isso seria persistido no banco de dados)
-      // Aqui estamos apenas retornando o grupo para a interface parent
+      // Adicionar o usuário como membro do grupo
       onGrupoAdicionado(novoGrupo);
       setSuccessMessage(`Você entrou no grupo "${novoGrupo.nome}" com sucesso!`);
       setCodigo("");
