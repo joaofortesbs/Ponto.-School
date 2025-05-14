@@ -286,13 +286,6 @@ function App() {
     };
   }, [location.pathname]);
 
-  useEffect(() => {
-    // Inicializar sistema de notificações
-    import('@/lib/notifications-service').then(module => {
-      module.initializeNotifications();
-    });
-  }, []);
-
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <UsernameProvider>
