@@ -294,25 +294,56 @@ export const buscarGrupoComCodigo = async (codigo: string): Promise<any | null> 
     // Normalizar o código
     const codigoNormalizado = codigo.trim().toUpperCase();
     
-    // Buscar no banco de dados central
-    const resultado = await buscarGrupoPorCodigo(codigoNormalizado);
+    // Buscar diretamente na tabela de códigos
+    const { data, error } = await supabase
+      .from('codigos_grupos_estudo')
+      .select('*')
+      .eq('codigo', codigoNormalizado)
+      .single();
     
-    if (resultado.success && resultado.data) {
-      return resultado.data;
-    }
-    
-    // Fallback: buscar nos armazenamentos locais
-    const GRUPOS_STORAGE_KEY = 'epictus_grupos_estudo';
-    const grupos = JSON.parse(localStorage.getItem(GRUPOS_STORAGE_KEY) || '[]');
-    
-    const grupoEncontrado = grupos.find((g: any) => 
-      g.codigo && g.codigo.toUpperCase() === codigoNormalizado);
+    if (error) {
+      console.error('Erro ao buscar código no banco de dados:', error);
       
-    if (grupoEncontrado) {
-      return grupoEncontrado;
+      // Fallback: buscar nos armazenamentos locais
+      const GRUPOS_STORAGE_KEY = 'epictus_grupos_estudo';
+      const grupos = JSON.parse(localStorage.getItem(GRUPOS_STORAGE_KEY) || '[]');
+      
+      const grupoEncontrado = grupos.find((g: any) => 
+        g.codigo && g.codigo.toUpperCase() === codigoNormalizado);
+        
+      if (grupoEncontrado) {
+        console.log(`Grupo para código ${codigoNormalizado} encontrado no armazenamento local`, grupoEncontrado);
+        return grupoEncontrado;
+      }
+      
+      return null;
     }
     
-    return null;
+    if (!data) {
+      console.log(`Nenhum grupo encontrado para o código ${codigoNormalizado}`);
+      return null;
+    }
+    
+    // Com o grupo_id do código, buscar informações completas na tabela grupos_estudo
+    const { data: grupoCompleto, error: grupoError } = await supabase
+      .from('grupos_estudo')
+      .select('*')
+      .eq('id', data.grupo_id)
+      .single();
+      
+    if (!grupoError && grupoCompleto) {
+      console.log(`Grupo completo para código ${codigoNormalizado} encontrado:`, grupoCompleto);
+      
+      // Mesclamos os dados para ter informações completas
+      return {
+        ...grupoCompleto,
+        codigo: codigoNormalizado
+      };
+    }
+    
+    // Se não encontrar na tabela principal, retornamos os dados da tabela de códigos
+    console.log(`Informações parciais do grupo para código ${codigoNormalizado} encontradas na tabela de códigos`);
+    return data;
   } catch (error) {
     console.error('Erro ao buscar grupo por código:', error);
     return null;
@@ -322,33 +353,30 @@ export const buscarGrupoComCodigo = async (codigo: string): Promise<any | null> 
 // Verifica se um código de grupo existe no banco de dados
 export const verificarSeCodigoExiste = async (codigo: string): Promise<boolean> => {
   try {
-    // Simular verificação para fins de demonstração
-    // Aqui seria feita uma verificação real no banco de dados
-    // Exemplo de implementação real:
-    /*
+    if (!codigo || codigo.trim() === '') {
+      return false;
+    }
+    
+    const codigoNormalizado = codigo.trim().toUpperCase();
+    
+    // Consulta real no banco de dados
     const { data, error } = await supabase
-      .from('codigos_grupos')
-      .select('*')
-      .eq('codigo', codigo)
-      .eq('ativo', true)
+      .from('codigos_grupos_estudo')
+      .select('codigo')
+      .eq('codigo', codigoNormalizado)
       .single();
       
     if (error) {
+      if (error.code === 'PGRST116') { // Código para 'not found'
+        console.log(`Código ${codigoNormalizado} não encontrado no banco de dados`);
+        return false;
+      }
       console.error("Erro ao verificar código:", error);
       return false;
     }
     
+    console.log(`Código ${codigoNormalizado} encontrado no banco de dados!`);
     return !!data;
-    */
-    
-    // Simulação para fins de demonstração
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        // Aceitar qualquer código que tenha pelo menos 6 caracteres
-        // Em produção, isso seria substituído pela verificação real
-        resolve(codigo.length >= 6);
-      }, 1000);
-    });
   } catch (error) {
     console.error("Erro ao verificar código:", error);
     return false;
