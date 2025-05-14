@@ -137,6 +137,15 @@ mode = "sequential"
 task = "shell.exec"
 args = "node scripts/sync-grupos-codigos.js"
 
+[[workflows.workflow]]
+name = "Corrigir Renderização"
+author = 42059808
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node scripts/fix-rendering.js && npm run dev"
+
 [auth]
 pageEnabled = false
 buttonEnabled = false

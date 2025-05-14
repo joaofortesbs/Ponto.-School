@@ -6,6 +6,11 @@ import { BrowserRouter } from "react-router-dom";
 import './lib/username-initializer.ts'
 import { preInitializeWebNodes } from './lib/web-persistence.ts'
 
+// Garantir que a inicialização não cause problemas de renderização
+window.addEventListener('DOMContentLoaded', () => {
+  console.log("DOM carregado completamente, verificando inicialização da aplicação");
+});
+
 // PRIORIDADE MÁXIMA: Inicializar teias antes de qualquer outro código
 // Esta função é executada imediatamente, antes mesmo da montagem do React
 function inicializarTeiasComPrioridadeMaxima() {
