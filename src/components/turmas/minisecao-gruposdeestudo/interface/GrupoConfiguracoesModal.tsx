@@ -92,72 +92,42 @@ const handleSubmit = async () => {
         return;
       }
 
-      // IMPORTANTE: Nunca gerar um novo código, apenas usar o existente ou recuperar se já existe
-      let codigoGrupo = grupo?.codigo || null;
+      // Verificar se grupo existe
+      if (!grupo || !grupo.id) {
+        throw new Error("Dados do grupo não encontrados ou inválidos");
+      }
 
-      if (!codigoGrupo) {
-        // Tentar recuperar o código de todas as fontes possíveis antes de gerar um novo
-        try {
-          // 1. Verificar no armazenamento dedicado para códigos
-          const CODIGOS_STORAGE_KEY = 'epictus_codigos_grupo';
-          const codigosGrupos = JSON.parse(localStorage.getItem(CODIGOS_STORAGE_KEY) || '{}');
+      // Obter código do grupo usando o sistema centralizado
+      let codigoGrupo = null;
+      try {
+        const { obterCodigoGrupoExistente, gerarESalvarCodigoUnico } = await import('@/lib/grupoCodigoUtils');
+        
+        // Primeiro tentar obter um código existente
+        codigoGrupo = await obterCodigoGrupoExistente(grupo.id);
+        
+        // Se não existir código, gerar um novo
+        if (!codigoGrupo) {
+          console.log("Nenhum código existente encontrado, gerando um novo...");
+          codigoGrupo = await gerarESalvarCodigoUnico(grupo.id);
+          console.log("Novo código gerado e salvo:", codigoGrupo);
+        } else {
+          console.log("Usando código existente:", codigoGrupo);
+        }
+      } catch (codeError) {
+        console.error("Erro ao gerenciar código do grupo:", codeError);
 
-          if (grupo.id && codigosGrupos[grupo.id]) {
-            console.log("Recuperado código existente do storage dedicado:", codigosGrupos[grupo.id]);
-            codigoGrupo = codigosGrupos[grupo.id];
-          } else {
-            // 2. Verificar em outros locais de armazenamento
-            const { obterGruposLocal, gerarCodigoUnicoGrupo } = await import('@/lib/gruposEstudoStorage');
-            const grupos = obterGruposLocal();
-            const grupoExistente = grupos.find(g => g.id === grupo.id);
-
-            if (grupoExistente?.codigo) {
-              console.log("Recuperado código existente do localStorage:", grupoExistente.codigo);
-              codigoGrupo = grupoExistente.codigo;
-            } else {
-              // 3. Verificar na sessionStorage
-              const sessionCode = sessionStorage.getItem(`grupo_codigo_${grupo.id}`);
-              if (sessionCode) {
-                console.log("Recuperado código da sessionStorage:", sessionCode);
-                codigoGrupo = sessionCode;
-              } else {
-                // 4. Somente gerar um novo se realmente não existir em lugar nenhum
-                console.log("Nenhum código encontrado, gerando um novo...");
-                const { gerarCodigoUnicoGrupo } = await import('@/lib/gruposEstudoStorage');
-                codigoGrupo = await gerarCodigoUnicoGrupo(grupo.id);
-
-                // Salvar imediatamente nos storages para evitar perda
-                if (grupo.id) {
-                  codigosGrupos[grupo.id] = codigoGrupo;
-                  localStorage.setItem(CODIGOS_STORAGE_KEY, JSON.stringify(codigosGrupos));
-                  sessionStorage.setItem(`grupo_codigo_${grupo.id}`, codigoGrupo);
-                }
-
-                console.log("Novo código gerado e salvo:", codigoGrupo);
-              }
-            }
-          }
-        } catch (codeError) {
-          console.error("Erro ao recuperar/gerar código:", codeError);
-
-          // Apenas se realmente não tiver código, use um fallback
-          if (!codigoGrupo) {
-            const CARACTERES_PERMITIDOS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-            codigoGrupo = Array(7).fill(0).map(() => 
-              CARACTERES_PERMITIDOS.charAt(Math.floor(Math.random() * CARACTERES_PERMITIDOS.length))
-            ).join('');
-            console.log("Código fallback gerado:", codigoGrupo);
-          }
+        // Fallback para garantir que sempre temos um código
+        if (!codigoGrupo) {
+          const CARACTERES_PERMITIDOS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+          codigoGrupo = Array(7).fill(0).map(() => 
+            CARACTERES_PERMITIDOS.charAt(Math.floor(Math.random() * CARACTERES_PERMITIDOS.length))
+          ).join('');
+          console.log("Código fallback gerado:", codigoGrupo);
         }
       }
 
       // Garantir que o código esteja em maiúsculas
       codigoGrupo = codigoGrupo?.toUpperCase();
-
-      // Verificar se grupo existe
-      if (!grupo || !grupo.id) {
-        throw new Error("Dados do grupo não encontrados ou inválidos");
-      }
 
       // Preparar o objeto atualizado preservando o código
       const grupoAtualizado = {
@@ -184,6 +154,15 @@ const handleSubmit = async () => {
 
         if (error) throw error;
         console.log("Grupo atualizado no Supabase:", data);
+        
+        // Sincronizar com o banco de dados de códigos
+        try {
+          const { salvarCodigoNoBanco } = await import('@/lib/codigosGruposService');
+          await salvarCodigoNoBanco(codigoGrupo, grupoAtualizado);
+          console.log("Código sincronizado com banco de dados central");
+        } catch (syncError) {
+          console.error("Erro ao sincronizar código com banco central:", syncError);
+        }
       } catch (supabaseError) {
         console.error("Erro ao atualizar o grupo no Supabase:", supabaseError);
         // Continuar e salvar localmente mesmo com erro no Supabase
@@ -218,6 +197,17 @@ const handleSubmit = async () => {
           console.log("Grupo atualizado com sucesso no localStorage e sessionStorage");
         } catch (e) {
           console.error("Erro ao salvar na sessão:", e);
+        }
+        
+        // Atualizar no armazenamento dedicado para códigos
+        try {
+          const CODIGOS_STORAGE_KEY = 'epictus_codigos_grupo';
+          const codigosGrupos = JSON.parse(localStorage.getItem(CODIGOS_STORAGE_KEY) || '{}');
+          codigosGrupos[grupo.id] = codigoGrupo;
+          localStorage.setItem(CODIGOS_STORAGE_KEY, JSON.stringify(codigosGrupos));
+          console.log("Código atualizado no armazenamento dedicado");
+        } catch (e) {
+          console.error("Erro ao atualizar código no armazenamento dedicado:", e);
         }
       } catch (storageError) {
         console.error("Erro ao atualizar armazenamento local:", storageError);
@@ -283,136 +273,97 @@ const handleSubmit = async () => {
     // Função para gerar um código único para o grupo e garantir que seja permanente
     const handleGerarCodigo = async () => {
       try {
-          // Sistema de verificação multicamada para evitar geração de códigos duplicados
-
+          // Sistema centralizado de verificação e geração de códigos
+          
           // 1. Verificar se o grupo já tem um código na UI atual
           if (grupoAtualizado?.codigo) {
-              // Se já existe um código na interface, mostrar notificação e não gerar um novo
               mostrarNotificacaoSucesso("Este grupo já possui um código permanente!");
               return;
           }
 
           // 2. Verificar se o grupo originalmente já tinha um código
           if (grupo && grupo.codigo) {
-              // Se já existe código no objeto original, apenas exibe notificação e atualiza UI
               mostrarNotificacaoSucesso("Este grupo já possui um código único permanente!");
-
-              // Mesmo que o estado não tenha o código, atualizamos para garantir consistência
+              
+              // Atualizar o estado para garantir consistência
               setGrupoAtualizado(prev => ({
                   ...prev,
                   codigo: grupo.codigo
               }));
-
+              
               return;
           }
 
-          // 3. Verificar no armazenamento dedicado de códigos (mais confiável)
+          // 3. Usar o sistema centralizado de códigos
           if (grupo?.id) {
-              try {
-                  const CODIGOS_STORAGE_KEY = 'epictus_codigos_grupo';
-                  const codigosGrupos = JSON.parse(localStorage.getItem(CODIGOS_STORAGE_KEY) || '{}');
-
-                  if (codigosGrupos[grupo.id]) {
-                      mostrarNotificacaoSucesso("Código único recuperado do armazenamento permanente!");
-
-                      // Atualizar o estado local para a UI
-                      setGrupoAtualizado(prev => ({
-                          ...prev,
-                          codigo: codigosGrupos[grupo.id]
-                      }));
-
-                      // Atualizar o grupo original para manter consistência
-                      if (grupo) grupo.codigo = codigosGrupos[grupo.id];
-
-                      // Forçar atualização da UI e persistir a alteração
-                      if (grupo && onSave) {
-                          onSave({...grupo, codigo: codigosGrupos[grupo.id]});
-                      }
-
-                      return;
-                  }
-              } catch (e) {
-                  console.error("Erro ao verificar armazenamento dedicado:", e);
-              }
-
-              // 4. Verificar código no armazenamento geral de grupos como fallback
-              const { obterGruposLocal } = await import('@/lib/gruposEstudoStorage');
-              const grupos = obterGruposLocal();
-              const grupoExistente = grupos.find(g => g.id === grupo.id);
-
-              if (grupoExistente?.codigo) {
-                  mostrarNotificacaoSucesso("Código único recuperado do armazenamento de grupos!");
-
-                  // Atualizar o estado da UI com o código encontrado
+              // Mostrar notificação de processamento
+              mostrarNotificacaoSucesso("Buscando ou gerando código permanente...");
+              
+              // Importar o sistema centralizado de códigos
+              const { obterCodigoGrupoExistente, gerarESalvarCodigoUnico, salvarCodigoGrupo } = 
+                  await import('@/lib/grupoCodigoUtils');
+                  
+              // Primeiro tentar obter um código existente
+              let codigo = await obterCodigoGrupoExistente(grupo.id);
+              
+              if (codigo) {
+                  console.log("Código já existente recuperado:", codigo);
+                  mostrarNotificacaoSucesso("Código único recuperado com sucesso!");
+                  
+                  // Atualizar a UI
                   setGrupoAtualizado(prev => ({
                       ...prev,
-                      codigo: grupoExistente.codigo
+                      codigo: codigo
                   }));
-
+                  
                   // Atualizar o grupo original para manter consistência
-                  if (grupo) grupo.codigo = grupoExistente.codigo;
-
+                  if (grupo) grupo.codigo = codigo;
+                  
                   // Forçar atualização da UI e persistir a alteração
                   if (grupo && onSave) {
-                      onSave({...grupo, codigo: grupoExistente.codigo});
+                      onSave({...grupo, codigo});
                   }
-
-                  // Adicionar ao armazenamento dedicado para maior confiabilidade futura
-                  try {
-                      const CODIGOS_STORAGE_KEY = 'epictus_codigos_grupo';
-                      const codigosGrupos = JSON.parse(localStorage.getItem(CODIGOS_STORAGE_KEY) || '{}');
-                      codigosGrupos[grupo.id] = grupoExistente.codigo;
-                      localStorage.setItem(CODIGOS_STORAGE_KEY, JSON.stringify(codigosGrupos));
-                      console.log("Código existente adicionado ao armazenamento dedicado:", grupoExistente.codigo);
-                  } catch (storageError) {
-                      console.error("Erro ao adicionar código existente ao armazenamento dedicado:", storageError);
-                  }
-
+                  
+                  // Sincronizar com banco de dados central
+                  const { salvarCodigoNoBanco } = await import('@/lib/codigosGruposService');
+                  await salvarCodigoNoBanco(codigo, grupo);
+                  
                   return;
               }
-          }
-
-          // 5. Se realmente não existir código, só então gerar um novo
-          const { gerarCodigoUnicoGrupo, salvarCodigoGrupo } = await import('@/lib/gruposEstudoStorage');
-
-          // Mostrar notificação de que o processo começou
-          mostrarNotificacaoSucesso("Gerando código permanente...");
-
-          const novoCodigo = await gerarCodigoUnicoGrupo(grupo?.id);
-          console.log("Novo código único gerado e armazenado:", novoCodigo);
-
-          if (novoCodigo) {
-              // Atualizar o estado local para a UI
-              setGrupoAtualizado(prev => ({
-                  ...prev,
-                  codigo: novoCodigo
-              }));
-
-              // Atualizar o grupo original para manter consistência
-              if (grupo) grupo.codigo = novoCodigo;
-
-              // Mostrar notificação de sucesso
-              mostrarNotificacaoSucesso("Código permanente do grupo gerado com sucesso!");
-
-              // Forçar atualização da UI e persistir a alteração
-              if (grupo && onSave) {
-                  onSave({...grupo, codigo: novoCodigo});
-              }
-
-              // Salvamento adicional para garantir persistência
-              if (grupo?.id) {
-                  // Usar a função de salvamento dedicada para garantir persistência
-                  await salvarCodigoGrupo(grupo.id, novoCodigo);
-
-                  // Adicionar ao armazenamento dedicado para maior confiabilidade
+              
+              // Se não encontrou código existente, gerar um novo
+              console.log("Nenhum código existente encontrado, gerando um novo...");
+              
+              // Gerar novo código
+              codigo = await gerarESalvarCodigoUnico(grupo.id);
+              
+              if (codigo) {
+                  console.log("Novo código gerado:", codigo);
+                  
+                  // Atualizar a UI
+                  setGrupoAtualizado(prev => ({
+                      ...prev,
+                      codigo: codigo
+                  }));
+                  
+                  // Atualizar o grupo original para manter consistência
+                  if (grupo) grupo.codigo = codigo;
+                  
+                  // Mostrar notificação de sucesso
+                  mostrarNotificacaoSucesso("Código permanente do grupo gerado com sucesso!");
+                  
+                  // Forçar atualização da UI e persistir a alteração
+                  if (grupo && onSave) {
+                      onSave({...grupo, codigo});
+                  }
+                  
+                  // Sincronizar com banco de dados central
                   try {
-                      const CODIGOS_STORAGE_KEY = 'epictus_codigos_grupo';
-                      const codigosGrupos = JSON.parse(localStorage.getItem(CODIGOS_STORAGE_KEY) || '{}');
-                      codigosGrupos[grupo.id] = novoCodigo;
-                      localStorage.setItem(CODIGOS_STORAGE_KEY, JSON.stringify(codigosGrupos));
-                      console.log("Novo código adicionado ao armazenamento dedicado:", novoCodigo);
-                  } catch (storageError) {
-                      console.error("Erro ao adicionar novo código ao armazenamento dedicado:", storageError);
+                      const { salvarCodigoNoBanco } = await import('@/lib/codigosGruposService');
+                      await salvarCodigoNoBanco(codigo, grupo);
+                      console.log("Código sincronizado com banco de dados central");
+                  } catch (syncError) {
+                      console.error("Erro ao sincronizar código com banco central:", syncError);
                   }
               }
           }

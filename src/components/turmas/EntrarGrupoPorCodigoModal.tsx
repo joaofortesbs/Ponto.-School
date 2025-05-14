@@ -1,8 +1,7 @@
-
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { X, Key, AlertCircle, Check } from "lucide-react";
+import { X, Key, AlertCircle, Check, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase";
 import { verificarCodigoExiste } from "@/lib/grupoCodigoUtils";
@@ -22,12 +21,13 @@ const EntrarGrupoPorCodigoModal: React.FC<EntrarGrupoPorCodigoModalProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [showBuscarModal, setShowBuscarModal] = useState(false); // State for the search modal
 
   const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Converter para maiúsculas e remover espaços
     const code = e.target.value.toUpperCase().replace(/\s/g, '');
     setGroupCode(code);
-    
+
     // Limpar mensagens de erro quando o usuário digita
     if (error) setError(null);
     if (success) setSuccess(null);
@@ -38,7 +38,7 @@ const EntrarGrupoPorCodigoModal: React.FC<EntrarGrupoPorCodigoModalProps> = ({
       setError("Por favor, insira o código do grupo");
       return;
     }
-    
+
     // Verificar formato do código (7 caracteres alfanuméricos)
     if (!/^[A-Z0-9]{7}$/.test(groupCode.trim())) {
       setError("Código inválido. O código deve ter 7 caracteres (letras e números).");
@@ -47,7 +47,7 @@ const EntrarGrupoPorCodigoModal: React.FC<EntrarGrupoPorCodigoModalProps> = ({
 
     setIsProcessing(true);
     setError(null);
-    
+
     try {
       // Verificar se o usuário está logado
       const { data: { session } } = await supabase.auth.getSession();
@@ -60,7 +60,7 @@ const EntrarGrupoPorCodigoModal: React.FC<EntrarGrupoPorCodigoModalProps> = ({
 
       // Verificar primeiro localmente se o código existe
       const codigoExisteLocal = verificarCodigoExiste(groupCode);
-      
+
       if (codigoExisteLocal) {
         console.log("Código encontrado localmente:", groupCode);
       }
@@ -74,7 +74,7 @@ const EntrarGrupoPorCodigoModal: React.FC<EntrarGrupoPorCodigoModalProps> = ({
 
       if (errorBusca) {
         console.error("Erro ao verificar código no Supabase:", errorBusca);
-        
+
         // Se não encontrou no Supabase mas existe localmente, tentar usar o local
         if (codigoExisteLocal) {
           // Buscar nos grupos locais
@@ -82,26 +82,26 @@ const EntrarGrupoPorCodigoModal: React.FC<EntrarGrupoPorCodigoModalProps> = ({
           const grupos = JSON.parse(localStorage.getItem(GRUPOS_STORAGE_KEY) || '[]');
           const grupoLocal = grupos.find((g: any) => 
             g.codigo && g.codigo.toUpperCase() === groupCode.toUpperCase());
-          
+
           if (grupoLocal) {
             setSuccess(`Você entrou no grupo: ${grupoLocal.nome}`);
-            
+
             // Chamar o callback de sucesso
             if (onSuccess) {
               onSuccess(grupoLocal.id);
             }
-            
+
             // Fechar o modal após um breve delay
             setTimeout(() => {
               onClose();
               setGroupCode("");
               setSuccess(null);
             }, 1500);
-            
+
             return;
           }
         }
-        
+
         setError("Código de grupo inválido ou grupo não encontrado.");
         setIsProcessing(false);
         return;
@@ -109,7 +109,7 @@ const EntrarGrupoPorCodigoModal: React.FC<EntrarGrupoPorCodigoModalProps> = ({
 
       // Verificar se o usuário já é membro do grupo
       const membrosIds = grupoExistente.membros_ids || [];
-      
+
       if (membrosIds.includes(session.user.id) || grupoExistente.user_id === session.user.id) {
         setError("Você já é membro deste grupo.");
         setIsProcessing(false);
@@ -118,7 +118,7 @@ const EntrarGrupoPorCodigoModal: React.FC<EntrarGrupoPorCodigoModalProps> = ({
 
       // Adicionar o usuário ao grupo
       const novosMembrosIds = [...membrosIds, session.user.id];
-      
+
       // Atualizar o grupo no Supabase
       await supabase
         .from('grupos_estudo')
@@ -132,10 +132,10 @@ const EntrarGrupoPorCodigoModal: React.FC<EntrarGrupoPorCodigoModalProps> = ({
       try {
         const GRUPOS_STORAGE_KEY = 'epictus_grupos_estudo';
         const grupos = JSON.parse(localStorage.getItem(GRUPOS_STORAGE_KEY) || '[]');
-        
+
         // Verificar se o grupo já está no storage local
         const grupoIndex = grupos.findIndex((g: any) => g.id === grupoExistente.id);
-        
+
         if (grupoIndex >= 0) {
           // Atualizar o grupo existente
           grupos[grupoIndex].membros_ids = novosMembrosIds;
@@ -148,7 +148,7 @@ const EntrarGrupoPorCodigoModal: React.FC<EntrarGrupoPorCodigoModalProps> = ({
             membros: (grupoExistente.membros || 1) + 1
           });
         }
-        
+
         localStorage.setItem(GRUPOS_STORAGE_KEY, JSON.stringify(grupos));
       } catch (storageError) {
         console.error("Erro ao atualizar grupos no localStorage:", storageError);
@@ -156,19 +156,19 @@ const EntrarGrupoPorCodigoModal: React.FC<EntrarGrupoPorCodigoModalProps> = ({
 
       // Exibir mensagem de sucesso
       setSuccess(`Você entrou no grupo: ${grupoExistente.nome}`);
-      
+
       // Chamar o callback de sucesso
       if (onSuccess) {
         onSuccess(grupoExistente.id);
       }
-      
+
       // Fechar o modal após um breve delay
       setTimeout(() => {
         onClose();
         setGroupCode("");
         setSuccess(null);
       }, 1500);
-      
+
     } catch (error) {
       console.error("Erro ao entrar no grupo:", error);
       setError("Ocorreu um erro ao tentar entrar no grupo. Tente novamente mais tarde.");
@@ -234,21 +234,33 @@ const EntrarGrupoPorCodigoModal: React.FC<EntrarGrupoPorCodigoModalProps> = ({
 
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="grupoCodigo" className="block text-sm font-medium text-white/70 mb-2">
+                <div className="flex justify-between items-center mb-2">
+                  <label htmlFor="grupoCodigo" className="block text-sm font-medium text-white/70">
                     Código do Grupo <span className="text-[#FF6B00]">*</span>
                   </label>
-                  <Input
-                    id="grupoCodigo"
-                    value={groupCode}
-                    onChange={handleCodeChange}
-                    placeholder="Ex: ABC1234"
-                    className="w-full border-[#1E293B] bg-[#0F172A] text-white placeholder:text-gray-500 focus:border-[#FF6B00] uppercase tracking-wider text-center text-lg font-mono"
-                    maxLength={7}
-                  />
-                  <p className="text-xs text-gray-500 mt-2">
-                    O código do grupo é um identificador único de 7 caracteres fornecido pelo criador do grupo.
-                  </p>
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="sm"
+                    className="text-[#FF6B00] hover:text-[#FF7A1A] hover:bg-[#FF6B00]/10 text-xs h-7"
+                    onClick={() => setShowBuscarModal(true)}
+                  >
+                    <Search className="h-3 w-3 mr-1" />
+                    Buscar grupos
+                  </Button>
                 </div>
+                <Input
+                  id="grupoCodigo"
+                  value={groupCode}
+                  onChange={handleCodeChange}
+                  placeholder="Ex: ABC1234"
+                  className="w-full border-[#1E293B] bg-[#0F172A] text-white placeholder:text-gray-500 focus:border-[#FF6B00] uppercase tracking-wider text-center text-lg font-mono"
+                  maxLength={7}
+                />
+                <p className="text-xs text-gray-500 mt-2">
+                  O código do grupo é um identificador único de 7 caracteres fornecido pelo criador do grupo.
+                </p>
+              </div>
               </div>
             </div>
 
