@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 @import url('https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Caveat:wght@400;600&family=Kalam:wght@400;700&display=swap');
 @import "./styles/animations.css";
 @import "./styles/hide-scrollbar.css";
@@ -441,11 +445,6 @@ button[aria-haspopup="menu"] {
 #scroll-right-btn:active {
   transform: translateY(-50%) scale(0.95);
 }
-
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
 @layer utilities {
   .scrollbar-hide {
