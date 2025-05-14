@@ -49,7 +49,6 @@ import PlanSelectionPage from "@/pages/plan-selection";
 import ProfilePage from "@/pages/profile";
 import WelcomeModal from "./components/auth/WelcomeModal"; // Added import
 import { TypewriterLoader } from "./components/ui/typewriter-loader"; // Added import
-import { notificationService } from "@/lib/notifications-service";
 
 
 // Componente para proteger rotas
