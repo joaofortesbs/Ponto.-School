@@ -498,6 +498,15 @@ args = "  });"
 task = "shell.exec"
 args = "\""
 
+[[workflows.workflow]]
+name = "Corrigir Tabelas de Grupos"
+author = 42059808
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node scripts/fix-missing-tables.js"
+
 [auth]
 pageEnabled = false
 buttonEnabled = false
