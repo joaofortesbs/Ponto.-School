@@ -27,7 +27,7 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
             className="bg-white dark:bg-[#1E293B] rounded-xl overflow-hidden max-w-4xl w-full shadow-xl relative"
           >
             <div className="sticky top-0 z-10 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-4 flex justify-between items-center">
-              <h2 className="text-xl font-bold text-white">Criar Novo Grupo</h2>
+              <h2 className="text-xl font-bold text-white">Novo Grupo de Estudo</h2>
               <Button
                 variant="ghost"
                 size="icon"

@@ -1,7 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 @import url('https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Caveat:wght@400;600&family=Kalam:wght@400;700&display=swap');
 @import "./styles/animations.css";
 @import "./styles/hide-scrollbar.css";
 @import "./styles/typewriter-loader.css";
+@import "./styles/notebook.css";
+@import "./styles/header-animations.css";
+@import "./styles/carousel-effects.css";
+@import "./styles/modern-scanner.css";
+@import "./styles/rotina-calendar.css";
 
 /* Estilo para tópicos selecionados - apenas borda laranja (sem animação) */
 .topic-selected {
@@ -9,12 +18,6 @@
   position: relative;
   box-shadow: 0 0 10px rgba(255, 107, 0, 0.4);
 }
-
-@import "./styles/notebook.css";
-@import "./styles/header-animations.css";
-@import "./styles/carousel-effects.css";
-@import "./styles/modern-scanner.css";
-@import "./styles/rotina-calendar.css";
 
 /* Estilos para corrigir problemas de altura em componentes específicos */
 .mode-epictus-turbo-advanced {
@@ -442,11 +445,6 @@ button[aria-haspopup="menu"] {
 #scroll-right-btn:active {
   transform: translateY(-50%) scale(0.95);
 }
-
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
 @layer utilities {
   .scrollbar-hide {

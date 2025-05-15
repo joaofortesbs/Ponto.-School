@@ -318,3 +318,97 @@ export const buscarGrupoComCodigo = async (codigo: string): Promise<any | null> 
     return null;
   }
 };
+
+// Verifica se um código de grupo existe no banco de dados
+export const verificarSeCodigoExiste = async (codigo: string): Promise<boolean> => {
+  try {
+    // Simular verificação para fins de demonstração
+    // Aqui seria feita uma verificação real no banco de dados
+    // Exemplo de implementação real:
+    /*
+    const { data, error } = await supabase
+      .from('codigos_grupos')
+      .select('*')
+      .eq('codigo', codigo)
+      .eq('ativo', true)
+      .single();
+      
+    if (error) {
+      console.error("Erro ao verificar código:", error);
+      return false;
+    }
+    
+    return !!data;
+    */
+    
+    // Simulação para fins de demonstração
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        // Aceitar qualquer código que tenha pelo menos 6 caracteres
+        // Em produção, isso seria substituído pela verificação real
+        resolve(codigo.length >= 6);
+      }, 1000);
+    });
+  } catch (error) {
+    console.error("Erro ao verificar código:", error);
+    return false;
+  }
+};
+
+// Gera um código único para um grupo
+export const gerarCodigoGrupo = (): string => {
+  const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let codigo = '';
+  
+  // Primeiro segmento (4 caracteres)
+  for (let i = 0; i < 4; i++) {
+    codigo += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+  }
+  
+  codigo += '-';
+  
+  // Segundo segmento (4 caracteres)
+  for (let i = 0; i < 4; i++) {
+    codigo += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+  }
+  
+  codigo += '-';
+  
+  // Terceiro segmento (4 caracteres)
+  for (let i = 0; i < 4; i++) {
+    codigo += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+  }
+  
+  return codigo;
+};
+
+// Registra um novo código de grupo no banco de dados
+export const registrarCodigoGrupo = async (grupoId: string): Promise<string | null> => {
+  try {
+    const codigo = gerarCodigoGrupo();
+    
+    // Aqui seria feito o registro real no banco de dados
+    // Exemplo de implementação real:
+    /*
+    const { data, error } = await supabase
+      .from('codigos_grupos')
+      .insert({
+        codigo,
+        grupo_id: grupoId,
+        ativo: true,
+        data_criacao: new Date(),
+        data_expiracao: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 dias
+      });
+      
+    if (error) {
+      console.error("Erro ao registrar código:", error);
+      return null;
+    }
+    */
+    
+    return codigo;
+  } catch (error) {
+    console.error("Erro ao registrar código:", error);
+    return null;
+  }
+};
