@@ -2178,6 +2178,24 @@ mode = "sequential"
 task = "shell.exec"
 args = "node scripts/fix-tables-api.js"
 
+[[workflows.workflow]]
+name = "Correção Forçada de Tabelas"
+author = 42059808
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node scripts/force-create-tables.js"
+
+[[workflows.workflow]]
+name = "Iniciar API de Correção"
+author = 42059808
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node scripts/fix-tables-api.js"
+
 [auth]
 pageEnabled = false
 buttonEnabled = false

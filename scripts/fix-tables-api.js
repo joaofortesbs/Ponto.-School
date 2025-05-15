@@ -469,3 +469,287 @@ if (require.main === module) {
 }
 
 module.exports = fixTablesApi;
+/**
+ * Script para iniciar um servidor API temporário para correção de tabelas
+ * Este script é utilizado como fallback quando outros métodos falham
+ */
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const { createClient } = require('@supabase/supabase-js');
+
+// Credenciais do Supabase
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error('Credenciais do Supabase não encontradas no ambiente');
+  process.exit(1);
+}
+
+// Criar cliente Supabase
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+// Criar servidor Express
+const app = express();
+const PORT = process.env.PORT || 3333;
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// Rota principal para correção de tabelas
+app.post('/api/fix-tables', async (req, res) => {
+  console.log('Solicitação recebida para corrigir tabelas');
+  
+  try {
+    // Criar extensão uuid-ossp (importante para as tabelas)
+    try {
+      await supabase.rpc('execute_sql', { 
+        sql_query: `CREATE EXTENSION IF NOT EXISTS "uuid-ossp";` 
+      });
+      console.log('✅ Extensão uuid-ossp criada/verificada com sucesso');
+    } catch (extError) {
+      console.warn('⚠️ Não foi possível criar extensão uuid-ossp:', extError);
+    }
+
+    // Criar tabela grupos_estudo
+    try {
+      await supabase.rpc('execute_sql', {
+        sql_query: `
+          CREATE TABLE IF NOT EXISTS public.grupos_estudo (
+            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+            user_id UUID NOT NULL,
+            nome TEXT NOT NULL,
+            descricao TEXT,
+            cor TEXT NOT NULL DEFAULT '#FF6B00',
+            membros INTEGER NOT NULL DEFAULT 1,
+            membros_ids JSONB DEFAULT '[]'::jsonb,
+            topico TEXT,
+            topico_nome TEXT,
+            topico_icon TEXT,
+            privado BOOLEAN DEFAULT false,
+            visibilidade TEXT DEFAULT 'todos',
+            codigo TEXT,
+            disciplina TEXT DEFAULT 'Geral',
+            data_criacao TIMESTAMP WITH TIME ZONE DEFAULT now()
+          );
+          
+          CREATE INDEX IF NOT EXISTS grupos_estudo_user_id_idx ON public.grupos_estudo(user_id);
+          
+          ALTER TABLE public.grupos_estudo ENABLE ROW LEVEL SECURITY;
+          
+          DO $$
+          BEGIN
+            BEGIN
+              DROP POLICY IF EXISTS "Usuários podem visualizar grupos" ON public.grupos_estudo;
+              EXCEPTION WHEN OTHERS THEN
+              NULL;
+            END;
+            
+            BEGIN
+              CREATE POLICY "Usuários podem visualizar grupos"
+                ON public.grupos_estudo FOR SELECT
+                USING (true);
+              EXCEPTION WHEN OTHERS THEN
+              NULL;
+            END;
+            
+            BEGIN
+              DROP POLICY IF EXISTS "Usuários podem inserir grupos" ON public.grupos_estudo;
+              EXCEPTION WHEN OTHERS THEN
+              NULL;
+            END;
+            
+            BEGIN
+              CREATE POLICY "Usuários podem inserir grupos"
+                ON public.grupos_estudo FOR INSERT
+                WITH CHECK (true);
+              EXCEPTION WHEN OTHERS THEN
+              NULL;
+            END;
+            
+            BEGIN
+              DROP POLICY IF EXISTS "Usuários podem atualizar grupos" ON public.grupos_estudo;
+              EXCEPTION WHEN OTHERS THEN
+              NULL;
+            END;
+            
+            BEGIN
+              CREATE POLICY "Usuários podem atualizar grupos"
+                ON public.grupos_estudo FOR UPDATE
+                USING (true);
+              EXCEPTION WHEN OTHERS THEN
+              NULL;
+            END;
+            
+            BEGIN
+              DROP POLICY IF EXISTS "Usuários podem excluir grupos" ON public.grupos_estudo;
+              EXCEPTION WHEN OTHERS THEN
+              NULL;
+            END;
+            
+            BEGIN
+              CREATE POLICY "Usuários podem excluir grupos"
+                ON public.grupos_estudo FOR DELETE
+                USING (true);
+              EXCEPTION WHEN OTHERS THEN
+              NULL;
+            END;
+          END
+          $$;
+        `
+      });
+      console.log('✅ Tabela grupos_estudo criada com sucesso');
+    } catch (gruposError) {
+      console.error('❌ Erro ao criar tabela grupos_estudo:', gruposError);
+      return res.status(500).json({ 
+        success: false, 
+        error: `Erro ao criar tabela grupos_estudo: ${gruposError.message}` 
+      });
+    }
+
+    // Criar tabela codigos_grupos_estudo
+    try {
+      await supabase.rpc('execute_sql', {
+        sql_query: `
+          CREATE TABLE IF NOT EXISTS public.codigos_grupos_estudo (
+            codigo VARCHAR(15) PRIMARY KEY,
+            grupo_id UUID NOT NULL,
+            nome VARCHAR(255) NOT NULL,
+            descricao TEXT,
+            data_criacao TIMESTAMP WITH TIME ZONE DEFAULT now(),
+            user_id UUID,
+            privado BOOLEAN DEFAULT false,
+            membros INTEGER DEFAULT 1,
+            visibilidade VARCHAR(50),
+            disciplina VARCHAR(100),
+            cor VARCHAR(50) DEFAULT '#FF6B00',
+            membros_ids JSONB DEFAULT '[]'::jsonb,
+            ultima_atualizacao TIMESTAMP WITH TIME ZONE DEFAULT now()
+          );
+          
+          CREATE INDEX IF NOT EXISTS idx_codigos_grupos_estudo_grupo_id ON public.codigos_grupos_estudo(grupo_id);
+          CREATE INDEX IF NOT EXISTS idx_codigos_grupos_estudo_user_id ON public.codigos_grupos_estudo(user_id);
+          
+          ALTER TABLE public.codigos_grupos_estudo ENABLE ROW LEVEL SECURITY;
+          
+          DO $$
+          BEGIN
+            BEGIN
+              DROP POLICY IF EXISTS "Todos podem visualizar códigos" ON public.codigos_grupos_estudo;
+              EXCEPTION WHEN OTHERS THEN
+              NULL;
+            END;
+            
+            BEGIN
+              CREATE POLICY "Todos podem visualizar códigos"
+                ON public.codigos_grupos_estudo FOR SELECT
+                USING (true);
+              EXCEPTION WHEN OTHERS THEN
+              NULL;
+            END;
+            
+            BEGIN
+              DROP POLICY IF EXISTS "Todos podem inserir códigos" ON public.codigos_grupos_estudo;
+              EXCEPTION WHEN OTHERS THEN
+              NULL;
+            END;
+            
+            BEGIN
+              CREATE POLICY "Todos podem inserir códigos"
+                ON public.codigos_grupos_estudo FOR INSERT
+                WITH CHECK (true);
+              EXCEPTION WHEN OTHERS THEN
+              NULL;
+            END;
+            
+            BEGIN
+              DROP POLICY IF EXISTS "Todos podem atualizar códigos" ON public.codigos_grupos_estudo;
+              EXCEPTION WHEN OTHERS THEN
+              NULL;
+            END;
+            
+            BEGIN
+              CREATE POLICY "Todos podem atualizar códigos"
+                ON public.codigos_grupos_estudo FOR UPDATE
+                USING (true);
+              EXCEPTION WHEN OTHERS THEN
+              NULL;
+            END;
+          END
+          $$;
+        `
+      });
+      console.log('✅ Tabela codigos_grupos_estudo criada com sucesso');
+    } catch (codigosError) {
+      console.error('❌ Erro ao criar tabela codigos_grupos_estudo:', codigosError);
+      return res.status(500).json({ 
+        success: false, 
+        error: `Erro ao criar tabela codigos_grupos_estudo: ${codigosError.message}` 
+      });
+    }
+
+    // Verificar se as tabelas foram criadas corretamente
+    try {
+      const { data: gruposCheck, error: gruposCheckError } = await supabase
+        .from('grupos_estudo')
+        .select('id')
+        .limit(1);
+        
+      if (gruposCheckError) {
+        console.error('❌ Erro ao verificar tabela grupos_estudo:', gruposCheckError);
+        return res.status(500).json({ 
+          success: false, 
+          error: `Erro ao verificar tabela grupos_estudo: ${gruposCheckError.message}` 
+        });
+      }
+      
+      const { data: codigosCheck, error: codigosCheckError } = await supabase
+        .from('codigos_grupos_estudo')
+        .select('codigo')
+        .limit(1);
+        
+      if (codigosCheckError) {
+        console.error('❌ Erro ao verificar tabela codigos_grupos_estudo:', codigosCheckError);
+        return res.status(500).json({ 
+          success: false, 
+          error: `Erro ao verificar tabela codigos_grupos_estudo: ${codigosCheckError.message}` 
+        });
+      }
+      
+      console.log('✅ Ambas as tabelas verificadas com sucesso!');
+      return res.status(200).json({ 
+        success: true, 
+        message: 'Tabelas criadas e verificadas com sucesso!' 
+      });
+    } catch (verifyError) {
+      console.error('❌ Erro ao verificar tabelas:', verifyError);
+      return res.status(500).json({ 
+        success: false, 
+        error: `Erro ao verificar tabelas: ${verifyError.message}` 
+      });
+    }
+  } catch (error) {
+    console.error('❌ Erro geral:', error);
+    return res.status(500).json({ 
+      success: false, 
+      error: `Erro geral: ${error.message}` 
+    });
+  }
+});
+
+// Rota de status
+app.get('/api/fix-tables/status', (req, res) => {
+  res.status(200).json({
+    status: 'online',
+    message: 'API de correção de tabelas está operacional'
+  });
+});
+
+// Iniciar servidor
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Servidor API de correção de tabelas rodando em http://0.0.0.0:${PORT}`);
+  console.log(`Acesse http://0.0.0.0:${PORT}/api/fix-tables/status para verificar o status`);
+  console.log('Para corrigir as tabelas, envie uma requisição POST para /api/fix-tables');
+});

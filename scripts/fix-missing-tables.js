@@ -1,46 +1,109 @@
 
 // Script para corrigir/criar tabelas necessárias para os grupos de estudo
 const { createClient } = require('@supabase/supabase-js');
+require('dotenv').config();
 
 // Obter credenciais do ambiente
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY;
 
-// Criar cliente Supabase
-const supabase = createClient(supabaseUrl, supabaseKey);
+if (!supabaseUrl || !supabaseKey) {
+  console.error('❌ ERRO: Variáveis de ambiente SUPABASE_URL e SUPABASE_KEY são necessárias.');
+  console.error('Verifique se o arquivo .env existe e contém essas variáveis.');
+  process.exit(1);
+}
 
-// Função para executar uma consulta SQL com tratamento de erros
-async function executarConsultaSegura(descricao, sql) {
-  try {
-    console.log(`🔄 ${descricao}...`);
-    
-    // Usando o método correto para executar SQL no Supabase
-    const { error } = await supabase.rpc('execute_sql', { sql_query: sql }).catch(() => {
-      // Fallback para caso o RPC não esteja disponível
-      console.log(`Tentando método alternativo para ${descricao.toLowerCase()}...`);
-      return { error: { message: "RPC não disponível, tentando método alternativo" } };
-    });
-    
-    if (error) {
-      console.error(`❌ Erro ao ${descricao.toLowerCase()}: ${error.message}`);
-      // Tentativa alternativa usando createClient e from
+// Criar cliente Supabase com opções estendidas para maior robustez
+const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: false
+  },
+  global: {
+    headers: { 'x-application-name': 'fix-missing-tables' },
+  },
+});
+
+// Verificar se o cliente está inicializado corretamente
+console.log('📄 Inicializando script de correção de tabelas...');
+console.log(`📄 Usando URL do Supabase: ${supabaseUrl.substring(0, 20)}...`);
+console.log('📄 Verificando autenticação do Supabase...');
+
+// Função para executar uma consulta SQL com tratamento de erros e múltiplas tentativas
+async function executarConsultaSegura(descricao, sql, maxRetries = 3) {
+  for (let tentativa = 1; tentativa <= maxRetries; tentativa++) {
+    try {
+      console.log(`🔄 ${descricao}... (tentativa ${tentativa}/${maxRetries})`);
+      
+      // Método 1: Usar RPC execute_sql
       try {
-        // Tentando usar o método from como alternativa
-        await supabase.from('_temp_sql_execution').select('*').limit(0);
-        console.log('Usando método alternativo para operações SQL...');
-        return true; // Consideramos como sucesso, mesmo se não conseguirmos executar diretamente
-      } catch (fallbackErr) {
-        console.error(`❌ Fallback também falhou: ${fallbackErr.message}`);
+        const { error } = await supabase.rpc('execute_sql', { sql_query: sql });
+        
+        if (!error) {
+          console.log(`✅ ${descricao} concluído com sucesso`);
+          return true;
+        }
+        
+        console.log(`ℹ️ Tentativa ${tentativa} com RPC falhou: ${error.message}`);
+      } catch (rpcError) {
+        console.log(`ℹ️ Erro no RPC: ${rpcError.message}`);
+      }
+      
+      // Método 2: Tentativa direta com query (obsoleto, mas pode funcionar em algumas versões)
+      try {
+        await supabase.query(sql);
+        console.log(`✅ ${descricao} concluído com sucesso via query direta`);
+        return true;
+      } catch (queryError) {
+        console.log(`ℹ️ Tentativa direta via query falhou: ${queryError.message}`);
+      }
+      
+      // Método 3: Tentativa com REST API para criar tabela (simulação)
+      if (tentativa === maxRetries) {
+        try {
+          console.log(`ℹ️ Tentando método alternativo via REST API...`);
+          
+          // Criar uma tabela temporária para testar se temos permissão
+          const tempTableName = `_temp_${Math.floor(Math.random() * 10000)}`;
+          
+          // Tentar criar uma tabela temporária para testar permissões
+          const { error: tempError } = await supabase
+            .from(tempTableName)
+            .insert([{ id: 1, test: true }]);
+            
+          if (!tempError || tempError.code !== "42P01") {
+            console.log(`ℹ️ Teste de permissão com tabela temporária: ${tempError ? "falhou" : "sucesso"}`);
+          }
+          
+          // Retornar falso se estamos na última tentativa
+          return false;
+        } catch (restError) {
+          console.log(`ℹ️ Método REST também falhou: ${restError.message}`);
+          return false;
+        }
+      }
+      
+      // Esperar antes da próxima tentativa (backoff exponencial)
+      const delayMs = Math.min(1000 * Math.pow(2, tentativa - 1), 10000);
+      console.log(`⏳ Aguardando ${delayMs}ms antes da próxima tentativa...`);
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+      
+    } catch (err) {
+      console.error(`❌ Exceção ao ${descricao.toLowerCase()}: ${err.message}`);
+      
+      if (tentativa === maxRetries) {
         return false;
       }
+      
+      // Esperar antes da próxima tentativa
+      const delayMs = Math.min(1000 * Math.pow(2, tentativa - 1), 10000);
+      console.log(`⏳ Aguardando ${delayMs}ms antes da próxima tentativa...`);
+      await new Promise(resolve => setTimeout(resolve, delayMs));
     }
-    
-    console.log(`✅ ${descricao} concluído com sucesso`);
-    return true;
-  } catch (err) {
-    console.error(`❌ Exceção ao ${descricao.toLowerCase()}: ${err.message}`);
-    return false;
   }
+  
+  return false;
 }
 
 // Criar função para checar existência de tabelas
