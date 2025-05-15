@@ -1734,7 +1734,7 @@ export const salvarCodigoGrupoObjeto = async (codigoData: any) => {
 
       if (existingCode) {
         // Código já existe, gerar um novo código
-        const novoCodigo = gerarCodigoGrupo();
+        const novoCodigo = gerarCodigoGrupoAlternativo();
         codigoData.codigo = novoCodigo;
       }
 
@@ -2152,8 +2152,8 @@ export const entrarEmGrupoComCodigo = async (codigo: string) => {
   }
 };
 
-// Função para gerar código de grupo aleatório
-export const gerarCodigoGrupo = () => {
+// Função para gerar código de grupo aleatório (versão alternativa)
+export const gerarCodigoGrupoAlternativo = () => {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let codigo = '';
 
