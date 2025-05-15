@@ -330,3 +330,197 @@ export const pesquisarGruposPorTermo = async (termo: string) => {
     return { success: false, error: err };
   }
 };
+import { supabase } from './supabase';
+
+/**
+ * Verifica se um código de grupo existe
+ * @param codigo O código a ser verificado
+ * @returns Objeto indicando se o código existe e dados do grupo
+ */
+export async function verificarCodigoGrupo(codigo: string) {
+  if (!codigo) {
+    return { existe: false, grupo: null, error: "Código não fornecido" };
+  }
+
+  try {
+    // Verificar na tabela de códigos primeiro (mais rápido)
+    const { data: codigoData, error: codigoError } = await supabase
+      .from('codigos_grupos_estudo')
+      .select('*')
+      .eq('codigo', codigo.toUpperCase())
+      .maybeSingle();
+
+    if (codigoError && codigoError.code !== 'PGRST116') {
+      console.error("Erro ao verificar código na tabela de códigos:", codigoError);
+      
+      // Tentar verificar diretamente na tabela de grupos
+      const { data: grupoData, error: grupoError } = await supabase
+        .from('grupos_estudo')
+        .select('*')
+        .eq('codigo', codigo.toUpperCase())
+        .maybeSingle();
+        
+      if (grupoError) {
+        console.error("Erro ao verificar código na tabela de grupos:", grupoError);
+        return { existe: false, grupo: null, error: "Erro ao verificar código" };
+      }
+      
+      return { existe: !!grupoData, grupo: grupoData, error: null };
+    }
+    
+    if (codigoData) {
+      // Se encontrou na tabela de códigos, buscar o grupo completo
+      const { data: grupoData, error: grupoError } = await supabase
+        .from('grupos_estudo')
+        .select('*')
+        .eq('id', codigoData.grupo_id)
+        .maybeSingle();
+        
+      if (grupoError) {
+        console.error("Erro ao buscar grupo pelo ID:", grupoError);
+        // Retornar os dados da tabela de códigos mesmo assim
+        return { existe: true, grupo: codigoData, error: null };
+      }
+      
+      return { existe: true, grupo: grupoData || codigoData, error: null };
+    }
+    
+    return { existe: false, grupo: null, error: null };
+  } catch (error) {
+    console.error("Erro ao verificar código:", error);
+    return { existe: false, grupo: null, error: "Erro ao verificar código" };
+  }
+}
+
+/**
+ * Adiciona um usuário a um grupo usando o código
+ * @param codigo Código do grupo
+ * @param userId ID do usuário
+ * @returns Objeto indicando sucesso ou falha
+ */
+export async function adicionarUsuarioAoGrupoPorCodigo(codigo: string, userId: string) {
+  if (!codigo || !userId) {
+    return { success: false, message: "Código ou userId não fornecido" };
+  }
+
+  try {
+    // Verificar se o código existe
+    const { existe, grupo, error } = await verificarCodigoGrupo(codigo);
+    
+    if (error) {
+      return { success: false, message: error };
+    }
+    
+    if (!existe || !grupo) {
+      return { success: false, message: "Código de grupo não encontrado" };
+    }
+    
+    // Verificar se o usuário já é membro
+    const membrosIds = Array.isArray(grupo.membros_ids) ? grupo.membros_ids : [];
+    
+    if (membrosIds.includes(userId)) {
+      return { success: false, message: "Você já é membro deste grupo", grupo };
+    }
+    
+    // Adicionar usuário ao grupo
+    membrosIds.push(userId);
+    
+    const { error: updateError } = await supabase
+      .from('grupos_estudo')
+      .update({ 
+        membros_ids: membrosIds,
+        membros: membrosIds.length 
+      })
+      .eq('id', grupo.id);
+      
+    if (updateError) {
+      console.error("Erro ao adicionar usuário ao grupo:", updateError);
+      return { success: false, message: "Erro ao adicionar usuário ao grupo" };
+    }
+    
+    // Atualizar também na tabela de códigos
+    const { error: updateCodigoError } = await supabase
+      .from('codigos_grupos_estudo')
+      .update({ 
+        membros_ids: membrosIds,
+        membros: membrosIds.length,
+        ultima_atualizacao: new Date().toISOString()
+      })
+      .eq('codigo', codigo.toUpperCase());
+      
+    if (updateCodigoError) {
+      console.warn("Aviso: Erro ao atualizar tabela de códigos:", updateCodigoError);
+      // Não falhar por causa disso
+    }
+    
+    // Retornar grupo atualizado
+    const grupoAtualizado = {
+      ...grupo,
+      membros_ids: membrosIds,
+      membros: membrosIds.length
+    };
+    
+    return { 
+      success: true, 
+      message: `Você foi adicionado ao grupo: ${grupo.nome}`, 
+      grupo: grupoAtualizado 
+    };
+  } catch (error) {
+    console.error("Erro ao adicionar usuário ao grupo:", error);
+    return { success: false, message: "Erro ao adicionar usuário ao grupo" };
+  }
+}
+
+/**
+ * Atualiza os dados de um grupo tanto na tabela de grupos quanto na tabela de códigos
+ * @param grupo Dados do grupo para atualizar
+ * @returns Objeto indicando sucesso ou falha
+ */
+export async function atualizarGrupo(grupo: any) {
+  if (!grupo || !grupo.id) {
+    return { success: false, message: "Dados do grupo inválidos" };
+  }
+
+  try {
+    // Atualizar na tabela de grupos
+    const { error: updateError } = await supabase
+      .from('grupos_estudo')
+      .update(grupo)
+      .eq('id', grupo.id);
+      
+    if (updateError) {
+      console.error("Erro ao atualizar grupo:", updateError);
+      return { success: false, message: "Erro ao atualizar grupo" };
+    }
+    
+    // Se o grupo tem código, atualizar também na tabela de códigos
+    if (grupo.codigo) {
+      const dadosParaCodigo = {
+        nome: grupo.nome || 'Grupo sem nome',
+        descricao: grupo.descricao || '',
+        privado: grupo.privado || false,
+        membros: grupo.membros || 1,
+        visibilidade: grupo.visibilidade || 'todos',
+        disciplina: grupo.disciplina || '',
+        cor: grupo.cor || '#FF6B00',
+        membros_ids: grupo.membros_ids || [],
+        ultima_atualizacao: new Date().toISOString()
+      };
+      
+      const { error: updateCodigoError } = await supabase
+        .from('codigos_grupos_estudo')
+        .update(dadosParaCodigo)
+        .eq('codigo', grupo.codigo);
+        
+      if (updateCodigoError) {
+        console.warn("Aviso: Erro ao atualizar tabela de códigos:", updateCodigoError);
+        // Não falhar por causa disso
+      }
+    }
+    
+    return { success: true, message: "Grupo atualizado com sucesso", grupo };
+  } catch (error) {
+    console.error("Erro ao atualizar grupo:", error);
+    return { success: false, message: "Erro ao atualizar grupo" };
+  }
+}

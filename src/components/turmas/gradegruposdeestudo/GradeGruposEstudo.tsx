@@ -678,7 +678,43 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
         onClose={() => setShowAdicionarGruposModal(false)}
         onGrupoAdicionado={(grupo) => {
           // Atualizar a lista após adicionar um grupo
-          setGruposEstudo(prevGrupos => [...prevGrupos, grupo]);
+          if (grupo) {
+            setGruposEstudo(prevGrupos => [...prevGrupos, grupo]);
+          }
+          // Forçar atualização dos grupos mesmo sem receber um grupo específico
+          else {
+            const { data: { session } } = supabase.auth.getSession();
+            if (session) {
+              // Recarregar grupos depois de um segundo para permitir a propagação das alterações
+              setTimeout(() => {
+                sincronizarGruposLocais(session.user.id)
+                  .then(() => {
+                    const gruposAtualizados = obterGruposLocal();
+                    // Converter para formato compatível com GrupoEstudo
+                    const gruposFormatados = gruposAtualizados.map((g: any) => ({
+                      id: g.id,
+                      nome: g.nome,
+                      descricao: g.descricao,
+                      cor: g.cor,
+                      membros: g.membros || 1,
+                      topico: g.topico,
+                      disciplina: g.disciplina || "",
+                      icon: g.topico_icon,
+                      dataCriacao: g.data_criacao,
+                      tendencia: Math.random() > 0.7 ? "alta" : undefined,
+                      novoConteudo: Math.random() > 0.7,
+                      privado: g.privado,
+                      visibilidade: g.visibilidade,
+                      topico_nome: g.topico_nome,
+                      topico_icon: g.topico_icon,
+                      data_inicio: g.data_inicio,
+                      criador: g.criador || "você"
+                    }));
+                    setGruposEstudo(gruposFormatados);
+                  });
+              }, 1000);
+            }
+          }
           setShowAdicionarGruposModal(false);
         }}
       />

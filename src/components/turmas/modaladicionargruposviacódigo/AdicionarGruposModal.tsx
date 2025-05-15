@@ -34,6 +34,20 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
   const [resultados, setResultados] = useState<any[]>([]);
   const [sincronizando, setSincronizando] = useState(false);
 
+  // Get userId from local storage, because userId from props is not reliable
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const storedUserId = localStorage.getItem('epictus_user_id');
+    if (storedUserId) {
+      setCurrentUserId(storedUserId);
+    }
+  }, []);
+  
+  const onClose = () => {
+    onOpenChange(false);
+  };
+
   // Limpar erros/mensagens quando troca de tab
   useEffect(() => {
     setErrorMessage('');
@@ -90,8 +104,8 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
       // Atualizar lista de membros
       const membrosIds = Array.isArray(grupo.membros_ids) ? grupo.membros_ids : [];
 
-      if (!membrosIds.includes(userId)) {
-        membrosIds.push(userId);
+      if (currentUserId && !membrosIds.includes(currentUserId)) {
+        membrosIds.push(currentUserId);
       }
 
       // Atualizar grupo
@@ -230,8 +244,8 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
       // Atualizar membros
       const membrosIds = Array.isArray(grupo.membros_ids) ? grupo.membros_ids : [];
 
-      if (!membrosIds.includes(userId)) {
-        membrosIds.push(userId);
+      if (currentUserId && !membrosIds.includes(currentUserId)) {
+        membrosIds.push(currentUserId);
       }
 
       // Atualizar no banco
@@ -374,13 +388,13 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
               )}
             </Button>
             <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onOpenChange(false)}
-              className="text-white hover:bg-slate-700"
-            >
-              <X className="h-4 w-4" />
-            </Button>
+                variant="ghost"
+                size="icon"
+                onClick={onClose}
+                className="text-white hover:bg-slate-700"
+              >
+                <X className="h-4 w-4" />
+              </Button>
           </div>
         </DialogHeader>
 

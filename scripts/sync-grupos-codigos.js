@@ -163,3 +163,307 @@ sincronizarCodigosGrupos()
     process.exit(1);
   });
 ```
+// Script para sincronizar códigos de grupos
+require('dotenv').config();
+const { createClient } = require('@supabase/supabase-js');
+
+// Obter URL e chave do Supabase do ambiente
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_KEY;
+
+// Verificar se as variáveis estão definidas
+if (!supabaseUrl || !supabaseKey) {
+  console.error('ERRO: Variáveis de ambiente SUPABASE_URL e SUPABASE_KEY precisam estar definidas');
+  process.exit(1);
+}
+
+// Criar cliente Supabase
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+/**
+ * Gera um código único para um grupo
+ * @returns {string} Código no formato XXXX-YYYY-ZZZZ
+ */
+function gerarCodigoGrupo() {
+  const caracteres = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let codigo = '';
+  
+  // Gerar primeira parte (4 caracteres)
+  for (let i = 0; i < 4; i++) {
+    codigo += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+  }
+  
+  // Adicionar hífen
+  codigo += '-';
+  
+  // Gerar segunda parte (4 caracteres)
+  for (let i = 0; i < 4; i++) {
+    codigo += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+  }
+  
+  // Adicionar hífen
+  codigo += '-';
+  
+  // Gerar terceira parte (4 caracteres)
+  for (let i = 0; i < 4; i++) {
+    codigo += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+  }
+  
+  return codigo;
+}
+
+/**
+ * Sincroniza códigos de grupos entre tabelas
+ */
+async function sincronizarCodigosGrupos() {
+  console.log('🔄 Iniciando sincronização de códigos de grupos...');
+  
+  try {
+    // Verificar tabelas
+    try {
+      const { error: checkGruposError } = await supabase
+        .from('grupos_estudo')
+        .select('id')
+        .limit(1);
+
+      if (checkGruposError && checkGruposError.code === '42P01') {
+        console.error('❌ Tabela grupos_estudo não existe!');
+        return {
+          success: false,
+          message: 'Tabela grupos_estudo não existe',
+          total: 0,
+          sucessos: 0,
+          erros: 1,
+          ignorados: 0
+        };
+      }
+
+      const { error: checkCodigosError } = await supabase
+        .from('codigos_grupos_estudo')
+        .select('codigo')
+        .limit(1);
+
+      if (checkCodigosError && checkCodigosError.code === '42P01') {
+        console.error('❌ Tabela codigos_grupos_estudo não existe!');
+        return {
+          success: false,
+          message: 'Tabela codigos_grupos_estudo não existe',
+          total: 0,
+          sucessos: 0,
+          erros: 1,
+          ignorados: 0
+        };
+      }
+    } catch (checkError) {
+      console.error('❌ Erro ao verificar tabelas:', checkError);
+      return {
+        success: false,
+        message: 'Erro ao verificar tabelas',
+        total: 0,
+        sucessos: 0,
+        erros: 1,
+        ignorados: 0
+      };
+    }
+
+    // Buscar grupos sem código
+    const { data: gruposSemCodigo, error: semCodigoError } = await supabase
+      .from('grupos_estudo')
+      .select('*')
+      .is('codigo', null);
+
+    if (semCodigoError) {
+      console.error('❌ Erro ao buscar grupos sem código:', semCodigoError);
+      return {
+        success: false,
+        message: 'Erro ao buscar grupos sem código',
+        total: 0,
+        sucessos: 0,
+        erros: 1,
+        ignorados: 0
+      };
+    }
+
+    console.log(`🔍 Encontrados ${gruposSemCodigo?.length || 0} grupos sem código`);
+
+    // Gerar códigos para grupos sem código
+    let sucessosGeracao = 0;
+    let errosGeracao = 0;
+
+    for (const grupo of gruposSemCodigo || []) {
+      try {
+        // Gerar código único
+        const novoCodigo = gerarCodigoGrupo();
+        
+        // Atualizar grupo com o novo código
+        const { error: updateError } = await supabase
+          .from('grupos_estudo')
+          .update({ codigo: novoCodigo })
+          .eq('id', grupo.id);
+
+        if (updateError) {
+          console.error(`❌ Erro ao atualizar código para grupo ${grupo.id}:`, updateError);
+          errosGeracao++;
+          continue;
+        }
+
+        console.log(`✅ Código ${novoCodigo} gerado para grupo ${grupo.id} (${grupo.nome})`);
+        sucessosGeracao++;
+      } catch (grupoError) {
+        console.error(`❌ Erro ao processar grupo ${grupo.id}:`, grupoError);
+        errosGeracao++;
+      }
+    }
+
+    // Buscar todos os grupos para sincronizar com tabela de códigos
+    const { data: todosGrupos, error: todosGruposError } = await supabase
+      .from('grupos_estudo')
+      .select('*')
+      .not('codigo', 'is', null);
+
+    if (todosGruposError) {
+      console.error('❌ Erro ao buscar todos os grupos:', todosGruposError);
+      return {
+        success: false,
+        message: 'Erro ao buscar todos os grupos',
+        total: gruposSemCodigo?.length || 0,
+        sucessos: sucessosGeracao,
+        erros: errosGeracao + 1,
+        ignorados: 0
+      };
+    }
+
+    console.log(`🔍 Encontrados ${todosGrupos?.length || 0} grupos com código para sincronizar`);
+
+    // Sincronizar códigos
+    let sucessosSincronizacao = 0;
+    let errosSincronizacao = 0;
+    let ignorados = 0;
+
+    for (const grupo of todosGrupos || []) {
+      try {
+        if (!grupo.codigo) {
+          console.log(`⚠️ Grupo ${grupo.id} ainda sem código. Ignorando.`);
+          ignorados++;
+          continue;
+        }
+
+        // Verificar se código já existe na tabela de códigos
+        const { data: codigoExistente, error: codigoExistenteError } = await supabase
+          .from('codigos_grupos_estudo')
+          .select('codigo')
+          .eq('codigo', grupo.codigo)
+          .maybeSingle();
+
+        if (codigoExistenteError) {
+          console.error(`❌ Erro ao verificar código ${grupo.codigo}:`, codigoExistenteError);
+          errosSincronizacao++;
+          continue;
+        }
+
+        if (codigoExistente) {
+          // Atualizar informações
+          const { error: updateError } = await supabase
+            .from('codigos_grupos_estudo')
+            .update({
+              nome: grupo.nome || 'Grupo sem nome',
+              descricao: grupo.descricao || '',
+              user_id: grupo.user_id,
+              privado: grupo.privado || false,
+              membros: grupo.membros || 1,
+              visibilidade: grupo.visibilidade || 'todos',
+              disciplina: grupo.disciplina || '',
+              cor: grupo.cor || '#FF6B00',
+              membros_ids: grupo.membros_ids || [],
+              ultima_atualizacao: new Date().toISOString()
+            })
+            .eq('codigo', grupo.codigo);
+
+          if (updateError) {
+            console.error(`❌ Erro ao atualizar código ${grupo.codigo}:`, updateError);
+            errosSincronizacao++;
+          } else {
+            console.log(`✅ Código ${grupo.codigo} atualizado`);
+            sucessosSincronizacao++;
+          }
+        } else {
+          // Inserir novo registro
+          const { error: insertError } = await supabase
+            .from('codigos_grupos_estudo')
+            .insert({
+              codigo: grupo.codigo,
+              grupo_id: grupo.id,
+              nome: grupo.nome || 'Grupo sem nome',
+              descricao: grupo.descricao || '',
+              user_id: grupo.user_id,
+              privado: grupo.privado || false,
+              membros: grupo.membros || 1,
+              visibilidade: grupo.visibilidade || 'todos',
+              disciplina: grupo.disciplina || '',
+              cor: grupo.cor || '#FF6B00',
+              membros_ids: grupo.membros_ids || [],
+              data_criacao: grupo.data_criacao || new Date().toISOString(),
+              ultima_atualizacao: new Date().toISOString()
+            });
+
+          if (insertError) {
+            console.error(`❌ Erro ao inserir código ${grupo.codigo}:`, insertError);
+            errosSincronizacao++;
+          } else {
+            console.log(`✅ Código ${grupo.codigo} inserido`);
+            sucessosSincronizacao++;
+          }
+        }
+      } catch (grupoError) {
+        console.error(`❌ Erro ao processar grupo ${grupo.id}:`, grupoError);
+        errosSincronizacao++;
+      }
+    }
+
+    // Resultado final
+    const totalSucessos = sucessosGeracao + sucessosSincronizacao;
+    const totalErros = errosGeracao + errosSincronizacao;
+    const totalProcessados = (gruposSemCodigo?.length || 0) + (todosGrupos?.length || 0);
+
+    console.log('\n📊 RESUMO DA SINCRONIZAÇÃO:');
+    console.log(`Total processado: ${totalProcessados}`);
+    console.log(`Sucessos: ${totalSucessos}`);
+    console.log(`Erros: ${totalErros}`);
+    console.log(`Ignorados: ${ignorados}`);
+
+    return {
+      success: totalErros === 0,
+      message: totalErros === 0 ? 'Sincronização concluída com sucesso' : 'Sincronização concluída com erros',
+      total: totalProcessados,
+      sucessos: totalSucessos,
+      erros: totalErros,
+      ignorados: ignorados
+    };
+  } catch (error) {
+    console.error('❌ Erro durante a sincronização:', error);
+    return {
+      success: false,
+      message: 'Erro durante a sincronização',
+      total: 0,
+      sucessos: 0,
+      erros: 1,
+      ignorados: 0
+    };
+  }
+}
+
+// Executar sincronização
+sincronizarCodigosGrupos()
+  .then(resultado => {
+    console.log('🏁 Processo finalizado!');
+    if (resultado.success) {
+      console.log('✅ Sincronização concluída com sucesso!');
+    } else {
+      console.error('⚠️ Sincronização concluída com problemas. Verifique os detalhes acima.');
+    }
+    process.exit(resultado.success ? 0 : 1);
+  })
+  .catch(error => {
+    console.error('💥 Erro fatal:', error);
+    process.exit(1);
+  });
