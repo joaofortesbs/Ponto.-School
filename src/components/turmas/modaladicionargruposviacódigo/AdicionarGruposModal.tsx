@@ -92,7 +92,7 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
 
       if (error) {
         console.error("Erro ao buscar grupos na base de dados de códigos:", error);
-        
+
         // Fallback: buscar direto na tabela de grupos
         await buscarGruposEstudo();
         return;
@@ -100,7 +100,7 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
 
       if (!data || data.length === 0) {
         console.log("Nenhum grupo encontrado na tabela de códigos, buscando na tabela de grupos...");
-        
+
         // Fallback: buscar direto na tabela de grupos
         await buscarGruposEstudo();
         return;
@@ -232,7 +232,7 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
       setSuccessMessage(null);
 
       const codigoNormalizado = codigo.trim().toUpperCase();
-      
+
       console.log(`Verificando código: ${codigoNormalizado}`);
 
       // Obter o ID do usuário atual do localStorage ou sessionStorage
@@ -272,7 +272,7 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
           if (!error && data) {
             console.log("Grupo encontrado diretamente na tabela grupos_estudo:", data);
             grupoEncontrado = data;
-            
+
             // Sincronizar com a tabela de códigos para futuras buscas
             try {
               const { error: syncError } = await supabase
@@ -292,7 +292,7 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
                   data_criacao: data.data_criacao,
                   ultima_atualizacao: new Date().toISOString()
                 });
-                
+
               if (syncError && syncError.code !== '23505') { // Ignorar erro de chave duplicada
                 console.error("Erro ao sincronizar com tabela de códigos:", syncError);
               }
