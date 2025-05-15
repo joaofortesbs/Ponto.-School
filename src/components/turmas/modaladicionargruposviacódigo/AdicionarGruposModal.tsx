@@ -156,9 +156,17 @@ const AdicionarGruposModal = ({ open, onOpenChange }) => {
       if (resultado.sucesso) {
         setIsSuccess(true);
         setCodigo("");
+        
+        // Recarregar a página para mostrar o novo grupo
         setTimeout(() => {
           setIsSuccess(false);
-        }, 3000);
+          // Fechar modal após sucesso
+          if (onOpenChange) {
+            onOpenChange(false);
+          }
+          // Recarregar a página para atualizar os grupos
+          window.location.reload();
+        }, 2000);
       } else {
         setError(resultado.mensagem || "Erro ao entrar no grupo.");
       }
@@ -236,7 +244,7 @@ const AdicionarGruposModal = ({ open, onOpenChange }) => {
               {isSuccess && (
                 <Alert className="py-2 bg-green-100 dark:bg-green-900/30">
                   <AlertDescription className="text-sm text-green-800 dark:text-green-300">
-                    Você entrou no grupo com sucesso!
+                    Você entrou no grupo com sucesso! Redirecionando...
                   </AlertDescription>
                 </Alert>
               )}

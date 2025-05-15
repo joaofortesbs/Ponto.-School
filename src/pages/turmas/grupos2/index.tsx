@@ -27,6 +27,7 @@ import {
   Zap,
   ArrowRight,
 } from "lucide-react";
+import AdicionarGruposModal from '@/components/turmas/modaladicionargruposviacódigo/AdicionarGruposModal';
 
 // Sample data for study groups
 const studyGroups = [
@@ -318,6 +319,7 @@ export default function GruposEstudo2() {
   const [activeTab, setActiveTab] = useState("meus-grupos");
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
   const [filterOpen, setFilterOpen] = useState(false);
+    const [showAdicionarGruposModal, setShowAdicionarGruposModal] = useState(false);
 
   // Filter groups based on search query
   const filteredGroups = studyGroups.filter(
@@ -377,7 +379,8 @@ export default function GruposEstudo2() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <Button className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white rounded-lg shadow-md transition-all duration-300 hover:shadow-lg transform hover:scale-[1.02]">
+          <Button className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white rounded-lg shadow-md transition-all duration-300 hover:shadow-lg transform hover:scale-[1.02]"
+          onClick={() => setShowAdicionarGruposModal(true)}>
             <Plus className="h-4 w-4 mr-1" /> Criar Novo Grupo
           </Button>
         </div>
@@ -1166,6 +1169,11 @@ export default function GruposEstudo2() {
           </div>
         </div>
       )}
+        {/* Modal para adicionar grupos via código */}
+        <AdicionarGruposModal
+            open={showAdicionarGruposModal}
+            onOpenChange={setShowAdicionarGruposModal}
+        />
     </div>
   );
 }
