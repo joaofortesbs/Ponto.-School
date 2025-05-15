@@ -13,18 +13,22 @@ import { supabase } from '@/lib/supabase';
 import { verificarRelacaoUsuarioComGrupo, sincronizarCodigosGrupos } from '@/lib/grupoCodigoUtils';
 
 interface AdicionarGruposModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  userId: string;
-  onGrupoAdicionado?: () => void;
+  isOpen: boolean;
+  onClose: () => void;
+  onGrupoAdicionado?: (grupo?: any) => void;
+  userId?: string;
 }
 
 const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({ 
-  open, 
-  onOpenChange, 
+  isOpen, 
+  onClose, 
   userId,
   onGrupoAdicionado 
 }) => {
+  const open = isOpen;
+  const onOpenChange = (open: boolean) => {
+    if (!open) onClose();
+  };
   const [activeTab, setActiveTab] = useState('pesquisar');
   const [searchTerm, setSearchTerm] = useState('');
   const [codigoGrupo, setCodigoGrupo] = useState('');
