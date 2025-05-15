@@ -54,7 +54,7 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
   // Função para criar tabelas necessárias
   const criarTabelasNecessarias = async () => {
     console.log("Criando tabelas necessárias...");
-    
+
     try {
       // Criar tabela grupos_estudo
       await supabase.query(`
@@ -76,7 +76,7 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
           data_criacao TIMESTAMP WITH TIME ZONE DEFAULT now()
         );
       `);
-      
+
       // Criar tabela codigos_grupos_estudo
       await supabase.query(`
         CREATE TABLE IF NOT EXISTS public.codigos_grupos_estudo (
@@ -95,7 +95,7 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
           ultima_atualizacao TIMESTAMP WITH TIME ZONE DEFAULT now()
         );
       `);
-      
+
       return true;
     } catch (error) {
       console.error("Erro ao criar tabelas:", error);
@@ -118,94 +118,100 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
   const buscarGrupos = async () => {
     if (!searchTerm.trim()) return;
 
+    // Verificar se as tabelas necessárias existem
     try {
-      setIsSearching(true);
-      setErrorMessage(null);
+      // Verificar primeiro se o script de criação de tabelas precisa ser executado
+      const { data: tableCheck, error: tableCheckError } = await supabase.rpc(
+        'check_table_exists',
+        { table_name: 'codigos_grupos_estudo' }
+      ).maybeSingle();
 
-      // Verificar se a tabela codigos_grupos_estudo existe e contém dados
-      try {
-        const { count, error: countError } = await supabase
-          .from('codigos_grupos_estudo')
-          .select('*', { count: 'exact', head: true });
+      // Se a função RPC não existe ou deu erro, verificamos usando o método tradicional
+      if (tableCheckError || !tableCheck) {
+        console.log("Verificando tabelas usando método alternativo...");
 
-        if (countError) {
-          console.error("Erro ao verificar tabela de códigos:", countError);
-          
-          // Se o erro for de tabela não existente, tentar criar as tabelas
-          if (countError.code === '42P01') {
-            console.log("Tabela de códigos não existe. Tentando criar...");
-            const criada = await criarTabelasNecessarias();
-            if (!criada) {
-              setErrorMessage("A tabela de códigos não existe. Por favor, execute o workflow 'Corrigir Tabelas de Grupos' ou clique em Sincronizar novamente.");
-              setIsSearching(false);
-              return;
+        try {
+          const { count, error: countError } = await supabase
+            .from('codigos_grupos_estudo')
+            .select('*', { count: 'exact', head: true });
+
+          if (countError) {
+            console.error("Erro ao verificar tabela de códigos:", countError);
+
+            // Se o erro for de tabela não existente, tentar criar as tabelas
+            if (countError.code === '42P01') {
+              console.log("Tabela de códigos não existe. Tentando criar...");
+              const criada = await criarTabelasNecessarias();
+              if (!criada) {
+                setErrorMessage("A tabela de códigos não existe. Por favor, execute o workflow 'Corrigir Tabelas de Grupos' ou clique em Sincronizar novamente.");
+                setIsSearching(false);
+                return;
+              }
             }
           }
-          
-          // Fallback: buscar direto em grupos_estudo
+        } catch (e) {
+          console.error("Exceção ao verificar tabela de códigos:", e);
+          console.log("Tentando criar tabelas necessárias...");
+          await criarTabelasNecessarias();
+        }
+      }
+
+      // Tenta o método principal de busca
+      try {
+        const { data, error } = await supabase
+          .from('codigos_grupos_estudo')
+          .select('*')
+          .or(`nome.ilike.%${searchTerm}%,descricao.ilike.%${searchTerm}%,disciplina.ilike.%${searchTerm}%,codigo.ilike.%${searchTerm}%`)
+          .order('ultima_atualizacao', { ascending: false })
+          .limit(20);
+
+        if (error) {
+          console.error("Erro ao buscar grupos na base de dados de códigos:", error);
+          // Fallback: buscar direto na tabela de grupos
           await buscarGruposEstudo();
           return;
         }
-      } catch (e) {
-        console.error("Erro ao verificar tabela de códigos:", e);
-        // Fallback: buscar direto em grupos_estudo
-        await buscarGruposEstudo();
-        return;
-      }
 
-      console.log(`A tabela de códigos contém ${count} registros`);
+        if (!data || data.length === 0) {
+          console.log("Nenhum grupo encontrado na tabela de códigos, buscando na tabela de grupos...");
+          // Fallback: buscar direto na tabela de grupos
+          await buscarGruposEstudo();
+          return;
+        }
 
-      // Realizar busca aprimorada no banco de dados de códigos de grupos
-      const { data, error } = await supabase
-        .from('codigos_grupos_estudo')
-        .select('*')
-        .or(`nome.ilike.%${searchTerm}%,descricao.ilike.%${searchTerm}%,disciplina.ilike.%${searchTerm}%,codigo.ilike.%${searchTerm}%`)
-        .order('ultima_atualizacao', { ascending: false })
-        .limit(20);
+        // Transformar os resultados da tabela codigos_grupos_estudo para o formato GrupoEstudo
+        const gruposEncontrados: GrupoEstudo[] = data.map(grupo => ({
+          id: grupo.grupo_id,
+          nome: grupo.nome,
+          descricao: grupo.descricao || `Grupo de estudos sobre ${grupo.nome}`,
+          membros: grupo.membros || 1,
+          disciplina: grupo.disciplina || "Geral",
+          cor: grupo.cor || "#FF6B00",
+          icon: "📚", // Usamos um ícone padrão, já que não temos no banco
+          dataCriacao: grupo.data_criacao || grupo.ultima_atualizacao || new Date().toISOString(),
+          tendencia: Math.random() > 0.7 ? "alta" : undefined, // Aleatório por enquanto
+          novoConteudo: Math.random() > 0.6, // Aleatório por enquanto
+          visibilidade: grupo.privado ? "privado" : "público",
+          topico_nome: grupo.topico_nome,
+          topico_icon: grupo.topico_icon,
+          codigo: grupo.codigo // Importante: incluir o código do grupo
+        }));
 
-      if (error) {
-        console.error("Erro ao buscar grupos na base de dados de códigos:", error);
+        setGruposEncontrados(gruposEncontrados);
+        setIsSearching(false);
 
+        console.log(`Encontrados ${gruposEncontrados.length} grupos relacionados a "${searchTerm}" na tabela de códigos`);
+
+      } catch (error) {
+        console.error("Erro ao buscar na tabela de códigos:", error);
         // Fallback: buscar direto na tabela de grupos
         await buscarGruposEstudo();
-        return;
       }
-
-      if (!data || data.length === 0) {
-        console.log("Nenhum grupo encontrado na tabela de códigos, buscando na tabela de grupos...");
-
-        // Fallback: buscar direto na tabela de grupos
-        await buscarGruposEstudo();
-        return;
-      }
-
-      // Transformar os resultados da tabela codigos_grupos_estudo para o formato GrupoEstudo
-      const gruposEncontrados: GrupoEstudo[] = data.map(grupo => ({
-        id: grupo.grupo_id,
-        nome: grupo.nome,
-        descricao: grupo.descricao || `Grupo de estudos sobre ${grupo.nome}`,
-        membros: grupo.membros || 1,
-        disciplina: grupo.disciplina || "Geral",
-        cor: grupo.cor || "#FF6B00",
-        icon: "📚", // Usamos um ícone padrão, já que não temos no banco
-        dataCriacao: grupo.data_criacao || grupo.ultima_atualizacao || new Date().toISOString(),
-        tendencia: Math.random() > 0.7 ? "alta" : undefined, // Aleatório por enquanto
-        novoConteudo: Math.random() > 0.6, // Aleatório por enquanto
-        visibilidade: grupo.privado ? "privado" : "público",
-        topico_nome: grupo.topico_nome,
-        topico_icon: grupo.topico_icon,
-        codigo: grupo.codigo // Importante: incluir o código do grupo
-      }));
-
-      setGruposEncontrados(gruposEncontrados);
-      setIsSearching(false);
-
-      console.log(`Encontrados ${gruposEncontrados.length} grupos relacionados a "${searchTerm}" na tabela de códigos`);
 
     } catch (error) {
-      console.error("Erro ao buscar grupos:", error);
-      setErrorMessage("Ocorreu um erro ao buscar grupos. Tente novamente.");
-      setIsSearching(false);
+      console.error("Erro durante verificação das tabelas:", error);
+      // Fallback: buscar direto em grupos_estudo
+      await buscarGruposEstudo();
     }
   };
 
@@ -217,7 +223,7 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
         const { count, error: checkError } = await supabase
           .from('grupos_estudo')
           .select('*', { count: 'exact', head: true });
-          
+
         if (checkError) {
           if (checkError.code === '42P01') {
             // Tabela não existe, tentar criar
@@ -240,7 +246,7 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
       } catch (checkError) {
         console.error("Erro ao verificar tabela de grupos:", checkError);
       }
-      
+
       // Buscar na tabela de grupos_estudo diretamente
       const { data: gruposData, error: gruposError } = await supabase
         .from('grupos_estudo')
@@ -251,13 +257,13 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
 
       if (gruposError) {
         console.error("Erro ao buscar na tabela de grupos:", gruposError);
-        
+
         if (gruposError.code === '42P01') {
           setErrorMessage("A tabela de grupos não existe. Clique em Sincronizar para configurar o banco de dados.");
         } else {
           setErrorMessage("Ocorreu um erro ao buscar grupos. Tente novamente.");
         }
-        
+
         setIsSearching(false);
         setGruposEncontrados([]);
         return;
@@ -520,80 +526,117 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
       setSincronizando(true);
       setErrorMessage(null);
       setSuccessMessage(null);
-      
-      // Execute o script fix-missing-tables.js usando o Node.js
-      try {
-        // Primeiro tentar usar a API
-        const response = await fetch('/api/fix-missing-tables', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-        });
-        
-        if (response.ok) {
-          console.log('✅ Verificação das tabelas concluída com sucesso via API');
-          setSuccessMessage("Estrutura do banco de dados verificada com sucesso!");
-        } else {
-          console.warn('⚠️ API para verificar tabelas não respondeu. Criando tabelas diretamente...');
-          
-          // Criar tabelas diretamente
-          await criarTabelasDiretamente();
-          setSuccessMessage("Tabelas criadas diretamente com sucesso!");
+
+      // 1. DIAGNÓSTICO E PREPARAÇÃO DO BANCO DE DADOS
+      console.log("🔍 Verificando estrutura do banco de dados...");
+
+      // Tenta criar as tabelas diretamente, sem depender da API
+      const tabelasCriadas = await criarTabelasDiretamente();
+
+      if (tabelasCriadas) {
+        console.log("✅ Tabelas criadas ou verificadas com sucesso");
+        setSuccessMessage("Estrutura do banco de dados verificada com sucesso!");
+      } else {
+        // Mostra uma mensagem de progresso
+        setSuccessMessage("Tentando reparar estrutura do banco de dados...");
+
+        // FALLBACK: Tenta executar o script diretamente usando a API
+        try {
+          const response = await fetch('/api/fix-missing-tables', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+          });
+
+          if (response.ok) {
+            console.log('✅ Verificação das tabelas concluída com sucesso via API');
+            setSuccessMessage("Estrutura do banco de dados verificada com sucesso via API!");
+          } else {
+            console.warn('⚠️ API para verificar tabelas não respondeu corretamente');
+            setSuccessMessage("Estrutura criada com limitações. Algumas funcionalidades podem não estar disponíveis.");
+          }
+        } catch (apiError) {
+          console.warn('⚠️ Erro ao acessar API de verificação de tabelas:', apiError);
+          setSuccessMessage("Tabelas criadas com limitações. Algumas funcionalidades podem precisar do workflow 'Corrigir Tabelas de Grupos'.");
         }
-      } catch (apiError) {
-        console.warn('⚠️ Erro ao acessar API de verificação de tabelas:', apiError);
-        console.log('Tentando criar tabelas diretamente...');
-        
-        // Criar tabelas como fallback
-        await criarTabelasDiretamente();
       }
-      
-      // Verificar se as tabelas existem antes de prosseguir
+
+      // Espera um pouco para a mensagem ser visível
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // 2. VERIFICAÇÃO DAS TABELAS
       try {
-        const { error: gruposError } = await supabase
+        // Tenta uma consulta simples em cada tabela para verificar se estão acessíveis
+        const { data: gruposCheck, error: gruposCheckError } = await supabase
           .from('grupos_estudo')
-          .select('id')
+          .select('id, codigo')
           .limit(1);
-          
-        if (gruposError) {
-          throw new Error(`Falha ao acessar tabela grupos_estudo: ${gruposError.message}`);
+
+        if (gruposCheckError) {
+          console.error('❌ Não foi possível acessar a tabela grupos_estudo:', gruposCheckError);
+          setErrorMessage(`Erro ao acessar grupos_estudo: ${gruposCheckError.message}. Por favor, execute o workflow 'Corrigir Tabelas de Grupos'.`);
+          setSincronizando(false);
+          return;
         }
-        
-        const { error: codigosError } = await supabase
+
+        const { data: codigosCheck, error: codigosCheckError } = await supabase
           .from('codigos_grupos_estudo')
           .select('codigo')
           .limit(1);
-          
-        if (codigosError) {
-          throw new Error(`Falha ao acessar tabela codigos_grupos_estudo: ${codigosError.message}`);
+
+        if (codigosCheckError) {
+          console.error('❌ Não foi possível acessar a tabela codigos_grupos_estudo:', codigosCheckError);
+          setErrorMessage(`Erro ao acessar codigos_grupos_estudo: ${codigosCheckError.message}. Por favor, execute o workflow 'Corrigir Tabelas de Grupos'.`);
+          setSincronizando(false);
+          return;
         }
+
+        console.log("✅ Ambas as tabelas estão acessíveis");
+        setSuccessMessage("Tabelas verificadas com sucesso! Iniciando sincronização...");
+
       } catch (checkError) {
-        console.error('❌ Erro ao verificar tabelas:', checkError);
-        setErrorMessage(`Não foi possível acessar as tabelas necessárias. Por favor, execute o workflow 'Corrigir Tabelas de Grupos' e tente novamente.`);
+        console.error('❌ Erro ao verificar acesso às tabelas:', checkError);
+        setErrorMessage(`Erro ao verificar tabelas: ${checkError.message}. Por favor, execute o workflow 'Corrigir Tabelas de Grupos'.`);
         setSincronizando(false);
         return;
       }
 
-      // Buscar todos os grupos de estudo
-      const { data: grupos, error } = await supabase
-        .from('grupos_estudo')
-        .select('*');
+      // 3. SINCRONIZAÇÃO DOS DADOS
+      // 3.1 Buscar grupos no banco de dados
+      console.log("🔄 Iniciando sincronização de grupos...");
+      setSuccessMessage("Buscando grupos para sincronizar...");
 
-      if (error) {
-        console.error('❌ Erro ao buscar grupos:', error);
-        setErrorMessage(`Erro ao buscar grupos: ${error.message}`);
+      let grupos = [];
+      try {
+        const { data, error } = await supabase
+          .from('grupos_estudo')
+          .select('*');
+
+        if (error) {
+          console.error('❌ Erro ao buscar grupos:', error);
+          setErrorMessage(`Erro ao buscar grupos: ${error.message}`);
+          setSincronizando(false);
+          return;
+        }
+
+        grupos = data || [];
+        console.log(`📊 Encontrados ${grupos.length} grupos no banco de dados`);
+
+      } catch (fetchError) {
+        console.error('❌ Erro ao buscar grupos:', fetchError);
+        setErrorMessage(`Erro ao buscar grupos: ${fetchError.message}`);
         setSincronizando(false);
         return;
       }
-
-      console.log(`📊 Encontrados ${grupos?.length || 0} grupos para sincronizar`);
 
       // Contadores para o relatório
       let sucessos = 0;
       let erros = 0;
       let ignorados = 0;
 
-      // Processar cada grupo
-      for (const grupo of grupos || []) {
+      // 3.2 Processar cada grupo do banco
+      setSuccessMessage(`Sincronizando ${grupos.length} grupos do banco de dados...`);
+
+      for (const grupo of grupos) {
         try {
           // Verificar se o grupo já tem código
           if (!grupo.codigo) {
@@ -634,13 +677,15 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
         }
       }
 
-      // Também verificar se há grupos no localStorage para sincronizar
+      // 3.3 Buscar e processar grupos do localStorage
+      let gruposLocais = [];
       try {
         const gruposLocalStorage = localStorage.getItem('epictus_grupos_estudo');
         if (gruposLocalStorage) {
-          const gruposLocais = JSON.parse(gruposLocalStorage);
+          gruposLocais = JSON.parse(gruposLocalStorage);
           if (Array.isArray(gruposLocais) && gruposLocais.length > 0) {
             console.log(`📊 Encontrados ${gruposLocais.length} grupos no localStorage`);
+            setSuccessMessage(`Sincronizando ${gruposLocais.length} grupos do localStorage...`);
 
             let localSucessos = 0;
             let localErros = 0;
@@ -653,68 +698,80 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
               }
 
               try {
-                // Primeiro verificar se o grupo já existe na tabela grupos_estudo
+                // Verificar se o grupo já existe no banco
                 const { data: existingGrupo, error: checkError } = await supabase
                   .from('grupos_estudo')
                   .select('id')
                   .eq('id', grupo.id)
                   .maybeSingle();
 
-                if (checkError) {
-                  console.error(`❌ Erro ao verificar grupo local ${grupo.id}:`, checkError);
-                  localErros++;
-                  continue;
-                }
+              if (checkError && checkError.code !== 'PGRST116') {
+                // Ignorar erro de "nenhum registro encontrado"
+                console.error(`❌ Erro ao verificar grupo local ${grupo.id}:`, checkError);
+                localErros++;
+                continue;
+              }
 
-                // Se o grupo não existir no banco, inseri-lo
+                // Se o grupo não existir no banco, inserir
                 if (!existingGrupo) {
-                  const { error: insertGrupoError } = await supabase
-                    .from('grupos_estudo')
-                    .insert({
-                      id: grupo.id,
-                      user_id: grupo.user_id || grupo.criador || 'desconhecido',
-                      nome: grupo.nome,
-                      descricao: grupo.descricao || '',
-                      cor: grupo.cor || '#FF6B00',
-                      membros: grupo.membros || 1,
-                      membros_ids: grupo.membros_ids || [],
-                      topico: grupo.topico,
-                      topico_nome: grupo.topico_nome,
-                      topico_icon: grupo.topico_icon,
-                      privado: grupo.privado || false,
-                      visibilidade: grupo.visibilidade || 'todos',
-                      codigo: grupo.codigo,
-                      disciplina: grupo.disciplina || 'Geral',
-                      data_criacao: grupo.dataCriacao || grupo.data_criacao || new Date().toISOString()
-                    });
+                  try {
+                    const { error: insertGrupoError } = await supabase
+                      .from('grupos_estudo')
+                      .insert({
+                        id: grupo.id,
+                        user_id: grupo.user_id || grupo.criador || 'desconhecido',
+                        nome: grupo.nome || 'Grupo sem nome',
+                        descricao: grupo.descricao || '',
+                        cor: grupo.cor || '#FF6B00',
+                        membros: grupo.membros || 1,
+                        membros_ids: grupo.membros_ids || [],
+                        topico: grupo.topico,
+                        topico_nome: grupo.topico_nome,
+                        topico_icon: grupo.topico_icon,
+                        privado: grupo.privado || false,
+                        visibilidade: grupo.visibilidade || 'todos',
+                        codigo: grupo.codigo,
+                        disciplina: grupo.disciplina || 'Geral',
+                        data_criacao: grupo.dataCriacao || grupo.data_criacao || new Date().toISOString()
+                      });
 
-                  if (insertGrupoError) {
-                    console.error(`❌ Erro ao inserir grupo local ${grupo.id}:`, insertGrupoError);
+                    if (insertGrupoError) {
+                      console.error(`❌ Erro ao inserir grupo local ${grupo.id}:`, insertGrupoError);
+                      if (insertGrupoError.code === '23505') {
+                        console.log(`ℹ️ Grupo ${grupo.id} já existe no banco (chave duplicada)`);
+                      } else {
+                        localErros++;
+                        continue;
+                      }
+                    } else {
+                      console.log(`✅ Grupo local ${grupo.id} inserido com sucesso no banco`);
+                    }
+                  } catch (insertError) {
+                    console.error(`❌ Erro ao inserir grupo ${grupo.id}:`, insertError);
                     localErros++;
                     continue;
                   }
-
-                  console.log(`✅ Grupo local ${grupo.id} inserido com sucesso`);
                 }
 
-                // Inserir na tabela de códigos
-                const { error: insertCodigoError } = await supabase
-                  .from('codigos_grupos_estudo')
-                  .upsert({
-                    codigo: grupo.codigo,
-                    grupo_id: grupo.id,
-                    nome: grupo.nome || 'Grupo sem nome',
-                    descricao: grupo.descricao || '',
-                    user_id: grupo.user_id || grupo.criador,
-                    privado: grupo.privado || false,
-                    membros: grupo.membros || 1,
-                    visibilidade: grupo.visibilidade || 'todos',
-                    disciplina: grupo.disciplina || '',
-                    cor: grupo.cor || '#FF6B00',
-                    membros_ids: grupo.membros_ids || [],
-                    data_criacao: grupo.dataCriacao || grupo.data_criacao || new Date().toISOString(),
-                    ultima_atualizacao: new Date().toISOString()
-                  }, { onConflict: 'codigo' });
+                // Inserir/atualizar na tabela de códigos
+                try {
+                  const { error: insertCodigoError } = await supabase
+                    .from('codigos_grupos_estudo')
+                    .upsert({
+                      codigo: grupo.codigo,
+                      grupo_id: grupo.id,
+                      nome: grupo.nome || 'Grupo sem nome',
+                      descricao: grupo.descricao || '',
+                      user_id: grupo.user_id || grupo.criador || 'desconhecido',
+                      privado: grupo.privado || false,
+                      membros: grupo.membros || 1,
+                      visibilidade: grupo.visibilidade || 'todos',
+                      disciplina: grupo.disciplina || '',
+                      cor: grupo.cor || '#FF6B00',
+                      membros_ids: grupo.membros_ids || [],
+                      data_criacao: grupo.dataCriacao || grupo.data_criacao || new Date().toISOString(),
+                      ultima_atualizacao: new Date().toISOString()
+                    }, { onConflict: 'codigo' });
 
                 if (insertCodigoError) {
                   console.error(`❌ Erro ao sincronizar código local ${grupo.codigo}:`, insertCodigoError);
@@ -723,29 +780,36 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
                   console.log(`✅ Código local ${grupo.codigo} sincronizado com sucesso`);
                   localSucessos++;
                 }
-              } catch (localError) {
-                console.error(`❌ Erro ao processar grupo local ${grupo.id}:`, localError);
+              } catch (codigoError) {
+                console.error(`❌ Erro ao sincronizar código ${grupo.codigo}:`, codigoError);
                 localErros++;
               }
+            } catch (localError) {
+              console.error(`❌ Erro ao processar grupo local ${grupo.id}:`, localError);
+              localErros++;
             }
-
-            // Adicionar aos contadores gerais
-            sucessos += localSucessos;
-            erros += localErros;
-            ignorados += localIgnorados;
           }
+
+          // Adicionar aos contadores gerais
+          sucessos += localSucessos;
+          erros += localErros;
+          ignorados += localIgnorados;
         }
-      } catch (localStorageError) {
-        console.error("❌ Erro ao processar grupos do localStorage:", localStorageError);
       }
+    } catch (localStorageError) {
+      console.error("❌ Erro ao processar grupos do localStorage:", localStorageError);
+    }
 
-      // Exibir notificação de sucesso com resumo
-      setSuccessMessage(`✅ Sincronização concluída. Total: ${sucessos + erros + ignorados} | Sucesso: ${sucessos} | Ignorados: ${ignorados} | Erros: ${erros}`);
+    // 4. EXIBIR RESULTADO
+    // Exibir notificação de sucesso com resumo
+    const totalGrupos = sucessos + erros + ignorados;
+    setSuccessMessage(`✅ Sincronização concluída. Total: ${totalGrupos} | Sucesso: ${sucessos} | Ignorados: ${ignorados} | Erros: ${erros}`);
 
-      // Recarregar grupos caso estejamos na aba de busca
-      if (activeTab === 'pesquisar') {
-        await buscarGrupos();
-      }
+    // 5. RECARREGAR DADOS DA INTERFACE
+    // Recarregar grupos caso estejamos na aba de busca
+    if (activeTab === 'pesquisar' && searchTerm) {
+      await buscarGrupos();
+    }
     } catch (error: any) {
       console.error('❌ Erro na sincronização:', error);
       setErrorMessage(`Erro na sincronização: ${error.message}`);
@@ -753,23 +817,48 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
       setSincronizando(false);
     }
   };
-  
+
   // Função para criar tabelas diretamente sem depender da API
   const criarTabelasDiretamente = async () => {
     console.log("🔧 Criando tabelas necessárias diretamente...");
-    
+
     try {
-      // Verificar e criar extensão uuid se possível
+      // Criar função auxiliar para verificar se tabela existe
+      try {
+        await supabase.query(`
+          CREATE OR REPLACE FUNCTION check_table_exists(table_name text) 
+          RETURNS boolean AS $$
+          DECLARE
+              table_exists boolean;
+          BEGIN
+              SELECT EXISTS (
+                  SELECT FROM information_schema.tables 
+                  WHERE  table_schema = 'public'
+                  AND    table_name = table_name
+              ) INTO table_exists;
+
+              RETURN table_exists;
+          END;
+          $$ LANGUAGE plpgsql;
+        `);
+        console.log('✅ Função check_table_exists criada com sucesso');
+      } catch (funcError) {
+        console.log('ℹ️ Não foi possível criar função auxiliar:', funcError);
+      }
+
+      // Verificar e criar extensão uuid se possível (necessário para gerar IDs)
       try {
         await supabase.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`);
         console.log('✅ Extensão uuid-ossp verificada/criada');
       } catch (extError) {
         console.log('ℹ️ Não foi possível verificar/criar extensão uuid-ossp:', extError);
       }
-      
-      // Criar tabela grupos_estudo
+
+      // Criar tabela grupos_estudo com tratamento de erro aprimorado
       try {
-        const { error: createGruposError } = await supabase.query(`
+        // Primeiro dividir em consultas menores para melhor diagnóstico
+        // 1. Criar tabela principal
+        const { error: createTableError } = await supabase.query(`
           CREATE TABLE IF NOT EXISTS public.grupos_estudo (
             id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
             user_id UUID NOT NULL,
@@ -787,41 +876,57 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
             disciplina TEXT DEFAULT 'Geral',
             data_criacao TIMESTAMP WITH TIME ZONE DEFAULT now()
           );
-          
-          CREATE INDEX IF NOT EXISTS grupos_estudo_user_id_idx ON public.grupos_estudo(user_id);
-          CREATE INDEX IF NOT EXISTS grupos_estudo_codigo_idx ON public.grupos_estudo(codigo);
-          
-          ALTER TABLE public.grupos_estudo ENABLE ROW LEVEL SECURITY;
-          
-          DROP POLICY IF EXISTS "Usuários podem visualizar grupos" ON public.grupos_estudo;
-          CREATE POLICY "Usuários podem visualizar grupos"
-            ON public.grupos_estudo FOR SELECT
-            USING (true);
-            
-          DROP POLICY IF EXISTS "Usuários podem inserir grupos" ON public.grupos_estudo;
-          CREATE POLICY "Usuários podem inserir grupos"
-            ON public.grupos_estudo FOR INSERT
-            WITH CHECK (true);
-            
-          DROP POLICY IF EXISTS "Usuários podem atualizar grupos" ON public.grupos_estudo;
-          CREATE POLICY "Usuários podem atualizar grupos"
-            ON public.grupos_estudo FOR UPDATE
-            USING (true);
         `);
 
-        if (createGruposError) {
-          console.error("❌ Erro ao criar tabela grupos_estudo:", createGruposError);
-          throw createGruposError;
+        if (createTableError) {
+          console.error("❌ Erro ao criar tabela grupos_estudo:", createTableError);
+        } else {
+          console.log('✅ Tabela grupos_estudo criada com sucesso!');
         }
-        
-        console.log('✅ Tabela grupos_estudo criada com sucesso!');
+
+        // 2. Criar índices
+        try {
+          await supabase.query(`
+            CREATE INDEX IF NOT EXISTS grupos_estudo_user_id_idx ON public.grupos_estudo(user_id);
+            CREATE INDEX IF NOT EXISTS grupos_estudo_codigo_idx ON public.grupos_estudo(codigo);
+          `);
+          console.log('✅ Índices criados para grupos_estudo');
+        } catch (indexError) {
+          console.warn('⚠️ Erro ao criar índices para grupos_estudo:', indexError);
+        }
+
+        // 3. Configurar políticas de segurança
+        try {
+          await supabase.query(`
+            ALTER TABLE public.grupos_estudo ENABLE ROW LEVEL SECURITY;
+
+            DROP POLICY IF EXISTS "Usuários podem visualizar grupos" ON public.grupos_estudo;
+            CREATE POLICY "Usuários podem visualizar grupos"
+              ON public.grupos_estudo FOR SELECT
+              USING (true);
+
+            DROP POLICY IF EXISTS "Usuários podem inserir grupos" ON public.grupos_estudo;
+            CREATE POLICY "Usuários podem inserir grupos"
+              ON public.grupos_estudo FOR INSERT
+              WITH CHECK (true);
+
+            DROP POLICY IF EXISTS "Usuários podem atualizar grupos" ON public.grupos_estudo;
+            CREATE POLICY "Usuários podem atualizar grupos"
+              ON public.grupos_estudo FOR UPDATE
+              USING (true);
+          `);
+          console.log('✅ Políticas de segurança configuradas para grupos_estudo');
+        } catch (policyError) {
+          console.warn('⚠️ Erro ao configurar políticas para grupos_estudo:', policyError);
+        }
+
       } catch (createGruposError) {
         console.error("❌ Erro ao criar tabela grupos_estudo:", createGruposError);
-        throw new Error(`Falha ao criar tabela grupos_estudo: ${createGruposError.message}`);
       }
-      
-      // Criar tabela codigos_grupos_estudo
+
+      // Criar tabela codigos_grupos_estudo com tratamento de erro aprimorado
       try {
+        // 1. Criar tabela principal
         const { error: createCodigosError } = await supabase.query(`
           CREATE TABLE IF NOT EXISTS public.codigos_grupos_estudo (
             codigo VARCHAR(15) PRIMARY KEY,
@@ -838,40 +943,79 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
             membros_ids JSONB DEFAULT '[]'::jsonb,
             ultima_atualizacao TIMESTAMP WITH TIME ZONE DEFAULT now()
           );
-          
-          CREATE INDEX IF NOT EXISTS idx_codigos_grupos_estudo_grupo_id ON public.codigos_grupos_estudo(grupo_id);
-          CREATE INDEX IF NOT EXISTS idx_codigos_grupos_estudo_user_id ON public.codigos_grupos_estudo(user_id);
-          
-          ALTER TABLE public.codigos_grupos_estudo ENABLE ROW LEVEL SECURITY;
-          
-          DROP POLICY IF EXISTS "Todos podem visualizar códigos" ON public.codigos_grupos_estudo;
-          CREATE POLICY "Todos podem visualizar códigos"
-            ON public.codigos_grupos_estudo FOR SELECT
-            USING (true);
-            
-          DROP POLICY IF EXISTS "Todos podem inserir códigos" ON public.codigos_grupos_estudo;
-          CREATE POLICY "Todos podem inserir códigos"
-            ON public.codigos_grupos_estudo FOR INSERT
-            WITH CHECK (true);
-            
-          DROP POLICY IF EXISTS "Todos podem atualizar códigos" ON public.codigos_grupos_estudo;
-          CREATE POLICY "Todos podem atualizar códigos"
-            ON public.codigos_grupos_estudo FOR UPDATE
-            USING (true);
         `);
 
         if (createCodigosError) {
           console.error("❌ Erro ao criar tabela codigos_grupos_estudo:", createCodigosError);
-          throw createCodigosError;
+        } else {
+          console.log('✅ Tabela codigos_grupos_estudo criada com sucesso!');
         }
-        
-        console.log('✅ Tabela codigos_grupos_estudo criada com sucesso!');
+
+        // 2. Criar índices
+        try {
+          await supabase.query(`
+            CREATE INDEX IF NOT EXISTS idx_codigos_grupos_estudo_grupo_id ON public.codigos_grupos_estudo(grupo_id);
+            CREATE INDEX IF NOT EXISTS idx_codigos_grupos_estudo_user_id ON public.codigos_grupos_estudo(user_id);
+          `);
+          console.log('✅ Índices criados para codigos_grupos_estudo');
+        } catch (indexError) {
+          console.warn('⚠️ Erro ao criar índices para codigos_grupos_estudo:', indexError);
+        }
+
+        // 3. Configurar políticas de segurança
+        try {
+          await supabase.query(`
+            ALTER TABLE public.codigos_grupos_estudo ENABLE ROW LEVEL SECURITY;
+
+            DROP POLICY IF EXISTS "Todos podem visualizar códigos" ON public.codigos_grupos_estudo;
+            CREATE POLICY "Todos podem visualizar códigos"
+              ON public.codigos_grupos_estudo FOR SELECT
+              USING (true);
+
+            DROP POLICY IF EXISTS "Todos podem inserir códigos" ON public.codigos_grupos_estudo;
+            CREATE POLICY "Todos podem inserir códigos"
+              ON public.codigos_grupos_estudo FOR INSERT
+              WITH CHECK (true);
+
+            DROP POLICY IF EXISTS "Todos podem atualizar códigos" ON public.codigos_grupos_estudo;
+            CREATE POLICY "Todos podem atualizar códigos"
+              ON public.codigos_grupos_estudo FOR UPDATE
+              USING (true);
+          `);
+          console.log('✅ Políticas de segurança configuradas para codigos_grupos_estudo');
+        } catch (policyError) {
+          console.warn('⚠️ Erro ao configurar políticas para codigos_grupos_estudo:', policyError);
+        }
+
       } catch (createCodigosError) {
         console.error("❌ Erro ao criar tabela codigos_grupos_estudo:", createCodigosError);
-        throw new Error(`Falha ao criar tabela codigos_grupos_estudo: ${createCodigosError.message}`);
       }
-      
-      return true;
+
+      // Verificar se as tabelas foram criadas corretamente
+      let tablesCreated = false;
+      try {
+        const { data: gruposExists, error: gruposCheckError } = await supabase
+          .from('grupos_estudo')
+          .select('id')
+          .limit(1);
+
+        const { data: codigosExists, error: codigosCheckError } = await supabase
+          .from('codigos_grupos_estudo')
+          .select('codigo')
+          .limit(1);
+
+        if (!gruposCheckError && !codigosCheckError) {
+          console.log('✅ Ambas as tabelas estão acessíveis e prontas para uso');
+          tablesCreated = true;
+        } else {
+          console.warn('⚠️ Verificação das tabelas após criação retornou erros:', 
+            gruposCheckError || codigosCheckError);
+        }
+      } catch (verifyError) {
+        console.error("❌ Erro ao verificar se tabelas foram criadas:", verifyError);
+      }
+
+      return tablesCreated;
     } catch (error) {
       console.error("❌ Erro ao criar tabelas:", error);
       setErrorMessage(`Falha ao criar tabelas: ${error.message}. Por favor, execute o workflow 'Corrigir Tabelas de Grupos' e tente novamente.`);

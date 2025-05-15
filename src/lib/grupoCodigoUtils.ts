@@ -1523,78 +1523,151 @@ const criarTabelaCodigosGrupos = async () => {
   try {
     console.log("Iniciando criação da tabela codigos_grupos_estudo...");
 
+    // Criar função auxiliar para verificar se tabela existe
+    try {
+      await supabase.query(`
+        CREATE OR REPLACE FUNCTION check_table_exists(table_name text) 
+        RETURNS boolean AS $$
+        DECLARE
+            table_exists boolean;
+        BEGIN
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE  table_schema = 'public'
+                AND    table_name = table_name
+            ) INTO table_exists;
+            
+            RETURN table_exists;
+        END;
+        $$ LANGUAGE plpgsql;
+      `);
+      console.log("✅ Função check_table_exists criada com sucesso");
+    } catch (funcError) {
+      console.log("ℹ️ Não foi possível criar função auxiliar:", funcError);
+    }
+
     // Primeiro, verificar se a extensão uuid-ossp está disponível
     try {
       await supabase.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`);
-      console.log("Extensão uuid-ossp verificada/criada");
+      console.log("✅ Extensão uuid-ossp verificada/criada");
     } catch (extError) {
-      console.log("Nota: Não foi possível criar extensão uuid-ossp, mas isso pode não ser um problema:", extError);
+      console.log("ℹ️ Não foi possível criar extensão uuid-ossp, mas isso pode não ser um problema:", extError);
     }
 
-    // Executar SQL para criar a tabela
-    const { error } = await supabase.query(`
-      CREATE TABLE IF NOT EXISTS public.codigos_grupos_estudo (
-        codigo VARCHAR(15) PRIMARY KEY,
-        grupo_id UUID NOT NULL,
-        nome VARCHAR NOT NULL,
-        descricao TEXT,
-        data_criacao TIMESTAMP WITH TIME ZONE DEFAULT now(),
-        user_id UUID,
-        privado BOOLEAN DEFAULT false,
-        membros INTEGER DEFAULT 1,
-        visibilidade VARCHAR,
-        disciplina VARCHAR,
-        cor VARCHAR DEFAULT '#FF6B00',
-        membros_ids JSONB DEFAULT '[]'::jsonb,
-        ultima_atualizacao TIMESTAMP WITH TIME ZONE DEFAULT now()
-      );
-    `);
+    // Executar SQL para criar a tabela (fazendo em etapas para facilitar o diagnóstico)
+    try {
+      // 1. Criar a tabela principal
+      const { error: tableError } = await supabase.query(`
+        CREATE TABLE IF NOT EXISTS public.codigos_grupos_estudo (
+          codigo VARCHAR(15) PRIMARY KEY,
+          grupo_id UUID NOT NULL,
+          nome VARCHAR NOT NULL,
+          descricao TEXT,
+          data_criacao TIMESTAMP WITH TIME ZONE DEFAULT now(),
+          user_id UUID,
+          privado BOOLEAN DEFAULT false,
+          membros INTEGER DEFAULT 1,
+          visibilidade VARCHAR,
+          disciplina VARCHAR,
+          cor VARCHAR DEFAULT '#FF6B00',
+          membros_ids JSONB DEFAULT '[]'::jsonb,
+          ultima_atualizacao TIMESTAMP WITH TIME ZONE DEFAULT now()
+        );
+      `);
 
-    if (error) {
-      console.error("Erro ao criar tabela de códigos:", error);
+      if (tableError) {
+        console.error("❌ Erro ao criar tabela de códigos:", tableError);
+        throw tableError;
+      }
+      console.log("✅ Tabela codigos_grupos_estudo criada com sucesso");
+
+      // 2. Criar índices
+      try {
+        await supabase.query(`
+          CREATE INDEX IF NOT EXISTS idx_codigos_grupos_estudo_grupo_id ON public.codigos_grupos_estudo(grupo_id);
+          CREATE INDEX IF NOT EXISTS idx_codigos_grupos_estudo_user_id ON public.codigos_grupos_estudo(user_id);
+        `);
+        console.log("✅ Índices criados com sucesso");
+      } catch (indexError) {
+        console.warn("⚠️ Erro ao criar índices:", indexError);
+        // Continuar mesmo com erro de índices
+      }
+
+      // 3. Configurar políticas de segurança
+      try {
+        // Habilitar RLS
+        await supabase.query(`
+          ALTER TABLE public.codigos_grupos_estudo ENABLE ROW LEVEL SECURITY;
+        `);
+        console.log("✅ RLS habilitado com sucesso");
+        
+        // Política de SELECT
+        try {
+          await supabase.query(`
+            DROP POLICY IF EXISTS "Todos podem visualizar códigos" ON public.codigos_grupos_estudo;
+            CREATE POLICY "Todos podem visualizar códigos"
+              ON public.codigos_grupos_estudo FOR SELECT
+              USING (true);
+          `);
+          console.log("✅ Política SELECT criada com sucesso");
+        } catch (selectPolicyError) {
+          console.warn("⚠️ Erro ao criar política SELECT:", selectPolicyError);
+        }
+        
+        // Política de INSERT
+        try {
+          await supabase.query(`
+            DROP POLICY IF EXISTS "Todos podem inserir códigos" ON public.codigos_grupos_estudo;
+            CREATE POLICY "Todos podem inserir códigos"
+              ON public.codigos_grupos_estudo FOR INSERT
+              WITH CHECK (true);
+          `);
+          console.log("✅ Política INSERT criada com sucesso");
+        } catch (insertPolicyError) {
+          console.warn("⚠️ Erro ao criar política INSERT:", insertPolicyError);
+        }
+        
+        // Política de UPDATE
+        try {
+          await supabase.query(`
+            DROP POLICY IF EXISTS "Todos podem atualizar códigos" ON public.codigos_grupos_estudo;
+            CREATE POLICY "Todos podem atualizar códigos"
+              ON public.codigos_grupos_estudo FOR UPDATE
+              USING (true);
+          `);
+          console.log("✅ Política UPDATE criada com sucesso");
+        } catch (updatePolicyError) {
+          console.warn("⚠️ Erro ao criar política UPDATE:", updatePolicyError);
+        }
+      } catch (policyError) {
+        console.warn("⚠️ Erro ao configurar RLS:", policyError);
+        // Continuar mesmo com erro de políticas
+      }
+    } catch (error) {
+      console.error("❌ Erro ao criar tabela principal:", error);
       return false;
     }
 
-    // Criar índices e políticas de segurança
+    // Verificar se a tabela foi criada e está acessível
     try {
-      await supabase.query(`
-        CREATE INDEX IF NOT EXISTS idx_codigos_grupos_estudo_grupo_id ON public.codigos_grupos_estudo(grupo_id);
-        CREATE INDEX IF NOT EXISTS idx_codigos_grupos_estudo_user_id ON public.codigos_grupos_estudo(user_id);
-      `);
-
-      await supabase.query(`
-        ALTER TABLE public.codigos_grupos_estudo ENABLE ROW LEVEL SECURITY;
-      `);
-
-      await supabase.query(`
-        DROP POLICY IF EXISTS "Todos podem visualizar códigos" ON public.codigos_grupos_estudo;
-        CREATE POLICY "Todos podem visualizar códigos"
-          ON public.codigos_grupos_estudo FOR SELECT
-          USING (true);
-      `);
-
-      await supabase.query(`
-        DROP POLICY IF EXISTS "Todos podem inserir códigos" ON public.codigos_grupos_estudo;
-        CREATE POLICY "Todos podem inserir códigos"
-          ON public.codigos_grupos_estudo FOR INSERT
-          WITH CHECK (true);
-      `);
-
-      await supabase.query(`
-        DROP POLICY IF EXISTS "Todos podem atualizar códigos" ON public.codigos_grupos_estudo;
-        CREATE POLICY "Todos podem atualizar códigos"
-          ON public.codigos_grupos_estudo FOR UPDATE
-          USING (true);
-      `);
-    } catch (policiesError) {
-      console.warn("Aviso: Não foi possível criar todos os índices/políticas:", policiesError);
-      // Continuamos mesmo se falhar a criação de políticas
+      const { data, error } = await supabase
+        .from('codigos_grupos_estudo')
+        .select('codigo')
+        .limit(1);
+        
+      if (error) {
+        console.error("❌ Erro ao verificar tabela recém-criada:", error);
+        return false;
+      }
+      
+      console.log("✅ Tabela codigos_grupos_estudo criada e verificada com sucesso!");
+      return true;
+    } catch (checkError) {
+      console.error("❌ Erro ao verificar tabela recém-criada:", checkError);
+      return false;
     }
-
-    console.log("Tabela de códigos de grupos criada com sucesso!");
-    return true;
   } catch (error) {
-    console.error("Exceção ao criar tabela de códigos:", error);
+    console.error("❌ Exceção ao criar tabela de códigos:", error);
     return false;
   }
 };
