@@ -80,32 +80,63 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
     }
   };
 
-  // Função para verificar se as tabelas existem e são acessíveis
+  // Função robusta para verificar se as tabelas existem e são acessíveis
   const verificarTabelasExistem = async () => {
     try {
+      console.log("🔍 Verificando existência das tabelas...");
+
       // Verificar tabela grupos_estudo
-      const { error: gruposError } = await supabase
-        .from('grupos_estudo')
-        .select('id')
-        .limit(1);
+      let gruposExiste = false;
+      try {
+        const { count, error: gruposError } = await supabase
+          .from('grupos_estudo')
+          .select('*', { count: 'exact', head: true });
+
+        gruposExiste = !gruposError;
+
+        if (gruposError) {
+          if (gruposError.code === '42P01') {
+            console.log("⚠️ Tabela grupos_estudo não existe");
+          } else {
+            console.error("❌ Erro ao verificar tabela grupos_estudo:", gruposError);
+          }
+        } else {
+          console.log("✅ Tabela grupos_estudo existe e está acessível");
+        }
+      } catch (gruposCheckError) {
+        console.error("❌ Exceção ao verificar tabela grupos_estudo:", gruposCheckError);
+        gruposExiste = false;
+      }
 
       // Verificar tabela codigos_grupos_estudo
-      const { error: codigosError } = await supabase
-        .from('codigos_grupos_estudo')
-        .select('codigo')
-        .limit(1);
+      let codigosExiste = false;
+      try {
+        const { count, error: codigosError } = await supabase
+          .from('codigos_grupos_estudo')
+          .select('*', { count: 'exact', head: true });
 
-      // Se ambas as consultas não retornarem erro de tabela inexistente, as tabelas existem
-      const gruposExiste = !gruposError || gruposError.code !== '42P01';
-      const codigosExiste = !codigosError || codigosError.code !== '42P01';
+        codigosExiste = !codigosError;
 
-      return {
-        gruposExiste,
-        codigosExiste,
-        todasExistem: gruposExiste && codigosExiste
-      };
+        if (codigosError) {
+          if (codigosError.code === '42P01') {
+            console.log("⚠️ Tabela codigos_grupos_estudo não existe");
+          } else {
+            console.error("❌ Erro ao verificar tabela codigos_grupos_estudo:", codigosError);
+          }
+        } else {
+          console.log("✅ Tabela codigos_grupos_estudo existe e está acessível");
+        }
+      } catch (codigosCheckError) {
+        console.error("❌ Exceção ao verificar tabela codigos_grupos_estudo:", codigosCheckError);
+        codigosExiste = false;
+      }
+
+      const todasExistem = gruposExiste && codigosExiste;
+      console.log(`📊 Status das tabelas: grupos_estudo=${gruposExiste}, codigos_grupos_estudo=${codigosExiste}, todas=${todasExistem}`);
+
+      return { gruposExiste, codigosExiste, todasExistem };
     } catch (error) {
-      console.error("❌ Erro ao verificar existência das tabelas:", error);
+      console.error("❌ Erro geral ao verificar existência das tabelas:", error);
       return {
         gruposExiste: false,
         codigosExiste: false,
@@ -175,7 +206,7 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
       try {
         console.log("🔄 Tentando criar tabelas diretamente...");
         const criadasDiretamente = await criarTabelasNecessarias();
-        
+
         if (criadasDiretamente) {
           console.log("✅ Tabelas criadas com sucesso diretamente");
           return true;
@@ -705,11 +736,11 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
 
       // Estratégia 1: Criar tabelas diretamente usando supabase.query()
       let tabelasCriadas = false;
-      
+
       try {
         // Verificar se as tabelas existem
         const { todasExistem } = await verificarTabelasExistem();
-        
+
         if (todasExistem) {
           console.log("✅ Todas as tabelas já existem");
           setSuccessMessage("Todas as tabelas necessárias já existem!");
@@ -717,7 +748,7 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
         } else {
           // Tenta criar as tabelas diretamente
           const resultadoCriacao = await criarTabelasNecessarias();
-          
+
           if (resultadoCriacao) {
             console.log("✅ Tabelas criadas diretamente com sucesso");
             setSuccessMessage("Estrutura do banco de dados criada com sucesso!");
@@ -728,17 +759,17 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
         console.error("❌ Erro ao criar tabelas diretamente:", directError);
         setSuccessMessage("Tentando métodos alternativos para criar tabelas...");
       }
-      
+
       // Se a criação direta falhou, tenta usar a API
       if (!tabelasCriadas) {
         try {
           console.log("🔄 Tentando criar tabelas via API...");
-          
+
           const response = await fetch('/api/db/fix-tables', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
           });
-          
+
           if (response.ok) {
             console.log("✅ Tabelas criadas com sucesso via API");
             setSuccessMessage("Estrutura do banco de dados criada com sucesso via API!");
@@ -751,13 +782,13 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
           console.error("❌ Erro ao acessar API:", apiError);
         }
       }
-      
+
       // Última alternativa: usar o script fix-missing-tables.js
       if (!tabelasCriadas) {
         try {
           console.log("🔄 Tentando criar tabelas via workflow...");
           const workflowSuccess = await executarWorkflowCorrecaoTabelas();
-          
+
           if (workflowSuccess) {
             console.log("✅ Workflow executado com sucesso");
             setSuccessMessage("Estrutura criada via workflow. Prosseguindo com a sincronização...");
@@ -772,7 +803,7 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
           console.error("❌ Erro ao executar workflow:", workflowError);
         }
       }
-      
+
       // Se todas as tentativas falharam
       if (!tabelasCriadas) {
         setErrorMessage("Não foi possível criar as tabelas necessárias após várias tentativas. Por favor, execute o workflow 'Corrigir Tabelas de Grupos' manualmente.");
@@ -805,7 +836,8 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
                 id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
                 user_id UUID NOT NULL,
                 nome TEXT NOT NULL,
-                descricao TEXT,
+                ```text
+descricao TEXT,
                 cor TEXT NOT NULL DEFAULT '#FF6B00',
                 membros INTEGER NOT NULL DEFAULT 1,
                 membros_ids JSONB DEFAULT '[]'::jsonb,
