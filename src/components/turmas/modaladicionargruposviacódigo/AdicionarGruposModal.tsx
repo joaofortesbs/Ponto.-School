@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { verificarSeCodigoExiste } from "@/lib/grupoCodigoUtils";
 import { supabase } from "@/lib/supabase";
 import GrupoEstudoCard from "../components/GrupoEstudoCard";
+import { Loader2 } from 'lucide-react';
 
 interface GrupoEstudo {
   id: string;
@@ -48,6 +49,7 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isVerifyingCode, setIsVerifyingCode] = useState(false);
+  const [sincronizando, setSincronizando] = useState<boolean>(false);
 
   // Efeito para limpar mensagens quando o modal fecha
   useEffect(() => {
@@ -406,6 +408,96 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
     }
   };
 
+  // Função que implementa a sincronização de códigos dos grupos
+  const sincronizarCodigosGrupos = async () => {
+    try {
+      setSincronizando(true);
+      setErrorMessage(null);
+
+      // 1. Buscar todos os grupos de estudo
+      const { data: grupos, error } = await supabase
+        .from('grupos_estudo')
+        .select('*');
+
+      if (error) {
+        throw new Error(`Erro ao buscar grupos: ${error.message}`);
+      }
+
+      console.log(`Encontrados ${grupos?.length || 0} grupos para sincronizar`);
+
+      // Contadores para o relatório
+      let sucessos = 0;
+      let erros = 0;
+      let ignorados = 0;
+
+      // 2. Processar cada grupo
+      for (const grupo of grupos || []) {
+        try {
+          // Verificar se o grupo já tem código
+          if (!grupo.codigo) {
+            console.log(`Grupo ID ${grupo.id} não possui código, será ignorado`);
+            ignorados++;
+            continue;
+          }
+
+          // 3. Inserir na tabela de códigos
+          const { error: insertError } = await supabase
+            .from('codigos_grupos_estudo')
+            .upsert({
+              codigo: grupo.codigo,
+              grupo_id: grupo.id,
+              nome: grupo.nome || 'Grupo sem nome',
+              descricao: grupo.descricao || '',
+              user_id: grupo.user_id,
+              privado: grupo.privado || false,
+              membros: grupo.membros || 1,
+              visibilidade: grupo.visibilidade || 'todos',
+              disciplina: grupo.disciplina || '',
+              cor: grupo.cor || '#FF6B00',
+              membros_ids: grupo.membros_ids || [],
+              data_criacao: grupo.data_criacao || new Date().toISOString(),
+              ultima_atualizacao: new Date().toISOString()
+            }, { onConflict: 'codigo' });
+
+          if (insertError) {
+            console.error(`Erro ao sincronizar código ${grupo.codigo} para grupo ${grupo.id}: ${insertError.message}`);
+            erros++;
+          } else {
+            console.log(`Código ${grupo.codigo} sincronizado com sucesso para grupo ${grupo.id}`);
+            sucessos++;
+          }
+        } catch (itemError) {
+          console.error(`Erro ao processar grupo ${grupo.id}:`, itemError);
+          erros++;
+        }
+      }
+
+      // 4. Exibir notificação de sucesso com resumo
+      // toast({
+      //   title: "Sincronização concluída",
+      //   description: `Total: ${grupos?.length || 0} | Sucesso: ${sucessos} | Ignorados: ${ignorados} | Erros: ${erros}`,
+      //   duration: 5000
+      // });
+      setSuccessMessage(`Sincronização concluída. Total: ${grupos?.length || 0} | Sucesso: ${sucessos} | Ignorados: ${ignorados} | Erros: ${erros}`);
+
+      // 5. Recarregar grupos caso estejamos na aba de busca
+      if (activeTab === 'pesquisar') {
+        await buscarGrupos();
+      }
+    } catch (error: any) {
+      console.error('Erro na sincronização:', error);
+      setErrorMessage(`Erro na sincronização: ${error.message}`);
+      // toast({
+      //   title: "Erro na sincronização",
+      //   description: `Não foi possível completar a sincronização: ${error.message}`,
+      //   variant: "destructive",
+      //   duration: 5000
+      // });
+    } finally {
+      setSincronizando(false);
+    }
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -423,14 +515,37 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
                 <Users className="h-5 w-5 mr-2.5" />
                 Adicionar Grupos de Estudo
               </h2>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 rounded-full text-white/90 hover:text-white hover:bg-white/20"
-                onClick={onClose}
-              >
-                <X className="h-5 w-5" />
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={sincronizarCodigosGrupos}
+                  disabled={sincronizando}
+                  className="text-xs flex items-center gap-1 text-white/80 hover:text-white border-white/20"
+                >
+                  {sincronizando ? (
+                    <>
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      Sincronizando...
+                    </>
+                  ) : (
+                    <>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38" />
+                      </svg>
+                      Sincronizar
+                    </>
+                  )}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded-full text-white/90 hover:text-white hover:bg-white/20"
+                  onClick={onClose}
+                >
+                  <X className="h-5 w-5" />
+                </Button>
+              </div>
             </div>
 
             {/* Conteúdo do modal */}

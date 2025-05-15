@@ -514,7 +514,7 @@ export const buscarGrupoComCodigo = async (codigo: string): Promise<any | null> 
   }
 };
 
-// Verifica se um código de grupo existe no banco de dados
+// Verifica se um código de grupo existe no banco de dados e o sincroniza se necessário
 export const verificarSeCodigoExiste = async (codigo: string): Promise<boolean> => {
   try {
     if (!codigo || codigo.trim() === '') {
@@ -525,7 +525,7 @@ export const verificarSeCodigoExiste = async (codigo: string): Promise<boolean> 
     const codigoNormalizado = codigo.trim().toUpperCase();
     console.log(`Verificando se o código ${codigoNormalizado} existe...`);
 
-    // Primeiro, verificar na tabela de códigos
+    // Primeiro, verificar na tabela de códigos (a principal fonte de verdade)
     try {
       const { data: dataCodigos, error: errorCodigos } = await supabase
         .from('codigos_grupos_estudo')
@@ -549,46 +549,37 @@ export const verificarSeCodigoExiste = async (codigo: string): Promise<boolean> 
     try {
       const { data: dataGrupos, error: errorGrupos } = await supabase
         .from('grupos_estudo')
-        .select('codigo')
+        .select('*')  // Alterado para selecionar todos os campos para sincronização
         .eq('codigo', codigoNormalizado)
         .maybeSingle();
 
       if (!errorGrupos && dataGrupos) {
         console.log(`Código ${codigoNormalizado} encontrado na tabela de grupos!`);
         
-        // Tentar sincronizar com a tabela de códigos
+        // Sincronizar automaticamente com a tabela de códigos
         try {
-          const { data: grupoCompleto, error: grupoErro } = await supabase
-            .from('grupos_estudo')
-            .select('*')
-            .eq('codigo', codigoNormalizado)
-            .single();
+          const { error: syncError } = await supabase
+            .from('codigos_grupos_estudo')
+            .upsert({
+              codigo: codigoNormalizado,
+              grupo_id: dataGrupos.id,
+              nome: dataGrupos.nome || 'Grupo sem nome',
+              descricao: dataGrupos.descricao || '',
+              user_id: dataGrupos.user_id,
+              privado: dataGrupos.privado || false,
+              membros: dataGrupos.membros || 1,
+              visibilidade: dataGrupos.visibilidade || 'todos',
+              disciplina: dataGrupos.disciplina || '',
+              cor: dataGrupos.cor || '#FF6B00',
+              membros_ids: dataGrupos.membros_ids || [],
+              data_criacao: dataGrupos.data_criacao || new Date().toISOString(),
+              ultima_atualizacao: new Date().toISOString()
+            }, { onConflict: 'codigo' });
             
-          if (!grupoErro && grupoCompleto) {
-            // Sincronizar com a tabela de códigos
-            const { error: syncError } = await supabase
-              .from('codigos_grupos_estudo')
-              .upsert({
-                codigo: codigoNormalizado,
-                grupo_id: grupoCompleto.id,
-                nome: grupoCompleto.nome || 'Grupo sem nome',
-                descricao: grupoCompleto.descricao || '',
-                user_id: grupoCompleto.user_id,
-                privado: grupoCompleto.privado || false,
-                membros: grupoCompleto.membros || 1,
-                visibilidade: grupoCompleto.visibilidade || 'todos',
-                disciplina: grupoCompleto.disciplina || '',
-                cor: grupoCompleto.cor || '#FF6B00',
-                membros_ids: grupoCompleto.membros_ids || [],
-                data_criacao: grupoCompleto.data_criacao || new Date().toISOString(),
-                ultima_atualizacao: new Date().toISOString()
-              }, { onConflict: 'codigo' });
-              
-            if (syncError) {
-              console.error('Erro ao sincronizar código com tabela de códigos:', syncError);
-            } else {
-              console.log('Código sincronizado com a tabela central');
-            }
+          if (syncError) {
+            console.error('Erro ao sincronizar código com tabela de códigos:', syncError);
+          } else {
+            console.log('Código sincronizado com a tabela central');
           }
         } catch (syncError) {
           console.error('Erro ao sincronizar código:', syncError);
@@ -604,57 +595,85 @@ export const verificarSeCodigoExiste = async (codigo: string): Promise<boolean> 
       console.error("Exceção ao verificar código na tabela de grupos:", e);
     }
 
-    // Verificar nos armazenamentos locais como último recurso
+    // Verificar nos armazenamentos locais como último recurso e sincronizar se encontrado
     try {
-      // Verificar no storage específico para códigos
-      const codigosGrupos = JSON.parse(localStorage.getItem('epictus_codigos_grupo') || '{}');
-      const encontradoEmCodigos = Object.values(codigosGrupos).some(
-        (c: any) => typeof c === 'string' && c.toUpperCase() === codigoNormalizado
-      );
+      const grupos = JSON.parse(localStorage.getItem('epictus_grupos_estudo') || '[]');
+      const grupo = grupos.find((g: any) => g.codigo && g.codigo.toUpperCase() === codigoNormalizado);
       
-      if (encontradoEmCodigos) {
-        console.log(`Código ${codigoNormalizado} encontrado no storage de códigos`);
+      if (grupo) {
+        console.log(`Código ${codigoNormalizado} encontrado no storage de grupos`);
+        
+        // Sincronizar com a tabela de códigos
+        try {
+          const { error: syncError } = await supabase
+            .from('codigos_grupos_estudo')
+            .upsert({
+              codigo: codigoNormalizado,
+              grupo_id: grupo.id,
+              nome: grupo.nome || 'Grupo sem nome',
+              descricao: grupo.descricao || '',
+              user_id: grupo.user_id || grupo.criador,
+              privado: grupo.privado || false,
+              membros: grupo.membros || 1,
+              visibilidade: grupo.visibilidade || 'todos',
+              disciplina: grupo.disciplina || '',
+              cor: grupo.cor || '#FF6B00',
+              membros_ids: grupo.membros_ids || [],
+              data_criacao: grupo.dataCriacao || grupo.data_criacao || new Date().toISOString(),
+              ultima_atualizacao: new Date().toISOString()
+            }, { onConflict: 'codigo' });
+            
+          if (syncError) {
+            console.error('Erro ao sincronizar grupo do localStorage:', syncError);
+          } else {
+            console.log('Grupo do localStorage sincronizado com a tabela de códigos');
+          }
+        } catch (syncError) {
+          console.error('Exceção ao sincronizar grupo do localStorage:', syncError);
+        }
+        
         return true;
       }
       
-      // Verificar no storage de grupos
-      const grupos = JSON.parse(localStorage.getItem('epictus_grupos_estudo') || '[]');
-      const encontradoEmGrupos = grupos.some(
-        (g: any) => g.codigo && g.codigo.toUpperCase() === codigoNormalizado
+      // Verificar separadamente no storage de códigos
+      const codigosGrupos = JSON.parse(localStorage.getItem('epictus_codigos_grupo') || '{}');
+      const grupoIdComCodigo = Object.entries(codigosGrupos).find(
+        ([_, codigo]) => typeof codigo === 'string' && (codigo as string).toUpperCase() === codigoNormalizado
       );
       
-      if (encontradoEmGrupos) {
-        console.log(`Código ${codigoNormalizado} encontrado no storage de grupos`);
+      if (grupoIdComCodigo) {
+        const [grupoId, _] = grupoIdComCodigo;
+        console.log(`Código ${codigoNormalizado} encontrado no storage de códigos para o grupo ${grupoId}`);
         
-        // Tentar sincronizar com a tabela de códigos
-        const grupo = grupos.find((g: any) => g.codigo && g.codigo.toUpperCase() === codigoNormalizado);
-        if (grupo) {
+        // Tentar buscar informações do grupo para sincronização
+        const grupoLocal = grupos.find((g: any) => g.id === grupoId);
+        if (grupoLocal) {
           try {
             const { error: syncError } = await supabase
               .from('codigos_grupos_estudo')
               .upsert({
                 codigo: codigoNormalizado,
-                grupo_id: grupo.id,
-                nome: grupo.nome || 'Grupo sem nome',
-                descricao: grupo.descricao || '',
-                user_id: grupo.user_id || grupo.criador,
-                privado: grupo.privado || false,
-                membros: grupo.membros || 1,
-                visibilidade: grupo.visibilidade || 'todos',
-                disciplina: grupo.disciplina || '',
-                cor: grupo.cor || '#FF6B00',
-                membros_ids: grupo.membros_ids || [],
-                data_criacao: grupo.dataCriacao || new Date().toISOString(),
+                grupo_id: grupoId,
+                nome: grupoLocal.nome || 'Grupo sem nome',
+                descricao: grupoLocal.descricao || '',
+                user_id: grupoLocal.user_id || grupoLocal.criador,
+                privado: grupoLocal.privado || false,
+                membros: grupoLocal.membros || 1,
+                visibilidade: grupoLocal.visibilidade || 'todos',
+                disciplina: grupoLocal.disciplina || '',
+                cor: grupoLocal.cor || '#FF6B00',
+                membros_ids: grupoLocal.membros_ids || [],
+                data_criacao: grupoLocal.dataCriacao || grupoLocal.data_criacao || new Date().toISOString(),
                 ultima_atualizacao: new Date().toISOString()
               }, { onConflict: 'codigo' });
               
             if (syncError) {
-              console.error('Erro ao sincronizar grupo do localStorage:', syncError);
+              console.error('Erro ao sincronizar código do localStorage:', syncError);
             } else {
-              console.log('Grupo do localStorage sincronizado com a tabela de códigos');
+              console.log('Código do localStorage sincronizado com a tabela central');
             }
           } catch (syncError) {
-            console.error('Exceção ao sincronizar grupo do localStorage:', syncError);
+            console.error('Exceção ao sincronizar código do localStorage:', syncError);
           }
         }
         

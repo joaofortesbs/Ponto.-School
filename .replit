@@ -137,6 +137,367 @@ mode = "sequential"
 task = "shell.exec"
 args = "node scripts/sync-grupos-codigos.js"
 
+[[workflows.workflow]]
+name = "Sync Códigos Grupos"
+author = 42059808
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node -e \""
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "const { createClient } = require('@supabase/supabase-js');"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = ""
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "async function syncGruposCodigos() {"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  console.log('Iniciando sincronização de códigos de grupos...');"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  "
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  try {"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    // Buscar todos os grupos de estudo"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    const { data: grupos, error } = await supabase"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "      .from('grupos_estudo')"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "      .select('*');"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "      "
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    if (error) {"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "      throw new Error(`Erro ao buscar grupos: ${error.message}`);"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    }"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    "
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    console.log(`Encontrados ${grupos?.length || 0} grupos para sincronizar`);"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    "
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    // Contador de sucessos"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    let successCount = 0;"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    let errorCount = 0;"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    let skippedCount = 0;"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    "
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    // Processar cada grupo"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    for (const grupo of grupos || []) {"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "      try {"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "        // Verificar se o grupo já tem código"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "        if (!grupo.codigo) {"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          console.log(`Grupo ID ${grupo.id} não possui código, será ignorado`);"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          skippedCount++;"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          continue;"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "        }"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "        "
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "        // Inserir no banco de códigos"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "        const { error: insertError } = await supabase"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          .from('codigos_grupos_estudo')"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          .upsert({"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "            codigo: grupo.codigo,"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "            grupo_id: grupo.id,"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "            nome: grupo.nome || 'Grupo sem nome',"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "            descricao: grupo.descricao || '',"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "            user_id: grupo.user_id,"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "            privado: grupo.privado || false,"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "            membros: grupo.membros || 1,"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "            visibilidade: grupo.visibilidade || 'todos',"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "            disciplina: grupo.disciplina || '',"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "            cor: grupo.cor || '#FF6B00',"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "            membros_ids: grupo.membros_ids || [],"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "            data_criacao: grupo.data_criacao || new Date().toISOString(),"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "            ultima_atualizacao: new Date().toISOString()"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          }, { onConflict: 'codigo' });"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          "
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "        if (insertError) {"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          console.error(`Erro ao inserir código ${grupo.codigo} para grupo ${grupo.id}: ${insertError.message}`);"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          errorCount++;"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "        } else {"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          console.log(`Código ${grupo.codigo} sincronizado com sucesso para grupo ${grupo.id}`);"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          successCount++;"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "        }"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "      } catch (itemError) {"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "        console.error(`Erro ao processar grupo ${grupo.id}: ${itemError.message}`);"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "        errorCount++;"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "      }"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    }"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    "
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    console.log('--------- RESUMO DA SINCRONIZAÇÃO ---------');"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    console.log(`Total de grupos: ${grupos?.length || 0}`);"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    console.log(`Códigos sincronizados com sucesso: ${successCount}`);"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    console.log(`Grupos sem código (ignorados): ${skippedCount}`);"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    console.log(`Erros: ${errorCount}`);"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    console.log('-------------------------------------------');"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    "
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  } catch (error) {"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    console.error('Erro durante sincronização:', error);"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    process.exit(1);"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  }"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "}"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = ""
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "syncGruposCodigos()"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  .then(() => {"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    console.log('Sincronização concluída!');"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    process.exit(0);"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  })"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  .catch(err => {"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    console.error('Falha na sincronização:', err);"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    process.exit(1);"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  });"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "\""
+
 [auth]
 pageEnabled = false
 buttonEnabled = false
