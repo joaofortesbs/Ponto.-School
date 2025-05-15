@@ -1536,7 +1536,7 @@ const criarTabelaCodigosGrupos = async () => {
                 WHERE  table_schema = 'public'
                 AND    table_name = table_name
             ) INTO table_exists;
-            
+
             RETURN table_exists;
         END;
         $$ LANGUAGE plpgsql;
@@ -1600,7 +1600,7 @@ const criarTabelaCodigosGrupos = async () => {
           ALTER TABLE public.codigos_grupos_estudo ENABLE ROW LEVEL SECURITY;
         `);
         console.log("✅ RLS habilitado com sucesso");
-        
+
         // Política de SELECT
         try {
           await supabase.query(`
@@ -1613,7 +1613,7 @@ const criarTabelaCodigosGrupos = async () => {
         } catch (selectPolicyError) {
           console.warn("⚠️ Erro ao criar política SELECT:", selectPolicyError);
         }
-        
+
         // Política de INSERT
         try {
           await supabase.query(`
@@ -1626,7 +1626,7 @@ const criarTabelaCodigosGrupos = async () => {
         } catch (insertPolicyError) {
           console.warn("⚠️ Erro ao criar política INSERT:", insertPolicyError);
         }
-        
+
         // Política de UPDATE
         try {
           await supabase.query(`
@@ -1654,12 +1654,12 @@ const criarTabelaCodigosGrupos = async () => {
         .from('codigos_grupos_estudo')
         .select('codigo')
         .limit(1);
-        
+
       if (error) {
         console.error("❌ Erro ao verificar tabela recém-criada:", error);
         return false;
       }
-      
+
       console.log("✅ Tabela codigos_grupos_estudo criada e verificada com sucesso!");
       return true;
     } catch (checkError) {
@@ -1712,8 +1712,7 @@ export const salvarCodigoGrupoObjeto = async (codigoData: any) => {
         if (!criada) {
           return { 
             sucesso: false, 
-            error: new Error("Não foi possível criar a tabela de códigos") 
-          };
+            error: new Error("Não foi possível criar a tabela de códigos") };
         }
       }
     } catch (e) {
@@ -1832,15 +1831,108 @@ export const salvarCodigoGrupoObjeto = async (codigoData: any) => {
       // Verificar se as tabelas existem
       let gruposExiste = false;
       let codigosExiste = false;
+      let setSuccessMessage: (message: string) => void = () => {};
 
       try {
-        const { count, error } = await supabase
+        // Verificar se a tabela grupos_estudo existe
+        const { data: gruposCheck, error: gruposCheckError } = await supabase
           .from('grupos_estudo')
+          .select('id')
+          .limit(1);
+
+        if (gruposCheckError && gruposCheckError.code === '42P01') {
+          console.log('Tabela grupos_estudo não existe. Criando...');
+
+          try {
+            // Tentar criar a tabela usando a função RPC execute_sql
+            const { error: rpcError } = await supabase.rpc('execute_sql', {
+              sql_query: `
+              CREATE TABLE IF NOT EXISTS public.grupos_estudo (
+                id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                user_id UUID NOT NULL,
+                nome TEXT NOT NULL,
+                descricao TEXT,
+                cor TEXT NOT NULL DEFAULT '#FF6B00',
+                membros INTEGER NOT NULL DEFAULT 1,
+                membros_ids JSONB DEFAULT '[]'::jsonb,
+                topico TEXT,
+                topico_nome TEXT,
+                topico_icon TEXT,
+                privado BOOLEAN DEFAULT false,
+                visibilidade TEXT DEFAULT 'todos',
+                codigo TEXT,
+                disciplina TEXT DEFAULT 'Geral',
+                data_criacao TIMESTAMP WITH TIME ZONE DEFAULT now()
+              );
+            `
+            }).catch(() => ({ error: { message: "RPC não disponível" } }));
+
+            if (rpcError) {
+              console.log("Tentando método alternativo para criar tabela...");
+
+              // Chamar uma API para criar a tabela
+              const response = await fetch('/api/fix-tables', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                }
+              });
+
+              if (!response.ok) {
+                throw new Error("API de correção de tabelas retornou erro");
+              }
+
+              console.log("API de correção de tabelas executada com sucesso");
+            }
+
+            // Criar índices e políticas de segurança
+            await supabase.rpc('execute_sql', {
+              sql_query: `
+              CREATE INDEX IF NOT EXISTS grupos_estudo_user_id_idx ON public.grupos_estudo(user_id);
+
+              ALTER TABLE public.grupos_estudo ENABLE ROW LEVEL SECURITY;
+
+              DROP POLICY IF EXISTS "Usuários podem visualizar grupos" ON public.grupos_estudo;
+              CREATE POLICY "Usuários podem visualizar grupos"
+                ON public.grupos_estudo FOR SELECT
+                USING (true);
+
+              DROP POLICY IF EXISTS "Usuários podem inserir grupos" ON public.grupos_estudo;
+              CREATE POLICY "Usuários podem inserir grupos"
+                ON public.grupos_estudo FOR INSERT
+                WITH CHECK (true);
+
+              DROP POLICY IF EXISTS "Usuários podem atualizar grupos" ON public.grupos_estudo;
+              CREATE POLICY "Usuários podem atualizar grupos"
+                ON public.grupos_estudo FOR UPDATE
+                USING (true);
+            `
+            }).catch(() => console.log("Nota: Não foi possível criar índices e políticas via RPC"));
+          } catch (createError) {
+            console.error("Erro ao criar tabela grupos_estudo:", createError);
+            return { 
+              sucesso: false, 
+              mensagem: "Não foi possível criar a tabela grupos_estudo" 
+            };
+          }
+
+          console.log('✅ Tabela grupos_estudo criada com sucesso');
+          setSuccessMessage("Tabela grupos_estudo criada com sucesso!");
+        } else if (gruposCheckError) {
+          console.error('❌ Erro ao verificar tabela grupos_estudo:', gruposCheckError);
+          throw gruposCheckError;
+        } else {
+          console.log('✅ Tabela grupos_estudo já existe');
+        }
+
+        const { count, error } = await supabase
+          .from('codigos_grupos_estudo')
           .select('*', { count: 'exact', head: true });
 
-        gruposExiste = !error;
+        codigosExiste = !error;
       } catch (e) {
         gruposExiste = false;
+        codigosExiste = false;
       }
 
       try {
