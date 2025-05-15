@@ -787,73 +787,88 @@ export function RegisterForm() {
 
 
   return (
-    
-      
-        
+    <div className="space-y-6">
+      <div className="text-center space-y-2">
+        <h1 className="text-2xl font-bold tracking-tight text-brand-black dark:text-white">
           Criar nova conta
-        
-        
+        </h1>
+        <p className="text-muted-foreground">
           {step === 3 ? "Finalize seu cadastro" : "Preencha os dados abaixo para começar"}
-        
-      
+        </p>
+      </div>
 
       {renderStepIndicator()}
 
       {success ? (
-        
-          
-            
-              
-            
-            
-              
+        <div className="rounded-md bg-green-50 p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <CheckCircle className="h-5 w-5 text-green-400" aria-hidden="true" />
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-green-800">
                 Conta criada com sucesso!
-              
-              Sua conta foi criada e seus dados foram salvos com sucesso. Você será redirecionado para a página de login automaticamente em instantes...
-              
-                
-              
-            
-          
-        
+              </h3>
+              <div className="mt-2 text-sm text-green-700">
+                <p>
+                  Sua conta foi criada e seus dados foram salvos com sucesso. Você será redirecionado para a página de login automaticamente em instantes...
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       ) : (
-        
-          {showPlanConfirmation && } {/* Adiciona o modal */}
-          
-            
+        <>
+          {showPlanConfirmation && <PlanConfirmationModal />} {/* Adiciona o modal */}
+
+          <div className="grid gap-4">
+            <div className="text-center">
               {renderStepTitle()}
-            
-{/* Etapa 1: Informações básicas */}
+            </div>
+
+            {/* Etapa 1: Informações básicas */}
             {step === 1 && (
-              
+              <div className="grid gap-2">
                 {/* Nome Completo */}
-                
-                  
+                <div className="relative">
+                  <label
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    htmlFor="fullName"
+                  >
                     Nome Completo
-                  
-                  
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-hover:text-brand-primary transition-colors duration-200 z-10" />
-                    
-                      
-                        backdropFilter: "blur(12px)",
-                        WebkitBackdropFilter: "blur(12px)",
-                        boxShadow: "inset 0 1px 2px rgba(255, 255, 255, 0.1)"
-                      }}
-                    />
-                    
-                      background: "linear-gradient(135deg, rgba(255, 107, 0, 0.03) 0%, rgba(255, 140, 64, 0.02) 100%)"
-                    }}>
+                  </label>
+                  <Input
+                    type="text"
+                    name="fullName"
+                    id="fullName"
+                    placeholder="Digite seu nome completo"
+                    value={formData.fullName}
+                    onChange={handleChange}
+                    className="pl-10 group"
+                    style={{
+                      backdropFilter: "blur(12px)",
+                      WebkitBackdropFilter: "blur(12px)",
+                      boxShadow: "inset 0 1px 2px rgba(255, 255, 255, 0.1)"
+                    }}
+                  />
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-hover:text-brand-primary transition-colors duration-200 z-10" />
+                </div>
 
                 {/* Nome de Usuário */}
-                
-                  
+                <div className="relative">
+                  <label
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    htmlFor="username"
+                  >
                     Nome de Usuário
-                  
-                  
-                    
-                      @
-                      
-                        
+                  </label>
+                  <div className="relative">
+                    <Input
+                      type="text"
+                      name="username"
+                      id="username"
+                      value={formData.username}
+                      onChange={(e) => {
                           // Remover espaços e converter para minúsculas
                           const cleanedValue = e.target.value.toLowerCase().replace(/\s+/g, '');
 
@@ -891,384 +906,414 @@ export function RegisterForm() {
                           }
                         }}
                         placeholder="seunomeusuario"
-                        
+                        className="pl-10 group"
                         required
                       />
-                    
-                  
-                  Apenas letras minúsculas, números e sublinhados. Sem espaços.
-                
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-hover:text-brand-primary transition-colors duration-200 z-10" />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Apenas letras minúsculas, números e sublinhados. Sem espaços.
+                  </p>
+                </div>
 
                 {/* E-mail */}
-                
-                  
+                <div className="relative">
+                  <label
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    htmlFor="email"
+                  >
                     E-mail
-                  
-                  
-                    
-                      
-                        
-                        
-                        placeholder="Digite seu e-mail"
-                        
-                        required
-                      />
-                    
-                  
-                
-              
+                  </label>
+                  <div className="relative">
+                    <Input
+                      type="email"
+                      name="email"
+                      id="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      className="pl-10 group"
+                      placeholder="Digite seu e-mail"
+                      required
+                    />
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-hover:text-brand-primary transition-colors duration-200 z-10" />
+                  </div>
+                </div>
+              </div>
             )}
 
             {/* Etapa 2: Informações acadêmicas */}
             {step === 2 && (
-              
+              <div className="grid gap-2">
                 {/* Instituição */}
-                
-                  
+                <div className="relative">
+                  <label
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    htmlFor="institution"
+                  >
                     Instituição de Ensino
-                  
-                  
-                    
-                      
-                    
-                    
-                      
-                        
-                        
-                        placeholder="Digite o nome da sua instituição"
-                        
-                        autoComplete="organization"
-                      />
-                      {institutionFound && formData.institution && (
-                        
-                          
-                          
-                          Instituição encontrada
-                        
-                      )}
-                    
-                  
-                
+                  </label>
+                  <div className="relative">
+                    <Input
+                      type="text"
+                      name="institution"
+                      id="institution"
+                      value={formData.institution}
+                      onChange={handleChange}
+                      className="pl-10 group"
+                      placeholder="Digite o nome da sua instituição"
+                      autoComplete="organization"
+                    />
+                    <School className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-hover:text-brand-primary transition-colors duration-200 z-10" />
+                  </div>
+                  {institutionFound && formData.institution && (
+                    <p className="text-xs text-green-500 mt-1">
+                      Instituição encontrada
+                    </p>
+                  )}
+                </div>
 
                 {/* Estado (UF) */}
-                
-                  
+                <div className="relative">
+                  <label
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    htmlFor="state"
+                  >
                     Estado (UF)
-                  
-                  
-                    
-                      
-                    
-                    
-                      
+                  </label>
+                  <div className="relative">
+                    <select
+                      id="state"
+                      name="state"
+                      value={formData.state}
+                      className="w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-brand-primary focus:border-brand-primary sm:text-sm"
+                      onChange={(e) =>
                         handleSelectChange("state", e.target.value)}
-                      
-                      
-                        Acre (AC)
-                        Alagoas (AL)
-                        Amapá (AP)
-                        Amazonas (AM)
-                        Bahia (BA)
-                        Ceará (CE)
-                        Distrito Federal (DF)
-                        Espírito Santo (ES)
-                        Goiás (GO)
-                        Maranhão (MA)
-                        Mato Grosso (MT)
-                        Mato Grosso do Sul (MS)
-                        Minas Gerais (MG)
-                        Pará (PA)
-                        Paraíba (PB)
-                        Paraná (PR)
-                        Pernambuco (PE)
-                        Piauí (PI)
-                        Rio de Janeiro (RJ)
-                        Rio Grande do Norte (RN)
-                        Rio Grande do Sul (RS)
-                        Rondônia (RO)
-                        Roraima (RR)
-                        Santa Catarina (SC)
-                        São Paulo (SP)
-                        Sergipe (SE)
-                        Tocantins (TO)
-                      
-                    
-                  
-                
+                    >
+                      <option value="AC">Acre (AC)</option>
+                      <option value="AL">Alagoas (AL)</option>
+                      <option value="AP">Amapá (AP)</option>
+                      <option value="AM">Amazonas (AM)</option>
+                      <option value="BA">Bahia (BA)</option>
+                      <option value="CE">Ceará (CE)</option>
+                      <option value="DF">Distrito Federal (DF)</option>
+                      <option value="ES">Espírito Santo (ES)</option>
+                      <option value="GO">Goiás (GO)</option>
+                      <option value="MA">Maranhão (MA)</option>
+                      <option value="MT">Mato Grosso (MT)</option>
+                      <option value="MS">Mato Grosso do Sul (MS)</option>
+                      <option value="MG">Minas Gerais (MG)</option>
+                      <option value="PA">Pará (PA)</option>
+                      <option value="PB">Paraíba (PB)</option>
+                      <option value="PR">Paraná (PR)</option>
+                      <option value="PE">Pernambuco (PE)</option>
+                      <option value="PI">Piauí (PI)</option>
+                      <option value="RJ">Rio de Janeiro (RJ)</option>
+                      <option value="RN">Rio Grande do Norte (RN)</option>
+                      <option value="RS">Rio Grande do Sul (RS)</option>
+                      <option value="RO">Rondônia (RO)</option>
+                      <option value="RR">Roraima (RR)</option>
+                      <option value="SC">Santa Catarina (SC)</option>
+                      <option value="SP">São Paulo (SP)</option>
+                      <option value="SE">Sergipe (SE)</option>
+                      <option value="TO">Tocantins (TO)</option>
+                    </select>
+                  </div>
+                </div>
 
                 {/* Turma e Série - Mostrados apenas quando a instituição é preenchida */}
                 {showClassAndGrade && (
-                  
-                    
-                      
-                        
-                          
-                            Informações Acadêmicas
-                          
-                          {loadingOptions && (
-                            
-                              
-                              Carregando opções
-                            
-                          )}
-                        
-                      
+                  <div className="space-y-4">
+                    <div className="text-center">
+                      Informações Acadêmicas
+                    </div>
+                    {loadingOptions && (
+                      <div className="text-center">
+                        Carregando opções
+                      </div>
+                    )}
 
-                      
-                        {/* Turma */}
-                        
-                          
-                            
-                              Turma
-                            
-                            
-                              
-                                
-                              
-                              
-                                handleSelectChange("classGroup", e.target.value)
-                                }
-                                disabled={loadingOptions}
-                              >
-                                
-                                  Selecione sua turma
-                                
-                                {classOptions.map((option) => (
-                                  
-                                    {option.label}
-                                  
-                                ))}
-                                
-                                  Outra
-                                
-                              
-                            
-                            {formData.classGroup === "outra" && (
-                              
-                                
-                                  
-                                    Especifique sua turma
-                                  
-                                  
-                                    
-                                    
-                                    placeholder="Digite o nome da sua turma"
-                                    
-                                    required
-                                  />
-                                
-                              
-                            )}
-                          
-                        
+                    {/* Turma */}
+                    <div className="relative">
+                      <label
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        htmlFor="classGroup"
+                      >
+                        Turma
+                      </label>
+                      <div className="relative">
+                        <select
+                          id="classGroup"
+                          name="classGroup"
+                          value={formData.classGroup}
+                          className="w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-brand-primary focus:border-brand-primary sm:text-sm"
+                          onChange={(e) =>
+                            handleSelectChange("classGroup", e.target.value)
+                          }
+                          disabled={loadingOptions}
+                        >
+                          <option value="">Selecione sua turma</option>
+                          {classOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                          <option value="outra">Outra</option>
+                        </select>
+                      </div>
+                      {formData.classGroup === "outra" && (
+                        <div className="relative mt-2">
+                          <label
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            htmlFor="customClassGroup"
+                          >
+                            Especifique sua turma
+                          </label>
+                          <Input
+                            type="text"
+                            name="customClassGroup"
+                            id="customClassGroup"
+                            value={formData.customClassGroup}
+                            onChange={handleChange}
+                            className="pl-3"
+                            placeholder="Digite o nome da sua turma"
+                            required
+                          />
+                        </div>
+                      )}
+                    </div>
 
-                        {/* Série */}
-                        
-                          
-                            
-                              Série
-                            
-                            
-                              
-                                
-                              
-                              
-                                handleSelectChange("grade", e.target.value)
-                                }
-                                disabled={loadingOptions}
-                              >
-                                
-                                  Selecione sua série
-                                
-                                {gradeOptions.map((option) => (
-                                  
-                                    {option.label}
-                                  
-                                ))}
-                                
-                                  Outra
-                                
-                              
-                            
-                            {formData.grade === "outra" && (
-                              
-                                
-                                  
-                                    Especifique sua série
-                                  
-                                  
-                                    
-                                    
-                                    placeholder="Digite o nome da sua série"
-                                    
-                                    required
-                                  />
-                                
-                              
-                            )}
-                          
-                        
-                      
-                    
-                  
+                    {/* Série */}
+                    <div className="relative">
+                      <label
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        htmlFor="grade"
+                      >
+                        Série
+                      </label>
+                      <div className="relative">
+                        <select
+                          id="grade"
+                          name="grade"
+                          value={formData.grade}
+                          className="w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-brand-primary focus:border-brand-primary sm:text-sm"
+                          onChange={(e) =>
+                            handleSelectChange("grade", e.target.value)
+                          }
+                          disabled={loadingOptions}
+                        >
+                          <option value="">Selecione sua série</option>
+                          {gradeOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                          <option value="outra">Outra</option>
+                        </select>
+                      </div>
+                      {formData.grade === "outra" && (
+                        <div className="relative mt-2">
+                          <label
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            htmlFor="customGrade"
+                          >
+                            Especifique sua série
+                          </label>
+                          <Input
+                            type="text"
+                            name="customGrade"
+                            id="customGrade"
+                            value={formData.customGrade}
+                            onChange={handleChange}
+                            className="pl-3"
+                            placeholder="Digite o nome da sua série"
+                            required
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 )}
 
                 {/* Data de Nascimento */}
-                
-                  
+                <div className="relative">
+                  <label
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    htmlFor="birthDate"
+                  >
                     Data de Nascimento
-                  
-                  
-                    
-                      
-                        
-                        
-                        
-                        required
-                      />
-                    
-                  
-                
-              
+                  </label>
+                  <div className="relative">
+                    <Input
+                      type="date"
+                      name="birthDate"
+                      id="birthDate"
+                      value={formData.birthDate}
+                      onChange={handleChange}
+                      className="pl-10 group"
+                      required
+                    />
+                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-hover:text-brand-primary transition-colors duration-200 z-10" />
+                  </div>
+                </div>
+              </div>
             )}
 
             {/* Etapa 3: Senha */}
             {step === 3 && (
-              
+              <div className="grid gap-2">
                 {/* Senha */}
-                
-                  
+                <div className="relative">
+                  <label
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    htmlFor="password"
+                  >
                     Senha
-                  
-                  
-                    
-                      
-                        showPassword ? "text" : "password"}
-                        
-                        
-                        placeholder="Digite sua senha"
-                        
-                        required
-                      />
-                      
-                        
-                        
-                        
-                          {showPassword ? (
-                            
-                          ) : (
-                            
-                          )}
-                        
-                      
-                    
-                  
-                
+                  </label>
+                  <div className="relative">
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      name="password"
+                      id="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      className="pl-10 pr-10 group"
+                      placeholder="Digite sua senha"
+                      required
+                    />
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-hover:text-brand-primary transition-colors duration-200 z-10" />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
 
                 {/* Confirmar Senha */}
-                
-                  
+                <div className="relative">
+                  <label
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    htmlFor="confirmPassword"
+                  >
                     Confirmar Senha
-                  
-                  
-                    
-                      
-                        showConfirmPassword ? "text" : "password"}
-                        
-                        
-                        placeholder="Confirme sua senha"
-                        
-                        required
-                      />
-                      
-                        
-                        
-                        
-                          {showConfirmPassword ? (
-                            
-                          ) : (
-                            
-                          )}
-                        
-                      
-                    
-                  
-                
-              
-            )}
-          
-
-          {error && (
-            
-              {error}
-            
-          )}
-
-          
-            {step > 1 && (
-              
-                
-                Voltar
-              
+                  </label>
+                  <div className="relative">
+                    <Input
+                      type={showConfirmPassword ? "text" : "password"}
+                      name="confirmPassword"
+                      id="confirmPassword"
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      className="pl-10 pr-10 group"
+                      placeholder="Confirme sua senha"
+                      required
+                    />
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-hover:text-brand-primary transition-colors duration-200 z-10" />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowConfirmPassword((prev) => !prev)}
+                      className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full"
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </div>
             )}
 
-            {step 3 ? (
-              
-                
-                Avançar 
-              
-            ) : (
-              
-                {loading ? "Criando conta..." : "Criar conta"}
-              
+            {error && (
+              <p className="text-sm text-red-500 text-center">
+                {error}
+              </p>
             )}
-          
 
-          {step === 3 && (
-            <>
-              
-                
-                  
-                    
-                  
-                
-                
-                  
-                    
+            <div className="flex justify-between">
+              {step > 1 && (
+                <Button variant="secondary" size="sm" onClick={prevStep}>
+                  Voltar
+                </Button>
+              )}
+
+              <Button size="sm" onClick={step === 3 ? handleSubmit : nextStep} disabled={loading}>
+                {step === 3 ? (
+                    loading ? "Criando conta..." : "Criar conta"
+                ) : (
+                    "Avançar"
+                )}
+              </Button>
+            </div>
+
+            {step === 3 && (
+              <>
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">
                       Ou continue com
-                    
-                  
-                
-              
-
-              
-                
-                  
-                    
-                    Google
-                  
+                    </span>
+                  </div>
+                </div>
+                <Button variant="outline" type="button" disabled>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="mr-2 h-4 w-4"
+                  >
+                    <path d="M20.29 7.35L12 18.15 3.71 7.35"></path>
+                  </svg>
                   Google
-                
-                
-                  
-                    
-                    Facebook
-                  
+                </Button>
+                <Button variant="outline" type="button" disabled>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="mr-2 h-4 w-4"
+                  >
+                    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+                  </svg>
                   Facebook
-                
-              
-            </>
-          )}
-
-          
+                </Button>
+              </>
+            )}
+          </div>
+          <div className="text-center text-sm text-muted-foreground">
             Já tem uma conta?{" "}
-            
-              
+            <a href="/login" className="underline underline-offset-4">
               Fazer login
-            
-          
-        
+            </a>
+          </div>
+        </>
       )}
-    
+    </div>
   );
 }
