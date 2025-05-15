@@ -27,7 +27,6 @@ import {
   Zap,
   ArrowRight,
 } from "lucide-react";
-import AdicionarGruposModal from "@/components/turmas/modaladicionargruposviacódigo/AdicionarGruposModal";
 
 // Sample data for study groups
 const studyGroups = [
@@ -319,7 +318,6 @@ export default function GruposEstudo2() {
   const [activeTab, setActiveTab] = useState("meus-grupos");
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
   const [filterOpen, setFilterOpen] = useState(false);
-  const [showAdicionarGruposModal, setShowAdicionarGruposModal] = useState(false);
 
   // Filter groups based on search query
   const filteredGroups = studyGroups.filter(
@@ -343,15 +341,6 @@ export default function GruposEstudo2() {
   // Handle back to groups list
   const handleBackToList = () => {
     setSelectedGroup(null);
-  };
-
-  // Função para lidar com a adição de um novo grupo
-  const handleGrupoAdicionado = (grupo) => {
-    console.log("Grupo adicionado:", grupo);
-    // Em uma implementação real, você adicionaria este grupo à lista local
-    // ou recarregaria os dados do servidor
-    setShowAdicionarGruposModal(false);
-    // Aqui você poderia adicionar o grupo à lista local ou recarregar os dados
   };
 
   // Get selected group details
@@ -388,11 +377,8 @@ export default function GruposEstudo2() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <Button 
-            className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white rounded-lg shadow-md transition-all duration-300 hover:shadow-lg transform hover:scale-[1.02]"
-            onClick={() => setShowAdicionarGruposModal(true)}
-          >
-            <Plus className="h-4 w-4 mr-1" /> Adicionar Grupos
+          <Button className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white rounded-lg shadow-md transition-all duration-300 hover:shadow-lg transform hover:scale-[1.02]">
+            <Plus className="h-4 w-4 mr-1" /> Criar Novo Grupo
           </Button>
         </div>
       </div>
@@ -1180,13 +1166,6 @@ export default function GruposEstudo2() {
           </div>
         </div>
       )}
-
-      {/* Modal para adicionar grupos */}
-      <AdicionarGruposModal 
-        isOpen={showAdicionarGruposModal}
-        onClose={() => setShowAdicionarGruposModal(false)}
-        onGrupoAdicionado={handleGrupoAdicionado}
-      />
     </div>
   );
 }

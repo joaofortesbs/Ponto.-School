@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import CreateGroupModalEnhanced from "../CreateGroupModalEnhanced";
 import GrupoSairModal from "../minisecao-gruposdeestudo/interface/GrupoSairModal";
 import GrupoConfiguracoesModal from "../minisecao-gruposdeestudo/interface/GrupoConfiguracoesModal";
-import AdicionarGruposModal from "../modaladicionargruposviacódigo/AdicionarGruposModal";
 import { supabase } from "@/lib/supabase";
 import { criarGrupo, sincronizarGruposLocais, obterTodosGrupos, obterGruposLocal, salvarGrupoLocal, removerGrupoLocal } from '@/lib/gruposEstudoStorage';
 
@@ -46,7 +45,6 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
   const [gruposEstudo, setGruposEstudo] = useState<GrupoEstudo[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
-  const [showAdicionarGruposModal, setShowAdicionarGruposModal] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [sairModalOpen, setSairModalOpen] = useState(false);
   const [configModalOpen, setConfigModalOpen] = useState(false);
@@ -490,39 +488,6 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
     }
   };
 
-  // Função para abrir o modal de adição de grupos
-  const handleAbrirAdicionarGrupoModal = () => {
-    setModalAdicionarGrupoAberto(true);
-  };
-
-  // Função para fechar o modal de adição de grupos
-  const handleFecharAdicionarGrupoModal = () => {
-    setModalAdicionarGrupoAberto(false);
-  };
-
-  // Callback quando um grupo é adicionado
-  const handleGrupoAdicionado = async (novoGrupo: any) => {
-    if (novoGrupo) {
-      // Verificar se o grupo já existe na lista
-      const grupoExistente = gruposEstudo.findIndex(g => g.id === novoGrupo.id);
-
-      if (grupoExistente >= 0) {
-        // Atualizar grupo existente
-        const gruposAtualizados = [...gruposEstudo];
-        gruposAtualizados[grupoExistente] = novoGrupo;
-        setGruposEstudo(gruposAtualizados);
-      } else {
-        // Adicionar novo grupo no início da lista
-        setGruposEstudo(prev => [novoGrupo, ...prev]);
-      }
-    }
-
-    // Recarregar a lista completa para garantir sincronização com o servidor
-    setTimeout(() => {
-      carregarGrupos();
-    }, 1000);
-  };
-
   // Função auxiliar para aplicar a migração do banco de dados
   const executarMigracaoDoBancoDeDados = async () => {
     try {
@@ -666,8 +631,6 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
     }, 4000);
   };
 
-  const [modalAdicionarGrupoAberto, setModalAdicionarGrupoAberto] = useState(false);
-
   return (
     <div className="mt-8">
       {/* Modal de criação de grupo */}
@@ -706,53 +669,6 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
         grupo={selectedGrupo}
         onSave={handleSaveGroupSettings}
       />
-
-      {/* Modal para adicionar grupos */}
-      <AdicionarGruposModal
-        isOpen={showAdicionarGruposModal}
-        onClose={() => setShowAdicionarGruposModal(false)}
-        onGrupoAdicionado={(grupo) => {
-          // Atualizar a lista após adicionar um grupo
-          if (grupo) {
-            setGruposEstudo(prevGrupos => [...prevGrupos, grupo]);
-          }
-          // Forçar atualização dos grupos mesmo sem receber um grupo específico
-          else {
-            const { data: { session } } = supabase.auth.getSession();
-            if (session) {
-              // Recarregar grupos depois de um segundo para permitir a propagação das alterações
-              setTimeout(() => {
-                sincronizarGruposLocais(session.user.id)
-                  .then(() => {
-                    const gruposAtualizados = obterGruposLocal();
-                    // Converter para formato compatível com GrupoEstudo
-                    const gruposFormatados = gruposAtualizados.map((g: any) => ({
-                      id: g.id,
-                      nome: g.nome,
-                      descricao: g.descricao,
-                      cor: g.cor,
-                      membros: g.membros || 1,
-                      topico: g.topico,
-                      disciplina: g.disciplina || "",
-                      icon: g.topico_icon,
-                      dataCriacao: g.data_criacao,
-                      tendencia: Math.random() > 0.7 ? "alta" : undefined,
-                      novoConteudo: Math.random() > 0.7,
-                      privado: g.privado,
-                      visibilidade: g.visibilidade,
-                      topico_nome: g.topico_nome,
-                      topico_icon: g.topico_icon,
-                      data_inicio: g.data_inicio,
-                      criador: g.criador || "você"
-                    }));
-                    setGruposEstudo(gruposFormatados);
-                  });
-              }, 1000);
-            }
-          }
-          setShowAdicionarGruposModal(false);
-        }}
-      />
       {/* Cabeçalho da grade */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
@@ -764,20 +680,12 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
             {gruposFiltrados.length} grupos
           </Badge>
         </div>
-        <div className="flex gap-3">
-          <Button 
-            onClick={() => setShowAdicionarGruposModal(true)}
-            className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-medium rounded-xl shadow-md hover:shadow-lg transition-all duration-300 border border-[#FF6B00]/20 py-2 px-4 h-10"
-          >
-            <Search className="h-4 w-4 mr-2" /> Adicionar Grupos
-          </Button>
-          <Button 
-            onClick={abrirModalCriarGrupo}
-            className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF6B00]/90 hover:to-[#FF8C40]/90 text-white text-sm rounded-xl shadow-md"
-          >
-            <Plus className="h-4 w-4 mr-1" /> Criar Grupo
-          </Button>
-        </div>
+        <Button 
+          onClick={abrirModalCriarGrupo}
+          className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF6B00]/90 hover:to-[#FF8C40]/90 text-white text-sm rounded-xl shadow-md"
+        >
+          <Plus className="h-4 w-4 mr-1" /> Criar Grupo
+        </Button>
       </div>
 
       {/* Lista de grupos */}
