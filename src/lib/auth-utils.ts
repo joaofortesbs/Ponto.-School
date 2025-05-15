@@ -238,12 +238,16 @@ export const getUserDisplayName = (): string => {
 
 export const signInWithEmail = async (email: string, password: string) => {
   try {
+    console.log("Tentando login com email:", email);
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    if (error) throw error;
+    if (error) {
+      console.error("Erro na autenticação:", error.message);
+      throw error;
+    }
 
     if (data?.user) {
       localStorage.setItem('auth_checked', 'true');

@@ -800,7 +800,7 @@ export function RegisterForm() {
       {renderStepIndicator()}
 
       {success ? (
-        <div className="bg-green-100 dark:bg-green-900/30 border-2 border-green-500 dark:border-green-600 text-green-800 dark:text-green-300 p-6 rounded-lg mb-6 animate-fade-in flex items-center gap-4 shadow-md">
+        <div className="bg-green-100 dark:bg-green-900/30 border-2 border-green-500 dark:border-green-600 text-green-800 dark:text-green-300 p-6 rounded-lg mb-6 animate-fade-in flex items-center gap-4 shadow-md>
           <div className="rounded-full bg-green-200 dark:bg-green-800 p-3 flex-shrink-0">
             <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
           </div>

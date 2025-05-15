@@ -86,6 +86,8 @@ export function LoginForm() {
     setError("");
     setLoading(true);
     setSuccess(false); // Reset success on submit
+    
+    console.log("Iniciando tentativa de login com:", formData.email);
 
     // Basic field validation
     if (!formData.email || !formData.password) {
@@ -142,12 +144,16 @@ export function LoginForm() {
         setSuccess(false);
         const error = loginResult.error as any;
         
+        console.log("Erro detalhado de login:", error);
+        
         if (error?.message?.includes("Invalid login credentials") || 
             error?.message?.includes("Email not confirmed") ||
             error?.message?.includes("não encontrado")) {
-          setError("Nome de usuário ou senha inválidos");
+          setError("Nome de usuário ou senha inválidos. Verifique suas informações e tente novamente.");
         } else if (error?.status === 0 || error?.message?.includes("conexão")) {
-          setError("Erro de conexão. Verifique sua internet.");
+          setError("Erro de conexão. Verifique sua internet e tente novamente.");
+        } else if (error?.message?.includes("rate limit")) {
+          setError("Muitas tentativas em pouco tempo. Aguarde alguns minutos e tente novamente.");
         } else {
           setError("Erro ao fazer login: " + (error?.message || "Verifique suas credenciais"));
         }
