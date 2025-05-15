@@ -1754,7 +1754,7 @@ export const salvarCodigoGrupoObjeto = async (codigoData: any) => {
       console.error("Exceção ao salvar código de grupo:", error);
       return { sucesso: false, error };
     }
-  };
+  }
 
   // Função para criar a tabela grupos_estudo se não existir
   export const criarTabelaGruposEstudo = async () => {
@@ -2029,7 +2029,6 @@ export const salvarCodigoGrupoObjeto = async (codigoData: any) => {
   };
 
   
-import { supabase } from './supabase';
 import { v4 as uuidv4 } from 'uuid';
 
 // Função para verificar se o código de grupo existe
