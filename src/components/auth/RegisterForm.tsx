@@ -787,83 +787,73 @@ export function RegisterForm() {
 
 
   return (
-    <div className="space-y-6">
-      <div className="text-center space-y-2">
-        <h1 className="text-2xl font-bold tracking-tight text-brand-black dark:text-white">
+    
+      
+        
           Criar nova conta
-        </h1>
-        <p className="text-sm text-brand-muted dark:text-white/60">
+        
+        
           {step === 3 ? "Finalize seu cadastro" : "Preencha os dados abaixo para começar"}
-        </p>
-      </div>
+        
+      
 
       {renderStepIndicator()}
 
       {success ? (
-        <div className="bg-green-100 dark:bg-green-900/30 border-2 border-green-500 dark:border-green-600 text-green-800 dark:text-green-300 p-6 rounded-lg mb-6 animate-fade-in flex items-center gap-4 shadow-md>
-          <div className="rounded-full bg-green-200 dark:bg-green-800 p-3 flex-shrink-0">
-            <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
-          </div>
-          <div className="flex-1">
-            <h3 className="text-lg font-bold">Conta criada com sucesso!</h3>
-            <p className="text-sm mt-1">Sua conta foi criada e seus dados foram salvos com sucesso. Você será redirecionado para a página de login automaticamente em instantes...</p>
-            <div className="mt-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
-              <div className="bg-green-500 dark:bg-green-400 h-1.5 rounded-full animate-pulse" style={{width: '100%', animationDuration: '1.5s'}}></div>
-            </div>
-          </div>
-        </div>
+        
+          
+            
+              
+            
+            
+              
+                Conta criada com sucesso!
+              
+              Sua conta foi criada e seus dados foram salvos com sucesso. Você será redirecionado para a página de login automaticamente em instantes...
+              
+                
+              
+            
+          
+        
       ) : (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {showPlanConfirmation && <PlanConfirmationModal />} {/* Adiciona o modal */}
-          <div className="bg-white/40 dark:bg-gray-800/20 backdrop-blur-2xl p-6 rounded-lg border border-white/20 dark:border-gray-700/50 shadow-lg">
-            <h2 className="text-lg font-semibold mb-4 text-brand-black dark:text-white">
+        
+          {showPlanConfirmation && } {/* Adiciona o modal */}
+          
+            
               {renderStepTitle()}
-            </h2>
-
-            {/* Etapa 1: Informações básicas */}
+            
+{/* Etapa 1: Informações básicas */}
             {step === 1 && (
-              <div className="space-y-4">
+              
                 {/* Nome Completo */}
-                <div className="space-y-2">
-                  <label className="text-sm fontmedium text-brand-black dark:text-white">
+                
+                  
                     Nome Completo
-                  </label>
-                  <div className="relative group">
+                  
+                  
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-hover:text-brand-primary transition-colors duration-200 z-10" />
-                    <Input
-                      type="text"
-                      name="fullName"
-                      value={formData.fullName}
-                      onChange={handleChange}
-                      placeholder="Digite seu nome completo"
-                      className="pl-10 h-11 bg-white/30 dark:bg-white/8 backdrop-blur-md border-[#FF6B00]/10 dark:border-[#FF6B00]/20 focus:border-[#FF6B00]/60 dark:focus:border-[#FF6B00]/60 transition-all duration-300 hover:border-[#FF6B00]/30 rounded-lg"
-                      required
-                      style={{
+                    
+                      
                         backdropFilter: "blur(12px)",
                         WebkitBackdropFilter: "blur(12px)",
                         boxShadow: "inset 0 1px 2px rgba(255, 255, 255, 0.1)"
                       }}
                     />
-                    <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none border border-[#FF6B00]/30 shadow-[0_0_15px_rgba(255,107,0,0.15)]" style={{
+                    
                       background: "linear-gradient(135deg, rgba(255, 107, 0, 0.03) 0%, rgba(255, 140, 64, 0.02) 100%)"
-                    }}></div>
-                  </div>
-                </div>
+                    }}>
 
                 {/* Nome de Usuário */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-brand-black dark:text-white">
+                
+                  
                     Nome de Usuário
-                  </label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <div className="flex items-center relative">
-                      <span className="absolute left-3 text-muted-foreground">@</span>
-                      <Input
-                        type="text"
-                        name="username"
-                        value={formData.username}
-                        onChange={(e) => {
+                  
+                  
+                    
+                      @
+                      
+                        
                           // Remover espaços e converter para minúsculas
                           const cleanedValue = e.target.value.toLowerCase().replace(/\s+/g, '');
 
@@ -901,404 +891,384 @@ export function RegisterForm() {
                           }
                         }}
                         placeholder="seunomeusuario"
-                        className="pl-8 h-11"
+                        
                         required
                       />
-                    </div>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Apenas letras minúsculas, números e sublinhados. Sem espaços.
-                  </p>
-                </div>
+                    
+                  
+                  Apenas letras minúsculas, números e sublinhados. Sem espaços.
+                
 
                 {/* E-mail */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-brand-black dark:text-white">
+                
+                  
                     E-mail
-                  </label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      placeholder="Digite seu e-mail"
-                      className="pl-10 h-11"
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
+                  
+                  
+                    
+                      
+                        
+                        
+                        placeholder="Digite seu e-mail"
+                        
+                        required
+                      />
+                    
+                  
+                
+              
             )}
 
             {/* Etapa 2: Informações acadêmicas */}
             {step === 2 && (
-              <div className="space-y-4">
+              
                 {/* Instituição */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-brand-black dark:text-white">
+                
+                  
                     Instituição de Ensino
-                  </label>
-                  <div className="relative rounded-md shadow-sm">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <School className="h-4 w-4 text-brand-muted" />
-                    </div>
-                    <Input
-                      type="text"
-                      name="institution"
-                      value={formData.institution}
-                      onChange={handleChange}
-                      placeholder="Digite o nome da sua instituição"
-                      className="pl-10 h-11 focus-visible:ring-brand-primary focus-visible:border-brand-primary"
-                      required
-                      autoComplete="organization"
-                    />
-                    {institutionFound && formData.institution && (
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center text-xs bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 py-1 px-2 rounded-full">
-                        <CheckCircle className="h-3.5 w-3.5 mr-1" />
-                        <span>Instituição encontrada</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
+                  
+                  
+                    
+                      
+                    
+                    
+                      
+                        
+                        
+                        placeholder="Digite o nome da sua instituição"
+                        
+                        autoComplete="organization"
+                      />
+                      {institutionFound && formData.institution && (
+                        
+                          
+                          
+                          Instituição encontrada
+                        
+                      )}
+                    
+                  
+                
 
                 {/* Estado (UF) */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-brand-black dark:text-white">
+                
+                  
                     Estado (UF)
-                  </label>
-                  <div className="relative rounded-md shadow-sm">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Map className="h-4 w-4 text-brand-muted" />
-                    </div>
-                    <select
-                      name="state"
-                      value={formData.state}
-                      onChange={(e) => handleSelectChange("state", e.target.value)}
-                      className="w-full pl-10 h-11 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-primary focus-visible:border-brand-primary dark:bg-[#0A2540] dark:border-gray-700 transition-colors"
-                      required
-                    >
-                      <option value="AC">Acre (AC)</option>
-                      <option value="AL">Alagoas (AL)</option>
-                      <option value="AP">Amapá (AP)</option>
-                      <option value="AM">Amazonas (AM)</option>
-                      <option value="BA">Bahia (BA)</option>
-                      <option value="CE">Ceará (CE)</option>
-                      <option value="DF">Distrito Federal (DF)</option>
-                      <option value="ES">Espírito Santo (ES)</option>
-                      <option value="GO">Goiás (GO)</option>
-                      <option value="MA">Maranhão (MA)</option>
-                      <option value="MT">Mato Grosso (MT)</option>
-                      <option value="MS">Mato Grosso do Sul (MS)</option>
-                      <option value="MG">Minas Gerais (MG)</option>
-                      <option value="PA">Pará (PA)</option>
-                      <option value="PB">Paraíba (PB)</option>
-                      <option value="PR">Paraná (PR)</option>
-                      <option value="PE">Pernambuco (PE)</option>
-                      <option value="PI">Piauí (PI)</option>
-                      <option value="RJ">Rio de Janeiro (RJ)</option>
-                      <option value="RN">Rio Grande do Norte (RN)</option>
-                      <option value="RS">Rio Grande do Sul (RS)</option>
-                      <option value="RO">Rondônia (RO)</option>
-                      <option value="RR">Roraima (RR)</option>
-                      <option value="SC">Santa Catarina (SC)</option>
-                      <option value="SP">São Paulo (SP)</option>
-                      <option value="SE">Sergipe (SE)</option>
-                      <option value="TO">Tocantins (TO)</option>
-                    </select>
-                  </div>
-                </div>
+                  
+                  
+                    
+                      
+                    
+                    
+                      
+                        handleSelectChange("state", e.target.value)}
+                      
+                      
+                        Acre (AC)
+                        Alagoas (AL)
+                        Amapá (AP)
+                        Amazonas (AM)
+                        Bahia (BA)
+                        Ceará (CE)
+                        Distrito Federal (DF)
+                        Espírito Santo (ES)
+                        Goiás (GO)
+                        Maranhão (MA)
+                        Mato Grosso (MT)
+                        Mato Grosso do Sul (MS)
+                        Minas Gerais (MG)
+                        Pará (PA)
+                        Paraíba (PB)
+                        Paraná (PR)
+                        Pernambuco (PE)
+                        Piauí (PI)
+                        Rio de Janeiro (RJ)
+                        Rio Grande do Norte (RN)
+                        Rio Grande do Sul (RS)
+                        Rondônia (RO)
+                        Roraima (RR)
+                        Santa Catarina (SC)
+                        São Paulo (SP)
+                        Sergipe (SE)
+                        Tocantins (TO)
+                      
+                    
+                  
+                
 
                 {/* Turma e Série - Mostrados apenas quando a instituição é preenchida */}
                 {showClassAndGrade && (
-                  <div className="space-y-6 border border-gray-200 dark:border-gray-700 rounded-lg p-5 bg-white dark:bg-gray-800/40 shadow-sm transition-all duration-300">
-                    <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-700 pb-3">
-                      <h3 className="text-base font-semibold text-brand-black dark:text-white flex items-center">
-                        <GraduationCap className="h-5 w-5 mr-2 text-brand-primary" /> Informações Acadêmicas
-                      </h3>
-                      {loadingOptions && (
-                        <span className="text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 py-1 px-2 rounded-full flex items-center">
-                          <span className="w-2 h-2 bg-blue-500 rounded-full mr-1.5 animate-pulse"></span>
-                          Carregando opções
-                        </span>
-                      )}
-                    </div>
+                  
+                    
+                      
+                        
+                          
+                            Informações Acadêmicas
+                          
+                          {loadingOptions && (
+                            
+                              
+                              Carregando opções
+                            
+                          )}
+                        
+                      
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                      {/* Turma */}
-                      <div className="space-y-3">
-                        <label className="text-sm font-medium text-brand-black dark:text-white flex items-center">
-                          Turma
-                        </label>
-                        <div className="relative rounded-md shadow-sm">
-                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <GraduationCap className="h-4 w-4 text-brand-muted" />
-                          </div>
-                          <select
-                            name="classGroup"
-                            value={formData.classGroup}
-                            onChange={(e) =>
-                              handleSelectChange("classGroup", e.target.value)
-                            }
-                            className="w-full pl-10 h-11 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-primary focus-visible:border-brand-primary dark:bg-[#0A2540] dark:border-gray-700 transition-colors"
-                            disabled={loadingOptions}
-                          >
-                            <option value="" disabled>
-                              Selecione sua turma
-                            </option>
-                            {classOptions.map((option) => (
-                              <option key={option.value} value={option.value}>
-                                {option.label}
-                              </option>
-                            ))}
-                            <option value="outra">Outra</option>
-                          </select>
-                        </div>
-                        {formData.classGroup === "outra" && (
-                          <div className="mt-3 pl-3 border-l-2 border-brand-primary">
-                            <label className="text-xs font-medium text-brand-muted mb-1 block">
-                              Especifique sua turma
-                            </label>
-                            <Input
-                              type="text"
-                              name="customClassGroup"
-                              value={formData.customClassGroup}
-                              onChange={handleChange}
-                              placeholder="Digite o nome da sua turma"
-                              className="h-10 focus-visible:ring-brand-primary focus-visible:border-brand-primary"
-                              required
-                            />
-                          </div>
-                        )}
-                      </div>
+                      
+                        {/* Turma */}
+                        
+                          
+                            
+                              Turma
+                            
+                            
+                              
+                                
+                              
+                              
+                                handleSelectChange("classGroup", e.target.value)
+                                }
+                                disabled={loadingOptions}
+                              >
+                                
+                                  Selecione sua turma
+                                
+                                {classOptions.map((option) => (
+                                  
+                                    {option.label}
+                                  
+                                ))}
+                                
+                                  Outra
+                                
+                              
+                            
+                            {formData.classGroup === "outra" && (
+                              
+                                
+                                  
+                                    Especifique sua turma
+                                  
+                                  
+                                    
+                                    
+                                    placeholder="Digite o nome da sua turma"
+                                    
+                                    required
+                                  />
+                                
+                              
+                            )}
+                          
+                        
 
-                      {/* Série */}
-                      <div className="space-y-3">
-                        <label className="text-sm font-medium text-brand-black dark:text-white flex items-center">
-                          Série
-                        </label>
-                        <div className="relative rounded-md shadow-sm">
-                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <GraduationCap className="h-4 w-4 text-brand-muted" />
-                          </div>
-                          <select
-                            name="grade"
-                            value={formData.grade}
-                            onChange={(e) =>
-                              handleSelectChange("grade", e.target.value)
-                            }
-                            className="w-full pl-10 h-11 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-primary focus-visible:border-brand-primary dark:bg-[#0A2540] dark:border-gray-700 transition-colors"
-                            disabled={loadingOptions}
-                          >
-                            <option value="" disabled>
-                              Selecione sua série
-                            </option>
-                            {gradeOptions.map((option) => (
-                              <option key={option.value} value={option.value}>
-                                {option.label}
-                              </option>
-                            ))}
-                            <option value="outra">Outra</option>
-                          </select>
-                        </div>
-                        {formData.grade === "outra" && (
-                          <div className="mt-3 pl-3 border-l-2 border-brand-primary">
-                            <label className="text-xs font-medium text-brand-muted mb-1 block">
-                              Especifique sua série
-                            </label>
-                            <Input
-                              type="text"
-                              name="customGrade"
-                              value={formData.customGrade}
-                              onChange={handleChange}
-                              placeholder="Digite o nome da sua série"
-                              className="h-10 focus-visible:ring-brand-primary focus-visible:border-brand-primary"
-                              required
-                            />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+                        {/* Série */}
+                        
+                          
+                            
+                              Série
+                            
+                            
+                              
+                                
+                              
+                              
+                                handleSelectChange("grade", e.target.value)
+                                }
+                                disabled={loadingOptions}
+                              >
+                                
+                                  Selecione sua série
+                                
+                                {gradeOptions.map((option) => (
+                                  
+                                    {option.label}
+                                  
+                                ))}
+                                
+                                  Outra
+                                
+                              
+                            
+                            {formData.grade === "outra" && (
+                              
+                                
+                                  
+                                    Especifique sua série
+                                  
+                                  
+                                    
+                                    
+                                    placeholder="Digite o nome da sua série"
+                                    
+                                    required
+                                  />
+                                
+                              
+                            )}
+                          
+                        
+                      
+                    
+                  
                 )}
 
                 {/* Data de Nascimento */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-brand-black dark:text-white">
+                
+                  
                     Data de Nascimento
-                  </label>
-                  <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      type="date"
-                      name="birthDate"
-                      value={formData.birthDate}
-                      onChange={handleChange}
-                      className="pl-10 h-11"
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
+                  
+                  
+                    
+                      
+                        
+                        
+                        
+                        required
+                      />
+                    
+                  
+                
+              
             )}
 
             {/* Etapa 3: Senha */}
             {step === 3 && (
-              <div className="space-y-4">
+              
                 {/* Senha */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-brand-black dark:text-white">
+                
+                  
                     Senha
-                  </label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      type={showPassword ? "text" : "password"}
-                      name="password"
-                      value={formData.password}
-                      onChange={handleChange}
-                      placeholder="Digite sua senha"
-                      className="pl-10 pr-10 h-11"
-                      required
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4 text-muted-foreground" />
-                      ) : (
-                        <Eye className="h-4 w-4 text-muted-foreground" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
+                  
+                  
+                    
+                      
+                        showPassword ? "text" : "password"}
+                        
+                        
+                        placeholder="Digite sua senha"
+                        
+                        required
+                      />
+                      
+                        
+                        
+                        
+                          {showPassword ? (
+                            
+                          ) : (
+                            
+                          )}
+                        
+                      
+                    
+                  
+                
 
                 {/* Confirmar Senha */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-brand-black dark:text-white">
+                
+                  
                     Confirmar Senha
-                  </label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      type={showConfirmPassword ? "text" : "password"}
-                      name="confirmPassword"
-                      value={formData.confirmPassword}
-                      onChange={handleChange}
-                      placeholder="Confirme sua senha"
-                      className="pl-10 pr-10 h-11"
-                      required
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    >
-                      {showConfirmPassword ? (
-                        <EyeOff className="h-4 w-4 text-muted-foreground" />
-                      ) : (
-                        <Eye className="h-4 w-4 text-muted-foreground" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
-              </div>
+                  
+                  
+                    
+                      
+                        showConfirmPassword ? "text" : "password"}
+                        
+                        
+                        placeholder="Confirme sua senha"
+                        
+                        required
+                      />
+                      
+                        
+                        
+                        
+                          {showConfirmPassword ? (
+                            
+                          ) : (
+                            
+                          )}
+                        
+                      
+                    
+                  
+                
+              
             )}
-          </div>
+          
 
           {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-3 rounded-md text-sm">
+            
               {error}
-            </div>
+            
           )}
 
-          <div className="flex justify-between gap-3 mt-6">
+          
             {step > 1 && (
-              <Button
-                type="button"
-                onClick={prevStep}
-                variant="outline"
-                className="w-full h-11 text-base"
-                disabled={loading}
-              >
+              
+                
                 Voltar
-              </Button>
+              
             )}
 
-            {step < 3 ? (
-              <Button
-                type="button"
-                onClick={nextStep}
-                className="w-full h-11 text-base bg-brand-primary hover:bg-brand-primary/90 text-white"
-                disabled={loading}
-              >
-                Avançar <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
+            {step 3 ? (
+              
+                
+                Avançar 
+              
             ) : (
-              <Button
-                type="submit"
-                className="w-full h-11 text-base bg-brand-primary hover:bg-brand-primary/90 text-white"
-                disabled={loading}
-              >
+              
                 {loading ? "Criando conta..." : "Criar conta"}
-              </Button>
+              
             )}
-          </div>
+          
 
           {step === 3 && (
             <>
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white dark:bg-[#0A2540] px-2 text-muted-foreground">
-                    Ou continue com
-                  </span>
-                </div>
-              </div>
+              
+                
+                  
+                    
+                  
+                
+                
+                  
+                    
+                      Ou continue com
+                    
+                  
+                
+              
 
-              <div className="grid grid-cols-2 gap-4">
-                <Button variant="outline" className="h-11">
-                  <img
-                    src="https://www.svgrepo.com/show/506498/google.svg"
-                    alt="Google"
-                    className="w-5 h-5 mr-2"
-                  />
+              
+                
+                  
+                    
+                    Google
+                  
                   Google
-                </Button>
-                <Button variant="outline" className="h-11">
-                  <img
-                    src="https://www.svgrepo.com/show/521654/facebook.svg"
-                    alt="Facebook"
-                    className="w-5 h-5 mr-2"
-                  />
+                
+                
+                  
+                    
+                    Facebook
+                  
                   Facebook
-                </Button>
-              </div>
+                
+              
             </>
           )}
 
-          <p className="text-center text-sm text-brand-muted dark:text-white/60">
+          
             Já tem uma conta?{" "}
-            <Button
-              type="button"
-              variant="link"
-              className="text-brand-primary hover:text-brand-primary/90 p-0 h-auto"
-              onClick={() => navigate("/login")}
-            >
+            
+              
               Fazer login
-            </Button>
-          </p>
-        </form>
+            
+          
+        
       )}
-    </div>
+    
   );
 }

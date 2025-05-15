@@ -33,10 +33,10 @@ export function LoginForm() {
       setTimeout(() => {
         setAccountCreated(false);
       }, 8000); // Aumentado para 8 segundos para dar mais tempo de leitura
-      
+
       // Limpar flag de redirecionamento
       localStorage.removeItem('redirectTimer');
-      
+
       // Preencher o campo de email com o último username registrado
       const lastUsername = localStorage.getItem('lastRegisteredUsername');
       if (lastUsername) {
@@ -44,7 +44,7 @@ export function LoginForm() {
         console.log("Preenchendo campo de email com username:", lastUsername);
       }
     }
-    
+
     // Verificar o parâmetro na URL também
     const params = new URLSearchParams(location.search);
     if (params.get('newAccount') === 'true') {
@@ -52,23 +52,23 @@ export function LoginForm() {
       setTimeout(() => {
         setAccountCreated(false);
       }, 8000); // Aumentado para 8 segundos
-      
+
       // Limpar flag de redirecionamento
       localStorage.removeItem('redirectTimer');
-      
+
       // Verificar se há username no localStorage mesmo quando vindo por parâmetro de URL
       const lastUsername = localStorage.getItem('lastRegisteredUsername');
       if (lastUsername && !formData.email) {
         setFormData(prev => ({ ...prev, email: lastUsername }));
       }
     }
-    
+
     // Executar sempre na montagem do componente para verificar se existe um redirecionamento pendente
     const pendingRedirect = localStorage.getItem('redirectTimer');
     if (pendingRedirect === 'active') {
       setAccountCreated(true);
       localStorage.removeItem('redirectTimer');
-      
+
       const lastUsername = localStorage.getItem('lastRegisteredUsername');
       if (lastUsername) {
         setFormData(prev => ({ ...prev, email: lastUsername }));
@@ -86,7 +86,7 @@ export function LoginForm() {
     setError("");
     setLoading(true);
     setSuccess(false); // Reset success on submit
-    
+
     console.log("Iniciando tentativa de login com:", formData.email);
 
     // Basic field validation
@@ -125,10 +125,10 @@ export function LoginForm() {
       // Importar a função do auth-utils para garantir consistência
       const inputValue = formData.email.trim();
       const isEmail = inputValue.includes('@');
-      
+
       // Escolher a estratégia de login apropriada com base no tipo de entrada
       let loginResult;
-      
+
       if (isEmail) {
         console.log("Tentando login com email:", inputValue);
         loginResult = await signInWithEmail(inputValue, formData.password);
@@ -143,9 +143,9 @@ export function LoginForm() {
       if (!loginResult.success) {
         setSuccess(false);
         const error = loginResult.error as any;
-        
+
         console.log("Erro detalhado de login:", error);
-        
+
         if (error?.message?.includes("Invalid login credentials") || 
             error?.message?.includes("Email not confirmed") ||
             error?.message?.includes("não encontrado")) {
@@ -157,7 +157,7 @@ export function LoginForm() {
         } else {
           setError("Erro ao fazer login: " + (error?.message || "Verifique suas credenciais"));
         }
-        
+
         localStorage.removeItem('auth_checked');
         localStorage.removeItem('auth_status');
         setLoading(false);
@@ -168,7 +168,7 @@ export function LoginForm() {
       if (loginResult.data?.user) {
         localStorage.setItem('auth_checked', 'true');
         localStorage.setItem('auth_status', 'authenticated');
-        
+
         // Salvar o nome de usuário do login para acesso rápido
         if (!isEmail) {
           localStorage.setItem('username', inputValue);
@@ -390,3 +390,58 @@ export function RegistrationForm(){
     //Implementation for registration form here.  This would include fields for name, email, password, etc., and a submit handler to create a new user account in Supabase.  Error handling and success messages would also be necessary.
     return <div>Registration Form (Not implemented)</div>
 }
+
+// Simulate successful login
+async function signInWithEmail(email: string, password: string) {
+  // Tentar fazer login
+  try {
+    
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email,
+      password: password
+    });
+
+    if (error) {
+      console.error("Erro de login:", error);
+
+      // Mensagem de erro mais específica baseada no tipo de erro
+      if (error.message.includes("Invalid login credentials")) {
+        return { success: false, error: "Credenciais inválidas. Verifique seu email e senha." };
+      } else if (error.message.includes("Email not confirmed")) {
+        return { success: false, error: "Email não confirmado. Verifique sua caixa de entrada." };
+      } else {
+        return { success: false, error: "Erro ao fazer login, tente novamente" };
+      }
+    }
+    return {success: true, data};
+  } catch(error:any){
+      return { success: false, error: "Erro ao fazer login, tente novamente" };
+  }
+}
+
+async function signInWithUsername(username: string, password: string) {
+    // Tentar fazer login
+    try {
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: username,
+        password: password
+      });
+  
+      if (error) {
+        console.error("Erro de login:", error);
+  
+        // Mensagem de erro mais específica baseada no tipo de erro
+        if (error.message.includes("Invalid login credentials")) {
+          return { success: false, error: "Credenciais inválidas. Verifique seu nome de usuário e senha." };
+        } else if (error.message.includes("Email not confirmed")) {
+          return { success: false, error: "Email não confirmado. Verifique sua caixa de entrada." };
+        } else {
+          return { success: false, error: "Erro ao fazer login, tente novamente" };
+        }
+      }
+      return {success: true, data};
+    } catch(error:any){
+        return { success: false, error: "Erro ao fazer login, tente novamente" };
+    }
+  }
