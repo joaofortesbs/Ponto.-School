@@ -836,8 +836,7 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
                 id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
                 user_id UUID NOT NULL,
                 nome TEXT NOT NULL,
-                ```text
-descricao TEXT,
+                descricao TEXT,
                 cor TEXT NOT NULL DEFAULT '#FF6B00',
                 membros INTEGER NOT NULL DEFAULT 1,
                 membros_ids JSONB DEFAULT '[]'::jsonb,
