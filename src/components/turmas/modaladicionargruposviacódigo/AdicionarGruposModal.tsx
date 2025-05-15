@@ -1,314 +1,288 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, X, RefreshCw, Search, Link } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Search as SearchIcon, X, RefreshCcw } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/lib/supabase";
-import { verificarSeCodigoExiste, adicionarGrupoComCodigo } from "@/lib/grupoCodigoUtils";
+import { verificarCodigoExiste, entrarEmGrupoComCodigo } from "@/lib/grupoCodigoUtils";
 
-interface AdicionarGruposModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
-
-const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({ isOpen, onClose }) => {
-  const [codigo, setCodigo] = useState<string>("");
+const AdicionarGruposModal = ({ open, onOpenChange }) => {
+  const [codigo, setCodigo] = useState("");
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [sincronizando, setSincronizando] = useState<boolean>(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [buscaString, setBuscaString] = useState("");
+  const [sincronizando, setSincronizando] = useState(false);
 
-  useEffect(() => {
-    // Limpar estado quando o modal é aberto
-    if (isOpen) {
-      setCodigo("");
-      setError(null);
-    }
-  }, [isOpen]);
+  const limparErro = () => {
+    if (error) setError(null);
+  };
 
-  // Função para verificar e criar tabelas necessárias
-  const verificarCriarTabelas = async () => {
+  // Verificar/criar tabelas necessárias para funcionamento
+  const verificarECriarTabelas = useCallback(async () => {
     try {
       setSincronizando(true);
-
-      // Tentar através da API primeiro
+      setError(null);
+      
+      // Verificar se a tabela grupos_estudo existe
       try {
-        const response = await fetch('/api/fix-tables', {
-          method: 'POST',
-        });
-        
-        if (response.ok) {
-          console.log("Tabelas verificadas/criadas com sucesso via API");
-          return true;
-        }
-      } catch (apiError) {
-        console.error("Erro ao usar API para criar tabelas:", apiError);
+        await supabase.from('grupos_estudo').select('*', { count: 'exact', head: true });
+        console.log("Tabela grupos_estudo existe");
+      } catch (error) {
+        console.error("Erro ao verificar tabela grupos_estudo:", error);
+        await criarTabelaGruposEstudo();
       }
 
-      // Verificar se a tabela de grupos de estudo existe
-      const { count: countGrupos, error: errorGrupos } = await supabase
-        .from('grupos_estudo')
-        .select('*', { count: 'exact', head: true });
+      // Verificar se a tabela codigos_grupos_estudo existe
+      try {
+        await supabase.from('codigos_grupos_estudo').select('*', { count: 'exact', head: true });
+        console.log("Tabela codigos_grupos_estudo existe");
+      } catch (error) {
+        console.error("Erro ao verificar tabela codigos_grupos_estudo:", error);
+        await criarTabelaCodigosGrupos();
+      }
+      
+      // Atualizar o status
+      setSincronizando(false);
+      
+      return true;
+    } catch (err) {
+      console.error("Erro ao verificar/criar tabelas:", err);
+      setError("Erro ao verificar/criar tabelas: " + (err.message || JSON.stringify(err)));
+      setSincronizando(false);
+      return false;
+    }
+  }, []);
 
-      if (errorGrupos && errorGrupos.code === '42P01') {
-        console.log("Tabela grupos_estudo não existe. Tentando criar...");
-        
-        // Criar tabela grupos_estudo
-        try {
-          await supabase.query(`
-            CREATE TABLE IF NOT EXISTS public.grupos_estudo (
-              id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-              user_id UUID NOT NULL,
-              nome TEXT NOT NULL,
-              descricao TEXT,
-              cor TEXT NOT NULL DEFAULT '#FF6B00',
-              membros INTEGER NOT NULL DEFAULT 1,
-              membros_ids JSONB DEFAULT '[]'::jsonb,
-              topico TEXT,
-              topico_nome TEXT,
-              topico_icon TEXT,
-              privado BOOLEAN DEFAULT false,
-              visibilidade TEXT DEFAULT 'todos',
-              codigo TEXT,
-              disciplina TEXT DEFAULT 'Geral',
-              data_criacao TIMESTAMP WITH TIME ZONE DEFAULT now()
-            );
-          `);
-          console.log("Tabela grupos_estudo criada com sucesso!");
-        } catch (createError) {
-          console.error("Erro ao criar tabela grupos_estudo:", createError);
-          setError("Erro ao criar tabela de grupos. Por favor tente novamente.");
-          return false;
-        }
+  // Criar tabela grupos_estudo
+  const criarTabelaGruposEstudo = async () => {
+    try {
+      console.log("Criando tabela grupos_estudo...");
+      // Usar a API REST para criar tabela
+      const response = await fetch('/api/fix-tables', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'create_grupos_estudo'
+        })
+      });
+
+      if (!response.ok) {
+        const errorDetails = await response.json();
+        throw new Error(`Falha ao criar tabela grupos_estudo: ${errorDetails.error || response.statusText}`);
       }
 
-      // Verificar se a tabela de códigos existe
-      const { count: countCodigos, error: errorCodigos } = await supabase
-        .from('codigos_grupos_estudo')
-        .select('*', { count: 'exact', head: true });
-
-      if (errorCodigos && errorCodigos.code === '42P01') {
-        console.log("Tabela codigos_grupos_estudo não existe. Tentando criar...");
-        
-        // Criar tabela codigos_grupos_estudo
-        try {
-          await supabase.query(`
-            CREATE TABLE IF NOT EXISTS public.codigos_grupos_estudo (
-              codigo VARCHAR(15) PRIMARY KEY,
-              grupo_id UUID NOT NULL,
-              nome VARCHAR NOT NULL,
-              descricao TEXT,
-              data_criacao TIMESTAMP WITH TIME ZONE DEFAULT now(),
-              user_id UUID,
-              privado BOOLEAN DEFAULT false,
-              membros INTEGER DEFAULT 1,
-              visibilidade VARCHAR,
-              disciplina VARCHAR,
-              cor VARCHAR DEFAULT '#FF6B00',
-              membros_ids JSONB DEFAULT '[]'::jsonb,
-              ultima_atualizacao TIMESTAMP WITH TIME ZONE DEFAULT now()
-            );
-          `);
-          console.log("Tabela codigos_grupos_estudo criada com sucesso!");
-        } catch (createError) {
-          console.error("Erro ao criar tabela codigos_grupos_estudo:", createError);
-          setError("Erro ao criar tabela de códigos. Por favor tente novamente.");
-          return false;
-        }
-      }
-
+      console.log("Tabela grupos_estudo criada com sucesso");
       return true;
     } catch (error) {
-      console.error("Erro ao verificar/criar tabelas:", error);
-      setError("Erro ao verificar estrutura do banco de dados.");
+      console.error("Erro ao criar tabela grupos_estudo:", error);
+      setError(`Erro ao criar tabela: ${error.message}`);
       return false;
-    } finally {
-      setSincronizando(false);
     }
   };
 
-  const handleSincronizar = async () => {
-    await verificarCriarTabelas();
-  };
-
-  const handleEntrarGrupo = async () => {
-    if (!codigo.trim()) {
-      setError("Por favor, digite um código de convite");
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
+  // Criar tabela codigos_grupos_estudo
+  const criarTabelaCodigosGrupos = async () => {
     try {
-      // Verificar se as tabelas existem
-      const tabelasOk = await verificarCriarTabelas();
-      if (!tabelasOk) {
-        setError("Erro ao verificar/criar tabelas. Por favor, tente novamente.");
+      console.log("Criando tabela codigos_grupos_estudo...");
+      // Usar a API REST para criar tabela
+      const response = await fetch('/api/fix-tables', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'create_codigos_grupos_estudo'
+        })
+      });
+
+      if (!response.ok) {
+        const errorDetails = await response.json();
+        throw new Error(`Falha ao criar tabela codigos_grupos_estudo: ${errorDetails.error || response.statusText}`);
+      }
+
+      console.log("Tabela codigos_grupos_estudo criada com sucesso");
+      return true;
+    } catch (error) {
+      console.error("Erro ao criar tabela codigos_grupos_estudo:", error);
+      setError(`Erro ao criar tabela: ${error.message}`);
+      return false;
+    }
+  };
+
+  // Verificar tabelas ao carregar o componente
+  useEffect(() => {
+    if (open) {
+      verificarECriarTabelas();
+    }
+  }, [open, verificarECriarTabelas]);
+
+  const handleEntrarComCodigo = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      setIsSuccess(false);
+
+      if (!codigo) {
+        setError("Digite um código de convite.");
+        setLoading(false);
         return;
       }
-      
-      // Verificar se o código existe e adicionar o usuário ao grupo
-      const { success, error: codigoError, message } = await verificarSeCodigoExiste(codigo);
-      
-      if (success) {
-        const resultado = await adicionarGrupoComCodigo(codigo);
-        if (resultado.success) {
-          // Grupo adicionado com sucesso
-          onClose();
-          // Mostrar notificação ou feedback
-          mostrarNotificacaoSucesso("Você entrou no grupo com sucesso!");
-        } else {
-          setError(resultado.message || "Erro ao entrar no grupo");
-        }
-      } else {
-        setError(message || "Código inválido ou expirado");
+
+      // Verificar tabelas antes de executar a operação
+      const tabelasOk = await verificarECriarTabelas();
+      if (!tabelasOk) {
+        setLoading(false);
+        return;
       }
-    } catch (error) {
-      console.error("Erro ao verificar código:", error);
-      setError("Ocorreu um erro ao processar sua solicitação");
+
+      // Verificar se o código existe
+      const codigoExiste = await verificarCodigoExiste(codigo);
+      
+      if (!codigoExiste) {
+        setError("Código de convite inválido ou expirado.");
+        setLoading(false);
+        return;
+      }
+
+      // Entrar no grupo
+      const resultado = await entrarEmGrupoComCodigo(codigo);
+      
+      if (resultado.sucesso) {
+        setIsSuccess(true);
+        setCodigo("");
+        setTimeout(() => {
+          setIsSuccess(false);
+        }, 3000);
+      } else {
+        setError(resultado.mensagem || "Erro ao entrar no grupo.");
+      }
+    } catch (err) {
+      console.error("Erro ao entrar com código:", err);
+      setError("Erro ao processar o código: " + (err.message || JSON.stringify(err)));
     } finally {
       setLoading(false);
     }
   };
 
-  // Função auxiliar para mostrar notificação de sucesso
-  const mostrarNotificacaoSucesso = (mensagem: string) => {
-    const element = document.createElement('div');
-    element.style.position = 'fixed';
-    element.style.top = '20px';
-    element.style.left = '50%';
-    element.style.transform = 'translateX(-50%)';
-    element.style.padding = '10px 20px';
-    element.style.background = '#4CAF50';
-    element.style.color = 'white';
-    element.style.borderRadius = '4px';
-    element.style.zIndex = '9999';
-    element.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
-    element.textContent = mensagem;
-    document.body.appendChild(element);
-
-    // Remover após 3 segundos
-    setTimeout(() => {
-      element.style.opacity = '0';
-      element.style.transition = 'opacity 0.5s';
-      setTimeout(() => {
-        document.body.removeChild(element);
-      }, 500);
-    }, 3000);
+  const handleSincronizar = async () => {
+    await verificarECriarTabelas();
   };
 
-  if (!isOpen) {
-    return null;
-  }
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70">
-      <div className="relative bg-gradient-to-b from-gray-900 to-black w-full max-w-md rounded-xl border border-white/10 p-6 shadow-xl">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-5">
-          <div className="flex items-center">
-            <div className="h-8 w-8 bg-gradient-to-tr from-[#FF6B00] to-[#FF8C40] rounded-full flex items-center justify-center mr-3">
-              <Link className="h-4 w-4 text-white" />
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <span className="text-lg font-semibold">Adicionar Grupos de Estudo</span>
+          </DialogTitle>
+        </DialogHeader>
+
+        <Tabs defaultValue="codigo" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="codigo">Entrar com Código</TabsTrigger>
+            <TabsTrigger value="pesquisar">Pesquisar Grupos</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="codigo" className="mt-4 space-y-4">
+            <div className="flex flex-col space-y-4">
+              <div className="flex items-center gap-2">
+                <div className="h-10 w-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
+                  <svg viewBox="0 0 24 24" className="h-5 w-5 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium">Código de Convite</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Entre em grupos privados utilizando um código de convite. Estes códigos são compartilhados por administradores ou membros dos grupos para acesso exclusivo.
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <h4 className="text-sm font-semibold"># Digite o código de convite</h4>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Ex: ABCD-1234-XYZ9"
+                    value={codigo}
+                    onChange={(e) => {
+                      setCodigo(e.target.value);
+                      limparErro();
+                    }}
+                    className="flex-1"
+                  />
+                  <Button
+                    onClick={handleEntrarComCodigo}
+                    disabled={loading}
+                    className="bg-orange-500 hover:bg-orange-600 text-white"
+                  >
+                    Entrar com Código
+                  </Button>
+                </div>
+              </div>
+
+              {error && (
+                <Alert variant="destructive" className="py-2">
+                  <AlertDescription className="text-sm">{error}</AlertDescription>
+                </Alert>
+              )}
+
+              {isSuccess && (
+                <Alert className="py-2 bg-green-100 dark:bg-green-900/30">
+                  <AlertDescription className="text-sm text-green-800 dark:text-green-300">
+                    Você entrou no grupo com sucesso!
+                  </AlertDescription>
+                </Alert>
+              )}
             </div>
-            <h2 className="text-xl font-semibold text-white">Adicionar Grupos de Estudo</h2>
-          </div>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={onClose}
-            className="h-8 w-8 rounded-full"
-          >
-            <X className="h-4 w-4 text-white/80" />
+
+            <div className="flex justify-end pt-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleSincronizar}
+                disabled={sincronizando}
+                className="flex items-center gap-1"
+              >
+                <RefreshCcw className={`h-3.5 w-3.5 ${sincronizando ? 'animate-spin' : ''}`} />
+                {sincronizando ? 'Sincronizando...' : 'Sincronizar'}
+              </Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="pesquisar" className="mt-4 space-y-4">
+            <div className="relative">
+              <SearchIcon className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Pesquisar Grupos"
+                className="pl-9"
+                value={buscaString}
+                onChange={(e) => setBuscaString(e.target.value)}
+              />
+            </div>
+
+            <div className="min-h-[200px] flex flex-col items-center justify-center text-center p-4">
+              <div className="text-sm text-muted-foreground">
+                Pesquise por grupos públicos por nome, disciplina ou tópico
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+
+        <DialogClose asChild>
+          <Button variant="outline" className="absolute right-4 top-4">
+            <X className="h-4 w-4" />
+            <span className="sr-only">Fechar</span>
           </Button>
-        </div>
-
-        {/* Botão para sincronizar */}
-        <div className="flex justify-end mb-3">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleSincronizar}
-            disabled={sincronizando}
-            className="text-xs flex items-center gap-1 border-white/10 bg-transparent text-white/70 hover:bg-white/5"
-          >
-            {sincronizando ? (
-              <Loader2 className="h-3 w-3 animate-spin" />
-            ) : (
-              <RefreshCw className="h-3 w-3" />
-            )}
-            Sincronizar
-          </Button>
-        </div>
-
-        {/* Search input */}
-        <div className="relative w-full mb-6">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/50" />
-          <Input
-            placeholder="Pesquisar Grupos"
-            className="pl-10 bg-black/20 border-white/10 text-white placeholder:text-white/50 h-10"
-            disabled
-          />
-        </div>
-
-        {/* Convite box */}
-        <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-lg border border-white/10 p-4 mb-6">
-          <div className="flex items-center">
-            <div className="h-10 w-10 bg-[#FF6B00]/10 rounded-full flex items-center justify-center mr-3">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#FF6B00]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.3615 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.9.339 1.84.574 2.81.7A2 2 0 0122 16.92z" />
-              </svg>
-            </div>
-            <div>
-              <h3 className="text-lg font-medium text-white">Código de Convite</h3>
-              <p className="text-sm text-white/60">
-                Entre em grupos privados utilizando um código de convite. Estes códigos são compartilhados por administradores ou membros dos grupos para acesso exclusivo.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Código input */}
-        <div className="mb-2">
-          <label htmlFor="codigo" className="block text-sm font-medium text-[#FF6B00] mb-1">
-            # Digite o código de convite
-          </label>
-          <Input
-            id="codigo"
-            value={codigo}
-            onChange={(e) => setCodigo(e.target.value)}
-            placeholder="Ex: ABCD-1234-XYZ9"
-            className="bg-black/30 border-white/10 text-white placeholder:text-white/30"
-          />
-        </div>
-
-        {/* Error message */}
-        {error && (
-          <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-3 mb-4 flex items-center gap-2">
-            <X className="h-5 w-5 text-red-400" />
-            <p className="text-red-400 text-sm">{error}</p>
-          </div>
-        )}
-
-        {/* Button */}
-        <Button
-          onClick={handleEntrarGrupo}
-          disabled={loading || !codigo.trim()}
-          className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:opacity-90 text-white flex items-center justify-center gap-2 mt-3"
-        >
-          {loading ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Verificando...
-            </>
-          ) : (
-            <>
-              <Link className="h-4 w-4" />
-              Entrar com Código
-            </>
-          )}
-        </Button>
-      </div>
-    </div>
+        </DialogClose>
+      </DialogContent>
+    </Dialog>
   );
 };
 

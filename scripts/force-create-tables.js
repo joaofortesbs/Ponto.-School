@@ -503,3 +503,232 @@ forceCriarTabelas()
     console.error('❌ ERRO CRÍTICO:', error);
     process.exit(1);
   });
+// Script para forçar a criação de tabelas do banco de dados
+require('dotenv').config();
+const { createClient } = require('@supabase/supabase-js');
+
+// Obter credenciais do ambiente
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_KEY;
+
+// Inicializar cliente Supabase
+const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    persistSession: false
+  }
+});
+
+// Função para forçar a criação das tabelas
+async function forcarCriacaoTabelas() {
+  console.log('🔨 INICIANDO CRIAÇÃO FORÇADA DE TABELAS');
+  console.log('----------------------------------------');
+  
+  try {
+    // 1. Extensão UUID
+    console.log('Criando extensão UUID...');
+    try {
+      await supabase.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`);
+      console.log('✅ Extensão UUID criada com sucesso');
+    } catch (err) {
+      console.error('⚠️ Erro ao criar extensão UUID:', err.message);
+      console.log('Continuando mesmo com erro...');
+    }
+    
+    // 2. Tabela grupos_estudo
+    console.log('\nCriando tabela grupos_estudo...');
+    try {
+      // Criar tabela
+      await supabase.query(`
+        DROP TABLE IF EXISTS public.grupos_estudo CASCADE;
+        
+        CREATE TABLE public.grupos_estudo (
+          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+          user_id UUID NOT NULL,
+          nome TEXT NOT NULL,
+          descricao TEXT,
+          cor TEXT NOT NULL DEFAULT '#FF6B00',
+          membros INTEGER NOT NULL DEFAULT 1,
+          membros_ids JSONB DEFAULT '[]'::jsonb,
+          topico TEXT,
+          topico_nome TEXT,
+          topico_icon TEXT,
+          privado BOOLEAN DEFAULT false,
+          visibilidade TEXT DEFAULT 'todos',
+          codigo TEXT,
+          disciplina TEXT DEFAULT 'Geral',
+          data_criacao TIMESTAMP WITH TIME ZONE DEFAULT now()
+        );
+      `);
+      console.log('✅ Tabela grupos_estudo criada');
+      
+      // Criar índice
+      try {
+        await supabase.query(`CREATE INDEX IF NOT EXISTS grupos_estudo_user_id_idx ON public.grupos_estudo(user_id);`);
+        console.log('✅ Índice criado para grupos_estudo');
+      } catch (indexErr) {
+        console.error('⚠️ Erro ao criar índice:', indexErr.message);
+      }
+      
+      // Configurar RLS
+      try {
+        await supabase.query(`
+          ALTER TABLE public.grupos_estudo ENABLE ROW LEVEL SECURITY;
+          
+          DROP POLICY IF EXISTS "Usuários podem visualizar grupos" ON public.grupos_estudo;
+          CREATE POLICY "Usuários podem visualizar grupos"
+            ON public.grupos_estudo FOR SELECT
+            USING (true);
+            
+          DROP POLICY IF EXISTS "Usuários podem inserir grupos" ON public.grupos_estudo;
+          CREATE POLICY "Usuários podem inserir grupos"
+            ON public.grupos_estudo FOR INSERT
+            WITH CHECK (true);
+            
+          DROP POLICY IF EXISTS "Usuários podem atualizar grupos" ON public.grupos_estudo;
+          CREATE POLICY "Usuários podem atualizar grupos"
+            ON public.grupos_estudo FOR UPDATE
+            USING (true);
+            
+          DROP POLICY IF EXISTS "Usuários podem excluir grupos" ON public.grupos_estudo;
+          CREATE POLICY "Usuários podem excluir grupos"
+            ON public.grupos_estudo FOR DELETE
+            USING (true);
+        `);
+        console.log('✅ Políticas RLS configuradas para grupos_estudo');
+      } catch (rlsErr) {
+        console.error('⚠️ Erro ao configurar RLS:', rlsErr.message);
+      }
+    } catch (err) {
+      console.error('❌ Erro ao criar tabela grupos_estudo:', err.message);
+    }
+    
+    // 3. Tabela codigos_grupos_estudo
+    console.log('\nCriando tabela codigos_grupos_estudo...');
+    try {
+      // Criar tabela
+      await supabase.query(`
+        DROP TABLE IF EXISTS public.codigos_grupos_estudo CASCADE;
+        
+        CREATE TABLE public.codigos_grupos_estudo (
+          codigo VARCHAR(15) PRIMARY KEY,
+          grupo_id UUID NOT NULL,
+          nome VARCHAR NOT NULL,
+          descricao TEXT,
+          data_criacao TIMESTAMP WITH TIME ZONE DEFAULT now(),
+          user_id UUID,
+          privado BOOLEAN DEFAULT false,
+          membros INTEGER DEFAULT 1,
+          visibilidade VARCHAR,
+          disciplina VARCHAR,
+          cor VARCHAR DEFAULT '#FF6B00',
+          membros_ids JSONB DEFAULT '[]'::jsonb,
+          ultima_atualizacao TIMESTAMP WITH TIME ZONE DEFAULT now()
+        );
+      `);
+      console.log('✅ Tabela codigos_grupos_estudo criada');
+      
+      // Criar índices
+      try {
+        await supabase.query(`
+          CREATE INDEX IF NOT EXISTS idx_codigos_grupos_estudo_grupo_id ON public.codigos_grupos_estudo(grupo_id);
+          CREATE INDEX IF NOT EXISTS idx_codigos_grupos_estudo_user_id ON public.codigos_grupos_estudo(user_id);
+        `);
+        console.log('✅ Índices criados para codigos_grupos_estudo');
+      } catch (indexErr) {
+        console.error('⚠️ Erro ao criar índices:', indexErr.message);
+      }
+      
+      // Configurar RLS
+      try {
+        await supabase.query(`
+          ALTER TABLE public.codigos_grupos_estudo ENABLE ROW LEVEL SECURITY;
+          
+          DROP POLICY IF EXISTS "Todos podem visualizar códigos" ON public.codigos_grupos_estudo;
+          CREATE POLICY "Todos podem visualizar códigos"
+            ON public.codigos_grupos_estudo FOR SELECT
+            USING (true);
+            
+          DROP POLICY IF EXISTS "Todos podem inserir códigos" ON public.codigos_grupos_estudo;
+          CREATE POLICY "Todos podem inserir códigos"
+            ON public.codigos_grupos_estudo FOR INSERT
+            WITH CHECK (true);
+            
+          DROP POLICY IF EXISTS "Todos podem atualizar códigos" ON public.codigos_grupos_estudo;
+          CREATE POLICY "Todos podem atualizar códigos"
+            ON public.codigos_grupos_estudo FOR UPDATE
+            USING (true);
+        `);
+        console.log('✅ Políticas RLS configuradas para codigos_grupos_estudo');
+      } catch (rlsErr) {
+        console.error('⚠️ Erro ao configurar RLS:', rlsErr.message);
+      }
+    } catch (err) {
+      console.error('❌ Erro ao criar tabela codigos_grupos_estudo:', err.message);
+    }
+    
+    // 4. Verificar tabelas criadas
+    console.log('\nVerificando criação das tabelas...');
+    
+    try {
+      const { count: countGrupos, error: errorGrupos } = await supabase
+        .from('grupos_estudo')
+        .select('*', { count: 'exact', head: true });
+        
+      if (errorGrupos) {
+        console.error('❌ Falha ao verificar tabela grupos_estudo:', errorGrupos.message);
+      } else {
+        console.log(`✅ Tabela grupos_estudo verificada (${countGrupos || 0} registros)`);
+      }
+    } catch (err) {
+      console.error('❌ Erro ao verificar tabela grupos_estudo:', err.message);
+    }
+    
+    try {
+      const { count: countCodigos, error: errorCodigos } = await supabase
+        .from('codigos_grupos_estudo')
+        .select('*', { count: 'exact', head: true });
+        
+      if (errorCodigos) {
+        console.error('❌ Falha ao verificar tabela codigos_grupos_estudo:', errorCodigos.message);
+      } else {
+        console.log(`✅ Tabela codigos_grupos_estudo verificada (${countCodigos || 0} registros)`);
+      }
+    } catch (err) {
+      console.error('❌ Erro ao verificar tabela codigos_grupos_estudo:', err.message);
+    }
+    
+    console.log('\n----------------------------------------');
+    console.log('🎉 PROCESSO DE CRIAÇÃO FORÇADA CONCLUÍDO');
+    
+    return true;
+  } catch (error) {
+    console.error('❌ ERRO FATAL DURANTE CRIAÇÃO DE TABELAS:', error);
+    return false;
+  }
+}
+
+// Função principal
+async function main() {
+  try {
+    console.log('🚀 Iniciando script de criação forçada de tabelas...\n');
+    
+    const resultado = await forcarCriacaoTabelas();
+    
+    if (resultado) {
+      console.log('\n🎉 Script concluído com sucesso!');
+      process.exit(0);
+    } else {
+      console.error('\n❌ Script concluído com erros.');
+      process.exit(1);
+    }
+  } catch (error) {
+    console.error('\n❌ Erro fatal durante execução do script:', error);
+    process.exit(1);
+  }
+}
+
+// Executar script
+main().catch(err => {
+  console.error('❌ Erro não tratado:', err);
+  process.exit(1);
+});
