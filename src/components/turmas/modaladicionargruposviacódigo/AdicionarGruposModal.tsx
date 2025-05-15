@@ -156,7 +156,7 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
     }
   };
 
-  // Função para criar ou verificar tabelas
+  // Função para criar ou verificar tabelas - versão robusta com múltiplas estratégias
   const criarTabelasDiretamente = async () => {
     try {
       console.log("🔧 Verificando acesso às tabelas...");
@@ -171,25 +171,54 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
 
       console.log(`⚠️ Status das tabelas: grupos_estudo=${gruposExiste}, codigos_grupos_estudo=${codigosExiste}`);
 
-      // Tentar executar o script fix-missing-tables.js
-      if (await executarWorkflowCorrecaoTabelas()) {
-        console.log("✅ Workflow executado com sucesso");
-
-        // Verificar novamente se as tabelas foram criadas
-        const { todasExistem: criadasComSucesso } = await verificarTabelasExistem();
-
-        if (criadasComSucesso) {
-          console.log("✅ Tabelas criadas com sucesso pelo workflow");
+      // ESTRATÉGIA 1: Criar tabelas diretamente pelo componente
+      try {
+        console.log("🔄 Tentando criar tabelas diretamente...");
+        const criadasDiretamente = await criarTabelasNecessarias();
+        
+        if (criadasDiretamente) {
+          console.log("✅ Tabelas criadas com sucesso diretamente");
           return true;
-        } else {
-          console.log("⚠️ Workflow executado, mas tabelas ainda não estão acessíveis");
         }
+      } catch (directError) {
+        console.error("⚠️ Erro ao criar tabelas diretamente:", directError);
       }
 
-      // Se o workflow falhar, tentar usar a API REST
-      return await criarTabelasViaRESTAPI();
+      // ESTRATÉGIA 2: Tentar executar o script fix-missing-tables.js
+      try {
+        if (await executarWorkflowCorrecaoTabelas()) {
+          console.log("✅ Workflow executado com sucesso");
+
+          // Verificar novamente se as tabelas foram criadas
+          const { todasExistem: criadasComSucesso } = await verificarTabelasExistem();
+
+          if (criadasComSucesso) {
+            console.log("✅ Tabelas criadas com sucesso pelo workflow");
+            return true;
+          } else {
+            console.log("⚠️ Workflow executado, mas tabelas ainda não estão acessíveis");
+          }
+        }
+      } catch (workflowError) {
+        console.error("⚠️ Erro ao executar workflow:", workflowError);
+      }
+
+      // ESTRATÉGIA 3: API REST
+      try {
+        const criadasViaAPI = await criarTabelasViaRESTAPI();
+        if (criadasViaAPI) {
+          return true;
+        }
+      } catch (apiError) {
+        console.error("⚠️ Erro ao usar API REST:", apiError);
+      }
+
+      // Se todas as estratégias falharem, mostrar mensagem de fallback
+      setErrorMessage("Não foi possível criar as tabelas automaticamente. Tente iniciar a sincronização novamente ou execute manualmente o workflow 'Corrigir Tabelas de Grupos'.");
+      return false;
     } catch (error) {
       console.error("❌ Erro ao criar/verificar tabelas:", error);
+      setErrorMessage("Erro ao verificar tabelas. Tente novamente ou execute manualmente o workflow 'Corrigir Tabelas de Grupos'.");
       return false;
     }
   };
@@ -663,7 +692,7 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
     }
   };
 
-  // Função que implementa a sincronização de códigos dos grupos
+  // Função que implementa a sincronização de códigos dos grupos - versão robusta
   const sincronizarCodigosGrupos = async () => {
     try {
       setSincronizando(true);
@@ -672,35 +701,83 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
 
       // 1. DIAGNÓSTICO E PREPARAÇÃO DO BANCO DE DADOS
       console.log("🔍 Verificando estrutura do banco de dados...");
+      setSuccessMessage("Verificando estrutura do banco de dados...");
 
-      // Tenta criar as tabelas diretamente, sem depender da API
-      const tabelasCriadas = await criarTabelasDiretamente();
-
-      if (tabelasCriadas) {
-        console.log("✅ Tabelas criadas ou verificadas com sucesso");
-        setSuccessMessage("Estrutura do banco de dados verificada com sucesso!");
-      } else {
-        // Mostra uma mensagem de progresso
-        setSuccessMessage("Tentando reparar estrutura do banco de dados...");
-
-        // FALLBACK: Tenta executar o script diretamente usando a API
+      // Estratégia 1: Criar tabelas diretamente usando supabase.query()
+      let tabelasCriadas = false;
+      
+      try {
+        // Verificar se as tabelas existem
+        const { todasExistem } = await verificarTabelasExistem();
+        
+        if (todasExistem) {
+          console.log("✅ Todas as tabelas já existem");
+          setSuccessMessage("Todas as tabelas necessárias já existem!");
+          tabelasCriadas = true;
+        } else {
+          // Tenta criar as tabelas diretamente
+          const resultadoCriacao = await criarTabelasNecessarias();
+          
+          if (resultadoCriacao) {
+            console.log("✅ Tabelas criadas diretamente com sucesso");
+            setSuccessMessage("Estrutura do banco de dados criada com sucesso!");
+            tabelasCriadas = true;
+          }
+        }
+      } catch (directError) {
+        console.error("❌ Erro ao criar tabelas diretamente:", directError);
+        setSuccessMessage("Tentando métodos alternativos para criar tabelas...");
+      }
+      
+      // Se a criação direta falhou, tenta usar a API
+      if (!tabelasCriadas) {
         try {
-          const response = await fetch('/api/fix-missing-tables', {
+          console.log("🔄 Tentando criar tabelas via API...");
+          
+          const response = await fetch('/api/db/fix-tables', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json' }
           });
-
+          
           if (response.ok) {
-            console.log('✅ Verificação das tabelas concluída com sucesso via API');
-            setSuccessMessage("Estrutura do banco de dados verificada com sucesso via API!");
+            console.log("✅ Tabelas criadas com sucesso via API");
+            setSuccessMessage("Estrutura do banco de dados criada com sucesso via API!");
+            tabelasCriadas = true;
           } else {
-            console.warn('⚠️ API para verificar tabelas não respondeu corretamente');
-            setSuccessMessage("Estrutura criada com limitações. Algumas funcionalidades podem não estar disponíveis.");
+            console.error("❌ API retornou erro:", await response.text());
+            setSuccessMessage("Tentando método alternativo...");
           }
         } catch (apiError) {
-          console.warn('⚠️ Erro ao acessar API de verificação de tabelas:', apiError);
-          setSuccessMessage("Tabelas criadas com limitações. Algumas funcionalidades podem precisar do workflow 'Corrigir Tabelas de Grupos'.");
+          console.error("❌ Erro ao acessar API:", apiError);
         }
+      }
+      
+      // Última alternativa: usar o script fix-missing-tables.js
+      if (!tabelasCriadas) {
+        try {
+          console.log("🔄 Tentando criar tabelas via workflow...");
+          const workflowSuccess = await executarWorkflowCorrecaoTabelas();
+          
+          if (workflowSuccess) {
+            console.log("✅ Workflow executado com sucesso");
+            setSuccessMessage("Estrutura criada via workflow. Prosseguindo com a sincronização...");
+            tabelasCriadas = true;
+          } else {
+            console.error("❌ Falha ao executar workflow");
+            setErrorMessage("Não foi possível criar as tabelas automaticamente. Execute o workflow 'Corrigir Tabelas de Grupos' e tente novamente.");
+            setSincronizando(false);
+            return;
+          }
+        } catch (workflowError) {
+          console.error("❌ Erro ao executar workflow:", workflowError);
+        }
+      }
+      
+      // Se todas as tentativas falharam
+      if (!tabelasCriadas) {
+        setErrorMessage("Não foi possível criar as tabelas necessárias após várias tentativas. Por favor, execute o workflow 'Corrigir Tabelas de Grupos' manualmente.");
+        setSincronizando(false);
+        return;
       }
 
       // Espera um pouco para a mensagem ser visível

@@ -447,32 +447,91 @@ async function verificarECriarTabelas() {
 
 // Executar a função principal
 module.exports = async function fixMissingTables() {
-  // Primeiro verificar e criar as tabelas
-  const tabelasCriadas = await verificarECriarTabelas();
-  
-  if (!tabelasCriadas) {
-    console.error('❌ Não foi possível criar as tabelas necessárias. Abortando sincronização.');
-    return false;
-  }
-  
-  // Agora sincronizar os dados
   try {
-    // Buscar grupos
-    const { data: grupos, error } = await supabase
-      .from('grupos_estudo')
-      .select('*');
+    console.log('🚀 Iniciando processo de correção de tabelas...');
+    
+    // Primeiro verificar e criar as tabelas
+    const tabelasCriadas = await verificarECriarTabelas();
+    
+    if (!tabelasCriadas) {
+      console.error('❌ Não foi possível criar as tabelas necessárias. Tentando método alternativo...');
       
-    if (error) {
-      console.error('❌ Erro ao buscar grupos:', error);
-      return false;
+      // Tentar método alternativo direto
+      try {
+        console.log('🔄 Tentando criar tabelas diretamente...');
+        
+        // Criar extensão uuid-ossp
+        await supabase.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`);
+        
+        // Criar tabela grupos_estudo
+        await supabase.query(`
+          CREATE TABLE IF NOT EXISTS public.grupos_estudo (
+            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+            user_id UUID NOT NULL,
+            nome TEXT NOT NULL,
+            descricao TEXT,
+            cor TEXT NOT NULL DEFAULT '#FF6B00',
+            membros INTEGER NOT NULL DEFAULT 1,
+            membros_ids JSONB DEFAULT '[]'::jsonb,
+            topico TEXT,
+            topico_nome TEXT,
+            topico_icon TEXT,
+            privado BOOLEAN DEFAULT false,
+            visibilidade TEXT DEFAULT 'todos',
+            codigo TEXT,
+            disciplina TEXT DEFAULT 'Geral',
+            data_criacao TIMESTAMP WITH TIME ZONE DEFAULT now()
+          );
+        `);
+        
+        // Criar tabela codigos_grupos_estudo
+        await supabase.query(`
+          CREATE TABLE IF NOT EXISTS public.codigos_grupos_estudo (
+            codigo VARCHAR(15) PRIMARY KEY,
+            grupo_id UUID NOT NULL,
+            nome VARCHAR NOT NULL,
+            descricao TEXT,
+            data_criacao TIMESTAMP WITH TIME ZONE DEFAULT now(),
+            user_id UUID,
+            privado BOOLEAN DEFAULT false,
+            membros INTEGER DEFAULT 1,
+            visibilidade VARCHAR,
+            disciplina VARCHAR,
+            cor VARCHAR DEFAULT '#FF6B00',
+            membros_ids JSONB DEFAULT '[]'::jsonb,
+            ultima_atualizacao TIMESTAMP WITH TIME ZONE DEFAULT now()
+          );
+        `);
+        
+        console.log('✅ Tabelas criadas diretamente com sucesso!');
+      } catch (directError) {
+        console.error('❌ Erro ao criar tabelas diretamente:', directError);
+        return false;
+      }
     }
     
-    console.log(`📊 Encontrados ${grupos?.length || 0} grupos para sincronizar`);
-    
-    // Sincronizar os grupos encontrados
-    const resultado = await sincronizarGruposDados(grupos || []);
-    
-    return resultado;
+    // Agora sincronizar os dados
+    try {
+      // Buscar grupos
+      const { data: grupos, error } = await supabase
+        .from('grupos_estudo')
+        .select('*');
+        
+      if (error) {
+        console.error('❌ Erro ao buscar grupos:', error);
+        return true; // Retornar true mesmo assim para indicar que as tabelas foram criadas
+      }
+      
+      console.log(`📊 Encontrados ${grupos?.length || 0} grupos para sincronizar`);
+      
+      // Sincronizar os grupos encontrados
+      const resultado = await sincronizarGruposDados(grupos || []);
+      
+      return resultado;
+    } catch (error) {
+      console.error('❌ Erro durante o processo de sincronização:', error);
+      return true; // Retornar true mesmo assim para indicar que as tabelas foram criadas
+    }
   } catch (error) {
     console.error('❌ Erro durante o processo de sincronização:', error);
     return false;
