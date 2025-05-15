@@ -714,7 +714,7 @@ export default function GruposEstudo2() {
                           </div>
                           <p className="text-sm text-gray-600 dark:text-gray-300">
                             {activity.content}
-                          </p>
+                                                      </p>
                           <p className="text-xs text-[#FF6B00] mt-1">
                             Em: {activity.groupName}
                           </p>
