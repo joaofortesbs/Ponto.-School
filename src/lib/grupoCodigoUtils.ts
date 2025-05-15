@@ -5,6 +5,24 @@
 import { supabase } from '@/lib/supabase';
 import { gerarCodigoUnico, salvarCodigoNoBanco, buscarGrupoPorCodigo } from './codigosGruposService';
 
+// Interface para o tipo GrupoEstudo
+interface GrupoEstudo {
+  id: string;
+  codigo?: string;
+  nome: string;
+  descricao?: string;
+  user_id: string;
+  privado?: boolean;
+  membros?: number;
+  visibilidade?: string;
+  disciplina?: string;
+  cor?: string;
+  membros_ids?: string[];
+  data_criacao?: string;
+  dataCriacao?: string;
+  criador?: string;
+}
+
 /**
  * Obtém um código de grupo existente de várias fontes
  * @param grupoId - ID do grupo para buscar o código
@@ -1338,10 +1356,8 @@ export const obterTodosGrupos = async (userId: string): Promise<GrupoEstudo[]> =
   }
 };
 
-import { supabase } from "@/lib/supabase";
-
-// Função para verificar se um código de grupo existe
-export const verificarSeCodigoExiste = async (codigo: string) => {
+// Função para verificar se um código de grupo existe e retorna um objeto detalhado
+export const verificarSeCodigoExisteDetalhado = async (codigo: string) => {
   if (!codigo) return { existe: false, mensagem: "Código não fornecido" };
 
   try {
@@ -1582,8 +1598,8 @@ const criarTabelaCodigosGrupos = async () => {
   }
 };
 
-// Função para gerar um código único de grupo
-export const gerarCodigoGrupo = () => {
+// Função para gerar um código único de grupo (versão melhorada)
+export const gerarCodigoGrupoMelhorado = () => {
   // Caracteres permitidos (removido caracteres ambíguos como 0/O, 1/I, etc.)
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
@@ -1607,8 +1623,8 @@ export const gerarCodigoGrupo = () => {
   return codigo;
 };
 
-// Função para salvar um código na tabela
-export const salvarCodigoGrupo = async (codigoData: any) => {
+// Função para salvar um código na tabela usando objeto de dados
+export const salvarCodigoGrupoObjeto = async (codigoData: any) => {
   try {
     // Verificar se a tabela existe e criar se necessário
     try {

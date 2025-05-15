@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { verificarSeCodigoExiste } from "@/lib/grupoCodigoUtils";
+import { verificarSeCodigoExisteDetalhado, verificarRelacaoUsuarioComGrupo, buscarGrupoComCodigo } from "@/lib/grupoCodigoUtils";
 import { supabase } from "@/lib/supabase";
 import GrupoEstudoCard from "../components/GrupoEstudoCard";
 import { Loader2 } from 'lucide-react';
@@ -422,7 +422,7 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
         });
-        
+
         if (response.ok) {
           console.log('Verificação das tabelas concluída com sucesso via API');
         } else {
@@ -440,13 +440,13 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
       const { count: gruposCount, error: gruposError } = await supabase
         .from('grupos_estudo')
         .select('*', { count: 'exact', head: true });
-        
+
       if (gruposError) {
         if (gruposError.code === '42P01') { // Tabela não existe
           // Abortar sincronização e instruir o usuário a executar o script separadamente
           console.error("A tabela grupos_estudo não existe");
           setErrorMessage("A tabela grupos_estudo não existe. Executando script para criar tabelas necessárias...");
-          
+
           // Tentar criar as tabelas automaticamente
           try {
             // SQL para criar a tabela grupos_estudo
@@ -469,14 +469,14 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
                 data_criacao TIMESTAMP WITH TIME ZONE DEFAULT now()
               );
             `);
-            
+
             if (createError) {
               console.error("Erro ao criar tabela grupos_estudo:", createError);
               setErrorMessage("Falha ao criar tabela grupos_estudo. Por favor, execute o workflow 'Corrigir Tabelas de Grupos' e tente novamente.");
               setSincronizando(false);
               return;
             }
-            
+
             // Criar também a tabela codigos_grupos_estudo
             const { error: createCodigosError } = await supabase.query(`
               CREATE TABLE IF NOT EXISTS public.codigos_grupos_estudo (
@@ -495,14 +495,14 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
                 ultima_atualizacao TIMESTAMP WITH TIME ZONE DEFAULT now()
               );
             `);
-            
+
             if (createCodigosError) {
               console.error("Erro ao criar tabela codigos_grupos_estudo:", createCodigosError);
               setErrorMessage("Falha ao criar tabela codigos_grupos_estudo. Por favor, execute o workflow 'Corrigir Tabelas de Grupos' e tente novamente.");
               setSincronizando(false);
               return;
             }
-            
+
             setSuccessMessage("Tabelas criadas com sucesso! Tente sincronizar novamente.");
             setSincronizando(false);
             return;
@@ -519,19 +519,19 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
           return;
         }
       }
-      
+
       console.log(`Tabela grupos_estudo existe com ${gruposCount} registros`);
-      
+
       // Verificar tabela codigos_grupos_estudo
       console.log("Verificando se a tabela codigos_grupos_estudo existe...");
       const { count: codigosCount, error: codigosError } = await supabase
         .from('codigos_grupos_estudo')
         .select('*', { count: 'exact', head: true });
-        
+
       if (codigosError) {
         if (codigosError.code === '42P01') { // Tabela não existe
           console.error("A tabela codigos_grupos_estudo não existe");
-          
+
           // Tentar criar a tabela automaticamente
           try {
             const { error: createError } = await supabase.query(`
@@ -551,14 +551,14 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
                 ultima_atualizacao TIMESTAMP WITH TIME ZONE DEFAULT now()
               );
             `);
-            
+
             if (createError) {
               console.error("Erro ao criar tabela codigos_grupos_estudo:", createError);
               setErrorMessage("Falha ao criar tabela codigos_grupos_estudo. Por favor, execute o workflow 'Corrigir Tabelas de Grupos' e tente novamente.");
               setSincronizando(false);
               return;
             }
-            
+
             console.log("Tabela codigos_grupos_estudo criada com sucesso!");
           } catch (createError) {
             console.error("Erro ao criar tabela codigos_grupos_estudo:", createError);
@@ -644,17 +644,17 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
           const gruposLocais = JSON.parse(gruposLocalStorage);
           if (Array.isArray(gruposLocais) && gruposLocais.length > 0) {
             console.log(`Encontrados ${gruposLocais.length} grupos no localStorage`);
-            
+
             let localSucessos = 0;
             let localErros = 0;
             let localIgnorados = 0;
-            
+
             for (const grupo of gruposLocais) {
               if (!grupo.codigo) {
                 localIgnorados++;
                 continue;
               }
-              
+
               try {
                 // Primeiro verificar se o grupo já existe na tabela grupos_estudo
                 const { data: existingGrupo, error: checkError } = await supabase
@@ -662,13 +662,13 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
                   .select('id')
                   .eq('id', grupo.id)
                   .maybeSingle();
-                  
+
                 if (checkError) {
                   console.error(`Erro ao verificar grupo local ${grupo.id}:`, checkError);
                   localErros++;
                   continue;
                 }
-                
+
                 // Se o grupo não existir no banco, inseri-lo
                 if (!existingGrupo) {
                   const { error: insertGrupoError } = await supabase
@@ -690,16 +690,16 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
                       disciplina: grupo.disciplina || 'Geral',
                       data_criacao: grupo.dataCriacao || grupo.data_criacao || new Date().toISOString()
                     });
-                    
+
                   if (insertGrupoError) {
                     console.error(`Erro ao inserir grupo local ${grupo.id}:`, insertGrupoError);
                     localErros++;
                     continue;
                   }
-                  
+
                   console.log(`Grupo local ${grupo.id} inserido com sucesso`);
                 }
-                
+
                 // Inserir na tabela de códigos
                 const { error: insertCodigoError } = await supabase
                   .from('codigos_grupos_estudo')
@@ -718,7 +718,7 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
                     data_criacao: grupo.dataCriacao || grupo.data_criacao || new Date().toISOString(),
                     ultima_atualizacao: new Date().toISOString()
                   }, { onConflict: 'codigo' });
-                  
+
                 if (insertCodigoError) {
                   console.error(`Erro ao sincronizar código local ${grupo.codigo}:`, insertCodigoError);
                   localErros++;
@@ -731,7 +731,7 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
                 localErros++;
               }
             }
-            
+
             // Adicionar aos contadores gerais
             sucessos += localSucessos;
             erros += localErros;
