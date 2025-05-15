@@ -2169,6 +2169,15 @@ args = "  });"
 task = "shell.exec"
 args = "\""
 
+[[workflows.workflow]]
+name = "API de Correção de Tabelas"
+author = 42059808
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node scripts/fix-tables-api.js"
+
 [auth]
 pageEnabled = false
 buttonEnabled = false

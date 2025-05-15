@@ -51,6 +51,149 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
   const [isVerifyingCode, setIsVerifyingCode] = useState(false);
   const [sincronizando, setSincronizando] = useState<boolean>(false);
 
+  // Função para executar o script de correção usando o workflow existente
+  const executarWorkflowCorrecaoTabelas = async () => {
+    try {
+      setSuccessMessage("Executando workflow de correção de tabelas...");
+
+      // Fazer uma requisição para executar o script fix-missing-tables.js
+      const response = await fetch("/api/run-workflow", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          workflow: "Corrigir Tabelas de Grupos"
+        }),
+      });
+
+      if (response.ok) {
+        console.log("✅ Workflow executado com sucesso");
+        return true;
+      } else {
+        console.error("❌ Falha ao executar workflow:", await response.text());
+        return false;
+      }
+    } catch (error) {
+      console.error("❌ Erro ao executar workflow:", error);
+      return false;
+    }
+  };
+
+  // Função para verificar se as tabelas existem e são acessíveis
+  const verificarTabelasExistem = async () => {
+    try {
+      // Verificar tabela grupos_estudo
+      const { error: gruposError } = await supabase
+        .from('grupos_estudo')
+        .select('id')
+        .limit(1);
+
+      // Verificar tabela codigos_grupos_estudo
+      const { error: codigosError } = await supabase
+        .from('codigos_grupos_estudo')
+        .select('codigo')
+        .limit(1);
+
+      // Se ambas as consultas não retornarem erro de tabela inexistente, as tabelas existem
+      const gruposExiste = !gruposError || gruposError.code !== '42P01';
+      const codigosExiste = !codigosError || codigosError.code !== '42P01';
+
+      return {
+        gruposExiste,
+        codigosExiste,
+        todasExistem: gruposExiste && codigosExiste
+      };
+    } catch (error) {
+      console.error("❌ Erro ao verificar existência das tabelas:", error);
+      return {
+        gruposExiste: false,
+        codigosExiste: false,
+        todasExistem: false
+      };
+    }
+  };
+
+  // Função para criar tabelas usando a API REST do Supabase
+  const criarTabelasViaRESTAPI = async () => {
+    try {
+      console.log("🔄 Tentando criar tabelas via REST API...");
+
+      // Primeiro verificar se as tabelas já existem
+      const { todasExistem } = await verificarTabelasExistem();
+
+      if (todasExistem) {
+        console.log("✅ Todas as tabelas já existem");
+        return true;
+      }
+
+      // Se não existem, vamos usar o script fix-missing-tables.js
+      console.log("🔄 Executando script fix-missing-tables.js...");
+
+      // Tenta executar via NODE.js diretamente
+      try {
+        const response = await fetch(`/api/db/fix-tables`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (response.ok) {
+          console.log("✅ Tabelas criadas com sucesso via API");
+          return true;
+        } else {
+          console.error("❌ Erro ao criar tabelas via API:", await response.text());
+        }
+      } catch (apiError) {
+        console.error("❌ Erro ao acessar API:", apiError);
+      }
+
+      // Se falhar, vamos recomendar o uso do workflow
+      setErrorMessage("Não foi possível criar as tabelas automaticamente. Por favor, execute o workflow 'Corrigir Tabelas de Grupos' e tente novamente.");
+      return false;
+    } catch (error) {
+      console.error("❌ Erro ao criar tabelas via REST API:", error);
+      return false;
+    }
+  };
+
+  // Função para criar ou verificar tabelas
+  const criarTabelasDiretamente = async () => {
+    try {
+      console.log("🔧 Verificando acesso às tabelas...");
+
+      // Verificar se as tabelas já existem
+      const { todasExistem, gruposExiste, codigosExiste } = await verificarTabelasExistem();
+
+      if (todasExistem) {
+        console.log("✅ Todas as tabelas já existem e são acessíveis");
+        return true;
+      }
+
+      console.log(`⚠️ Status das tabelas: grupos_estudo=${gruposExiste}, codigos_grupos_estudo=${codigosExiste}`);
+
+      // Tentar executar o script fix-missing-tables.js
+      if (await executarWorkflowCorrecaoTabelas()) {
+        console.log("✅ Workflow executado com sucesso");
+
+        // Verificar novamente se as tabelas foram criadas
+        const { todasExistem: criadasComSucesso } = await verificarTabelasExistem();
+
+        if (criadasComSucesso) {
+          console.log("✅ Tabelas criadas com sucesso pelo workflow");
+          return true;
+        } else {
+          console.log("⚠️ Workflow executado, mas tabelas ainda não estão acessíveis");
+        }
+      }
+
+      // Se o workflow falhar, tentar usar a API REST
+      return await criarTabelasViaRESTAPI();
+    } catch (error) {
+      console.error("❌ Erro ao criar/verificar tabelas:", error);
+      return false;
+    }
+  };
+
   // Função para criar tabelas necessárias
   const criarTabelasNecessarias = async () => {
     console.log("Criando tabelas necessárias...");
@@ -930,211 +1073,6 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
       setErrorMessage(`Erro na sincronização: ${error.message}`);
     } finally {
       setSincronizando(false);
-    }
-  };
-
-  // Função para criar tabelas diretamente sem depender da API
-  const criarTabelasDiretamente = async () => {
-    console.log("🔧 Criando tabelas necessárias diretamente...");
-
-    try {
-      // Criar função auxiliar para verificar se tabela existe
-      try {
-        await supabase.query(`
-          CREATE OR REPLACE FUNCTION check_table_exists(table_name text) 
-          RETURNS boolean AS $$
-          DECLARE
-              table_exists boolean;
-          BEGIN
-              SELECT EXISTS (
-                  SELECT FROM information_schema.tables 
-                  WHERE  table_schema = 'public'
-                  AND    table_name = table_name
-              ) INTO table_exists;
-
-              RETURN table_exists;
-          END;
-          $$ LANGUAGE plpgsql;
-        `);
-        console.log('✅ Função check_table_exists criada com sucesso');
-      } catch (funcError) {
-        console.log('ℹ️ Não foi possível criar função auxiliar:', funcError);
-      }
-
-      // Verificar e criar extensão uuid se possível (necessário para gerar IDs)
-      try {
-        await supabase.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`);
-        console.log('✅ Extensão uuid-ossp verificada/criada');
-      } catch (extError) {
-        console.log('ℹ️ Não foi possível verificar/criar extensão uuid-ossp:', extError);
-      }
-
-      // Criar tabela grupos_estudo com tratamento de erro aprimorado
-      try {
-        // Primeiro dividir em consultas menores para melhor diagnóstico
-        // 1. Criar tabela principal
-        const { error: createTableError } = await supabase.query(`
-          CREATE TABLE IF NOT EXISTS public.grupos_estudo (
-            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-            user_id UUID NOT NULL,
-            nome TEXT NOT NULL,
-            descricao TEXT,
-            cor TEXT NOT NULL DEFAULT '#FF6B00',
-            membros INTEGER NOT NULL DEFAULT 1,
-            membros_ids JSONB DEFAULT '[]'::jsonb,
-            topico TEXT,
-            topico_nome TEXT,
-            topico_icon TEXT,
-            privado BOOLEAN DEFAULT false,
-            visibilidade TEXT DEFAULT 'todos',
-            codigo TEXT,
-            disciplina TEXT DEFAULT 'Geral',
-            data_criacao TIMESTAMP WITH TIME ZONE DEFAULT now()
-          );
-        `);
-
-        if (createTableError) {
-          console.error("❌ Erro ao criar tabela grupos_estudo:", createTableError);
-        } else {
-          console.log('✅ Tabela grupos_estudo criada com sucesso!');
-        }
-
-        // 2. Criar índices
-        try {
-          await supabase.query(`
-            CREATE INDEX IF NOT EXISTS grupos_estudo_user_id_idx ON public.grupos_estudo(user_id);
-            CREATE INDEX IF NOT EXISTS grupos_estudo_codigo_idx ON public.grupos_estudo(codigo);
-          `);
-          console.log('✅ Índices criados para grupos_estudo');
-        } catch (indexError) {
-          console.warn('⚠️ Erro ao criar índices para grupos_estudo:', indexError);
-        }
-
-        // 3. Configurar políticas de segurança
-        try {
-          await supabase.query(`
-            ALTER TABLE public.grupos_estudo ENABLE ROW LEVEL SECURITY;
-
-            DROP POLICY IF EXISTS "Usuários podem visualizar grupos" ON public.grupos_estudo;
-            CREATE POLICY "Usuários podem visualizar grupos"
-              ON public.grupos_estudo FOR SELECT
-              USING (true);
-
-            DROP POLICY IF EXISTS "Usuários podem inserir grupos" ON public.grupos_estudo;
-            CREATE POLICY "Usuários podem inserir grupos"
-              ON public.grupos_estudo FOR INSERT
-              WITH CHECK (true);
-
-            DROP POLICY IF EXISTS "Usuários podem atualizar grupos" ON public.grupos_estudo;
-            CREATE POLICY "Usuários podem atualizar grupos"
-              ON public.grupos_estudo FOR UPDATE
-              USING (true);
-          `);
-          console.log('✅ Políticas de segurança configuradas para grupos_estudo');
-        } catch (policyError) {
-          console.warn('⚠️ Erro ao configurar políticas para grupos_estudo:', policyError);
-        }
-
-      } catch (createGruposError) {
-        console.error("❌ Erro ao criar tabela grupos_estudo:", createGruposError);
-      }
-
-      // Criar tabela codigos_grupos_estudo com tratamento de erro aprimorado
-      try {
-        // 1. Criar tabela principal
-        const { error: createCodigosError } = await supabase.query(`
-          CREATE TABLE IF NOT EXISTS public.codigos_grupos_estudo (
-            codigo VARCHAR(15) PRIMARY KEY,
-            grupo_id UUID NOT NULL,
-            nome VARCHAR NOT NULL,
-            descricao TEXT,
-            data_criacao TIMESTAMP WITH TIME ZONE DEFAULT now(),
-            user_id UUID,
-            privado BOOLEAN DEFAULT false,
-            membros INTEGER DEFAULT 1,
-            visibilidade VARCHAR,
-            disciplina VARCHAR,
-            cor VARCHAR DEFAULT '#FF6B00',
-            membros_ids JSONB DEFAULT '[]'::jsonb,
-            ultima_atualizacao TIMESTAMP WITH TIME ZONE DEFAULT now()
-          );
-        `);
-
-        if (createCodigosError) {
-          console.error("❌ Erro ao criar tabela codigos_grupos_estudo:", createCodigosError);
-        } else {
-          console.log('✅ Tabela codigos_grupos_estudo criada com sucesso!');
-        }
-
-        // 2. Criar índices
-        try {
-          await supabase.query(`
-            CREATE INDEX IF NOT EXISTS idx_codigos_grupos_estudo_grupo_id ON public.codigos_grupos_estudo(grupo_id);
-            CREATE INDEX IF NOT EXISTS idx_codigos_grupos_estudo_user_id ON public.codigos_grupos_estudo(user_id);
-          `);
-          console.log('✅ Índices criados para codigos_grupos_estudo');
-        } catch (indexError) {
-          console.warn('⚠️ Erro ao criar índices para codigos_grupos_estudo:', indexError);
-        }
-
-        // 3. Configurar políticas de segurança
-        try {
-          await supabase.query(`
-            ALTER TABLE public.codigos_grupos_estudo ENABLE ROW LEVEL SECURITY;
-
-            DROP POLICY IF EXISTS "Todos podem visualizar códigos" ON public.codigos_grupos_estudo;
-            CREATE POLICY "Todos podem visualizar códigos"
-              ON public.codigos_grupos_estudo FOR SELECT
-              USING (true);
-
-            DROP POLICY IF EXISTS "Todos podem inserir códigos" ON public.codigos_grupos_estudo;
-            CREATE POLICY "Todos podem inserir códigos"
-              ON public.codigos_grupos_estudo FOR INSERT
-              WITH CHECK (true);
-
-            DROP POLICY IF EXISTS "Todos podem atualizar códigos" ON public.codigos_grupos_estudo;
-            CREATE POLICY "Todos podem atualizar códigos"
-              ON public.codigos_grupos_estudo FOR UPDATE
-              USING (true);
-          `);
-          console.log('✅ Políticas de segurança configuradas para codigos_grupos_estudo');
-        } catch (policyError) {
-          console.warn('⚠️ Erro ao configurar políticas para codigos_grupos_estudo:', policyError);
-        }
-
-      } catch (createCodigosError) {
-        console.error("❌ Erro ao criar tabela codigos_grupos_estudo:", createCodigosError);
-      }
-
-      // Verificar se as tabelas foram criadas corretamente
-      let tablesCreated = false;
-      try {
-        const { data: gruposExists, error: gruposCheckError } = await supabase
-          .from('grupos_estudo')
-          .select('id')
-          .limit(1);
-
-        const { data: codigosExists, error: codigosCheckError } = await supabase
-          .from('codigos_grupos_estudo')
-          .select('codigo')
-          .limit(1);
-
-        if (!gruposCheckError && !codigosCheckError) {
-          console.log('✅ Ambas as tabelas estão acessíveis e prontas para uso');
-          tablesCreated = true;
-        } else {
-          console.warn('⚠️ Verificação das tabelas após criação retornou erros:', 
-            gruposCheckError || codigosCheckError);
-        }
-      } catch (verifyError) {
-        console.error("❌ Erro ao verificar se tabelas foram criadas:", verifyError);
-      }
-
-      return tablesCreated;
-    } catch (error) {
-      console.error("❌ Erro ao criar tabelas:", error);
-      setErrorMessage(`Falha ao criar tabelas: ${error.message}. Por favor, execute o workflow 'Corrigir Tabelas de Grupos' e tente novamente.`);
-      return false;
     }
   };
 
