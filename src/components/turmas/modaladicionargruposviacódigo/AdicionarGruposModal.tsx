@@ -51,6 +51,58 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
   const [isVerifyingCode, setIsVerifyingCode] = useState(false);
   const [sincronizando, setSincronizando] = useState<boolean>(false);
 
+  // Função para criar tabelas necessárias
+  const criarTabelasNecessarias = async () => {
+    console.log("Criando tabelas necessárias...");
+    
+    try {
+      // Criar tabela grupos_estudo
+      await supabase.query(`
+        CREATE TABLE IF NOT EXISTS public.grupos_estudo (
+          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+          user_id UUID NOT NULL,
+          nome TEXT NOT NULL,
+          descricao TEXT,
+          cor TEXT NOT NULL DEFAULT '#FF6B00',
+          membros INTEGER NOT NULL DEFAULT 1,
+          membros_ids JSONB DEFAULT '[]'::jsonb,
+          topico TEXT,
+          topico_nome TEXT,
+          topico_icon TEXT,
+          privado BOOLEAN DEFAULT false,
+          visibilidade TEXT DEFAULT 'todos',
+          codigo TEXT,
+          disciplina TEXT DEFAULT 'Geral',
+          data_criacao TIMESTAMP WITH TIME ZONE DEFAULT now()
+        );
+      `);
+      
+      // Criar tabela codigos_grupos_estudo
+      await supabase.query(`
+        CREATE TABLE IF NOT EXISTS public.codigos_grupos_estudo (
+          codigo VARCHAR(15) PRIMARY KEY,
+          grupo_id UUID NOT NULL,
+          nome VARCHAR NOT NULL,
+          descricao TEXT,
+          data_criacao TIMESTAMP WITH TIME ZONE DEFAULT now(),
+          user_id UUID,
+          privado BOOLEAN DEFAULT false,
+          membros INTEGER DEFAULT 1,
+          visibilidade VARCHAR,
+          disciplina VARCHAR,
+          cor VARCHAR DEFAULT '#FF6B00',
+          membros_ids JSONB DEFAULT '[]'::jsonb,
+          ultima_atualizacao TIMESTAMP WITH TIME ZONE DEFAULT now()
+        );
+      `);
+      
+      return true;
+    } catch (error) {
+      console.error("Erro ao criar tabelas:", error);
+      return false;
+    }
+  };
+
   // Efeito para limpar mensagens quando o modal fecha
   useEffect(() => {
     if (!isOpen) {
@@ -71,12 +123,31 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
       setErrorMessage(null);
 
       // Verificar se a tabela codigos_grupos_estudo existe e contém dados
-      const { count, error: countError } = await supabase
-        .from('codigos_grupos_estudo')
-        .select('*', { count: 'exact', head: true });
+      try {
+        const { count, error: countError } = await supabase
+          .from('codigos_grupos_estudo')
+          .select('*', { count: 'exact', head: true });
 
-      if (countError) {
-        console.error("Erro ao verificar tabela de códigos:", countError);
+        if (countError) {
+          console.error("Erro ao verificar tabela de códigos:", countError);
+          
+          // Se o erro for de tabela não existente, tentar criar as tabelas
+          if (countError.code === '42P01') {
+            console.log("Tabela de códigos não existe. Tentando criar...");
+            const criada = await criarTabelasNecessarias();
+            if (!criada) {
+              setErrorMessage("A tabela de códigos não existe. Por favor, execute o workflow 'Corrigir Tabelas de Grupos' ou clique em Sincronizar novamente.");
+              setIsSearching(false);
+              return;
+            }
+          }
+          
+          // Fallback: buscar direto em grupos_estudo
+          await buscarGruposEstudo();
+          return;
+        }
+      } catch (e) {
+        console.error("Erro ao verificar tabela de códigos:", e);
         // Fallback: buscar direto em grupos_estudo
         await buscarGruposEstudo();
         return;
@@ -141,6 +212,35 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
   // Função auxiliar para buscar grupos na tabela principal como fallback
   const buscarGruposEstudo = async () => {
     try {
+      // Verificar se a tabela grupos_estudo existe
+      try {
+        const { count, error: checkError } = await supabase
+          .from('grupos_estudo')
+          .select('*', { count: 'exact', head: true });
+          
+        if (checkError) {
+          if (checkError.code === '42P01') {
+            // Tabela não existe, tentar criar
+            console.log("Tabela grupos_estudo não existe. Tentando criar...");
+            const criada = await criarTabelasNecessarias();
+            if (!criada) {
+              setErrorMessage("As tabelas necessárias não existem. Clique em Sincronizar para criar as estruturas.");
+              setIsSearching(false);
+              setGruposEncontrados([]);
+              return;
+            }
+          } else {
+            console.error("Erro ao verificar tabela de grupos:", checkError);
+            setErrorMessage("Ocorreu um erro ao verificar a estrutura do banco de dados.");
+            setIsSearching(false);
+            setGruposEncontrados([]);
+            return;
+          }
+        }
+      } catch (checkError) {
+        console.error("Erro ao verificar tabela de grupos:", checkError);
+      }
+      
       // Buscar na tabela de grupos_estudo diretamente
       const { data: gruposData, error: gruposError } = await supabase
         .from('grupos_estudo')
@@ -151,7 +251,13 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
 
       if (gruposError) {
         console.error("Erro ao buscar na tabela de grupos:", gruposError);
-        setErrorMessage("Ocorreu um erro ao buscar grupos. Tente novamente.");
+        
+        if (gruposError.code === '42P01') {
+          setErrorMessage("A tabela de grupos não existe. Clique em Sincronizar para configurar o banco de dados.");
+        } else {
+          setErrorMessage("Ocorreu um erro ao buscar grupos. Tente novamente.");
+        }
+        
         setIsSearching(false);
         setGruposEncontrados([]);
         return;
@@ -414,6 +520,58 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
       setSincronizando(true);
       setErrorMessage(null);
       setSuccessMessage(null);
+      
+      // Função auxiliar para criar tabelas se não existirem
+      const criarTabelasNecessarias = async () => {
+        console.log("Criando tabelas necessárias...");
+        
+        try {
+          // Criar tabela grupos_estudo
+          await supabase.query(`
+            CREATE TABLE IF NOT EXISTS public.grupos_estudo (
+              id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+              user_id UUID NOT NULL,
+              nome TEXT NOT NULL,
+              descricao TEXT,
+              cor TEXT NOT NULL DEFAULT '#FF6B00',
+              membros INTEGER NOT NULL DEFAULT 1,
+              membros_ids JSONB DEFAULT '[]'::jsonb,
+              topico TEXT,
+              topico_nome TEXT,
+              topico_icon TEXT,
+              privado BOOLEAN DEFAULT false,
+              visibilidade TEXT DEFAULT 'todos',
+              codigo TEXT,
+              disciplina TEXT DEFAULT 'Geral',
+              data_criacao TIMESTAMP WITH TIME ZONE DEFAULT now()
+            );
+          `);
+          
+          // Criar tabela codigos_grupos_estudo
+          await supabase.query(`
+            CREATE TABLE IF NOT EXISTS public.codigos_grupos_estudo (
+              codigo VARCHAR(15) PRIMARY KEY,
+              grupo_id UUID NOT NULL,
+              nome VARCHAR NOT NULL,
+              descricao TEXT,
+              data_criacao TIMESTAMP WITH TIME ZONE DEFAULT now(),
+              user_id UUID,
+              privado BOOLEAN DEFAULT false,
+              membros INTEGER DEFAULT 1,
+              visibilidade VARCHAR,
+              disciplina VARCHAR,
+              cor VARCHAR DEFAULT '#FF6B00',
+              membros_ids JSONB DEFAULT '[]'::jsonb,
+              ultima_atualizacao TIMESTAMP WITH TIME ZONE DEFAULT now()
+            );
+          `);
+          
+          return true;
+        } catch (error) {
+          console.error("Erro ao criar tabelas:", error);
+          return false;
+        }
+      };
 
       // Primeiro executar o script de criação das tabelas necessárias
       // Esta opção é mais robusta, pois primeiro verifica e cria as tabelas
@@ -426,12 +584,13 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
         if (response.ok) {
           console.log('Verificação das tabelas concluída com sucesso via API');
         } else {
-          console.warn('API para verificar tabelas não respondeu. Continuando com verificação direta...');
-          // Continuaremos com a verificação direta abaixo
+          console.warn('API para verificar tabelas não respondeu. Tentando criar tabelas diretamente...');
+          await criarTabelasNecessarias();
         }
       } catch (apiError) {
         console.warn('Erro ao acessar API de verificação de tabelas:', apiError);
-        // Continuaremos com a verificação direta
+        console.log('Tentando criar tabelas diretamente...');
+        await criarTabelasNecessarias();
       }
 
       // Verificação direta das tabelas (backup se a API falhar)
