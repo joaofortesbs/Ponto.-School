@@ -198,10 +198,9 @@ export const pesquisarCodigosGrupos = async (termo: string) => {
   if (!termo) return listarTodosCodigosGrupos(10);
   
   try {
-    // Consulta mais completa para obter todos os dados relevantes
     const { data, error } = await supabase
       .from('codigos_grupos_estudo')
-      .select('*')
+      .select('codigo, nome, descricao, membros, disciplina, cor, privado, visibilidade')
       .or(`nome.ilike.%${termo}%,descricao.ilike.%${termo}%,disciplina.ilike.%${termo}%`)
       .order('data_criacao', { ascending: false })
       .limit(20);
@@ -211,44 +210,7 @@ export const pesquisarCodigosGrupos = async (termo: string) => {
       return { success: false, error };
     }
     
-    // Verificar se temos resultados
-    if (!data || data.length === 0) {
-      console.log(`Nenhum grupo encontrado para o termo '${termo}'`);
-      return { success: true, data: [] };
-    }
-    
-    console.log(`Encontrados ${data.length} grupos relacionados ao termo '${termo}'`);
-    
-    // Para cada código encontrado, tentar buscar dados mais completos
-    const resultadosCompletos = await Promise.all(
-      data.map(async (grupo) => {
-        try {
-          // Verificar se há informações mais completas na tabela de grupos
-          const { data: grupoCompleto, error: grupoError } = await supabase
-            .from('grupos_estudo')
-            .select('*')
-            .eq('id', grupo.grupo_id)
-            .single();
-            
-          if (!grupoError && grupoCompleto) {
-            // Combinar informações, priorizando dados completos do grupo
-            return {
-              ...grupo,
-              ...grupoCompleto,
-              codigo: grupo.codigo // Garantir que o código seja mantido
-            };
-          }
-          
-          // Se não encontrar informações complementares, retornar o que já temos
-          return grupo;
-        } catch (e) {
-          console.error(`Erro ao buscar dados completos para grupo ${grupo.grupo_id}:`, e);
-          return grupo;
-        }
-      })
-    );
-    
-    return { success: true, data: resultadosCompletos };
+    return { success: true, data };
   } catch (err) {
     console.error('Erro ao processar pesquisa de códigos:', err);
     return { success: false, error: err };

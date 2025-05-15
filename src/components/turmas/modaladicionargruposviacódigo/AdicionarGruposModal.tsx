@@ -69,49 +69,56 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
       setIsSearching(true);
       setErrorMessage(null);
       
-      // Realizar busca real no banco de dados de códigos de grupos
-      const { data, error } = await supabase
-        .from('codigos_grupos_estudo')
-        .select('*')
-        .or(`nome.ilike.%${searchTerm}%,descricao.ilike.%${searchTerm}%,disciplina.ilike.%${searchTerm}%`)
-        .order('data_criacao', { ascending: false })
-        .limit(20);
+      // Simular chamada ao backend para buscar grupos
+      // Em produção, isso seria substituído por uma chamada real à API ou Supabase
       
-      if (error) {
-        console.error("Erro ao buscar grupos na base de dados:", error);
-        setErrorMessage("Ocorreu um erro ao buscar grupos. Tente novamente.");
+      setTimeout(() => {
+        // Dados simulados para demonstração
+        const gruposSimulados: GrupoEstudo[] = [
+          {
+            id: `search-result-1-${Date.now()}`,
+            nome: `Grupo de ${searchTerm} Avançado`,
+            descricao: `Grupo dedicado ao estudo avançado de ${searchTerm}`,
+            membros: Math.floor(Math.random() * 20) + 3,
+            disciplina: "Diversas",
+            cor: "#FF6B00",
+            icon: "📚",
+            dataCriacao: new Date().toISOString(),
+            tendencia: Math.random() > 0.5 ? "alta" : undefined,
+            novoConteudo: Math.random() > 0.7,
+            visibilidade: "público"
+          },
+          {
+            id: `search-result-2-${Date.now()}`,
+            nome: `Estudos de ${searchTerm}`,
+            descricao: `Grupo colaborativo para estudar ${searchTerm} e temas relacionados`,
+            membros: Math.floor(Math.random() * 15) + 2,
+            disciplina: "Matemática",
+            cor: "#FF8C40",
+            icon: "🧮",
+            dataCriacao: new Date().toISOString(),
+            tendencia: Math.random() > 0.7 ? "alta" : undefined,
+            novoConteudo: Math.random() > 0.6,
+            visibilidade: "privado"
+          },
+          {
+            id: `search-result-3-${Date.now()}`,
+            nome: `${searchTerm} para Iniciantes`,
+            descricao: `Grupo de estudo para quem está começando em ${searchTerm}`,
+            membros: Math.floor(Math.random() * 10) + 5,
+            disciplina: "Física",
+            cor: "#E85D04",
+            icon: "⚛️",
+            dataCriacao: new Date().toISOString(),
+            tendencia: Math.random() > 0.6 ? "alta" : undefined,
+            novoConteudo: Math.random() > 0.5,
+            visibilidade: "público"
+          }
+        ];
+        
+        setGruposEncontrados(gruposSimulados);
         setIsSearching(false);
-        return;
-      }
-      
-      if (!data || data.length === 0) {
-        setGruposEncontrados([]);
-        setIsSearching(false);
-        return;
-      }
-      
-      // Transformar os resultados da tabela codigos_grupos_estudo para o formato GrupoEstudo
-      const gruposEncontrados: GrupoEstudo[] = data.map(grupo => ({
-        id: grupo.grupo_id,
-        nome: grupo.nome,
-        descricao: grupo.descricao || `Grupo de estudos sobre ${grupo.nome}`,
-        membros: grupo.membros || 1,
-        disciplina: grupo.disciplina || "Geral",
-        cor: grupo.cor || "#FF6B00",
-        icon: "📚", // Usamos um ícone padrão, já que não temos no banco
-        dataCriacao: grupo.data_criacao,
-        tendencia: Math.random() > 0.7 ? "alta" : undefined, // Aleatório por enquanto
-        novoConteudo: Math.random() > 0.6, // Aleatório por enquanto
-        visibilidade: grupo.privado ? "privado" : "público",
-        topico_nome: grupo.topico_nome,
-        topico_icon: grupo.topico_icon
-      }));
-      
-      setGruposEncontrados(gruposEncontrados);
-      setIsSearching(false);
-      
-      console.log(`Encontrados ${gruposEncontrados.length} grupos relacionados a "${searchTerm}" no banco de dados`);
-      
+      }, 1000);
     } catch (error) {
       console.error("Erro ao buscar grupos:", error);
       setErrorMessage("Ocorreu um erro ao buscar grupos. Tente novamente.");
@@ -131,60 +138,35 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
       setErrorMessage(null);
       setSuccessMessage(null);
 
-      const codigoNormalizado = codigo.trim().toUpperCase();
+      // Verificar se o código existe
+      const codigoExiste = await verificarSeCodigoExiste(codigo.trim());
       
-      // Buscar o grupo diretamente na tabela de códigos
-      const { data, error } = await supabase
-        .from('codigos_grupos_estudo')
-        .select('*')
-        .eq('codigo', codigoNormalizado)
-        .single();
-      
-      if (error || !data) {
-        console.error("Erro ao verificar código ou código não encontrado:", error);
+      if (codigoExiste) {
+        // Simulação de obtenção dos dados do grupo
+        setTimeout(() => {
+          const novoGrupo: GrupoEstudo = {
+            id: `grupo-codigo-${Date.now()}`,
+            nome: `Grupo via Código ${codigo.substring(0, 4)}`,
+            descricao: "Grupo adicionado via código de convite",
+            membros: Math.floor(Math.random() * 15) + 2,
+            cor: "#FF6B00",
+            icon: "🔑",
+            dataCriacao: new Date().toISOString(),
+            tendencia: Math.random() > 0.7 ? "alta" : undefined,
+            novoConteudo: true,
+            visibilidade: "privado",
+            disciplina: "Especializado"
+          };
+          
+          onGrupoAdicionado(novoGrupo);
+          setSuccessMessage("Grupo adicionado com sucesso!");
+          setCodigo("");
+          setIsVerifyingCode(false);
+        }, 1500);
+      } else {
         setErrorMessage("Código inválido ou expirado. Verifique e tente novamente.");
         setIsVerifyingCode(false);
-        return;
       }
-      
-      // Buscar informações mais completas do grupo na tabela principal
-      const { data: grupoData, error: grupoError } = await supabase
-        .from('grupos_estudo')
-        .select('*')
-        .eq('id', data.grupo_id)
-        .single();
-      
-      // Se houver erro na busca de dados complementares, usamos os dados da tabela de códigos
-      const grupoFinal = !grupoError && grupoData ? grupoData : data;
-      
-      // Construir objeto do grupo com os dados obtidos
-      const novoGrupo: GrupoEstudo = {
-        id: grupoFinal.grupo_id || data.grupo_id,
-        nome: grupoFinal.nome || data.nome,
-        descricao: grupoFinal.descricao || data.descricao || `Grupo acessado via código ${codigoNormalizado}`,
-        membros: grupoFinal.membros || data.membros || 1,
-        disciplina: grupoFinal.disciplina || data.disciplina || "Geral",
-        cor: grupoFinal.cor || data.cor || "#FF6B00",
-        icon: grupoFinal.icon || "🔑",
-        dataCriacao: grupoFinal.data_criacao || data.data_criacao || new Date().toISOString(),
-        tendencia: grupoFinal.tendencia || undefined,
-        novoConteudo: true, // Destacamos como novo
-        privado: grupoFinal.privado || data.privado || false,
-        visibilidade: (grupoFinal.privado || data.privado) ? "privado" : "público",
-        topico_nome: grupoFinal.topico_nome || data.topico_nome,
-        topico_icon: grupoFinal.topico_icon || data.topico_icon,
-        criador: grupoFinal.user_id || data.user_id
-      };
-      
-      console.log(`Grupo encontrado via código ${codigoNormalizado}:`, novoGrupo);
-      
-      // Adicionar o usuário como membro do grupo (em um cenário real, isso seria persistido no banco de dados)
-      // Aqui estamos apenas retornando o grupo para a interface parent
-      onGrupoAdicionado(novoGrupo);
-      setSuccessMessage(`Você entrou no grupo "${novoGrupo.nome}" com sucesso!`);
-      setCodigo("");
-      setIsVerifyingCode(false);
-      
     } catch (error) {
       console.error("Erro ao adicionar grupo via código:", error);
       setErrorMessage("Ocorreu um erro ao verificar o código. Tente novamente.");
