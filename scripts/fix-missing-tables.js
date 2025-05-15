@@ -290,7 +290,185 @@ async function sincronizarDados() {
     }
     
     console.log(`📊 Sincronização concluída: ${sucessos} sucessos, ${erros} erros`);
-    return sucessos > 0 || erros === 0; // Considerar sucesso se pelo menos um grupo foi sincronizado ou não houve erros
+    return sucessos > 0 || erros === 0; // Considerar sucesso se pelo menos um grupo foi sincronizado ou não houve erro
+}
+
+// Função para verificar e criar as tabelas necessárias
+async function verificarECriarTabelas() {
+  console.log('🔄 Verificando e criando tabelas necessárias...');
+  
+  try {
+    // Verificar/criar extensão uuid-ossp
+    try {
+      await supabase.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`);
+      console.log('✅ Extensão uuid-ossp verificada/criada');
+    } catch (extError) {
+      console.log('ℹ️ Não foi possível criar extensão uuid-ossp, continuando mesmo assim:', extError);
+    }
+    
+    // Criar tabela grupos_estudo
+    try {
+      await supabase.query(`
+        CREATE TABLE IF NOT EXISTS public.grupos_estudo (
+          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+          user_id UUID NOT NULL,
+          nome TEXT NOT NULL,
+          descricao TEXT,
+          cor TEXT NOT NULL DEFAULT '#FF6B00',
+          membros INTEGER NOT NULL DEFAULT 1,
+          membros_ids JSONB DEFAULT '[]'::jsonb,
+          topico TEXT,
+          topico_nome TEXT,
+          topico_icon TEXT,
+          privado BOOLEAN DEFAULT false,
+          visibilidade TEXT DEFAULT 'todos',
+          codigo TEXT,
+          disciplina TEXT DEFAULT 'Geral',
+          data_criacao TIMESTAMP WITH TIME ZONE DEFAULT now()
+        );
+        
+        CREATE INDEX IF NOT EXISTS grupos_estudo_user_id_idx ON public.grupos_estudo(user_id);
+        
+        ALTER TABLE public.grupos_estudo ENABLE ROW LEVEL SECURITY;
+        
+        DROP POLICY IF EXISTS "Usuários podem visualizar grupos" ON public.grupos_estudo;
+        CREATE POLICY "Usuários podem visualizar grupos"
+          ON public.grupos_estudo FOR SELECT
+          USING (true);
+          
+        DROP POLICY IF EXISTS "Usuários podem inserir grupos" ON public.grupos_estudo;
+        CREATE POLICY "Usuários podem inserir grupos"
+          ON public.grupos_estudo FOR INSERT
+          WITH CHECK (true);
+          
+        DROP POLICY IF EXISTS "Usuários podem atualizar grupos" ON public.grupos_estudo;
+        CREATE POLICY "Usuários podem atualizar grupos"
+          ON public.grupos_estudo FOR UPDATE
+          USING (true);
+          
+        DROP POLICY IF EXISTS "Usuários podem excluir grupos" ON public.grupos_estudo;
+        CREATE POLICY "Usuários podem excluir grupos"
+          ON public.grupos_estudo FOR DELETE
+          USING (true);
+      `);
+      console.log('✅ Tabela grupos_estudo criada/verificada com sucesso');
+    } catch (gruposError) {
+      console.error('❌ Erro ao criar tabela grupos_estudo:', gruposError);
+      throw gruposError;
+    }
+    
+    // Criar tabela codigos_grupos_estudo
+    try {
+      await supabase.query(`
+        CREATE TABLE IF NOT EXISTS public.codigos_grupos_estudo (
+          codigo VARCHAR(15) PRIMARY KEY,
+          grupo_id UUID NOT NULL,
+          nome VARCHAR NOT NULL,
+          descricao TEXT,
+          data_criacao TIMESTAMP WITH TIME ZONE DEFAULT now(),
+          user_id UUID,
+          privado BOOLEAN DEFAULT false,
+          membros INTEGER DEFAULT 1,
+          visibilidade VARCHAR,
+          disciplina VARCHAR,
+          cor VARCHAR DEFAULT '#FF6B00',
+          membros_ids JSONB DEFAULT '[]'::jsonb,
+          ultima_atualizacao TIMESTAMP WITH TIME ZONE DEFAULT now()
+        );
+        
+        CREATE INDEX IF NOT EXISTS idx_codigos_grupos_estudo_grupo_id ON public.codigos_grupos_estudo(grupo_id);
+        CREATE INDEX IF NOT EXISTS idx_codigos_grupos_estudo_user_id ON public.codigos_grupos_estudo(user_id);
+        
+        ALTER TABLE public.codigos_grupos_estudo ENABLE ROW LEVEL SECURITY;
+        
+        DROP POLICY IF EXISTS "Todos podem visualizar códigos" ON public.codigos_grupos_estudo;
+        CREATE POLICY "Todos podem visualizar códigos"
+          ON public.codigos_grupos_estudo FOR SELECT
+          USING (true);
+          
+        DROP POLICY IF EXISTS "Todos podem inserir códigos" ON public.codigos_grupos_estudo;
+        CREATE POLICY "Todos podem inserir códigos"
+          ON public.codigos_grupos_estudo FOR INSERT
+          WITH CHECK (true);
+          
+        DROP POLICY IF EXISTS "Todos podem atualizar códigos" ON public.codigos_grupos_estudo;
+        CREATE POLICY "Todos podem atualizar códigos"
+          ON public.codigos_grupos_estudo FOR UPDATE
+          USING (true);
+      `);
+      console.log('✅ Tabela codigos_grupos_estudo criada/verificada com sucesso');
+    } catch (codigosError) {
+      console.error('❌ Erro ao criar tabela codigos_grupos_estudo:', codigosError);
+      throw codigosError;
+    }
+    
+    // Verificar se as tabelas foram realmente criadas
+    try {
+      const { data: gruposCheck, error: gruposCheckError } = await supabase
+        .from('grupos_estudo')
+        .select('id')
+        .limit(1);
+        
+      if (gruposCheckError) {
+        console.error('❌ Falha na verificação da tabela grupos_estudo:', gruposCheckError);
+        return false;
+      }
+      
+      const { data: codigosCheck, error: codigosCheckError } = await supabase
+        .from('codigos_grupos_estudo')
+        .select('codigo')
+        .limit(1);
+        
+      if (codigosCheckError) {
+        console.error('❌ Falha na verificação da tabela codigos_grupos_estudo:', codigosCheckError);
+        return false;
+      }
+      
+      console.log('✅ Ambas as tabelas foram verificadas e estão acessíveis');
+      return true;
+    } catch (checkError) {
+      console.error('❌ Erro ao verificar tabelas recém-criadas:', checkError);
+      return false;
+    }
+  } catch (error) {
+    console.error('❌ Erro ao criar tabelas:', error);
+    return false;
+  }
+}
+
+// Executar a função principal
+module.exports = async function fixMissingTables() {
+  // Primeiro verificar e criar as tabelas
+  const tabelasCriadas = await verificarECriarTabelas();
+  
+  if (!tabelasCriadas) {
+    console.error('❌ Não foi possível criar as tabelas necessárias. Abortando sincronização.');
+    return false;
+  }
+  
+  // Agora sincronizar os dados
+  try {
+    // Buscar grupos
+    const { data: grupos, error } = await supabase
+      .from('grupos_estudo')
+      .select('*');
+      
+    if (error) {
+      console.error('❌ Erro ao buscar grupos:', error);
+      return false;
+    }
+    
+    console.log(`📊 Encontrados ${grupos?.length || 0} grupos para sincronizar`);
+    
+    // Sincronizar os grupos encontrados
+    const resultado = await sincronizarGruposDados(grupos || []);
+    
+    return resultado;
+  } catch (error) {
+    console.error('❌ Erro durante o processo de sincronização:', error);
+    return false;
+  }
+}s
   } catch (syncError) {
     console.error(`❌ Erro ao sincronizar dados: ${syncError.message}`);
     return false;

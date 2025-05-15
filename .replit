@@ -1528,6 +1528,647 @@ args = "  });"
 task = "shell.exec"
 args = "\""
 
+[[workflows.workflow]]
+name = "Corrigir Tabelas de Grupos Automaticamente"
+author = 42059808
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node -e \""
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "require('dotenv').config();"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "const { createClient } = require('@supabase/supabase-js');"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = ""
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "async function criarTabelas() {"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  console.log('Iniciando criação de tabelas necessárias...');"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  "
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  try {"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    console.log('Criando extensão uuid-ossp...');"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    try {"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = '      await supabase.query(`CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";`);'
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "      console.log('✅ Extensão uuid-ossp verificada/criada');"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    } catch (extError) {"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "      console.log('ℹ️ Não foi possível criar extensão uuid-ossp:', extError);"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    }"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    "
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    console.log('Criando tabela grupos_estudo...');"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    try {"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "      await supabase.query(`"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "        CREATE TABLE IF NOT EXISTS public.grupos_estudo ("
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          user_id UUID NOT NULL,"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          nome TEXT NOT NULL,"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          descricao TEXT,"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          cor TEXT NOT NULL DEFAULT '#FF6B00',"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          membros INTEGER NOT NULL DEFAULT 1,"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          membros_ids JSONB DEFAULT '[]'::jsonb,"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          topico TEXT,"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          topico_nome TEXT,"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          topico_icon TEXT,"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          privado BOOLEAN DEFAULT false,"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          visibilidade TEXT DEFAULT 'todos',"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          codigo TEXT,"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          disciplina TEXT DEFAULT 'Geral',"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          data_criacao TIMESTAMP WITH TIME ZONE DEFAULT now()"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "        );"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "        "
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "        CREATE INDEX IF NOT EXISTS grupos_estudo_user_id_idx ON public.grupos_estudo(user_id);"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "        "
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "        ALTER TABLE public.grupos_estudo ENABLE ROW LEVEL SECURITY;"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "        "
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = '        DROP POLICY IF EXISTS \"Usuários podem visualizar grupos\" ON public.grupos_estudo;'
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = '        CREATE POLICY \"Usuários podem visualizar grupos\"'
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          ON public.grupos_estudo FOR SELECT"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          USING (true);"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          "
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = '        DROP POLICY IF EXISTS \"Usuários podem inserir grupos\" ON public.grupos_estudo;'
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = '        CREATE POLICY \"Usuários podem inserir grupos\"'
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          ON public.grupos_estudo FOR INSERT"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          WITH CHECK (true);"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          "
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = '        DROP POLICY IF EXISTS \"Usuários podem atualizar grupos\" ON public.grupos_estudo;'
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = '        CREATE POLICY \"Usuários podem atualizar grupos\"'
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          ON public.grupos_estudo FOR UPDATE"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          USING (true);"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          "
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = '        DROP POLICY IF EXISTS \"Usuários podem excluir grupos\" ON public.grupos_estudo;'
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = '        CREATE POLICY \"Usuários podem excluir grupos\"'
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          ON public.grupos_estudo FOR DELETE"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          USING (true);"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "      `);"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "      console.log('✅ Tabela grupos_estudo criada com sucesso!');"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    } catch (gruposError) {"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "      console.error('❌ Erro ao criar tabela grupos_estudo:', gruposError);"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "      throw gruposError;"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    }"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    "
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    console.log('Criando tabela codigos_grupos_estudo...');"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    try {"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "      await supabase.query(`"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "        CREATE TABLE IF NOT EXISTS public.codigos_grupos_estudo ("
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          codigo VARCHAR(15) PRIMARY KEY,"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          grupo_id UUID NOT NULL,"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          nome VARCHAR NOT NULL,"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          descricao TEXT,"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          data_criacao TIMESTAMP WITH TIME ZONE DEFAULT now(),"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          user_id UUID,"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          privado BOOLEAN DEFAULT false,"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          membros INTEGER DEFAULT 1,"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          visibilidade VARCHAR,"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          disciplina VARCHAR,"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          cor VARCHAR DEFAULT '#FF6B00',"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          membros_ids JSONB DEFAULT '[]'::jsonb,"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          ultima_atualizacao TIMESTAMP WITH TIME ZONE DEFAULT now()"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "        );"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "        "
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "        CREATE INDEX IF NOT EXISTS idx_codigos_grupos_estudo_grupo_id ON public.codigos_grupos_estudo(grupo_id);"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "        CREATE INDEX IF NOT EXISTS idx_codigos_grupos_estudo_user_id ON public.codigos_grupos_estudo(user_id);"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "        "
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "        ALTER TABLE public.codigos_grupos_estudo ENABLE ROW LEVEL SECURITY;"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "        "
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = '        DROP POLICY IF EXISTS \"Todos podem visualizar códigos\" ON public.codigos_grupos_estudo;'
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = '        CREATE POLICY \"Todos podem visualizar códigos\"'
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          ON public.codigos_grupos_estudo FOR SELECT"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          USING (true);"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          "
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = '        DROP POLICY IF EXISTS \"Todos podem inserir códigos\" ON public.codigos_grupos_estudo;'
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = '        CREATE POLICY \"Todos podem inserir códigos\"'
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          ON public.codigos_grupos_estudo FOR INSERT"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          WITH CHECK (true);"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          "
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = '        DROP POLICY IF EXISTS \"Todos podem atualizar códigos\" ON public.codigos_grupos_estudo;'
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = '        CREATE POLICY \"Todos podem atualizar códigos\"'
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          ON public.codigos_grupos_estudo FOR UPDATE"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "          USING (true);"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "      `);"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "      console.log('✅ Tabela codigos_grupos_estudo criada com sucesso!');"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    } catch (codigosError) {"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "      console.error('❌ Erro ao criar tabela codigos_grupos_estudo:', codigosError);"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "      throw codigosError;"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    }"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    "
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    // Verificar se conseguimos acessar as tabelas"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    try {"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "      const { data: gruposCheck, error: gruposCheckError } = await supabase"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "        .from('grupos_estudo')"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "        .select('*')"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "        .limit(1);"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "        "
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "      if (gruposCheckError) {"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "        console.error('❌ Não foi possível acessar a tabela grupos_estudo após criação:', gruposCheckError);"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "        return false;"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "      }"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "      "
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "      const { data: codigosCheck, error: codigosCheckError } = await supabase"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "        .from('codigos_grupos_estudo')"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "        .select('*')"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "        .limit(1);"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "        "
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "      if (codigosCheckError) {"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "        console.error('❌ Não foi possível acessar a tabela codigos_grupos_estudo após criação:', codigosCheckError);"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "        return false;"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "      }"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "      "
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "      console.log('✅ Ambas as tabelas estão acessíveis!');"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "      return true;"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    } catch (checkError) {"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "      console.error('❌ Erro ao verificar acesso às tabelas:', checkError);"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "      return false;"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    }"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  } catch (error) {"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    console.error('❌ Erro durante a criação das tabelas:', error);"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    return false;"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  }"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "}"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = ""
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "criarTabelas()"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  .then(result => {"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    if (result) {"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "      console.log('✅ SUCESSO: Todas as tabelas foram criadas com sucesso!');"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    } else {"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "      console.error('❌ FALHA: Não foi possível criar todas as tabelas.');"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    }"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  })"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  .catch(err => {"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "    console.error('❌ ERRO CRÍTICO:', err);"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "  });"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "\""
+
 [auth]
 pageEnabled = false
 buttonEnabled = false

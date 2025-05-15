@@ -565,37 +565,152 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
 
       // 2. VERIFICAÇÃO DAS TABELAS
       try {
-        // Tenta uma consulta simples em cada tabela para verificar se estão acessíveis
-        const { data: gruposCheck, error: gruposCheckError } = await supabase
-          .from('grupos_estudo')
-          .select('id, codigo')
-          .limit(1);
+        // Verificar e criar as tabelas necessárias automaticamente
+        setSuccessMessage("Verificando e criando tabelas necessárias...");
 
-        if (gruposCheckError) {
-          console.error('❌ Não foi possível acessar a tabela grupos_estudo:', gruposCheckError);
-          setErrorMessage(`Erro ao acessar grupos_estudo: ${gruposCheckError.message}. Por favor, execute o workflow 'Corrigir Tabelas de Grupos'.`);
+        // Verificar se a tabela grupos_estudo existe, se não, criar
+        try {
+          const { data: gruposCheck, error: gruposCheckError } = await supabase
+            .from('grupos_estudo')
+            .select('id, codigo')
+            .limit(1);
+
+          if (gruposCheckError && gruposCheckError.code === '42P01') {
+            console.log('🔄 Tabela grupos_estudo não existe, criando automaticamente...');
+            setSuccessMessage("Criando tabela grupos_estudo...");
+
+            // Criar tabela grupos_estudo
+            await supabase.query(`
+              CREATE TABLE IF NOT EXISTS public.grupos_estudo (
+                id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                user_id UUID NOT NULL,
+                nome TEXT NOT NULL,
+                descricao TEXT,
+                cor TEXT NOT NULL DEFAULT '#FF6B00',
+                membros INTEGER NOT NULL DEFAULT 1,
+                membros_ids JSONB DEFAULT '[]'::jsonb,
+                topico TEXT,
+                topico_nome TEXT,
+                topico_icon TEXT,
+                privado BOOLEAN DEFAULT false,
+                visibilidade TEXT DEFAULT 'todos',
+                codigo TEXT,
+                disciplina TEXT DEFAULT 'Geral',
+                data_criacao TIMESTAMP WITH TIME ZONE DEFAULT now()
+              );
+              CREATE INDEX IF NOT EXISTS grupos_estudo_user_id_idx ON public.grupos_estudo(user_id);
+              ALTER TABLE public.grupos_estudo ENABLE ROW LEVEL SECURITY;
+
+              DROP POLICY IF EXISTS "Usuários podem visualizar grupos" ON public.grupos_estudo;
+              CREATE POLICY "Usuários podem visualizar grupos"
+                ON public.grupos_estudo FOR SELECT
+                USING (true);
+
+              DROP POLICY IF EXISTS "Usuários podem inserir grupos" ON public.grupos_estudo;
+              CREATE POLICY "Usuários podem inserir grupos"
+                ON public.grupos_estudo FOR INSERT
+                WITH CHECK (true);
+
+              DROP POLICY IF EXISTS "Usuários podem atualizar grupos" ON public.grupos_estudo;
+              CREATE POLICY "Usuários podem atualizar grupos"
+                ON public.grupos_estudo FOR UPDATE
+                USING (true);
+            `);
+
+            console.log('✅ Tabela grupos_estudo criada com sucesso');
+            setSuccessMessage("Tabela grupos_estudo criada com sucesso!");
+          } else if (gruposCheckError) {
+            console.error('❌ Erro ao verificar tabela grupos_estudo:', gruposCheckError);
+            throw gruposCheckError;
+          } else {
+            console.log('✅ Tabela grupos_estudo já existe');
+          }
+        } catch (gruposError) {
+          console.error('❌ Erro ao verificar/criar tabela grupos_estudo:', gruposError);
+          if (gruposError.code === '42501') {
+            setErrorMessage("Erro de permissão: Sua conta não tem permissão para criar tabelas. Por favor, contate o suporte.");
+          } else {
+            setErrorMessage(`Erro ao verificar/criar tabela grupos_estudo: ${gruposError.message}`);
+          }
           setSincronizando(false);
           return;
         }
 
-        const { data: codigosCheck, error: codigosCheckError } = await supabase
-          .from('codigos_grupos_estudo')
-          .select('codigo')
-          .limit(1);
+        // Verificar se a tabela codigos_grupos_estudo existe, se não, criar
+        try {
+          const { data: codigosCheck, error: codigosCheckError } = await supabase
+            .from('codigos_grupos_estudo')
+            .select('codigo')
+            .limit(1);
 
-        if (codigosCheckError) {
-          console.error('❌ Não foi possível acessar a tabela codigos_grupos_estudo:', codigosCheckError);
-          setErrorMessage(`Erro ao acessar codigos_grupos_estudo: ${codigosCheckError.message}. Por favor, execute o workflow 'Corrigir Tabelas de Grupos'.`);
+          if (codigosCheckError && codigosCheckError.code === '42P01') {
+            console.log('🔄 Tabela codigos_grupos_estudo não existe, criando automaticamente...');
+            setSuccessMessage("Criando tabela codigos_grupos_estudo...");
+
+            // Criar tabela codigos_grupos_estudo
+            await supabase.query(`
+              CREATE TABLE IF NOT EXISTS public.codigos_grupos_estudo (
+                codigo VARCHAR(15) PRIMARY KEY,
+                grupo_id UUID NOT NULL,
+                nome VARCHAR NOT NULL,
+                descricao TEXT,
+                data_criacao TIMESTAMP WITH TIME ZONE DEFAULT now(),
+                user_id UUID,
+                privado BOOLEAN DEFAULT false,
+                membros INTEGER DEFAULT 1,
+                visibilidade VARCHAR,
+                disciplina VARCHAR,
+                cor VARCHAR DEFAULT '#FF6B00',
+                membros_ids JSONB DEFAULT '[]'::jsonb,
+                ultima_atualizacao TIMESTAMP WITH TIME ZONE DEFAULT now()
+              );
+
+              CREATE INDEX IF NOT EXISTS idx_codigos_grupos_estudo_grupo_id ON public.codigos_grupos_estudo(grupo_id);
+              CREATE INDEX IF NOT EXISTS idx_codigos_grupos_estudo_user_id ON public.codigos_grupos_estudo(user_id);
+
+              ALTER TABLE public.codigos_grupos_estudo ENABLE ROW LEVEL SECURITY;
+
+              DROP POLICY IF EXISTS "Todos podem visualizar códigos" ON public.codigos_grupos_estudo;
+              CREATE POLICY "Todos podem visualizar códigos"
+                ON public.codigos_grupos_estudo FOR SELECT
+                USING (true);
+
+              DROP POLICY IF EXISTS "Todos podem inserir códigos" ON public.codigos_grupos_estudo;
+              CREATE POLICY "Todos podem inserir códigos"
+                ON public.codigos_grupos_estudo FOR INSERT
+                WITH CHECK (true);
+
+              DROP POLICY IF EXISTS "Todos podem atualizar códigos" ON public.codigos_grupos_estudo;
+              CREATE POLICY "Todos podem atualizar códigos"
+                ON public.codigos_grupos_estudo FOR UPDATE
+                USING (true);
+            `);
+
+            console.log('✅ Tabela codigos_grupos_estudo criada com sucesso');
+            setSuccessMessage("Tabela codigos_grupos_estudo criada com sucesso!");
+          } else if (codigosCheckError) {
+            console.error('❌ Erro ao verificar tabela codigos_grupos_estudo:', codigosCheckError);
+            throw codigosCheckError;
+          } else {
+            console.log('✅ Tabela codigos_grupos_estudo já existe');
+          }
+        } catch (codigosError) {
+          console.error('❌ Erro ao verificar/criar tabela codigos_grupos_estudo:', codigosError);
+          if (codigosError.code === '42501') {
+            setErrorMessage("Erro de permissão: Sua conta não tem permissão para criar tabelas. Por favor, contate o suporte.");
+          } else {
+            setErrorMessage(`Erro ao verificar/criar tabela codigos_grupos_estudo: ${codigosError.message}`);
+          }
           setSincronizando(false);
           return;
         }
 
-        console.log("✅ Ambas as tabelas estão acessíveis");
-        setSuccessMessage("Tabelas verificadas com sucesso! Iniciando sincronização...");
+        console.log("✅ Ambas as tabelas estão acessíveis ou foram criadas");
+        setSuccessMessage("Tabelas verificadas/criadas com sucesso! Iniciando sincronização...");
 
       } catch (checkError) {
         console.error('❌ Erro ao verificar acesso às tabelas:', checkError);
-        setErrorMessage(`Erro ao verificar tabelas: ${checkError.message}. Por favor, execute o workflow 'Corrigir Tabelas de Grupos'.`);
+        setErrorMessage(`Erro ao verificar tabelas: ${checkError.message || 'Erro desconhecido'}`);
         setSincronizando(false);
         return;
       }
