@@ -563,14 +563,15 @@ export function RegisterForm() {
             console.error("LocalStorage error:", storageError);
           }
 
-          // Registro considerado bem-sucedido - mostrar mensagem e redirecionar após 2 segundos
+          // Registro considerado bem-sucedido - mostrar mensagem e redirecionar após confirmação
           setSuccess(true);
           setLoading(false);
 
-          // Garantir redirecionamento mesmo se houver erro
+          // Reduzir o tempo de redirecionamento para melhorar a experiência do usuário
           const redirectTimer = setTimeout(() => {
+            console.log("Redirecionando para a página de login...");
             navigate("/login", { state: { newAccount: true } });
-          }, 2000);
+          }, 1500); // Reduzido para 1.5 segundos
 
           // Armazenar o timer no localStorage para garantir que ele persista
           try {
@@ -588,6 +589,14 @@ export function RegisterForm() {
               return null;
             }
           };
+          
+          // Adicionar outro mecanismo de segurança para garantir o redirecionamento
+          document.addEventListener('visibilitychange', function handleVisibility() {
+            if (localStorage.getItem('redirectTimer') === 'active') {
+              navigate("/login", { state: { newAccount: true } });
+              document.removeEventListener('visibilitychange', handleVisibility);
+            }
+          });
 
         } catch (err) {
           console.error("Error in profile operations:", err);
@@ -609,9 +618,18 @@ export function RegisterForm() {
       setSuccess(true);
       setLoading(false);
 
+      // Configurar redirecionamento mais robusto
+      try {
+        localStorage.setItem('redirectTimer', 'active');
+        localStorage.setItem('lastRegisteredUsername', formData.username || '');
+      } catch (e) {
+        console.error("Erro ao salvar dados no localStorage:", e);
+      }
+
       setTimeout(() => {
+        console.log("Redirecionando após tratamento de erro...");
         navigate("/login", { state: { newAccount: true } });
-      }, 3000);
+      }, 2000);
     } finally {
       setLoading(false);
     }
@@ -788,7 +806,10 @@ export function RegisterForm() {
           </div>
           <div className="flex-1">
             <h3 className="text-lg font-bold">Conta criada com sucesso!</h3>
-            <p className="text-sm mt-1">Sua conta foi criada e seus dados foram salvos com sucesso. Redirecionando para a página de login em instantes...</p>
+            <p className="text-sm mt-1">Sua conta foi criada e seus dados foram salvos com sucesso. Você será redirecionado para a página de login automaticamente em instantes...</p>
+            <div className="mt-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
+              <div className="bg-green-500 dark:bg-green-400 h-1.5 rounded-full animate-pulse" style={{width: '100%', animationDuration: '1.5s'}}></div>
+            </div>
           </div>
         </div>
       ) : (

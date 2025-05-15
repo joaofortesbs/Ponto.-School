@@ -32,7 +32,7 @@ export function LoginForm() {
       setAccountCreated(true);
       setTimeout(() => {
         setAccountCreated(false);
-      }, 5000);
+      }, 8000); // Aumentado para 8 segundos para dar mais tempo de leitura
       
       // Limpar flag de redirecionamento
       localStorage.removeItem('redirectTimer');
@@ -41,6 +41,7 @@ export function LoginForm() {
       const lastUsername = localStorage.getItem('lastRegisteredUsername');
       if (lastUsername) {
         setFormData(prev => ({ ...prev, email: lastUsername }));
+        console.log("Preenchendo campo de email com username:", lastUsername);
       }
     }
     
@@ -50,10 +51,28 @@ export function LoginForm() {
       setAccountCreated(true);
       setTimeout(() => {
         setAccountCreated(false);
-      }, 5000);
+      }, 8000); // Aumentado para 8 segundos
       
       // Limpar flag de redirecionamento
       localStorage.removeItem('redirectTimer');
+      
+      // Verificar se há username no localStorage mesmo quando vindo por parâmetro de URL
+      const lastUsername = localStorage.getItem('lastRegisteredUsername');
+      if (lastUsername && !formData.email) {
+        setFormData(prev => ({ ...prev, email: lastUsername }));
+      }
+    }
+    
+    // Executar sempre na montagem do componente para verificar se existe um redirecionamento pendente
+    const pendingRedirect = localStorage.getItem('redirectTimer');
+    if (pendingRedirect === 'active') {
+      setAccountCreated(true);
+      localStorage.removeItem('redirectTimer');
+      
+      const lastUsername = localStorage.getItem('lastRegisteredUsername');
+      if (lastUsername) {
+        setFormData(prev => ({ ...prev, email: lastUsername }));
+      }
     }
   }, [location]);
 
