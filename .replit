@@ -2178,6 +2178,15 @@ mode = "sequential"
 task = "shell.exec"
 args = "node scripts/fix-tables-api.js"
 
+[[workflows.workflow]]
+name = "Sincronizar Códigos de Grupos"
+author = 42059808
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node scripts/sync-grupos-codigos.js"
+
 [auth]
 pageEnabled = false
 buttonEnabled = false
