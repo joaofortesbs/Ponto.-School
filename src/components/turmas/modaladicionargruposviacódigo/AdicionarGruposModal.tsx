@@ -4,12 +4,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search as SearchIcon, X, RefreshCcw } from "lucide-react";
+import { Search as SearchIcon, X, RefreshCcw, UserPlus } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/lib/supabase";
 import { verificarCodigoExiste, entrarEmGrupoComCodigo } from "@/lib/grupoCodigoUtils";
 
-const AdicionarGruposModal = ({ open, onOpenChange }) => {
+interface AdicionarGruposModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({ open, onOpenChange }) => {
   const [codigo, setCodigo] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,28 +33,30 @@ const AdicionarGruposModal = ({ open, onOpenChange }) => {
       setError(null);
       
       // Verificar se a tabela grupos_estudo existe
-      try {
-        await supabase.from('grupos_estudo').select('*', { count: 'exact', head: true });
-        console.log("Tabela grupos_estudo existe");
-      } catch (error) {
-        console.error("Erro ao verificar tabela grupos_estudo:", error);
+      const { error: gruposError } = await supabase.from('grupos_estudo').select('id', { count: 'exact', head: true });
+      
+      if (gruposError) {
+        console.error("Erro ao verificar tabela grupos_estudo:", gruposError);
         await criarTabelaGruposEstudo();
+      } else {
+        console.log("Tabela grupos_estudo existe");
       }
 
       // Verificar se a tabela codigos_grupos_estudo existe
-      try {
-        await supabase.from('codigos_grupos_estudo').select('*', { count: 'exact', head: true });
-        console.log("Tabela codigos_grupos_estudo existe");
-      } catch (error) {
-        console.error("Erro ao verificar tabela codigos_grupos_estudo:", error);
+      const { error: codigosError } = await supabase.from('codigos_grupos_estudo').select('id', { count: 'exact', head: true });
+      
+      if (codigosError) {
+        console.error("Erro ao verificar tabela codigos_grupos_estudo:", codigosError);
         await criarTabelaCodigosGrupos();
+      } else {
+        console.log("Tabela codigos_grupos_estudo existe");
       }
       
       // Atualizar o status
       setSincronizando(false);
       
       return true;
-    } catch (err) {
+    } catch (err: any) {
       console.error("Erro ao verificar/criar tabelas:", err);
       setError("Erro ao verificar/criar tabelas: " + (err.message || JSON.stringify(err)));
       setSincronizando(false);
@@ -79,7 +86,7 @@ const AdicionarGruposModal = ({ open, onOpenChange }) => {
 
       console.log("Tabela grupos_estudo criada com sucesso");
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao criar tabela grupos_estudo:", error);
       setError(`Erro ao criar tabela: ${error.message}`);
       return false;
@@ -108,7 +115,7 @@ const AdicionarGruposModal = ({ open, onOpenChange }) => {
 
       console.log("Tabela codigos_grupos_estudo criada com sucesso");
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao criar tabela codigos_grupos_estudo:", error);
       setError(`Erro ao criar tabela: ${error.message}`);
       return false;
@@ -128,7 +135,7 @@ const AdicionarGruposModal = ({ open, onOpenChange }) => {
       setError(null);
       setIsSuccess(false);
 
-      if (!codigo) {
+      if (!codigo || codigo.trim() === "") {
         setError("Digite um código de convite.");
         setLoading(false);
         return;
@@ -170,7 +177,7 @@ const AdicionarGruposModal = ({ open, onOpenChange }) => {
       } else {
         setError(resultado.mensagem || "Erro ao entrar no grupo.");
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Erro ao entrar com código:", err);
       setError("Erro ao processar o código: " + (err.message || JSON.stringify(err)));
     } finally {
@@ -187,6 +194,7 @@ const AdicionarGruposModal = ({ open, onOpenChange }) => {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
+            <UserPlus className="h-5 w-5 text-orange-500" />
             <span className="text-lg font-semibold">Adicionar Grupos de Estudo</span>
           </DialogTitle>
         </DialogHeader>
@@ -224,13 +232,18 @@ const AdicionarGruposModal = ({ open, onOpenChange }) => {
                       limparErro();
                     }}
                     className="flex-1"
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        handleEntrarComCodigo();
+                      }
+                    }}
                   />
                   <Button
                     onClick={handleEntrarComCodigo}
                     disabled={loading}
                     className="bg-orange-500 hover:bg-orange-600 text-white"
                   >
-                    Entrar com Código
+                    {loading ? "Entrando..." : "Entrar com Código"}
                   </Button>
                 </div>
               </div>
