@@ -48,7 +48,7 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
     }
   }, []);
   
-  const onClose = () => {
+  const handleClose = () => {
     onOpenChange(false);
   };
 
@@ -394,7 +394,7 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
             <Button
                 variant="ghost"
                 size="icon"
-                onClick={onClose}
+                onClick={handleClose}
                 className="text-white hover:bg-slate-700"
               >
                 <X className="h-4 w-4" />
