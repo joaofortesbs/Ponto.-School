@@ -3,6 +3,7 @@
  * Este arquivo centraliza operações comuns relacionadas aos códigos dos grupos
  */
 import { supabase } from '@/lib/supabase';
+// Usando funções do serviço de códigos
 import { gerarCodigoUnico, salvarCodigoNoBanco, buscarGrupoPorCodigo } from './codigosGruposService';
 
 // Interface para o tipo GrupoEstudo
