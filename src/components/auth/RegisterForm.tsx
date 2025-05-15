@@ -163,10 +163,10 @@ export function RegisterForm() {
     // Sempre garantir que as opções estejam carregadas, independente do estado anterior
     setClassOptions(preloadedClassOptions);
     setGradeOptions(preloadedGradeOptions);
-    
+
     // Definir loading como false imediatamente
     setLoadingOptions(false);
-    
+
     if (formData.institution.trim().length > 0) {
       // Mostrar seção de turmas e séries imediatamente
       setShowClassAndGrade(true);
@@ -174,7 +174,7 @@ export function RegisterForm() {
     } else {
       setShowClassAndGrade(false);
       setInstitutionFound(false);
-      
+
       // Reset the values when institution is cleared
       setFormData((prev) => ({
         ...prev,
@@ -184,7 +184,7 @@ export function RegisterForm() {
         customGrade: "",
       }));
     }
-    
+
     // Garantir que componentes sejam mostrados com um timeout de segurança
     const timer = setTimeout(() => {
       if (formData.institution.trim().length > 0) {
@@ -192,7 +192,7 @@ export function RegisterForm() {
         setInstitutionFound(true);
       }
     }, 100);
-    
+
     return () => clearTimeout(timer);
   }, [formData.institution]);
 
@@ -589,7 +589,7 @@ export function RegisterForm() {
               return null;
             }
           };
-          
+
           // Adicionar outro mecanismo de segurança para garantir o redirecionamento
           document.addEventListener('visibilitychange', function handleVisibility() {
             if (localStorage.getItem('redirectTimer') === 'active') {

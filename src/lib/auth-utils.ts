@@ -249,6 +249,32 @@ export const signInWithEmail = async (email: string, password: string) => {
       localStorage.setItem('auth_checked', 'true');
       localStorage.setItem('auth_status', 'authenticated');
 
+      // Após login bem-sucedido, buscar informações do perfil
+      try {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('username, display_name, email, full_name')
+          .eq('id', data.user.id)
+          .single();
+          
+        if (profileData) {
+          // Salvar os dados do usuário para uso rápido na aplicação
+          saveUserDisplayName(
+            profileData.display_name, 
+            profileData.full_name, 
+            profileData.username
+          );
+          
+          // Garantir que o username está salvo corretamente
+          if (profileData.username) {
+            localStorage.setItem('username', profileData.username);
+            try { sessionStorage.setItem('username', profileData.username); } catch (e) {}
+          }
+        }
+      } catch (e) {
+        console.warn("Erro ao obter perfil após login:", e);
+      }
+
       // Não armazenamos mais timestamp de sessão para que o modal sempre apareça
     }
 
@@ -265,20 +291,59 @@ export const signInWithEmail = async (email: string, password: string) => {
  */
 export const signInWithUsername = async (username: string, password: string) => {
   try {
+    console.log("Iniciando login com username:", username);
+    
     // Primeiro, buscar o email associado ao nome de usuário
     const { data: profileData, error: profileError } = await supabase
       .from('profiles')
-      .select('email')
+      .select('email, username, display_name')
       .eq('username', username)
       .single();
 
     if (profileError || !profileData?.email) {
+      console.log("Nome de usuário não encontrado:", username, profileError);
+      
+      // Tentar buscar por similaridade como alternativa (caso o usuário tenha digitado com capitalização diferente)
+      try {
+        const { data: alternativeProfiles, error: altError } = await supabase
+          .from('profiles')
+          .select('email, username, display_name')
+          .ilike('username', username)
+          .limit(1);
+          
+        if (!altError && alternativeProfiles && alternativeProfiles.length > 0) {
+          console.log("Encontrado perfil alternativo por similaridade:", alternativeProfiles[0].username);
+          
+          // Salvar o username correto para referência futura
+          try {
+            localStorage.setItem('username', alternativeProfiles[0].username);
+          } catch (e) {}
+          
+          // Usar o email encontrado para login
+          return signInWithEmail(alternativeProfiles[0].email, password);
+        }
+      } catch (e) {
+        console.error("Erro ao tentar busca alternativa:", e);
+      }
+      
       return { 
         success: false, 
         error: new Error("Nome de usuário não encontrado")
       };
     }
 
+    // Salvar o username confirmado
+    try {
+      localStorage.setItem('username', profileData.username);
+      localStorage.setItem('userFirstName', profileData.display_name || username);
+      
+      // Armazenar também no sessionStorage como backup
+      sessionStorage.setItem('username', profileData.username);
+    } catch (e) {
+      console.warn("Erro ao salvar username no cache:", e);
+    }
+
+    console.log("Username encontrado, email associado:", profileData.email);
     // Usar o email encontrado para fazer login
     return signInWithEmail(profileData.email, password);
     

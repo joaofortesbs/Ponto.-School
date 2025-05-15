@@ -120,77 +120,54 @@ export function LoginForm() {
     }, 5000);
 
     try {
-      let authResult;
-      const inputValue = formData.email;
+      // Importar a função do auth-utils para garantir consistência
+      const inputValue = formData.email.trim();
       const isEmail = inputValue.includes('@');
-
+      
+      // Escolher a estratégia de login apropriada com base no tipo de entrada
+      let loginResult;
+      
       if (isEmail) {
-        // Login com email
-        authResult = await Promise.race([
-          supabase.auth.signInWithPassword({
-            email: inputValue,
-            password: formData.password,
-          }),
-          new Promise((_, reject) => 
-            setTimeout(() => reject(new Error("Tempo limite excedido")), 8000)
-          )
-        ]);
+        console.log("Tentando login com email:", inputValue);
+        loginResult = await signInWithEmail(inputValue, formData.password);
       } else {
-        // Login com nome de usuário
-        // Primeiro, buscar o email associado ao nome de usuário
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('email')
-          .eq('username', inputValue)
-          .single();
-
-        if (profileError || !profileData?.email) {
-          setSuccess(false);
-          setError("Nome de usuário não encontrado");
-          setLoading(false);
-          clearTimeout(preloadTimeout);
-          clearTimeout(authTimeout);
-          localStorage.removeItem('auth_checked');
-          localStorage.removeItem('auth_status');
-          return;
-        }
-
-        // Agora fazer login com o email encontrado
-        authResult = await Promise.race([
-          supabase.auth.signInWithPassword({
-            email: profileData.email,
-            password: formData.password,
-          }),
-          new Promise((_, reject) => 
-            setTimeout(() => reject(new Error("Tempo limite excedido")), 8000)
-          )
-        ]);
+        console.log("Tentando login com nome de usuário:", inputValue);
+        loginResult = await signInWithUsername(inputValue, formData.password);
       }
-
-      const { data, error } = authResult;
 
       clearTimeout(preloadTimeout);
       clearTimeout(authTimeout);
 
-      if (error) {
+      if (!loginResult.success) {
         setSuccess(false);
-        if (error.message.includes("Invalid login credentials") ||
-            error.message.includes("Email not confirmed")) {
-          setError("Email ou senha inválidos");
-        } else if (error.status === 0) { //Improved network error handling
+        const error = loginResult.error as any;
+        
+        if (error?.message?.includes("Invalid login credentials") || 
+            error?.message?.includes("Email not confirmed") ||
+            error?.message?.includes("não encontrado")) {
+          setError("Nome de usuário ou senha inválidos");
+        } else if (error?.status === 0 || error?.message?.includes("conexão")) {
           setError("Erro de conexão. Verifique sua internet.");
         } else {
-          setError("Erro ao fazer login: " + error.message);
+          setError("Erro ao fazer login: " + (error?.message || "Verifique suas credenciais"));
         }
+        
         localStorage.removeItem('auth_checked');
         localStorage.removeItem('auth_status');
         setLoading(false);
         return;
       }
 
-      if (data?.user) {
+      // Login bem-sucedido
+      if (loginResult.data?.user) {
         localStorage.setItem('auth_checked', 'true');
         localStorage.setItem('auth_status', 'authenticated');
+        
+        // Salvar o nome de usuário do login para acesso rápido
+        if (!isEmail) {
+          localStorage.setItem('username', inputValue);
+          try { sessionStorage.setItem('username', inputValue); } catch (e) {}
+        }
 
         // Redirecionar rapidamente para melhorar percepção de velocidade
         navigate("/");
