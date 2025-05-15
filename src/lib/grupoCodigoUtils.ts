@@ -439,6 +439,94 @@ export const verificarSeCodigoExiste = async (codigo: string): Promise<boolean> 
   }
 };
 
+/**
+ * Verifica se um código pertence a um grupo criado pelo usuário ou do qual ele já é membro
+ * @param codigo - O código do grupo a verificar
+ * @param userId - ID do usuário atual
+ * @returns Objeto contendo o resultado da verificação e detalhes do grupo, se aplicável
+ */
+export const verificarRelacaoUsuarioComGrupo = async (
+  codigo: string, 
+  userId: string
+): Promise<{ 
+  pertenceAoUsuario: boolean, 
+  jaEMembro: boolean, 
+  nomeGrupo: string,
+  grupoId: string | null
+}> => {
+  try {
+    if (!codigo || !userId) {
+      return { pertenceAoUsuario: false, jaEMembro: false, nomeGrupo: '', grupoId: null };
+    }
+
+    const codigoNormalizado = codigo.trim().toUpperCase();
+
+    // Primeiro verificar na tabela de códigos
+    let grupoInfo = null;
+
+    // Buscar na tabela de códigos
+    const { data: dataCodigos, error: errorCodigos } = await supabase
+      .from('codigos_grupos_estudo')
+      .select('*')
+      .eq('codigo', codigoNormalizado)
+      .maybeSingle();
+
+    if (!errorCodigos && dataCodigos) {
+      grupoInfo = dataCodigos;
+    }
+
+    // Se não encontrou na tabela de códigos, buscar na tabela de grupos
+    if (!grupoInfo) {
+      const { data: dataGrupos, error: errorGrupos } = await supabase
+        .from('grupos_estudo')
+        .select('*')
+        .eq('codigo', codigoNormalizado)
+        .maybeSingle();
+
+      if (!errorGrupos && dataGrupos) {
+        grupoInfo = dataGrupos;
+      }
+    }
+
+    // Se não encontrou o grupo em nenhuma das tabelas
+    if (!grupoInfo) {
+      return { pertenceAoUsuario: false, jaEMembro: false, nomeGrupo: '', grupoId: null };
+    }
+
+    // Verificar se o usuário é o criador do grupo
+    const pertenceAoUsuario = grupoInfo.user_id === userId;
+
+    // Verificar se o usuário já é membro
+    const membrosIds = grupoInfo.membros_ids || [];
+    const jaEMembro = membrosIds.includes(userId);
+
+    // Verificar também no localStorage
+    let membroLocalStorage = false;
+    try {
+      const gruposStorage = localStorage.getItem('epictus_grupos_estudo');
+      if (gruposStorage) {
+        const grupos = JSON.parse(gruposStorage);
+        const grupoLocalStorage = grupos.find((g: any) => 
+          g.id === (grupoInfo.id || grupoInfo.grupo_id)
+        );
+        membroLocalStorage = !!grupoLocalStorage;
+      }
+    } catch (e) {
+      console.error("Erro ao verificar grupos no localStorage:", e);
+    }
+
+    return { 
+      pertenceAoUsuario, 
+      jaEMembro: jaEMembro || membroLocalStorage, 
+      nomeGrupo: grupoInfo.nome || 'Grupo sem nome',
+      grupoId: grupoInfo.id || grupoInfo.grupo_id
+    };
+  } catch (error) {
+    console.error("Erro ao verificar relação do usuário com o grupo:", error);
+    return { pertenceAoUsuario: false, jaEMembro: false, nomeGrupo: '', grupoId: null };
+  }
+};
+
 // Gera um código único para um grupo
 export const gerarCodigoGrupo = (): string => {
   const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';

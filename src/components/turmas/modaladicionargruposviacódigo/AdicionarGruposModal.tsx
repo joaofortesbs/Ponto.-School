@@ -235,6 +235,12 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
       
       console.log(`Verificando código: ${codigoNormalizado}`);
 
+      // Obter o ID do usuário atual do localStorage ou sessionStorage
+      const userId = localStorage.getItem('user_id') || sessionStorage.getItem('user_id');
+      if (!userId) {
+        console.warn("ID do usuário não encontrado no storage local");
+      }
+
       // ETAPA 1: Buscar na tabela específica de códigos
       let grupoEncontrado = null;
       try {
@@ -306,6 +312,41 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
         setErrorMessage("Código inválido ou expirado. Verifique e tente novamente.");
         setIsVerifyingCode(false);
         return;
+      }
+
+      // Verificar se o usuário já é o criador do grupo ou está na lista de membros
+      if (userId && grupoEncontrado.user_id === userId) {
+        setErrorMessage(`Você já é o criador do grupo "${grupoEncontrado.nome}". Não é necessário entrar novamente.`);
+        setIsVerifyingCode(false);
+        return;
+      }
+
+      // Verificar se o usuário já é membro do grupo
+      const membrosIds = grupoEncontrado.membros_ids || [];
+      if (userId && membrosIds.includes(userId)) {
+        setErrorMessage(`Você já é membro do grupo "${grupoEncontrado.nome}".`);
+        setIsVerifyingCode(false);
+        return;
+      }
+
+      // Verificar também no localStorage se o usuário já tem o grupo
+      let gruposUsuario = [];
+      try {
+        const gruposStorage = localStorage.getItem('epictus_grupos_estudo');
+        if (gruposStorage) {
+          gruposUsuario = JSON.parse(gruposStorage);
+          const grupoJaAdicionado = gruposUsuario.find((g: any) => 
+            g.id === (grupoEncontrado?.id || grupoEncontrado?.grupo_id)
+          );
+
+          if (grupoJaAdicionado) {
+            setErrorMessage(`Você já participa do grupo "${grupoEncontrado.nome}".`);
+            setIsVerifyingCode(false);
+            return;
+          }
+        }
+      } catch (storageError) {
+        console.error("Erro ao verificar grupos no storage:", storageError);
       }
 
       // Construir objeto do grupo com os dados obtidos
