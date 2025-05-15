@@ -490,6 +490,39 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
     }
   };
 
+  // Função para abrir o modal de adição de grupos
+  const handleAbrirAdicionarGrupoModal = () => {
+    setModalAdicionarGrupoAberto(true);
+  };
+
+  // Função para fechar o modal de adição de grupos
+  const handleFecharAdicionarGrupoModal = () => {
+    setModalAdicionarGrupoAberto(false);
+  };
+
+  // Callback quando um grupo é adicionado
+  const handleGrupoAdicionado = async (novoGrupo: any) => {
+    if (novoGrupo) {
+      // Verificar se o grupo já existe na lista
+      const grupoExistente = gruposEstudo.findIndex(g => g.id === novoGrupo.id);
+
+      if (grupoExistente >= 0) {
+        // Atualizar grupo existente
+        const gruposAtualizados = [...gruposEstudo];
+        gruposAtualizados[grupoExistente] = novoGrupo;
+        setGruposEstudo(gruposAtualizados);
+      } else {
+        // Adicionar novo grupo no início da lista
+        setGruposEstudo(prev => [novoGrupo, ...prev]);
+      }
+    }
+
+    // Recarregar a lista completa para garantir sincronização com o servidor
+    setTimeout(() => {
+      carregarGrupos();
+    }, 1000);
+  };
+
   // Função auxiliar para aplicar a migração do banco de dados
   const executarMigracaoDoBancoDeDados = async () => {
     try {
@@ -632,6 +665,8 @@ const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({
       }, 500);
     }, 4000);
   };
+
+  const [modalAdicionarGrupoAberto, setModalAdicionarGrupoAberto] = useState(false);
 
   return (
     <div className="mt-8">

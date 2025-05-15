@@ -47,7 +47,7 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
       setCurrentUserId(storedUserId);
     }
   }, []);
-  
+
   const handleClose = () => {
     onOpenChange(false);
   };
@@ -366,6 +366,84 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
     }
   };
 
+  // Função para entrar em um grupo via código
+  const entrarGrupoPorCodigo = async () => {
+    if (!codigoGrupo.trim()) {
+      setErrorMessage('Por favor, digite um código de grupo válido.');
+      return;
+    }
+
+    if (!currentUserId) {
+      setErrorMessage('Erro de autenticação. Tente novamente mais tarde.');
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorMessage('');
+    setSuccessMessage('');
+
+    try {
+      const codigoFormatado = codigoGrupo.trim().toUpperCase();
+
+      // Primeiro verificar se o usuário já tem relação com este grupo
+      const relacao = await verificarRelacaoUsuarioComGrupo(codigoFormatado, currentUserId);
+
+      if (relacao.pertenceAoUsuario) {
+        setErrorMessage('Você é o criador deste grupo.');
+        setIsLoading(false);
+        return;
+      }
+
+      if (relacao.jaEMembro) {
+        setErrorMessage('Você já é membro deste grupo.');
+        setIsLoading(false);
+        return;
+      }
+
+      // Adicionar usuário ao grupo diretamente com uma única chamada
+      const { success, message, grupo: grupoAtualizado } = 
+        await adicionarUsuarioAoGrupoPorCodigo(codigoFormatado, currentUserId);
+
+      if (!success) {
+        setErrorMessage(message || 'Erro ao entrar no grupo.');
+        setIsLoading(false);
+        return;
+      }
+
+      // Adicionar ao localStorage para backup
+      try {
+        const GRUPOS_STORAGE_KEY = 'epictus_grupos_estudo';
+        const grupos = JSON.parse(localStorage.getItem(GRUPOS_STORAGE_KEY) || '[]');
+
+        // Verificar se o grupo já existe no localStorage
+        const grupoExistente = grupos.findIndex((g: any) => g.id === grupoAtualizado.id);
+
+        if (grupoExistente >= 0) {
+          grupos[grupoExistente] = grupoAtualizado;
+        } else {
+          grupos.push(grupoAtualizado);
+        }
+
+        localStorage.setItem(GRUPOS_STORAGE_KEY, JSON.stringify(grupos));
+      } catch (storageError) {
+        console.warn('Aviso: Erro ao salvar grupo no localStorage:', storageError);
+      }
+
+      setSuccessMessage(message || 'Você entrou no grupo com sucesso!');
+      setCodigoGrupo('');
+
+      // Notificar que um grupo foi adicionado
+      if (onGrupoAdicionado) {
+        onGrupoAdicionado(grupoAtualizado);
+      }
+    } catch (error) {
+      console.error('Erro ao entrar no grupo:', error);
+      setErrorMessage('Erro ao entrar no grupo. Tente novamente mais tarde.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto bg-[#181C2E] text-white border-slate-700">
@@ -537,7 +615,7 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
                   placeholder="Ex: ABCD-1234-XYZ9"
                   value={codigoGrupo}
                   onChange={(e) => setCodigoGrupo(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && processarEntradaGrupo()}
+                  onKeyDown={(e) => e.key === 'Enter' && entrarGrupoPorCodigo()}
                 />
 
                 {errorMessage && (
@@ -556,7 +634,7 @@ const AdicionarGruposModal: React.FC<AdicionarGruposModalProps> = ({
 
                 <Button
                   className="w-full bg-orange-500 hover:bg-orange-600"
-                  onClick={processarEntradaGrupo}
+                  onClick={entrarGrupoPorCodigo}
                   disabled={isLoading || !codigoGrupo}
                 >
                   {isLoading ? (

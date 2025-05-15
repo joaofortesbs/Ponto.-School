@@ -1,7 +1,7 @@
 
 /**
  * Serviço para gerenciar códigos de grupos de estudo
- * Versão simplificada e melhorada
+ * Versão simplificada e otimizada
  */
 import { supabase } from './supabase';
 
@@ -10,94 +10,102 @@ const CARACTERES_PERMITIDOS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
 /**
  * Gera um código único para um grupo de estudo
- * @returns Código alfanumérico único no formato XXXX-YYYY
+ * @returns Código alfanumérico único no formato XXXX-YYYY-ZZZZ
  */
 export const gerarCodigoUnico = async (): Promise<string> => {
   // Função para gerar um código aleatório
   const gerarCodigo = () => {
-    // Gerar primeiro segmento (4 caracteres)
     let codigo = '';
+    
+    // Primeira parte (4 caracteres)
     for (let i = 0; i < 4; i++) {
       codigo += CARACTERES_PERMITIDOS.charAt(
         Math.floor(Math.random() * CARACTERES_PERMITIDOS.length)
       );
     }
-
+    
     codigo += '-';
-
-    // Gerar segundo segmento (4 caracteres)
+    
+    // Segunda parte (4 caracteres)
     for (let i = 0; i < 4; i++) {
       codigo += CARACTERES_PERMITIDOS.charAt(
         Math.floor(Math.random() * CARACTERES_PERMITIDOS.length)
       );
     }
-
+    
+    codigo += '-';
+    
+    // Terceira parte (4 caracteres)
+    for (let i = 0; i < 4; i++) {
+      codigo += CARACTERES_PERMITIDOS.charAt(
+        Math.floor(Math.random() * CARACTERES_PERMITIDOS.length)
+      );
+    }
+    
     return codigo;
   };
 
-  // Tentativas máximas para evitar loops infinitos
+  // Máximo de tentativas para encontrar um código único
   const MAX_TENTATIVAS = 5;
   
   try {
     for (let tentativa = 0; tentativa < MAX_TENTATIVAS; tentativa++) {
       const codigo = gerarCodigo();
       
-      // Verificar se o código já existe (primeiro na tabela de códigos)
-      const { data: codigoExistente, error: codigoError } = await supabase
+      // Verificar se o código já existe
+      const { data, error } = await supabase
         .from('codigos_grupos_estudo')
         .select('codigo')
         .eq('codigo', codigo)
         .maybeSingle();
         
-      if (codigoError) {
-        console.error('Erro ao verificar código na tabela de códigos:', codigoError);
-        // Se houver erro, verificar na tabela de grupos
-        const { data: grupoExistente, error: grupoError } = await supabase
+      if (error) {
+        console.log('Aviso: Erro ao verificar código. Tentando alternativa...');
+        
+        // Verificar na tabela principal
+        const { data: grupoData, error: grupoError } = await supabase
           .from('grupos_estudo')
           .select('id')
           .eq('codigo', codigo)
           .maybeSingle();
           
-        if (grupoError || !grupoExistente) {
-          // Se houver erro na consulta ou o código não existir, podemos usá-lo
+        if (grupoError || !grupoData) {
+          // Se não encontrou ou houve erro, o código provavelmente está disponível
           return codigo;
         }
-      } else if (!codigoExistente) {
-        // Código não encontrado na tabela de códigos, podemos usá-lo
+      } else if (!data) {
+        // Código não existe na tabela de códigos
         return codigo;
       }
       
-      // Se chegou aqui, código já existe. Tentar novamente.
-      console.log(`Código ${codigo} já existe. Tentando gerar outro...`);
+      // Se chegou aqui, o código já existe
+      console.log(`Código ${codigo} já existe. Gerando outro...`);
     }
 
-    // Se chegamos aqui, não conseguimos um código único após várias tentativas
-    // Adicionar um timestamp ao código para garantir unicidade
+    // Se todas as tentativas falharem, adicionar timestamp para garantir unicidade
     const timestamp = Date.now().toString().slice(-4);
-    let codigo = '';
-    
-    // Gerar 3 caracteres aleatórios
-    for (let i = 0; i < 3; i++) {
-      codigo += CARACTERES_PERMITIDOS.charAt(
-        Math.floor(Math.random() * CARACTERES_PERMITIDOS.length)
-      );
-    }
-    
-    // Adicionar timestamp e separador
-    codigo += timestamp + '-';
-    
-    // Adicionar 4 caracteres aleatórios
-    for (let i = 0; i < 4; i++) {
-      codigo += CARACTERES_PERMITIDOS.charAt(
-        Math.floor(Math.random() * CARACTERES_PERMITIDOS.length)
-      );
-    }
+    const codigo = `${CARACTERES_PERMITIDOS.charAt(
+      Math.floor(Math.random() * CARACTERES_PERMITIDOS.length)
+    )}${CARACTERES_PERMITIDOS.charAt(
+      Math.floor(Math.random() * CARACTERES_PERMITIDOS.length)
+    )}${CARACTERES_PERMITIDOS.charAt(
+      Math.floor(Math.random() * CARACTERES_PERMITIDOS.length)
+    )}${timestamp}-${CARACTERES_PERMITIDOS.charAt(
+      Math.floor(Math.random() * CARACTERES_PERMITIDOS.length)
+    )}${CARACTERES_PERMITIDOS.charAt(
+      Math.floor(Math.random() * CARACTERES_PERMITIDOS.length)
+    )}${CARACTERES_PERMITIDOS.charAt(
+      Math.floor(Math.random() * CARACTERES_PERMITIDOS.length)
+    )}${CARACTERES_PERMITIDOS.charAt(
+      Math.floor(Math.random() * CARACTERES_PERMITIDOS.length)
+    )}`;
     
     return codigo;
   } catch (err) {
     console.error('Erro ao gerar código único:', err);
-    // Em caso de falha, retornar um código com timestamp para garantir unicidade
-    const fallback = `${CARACTERES_PERMITIDOS.charAt(Math.floor(Math.random() * CARACTERES_PERMITIDOS.length))}${Date.now().toString().slice(-6)}-${CARACTERES_PERMITIDOS.charAt(Math.floor(Math.random() * CARACTERES_PERMITIDOS.length))}${Date.now().toString().slice(-3)}`;
+    
+    // Código de contingência em caso de falha
+    const fallback = `${CARACTERES_PERMITIDOS.charAt(Math.floor(Math.random() * CARACTERES_PERMITIDOS.length))}${Date.now().toString().slice(-5)}-${CARACTERES_PERMITIDOS.charAt(Math.floor(Math.random() * CARACTERES_PERMITIDOS.length))}${Date.now().toString().slice(-4)}`;
     return fallback;
   }
 };
@@ -106,7 +114,7 @@ export const gerarCodigoUnico = async (): Promise<string> => {
  * Salva um código de grupo no banco de dados
  * @param grupoId ID do grupo
  * @param codigo Código a ser associado
- * @returns Sucesso ou erro da operação
+ * @returns Resultado da operação
  */
 export const salvarCodigoNoBanco = async (grupoId: string, codigo: string) => {
   if (!grupoId || !codigo) {
@@ -114,7 +122,7 @@ export const salvarCodigoNoBanco = async (grupoId: string, codigo: string) => {
   }
 
   try {
-    // Normalizar código (maiúsculas)
+    // Normalizar código
     const codigoNormalizado = codigo.toUpperCase();
 
     // Atualizar na tabela principal de grupos
@@ -128,8 +136,7 @@ export const salvarCodigoNoBanco = async (grupoId: string, codigo: string) => {
       return { success: false, error: grupoError };
     }
 
-    // Inserir/atualizar na tabela de códigos
-    // Primeiro, buscar informações do grupo para garantir consistência
+    // Buscar informações do grupo para garantir consistência
     const { data: grupo, error: getGrupoError } = await supabase
       .from('grupos_estudo')
       .select('*')
@@ -141,7 +148,7 @@ export const salvarCodigoNoBanco = async (grupoId: string, codigo: string) => {
       return { success: true, warning: 'Código salvo na tabela principal, mas não na tabela de códigos' };
     }
 
-    // Inserir na tabela de códigos
+    // Inserir/atualizar na tabela de códigos
     const { error: codigoError } = await supabase
       .from('codigos_grupos_estudo')
       .upsert({
@@ -161,13 +168,13 @@ export const salvarCodigoNoBanco = async (grupoId: string, codigo: string) => {
       }, { onConflict: 'codigo' });
 
     if (codigoError) {
-      console.error('Erro ao salvar na tabela codigos_grupos_estudo:', codigoError);
-      return { success: true, warning: 'Código salvo apenas na tabela principal' };
+      console.warn('Aviso: Erro ao salvar na tabela codigos_grupos_estudo:', codigoError);
+      return { success: true, warning: 'Código salvo na tabela principal, mas não na tabela de códigos' };
     }
 
     return { success: true };
   } catch (err) {
-    console.error('Erro ao processar salvamento de código:', err);
+    console.error('Erro ao salvar código:', err);
     return { success: false, error: err };
   }
 };
@@ -183,70 +190,53 @@ export const buscarGrupoPorCodigo = async (codigo: string) => {
   try {
     const codigoNormalizado = codigo.toUpperCase().trim();
 
-    // Primeiro, tentar buscar na tabela de códigos (mais otimizada)
+    // Buscar primeiro diretamente na tabela de grupos (mais direto)
+    const { data: dadosGrupo, error: grupoError } = await supabase
+      .from('grupos_estudo')
+      .select('*')
+      .eq('codigo', codigoNormalizado)
+      .maybeSingle();
+      
+    if (!grupoError && dadosGrupo) {
+      return { success: true, data: dadosGrupo };
+    }
+    
+    if (grupoError) {
+      console.warn('Aviso: Erro ao buscar na tabela de grupos. Tentando via códigos...', grupoError);
+    }
+    
+    // Se não encontrou ou deu erro, tentar via tabela de códigos
     const { data: dadosCodigo, error: codigoError } = await supabase
       .from('codigos_grupos_estudo')
       .select('*')
       .eq('codigo', codigoNormalizado)
       .maybeSingle();
-
+      
     if (codigoError) {
-      console.warn('Aviso: Erro ao buscar na tabela codigos_grupos_estudo:', codigoError);
-      // Se falhar, tentar diretamente na tabela de grupos
-      const { data: dadosGrupo, error: grupoError } = await supabase
-        .from('grupos_estudo')
-        .select('*')
-        .eq('codigo', codigoNormalizado)
-        .maybeSingle();
-
-      if (grupoError) {
-        console.error('Erro ao buscar grupo por código:', grupoError);
-        return { success: false, error: grupoError };
-      }
-
-      if (!dadosGrupo) {
-        return { success: false, error: 'Código não encontrado' };
-      }
-
-      return { success: true, data: dadosGrupo };
+      console.error('Erro ao buscar código:', codigoError);
+      return { success: false, error: 'Erro ao buscar código' };
     }
-
+    
     if (!dadosCodigo) {
-      // Não encontrou na tabela de códigos, tentar na tabela principal
-      const { data: dadosGrupo, error: grupoError } = await supabase
-        .from('grupos_estudo')
-        .select('*')
-        .eq('codigo', codigoNormalizado)
-        .maybeSingle();
-
-      if (grupoError) {
-        console.error('Erro ao buscar grupo por código:', grupoError);
-        return { success: false, error: grupoError };
-      }
-
-      if (!dadosGrupo) {
-        return { success: false, error: 'Código não encontrado' };
-      }
-
-      return { success: true, data: dadosGrupo };
+      return { success: false, error: 'Código não encontrado' };
     }
-
-    // Se encontrou na tabela de códigos, mas queremos o grupo completo
-    const { data: dadosGrupo, error: grupoError } = await supabase
+    
+    // Se encontrou na tabela de códigos, buscar o grupo principal
+    const { data: grupoCompleto, error: grupoCompletoError } = await supabase
       .from('grupos_estudo')
       .select('*')
       .eq('id', dadosCodigo.grupo_id)
       .maybeSingle();
-
-    if (grupoError || !dadosGrupo) {
-      // Se falhar a busca do grupo pelo ID, retornar os dados do código
+      
+    if (grupoCompletoError || !grupoCompleto) {
+      // Se não conseguir buscar o grupo completo, retornar os dados da tabela de códigos
       return { success: true, data: dadosCodigo, source: 'codigo' };
     }
-
-    return { success: true, data: dadosGrupo };
+    
+    return { success: true, data: grupoCompleto };
   } catch (err) {
     console.error('Erro ao buscar grupo por código:', err);
-    return { success: false, error: err };
+    return { success: false, error: 'Erro ao processar busca' };
   }
 };
 
@@ -261,45 +251,48 @@ export const verificarCodigoExiste = async (codigo: string): Promise<boolean> =>
   try {
     const codigoNormalizado = codigo.toUpperCase().trim();
 
-    // Verificar primeiro na tabela de códigos
-    const { data: codigoData, error: codigoError } = await supabase
-      .from('codigos_grupos_estudo')
-      .select('codigo')
-      .eq('codigo', codigoNormalizado)
-      .maybeSingle();
-
-    if (!codigoError && codigoData) {
-      return true;
-    }
-
-    // Se não encontrar ou houver erro, verificar na tabela de grupos
+    // Verificar na tabela de grupos (mais direto)
     const { data: grupoData, error: grupoError } = await supabase
       .from('grupos_estudo')
       .select('id')
       .eq('codigo', codigoNormalizado)
       .maybeSingle();
-
-    return !grupoError && !!grupoData;
+      
+    if (!grupoError && grupoData) {
+      return true;
+    }
+    
+    // Se não encontrou ou deu erro, verificar na tabela de códigos
+    const { data: codigoData, error: codigoError } = await supabase
+      .from('codigos_grupos_estudo')
+      .select('codigo')
+      .eq('codigo', codigoNormalizado)
+      .maybeSingle();
+      
+    return !codigoError && !!codigoData;
   } catch (err) {
-    console.error('Erro ao verificar existência de código:', err);
+    console.error('Erro ao verificar código:', err);
     return false;
   }
 };
 
 /**
  * Pesquisa códigos de grupos de estudos
- * @param termo Termo de pesquisa (nome, disciplina, etc)
+ * @param termo Termo de pesquisa (nome, disciplina, código)
  * @returns Lista de grupos encontrados
  */
 export const pesquisarGruposPorTermo = async (termo: string) => {
   if (!termo) return { success: true, data: [] };
 
   try {
-    // Primeiro tenta interpretar o termo como um código direto
-    if (termo.includes('-') || termo.length >= 4) {
-      const codigoNormalizado = termo.toUpperCase().trim();
+    // Normalizar o termo
+    const termoNormalizado = termo.trim();
+    
+    // Se parece com um código (tem hífen ou pelo menos 4 caracteres), verificar primeiro como código exato
+    if (termoNormalizado.includes('-') || termoNormalizado.length >= 4) {
+      const codigoNormalizado = termoNormalizado.toUpperCase();
       
-      // Verificar se é um código exato
+      // Buscar por código exato
       const { data: grupoPorCodigo, error: codigoError } = await supabase
         .from('grupos_estudo')
         .select('*')
@@ -311,11 +304,11 @@ export const pesquisarGruposPorTermo = async (termo: string) => {
       }
     }
     
-    // Se não for um código exato ou não encontrar, fazer pesquisa ampla
+    // Não encontrou como código exato, fazer busca ampla
     const { data, error } = await supabase
       .from('grupos_estudo')
       .select('*')
-      .or(`nome.ilike.%${termo}%,descricao.ilike.%${termo}%,disciplina.ilike.%${termo}%,codigo.ilike.%${termo}%`)
+      .or(`nome.ilike.%${termoNormalizado}%,descricao.ilike.%${termoNormalizado}%,disciplina.ilike.%${termoNormalizado}%,codigo.ilike.%${termoNormalizado}%`)
       .order('data_criacao', { ascending: false })
       .limit(20);
 
@@ -330,7 +323,6 @@ export const pesquisarGruposPorTermo = async (termo: string) => {
     return { success: false, error: err };
   }
 };
-import { supabase } from './supabase';
 
 /**
  * Verifica se um código de grupo existe
@@ -343,49 +335,52 @@ export async function verificarCodigoGrupo(codigo: string) {
   }
 
   try {
-    // Verificar na tabela de códigos primeiro (mais rápido)
+    const codigoNormalizado = codigo.trim().toUpperCase();
+    
+    // Buscar diretamente na tabela de grupos
+    const { data: grupoData, error: grupoError } = await supabase
+      .from('grupos_estudo')
+      .select('*')
+      .eq('codigo', codigoNormalizado)
+      .maybeSingle();
+      
+    if (!grupoError && grupoData) {
+      return { existe: true, grupo: grupoData, error: null };
+    }
+    
+    if (grupoError) {
+      console.warn("Aviso: Erro ao verificar código na tabela de grupos. Tentando via códigos...");
+    }
+    
+    // Buscar na tabela de códigos
     const { data: codigoData, error: codigoError } = await supabase
       .from('codigos_grupos_estudo')
       .select('*')
-      .eq('codigo', codigo.toUpperCase())
+      .eq('codigo', codigoNormalizado)
       .maybeSingle();
-
-    if (codigoError && codigoError.code !== 'PGRST116') {
+      
+    if (codigoError) {
       console.error("Erro ao verificar código na tabela de códigos:", codigoError);
-      
-      // Tentar verificar diretamente na tabela de grupos
-      const { data: grupoData, error: grupoError } = await supabase
-        .from('grupos_estudo')
-        .select('*')
-        .eq('codigo', codigo.toUpperCase())
-        .maybeSingle();
-        
-      if (grupoError) {
-        console.error("Erro ao verificar código na tabela de grupos:", grupoError);
-        return { existe: false, grupo: null, error: "Erro ao verificar código" };
-      }
-      
-      return { existe: !!grupoData, grupo: grupoData, error: null };
+      return { existe: false, grupo: null, error: "Erro ao verificar código" };
     }
     
-    if (codigoData) {
-      // Se encontrou na tabela de códigos, buscar o grupo completo
-      const { data: grupoData, error: grupoError } = await supabase
-        .from('grupos_estudo')
-        .select('*')
-        .eq('id', codigoData.grupo_id)
-        .maybeSingle();
-        
-      if (grupoError) {
-        console.error("Erro ao buscar grupo pelo ID:", grupoError);
-        // Retornar os dados da tabela de códigos mesmo assim
-        return { existe: true, grupo: codigoData, error: null };
-      }
-      
-      return { existe: true, grupo: grupoData || codigoData, error: null };
+    if (!codigoData) {
+      return { existe: false, grupo: null, error: null };
     }
     
-    return { existe: false, grupo: null, error: null };
+    // Se encontrou na tabela de códigos, buscar o grupo completo
+    const { data: grupoCompleto, error: grupoCompletoError } = await supabase
+      .from('grupos_estudo')
+      .select('*')
+      .eq('id', codigoData.grupo_id)
+      .maybeSingle();
+      
+    if (grupoCompletoError || !grupoCompleto) {
+      // Se não conseguir buscar o grupo completo, retornar os dados da tabela de códigos
+      return { existe: true, grupo: codigoData, error: null };
+    }
+    
+    return { existe: true, grupo: grupoCompleto, error: null };
   } catch (error) {
     console.error("Erro ao verificar código:", error);
     return { existe: false, grupo: null, error: "Erro ao verificar código" };
@@ -416,7 +411,16 @@ export async function adicionarUsuarioAoGrupoPorCodigo(codigo: string, userId: s
     }
     
     // Verificar se o usuário já é membro
-    const membrosIds = Array.isArray(grupo.membros_ids) ? grupo.membros_ids : [];
+    let membrosIds = [];
+    try {
+      membrosIds = Array.isArray(grupo.membros_ids) 
+        ? grupo.membros_ids 
+        : (typeof grupo.membros_ids === 'string' 
+            ? JSON.parse(grupo.membros_ids) 
+            : []);
+    } catch (e) {
+      membrosIds = [];
+    }
     
     if (membrosIds.includes(userId)) {
       return { success: false, message: "Você já é membro deste grupo", grupo };
@@ -425,6 +429,7 @@ export async function adicionarUsuarioAoGrupoPorCodigo(codigo: string, userId: s
     // Adicionar usuário ao grupo
     membrosIds.push(userId);
     
+    // Atualizar grupo
     const { error: updateError } = await supabase
       .from('grupos_estudo')
       .update({ 
@@ -438,7 +443,7 @@ export async function adicionarUsuarioAoGrupoPorCodigo(codigo: string, userId: s
       return { success: false, message: "Erro ao adicionar usuário ao grupo" };
     }
     
-    // Atualizar também na tabela de códigos
+    // Atualizar na tabela de códigos
     const { error: updateCodigoError } = await supabase
       .from('codigos_grupos_estudo')
       .update({ 
@@ -468,59 +473,5 @@ export async function adicionarUsuarioAoGrupoPorCodigo(codigo: string, userId: s
   } catch (error) {
     console.error("Erro ao adicionar usuário ao grupo:", error);
     return { success: false, message: "Erro ao adicionar usuário ao grupo" };
-  }
-}
-
-/**
- * Atualiza os dados de um grupo tanto na tabela de grupos quanto na tabela de códigos
- * @param grupo Dados do grupo para atualizar
- * @returns Objeto indicando sucesso ou falha
- */
-export async function atualizarGrupo(grupo: any) {
-  if (!grupo || !grupo.id) {
-    return { success: false, message: "Dados do grupo inválidos" };
-  }
-
-  try {
-    // Atualizar na tabela de grupos
-    const { error: updateError } = await supabase
-      .from('grupos_estudo')
-      .update(grupo)
-      .eq('id', grupo.id);
-      
-    if (updateError) {
-      console.error("Erro ao atualizar grupo:", updateError);
-      return { success: false, message: "Erro ao atualizar grupo" };
-    }
-    
-    // Se o grupo tem código, atualizar também na tabela de códigos
-    if (grupo.codigo) {
-      const dadosParaCodigo = {
-        nome: grupo.nome || 'Grupo sem nome',
-        descricao: grupo.descricao || '',
-        privado: grupo.privado || false,
-        membros: grupo.membros || 1,
-        visibilidade: grupo.visibilidade || 'todos',
-        disciplina: grupo.disciplina || '',
-        cor: grupo.cor || '#FF6B00',
-        membros_ids: grupo.membros_ids || [],
-        ultima_atualizacao: new Date().toISOString()
-      };
-      
-      const { error: updateCodigoError } = await supabase
-        .from('codigos_grupos_estudo')
-        .update(dadosParaCodigo)
-        .eq('codigo', grupo.codigo);
-        
-      if (updateCodigoError) {
-        console.warn("Aviso: Erro ao atualizar tabela de códigos:", updateCodigoError);
-        // Não falhar por causa disso
-      }
-    }
-    
-    return { success: true, message: "Grupo atualizado com sucesso", grupo };
-  } catch (error) {
-    console.error("Erro ao atualizar grupo:", error);
-    return { success: false, message: "Erro ao atualizar grupo" };
   }
 }

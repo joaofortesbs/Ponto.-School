@@ -1,6 +1,6 @@
 /**
  * Utilitários para gerenciar códigos dos grupos de estudo
- * Versão simplificada e melhorada
+ * Versão simplificada e otimizada
  */
 import { supabase } from '@/lib/supabase';
 
@@ -23,9 +23,9 @@ export interface GrupoEstudo {
 }
 
 /**
- * Verifica se um código existe no banco de dados
- * @param codigo Código a ser verificado
- * @returns true se o código existe
+ * Verifica se um código de grupo existe
+ * @param codigo Código a verificar
+ * @returns true se o código existe, false caso contrário
  */
 export const verificarSeCodigoExiste = async (codigo: string): Promise<boolean> => {
   if (!codigo || codigo.trim() === '') return false;
@@ -33,25 +33,27 @@ export const verificarSeCodigoExiste = async (codigo: string): Promise<boolean> 
   try {
     const codigoNormalizado = codigo.trim().toUpperCase();
 
-    // Verificar na tabela de códigos (mais otimizado)
-    const { data: codigoDados, error: codigoError } = await supabase
+    // Verificar primeiro na tabela de códigos (mais eficiente)
+    const { data, error } = await supabase
       .from('codigos_grupos_estudo')
       .select('codigo')
       .eq('codigo', codigoNormalizado)
       .maybeSingle();
 
-    if (!codigoError && codigoDados) {
-      return true;
+    if (error) {
+      console.log("Aviso: Erro ao verificar na tabela de códigos, tentando na tabela de grupos");
+
+      // Se falhar, verificar na tabela principal de grupos
+      const { data: grupoData, error: grupoError } = await supabase
+        .from('grupos_estudo')
+        .select('codigo')
+        .eq('codigo', codigoNormalizado)
+        .maybeSingle();
+
+      return !grupoError && !!grupoData;
     }
 
-    // Se não encontrar ou houver erro, verificar na tabela de grupos
-    const { data: grupoDados, error: grupoError } = await supabase
-      .from('grupos_estudo')
-      .select('id')
-      .eq('codigo', codigoNormalizado)
-      .maybeSingle();
-
-    return !grupoError && !!grupoDados;
+    return !!data;
   } catch (error) {
     console.error("Erro ao verificar código:", error);
     return false;
@@ -69,56 +71,50 @@ export const buscarGrupoComCodigo = async (codigo: string): Promise<GrupoEstudo 
   try {
     const codigoNormalizado = codigo.trim().toUpperCase();
 
-    // Buscar diretamente na tabela de grupos
+    // Buscar grupo diretamente pelo código
     const { data, error } = await supabase
       .from('grupos_estudo')
       .select('*')
       .eq('codigo', codigoNormalizado)
       .maybeSingle();
 
-    if (error) {
-      console.error("Erro ao buscar grupo por código:", error);
+    if (error || !data) {
+      console.log("Grupo não encontrado diretamente. Tentando via tabela de códigos.");
 
-      // Tentar alternativa: buscar na tabela de códigos e depois o grupo
-      const { data: codigoDados, error: codigoError } = await supabase
+      // Tentar via tabela de códigos
+      const { data: codigoData, error: codigoError } = await supabase
         .from('codigos_grupos_estudo')
         .select('grupo_id')
         .eq('codigo', codigoNormalizado)
         .maybeSingle();
 
-      if (codigoError || !codigoDados) {
-        return null;
-      }
+      if (codigoError || !codigoData) return null;
 
-      // Buscar o grupo pelo ID
-      const { data: grupoDados, error: grupoError } = await supabase
+      // Buscar grupo pelo ID
+      const { data: grupoData, error: grupoError } = await supabase
         .from('grupos_estudo')
         .select('*')
-        .eq('id', codigoDados.grupo_id)
+        .eq('id', codigoData.grupo_id)
         .maybeSingle();
 
-      if (grupoError || !grupoDados) {
-        return null;
-      }
+      if (grupoError || !grupoData) return null;
 
       return {
-        id: grupoDados.id,
-        codigo: grupoDados.codigo,
-        nome: grupoDados.nome,
-        descricao: grupoDados.descricao,
-        user_id: grupoDados.user_id,
-        privado: grupoDados.privado,
-        membros: grupoDados.membros,
-        visibilidade: grupoDados.visibilidade,
-        disciplina: grupoDados.disciplina,
-        cor: grupoDados.cor,
-        membros_ids: grupoDados.membros_ids,
-        data_criacao: grupoDados.data_criacao,
-        dataCriacao: grupoDados.data_criacao
+        id: grupoData.id,
+        codigo: grupoData.codigo,
+        nome: grupoData.nome,
+        descricao: grupoData.descricao,
+        user_id: grupoData.user_id,
+        privado: grupoData.privado,
+        membros: grupoData.membros,
+        visibilidade: grupoData.visibilidade,
+        disciplina: grupoData.disciplina,
+        cor: grupoData.cor,
+        membros_ids: grupoData.membros_ids,
+        data_criacao: grupoData.data_criacao,
+        dataCriacao: grupoData.data_criacao
       };
     }
-
-    if (!data) return null;
 
     return {
       id: data.id,
@@ -136,7 +132,7 @@ export const buscarGrupoComCodigo = async (codigo: string): Promise<GrupoEstudo 
       dataCriacao: data.data_criacao
     };
   } catch (error) {
-    console.error("Erro ao buscar grupo:", error);
+    console.error("Erro ao buscar grupo pelo código:", error);
     return null;
   }
 };
@@ -148,12 +144,7 @@ export const buscarGrupoComCodigo = async (codigo: string): Promise<GrupoEstudo 
  * @returns Informações sobre a relação do usuário com o grupo
  */
 export async function verificarRelacaoUsuarioComGrupo(codigo: string, userId: string) {
-  if (!codigo) {
-    return { grupoId: null, jaEMembro: false, pertenceAoUsuario: false, nomeGrupo: null };
-  }
-
-  if (!userId) {
-    console.error("UserId não fornecido para verificarRelacaoUsuarioComGrupo");
+  if (!codigo || !userId) {
     return { grupoId: null, jaEMembro: false, pertenceAoUsuario: false, nomeGrupo: null };
   }
 
@@ -168,12 +159,12 @@ export async function verificarRelacaoUsuarioComGrupo(codigo: string, userId: st
     const pertenceAoUsuario = grupo.user_id === userId;
 
     // Verificar se é membro (na lista de membros)
-    let membrosIds = [];
+    let membrosIds: string[] = [];
     try {
       membrosIds = Array.isArray(grupo.membros_ids) 
         ? grupo.membros_ids 
         : (typeof grupo.membros_ids === 'string' 
-            ? JSON.parse(grupo.membros_ids) 
+            ? JSON.parse(grupo.membros_ids as string) 
             : []);
     } catch (e) {
       membrosIds = [];
@@ -210,21 +201,30 @@ export async function verificarRelacaoUsuarioComGrupo(codigo: string, userId: st
 
 /**
  * Gera um código único para um grupo
- * @returns Código formatado no padrão XXXX-YYYY
+ * @returns Código formatado no padrão XXXX-YYYY-ZZZZ
  */
 export const gerarCodigoUnico = (): string => {
   // Caracteres permitidos (excluindo caracteres ambíguos como 0/O, 1/I)
   const caracteres = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
-  // Gerar primeiro segmento (4 caracteres)
+  // Gerar código
   let codigo = '';
+
+  // Primeiro segmento (4 caracteres)
   for (let i = 0; i < 4; i++) {
     codigo += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
   }
 
   codigo += '-';
 
-  // Gerar segundo segmento (4 caracteres)
+  // Segundo segmento (4 caracteres)
+  for (let i = 0; i < 4; i++) {
+    codigo += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+  }
+
+  codigo += '-';
+
+  // Terceiro segmento (4 caracteres)
   for (let i = 0; i < 4; i++) {
     codigo += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
   }
@@ -236,6 +236,7 @@ export const gerarCodigoUnico = (): string => {
  * Salva um código de grupo no banco de dados e armazenamento local
  * @param grupoId ID do grupo
  * @param codigo Código a ser salvo
+ * @returns true se salvo com sucesso, false caso contrário
  */
 export const salvarCodigoGrupo = async (grupoId: string, codigo: string): Promise<boolean> => {
   if (!grupoId || !codigo) return false;
@@ -243,54 +244,54 @@ export const salvarCodigoGrupo = async (grupoId: string, codigo: string): Promis
   try {
     const codigoNormalizado = codigo.toUpperCase();
 
-    // Salvar no banco de dados
+    // Atualizar na tabela de grupos
     const { error } = await supabase
       .from('grupos_estudo')
       .update({ codigo: codigoNormalizado })
       .eq('id', grupoId);
 
     if (error) {
-      console.error("Erro ao salvar código no banco:", error);
+      console.error("Erro ao salvar código na tabela de grupos:", error);
       return false;
     }
 
-    // Atualizar também na tabela de códigos
-    try {
-      // Buscar dados completos do grupo
-      const { data: grupo, error: grupoError } = await supabase
-        .from('grupos_estudo')
-        .select('*')
-        .eq('id', grupoId)
-        .single();
+    // Buscar dados completos do grupo para atualizar tabela de códigos
+    const { data: grupo, error: grupoError } = await supabase
+      .from('grupos_estudo')
+      .select('*')
+      .eq('id', grupoId)
+      .single();
 
-      if (!grupoError && grupo) {
-        const { error: codigoError } = await supabase
-          .from('codigos_grupos_estudo')
-          .upsert({
-            codigo: codigoNormalizado,
-            grupo_id: grupoId,
-            nome: grupo.nome || 'Grupo sem nome',
-            descricao: grupo.descricao || '',
-            user_id: grupo.user_id,
-            privado: grupo.privado || false,
-            membros: grupo.membros || 1,
-            visibilidade: grupo.visibilidade || 'todos',
-            disciplina: grupo.disciplina || '',
-            cor: grupo.cor || '#FF6B00',
-            membros_ids: grupo.membros_ids || [],
-            data_criacao: grupo.data_criacao || new Date().toISOString(),
-            ultima_atualizacao: new Date().toISOString()
-          }, { onConflict: 'codigo' });
-
-        if (codigoError) {
-          console.warn("Aviso: Erro ao salvar na tabela de códigos:", codigoError);
-        }
-      }
-    } catch (codigoTabError) {
-      console.warn("Aviso: Erro ao atualizar tabela de códigos:", codigoTabError);
+    if (grupoError || !grupo) {
+      console.error("Erro ao buscar dados do grupo para atualizar tabela de códigos:", grupoError);
+      return false;
     }
 
-    // Salvar no localStorage como backup
+    // Atualizar/inserir na tabela de códigos
+    const { error: codigoError } = await supabase
+      .from('codigos_grupos_estudo')
+      .upsert({
+        codigo: codigoNormalizado,
+        grupo_id: grupoId,
+        nome: grupo.nome || 'Grupo sem nome',
+        descricao: grupo.descricao || '',
+        user_id: grupo.user_id,
+        privado: grupo.privado || false,
+        membros: grupo.membros || 1,
+        visibilidade: grupo.visibilidade || 'todos',
+        disciplina: grupo.disciplina || '',
+        cor: grupo.cor || '#FF6B00',
+        membros_ids: grupo.membros_ids || [],
+        data_criacao: grupo.data_criacao || new Date().toISOString(),
+        ultima_atualizacao: new Date().toISOString()
+      }, { onConflict: 'codigo' });
+
+    if (codigoError) {
+      console.warn("Aviso: Erro ao atualizar tabela de códigos:", codigoError);
+      // Não falhar completamente por causa disso
+    }
+
+    // Atualizar localStorage como backup
     try {
       if (typeof window !== 'undefined') {
         // Armazenamento de códigos
@@ -299,7 +300,7 @@ export const salvarCodigoGrupo = async (grupoId: string, codigo: string): Promis
         codigosGrupos[grupoId] = codigoNormalizado;
         localStorage.setItem(CODIGOS_STORAGE_KEY, JSON.stringify(codigosGrupos));
 
-        // Atualizar nos grupos
+        // Atualizar nos grupos armazenados
         const GRUPOS_STORAGE_KEY = 'epictus_grupos_estudo';
         const grupos = JSON.parse(localStorage.getItem(GRUPOS_STORAGE_KEY) || '[]');
         const grupoIndex = grupos.findIndex((g: any) => g.id === grupoId);
@@ -310,7 +311,7 @@ export const salvarCodigoGrupo = async (grupoId: string, codigo: string): Promis
         }
       }
     } catch (storageError) {
-      console.error("Erro ao salvar código no localStorage:", storageError);
+      console.warn("Aviso: Erro ao salvar código no localStorage:", storageError);
     }
 
     return true;
@@ -352,23 +353,7 @@ export const gerarESalvarCodigoUnico = async (grupoId: string): Promise<string> 
     return codigo;
   } catch (error) {
     console.error("Erro ao gerar e salvar código:", error);
-
-    // Fallback - gerar um código simples em caso de erro
-    const fallbackCodigo = Array(4)
-      .fill(0)
-      .map(() => "ABCDEFGHJKLMNPQRSTUVWXYZ23456789".charAt(Math.floor(Math.random() * 32)))
-      .join('') + '-' + 
-      Array(4)
-      .fill(0)
-      .map(() => "ABCDEFGHJKLMNPQRSTUVWXYZ23456789".charAt(Math.floor(Math.random() * 32)))
-      .join('');
-
-    try {
-      await salvarCodigoGrupo(grupoId, fallbackCodigo);
-    } catch (fallbackError) {
-      console.error("Erro ao salvar código fallback:", fallbackError);
-    }
-
+    const fallbackCodigo = gerarCodigoUnico();
     return fallbackCodigo;
   }
 };
@@ -383,14 +368,14 @@ export const criarGrupo = async (dados: Omit<GrupoEstudo, 'id'>): Promise<GrupoE
     // Gerar um código único
     const codigo = gerarCodigoUnico();
 
-    // Adicionar o código aos dados
+    // Preparar dados completos
     const dadosCompletos = {
       ...dados,
       codigo: codigo.toUpperCase(),
       data_criacao: new Date().toISOString()
     };
 
-    // Inserir no Supabase
+    // Inserir no banco de dados
     const { data, error } = await supabase
       .from('grupos_estudo')
       .insert(dadosCompletos)
@@ -418,38 +403,35 @@ export const criarGrupo = async (dados: Omit<GrupoEstudo, 'id'>): Promise<GrupoE
       return grupoLocal;
     }
 
-    // Grupo criado com sucesso no Supabase
-    if (data) {
-      // Adicionar/atualizar na tabela de códigos
-      try {
-        await supabase
-          .from('codigos_grupos_estudo')
-          .upsert({
-            codigo: codigo.toUpperCase(),
-            grupo_id: data.id,
-            nome: data.nome || 'Grupo sem nome',
-            descricao: data.descricao || '',
-            user_id: data.user_id,
-            privado: data.privado || false,
-            membros: data.membros || 1,
-            visibilidade: data.visibilidade || 'todos',
-            disciplina: data.disciplina || '',
-            cor: data.cor || '#FF6B00',
-            membros_ids: data.membros_ids || [],
-            data_criacao: data.data_criacao || new Date().toISOString(),
-            ultima_atualizacao: new Date().toISOString()
-          }, { onConflict: 'codigo' });
-      } catch (codigoError) {
-        console.warn("Aviso: Erro ao sincronizar código do grupo:", codigoError);
-      }
+    // Adicionar na tabela de códigos
+    try {
+      await supabase
+        .from('codigos_grupos_estudo')
+        .upsert({
+          codigo: codigo.toUpperCase(),
+          grupo_id: data.id,
+          nome: data.nome || 'Grupo sem nome',
+          descricao: data.descricao || '',
+          user_id: data.user_id,
+          privado: data.privado || false,
+          membros: data.membros || 1,
+          visibilidade: data.visibilidade || 'todos',
+          disciplina: data.disciplina || '',
+          cor: data.cor || '#FF6B00',
+          membros_ids: data.membros_ids || [],
+          data_criacao: data.data_criacao || new Date().toISOString(),
+          ultima_atualizacao: new Date().toISOString()
+        }, { onConflict: 'codigo' });
+    } catch (codigoError) {
+      console.warn("Aviso: Erro ao adicionar código do grupo:", codigoError);
+    }
 
-      // Backup no localStorage
-      if (typeof window !== 'undefined') {
-        const GRUPOS_STORAGE_KEY = 'epictus_grupos_estudo';
-        const grupos = JSON.parse(localStorage.getItem(GRUPOS_STORAGE_KEY) || '[]');
-        grupos.push(data);
-        localStorage.setItem(GRUPOS_STORAGE_KEY, JSON.stringify(grupos));
-      }
+    // Backup no localStorage
+    if (typeof window !== 'undefined') {
+      const GRUPOS_STORAGE_KEY = 'epictus_grupos_estudo';
+      const grupos = JSON.parse(localStorage.getItem(GRUPOS_STORAGE_KEY) || '[]');
+      grupos.push(data);
+      localStorage.setItem(GRUPOS_STORAGE_KEY, JSON.stringify(grupos));
     }
 
     return data;
@@ -471,7 +453,7 @@ export const obterTodosGrupos = async (userId: string): Promise<GrupoEstudo[]> =
     // Lista para armazenar todos os grupos encontrados
     const todosGrupos = new Map<string, GrupoEstudo>();
 
-    // Buscar grupos no banco de dados
+    // Buscar grupos onde o usuário é criador ou membro
     try {
       const { data, error } = await supabase
         .from('grupos_estudo')
@@ -513,7 +495,7 @@ export const obterTodosGrupos = async (userId: string): Promise<GrupoEstudo[]> =
           .filter((g: any) => g.user_id === userId || g.criador === userId || 
                             (Array.isArray(g.membros_ids) && g.membros_ids.includes(userId)))
           .forEach((grupo: any) => {
-            // Apenas adicionar se ainda não existir ou for um grupo local
+            // Adicionar se não existir no mapa ou for um grupo local
             if (!todosGrupos.has(grupo.id) || grupo.id.startsWith('local_')) {
               todosGrupos.set(grupo.id, grupo);
             }
@@ -531,222 +513,194 @@ export const obterTodosGrupos = async (userId: string): Promise<GrupoEstudo[]> =
 };
 
 /**
- * Sincroniza os códigos de grupos local e remotamente
- * Útil quando há grupos criados offline
+ * Sincroniza os códigos de grupos entre tabelas
+ * @returns Resultado da sincronização
  */
 export async function sincronizarCodigosGrupos() {
-  console.log("Iniciando sincronização de códigos de grupos");
+  console.log("Iniciando sincronização de códigos de grupos...");
 
   try {
-    // Verificar se a tabela existe antes
+    // Verificar tabelas
     try {
-      const { error: checkError } = await supabase
+      const { error: errorGrupos } = await supabase
+        .from('grupos_estudo')
+        .select('id')
+        .limit(1);
+
+      if (errorGrupos) {
+        console.error("Erro ao acessar tabela grupos_estudo:", errorGrupos);
+        return { 
+          success: false, 
+          message: "Erro ao acessar tabela grupos_estudo. Execute o workflow 'Corrigir Tabelas de Grupos'.",
+          total: 0, 
+          sucessos: 0, 
+          erros: 1, 
+          ignorados: 0 
+        };
+      }
+
+      const { error: errorCodigos } = await supabase
         .from('codigos_grupos_estudo')
         .select('codigo')
         .limit(1);
 
-      if (checkError && checkError.code === '42P01') {
-        console.error("Tabela codigos_grupos_estudo não existe!");
+      if (errorCodigos) {
+        console.error("Erro ao acessar tabela codigos_grupos_estudo:", errorCodigos);
         return { 
           success: false, 
-          message: "Tabela de códigos não existe. Execute o workflow 'Corrigir Tabelas de Grupos'.",
-          total: 0,
-          sucessos: 0,
-          erros: 1,
-          ignorados: 0
+          message: "Erro ao acessar tabela codigos_grupos_estudo. Execute o workflow 'Corrigir Tabelas de Grupos'.",
+          total: 0, 
+          sucessos: 0, 
+          erros: 1, 
+          ignorados: 0 
         };
       }
-    } catch (checkError) {
-      console.error("Erro ao verificar tabela:", checkError);
+    } catch (error) {
+      console.error("Erro ao verificar tabelas:", error);
       return { 
         success: false, 
-        message: "Erro ao verificar tabela de códigos",
-        total: 0,
-        sucessos: 0,
-        erros: 1,
-        ignorados: 0
+        message: "Erro ao verificar tabelas. Execute o workflow 'Corrigir Tabelas de Grupos'.",
+        total: 0, 
+        sucessos: 0, 
+        erros: 1, 
+        ignorados: 0 
       };
     }
 
-    // Buscar todos os grupos
-    const { data: grupos, error } = await supabase
+    // Etapa 1: Gerar códigos para grupos sem código
+    const { data: gruposSemCodigo, error: errorBusca } = await supabase
       .from('grupos_estudo')
-      .select('*');
+      .select('id, nome')
+      .is('codigo', null);
 
-    if (error) {
-      console.error("Erro ao buscar grupos:", error);
+    if (errorBusca) {
+      console.error("Erro ao buscar grupos sem código:", errorBusca);
       return { 
         success: false, 
-        message: "Erro ao buscar grupos",
-        total: 0,
-        sucessos: 0,
-        erros: 1,
-        ignorados: 0
+        message: "Erro ao buscar grupos sem código",
+        total: 0, 
+        sucessos: 0, 
+        erros: 1, 
+        ignorados: 0 
       };
     }
 
-    console.log(`Encontrados ${grupos?.length || 0} grupos para sincronizar`);
+    console.log(`Encontrados ${gruposSemCodigo?.length || 0} grupos sem código`);
 
-    // Sincronizar códigos
-    let sucessos = 0;
-    let erros = 0;
-    let ignorados = 0;
-    let atualizados = 0;
-    let adicionados = 0;
+    let sucessosGeracao = 0;
+    let errosGeracao = 0;
 
-    // Processar grupos sem código primeiro
-    for (const grupo of (grupos || []).filter(g => !g.codigo)) {
+    // Gerar códigos para grupos sem código
+    for (const grupo of gruposSemCodigo || []) {
       try {
-        // Gerar código único para o grupo
-        const novoCodigo = await gerarCodigoUnicoGrupo(grupo.id);
+        const codigo = gerarCodigoUnico();
 
         // Atualizar o grupo com o novo código
         const { error: updateError } = await supabase
           .from('grupos_estudo')
-          .update({ codigo: novoCodigo })
+          .update({ codigo })
           .eq('id', grupo.id);
 
         if (updateError) {
-          console.error(`Erro ao gerar código para grupo ${grupo.id}:`, updateError);
-          erros++;
+          console.error(`Erro ao atualizar código para grupo ${grupo.id}:`, updateError);
+          errosGeracao++;
         } else {
-          console.log(`Código ${novoCodigo} gerado para grupo ${grupo.id} (${grupo.nome})`);
-
-          // Adicionar à tabela de códigos
-          const { error: insertError } = await supabase
-            .from('codigos_grupos_estudo')
-            .insert({
-              codigo: novoCodigo,
-              grupo_id: grupo.id,
-              nome: grupo.nome || 'Grupo sem nome',
-              descricao: grupo.descricao || '',
-              user_id: grupo.user_id,
-              privado: grupo.privado || false,
-              membros: grupo.membros || 1,
-              visibilidade: grupo.visibilidade || 'todos',
-              disciplina: grupo.disciplina || '',
-              cor: grupo.cor || '#FF6B00',
-              membros_ids: grupo.membros_ids || [],
-              data_criacao: grupo.data_criacao || new Date().toISOString(),
-              ultima_atualizacao: new Date().toISOString()
-            });
-
-          if (insertError) {
-            console.error(`Erro ao inserir código ${novoCodigo} na tabela de códigos:`, insertError);
-            erros++;
-          } else {
-            adicionados++;
-            sucessos++;
-          }
+          console.log(`Código ${codigo} gerado para grupo ${grupo.id} (${grupo.nome || 'Sem nome'})`);
+          sucessosGeracao++;
         }
-      } catch (grupoError) {
-        console.error(`Erro ao processar grupo sem código ${grupo.id}:`, grupoError);
-        erros++;
+      } catch (error) {
+        console.error(`Erro ao gerar código para grupo ${grupo.id}:`, error);
+        errosGeracao++;
       }
     }
 
-    // Processar grupos com código
-    for (const grupo of (grupos || []).filter(g => g.codigo)) {
-      try {
-        // Verificar se o código já existe na tabela de códigos
-        const { data: codigoExistente, error: checkError } = await supabase
-          .from('codigos_grupos_estudo')
-          .select('codigo')
-          .eq('codigo', grupo.codigo)
-          .maybeSingle();
+    // Etapa 2: Sincronizar códigos entre tabelas
+    const { data: gruposComCodigo, error: errorBuscaComCodigo } = await supabase
+      .from('grupos_estudo')
+      .select('*')
+      .not('codigo', 'is', null);
 
-        if (checkError) {
-          console.error(`Erro ao verificar código ${grupo.codigo}:`, checkError);
-          erros++;
+    if (errorBuscaComCodigo) {
+      console.error("Erro ao buscar grupos com código:", errorBuscaComCodigo);
+      return { 
+        success: false, 
+        message: "Erro ao buscar grupos com código",
+        total: gruposSemCodigo?.length || 0, 
+        sucessos: sucessosGeracao, 
+        erros: errosGeracao + 1, 
+        ignorados: 0 
+      };
+    }
+
+    console.log(`Encontrados ${gruposComCodigo?.length || 0} grupos com código para sincronizar`);
+
+    let sucessosSincronizacao = 0;
+    let errosSincronizacao = 0;
+    let ignorados = 0;
+
+    // Sincronizar códigos entre tabelas
+    for (const grupo of gruposComCodigo || []) {
+      try {
+        if (!grupo.codigo) {
+          console.log(`Grupo ${grupo.id} sem código. Ignorando.`);
+          ignorados++;
           continue;
         }
 
-        // Se não existir, inserir novo registro
-        if (!codigoExistente) {
-          const { error: insertError } = await supabase
-            .from('codigos_grupos_estudo')
-            .insert({
-              codigo: grupo.codigo,
-              grupo_id: grupo.id,
-              nome: grupo.nome || 'Grupo sem nome',
-              descricao: grupo.descricao || '',
-              user_id: grupo.user_id,
-              privado: grupo.privado || false,
-              membros: grupo.membros || 1,
-              visibilidade: grupo.visibilidade || 'todos',
-              disciplina: grupo.disciplina || '',
-              cor: grupo.cor || '#FF6B00',
-              membros_ids: grupo.membros_ids || [],
-              data_criacao: grupo.data_criacao || new Date().toISOString(),
-              ultima_atualizacao: new Date().toISOString()
-            });
+        // Adicionar/atualizar na tabela de códigos
+        const { error: upsertError } = await supabase
+          .from('codigos_grupos_estudo')
+          .upsert({
+            codigo: grupo.codigo,
+            grupo_id: grupo.id,
+            nome: grupo.nome || 'Grupo sem nome',
+            descricao: grupo.descricao || '',
+            user_id: grupo.user_id,
+            privado: grupo.privado || false,
+            membros: grupo.membros || 1,
+            visibilidade: grupo.visibilidade || 'todos',
+            disciplina: grupo.disciplina || '',
+            cor: grupo.cor || '#FF6B00',
+            membros_ids: grupo.membros_ids || [],
+            data_criacao: grupo.data_criacao || new Date().toISOString(),
+            ultima_atualizacao: new Date().toISOString()
+          }, { onConflict: 'codigo' });
 
-          if (insertError) {
-            console.error(`Erro ao sincronizar código ${grupo.codigo}:`, insertError);
-            erros++;
-          } else {
-            console.log(`Código ${grupo.codigo} adicionado para grupo ${grupo.id} (${grupo.nome})`);
-            adicionados++;
-            sucessos++;
-          }
+        if (upsertError) {
+          console.error(`Erro ao sincronizar código ${grupo.codigo}:`, upsertError);
+          errosSincronizacao++;
         } else {
-          // Se já existir, atualizar informações
-          const { error: updateError } = await supabase
-            .from('codigos_grupos_estudo')
-            .update({
-              nome: grupo.nome || 'Grupo sem nome',
-              descricao: grupo.descricao || '',
-              user_id: grupo.user_id,
-              privado: grupo.privado || false,
-              membros: grupo.membros || 1,
-              visibilidade: grupo.visibilidade || 'todos',
-              disciplina: grupo.disciplina || '',
-              cor: grupo.cor || '#FF6B00',
-              membros_ids: grupo.membros_ids || [],
-              ultima_atualizacao: new Date().toISOString()
-            })
-            .eq('codigo', grupo.codigo);
-
-          if (updateError) {
-            console.error(`Erro ao atualizar código ${grupo.codigo}:`, updateError);
-            erros++;
-          } else {
-            console.log(`Código ${grupo.codigo} atualizado para grupo ${grupo.id} (${grupo.nome})`);
-            atualizados++;
-            sucessos++;
-          }
+          console.log(`Código ${grupo.codigo} sincronizado para grupo ${grupo.id} (${grupo.nome || 'Sem nome'})`);
+          sucessosSincronizacao++;
         }
-      } catch (grupoError) {
-        console.error(`Erro ao processar grupo ${grupo.id}:`, grupoError);
-        erros++;
+      } catch (error) {
+        console.error(`Erro ao processar grupo ${grupo.id}:`, error);
+        errosSincronizacao++;
       }
     }
 
-    console.log(`Sincronização concluída!`);
-    console.log(`Total de grupos: ${grupos?.length || 0}`);
-    console.log(`Novos códigos gerados: ${adicionados}`);
-    console.log(`Códigos atualizados: ${atualizados}`);
-    console.log(`Sucessos totais: ${sucessos}`);
-    console.log(`Erros: ${erros}`);
-    console.log(`Ignorados: ${ignorados}`);
+    // Resultado final
+    const totalSucessos = sucessosGeracao + sucessosSincronizacao;
+    const totalErros = errosGeracao + errosSincronizacao;
+    const totalProcessados = (gruposSemCodigo?.length || 0) + (gruposComCodigo?.length || 0);
 
     return {
-      success: erros === 0,
-      message: erros === 0 ? "Sincronização concluída com sucesso" : "Sincronização concluída com erros",
-      total: (grupos || []).length,
-      sucessos,
-      erros,
+      success: totalErros === 0,
+      message: totalErros === 0 ? "Sincronização concluída com sucesso" : "Sincronização concluída com alguns erros",
+      total: totalProcessados,
+      sucessos: totalSucessos,
+      erros: totalErros,
       ignorados
     };
   } catch (error) {
-    console.error("Erro ao sincronizar códigos:", error);
+    console.error("Erro durante a sincronização:", error);
     return { 
       success: false, 
-      message: "Erro ao sincronizar códigos",
-      total: 0,
-      sucessos: 0,
-      erros: 1,
-      ignorados: 0
+      message: "Erro durante a sincronização de códigos",
+      total: 0, 
+      sucessos: 0, 
+      erros: 1, 
+      ignorados: 0 
     };
   }
 }
