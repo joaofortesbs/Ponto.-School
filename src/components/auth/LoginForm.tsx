@@ -104,6 +104,7 @@ export function LoginForm() {
     rememberMe: false,
   });
   const [success, setSuccess] = useState(false); // Added success state
+  const [accountCreated, setAccountCreated] = useState(false); // Estado para controlar mensagem de conta criada
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.type === "checkbox" ? e.target.checked : e.target.value;
