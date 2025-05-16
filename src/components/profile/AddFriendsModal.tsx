@@ -368,7 +368,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
             )}
           </div>
         </div>
-      </motion.div>
+      </div>
     );
   });
 
@@ -450,7 +450,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
             <span className="text-amber-400 text-xs bg-amber-400/10 px-3 py-1 rounded-full font-medium">Aguardando</span>
           )}
         </div>
-      </motion.div>
+      </div>
     );
   });
 
@@ -541,7 +541,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                 <UserCheck className="h-3.5 w-3.5" />
               </div>
             )}
-          </motion.div>
+          </div>
         </div>
 
         {/* Informações do perfil */}
@@ -648,7 +648,7 @@ className="w-full rounded-xl bg-white/5 hover:bg-white/10 border border-white/10
             >
               Ver perfil completo
             </Button>
-          </motion.div>
+          </div>
 
           {/* Indicador de atividade */}
           <div 
@@ -660,7 +660,7 @@ className="w-full rounded-xl bg-white/5 hover:bg-white/10 border border-white/10
             </p>
           </div>
         </div>
-      </motion.div>
+      </div>
     );
   };
 
@@ -692,7 +692,7 @@ className="w-full rounded-xl bg-white/5 hover:bg-white/10 border border-white/10
           : "Você não tem solicitações de amizade pendentes no momento."
         }
       </p>
-    </motion.div>
+    </div>
   );
 
   // Filtros para a busca
@@ -710,7 +710,7 @@ className="w-full rounded-xl bg-white/5 hover:bg-white/10 border border-white/10
             <Users className="h-4 w-4" /> Todos
           </button>
           <button 
-            className={`flex items-center gap-2 w-full px-3 py-2 rounded-md ${filter === 'online' ? 'bg-[#FF6B00]/20 text-[#FF6B00]' : 'text-white/70 hover:bg-white/5'}`}
+            className={`flex items-center gap-2 w-full px-3 py-2 rounded-md ${filter === 'online' ? 'bg-[#FF6B00/20 text-[#FF6B00]' : 'text-white/70 hover:bg-white/5'}`}
             onClick={() => { setFilter('online'); setShowFilterDropdown(false); }}
           >
             <Bell className="h-4 w-4" /> Online agora
@@ -738,7 +738,7 @@ className="w-full rounded-xl bg-white/5 hover:bg-white/10 border border-white/10
           </button>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 
   return (
