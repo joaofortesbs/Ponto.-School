@@ -827,33 +827,6 @@ svg.neural-connections {
     100% {
       opacity: 1;
     }
-
-/* Classes de otimização de performance para substituir animações */
-.performance-optimized {
-  will-change: auto;
-  backface-visibility: visible;
-  perspective: none;
-  transform: none;
-}
-
-/* Remover animações para melhorar desempenho */
-@media (prefers-reduced-motion: reduce), (prefers-reduced-motion: no-preference) {
-  .modal-content {
-    animation: none !important;
-    transition: none !important;
-    transform: none !important;
-  }
-  
-  .modal-card, 
-  .profile-container,
-  .user-card,
-  .pending-request-card {
-    animation: none !important;
-    transition: none !important;
-    transform: none !important;
-  }
-}
-
     50% {
       opacity: 0.7;
     }

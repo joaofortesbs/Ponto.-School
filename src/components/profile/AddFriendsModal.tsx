@@ -282,75 +282,101 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
     const relation = userRelations[user.id] || 'none';
 
     return (
-      <div className="relative flex p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700/60 transition-colors cursor-pointer" onClick={() => setSelectedUser(user)}>
-        <div className="flex gap-3">
+      <motion.div 
+        className="bg-gradient-to-br from-[#0c1a2b]/95 to-[#0c1a2b]/85 backdrop-blur-lg rounded-xl p-4 mb-3 hover:from-[#001427] hover:to-[#0c1a2b] transition-all duration-300 border border-white/10 shadow-xl hover:shadow-2xl hover:border-[#FF6B00]/30 group"
+        whileHover={{ scale: 1.02, y: -2 }}
+        whileTap={{ scale: 0.99 }}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 300, damping: 30, duration: 0.3 }}
+        layoutId={`card-${user.id}`}
+        onClick={() => setSelectedUser(user)}
+        layout
+      >
+        <div className="flex items-center gap-4">
           <div className="relative">
-            <Avatar className="h-12 w-12 border-2 border-white dark:border-slate-700 shadow-sm">
-              <AvatarImage src={user.avatar} />
-              <AvatarFallback className="bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] text-white">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] rounded-full opacity-75 blur-md group-hover:opacity-100 group-hover:blur-sm transition-all duration-500"></div>
+            <Avatar className="relative h-14 w-14 border-2 border-transparent">
+              <AvatarImage src={user.avatar} alt={user.name} className="object-cover" />
+              <AvatarFallback className="bg-gradient-to-br from-[#FF6B00] to-[#FF9B50] text-white">
                 {user.name.charAt(0)}
               </AvatarFallback>
             </Avatar>
 
             {/* Status indicator */}
             {user.lastActive === 'Agora mesmo' ? (
-              <div className="absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full bg-green-500 border-2 border-white dark:border-slate-800"></div>
+              <div className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full bg-emerald-500 border-2 border-[#0c1a2b] shadow-lg"></div>
             ) : user.lastActive?.includes('min') ? (
-              <div className="absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full bg-yellow-500 border-2 border-white dark:border-slate-800"></div>
+              <div className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full bg-yellow-500 border-2 border-[#0c1a2b] shadow-lg"></div>
             ) : (
-              <div className="absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full bg-slate-400 border-2 border-white dark:border-slate-800"></div>
+              <div className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full bg-slate-400 border-2 border-[#0c1a2b] shadow-lg"></div>
             )}
           </div>
-          
-          <div className="flex flex-col">
-            <div className="text-sm font-medium text-slate-900 dark:text-slate-100">
-              {user.name}
-              <div className="text-xs text-slate-500 dark:text-slate-400">@{user.username}</div>
-              <div className="text-xs text-slate-600 dark:text-slate-300 line-clamp-1 max-w-[180px] mt-0.5">{user.bio}</div>
-            </div>
+
+          <div className="flex-1 space-y-0.5">
+            <h3 className="text-white font-bold text-base group-hover:text-[#FF6B00] transition-colors duration-300">{user.name}</h3>
+            <p className="text-[#64748B] text-sm font-medium">@{user.username}</p>
+            <p className="text-white/80 text-xs line-clamp-1">{user.bio}</p>
 
             {/* Last active status (new) */}
-            <div className="flex items-center mt-1">
-              <Clock className="h-3 w-3 text-slate-400 mr-1" />
-              <span className="text-xs text-slate-500 dark:text-slate-400">{user.lastActive}</span>
+            <div className="flex items-center gap-1 mt-0.5">
+              <Clock className="h-3 w-3 text-gray-400" />
+              <span className="text-[10px] text-gray-400">{user.lastActive}</span>
             </div>
           </div>
-        </div>
 
-        <div className="ml-auto flex flex-col items-end justify-between">
-          <div className="text-xs px-2 py-1 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-0.5">
+          <div className="flex flex-col gap-2 items-end">
+            <span className="inline-flex items-center text-xs font-medium text-white/70 gap-1.5 bg-white/5 px-2 py-1 rounded-full">
+              {user.isPrivate ? (
+                <>
+                  <Lock className="h-3 w-3 text-amber-400" /> Perfil privado
+                </>
+              ) : (
+                <>
+                  <Unlock className="h-3 w-3 text-emerald-400" /> Perfil público
+                </>
+              )}
+            </span>
+
             {user.isPrivate ? (
-              <>
-                <Lock className="h-3 w-3 mr-0.5" /> Perfil privado
-              </>
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                className={`mt-1 ${
+                  relation === 'requested' 
+                  ? 'bg-white/10 text-white/70 hover:bg-white/15' 
+                  : 'bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] text-white hover:shadow-lg hover:shadow-[#FF6B00]/20'
+                } rounded-full px-4 transition-all duration-300`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (relation !== 'requested') {
+                    handleRelationAction(user.id, 'request');
+                  }
+                }}
+                disabled={relation === 'requested'}
+              >
+                {relation === 'requested' ? 'Solicitado ✓' : 'Solicitar conexão'}
+              </Button>
             ) : (
-              <>
-                <Unlock className="h-3 w-3 mr-0.5" /> Perfil público
-              </>
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                className={`mt-1 ${
+                  relation === 'following' 
+                  ? 'bg-[#FF6B00] text-white' 
+                  : 'bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] text-white hover:opacity-90'
+                } rounded-full px-4 hover:shadow-lg hover:shadow-[#FF6B00]/20 transition-all duration-300`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRelationAction(user.id, 'follow');
+                }}
+              >
+                {relation === 'following' ? 'Seguindo ✓' : 'Seguir perfil'}
+              </Button>
             )}
           </div>
-
-          {user.isPrivate ? (
-            <Button
-              onClick={(e) => { e.stopPropagation(); handleRelationAction(user.id, 'request'); }}
-              size="sm"
-              variant={relation === 'requested' ? 'outline' : 'default'}
-              className={relation === 'requested' ? 'border-green-500 text-green-500 hover:bg-green-50 dark:hover:bg-green-950/20 text-xs h-8' : 'bg-[#FF6B00] hover:bg-[#FF8C40] text-white text-xs h-8'}
-            >
-              {relation === 'requested' ? 'Solicitado ✓' : 'Solicitar conexão'}
-            </Button>
-          ) : (
-            <Button
-              onClick={(e) => { e.stopPropagation(); handleRelationAction(user.id, 'follow'); }}
-              size="sm"
-              variant={relation === 'following' ? 'outline' : 'default'}
-              className={relation === 'following' ? 'border-blue-500 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/20 text-xs h-8' : 'bg-blue-600 hover:bg-blue-700 text-white text-xs h-8'}
-            >
-              {relation === 'following' ? 'Seguindo ✓' : 'Seguir perfil'}
-            </Button>
-          )}
         </div>
-      </div>
+      </motion.div>
     );
   });
 
@@ -362,72 +388,84 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
     const { user, type } = request;
 
     return (
-      <div className="relative flex p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700/60 transition-colors cursor-pointer">
-        <div className="flex gap-3">
+      <motion.div 
+        className="bg-gradient-to-br from-[#0c1a2b]/95 to-[#0c1a2b]/85 backdrop-blur-lg rounded-xl p-4 mb-3 hover:from-[#001427] hover:to-[#0c1a2b] transition-all duration-300 border border-white/10 shadow-xl hover:shadow-2xl hover:border-[#FF6B00]/30 group"
+        whileHover={{ scale: 1.02, y: -2 }}
+        whileTap={{ scale: 0.99 }}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 300, damping: 30, duration: 0.3 }}
+        layoutId={layoutId}
+        onClick={() => setSelectedUser(user)}
+        layout
+      >
+        <div className="flex items-center gap-4">
           <div className="relative">
-            <Avatar className="h-12 w-12 border-2 border-white dark:border-slate-700 shadow-sm">
-              <AvatarImage src={user.avatar} />
-              <AvatarFallback className="bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] text-white">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] rounded-full opacity-75 blur-md group-hover:opacity-100 group-hover:blur-sm transition-all duration-500"></div>
+            <Avatar className="h-14 w-14 border-2 border-transparent relative">
+              <AvatarImage src={user.avatar} alt={user.name} className="object-cover" />
+              <AvatarFallback className="bg-gradient-to-br from-[#FF6B00] to-[#FF9B50] text-white">
                 {user.name.charAt(0)}
               </AvatarFallback>
             </Avatar>
 
             {/* Status indicator - blue for pending */}
-            <div className="absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full bg-blue-500 border-2 border-white dark:border-slate-800"></div>
+            <div className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full bg-blue-500 border-2 border-[#0c1a2b] shadow-lg"></div>
           </div>
-          
-          <div className="flex flex-col">
-            <div className="text-sm font-medium text-slate-900 dark:text-slate-100">
-              {user.name}
-              <div className="text-xs text-slate-500 dark:text-slate-400">@{user.username}</div>
+
+          <div className="flex-1 space-y-0.5">
+            <h3 className="text-white font-bold text-base group-hover:text-[#FF6B00] transition-colors duration-300">{user.name}</h3>
+            <p className="text-[#64748B] text-sm font-medium">@{user.username}</p>
+            <p className="text-white/80 text-xs">
               {type === 'received' 
                 ? (
-                  <div className="mt-1 flex items-center">
-                    <span className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 dark:text-blue-400">
-                      <UserCheck className="h-3 w-3" /> solicitação recebida
-                      <span className="text-slate-400 dark:text-slate-500">• {new Date(request.date).toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit'})}</span>
-                    </span>
-                  </div>
+                  <span className="inline-flex items-center gap-1">
+                    <span className="bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full text-[10px] font-medium">solicitação recebida</span>
+                    <span className="text-white/60">• {new Date(request.date).toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit'})}</span>
+                  </span>
                 ) 
                 : (
-                  <div className="mt-1 flex items-center">
-                    <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-600 dark:text-amber-400">
-                      <AlertCircle className="h-3 w-3" /> solicitação enviada
-                      <span className="text-slate-400 dark:text-slate-500">• {new Date(request.date).toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit'})}</span>
-                    </span>
-                  </div>
+                  <span className="inline-flex items-center gap-1">
+                    <span className="bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full text-[10px] font-medium">solicitação enviada</span>
+                    <span className="text-white/60">• {new Date(request.date).toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit'})}</span>
+                  </span>
                 )
               }
+            </p>
+          </div>
+
+          {type === 'received' && (
+            <div className="flex gap-2">
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                className="bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] hover:opacity-90 text-white rounded-full px-4 hover:shadow-lg hover:shadow-[#FF6B00]/20 transition-all duration-300"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRelationAction(user.id, 'accept');
+                }}
+              >
+                Aceitar
+              </Button>
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                className="bg-white/10 hover:bg-white/15 text-white rounded-full px-4 transition-all duration-300"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRelationAction(user.id, 'reject');
+                }}
+              >
+                Rejeitar
+              </Button>
             </div>
-          </div>
+          )}
+
+          {type === 'sent' && (
+            <span className="text-amber-400 text-xs bg-amber-400/10 px-3 py-1 rounded-full font-medium">Aguardando</span>
+          )}
         </div>
-
-        {type === 'received' && (
-          <div className="ml-auto flex items-center gap-2">
-            <Button
-              onClick={() => handleRelationAction(user.id, 'accept')}
-              size="sm"
-              className="bg-green-600 hover:bg-green-700 text-white text-xs h-7 px-3"
-            >
-              Aceitar
-            </Button>
-            <Button
-              onClick={() => handleRelationAction(user.id, 'reject')}
-              size="sm"
-              variant="outline"
-              className="border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50 text-xs h-7 px-3"
-            >
-              Rejeitar
-            </Button>
-          </div>
-        )}
-
-        {type === 'sent' && (
-          <div className="ml-auto text-xs font-medium text-slate-500 dark:text-slate-400 flex items-center">
-            <Clock className="h-3 w-3 mr-1 text-amber-500" /> Aguardando
-          </div>
-        )}
-      </div>
+      </motion.div>
     );
   });
 
@@ -441,170 +479,217 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
     const relation = userRelations[selectedUser.id] || 'none';
 
     return (
-      <div className="p-5 bg-white dark:bg-slate-900 rounded-2xl shadow-lg h-full overflow-y-auto">
+      <motion.div
+        className="h-full overflow-y-auto py-6 px-4 flex flex-col custom-scrollbar"
+        initial={{ opacity: 0, x: 50 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: 50 }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      >
         {/* Botão voltar para mobile */}
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="md:hidden mb-4 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+        <button 
+          className="md:hidden absolute top-4 left-4 text-white p-2 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-md z-30 transition-all duration-300"
           onClick={() => setSelectedUser(null)}
         >
-          <ChevronLeft className="h-4 w-4 mr-1" /> Voltar
-        </Button>
+          <ArrowLeft className="h-5 w-5" />
+        </button>
 
         {/* Capa com efeito parallax */}
-        <div className="relative w-full h-48 mb-16 rounded-xl overflow-hidden">
+        <div className="relative h-36 -mx-4 -mt-6 mb-4 overflow-hidden rounded-t-xl">
           {selectedUser.coverUrl ? (
-            <div className="absolute inset-0">
+            <motion.div 
+              className="absolute inset-0 w-full h-full bg-[#0A2540]"
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.5 }}
+            >
               <img 
                 src={selectedUser.coverUrl} 
-                alt="Capa do perfil" 
-                className="w-full h-full object-cover"
+                alt="Capa" 
+                className="w-full h-full object-cover transition-transform duration-500"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-            </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-[#001427]/95 via-[#001427]/70 to-transparent"></div>
+            </motion.div>
           ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-[#FF6B00] to-[#FF8C40]">
-              <div className="absolute inset-0 bg-grid-pattern opacity-20"></div>
+            <div className="w-full h-full bg-gradient-to-r from-[#001427] via-[#072e4f] to-[#0A2540]">
+              <motion.div 
+                className="absolute inset-0 bg-[url('/images/pattern-grid.svg')] opacity-20"
+                animate={{ backgroundPosition: ["0% 0%", "100% 100%"] }}
+                transition={{ duration: 20, repeat: Infinity, repeatType: "reverse" }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#001427]/95 to-transparent"></div>
             </div>
           )}
 
           {/* Pequeno menu de ações na capa */}
-          <div className="absolute top-3 right-3 flex items-center gap-2">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-8 w-8 rounded-full bg-black/20 text-white hover:bg-black/30 backdrop-blur-sm"
-            >
-              <Share2 className="h-4 w-4" />
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-8 w-8 rounded-full bg-black/20 text-white hover:bg-black/30 backdrop-blur-sm"
+          <div className="absolute top-3 right-3 flex gap-2 z-20">
+            <motion.button 
+              className="p-2 rounded-full bg-black/30 backdrop-blur-md text-white/80 hover:text-white hover:bg-black/50 transition-all"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
             >
               <Bookmark className="h-4 w-4" />
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-8 w-8 rounded-full bg-black/20 text-white hover:bg-black/30 backdrop-blur-sm"
+            </motion.button>
+            <motion.button 
+              className="p-2 rounded-full bg-black/30 backdrop-blur-md text-white/80 hover:text-white hover:bg-black/50 transition-all"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
             >
-              <Bell className="h-4 w-4" />
-            </Button>
+              <Eye className="h-4 w-4" />
+            </motion.button>
+            <motion.button 
+              className="md:flex hidden p-2 rounded-full bg-black/30 backdrop-blur-md text-white/80 hover:text-white hover:bg-black/50 transition-all"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setSelectedUser(null)}
+            >
+              <X className="h-4 w-4" />
+            </motion.button>
           </div>
         </div>
 
         {/* Avatar em destaque */}
-        <div className="absolute top-44 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-          <div className="relative">
-            <Avatar className="h-24 w-24 border-4 border-white dark:border-slate-900 shadow-lg">
-              <AvatarImage 
-                src={selectedUser.avatar} 
-                className="h-full w-full object-cover"
-              />
-              <AvatarFallback className="text-xl bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] text-white">
+        <div className="flex flex-col items-center -mt-16 mb-5">
+          <motion.div
+            className="relative"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20, delay: 0.1 }}
+          >
+            <div className="absolute -inset-1 bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] rounded-full opacity-90 blur-sm"></div>
+            <Avatar className="h-28 w-28 border-4 border-[#0A2540] shadow-2xl">
+              <AvatarImage src={selectedUser.avatar} alt={selectedUser.name} className="object-cover" />
+              <AvatarFallback className="bg-gradient-to-br from-[#FF6B00] to-[#FF9B50] text-white text-2xl font-bold">
                 {selectedUser.name.charAt(0)}
               </AvatarFallback>
             </Avatar>
 
             {/* Badge status */}
             {selectedUser.isPrivate ? (
-              <div className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full bg-slate-700 flex items-center justify-center border-2 border-white dark:border-slate-900">
-                <Lock className="h-3.5 w-3.5 text-white" />
+              <div className="absolute -bottom-1 -right-1 bg-amber-500 text-white p-1.5 rounded-full shadow-lg">
+                <Lock className="h-3.5 w-3.5" />
               </div>
             ) : (
-              <div className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full bg-green-500 flex items-center justify-center border-2 border-white dark:border-slate-900">
-                <Unlock className="h-3.5 w-3.5 text-white" />
+              <div className="absolute -bottom-1 -right-1 bg-emerald-500 text-white p-1.5 rounded-full shadow-lg">
+                <UserCheck className="h-3.5 w-3.5" />
               </div>
             )}
-          </div>
+          </motion.div>
         </div>
 
         {/* Informações do perfil */}
-        <div className="text-center mt-2 mb-4">
-          <div className="mb-1">
-            <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-              {selectedUser.name}
-            </h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400">@{selectedUser.username}</p>
-          </div>
+        <div className="text-center space-y-4">
+          <motion.div 
+            className="space-y-1"
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            <h2 className="text-2xl font-bold text-white">{selectedUser.name}</h2>
+            <p className="text-[#64748B] text-sm font-medium">@{selectedUser.username}</p>
+          </motion.div>
 
-          <p className="text-sm text-slate-700 dark:text-slate-300 max-w-md mx-auto my-3">
-            {selectedUser.bio}
-          </p>
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="px-6"
+          >
+            <p className="text-white/80 text-sm leading-relaxed">{selectedUser.bio}</p>
+          </motion.div>
 
-          <div className="flex items-center justify-center gap-2 text-xs mt-3">
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="flex flex-wrap justify-center gap-2 px-2"
+          >
             {selectedUser.favoriteSubject && (
-              <div className="flex items-center px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
-                <BookOpen className="h-3 w-3 mr-1" />
+              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-[#FF6B00]/20 to-[#FF9B50]/10 text-[#FF9B50] text-sm px-3 py-1.5 rounded-full">
+                <BookOpen className="h-3.5 w-3.5 text-[#FF6B00]" />
                 {selectedUser.favoriteSubject}
               </div>
             )}
 
             {selectedUser.educationLevel && (
-              <div className="flex items-center px-2 py-1 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">
-                <Sparkles className="h-3 w-3 mr-1" />
+              <div className="inline-flex items-center gap-2 bg-blue-500/10 text-blue-400 text-sm px-3 py-1.5 rounded-full">
+                <MapPin className="h-3.5 w-3.5" />
                 {selectedUser.educationLevel}
               </div>
             )}
-          </div>
+          </motion.div>
 
           {/* Estatísticas */}
-          <div className="flex justify-center gap-6 my-5 text-center">
-            <div className="flex flex-col items-center">
-              <p className="text-lg font-bold text-slate-900 dark:text-white">
-                {selectedUser.followersCount}
-              </p>
-              <p className="text-xs text-slate-600 dark:text-slate-400">
-                Seguidores
-              </p>
+          <motion.div 
+            className="grid grid-cols-3 gap-3 px-2 mt-4"
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.5 }}
+          >
+            <div className="bg-gradient-to-br from-white/5 to-white/3 backdrop-blur-sm rounded-xl p-3 shadow-inner">
+              <p className="text-xl font-bold text-white">{selectedUser.followersCount}</p>
+              <p className="text-white/60 text-xs">Seguidores</p>
             </div>
-            <div className="flex flex-col items-center">
-              <p className="text-lg font-bold text-slate-900 dark:text-white">
-                {selectedUser.friendsCount}
-              </p>
-              <p className="text-xs text-slate-600 dark:text-slate-400">
-                Amigos
-              </p>
+            <div className="bg-gradient-to-br from-white/5 to-white/3 backdrop-blur-sm rounded-xl p-3 shadow-inner">
+              <p className="text-xl font-bold text-white">{selectedUser.friendsCount}</p>
+              <p className="text-white/60 text-xs">Amigos</p>
             </div>
-            <div className="flex flex-col items-center">
-              <p className="text-lg font-bold text-slate-900 dark:text-white">
-                {selectedUser.postsCount}
-              </p>
-              <p className="text-xs text-slate-600 dark:text-slate-400">
-                Publicações
-              </p>
+            <div className="bg-gradient-to-br from-white/5 to-white/3 backdrop-blur-sm rounded-xl p-3 shadow-inner">
+              <p className="text-xl font-bold text-white">{selectedUser.postsCount}</p>
+              <p className="text-white/60 text-xs">Publicações</p>
             </div>
-          </div>
+          </motion.div>
 
           {/* Botões de ação */}
-          <div className="flex flex-col gap-3 mt-5">
+          <motion.div 
+            className="space-y-3 px-2 mt-6"
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.6 }}
+          >
             {selectedUser.isPrivate ? (
-              <Button
-                onClick={() => handleRelationAction(selectedUser.id, 'request')}
-                className={relation === 'requested' ? 'bg-slate-100 dark:bg-slate-800 border border-green-500 text-green-500' : 'bg-[#FF6B00] hover:bg-[#FF8C40] text-white'}
+              <Button 
+                className={`w-full rounded-xl ${
+                  relation === 'requested' 
+                  ? 'bg-white/10 hover:bg-white/15 text-white/80' 
+                  : 'bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] hover:shadow-lg hover:shadow-[#FF6B00]/20 text-white'
+                } py-6 transition-all duration-300`}
+                onClick={() => {
+                  if (relation !== 'requested') {
+                    handleRelationAction(selectedUser.id, 'request');
+                  }
+                }}
+                disabled={relation === 'requested'}
               >
                 {relation === 'requested' ? (
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-2">
                     <span>Solicitação enviada</span>
-                    <div className="p-0.5 bg-green-500 text-white rounded-full">
-                      <CheckCircle2 className="h-3.5 w-3.5" />
-                    </div>
+                    <motion.div
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ repeat: Infinity, duration: 1.5 }}
+                    >
+                      <CheckCircle2 className="h-5 w-5" />
+                    </motion.div>
                   </div>
                 ) : 'Solicitar amizade'}
               </Button>
             ) : (
-              <Button
+              <Button 
+                className={`w-full rounded-xl ${
+                  relation === 'following' 
+                  ? 'bg-[#FF6B00] hover:bg-[#FF6B00]/90' 
+                  : 'bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] hover:shadow-lg hover:shadow-[#FF6B00]/20'
+                } text-white py-6 transition-all duration-300`}
                 onClick={() => handleRelationAction(selectedUser.id, 'follow')}
-                className={relation === 'following' ? 'bg-slate-100 dark:bg-slate-800 border border-blue-500 text-blue-500' : 'bg-blue-600 hover:bg-blue-700 text-white'}
               >
                 {relation === 'following' ? (
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-2">
                     <span>Seguindo</span>
-                    <div className="p-0.5 bg-blue-500 text-white rounded-full">
-                      <CheckCircle2 className="h-3.5 w-3.5" />
-                    </div>
+                    <motion.div
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ repeat: Infinity, duration: 1.5 }}
+                    >
+                      <CheckCircle2 className="h-5 w-5" />
+                    </motion.div>
                   </div>
                 ) : 'Seguir perfil'}
               </Button>
@@ -612,36 +697,49 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
 
             <Button
               variant="outline"
-              className="border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200"
+className="w-full rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-white py-6 transition-all duration-300"
+              onClick={() => {
+                // Aqui iria a navegação para o perfil completo
+                onOpenChange(false);
+              }}
             >
               Ver perfil completo
             </Button>
-          </div>
+          </motion.div>
 
           {/* Indicador de atividade */}
-          <div className="mt-6 text-center">
-            <div className="inline-flex items-center px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs">
-              <div className={`h-2 w-2 rounded-full mr-2 ${selectedUser.lastActive === 'Agora mesmo' ? 'bg-green-500' : 'bg-amber-500'}`}></div>
+          <motion.div 
+            className="mt-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.7 }}
+          >
+            <p className="text-white/40 text-xs flex items-center justify-center gap-1">
+              <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
               {selectedUser.lastActive === 'Agora mesmo' ? 'Online agora' : `Visto ${selectedUser.lastActive}`}
-            </div>
-          </div>
+            </p>
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
     );
   };
 
   // Interface vazia quando nenhum resultado é encontrado
   const EmptyState = ({ type }: { type: 'search' | 'pending' }) => (
-    <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
-      <div className="w-16 h-16 mb-4 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-500">
+    <motion.div
+      className="flex flex-col items-center justify-center py-12 px-4 text-center"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.2 }}
+    >
+      <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4">
         {type === 'search' ? (
-          <Search className="h-8 w-8" />
+          <Search className="h-6 w-6 text-white/40" />
         ) : (
-          <Users className="h-8 w-8" />
+          <UserCheck className="h-6 w-6 text-white/40" />
         )}
       </div>
-      
-      <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">
+      <h3 className="text-white/80 text-lg font-medium mb-2">
         {type === 'search' 
           ? searchQuery.trim() !== '' 
             ? "Nenhum resultado encontrado" 
@@ -649,8 +747,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
           : "Sem solicitações pendentes"
         }
       </h3>
-      
-      <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md">
+      <p className="text-white/50 text-sm max-w-xs">
         {type === 'search' 
           ? searchQuery.trim() !== '' 
             ? `Não encontramos resultados para "${searchQuery}". Tente outro termo.` 
@@ -658,169 +755,151 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
           : "Você não tem solicitações de amizade pendentes no momento."
         }
       </p>
-    </div>
+    </motion.div>
   );
 
   // Filtros para a busca
   const FilterDropdown = () => (
-    <div className="absolute top-full right-0 mt-2 w-60 p-4 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 z-50">
-      <div className="mb-4">
-        <h4 className="text-sm font-medium text-slate-900 dark:text-slate-100 mb-2">
-          Filtrar por:
-        </h4>
-        <div className="space-y-2">
-          <div className="flex items-center">
-            <Button
-              variant="ghost"
-              size="sm"
-              className={`px-2 py-1 h-auto text-xs w-full justify-start ${filter === 'all' ? 'bg-slate-100 dark:bg-slate-700' : ''}`}
-              onClick={() => setFilter('all')}
-            >
-              <Filter className="h-3 w-3 mr-2" /> Todos
-            </Button>
-          </div>
-          <div className="flex items-center">
-            <Button
-              variant="ghost"
-              size="sm"
-              className={`px-2 py-1 h-auto text-xs w-full justify-start ${filter === 'online' ? 'bg-slate-100 dark:bg-slate-700' : ''}`}
-              onClick={() => setFilter('online')}
-            >
-              <div className="h-2 w-2 bg-green-500 rounded-full mr-2"></div> Online agora
-            </Button>
-          </div>
-          <div className="flex items-center">
-            <Button
-              variant="ghost"
-              size="sm"
-              className={`px-2 py-1 h-auto text-xs w-full justify-start ${filter === 'suggested' ? 'bg-slate-100 dark:bg-slate-700' : ''}`}
-              onClick={() => setFilter('suggested')}
-            >
-              <Sparkles className="h-3 w-3 mr-2" /> Sugeridos
-            </Button>
-          </div>
+    <motion.div 
+      className="absolute right-0 top-full mt-2 bg-[#0A2540] rounded-xl border border-white/10 shadow-xl z-30 w-48 overflow-hidden"
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+    >
+      <div className="p-2">
+        <h4 className="text-white text-xs px-2 py-1 font-medium">Filtrar por:</h4>
+        <div className="mt-1 space-y-1">
+          <button 
+            className={`flex items-center gap-2 w-full px-3 py-2 rounded-md ${filter === 'all' ? 'bg-[#FF6B00]/20 text-[#FF6B00]' : 'text-white/70 hover:bg-white/5'}`}
+            onClick={() => { setFilter('all'); setShowFilterDropdown(false); }}
+          >
+            <Users className="h-4 w-4" /> Todos
+          </button>
+          <button 
+            className={`flex items-center gap-2 w-full px-3 py-2 rounded-md ${filter === 'online' ? 'bg-[#FF6B00]/20 text-[#FF6B00]' : 'text-white/70 hover:bg-white/5'}`}
+            onClick={() => { setFilter('online'); setShowFilterDropdown(false); }}
+          >
+            <Bell className="h-4 w-4" /> Online agora
+          </button>
+          <button 
+            className={`flex items-center gap-2 w-full px-3 py-2 rounded-md ${filter === 'suggested' ? 'bg-[#FF6B00]/20 text-[#FF6B00]' : 'text-white/70 hover:bg-white/5'}`}
+            onClick={() => { setFilter('suggested'); setShowFilterDropdown(false); }}
+          >
+            <Bookmark className="h-4 w-4" /> Sugeridos
+          </button>
+        </div>
+        <h4 className="text-white text-xs px-2 py-1 mt-2 font-medium">Ordenar por:</h4>
+        <div className="mt-1 space-y-1">
+          <button 
+            className={`flex items-center gap-2 w-full px-3 py-2 rounded-md ${sortOrder === 'alphabetical' ? 'bg-[#FF6B00]/20 text-[#FF6B00]' : 'text-white/70 hover:bg-white/5'}`}
+            onClick={() => { setSortOrder('alphabetical'); setShowFilterDropdown(false); }}
+          >
+            Alfabética
+          </button>
+          <button 
+            className={`flex items-center gap-2 w-full px-3 py-2 rounded-md ${sortOrder === 'recent' ? 'bg-[#FF6B00]/20 text-[#FF6B00]' : 'text-white/70 hover:bg-white/5'}`}
+            onClick={() => { setSortOrder('recent'); setShowFilterDropdown(false); }}
+          >
+            Mais populares
+          </button>
         </div>
       </div>
-      <div>
-        <h4 className="text-sm font-medium text-slate-900 dark:text-slate-100 mb-2">
-          Ordenar por:
-        </h4>
-        <div className="space-y-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            className={`px-2 py-1 h-auto text-xs w-full justify-start ${sortOrder === 'alphabetical' ? 'bg-slate-100 dark:bg-slate-700' : ''}`}
-            onClick={() => setSortOrder('alphabetical')}
-          >
-            Alfabética <ChevronUp className="h-3 w-3 ml-2" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className={`px-2 py-1 h-auto text-xs w-full justify-start ${sortOrder === 'recent' ? 'bg-slate-100 dark:bg-slate-700' : ''}`}
-            onClick={() => setSortOrder('recent')}
-          >
-            Mais populares <Users className="h-3 w-3 ml-2" />
-          </Button>
-        </div>
-      </div>
-    </div>
+    </motion.div>
   );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl p-0 rounded-2xl overflow-hidden bg-white dark:bg-slate-900 shadow-2xl">
-        <div className="flex flex-col h-full md:flex-row">
-          <div className="flex-1 flex flex-col max-h-[80vh] overflow-hidden">
-            <div className="p-6 pb-3 flex items-center justify-between border-b border-slate-200 dark:border-slate-700">
+      <DialogContent className="max-w-5xl p-0 bg-gradient-to-b from-[#0A2540] to-[#001427] border-white/10 overflow-hidden rounded-xl shadow-2xl backdrop-blur-lg">
+        <div className="flex h-[85vh] max-h-[700px] overflow-hidden">
+          {/* Painel principal */}
+          <div className={`flex-1 p-6 ${selectedUser ? 'hidden md:block md:w-[55%]' : 'w-full'}`}>
+            <div className="flex justify-between items-center mb-5">
               <div>
-                <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-                  Adicionar amigos
+                <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+                  <span className="bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] text-transparent bg-clip-text">
+                    Adicionar amigos
+                  </span>
                 </h2>
-                <p className="text-sm text-slate-500 dark:text-slate-400">
-                  Conecte-se com estudantes como você
-                </p>
+                <p className="text-white/60 text-sm">Conecte-se com estudantes como você</p>
               </div>
-              <Button
-                variant="ghost"
-                className="h-8 w-8 p-0 rounded-full"
+              <motion.button 
+                className="text-white/60 hover:text-white p-2.5 rounded-full hover:bg-white/10 transition-all duration-300"
+                whileHover={{ rotate: 90 }}
+                whileTap={{ scale: 0.9 }}
                 onClick={() => onOpenChange(false)}
               >
-                <X className="h-4 w-4" />
-              </Button>
+                <X className="h-5 w-5" />
+              </motion.button>
             </div>
-            
 
-              <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
-                <TabsList className="flex px-6 pt-2 bg-transparent border-b border-slate-200 dark:border-slate-700">
-                  <TabsTrigger 
-                    value="buscar" 
-                    className="flex-1 px-4 py-2 text-sm data-[state=active]:shadow-none data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-[#FF6B00] data-[state=active]:text-[#FF6B00] rounded-none"
-                  >
-                    <Search className="h-4 w-4 mr-2" />
-                    Buscar Pessoas
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="pendentes" 
-                    className="flex-1 px-4 py-2 text-sm data-[state=active]:shadow-none data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-[#FF6B00] data-[state=active]:text-[#FF6B00] rounded-none flex items-center gap-1"
-                  >
-                    <Users className="h-4 w-4 mr-2" />
-                    Solicitações
+            <Tabs defaultValue="buscar" className="w-full" onValueChange={setActiveTab}>
+              <TabsList className="w-full bg-white/5 backdrop-blur-md mb-6 p-1 rounded-xl">
+                <TabsTrigger 
+                  value="buscar" 
+                  className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#FF6B00] data-[state=active]:to-[#FF9B50] data-[state=active]:text-white py-2.5 rounded-lg transition-all duration-300"
+                >
+                  <div className="flex items-center gap-2">
+                    <Search className="h-4 w-4" />
+                    <span>Buscar Pessoas</span>
+                  </div>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="pendentes" 
+                  className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#FF6B00] data-[state=active]:to-[#FF9B50] data-[state=active]:text-white py-2.5 rounded-lg transition-all duration-300"
+                >
+                  <div className="flex items-center gap-2">
+                    <UserCheck className="h-4 w-4" />
+                    <span>Solicitações</span>
                     {pendingRequests.filter(req => req.type === 'received').length > 0 && (
-                      <span className="ml-1 px-1.5 py-0.5 text-xs bg-[#FF6B00] text-white rounded-full">
+                      <span className="bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded-full min-w-[20px] flex items-center justify-center">
                         {pendingRequests.filter(req => req.type === 'received').length}
                       </span>
                     )}
-                  </TabsTrigger>
-                </TabsList>
+                  </div>
+                </TabsTrigger>
+              </TabsList>
 
-              <TabsContent value="buscar" className="flex-1 flex flex-col overflow-hidden">
-                <div className="p-6 pb-3 border-b border-slate-200 dark:border-slate-700">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-                    <Input
+              <TabsContent value="buscar" className="mt-0 focus-visible:outline-none">
+                <div className="relative mb-6 flex items-center">
+                  <div className="relative flex-1">
+                    <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                      <Search className="h-4 w-4 text-white/60" />
+                    </div>
+                    <Input 
+                      className="w-full pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/40 focus:border-[#FF6B00]/50 focus:ring-[#FF6B00]/30 rounded-xl py-6"
                       placeholder="Digite nome, e-mail ou @username"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 pr-10 py-2 bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700"
-                      autoComplete="off"
                     />
-                    {searchQuery && (
-                      <Button
-                        variant="ghost"
-                        className="absolute right-10 top-1/2 transform -translate-y-1/2 h-5 w-5 p-0"
-                        onClick={() => setSearchQuery('')}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    )}
 
                     {isLoading && (
-                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                        <RefreshCw className="h-4 w-4 text-slate-400 animate-spin" />
+                      <div className="absolute inset-y-0 right-3 flex items-center">
+                        <div className="h-4 w-4 border-2 border-white/40 border-t-transparent rounded-full animate-spin"></div>
                       </div>
                     )}
                   </div>
 
                   {/* Botão de filtro */}
-                  <div className="relative mt-3 flex justify-end">
+                  <div className="ml-2 relative">
                     <Button
                       variant="outline"
-                      size="sm"
-                      className="text-xs bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700"
+                      size="icon"
+                      className="h-10 w-10 rounded-full bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white"
                       onClick={() => setShowFilterDropdown(!showFilterDropdown)}
                     >
-                      <Filter className="h-3 w-3 mr-1.5" />
-                      Filtrar
+                      <Filter className="h-4 w-4" />
                     </Button>
 
-                    <div className="relative">
+                    <AnimatePresence>
                       {showFilterDropdown && <FilterDropdown />}
-                    </div>
+                    </AnimatePresence>
                   </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-4">
+                <div 
+                  className="overflow-y-auto max-h-[420px] pr-2 custom-scrollbar"
+                  ref={resultsContainerRef}
+                >
                   {searchQuery.trim() === '' && (
                     <EmptyState type="search" />
                   )}
@@ -829,89 +908,87 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                     <EmptyState type="search" />
                   )}
 
-                  <div className="space-y-3">
+                  <AnimatePresence mode="wait">
                     {filteredResults.map(user => (
                       <UserCard key={user.id} user={user} />
                     ))}
-                  </div>
+                  </AnimatePresence>
                 </div>
               </TabsContent>
 
-              <TabsContent value="pendentes" className="flex-1 overflow-y-auto">
-                <div className="p-4 border-b border-slate-200 dark:border-slate-700">
-                  <h3 className="text-sm font-medium flex items-center">
-                    <div className="w-2 h-2 rounded-full bg-blue-500 mr-2"></div>
-                    recebidas
-                    <span className="ml-2 text-xs text-slate-500">Solicitações de amizade</span>
+              <TabsContent value="pendentes" className="mt-0 focus-visible:outline-none">
+                <div className="mb-4 bg-gradient-to-r from-[#072e4f]/50 to-[#001427]/50 p-3 rounded-lg">
+                  <h3 className="text-white font-medium flex items-center gap-2">
+                    <span className="bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full text-xs font-medium">recebidas</span>
+                    Solicitações de amizade
                   </h3>
                 </div>
 
-                <div className="p-4 space-y-3">
+                <div className="overflow-y-auto max-h-[200px] pr-2 custom-scrollbar">
                   {pendingRequests.filter(req => req.type === 'received').length === 0 && (
                     <EmptyState type="pending" />
                   )}
 
-                  <div className="space-y-3">
+                  <AnimatePresence mode="wait">
                     {pendingRequests
                       .filter(req => req.type === 'received')
                       .map(request => (
                         <PendingRequestCard key={request.id} request={request} layoutId={`request-${request.id}`} />
                       ))}
-                  </div>
+                  </AnimatePresence>
                 </div>
 
-                <div className="p-4 border-b border-t border-slate-200 dark:border-slate-700">
-                  <h3 className="text-sm font-medium flex items-center">
-                    <div className="w-2 h-2 rounded-full bg-amber-500 mr-2"></div>
-                    enviadas
-                    <span className="ml-2 text-xs text-slate-500">Solicitações pendentes</span>
+                <div className="mt-6 mb-4 bg-gradient-to-r from-[#072e4f]/50 to-[#001427]/50 p-3 rounded-lg">
+                  <h3 className="text-white font-medium flex items-center gap-2">
+                    <span className="bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full text-xs font-medium">enviadas</span>
+                    Solicitações pendentes
                   </h3>
                 </div>
 
-                <div className="p-4 space-y-3">
+                <div className="overflow-y-auto max-h-[200px] pr-2 custom-scrollbar">
                   {pendingRequests.filter(req => req.type === 'sent').length === 0 && (
-                    <div className="text-center py-6 text-sm text-slate-500 dark:text-slate-400">
-                      Você não enviou solicitações recentemente
+                    <div className="flex flex-col items-center justify-center py-8 px-4 text-center bg-white/5 rounded-xl">
+                      <p className="text-white/60 text-sm">Você não enviou solicitações recentemente</p>
                     </div>
                   )}
 
-                  <div className="space-y-3">
+                  <AnimatePresence mode="wait">
                     {pendingRequests
                       .filter(req => req.type === 'sent')
                       .map(request => (
                         <PendingRequestCard key={request.id} request={request} layoutId={`sent-${request.id}`} />
                       ))}
-                  </div>
+                  </AnimatePresence>
                 </div>
               </TabsContent>
             </Tabs>
 
-            <div className="p-4 text-xs text-slate-500 dark:text-slate-400 border-t border-slate-200 dark:border-slate-700 flex justify-between items-center">
-              Ao aceitar, você permitirá que o usuário veja seu conteúdo privado.
-              <Button
-                variant="outline"
-                size="sm"
-                className="ml-auto text-xs"
+            <div className="absolute bottom-4 left-6 right-6 text-white/40 text-xs flex justify-between">
+              <p>Ao aceitar, você permitirá que o usuário veja seu conteúdo privado.</p>
+              <button 
+                className="hover:text-[#FF6B00] transition-colors"
                 onClick={() => onOpenChange(false)}
               >
                 Fechar
-              </Button>
+              </button>
             </div>
           </div>
 
           {/* Painel de perfil expandido */}
-          <div className={`w-0 md:w-96 transition-all duration-300 ${selectedUser ? 'md:w-96' : 'md:w-0'} overflow-hidden`}>
+          <AnimatePresence mode="wait">
             {selectedUser && (
-              <motion.div
-                initial={{ opacity: 0, x: 50 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 50 }}
-                className="h-full"
+              <motion.div 
+                className={`${selectedUser ? 'block' : 'hidden'} border-l border-white/10 bg-gradient-to-br from-[#0A2540]/90 to-[#001427]/90 backdrop-blur-xl md:w-[45%] relative`}
+                initial={{ width: 0, opacity: 0 }}
+                animate={{ width: "100%", opacity: 1 }}
+                exit={{ width: 0, opacity: 0 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+                layoutId={`profile-panel-${selectedUser.id}`}
               >
                 <UserProfilePanel />
               </motion.div>
             )}
-          </div>
+          </AnimatePresence>
         </div>
       </DialogContent>
     </Dialog>
