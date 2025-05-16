@@ -137,6 +137,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
   const [isLoading, setIsLoading] = useState(false);
   const [pendingRequests, setPendingRequests] = useState<PendingRequestType[]>(mockPendingRequests);
   const [userRelations, setUserRelations] = useState<{[key: string]: 'none' | 'requested' | 'following'}>({});
+  const [savedProfiles, setSavedProfiles] = useState<{[key: string]: boolean}>({});
 
   // Referências para melhorar desempenho
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -144,7 +145,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
 
   // Estados de UI
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
-  const [filter, setFilter] = useState<'all' | 'online' | 'suggested'>('all');
+  const [filter, setFilter] = useState<'all' | 'online' | 'suggested' | 'saved'>('all');
   const [sortOrder, setSortOrder] = useState<'alphabetical' | 'recent'>('recent');
 
   // Otimizações para debounce de pesquisa
@@ -189,12 +190,15 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
         // Filtro de sugestões (poderia ser baseado em interesses comuns)
         finalResults = sortedResults.filter(user => 
           user.favoriteSubject === 'Matemática' || user.favoriteSubject === 'Programação');
+      } else if (filter === 'saved') {
+        // Filtro de perfis salvos
+        finalResults = sortedResults.filter(user => savedProfiles[user.id]);
       }
 
       setFilteredResults(finalResults);
       setIsLoading(false);
     }, 300);
-  }, [filter, sortOrder]);
+  }, [filter, sortOrder, savedProfiles]);
 
   // Atualizar resultados quando a busca mudar
   useEffect(() => {
@@ -226,12 +230,29 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
     setUserRelations(initialRelations);
   }, []);
 
-  // Resetar o filtro ao trocar de aba
+  // Efeito para não rerenderizar o filtro ao trocar de aba
   useEffect(() => {
     if (activeTab === 'buscar') {
       performSearch(searchQuery);
     }
   }, [activeTab, performSearch, searchQuery]);
+
+  // Carregar perfis salvos do localStorage
+  useEffect(() => {
+    const savedProfilesFromStorage = localStorage.getItem('epictus_saved_profiles');
+    if (savedProfilesFromStorage) {
+      try {
+        setSavedProfiles(JSON.parse(savedProfilesFromStorage));
+      } catch (e) {
+        console.error('Erro ao carregar perfis salvos:', e);
+      }
+    }
+  }, []);
+
+  // Salvar perfis salvos no localStorage quando mudarem
+  useEffect(() => {
+    localStorage.setItem('epictus_saved_profiles', JSON.stringify(savedProfiles));
+  }, [savedProfiles]);
 
   // Fechar perfil selecionado quando fechar o modal
   useEffect(() => {
@@ -276,15 +297,30 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
     }
   };
 
+  const toggleSavedProfile = (userId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSavedProfiles(prev => ({
+      ...prev,
+      [userId]: !prev[userId],
+    }));
+  };
+
   // Renderizar card de usuário otimizado
   const UserCard = React.memo(({ user }: { user: UserType }) => {
     const relation = userRelations[user.id] || 'none';
 
     return (
       <div 
-        className="bg-gradient-to-br from-[#0c1a2b]/95 to-[#0c1a2b]/85 backdrop-blur-lg rounded-xl p-4 mb-3 hover:from-[#001427] hover:to-[#0c1a2b] transition-all duration-300 border border-white/10 shadow-xl hover:shadow-2xl hover:border-[#FF6B00]/30 group"
+        className="bg-gradient-to-br from-[#0c1a2b]/95 to-[#0c1a2b]/85 backdrop-blur-lg rounded-xl p-4 mb-3 hover:from-[#001427] hover:to-[#0c1a2b] transition-all duration-300 border border-white/10 shadow-xl hover:shadow-2xl hover:border-[#FF6B00]/30 group relative"
         onClick={() => setSelectedUser(user)}
       >
+        {/* Botão de perfil salvo */}
+        <button 
+          onClick={(e) => toggleSavedProfile(user.id, e)}
+          className="absolute top-3 right-3 z-10 bg-black/30 hover:bg-black/50 p-1.5 rounded-full transition-all duration-300"
+        >
+          <Bookmark className={`h-3.5 w-3.5 ${savedProfiles[user.id] ? 'text-amber-400 fill-amber-400' : 'text-white/70'}`} />
+        </button>
         <div className="flex items-center gap-4">
           <div className="relative">
             <div className="absolute -inset-0.5 bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] rounded-full opacity-75 blur-md group-hover:opacity-100 group-hover:blur-sm transition-all duration-500"></div>
@@ -720,6 +756,12 @@ className="w-full rounded-xl bg-white/5 hover:bg-white/10 border border-white/10
             onClick={() => { setFilter('suggested'); setShowFilterDropdown(false); }}
           >
             <Bookmark className="h-4 w-4" /> Sugeridos
+          </button>
+          <button 
+            className={`flex items-center gap-2 w-full px-3 py-2 rounded-md ${filter === 'saved' ? 'bg-[#FF6B00]/20 text-[#FF6B00]' : 'text-white/70 hover:bg-white/5'}`}
+            onClick={() => { setFilter('saved'); setShowFilterDropdown(false); }}
+          >
+            <Bookmark className="h-4 w-4" /> Salvos
           </button>
         </div>
         <h4 className="text-white text-xs px-2 py-1 mt-2 font-medium">Ordenar por:</h4>
