@@ -958,7 +958,7 @@ export default function ProfileHeader({
             className="bg-white/20 backdrop-blur-sm text-white text-xs py-0.5 px-2 rounded-full flex items-center shadow-lg cursor-not-allowed opacity-80"
           >
             <UserPlus className="h-3 w-3 mr-1" />
-            + Adicionar amigos
+            Adicionar amigos
           </motion.div>
         </div>
       </div>
