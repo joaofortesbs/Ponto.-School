@@ -342,12 +342,12 @@ export function LoginForm() {
           <div className="text-sm text-red-500 text-center">{error}</div>
         )}
         
-        {/* Divisão com estrela */}
+        {/* Divisão com asterisco */}
         <div className="my-5 flex items-center">
           <div className="flex-1 border-t border-gray-300 dark:border-gray-700"></div>
           <div className="mx-4 text-gray-400">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2v20m7.0711-17.071L4.9289 19.071M22 12H2m17.0711 7.0711L4.9289 4.9289"></path>
             </svg>
           </div>
           <div className="flex-1 border-t border-gray-300 dark:border-gray-700"></div>
