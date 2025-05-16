@@ -1,12 +1,16 @@
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Search, X, Eye, Lock, Unlock, ChevronLeft, ArrowLeft, UserCheck, MapPin, BookOpen, Bookmark } from "lucide-react";
+import { 
+  Search, X, Eye, Lock, Unlock, ChevronLeft, ArrowLeft, 
+  UserCheck, MapPin, BookOpen, Bookmark, Users, 
+  Clock, CheckCircle2, AlertCircle, Bell, Filter
+} from "lucide-react";
 
 // Tipos de usuário
 interface UserType {
@@ -22,6 +26,7 @@ interface UserType {
   postsCount: number;
   favoriteSubject?: string;
   educationLevel?: string;
+  lastActive?: string;
 }
 
 const mockUsers: UserType[] = [
@@ -37,7 +42,8 @@ const mockUsers: UserType[] = [
     friendsCount: 75,
     postsCount: 12,
     favoriteSubject: 'Matemática',
-    educationLevel: 'Ensino Médio'
+    educationLevel: 'Ensino Médio',
+    lastActive: '2 min atrás'
   },
   {
     id: '2',
@@ -50,7 +56,8 @@ const mockUsers: UserType[] = [
     friendsCount: 42,
     postsCount: 7,
     favoriteSubject: 'Física',
-    educationLevel: 'Pré-Vestibular'
+    educationLevel: 'Pré-Vestibular',
+    lastActive: '14 min atrás'
   },
   {
     id: '3',
@@ -63,7 +70,8 @@ const mockUsers: UserType[] = [
     friendsCount: 93,
     postsCount: 25,
     favoriteSubject: 'Biologia',
-    educationLevel: 'Graduação'
+    educationLevel: 'Graduação',
+    lastActive: 'Agora mesmo'
   },
   {
     id: '4',
@@ -76,7 +84,8 @@ const mockUsers: UserType[] = [
     friendsCount: 57,
     postsCount: 15,
     favoriteSubject: 'Programação',
-    educationLevel: 'Graduação'
+    educationLevel: 'Graduação',
+    lastActive: '1h atrás'
   },
   {
     id: '5',
@@ -89,7 +98,8 @@ const mockUsers: UserType[] = [
     friendsCount: 68,
     postsCount: 34,
     favoriteSubject: 'Literatura',
-    educationLevel: 'Graduação'
+    educationLevel: 'Graduação',
+    lastActive: '30 min atrás'
   }
 ];
 
@@ -121,50 +131,84 @@ interface AddFriendsModalProps {
 }
 
 const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange }) => {
+  // Estado principal
   const [activeTab, setActiveTab] = useState("buscar");
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<UserType[]>([]);
+  const [filteredResults, setFilteredResults] = useState<UserType[]>([]);
   const [selectedUser, setSelectedUser] = useState<UserType | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [pendingRequests, setPendingRequests] = useState<PendingRequestType[]>(mockPendingRequests);
   const [userRelations, setUserRelations] = useState<{[key: string]: 'none' | 'requested' | 'following'}>({});
+  
+  // Referências para melhorar desempenho
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const resultsContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Estados de UI
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const [filter, setFilter] = useState<'all' | 'online' | 'suggested'>('all');
+  const [sortOrder, setSortOrder] = useState<'alphabetical' | 'recent'>('recent');
 
-  // Debounce search
-  const debounce = (func: Function, delay: number) => {
-    let timeout: NodeJS.Timeout;
-    return (...args: any[]) => {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => func(...args), delay);
-    };
-  };
+  // Otimizações para debounce de pesquisa
+  const performSearch = useCallback((query: string) => {
+    if (query.trim() === '') {
+      setFilteredResults([]);
+      setIsLoading(false);
+      return;
+    }
 
-  // Simular busca com debounce
-  const debouncedSearch = useCallback(
-    debounce((query: string) => {
-      if (query.trim() === '') {
-        setSearchResults([]);
-        setIsLoading(false);
-        return;
+    setIsLoading(true);
+    
+    // Limpar timeout anterior se existir
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    
+    // Definir novo timeout
+    searchTimeoutRef.current = setTimeout(() => {
+      // Filtrar resultados com base na consulta
+      const results = mockUsers.filter(user => 
+        user.name.toLowerCase().includes(query.toLowerCase()) || 
+        user.username.toLowerCase().includes(query.toLowerCase())
+      );
+      
+      // Aplicar ordenação
+      const sortedResults = [...results].sort((a, b) => {
+        if (sortOrder === 'alphabetical') {
+          return a.name.localeCompare(b.name);
+        } else {
+          // Para 'recent', poderia ser baseado na data de registro ou última atividade
+          return b.followersCount - a.followersCount;
+        }
+      });
+      
+      // Aplicar filtro adicional
+      let finalResults = sortedResults;
+      if (filter === 'online') {
+        finalResults = sortedResults.filter(user => 
+          user.lastActive === 'Agora mesmo' || user.lastActive?.includes('min'));
+      } else if (filter === 'suggested') {
+        // Filtro de sugestões (poderia ser baseado em interesses comuns)
+        finalResults = sortedResults.filter(user => 
+          user.favoriteSubject === 'Matemática' || user.favoriteSubject === 'Programação');
       }
-
-      setIsLoading(true);
-      // Simulação de delay de busca
-      setTimeout(() => {
-        const filteredResults = mockUsers.filter(user => 
-          user.name.toLowerCase().includes(query.toLowerCase()) || 
-          user.username.toLowerCase().includes(query.toLowerCase())
-        );
-        setSearchResults(filteredResults);
-        setIsLoading(false);
-      }, 500);
-    }, 300),
-    []
-  );
+      
+      setFilteredResults(finalResults);
+      setIsLoading(false);
+    }, 300);
+  }, [filter, sortOrder]);
 
   // Atualizar resultados quando a busca mudar
   useEffect(() => {
-    debouncedSearch(searchQuery);
-  }, [searchQuery, debouncedSearch]);
+    performSearch(searchQuery);
+    
+    // Cleanup
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [searchQuery, performSearch]);
 
   // Inicializar estado das relações com os usuários
   useEffect(() => {
@@ -184,18 +228,49 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
     setUserRelations(initialRelations);
   }, []);
 
+  // Resetar o filtro ao trocar de aba
+  useEffect(() => {
+    if (activeTab === 'buscar') {
+      performSearch(searchQuery);
+    }
+  }, [activeTab, performSearch, searchQuery]);
+
+  // Fechar perfil selecionado quando fechar o modal
+  useEffect(() => {
+    if (!open) {
+      setSelectedUser(null);
+    }
+  }, [open]);
+
+  // Função para gerenciar relacionamentos de usuário
   const handleRelationAction = (userId: string, action: 'request' | 'follow' | 'accept' | 'reject') => {
     switch (action) {
       case 'request':
+        // Simular uma solicitação enviada
         setUserRelations(prev => ({...prev, [userId]: 'requested'}));
+        
+        // Adicionar à lista de solicitações pendentes
+        const requestedUser = mockUsers.find(user => user.id === userId);
+        if (requestedUser) {
+          const newRequest: PendingRequestType = {
+            id: `req-${Date.now()}`,
+            user: requestedUser,
+            type: 'sent',
+            date: new Date().toISOString().split('T')[0]
+          };
+          setPendingRequests(prev => [...prev, newRequest]);
+        }
         break;
+        
       case 'follow':
         setUserRelations(prev => ({...prev, [userId]: 'following'}));
         break;
+        
       case 'accept':
         // Remover das solicitações pendentes e adicionar como amigo
         setPendingRequests(prev => prev.filter(req => !(req.user.id === userId && req.type === 'received')));
         break;
+        
       case 'reject':
         // Apenas remover das solicitações pendentes
         setPendingRequests(prev => prev.filter(req => !(req.user.id === userId && req.type === 'received')));
@@ -203,24 +278,25 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
     }
   };
 
-  // Renderizar card de usuário
-  const UserCard = ({ user }: { user: UserType }) => {
+  // Componente de cartão de usuário otimizado
+  const UserCard = React.memo(({ user }: { user: UserType }) => {
     const relation = userRelations[user.id] || 'none';
     
     return (
       <motion.div 
-        className="bg-gradient-to-br from-[#0c1a2b]/95 to-[#0c1a2b]/85 backdrop-blur-lg rounded-xl p-4 mb-3 hover:from-[#0c1a2b] hover:to-[#0c1a2b] transition-all duration-300 border border-white/10 shadow-xl hover:shadow-2xl group"
+        className="bg-gradient-to-br from-[#0c1a2b]/95 to-[#0c1a2b]/85 backdrop-blur-lg rounded-xl p-4 mb-3 hover:from-[#001427] hover:to-[#0c1a2b] transition-all duration-300 border border-white/10 shadow-xl hover:shadow-2xl hover:border-[#FF6B00]/30 group"
         whileHover={{ scale: 1.02, y: -2 }}
         whileTap={{ scale: 0.99 }}
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         onClick={() => setSelectedUser(user)}
+        layout
       >
         <div className="flex items-center gap-4">
           <div className="relative">
             <div className="absolute -inset-0.5 bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] rounded-full opacity-75 blur-md group-hover:opacity-100 group-hover:blur-sm transition-all duration-500"></div>
-            <Avatar className="h-14 w-14 border-2 border-transparent relative">
+            <Avatar className="relative h-14 w-14 border-2 border-transparent">
               <AvatarImage src={user.avatar} alt={user.name} className="object-cover" />
               <AvatarFallback className="bg-gradient-to-br from-[#FF6B00] to-[#FF9B50] text-white">
                 {user.name.charAt(0)}
@@ -228,13 +304,25 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
             </Avatar>
             
             {/* Status indicator */}
-            <div className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full bg-emerald-500 border-2 border-[#0c1a2b] shadow-lg"></div>
+            {user.lastActive === 'Agora mesmo' ? (
+              <div className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full bg-emerald-500 border-2 border-[#0c1a2b] shadow-lg"></div>
+            ) : user.lastActive?.includes('min') ? (
+              <div className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full bg-yellow-500 border-2 border-[#0c1a2b] shadow-lg"></div>
+            ) : (
+              <div className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full bg-slate-400 border-2 border-[#0c1a2b] shadow-lg"></div>
+            )}
           </div>
           
           <div className="flex-1 space-y-0.5">
             <h3 className="text-white font-bold text-base group-hover:text-[#FF6B00] transition-colors duration-300">{user.name}</h3>
             <p className="text-[#64748B] text-sm font-medium">@{user.username}</p>
             <p className="text-white/80 text-xs line-clamp-1">{user.bio}</p>
+            
+            {/* Last active status (new) */}
+            <div className="flex items-center gap-1 mt-0.5">
+              <Clock className="h-3 w-3 text-gray-400" />
+              <span className="text-[10px] text-gray-400">{user.lastActive}</span>
+            </div>
           </div>
           
           <div className="flex flex-col gap-2 items-end">
@@ -290,26 +378,30 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
         </div>
       </motion.div>
     );
-  };
+  });
+  
+  // Memo para não rerenderizar
+  UserCard.displayName = 'UserCard';
 
-  // Renderizar card de solicitação pendente
-  const PendingRequestCard = ({ request }: { request: PendingRequestType }) => {
+  // Renderizar card de solicitação pendente otimizado
+  const PendingRequestCard = React.memo(({ request }: { request: PendingRequestType }) => {
     const { user, type } = request;
     
     return (
       <motion.div 
-        className="bg-gradient-to-br from-[#0c1a2b]/95 to-[#0c1a2b]/85 backdrop-blur-lg rounded-xl p-4 mb-3 hover:from-[#0c1a2b] hover:to-[#0c1a2b] transition-all duration-300 border border-white/10 shadow-xl hover:shadow-2xl group"
+        className="bg-gradient-to-br from-[#0c1a2b]/95 to-[#0c1a2b]/85 backdrop-blur-lg rounded-xl p-4 mb-3 hover:from-[#001427] hover:to-[#0c1a2b] transition-all duration-300 border border-white/10 shadow-xl hover:shadow-2xl hover:border-[#FF6B00]/30 group"
         whileHover={{ scale: 1.02, y: -2 }}
         whileTap={{ scale: 0.99 }}
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         onClick={() => setSelectedUser(user)}
+        layout
       >
         <div className="flex items-center gap-4">
           <div className="relative">
             <div className="absolute -inset-0.5 bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] rounded-full opacity-75 blur-md group-hover:opacity-100 group-hover:blur-sm transition-all duration-500"></div>
-            <Avatar className="h-14 w-14 border-2 border-transparent">
+            <Avatar className="h-14 w-14 border-2 border-transparent relative">
               <AvatarImage src={user.avatar} alt={user.name} className="object-cover" />
               <AvatarFallback className="bg-gradient-to-br from-[#FF6B00] to-[#FF9B50] text-white">
                 {user.name.charAt(0)}
@@ -374,7 +466,10 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
         </div>
       </motion.div>
     );
-  };
+  });
+  
+  // Memo para não rerenderizar
+  PendingRequestCard.displayName = 'PendingRequestCard';
 
   // Renderizar painel de perfil expandido
   const UserProfilePanel = () => {
@@ -402,7 +497,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
         <div className="relative h-36 -mx-4 -mt-6 mb-4 overflow-hidden rounded-t-xl">
           {selectedUser.coverUrl ? (
             <motion.div 
-              className="absolute inset-0 w-full h-full"
+              className="absolute inset-0 w-full h-full bg-[#0A2540]"
               whileHover={{ scale: 1.05 }}
               transition={{ duration: 0.5 }}
             >
@@ -411,6 +506,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                 alt="Capa" 
                 className="w-full h-full object-cover transition-transform duration-500"
               />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#001427]/95 via-[#001427]/70 to-transparent"></div>
             </motion.div>
           ) : (
             <div className="w-full h-full bg-gradient-to-r from-[#001427] via-[#072e4f] to-[#0A2540]">
@@ -419,9 +515,9 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                 animate={{ backgroundPosition: ["0% 0%", "100% 100%"] }}
                 transition={{ duration: 20, repeat: Infinity, repeatType: "reverse" }}
               />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#001427]/95 to-transparent"></div>
             </div>
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#001427]/95 to-transparent"></div>
           
           {/* Pequeno menu de ações na capa */}
           <div className="absolute top-3 right-3 flex gap-2 z-20">
@@ -570,7 +666,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                       animate={{ scale: [1, 1.2, 1] }}
                       transition={{ repeat: Infinity, duration: 1.5 }}
                     >
-                      ✓
+                      <CheckCircle2 className="h-5 w-5" />
                     </motion.div>
                   </div>
                 ) : 'Solicitar amizade'}
@@ -591,7 +687,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                       animate={{ scale: [1, 1.2, 1] }}
                       transition={{ repeat: Infinity, duration: 1.5 }}
                     >
-                      ✓
+                      <CheckCircle2 className="h-5 w-5" />
                     </motion.div>
                   </div>
                 ) : 'Seguir perfil'}
@@ -619,7 +715,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
           >
             <p className="text-white/40 text-xs flex items-center justify-center gap-1">
               <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              Online agora
+              {selectedUser.lastActive === 'Agora mesmo' ? 'Online agora' : `Visto ${selectedUser.lastActive}`}
             </p>
           </motion.div>
         </div>
@@ -661,6 +757,55 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
     </motion.div>
   );
 
+  // Filtros para a busca
+  const FilterDropdown = () => (
+    <motion.div 
+      className="absolute right-0 top-full mt-2 bg-[#0A2540] rounded-xl border border-white/10 shadow-xl z-30 w-48 overflow-hidden"
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+    >
+      <div className="p-2">
+        <h4 className="text-white text-xs px-2 py-1 font-medium">Filtrar por:</h4>
+        <div className="mt-1 space-y-1">
+          <button 
+            className={`flex items-center gap-2 w-full px-3 py-2 rounded-md ${filter === 'all' ? 'bg-[#FF6B00]/20 text-[#FF6B00]' : 'text-white/70 hover:bg-white/5'}`}
+            onClick={() => { setFilter('all'); setShowFilterDropdown(false); }}
+          >
+            <Users className="h-4 w-4" /> Todos
+          </button>
+          <button 
+            className={`flex items-center gap-2 w-full px-3 py-2 rounded-md ${filter === 'online' ? 'bg-[#FF6B00]/20 text-[#FF6B00]' : 'text-white/70 hover:bg-white/5'}`}
+            onClick={() => { setFilter('online'); setShowFilterDropdown(false); }}
+          >
+            <Bell className="h-4 w-4" /> Online agora
+          </button>
+          <button 
+            className={`flex items-center gap-2 w-full px-3 py-2 rounded-md ${filter === 'suggested' ? 'bg-[#FF6B00]/20 text-[#FF6B00]' : 'text-white/70 hover:bg-white/5'}`}
+            onClick={() => { setFilter('suggested'); setShowFilterDropdown(false); }}
+          >
+            <Bookmark className="h-4 w-4" /> Sugeridos
+          </button>
+        </div>
+        <h4 className="text-white text-xs px-2 py-1 mt-2 font-medium">Ordenar por:</h4>
+        <div className="mt-1 space-y-1">
+          <button 
+            className={`flex items-center gap-2 w-full px-3 py-2 rounded-md ${sortOrder === 'alphabetical' ? 'bg-[#FF6B00]/20 text-[#FF6B00]' : 'text-white/70 hover:bg-white/5'}`}
+            onClick={() => { setSortOrder('alphabetical'); setShowFilterDropdown(false); }}
+          >
+            Alfabética
+          </button>
+          <button 
+            className={`flex items-center gap-2 w-full px-3 py-2 rounded-md ${sortOrder === 'recent' ? 'bg-[#FF6B00]/20 text-[#FF6B00]' : 'text-white/70 hover:bg-white/5'}`}
+            onClick={() => { setSortOrder('recent'); setShowFilterDropdown(false); }}
+          >
+            Mais populares
+          </button>
+        </div>
+      </div>
+    </motion.div>
+  );
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl p-0 bg-gradient-to-b from-[#0A2540] to-[#001427] border-white/10 overflow-hidden rounded-xl shadow-2xl backdrop-blur-lg">
@@ -690,7 +835,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
               <TabsList className="w-full bg-white/5 backdrop-blur-md mb-6 p-1 rounded-xl">
                 <TabsTrigger 
                   value="buscar" 
-                  className="flex-1 data-[state=active]:bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] data-[state=active]:text-white py-2.5 rounded-lg transition-all duration-300"
+                  className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#FF6B00] data-[state=active]:to-[#FF9B50] data-[state=active]:text-white py-2.5 rounded-lg transition-all duration-300"
                 >
                   <div className="flex items-center gap-2">
                     <Search className="h-4 w-4" />
@@ -699,7 +844,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                 </TabsTrigger>
                 <TabsTrigger 
                   value="pendentes" 
-                  className="flex-1 data-[state=active]:bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] data-[state=active]:text-white py-2.5 rounded-lg transition-all duration-300"
+                  className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#FF6B00] data-[state=active]:to-[#FF9B50] data-[state=active]:text-white py-2.5 rounded-lg transition-all duration-300"
                 >
                   <div className="flex items-center gap-2">
                     <UserCheck className="h-4 w-4" />
@@ -714,39 +859,66 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
               </TabsList>
 
               <TabsContent value="buscar" className="mt-0 focus-visible:outline-none">
-                <div className="relative mb-6">
-                  <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                    <Search className="h-4 w-4 text-white/60" />
-                  </div>
-                  <Input 
-                    className="w-full pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/40 focus:border-[#FF6B00]/50 focus:ring-[#FF6B00]/30 rounded-xl py-6"
-                    placeholder="Digite nome, e-mail ou @username"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                  
-                  {isLoading && (
-                    <div className="absolute inset-y-0 right-3 flex items-center">
-                      <div className="h-4 w-4 border-2 border-white/40 border-t-transparent rounded-full animate-spin"></div>
+                <div className="relative mb-6 flex items-center">
+                  <div className="relative flex-1">
+                    <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                      <Search className="h-4 w-4 text-white/60" />
                     </div>
-                  )}
+                    <Input 
+                      className="w-full pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/40 focus:border-[#FF6B00]/50 focus:ring-[#FF6B00]/30 rounded-xl py-6"
+                      placeholder="Digite nome, e-mail ou @username"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                    
+                    {isLoading && (
+                      <div className="absolute inset-y-0 right-3 flex items-center">
+                        <div className="h-4 w-4 border-2 border-white/40 border-t-transparent rounded-full animate-spin"></div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Botão de filtro */}
+                  <div className="ml-2 relative">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-10 w-10 rounded-full bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white"
+                      onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+                    >
+                      <Filter className="h-4 w-4" />
+                    </Button>
+                    
+                    <AnimatePresence>
+                      {showFilterDropdown && <FilterDropdown />}
+                    </AnimatePresence>
+                  </div>
                 </div>
 
-                <div className="overflow-y-auto max-h-[420px] pr-2 custom-scrollbar">
-                  {searchResults.length === 0 && (searchQuery.trim() !== '' || !isLoading) && (
+                <div 
+                  className="overflow-y-auto max-h-[420px] pr-2 custom-scrollbar"
+                  ref={resultsContainerRef}
+                >
+                  {searchQuery.trim() === '' && (
                     <EmptyState type="search" />
                   )}
                   
-                  {searchResults.map(user => (
-                    <UserCard key={user.id} user={user} />
-                  ))}
+                  {searchQuery.trim() !== '' && filteredResults.length === 0 && !isLoading && (
+                    <EmptyState type="search" />
+                  )}
+                  
+                  <AnimatePresence>
+                    {filteredResults.map(user => (
+                      <UserCard key={user.id} user={user} />
+                    ))}
+                  </AnimatePresence>
                 </div>
               </TabsContent>
 
               <TabsContent value="pendentes" className="mt-0 focus-visible:outline-none">
-                <div className="mb-4">
+                <div className="mb-4 bg-gradient-to-r from-[#072e4f]/50 to-[#001427]/50 p-3 rounded-lg">
                   <h3 className="text-white font-medium flex items-center gap-2">
-                    <span className="bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full text-xs">recebidas</span>
+                    <span className="bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full text-xs font-medium">recebidas</span>
                     Solicitações de amizade
                   </h3>
                 </div>
@@ -756,16 +928,18 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                     <EmptyState type="pending" />
                   )}
                   
-                  {pendingRequests
-                    .filter(req => req.type === 'received')
-                    .map(request => (
-                      <PendingRequestCard key={request.id} request={request} />
-                    ))}
+                  <AnimatePresence>
+                    {pendingRequests
+                      .filter(req => req.type === 'received')
+                      .map(request => (
+                        <PendingRequestCard key={request.id} request={request} />
+                      ))}
+                  </AnimatePresence>
                 </div>
                 
-                <div className="mt-6 mb-4">
+                <div className="mt-6 mb-4 bg-gradient-to-r from-[#072e4f]/50 to-[#001427]/50 p-3 rounded-lg">
                   <h3 className="text-white font-medium flex items-center gap-2">
-                    <span className="bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full text-xs">enviadas</span>
+                    <span className="bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full text-xs font-medium">enviadas</span>
                     Solicitações pendentes
                   </h3>
                 </div>
@@ -777,11 +951,13 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                     </div>
                   )}
                   
-                  {pendingRequests
-                    .filter(req => req.type === 'sent')
-                    .map(request => (
-                      <PendingRequestCard key={request.id} request={request} />
-                    ))}
+                  <AnimatePresence>
+                    {pendingRequests
+                      .filter(req => req.type === 'sent')
+                      .map(request => (
+                        <PendingRequestCard key={request.id} request={request} />
+                      ))}
+                  </AnimatePresence>
                 </div>
               </TabsContent>
             </Tabs>
@@ -802,10 +978,10 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
             {selectedUser && (
               <motion.div 
                 className={`${selectedUser ? 'block' : 'hidden'} border-l border-white/10 bg-gradient-to-br from-[#0A2540]/90 to-[#001427]/90 backdrop-blur-xl md:w-[45%] relative`}
-                initial={{ width: 0 }}
-                animate={{ width: "100%" }}
-                exit={{ width: 0 }}
-                transition={{ duration: 0.3 }}
+                initial={{ width: 0, opacity: 0 }}
+                animate={{ width: "100%", opacity: 1 }}
+                exit={{ width: 0, opacity: 0 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
               >
                 <UserProfilePanel />
               </motion.div>
