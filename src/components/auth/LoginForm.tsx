@@ -420,3 +420,6 @@ const handleLogin = async (e: React.FormEvent) => {
         sessionStorage.removeItem('welcomeModalShown');
         sessionStorage.removeItem(`currentSession_${data.user.id}`);
       }
+    } catch (err) {
+      console.error("Erro ao fazer login:", err);
+    }
