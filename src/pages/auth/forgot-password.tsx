@@ -57,12 +57,6 @@ export default function ForgotPasswordPage() {
           </p>
         </div>
 
-        <div className="w-full flex justify-center py-4">
-          <div className="h-px w-1/3 bg-gray-200 dark:bg-gray-700/30"></div>
-          <div className="mx-4 text-gray-300 dark:text-gray-600">✧</div>
-          <div className="h-px w-1/3 bg-gray-200 dark:bg-gray-700/30"></div>
-        </div>
-
         {success ? (
           <div className="bg-green-100/80 dark:bg-green-900/30 border border-green-500/70 dark:border-green-600/70 text-green-800 dark:text-green-300 p-6 rounded-lg mb-6 animate-fade-in shadow-md backdrop-blur-sm">
             <h3 className="text-lg font-bold">E-mail enviado com sucesso!</h3>
@@ -102,6 +96,17 @@ export default function ForgotPasswordPage() {
             </div>
 
             {error && <div className="text-sm text-red-500 text-center">{error}</div>}
+            
+            {/* Divisão com asterisco - igual ao do login */}
+            <div className="my-4 flex items-center">
+              <div className="flex-1 border-t border-gray-300 dark:border-gray-700"></div>
+              <div className="mx-4 text-gray-400">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2v20m7.0711-17.071L4.9289 19.071M22 12H2m17.0711 7.0711L4.9289 4.9289"></path>
+                </svg>
+              </div>
+              <div className="flex-1 border-t border-gray-300 dark:border-gray-700"></div>
+            </div>
 
             <Button
               type="submit"
