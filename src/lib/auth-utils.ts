@@ -297,59 +297,45 @@ export const signInWithUsername = async (username: string, password: string) => 
   try {
     console.log("Iniciando login com username:", username);
 
-    // Primeiro, buscar o email associado ao nome de usuário
+    // Primeiro, buscar o email associado ao nome de usuário (case insensitive para maior flexibilidade)
     const { data: profileData, error: profileError } = await supabase
       .from('profiles')
       .select('email, username, display_name')
-      .eq('username', username)
-      .single();
+      .ilike('username', username)
+      .limit(1);
 
-    if (profileError || !profileData?.email) {
+    if (profileError || !profileData || profileData.length === 0) {
       console.log("Nome de usuário não encontrado:", username, profileError);
-
-      // Tentar buscar por similaridade como alternativa (caso o usuário tenha digitado com capitalização diferente)
-      try {
-        const { data: alternativeProfiles, error: altError } = await supabase
-          .from('profiles')
-          .select('email, username, display_name')
-          .ilike('username', username)
-          .limit(1);
-
-        if (!altError && alternativeProfiles && alternativeProfiles.length > 0) {
-          console.log("Encontrado perfil alternativo por similaridade:", alternativeProfiles[0].username);
-
-          // Salvar o username correto para referência futura
-          try {
-            localStorage.setItem('username', alternativeProfiles[0].username);
-          } catch (e) {}
-
-          // Usar o email encontrado para login
-          return signInWithEmail(alternativeProfiles[0].email, password);
-        }
-      } catch (e) {
-        console.error("Erro ao tentar busca alternativa:", e);
-      }
-
       return { 
         success: false, 
         error: new Error("Nome de usuário não encontrado")
       };
     }
 
+    const userProfile = profileData[0];
+    
+    if (!userProfile.email) {
+      console.log("Perfil encontrado, mas sem email associado:", username);
+      return {
+        success: false,
+        error: new Error("Conta com informações incompletas. Por favor, contate o suporte.")
+      };
+    }
+
     // Salvar o username confirmado
     try {
-      localStorage.setItem('username', profileData.username);
-      localStorage.setItem('userFirstName', profileData.display_name || username);
+      localStorage.setItem('username', userProfile.username);
+      localStorage.setItem('userFirstName', userProfile.display_name || username);
 
       // Armazenar também no sessionStorage como backup
-      sessionStorage.setItem('username', profileData.username);
+      sessionStorage.setItem('username', userProfile.username);
     } catch (e) {
       console.warn("Erro ao salvar username no cache:", e);
     }
 
-    console.log("Username encontrado, email associado:", profileData.email);
+    console.log("Username encontrado, email associado:", userProfile.email);
     // Usar o email encontrado para fazer login
-    return signInWithEmail(profileData.email, password);
+    return signInWithEmail(userProfile.email, password);
 
   } catch (error) {
     console.error("Erro ao fazer login com nome de usuário:", error);
@@ -362,13 +348,22 @@ export const signInWithUsername = async (username: string, password: string) => 
     try {
       localStorage.setItem('redirectTimer', 'active');
       localStorage.setItem('lastRegisteredUsername', username || '');
+      
+      // Armazenar informações adicionais para melhorar a experiência de login
+      if (username) {
+        localStorage.setItem('prefillUsername', username);
+        localStorage.setItem('registrationComplete', 'true');
+        localStorage.setItem('registrationTime', Date.now().toString());
+      }
 
-      console.log("Configurando redirecionamento automático para login");
+      console.log("Configurando redirecionamento automático para login com username:", username);
 
-      // Redirecionar para página de login com indicação de nova conta
-      window.location.href = '/login?newAccount=true';
+      // Redirecionar para página de login com indicação de nova conta e pré-preenchendo o nome de usuário
+      window.location.href = `/login?newAccount=true${username ? `&username=${encodeURIComponent(username)}` : ''}`;
     } catch (error) {
       console.error("Erro ao configurar redirecionamento:", error);
+      // Fallback simples em caso de erro
+      window.location.href = '/login';
     }
   };
 

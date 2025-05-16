@@ -13,18 +13,40 @@ interface FormData {
 }
 
 export function LoginForm() {
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [accountCreated, setAccountCreated] = useState(false);
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-    rememberMe: false,
-  });
-  const [success, setSuccess] = useState(false); // Added success state
+  // Verificar se há um username pré-definido (vindo do registro ou URL)
+  const getInitialUsername = () => {
+    // Verificar parâmetros da URL
+    const params = new URLSearchParams(window.location.search);
+    const urlUsername = params.get('username');
+
+    // Verificar localStorage para username de registro recente
+    const storedUsername = localStorage.getItem('prefillUsername');
+
+    // Priorizar username da URL, depois localStorage
+    return urlUsername || storedUsername || "";
+  };
+
+  const [emailOrUsername, setEmailOrUsername] = React.useState(getInitialUsername());
+  const [password, setPassword] = React.useState("");
+  const [showPassword, setShowPassword] = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState("");
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Verifique se o usuário foi redirecionado da página de registro
+  const isNewAccount = location.search.includes('newAccount=true') || location.state?.newAccount;
+
+  // Limpar dados temporários do localStorage após uso
+  React.useEffect(() => {
+    // Se já carregamos o username, podemos limpar
+    if (emailOrUsername && localStorage.getItem('prefillUsername')) {
+      // Delay pequeno para garantir que o formulário já renderizou
+      setTimeout(() => {
+        localStorage.removeItem('prefillUsername');
+      }, 1000);
+    }
+  }, [emailOrUsername]);
 
   useEffect(() => {
     // Verificar se veio da tela de registro
@@ -75,6 +97,13 @@ export function LoginForm() {
       }
     }
   }, [location]);
+
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+    rememberMe: false,
+  });
+  const [success, setSuccess] = useState(false); // Added success state
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.type === "checkbox" ? e.target.checked : e.target.value;
@@ -395,7 +424,7 @@ export function RegistrationForm(){
 async function signInWithEmail(email: string, password: string) {
   // Tentar fazer login
   try {
-    
+
     const { data, error } = await supabase.auth.signInWithPassword({
       email: email,
       password: password
@@ -422,15 +451,15 @@ async function signInWithEmail(email: string, password: string) {
 async function signInWithUsername(username: string, password: string) {
     // Tentar fazer login
     try {
-      
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email: username,
         password: password
       });
-  
+
       if (error) {
         console.error("Erro de login:", error);
-  
+
         // Mensagem de erro mais específica baseada no tipo de erro
         if (error.message.includes("Invalid login credentials")) {
           return { success: false, error: "Credenciais inválidas. Verifique seu nome de usuário e senha." };
