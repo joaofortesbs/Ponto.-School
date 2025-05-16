@@ -277,7 +277,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
     }
   };
 
-  // Componente de cartão de usuário otimizado
+  // Renderizar card de usuário otimizado
   const UserCard = React.memo(({ user }: { user: UserType }) => {
     const relation = userRelations[user.id] || 'none';
 
@@ -286,9 +286,6 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
         className="bg-gradient-to-br from-[#0c1a2b]/95 to-[#0c1a2b]/85 backdrop-blur-lg rounded-xl p-4 mb-3 hover:from-[#001427] hover:to-[#0c1a2b] transition-all duration-300 border border-white/10 shadow-xl hover:shadow-2xl hover:border-[#FF6B00]/30 group"
         whileHover={{ scale: 1.02, y: -2 }}
         whileTap={{ scale: 0.99 }}
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ type: "spring", stiffness: 300, damping: 30, duration: 0.3 }}
         layoutId={`card-${user.id}`}
         onClick={() => setSelectedUser(user)}
         layout
