@@ -341,13 +341,24 @@ export function LoginForm() {
         {error && (
           <div className="text-sm text-red-500 text-center">{error}</div>
         )}
+        
+        {/* Divisão com estrela */}
+        <div className="my-5 flex items-center">
+          <div className="flex-1 border-t border-gray-300 dark:border-gray-700"></div>
+          <div className="mx-4 text-gray-400">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+            </svg>
+          </div>
+          <div className="flex-1 border-t border-gray-300 dark:border-gray-700"></div>
+        </div>
 
         <Button
           type="submit"
           className="w-full h-11 text-base bg-brand-primary hover:bg-brand-primary/90 text-white transition-all duration-300 shadow-md hover:shadow-lg hover:shadow-brand-primary/20 relative overflow-hidden group"
           disabled={loading}
         >
-          <span className="relative z-10">{loading ? "Entrando..." : "Entrar"}</span>
+          <span className="relative z-10">{loading ? "Entrando..." : "Acessar minha conta"}</span>
           <span className="absolute inset-0 bg-gradient-to-r from-brand-primary to-[#FF8C40] opacity-0 group-hover:opacity-100 transition-opacity duration-500"></span>
         </Button>
 
