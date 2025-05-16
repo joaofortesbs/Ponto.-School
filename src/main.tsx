@@ -29,6 +29,95 @@ function inicializarTeiasComPrioridadeMaxima() {
           background: linear-gradient(135deg, rgba(0,20,39,1) 0%, rgba(41,51,92,1) 100%);
         }
 
+/**
+ * Função para evitar recargas automáticas indesejadas da aplicação
+ */
+function preventUnwantedReloads() {
+  // Criar identificador único para a sessão atual
+  const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+  sessionStorage.setItem('currentSessionId', sessionId);
+
+  // Interceptar eventos de beforeunload para prevenir recargas acidentais
+  window.addEventListener('beforeunload', (event) => {
+    // Apenas perguntar se parece ser uma recarga não intencional
+    const isIntentionalNavigation = sessionStorage.getItem('intentionalNavigation') === 'true';
+    
+    if (!isIntentionalNavigation && !window.location.href.includes('/auth/')) {
+      sessionStorage.removeItem('intentionalNavigation');
+      // Mensagem de confirmação para evitar recargas acidentais
+      const message = 'Há mudanças não salvas. Deseja realmente sair?';
+      event.returnValue = message;
+      return message;
+    }
+  });
+
+  // Sobrescrever o método de recarga para marcar recargas intencionais
+  const originalReload = window.location.reload;
+  window.location.reload = function(...args) {
+    sessionStorage.setItem('intentionalNavigation', 'true');
+    return originalReload.apply(this, args);
+  };
+
+  // Interceptar cliques em links para marcar navegações intencionais
+  document.addEventListener('click', (event) => {
+    const target = event.target as HTMLElement;
+    const anchor = target.closest('a');
+    
+    if (anchor && anchor.href && !anchor.getAttribute('target')) {
+      sessionStorage.setItem('intentionalNavigation', 'true');
+    }
+  });
+
+  // Detectar e cancelar múltiplas tentativas de recarga em curto período
+  let reloadAttempts = 0;
+  const reloadThreshold = 3;
+  const reloadTimeWindow = 5000; // 5 segundos
+  
+  window.addEventListener('error', () => {
+    reloadAttempts++;
+    
+    setTimeout(() => {
+      reloadAttempts--;
+    }, reloadTimeWindow);
+    
+    if (reloadAttempts >= reloadThreshold) {
+      console.error('Múltiplas tentativas de recarga detectadas. Estabilizando aplicação...');
+      reloadAttempts = 0;
+      
+      // Mostrar mensagem ao usuário
+      const errorMessage = document.createElement('div');
+      errorMessage.style.cssText = `
+        position: fixed;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(255, 107, 0, 0.9);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 4px;
+        z-index: 9999;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        font-family: system-ui, sans-serif;
+      `;
+      errorMessage.innerText = 'Estabilizando a aplicação, por favor aguarde...';
+      document.body.appendChild(errorMessage);
+      
+      // Remover após 5 segundos
+      setTimeout(() => {
+        document.body.removeChild(errorMessage);
+      }, 5000);
+      
+      return true; // Prevenir recarga automática
+    }
+    
+    return false;
+  });
+}
+
+// Inicializar prevenção de recargas
+preventUnwantedReloads();
+
+
         body::before {
           content: '';
           position: fixed;

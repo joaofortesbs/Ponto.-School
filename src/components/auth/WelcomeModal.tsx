@@ -26,7 +26,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
   const [activeBubble, setActiveBubble] = useState(0);
   const controls = useAnimationControls();
   const modalRef = useRef<HTMLDivElement>(null);
-  
+
   // Estado para controlar se o modal já foi mostrado nesta sessão
   const [shouldDisplay, setShouldDisplay] = useState(true);
 
@@ -53,18 +53,18 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
       if (isFirstLogin) {
         setShouldDisplay(true);
         controls.start("visible");
-        
+
         // Para primeiro login, garantimos que o modal seja exibido independente de tudo
         // Não verificamos sessionStorage, pois queremos forçar a exibição
-        
+
         // Marcar que o modal foi exibido nesta sessão, mas apenas após visualização
         const markAsShown = () => {
           sessionStorage.setItem(SESSION_MODAL_KEY, 'true');
         };
-        
+
         // Atrasar a marcação para garantir que o usuário veja o modal
         setTimeout(markAsShown, 2000);
-        
+
         // Efeito de rotação das bolhas
         const interval = setInterval(() => {
           setActiveBubble((prev) => (prev + 1) % 4);
@@ -84,7 +84,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
 
           // Marcar que o modal foi exibido nesta sessão
           sessionStorage.setItem(SESSION_MODAL_KEY, 'true');
-          
+
           // Efeito de rotação das bolhas
           const interval = setInterval(() => {
             setActiveBubble((prev) => (prev + 1) % 4);
@@ -352,7 +352,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                           }}
                         />
                       ))}
-                      
+
                       {/* Efeito de movimento de ondas melhorado */}
                       {[...Array(3)].map((_, i) => (
                         <motion.div
@@ -375,7 +375,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                           }}
                         />
                       ))}
-                      
+
                       {/* SVGs para ondas múltiplas */}
                       <svg width="0" height="0" className="absolute">
                         <defs>
@@ -417,7 +417,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                         />
                       </div>
                     </div>
-                    
+
                     {/* Efeitos de iluminação aprimorados */}
                     <motion.div 
                       className="absolute -top-40 -right-40 w-80 h-80 bg-[#FF6B00]/15 rounded-full blur-3xl"
@@ -543,7 +543,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                                   }}
                                 />
                               ))}
-                              
+
                               {/* Ícone de sucesso com efeito de brilho */}
                               <motion.div 
                                 className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] flex items-center justify-center relative z-10 shadow-lg shadow-[#FF6B00]/30"
@@ -573,7 +573,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                                 </motion.div>
                               </motion.div>
                             </motion.div>
-                            
+
                             {/* Título com efeito de entrada + glow dinâmico */}
                             <div className="relative">
                               <motion.h3 
@@ -611,6 +611,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                                     transition={{
                                       duration: 3,
                                       ease: "easeInOut",
+                                      delay: 0.1,
                                       repeat: Infinity
                                     }}
                                   >C</motion.span>
@@ -622,7 +623,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                                     transition={{
                                       duration: 3,
                                       ease: "easeInOut",
-                                      delay: 0.1,
+                                      delay: 0.2,
                                       repeat: Infinity
                                     }}
                                   >o</motion.span>
@@ -634,7 +635,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                                     transition={{
                                       duration: 3,
                                       ease: "easeInOut",
-                                      delay: 0.2,
+                                      delay: 0.3,
                                       repeat: Infinity
                                     }}
                                   >n</motion.span>
@@ -646,7 +647,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                                     transition={{
                                       duration: 3,
                                       ease: "easeInOut",
-                                      delay: 0.3,
+                                      delay: 0.4,
                                       repeat: Infinity
                                     }}
                                   >t</motion.span>
@@ -658,7 +659,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                                     transition={{
                                       duration: 3,
                                       ease: "easeInOut",
-                                      delay: 0.4,
+                                      delay: 0.5,
                                       repeat: Infinity
                                     }}
                                   >a</motion.span>
@@ -671,7 +672,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                                     transition={{
                                       duration: 3,
                                       ease: "easeInOut",
-                                      delay: 0.5,
+                                      delay: 0.6,
                                       repeat: Infinity
                                     }}
                                   >c</motion.span>
@@ -683,7 +684,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                                     transition={{
                                       duration: 3,
                                       ease: "easeInOut",
-                                      delay: 0.6,
+                                      delay: 0.7,
                                       repeat: Infinity
                                     }}
                                   >o</motion.span>
@@ -695,12 +696,12 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                                     transition={{
                                       duration: 3,
                                       ease: "easeInOut",
-                                      delay: 0.7,
+                                      delay: 0.8,
                                       repeat: Infinity
                                     }}
                                   >m</motion.span>
                                   <motion.span className="inline-block mx-1">sucesso!</motion.span>
-                                  
+
                                   {/* Efeito de estrela no título */}
                                   <motion.span
                                     className="absolute -right-6 -top-6 text-yellow-400"
@@ -736,7 +737,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                                   </motion.span>
                                 </motion.span>
                               </motion.h3>
-                              
+
                               {/* Barra decorativa animada sob o título */}
                               <motion.div
                                 className="absolute -bottom-2 left-0 h-[2px] bg-gradient-to-r from-[#FF6B00] via-[#FF8C40] to-[#FF6B00]"
@@ -860,24 +861,24 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                                   >
                                     {/* Cabeça */}
                                     <circle cx="100" cy="75" r="40" fill="#FFD8BF" />
-                                    
+
                                     {/* Cabelo */}
                                     <path d="M60 75 C60 45, 140 45, 140 75" fill="#4A3228" />
                                     <path d="M60 75 C60 55, 80 40, 100 40 C120 40, 140 55, 140 75" fill="#4A3228" />
-                                    
+
                                     {/* Ombros */}
                                     <path d="M60 110 C80 105, 120 105, 140 110" fill="#FFD8BF" />
-                                    
+
                                     {/* Corpo */}
                                     <path d="M75 112 L75 160 C85 165, 115 165, 125 160 L125 112" fill="#FF6B00" />
-                                    
+
                                     {/* Gravata ou detalhe */}
                                     <path d="M95 112 L100 150 L105 112" fill="#FF8C40" />
-                                    
+
                                     {/* Detalhes de roupas - botões */}
                                     <circle cx="100" cy="125" r="3" fill="#FFD700" />
                                     <circle cx="100" cy="135" r="3" fill="#FFD700" />
-                                    
+
                                     {/* Olhos */}
                                     <motion.g
                                       animate={{ 
@@ -895,10 +896,10 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                                       <circle cx="87" cy="68" r="2" fill="white" />
                                       <circle cx="117" cy="68" r="2" fill="white" />
                                     </motion.g>
-                                    
+
                                     {/* Nariz */}
                                     <path d="M97 80 Q100 85 103 80" fill="none" stroke="#C69B85" strokeWidth="1.5" />
-                                    
+
                                     {/* Boca */}
                                     <motion.path 
                                       d="M90 90 Q100 98 110 90" 
@@ -918,7 +919,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                                         ease: "easeInOut"
                                       }}
                                     />
-                                    
+
                                     {/* Sobrancelhas */}
                                     <motion.g
                                       animate={{
@@ -935,12 +936,12 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                                       <path d="M75 60 Q85 55 95 60" fill="none" stroke="#4A3228" strokeWidth="2" />
                                       <path d="M105 60 Q115 55 125 60" fill="none" stroke="#4A3228" strokeWidth="2" />
                                     </motion.g>
-                                    
+
                                     {/* Bochechas */}
                                     <circle cx="80" cy="82" r="7" fill="#FFBAA5" fillOpacity="0.5" />
                                     <circle cx="120" cy="82" r="7" fill="#FFBAA5" fillOpacity="0.5" />
                                   </motion.g>
-                                  
+
                                   {/* Braço direito acenando */}
                                   <motion.g
                                     animate={{ 
@@ -1024,7 +1025,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                             ))}
                           </motion.div>
                         </div>
-                        
+
                         {/* Subtítulo aprimorado */}
                         <motion.div 
                           initial={{ y: 10, opacity: 0 }}
