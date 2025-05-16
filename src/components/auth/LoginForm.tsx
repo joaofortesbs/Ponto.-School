@@ -33,10 +33,10 @@ export function LoginForm() {
       setTimeout(() => {
         setAccountCreated(false);
       }, 8000); // Aumentado para 8 segundos para dar mais tempo de leitura
-      
+
       // Limpar flag de redirecionamento
       localStorage.removeItem('redirectTimer');
-      
+
       // Verificar se temos o email direto do state (redirecionamento imediato)
       if (location.state.email) {
         setFormData(prev => ({ ...prev, email: location.state.email }));
@@ -57,7 +57,7 @@ export function LoginForm() {
         }
       }
     }
-    
+
     // Verificar o parâmetro na URL também
     const params = new URLSearchParams(location.search);
     if (params.get('newAccount') === 'true') {
@@ -65,23 +65,23 @@ export function LoginForm() {
       setTimeout(() => {
         setAccountCreated(false);
       }, 8000); // Aumentado para 8 segundos
-      
+
       // Limpar flag de redirecionamento
       localStorage.removeItem('redirectTimer');
-      
+
       // Verificar se há username no localStorage mesmo quando vindo por parâmetro de URL
       const lastUsername = localStorage.getItem('lastRegisteredUsername');
       if (lastUsername && !formData.email) {
         setFormData(prev => ({ ...prev, email: lastUsername }));
       }
     }
-    
+
     // Executar sempre na montagem do componente para verificar se existe um redirecionamento pendente
     const pendingRedirect = localStorage.getItem('redirectTimer');
     if (pendingRedirect === 'active') {
       setAccountCreated(true);
       localStorage.removeItem('redirectTimer');
-      
+
       const lastUsername = localStorage.getItem('lastRegisteredUsername');
       if (lastUsername) {
         setFormData(prev => ({ ...prev, email: lastUsername }));
@@ -354,7 +354,7 @@ export function LoginForm() {
         {error && (
           <div className="text-sm text-red-500 text-center">{error}</div>
         )}
-        
+
         {/* Divisão com asterisco */}
         <div className="my-5 flex items-center">
           <div className="flex-1 border-t border-gray-300 dark:border-gray-700"></div>
@@ -397,3 +397,26 @@ export function RegistrationForm(){
     //Implementation for registration form here.  This would include fields for name, email, password, etc., and a submit handler to create a new user account in Supabase.  Error handling and success messages would also be necessary.
     return <div>Registration Form (Not implemented)</div>
 }
+const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    // Verificar se veio do registro (para garantir exibição do modal de boas-vindas)
+    const isFromRegistration = localStorage.getItem('registrationCompleted') === 'true';
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      });
+
+      // Garantir que o flag de primeiro login esteja ativo após login bem-sucedido
+      // se o usuário acabou de se registrar
+      if (data?.user && isFromRegistration) {
+        localStorage.setItem('isFirstLogin', 'true');
+
+        // Limpar flag de sessão do modal para garantir que será exibido
+        sessionStorage.removeItem('welcomeModalShown');
+        sessionStorage.removeItem(`currentSession_${data.user.id}`);
+      }
