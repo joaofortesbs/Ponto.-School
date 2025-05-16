@@ -1,46 +1,129 @@
-import React from "react";
+
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Mail } from "lucide-react";
 import { AuthLayout } from "@/components/auth/AuthLayout";
+import { supabase } from "@/lib/supabase";
 
 export default function ForgotPasswordPage() {
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    setSuccess(false);
+
+    if (!email.trim()) {
+      setError("Por favor, digite seu e-mail cadastrado");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + "/reset-password",
+      });
+
+      if (error) {
+        setError(error.message);
+      } else {
+        setSuccess(true);
+      }
+    } catch (err: any) {
+      setError("Ocorreu um erro ao processar sua solicitação");
+      console.error("Erro ao solicitar recuperação de senha:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <AuthLayout>
-      <div className="flex flex-col space-y-6">
-        <div className="flex flex-col space-y-2 text-center">
-          <div className="mx-auto w-12 h-12 rounded-full bg-gradient-to-r from-[#FF6B00] to-[#0D00F5] flex items-center justify-center text-white font-bold text-xl">
-            P
-          </div>
-          <h1 className="text-2xl font-bold text-[#29335C] dark:text-white">
-            Esqueceu sua senha?
+      <div className="space-y-6 rounded-2xl max-w-md w-full mx-auto">
+        <div className="text-center space-y-4">
+          <h1 className="text-2xl font-bold tracking-tight text-brand-black dark:text-white drop-shadow-sm">
+            Esqueceu a senha?
           </h1>
-          <p className="text-sm text-[#64748B] dark:text-white/60">
-            Digite seu email e enviaremos instruções para redefinir sua senha
+          <p className="text-sm text-brand-muted dark:text-white/70">
+            Não se preocupe, nós vamos te ajudar.
+            <br />
+            Digite o e-mail cadastrado para prosseguir.
           </p>
         </div>
 
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="seu.email@exemplo.com"
-            />
-          </div>
-          <Button className="w-full bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white">
-            Enviar instruções
-          </Button>
+        <div className="w-full flex justify-center py-4">
+          <div className="h-px w-1/3 bg-gray-200 dark:bg-gray-700/30"></div>
+          <div className="mx-4 text-gray-300 dark:text-gray-600">✧</div>
+          <div className="h-px w-1/3 bg-gray-200 dark:bg-gray-700/30"></div>
         </div>
 
+        {success ? (
+          <div className="bg-green-100/80 dark:bg-green-900/30 border border-green-500/70 dark:border-green-600/70 text-green-800 dark:text-green-300 p-6 rounded-lg mb-6 animate-fade-in shadow-md backdrop-blur-sm">
+            <h3 className="text-lg font-bold">E-mail enviado com sucesso!</h3>
+            <p className="text-sm mt-1">
+              Verifique sua caixa de entrada e siga as instruções para redefinir sua senha.
+            </p>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-brand-black dark:text-white drop-shadow-sm">
+                E-mail
+              </label>
+              <div className="relative group">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-hover:text-brand-primary transition-colors duration-200 z-10" />
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Digite seu e-mail cadastrado"
+                  className="pl-10 h-11 bg-white/30 dark:bg-white/8 backdrop-blur-md border-[#FF6B00]/10 dark:border-[#FF6B00]/20 focus:border-[#FF6B00]/60 dark:focus:border-[#FF6B00]/60 transition-all duration-300 hover:border-[#FF6B00]/30 rounded-lg"
+                  required
+                  style={{
+                    backdropFilter: "blur(12px)",
+                    WebkitBackdropFilter: "blur(12px)",
+                    boxShadow: "inset 0 1px 2px rgba(255, 255, 255, 0.1)",
+                  }}
+                />
+                <div
+                  className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none border border-[#FF6B00]/30 shadow-[0_0_15px_rgba(255,107,0,0.15)]"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, rgba(255, 107, 0, 0.03) 0%, rgba(255, 140, 64, 0.02) 100%)",
+                  }}
+                ></div>
+              </div>
+            </div>
+
+            {error && <div className="text-sm text-red-500 text-center">{error}</div>}
+
+            <Button
+              type="submit"
+              className="w-full h-11 text-base bg-[#0D00F5] hover:bg-[#0D00F5]/90 text-white transition-all duration-300 shadow-md hover:shadow-lg hover:shadow-[#0D00F5]/20 relative overflow-hidden group"
+              disabled={loading}
+            >
+              <span className="relative z-10">
+                {loading ? "Processando..." : "Recuperar"}
+              </span>
+              <span className="absolute inset-0 bg-gradient-to-r from-[#0D00F5] to-[#3D30FF] opacity-0 group-hover:opacity-100 transition-opacity duration-500"></span>
+            </Button>
+          </form>
+        )}
+
         <div className="text-center text-sm">
-          <span className="text-[#64748B] dark:text-white/60">
-            Lembrou sua senha?{" "}
-          </span>
-          <Link to="/login" className="text-[#0D00F5] hover:underline">
+          <span className="text-brand-muted dark:text-white/70">Lembrou sua senha? </span>
+          <Link
+            to="/login"
+            className="text-brand-primary hover:text-brand-primary/90 font-medium relative group"
+          >
             Voltar para o login
+            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-brand-primary group-hover:w-full transition-all duration-300"></span>
           </Link>
         </div>
       </div>

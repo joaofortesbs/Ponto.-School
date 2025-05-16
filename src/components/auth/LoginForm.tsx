@@ -275,17 +275,9 @@ export function LoginForm() {
         </div>
 
         <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <label className="text-sm font-medium text-brand-black dark:text-white drop-shadow-sm">
-              Senha
-            </label>
-            <Button
-              variant="link"
-              className="text-xs text-brand-primary hover:text-brand-primary/90 p-0 h-auto drop-shadow-sm"
-            >
-              Esqueci minha senha
-            </Button>
-          </div>
+          <label className="text-sm font-medium text-brand-black dark:text-white drop-shadow-sm">
+            Senha
+          </label>
           <div className="relative group">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-hover:text-brand-primary transition-colors duration-200 z-10" />
             <Input
@@ -318,6 +310,15 @@ export function LoginForm() {
             <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none border border-[#FF6B00]/30 shadow-[0_0_15px_rgba(255,107,0,0.15)]" style={{
               background: "linear-gradient(135deg, rgba(255, 107, 0, 0.03) 0%, rgba(255, 140, 64, 0.02) 100%)"
             }}></div>
+          </div>
+          <div className="text-right">
+            <Button
+              variant="link"
+              className="text-xs text-brand-primary hover:text-brand-primary/90 p-0 h-auto drop-shadow-sm"
+              onClick={() => navigate("/forgot-password")}
+            >
+              Esqueci minha senha
+            </Button>
           </div>
         </div>
 
