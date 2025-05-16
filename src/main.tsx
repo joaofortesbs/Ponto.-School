@@ -118,17 +118,28 @@ function preventUnwantedReloads() {
 // Inicializar prevenção de recargas
 preventUnwantedReloads();
 
+// Adicionando estilos à página de autenticação
+const addAuthPageStyles = () => {
+  const style = document.createElement('style');
+  style.textContent = `
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(0,20,39,0.95) 0%, rgba(41,51,92,0.95) 100%);
+      z-index: -1;
+    }
+  `;
+  document.head.appendChild(style);
+};
 
-        body::before {
-          content: '';
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: linear-gradient(135deg, rgba(0,20,39,0.95) 0%, rgba(41,51,92,0.95) 100%);
-          z-index: -1;
-        }
+// Adicionar estilos se estiver na página de autenticação
+if (window.location.pathname.includes('/login') || window.location.pathname.includes('/register')) {
+  addAuthPageStyles();
+}
       `;
       document.head.appendChild(style);
 
