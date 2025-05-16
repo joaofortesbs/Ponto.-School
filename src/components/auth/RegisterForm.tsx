@@ -573,11 +573,6 @@ export function RegisterForm() {
             localStorage.setItem('lastRegisteredEmail', formData.email);
             localStorage.setItem('lastRegisteredUsername', formData.username);
             localStorage.setItem('redirectTimer', 'active');
-            
-            // Adicionar flag para indicar que o registro acabou de ser concluído
-            // Esta flag será lida pelo App.tsx para garantir a exibição do modal de boas-vindas
-            localStorage.setItem('registrationCompleted', 'true');
-            localStorage.setItem('isFirstLogin', 'true');
           } catch (e) {
             console.error("Erro ao salvar dados no localStorage:", e);
           }

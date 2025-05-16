@@ -49,21 +49,17 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
   // Verificar se o modal já foi exibido nesta sessão
   useEffect(() => {
     if (isOpen) {
-      // Verificar se este é o primeiro login (prioridade mais alta)
-      if (isFirstLogin) {
+      const modalShown = sessionStorage.getItem(SESSION_MODAL_KEY);
+      if (modalShown) {
+        setShouldDisplay(false);
+        // Fechar o modal automaticamente se já foi mostrado
+        onClose();
+      } else {
         setShouldDisplay(true);
         controls.start("visible");
-        
-        // Para primeiro login, garantimos que o modal seja exibido independente de tudo
-        // Não verificamos sessionStorage, pois queremos forçar a exibição
-        
-        // Marcar que o modal foi exibido nesta sessão, mas apenas após visualização
-        const markAsShown = () => {
-          sessionStorage.setItem(SESSION_MODAL_KEY, 'true');
-        };
-        
-        // Atrasar a marcação para garantir que o usuário veja o modal
-        setTimeout(markAsShown, 2000);
+
+        // Marcar que o modal foi exibido nesta sessão
+        sessionStorage.setItem(SESSION_MODAL_KEY, 'true');
         
         // Efeito de rotação das bolhas
         const interval = setInterval(() => {
@@ -71,30 +67,9 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
         }, 3000);
 
         return () => clearInterval(interval);
-      } else {
-        // Comportamento normal para logins subsequentes
-        const modalShown = sessionStorage.getItem(SESSION_MODAL_KEY);
-        if (modalShown) {
-          setShouldDisplay(false);
-          // Fechar o modal automaticamente se já foi mostrado
-          onClose();
-        } else {
-          setShouldDisplay(true);
-          controls.start("visible");
-
-          // Marcar que o modal foi exibido nesta sessão
-          sessionStorage.setItem(SESSION_MODAL_KEY, 'true');
-          
-          // Efeito de rotação das bolhas
-          const interval = setInterval(() => {
-            setActiveBubble((prev) => (prev + 1) % 4);
-          }, 3000);
-
-          return () => clearInterval(interval);
-        }
       }
     }
-  }, [isOpen, controls, onClose, isFirstLogin]);
+  }, [isOpen, controls, onClose]);
 
   const handleSettingsClick = () => {
     navigate("/configuracoes");
