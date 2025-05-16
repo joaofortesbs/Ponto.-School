@@ -37,11 +37,24 @@ export function LoginForm() {
       // Limpar flag de redirecionamento
       localStorage.removeItem('redirectTimer');
       
-      // Preencher o campo de email com o último username registrado
-      const lastUsername = localStorage.getItem('lastRegisteredUsername');
-      if (lastUsername) {
-        setFormData(prev => ({ ...prev, email: lastUsername }));
-        console.log("Preenchendo campo de email com username:", lastUsername);
+      // Verificar se temos o email direto do state (redirecionamento imediato)
+      if (location.state.email) {
+        setFormData(prev => ({ ...prev, email: location.state.email }));
+        console.log("Preenchendo campo de email do state:", location.state.email);
+      } else {
+        // Usar email registrado (preferencial)
+        const lastRegisteredEmail = localStorage.getItem('lastRegisteredEmail');
+        if (lastRegisteredEmail) {
+          setFormData(prev => ({ ...prev, email: lastRegisteredEmail }));
+          console.log("Preenchendo campo de email:", lastRegisteredEmail);
+        } else {
+          // Fallback para username se não tiver email
+          const lastUsername = localStorage.getItem('lastRegisteredUsername');
+          if (lastUsername) {
+            setFormData(prev => ({ ...prev, email: lastUsername }));
+            console.log("Preenchendo campo de email com username:", lastUsername);
+          }
+        }
       }
     }
     

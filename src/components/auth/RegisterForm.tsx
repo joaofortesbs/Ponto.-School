@@ -563,24 +563,23 @@ export function RegisterForm() {
             console.error("LocalStorage error:", storageError);
           }
 
-          // Registro considerado bem-sucedido - mostrar mensagem e redirecionar após confirmação
+          // Registro considerado bem-sucedido - mostrar mensagem e redirecionar imediatamente
           setSuccess(true);
           setLoading(false);
 
-          // Reduzir o tempo de redirecionamento para melhorar a experiência do usuário
-          const redirectTimer = setTimeout(() => {
-            console.log("Redirecionando para a página de login...");
-            navigate("/login", { state: { newAccount: true } });
-          }, 1500); // Reduzido para 1.5 segundos
-
-          // Armazenar o timer no localStorage para garantir que ele persista
+          // Armazenar informações importantes no localStorage antes do redirecionamento
           try {
-            localStorage.setItem('redirectTimer', 'active');
-            // Armazenar também o nome de usuário para exibir na tela de login
+            // Armazenar o email para auto-preenchimento no login
+            localStorage.setItem('lastRegisteredEmail', formData.email);
             localStorage.setItem('lastRegisteredUsername', formData.username);
+            localStorage.setItem('redirectTimer', 'active');
           } catch (e) {
             console.error("Erro ao salvar dados no localStorage:", e);
           }
+
+          // Redirecionamento imediato
+          console.log("Redirecionando para a página de login...");
+          navigate("/login", { state: { newAccount: true, email: formData.email } });
 
           // Garantir redireção mesmo se o componente desmontar
           window.onbeforeunload = () => {
