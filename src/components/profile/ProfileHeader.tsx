@@ -25,6 +25,7 @@ import {
   UserPlus,
   UserCheck
 } from "lucide-react";
+import AddFriendsModal from "./AddFriendsModal";
 import type { UserProfile } from "@/types/user-profile";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabase";
@@ -55,6 +56,7 @@ export default function ProfileHeader({
   const [showFollowersTooltip, setShowFollowersTooltip] = useState(false);
   const [showFollowingTooltip, setShowFollowingTooltip] = useState(false);
   const [showFollowingInTooltip, setShowFollowingInTooltip] = useState(false);
+  const [showAddFriendsModal, setShowAddFriendsModal] = useState(false);
 
 
   // Array de conquistas recentes para animação
@@ -955,7 +957,8 @@ export default function ProfileHeader({
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.7, duration: 0.3 }}
-            className="bg-white/20 backdrop-blur-sm text-white text-xs py-0.5 px-2 rounded-full flex items-center shadow-lg cursor-not-allowed opacity-80"
+            className="bg-white/20 backdrop-blur-sm text-white text-xs py-0.5 px-2 rounded-full flex items-center shadow-lg cursor-pointer hover:bg-white/30 transition-colors"
+            onClick={() => setShowAddFriendsModal(true)}
           >
             <UserPlus className="h-3 w-3 mr-1" />
             Adicionar amigos
@@ -1565,6 +1568,12 @@ export default function ProfileHeader({
           </div>
         </motion.div>
       </div>
+      
+      {/* Modal de Adicionar Amigos */}
+      <AddFriendsModal 
+        open={showAddFriendsModal} 
+        onOpenChange={setShowAddFriendsModal} 
+      />
     </div>
   );
 }
