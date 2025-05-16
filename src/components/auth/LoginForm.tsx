@@ -311,7 +311,23 @@ export function LoginForm() {
               background: "linear-gradient(135deg, rgba(255, 107, 0, 0.03) 0%, rgba(255, 140, 64, 0.02) 100%)"
             }}></div>
           </div>
-          <div className="text-right">
+          <div className="flex justify-between items-center mt-1">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="rememberMe"
+                name="rememberMe"
+                checked={formData.rememberMe}
+                onCheckedChange={(checked) =>
+                  setFormData((prev) => ({ ...prev, rememberMe: checked === true }))
+                }
+              />
+              <label
+                htmlFor="rememberMe"
+                className="text-sm text-brand-muted dark:text-white/60 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Lembrar de mim
+              </label>
+            </div>
             <Button
               variant="link"
               className="text-xs text-brand-primary hover:text-brand-primary/90 p-0 h-auto drop-shadow-sm"
@@ -320,23 +336,6 @@ export function LoginForm() {
               Esqueci minha senha
             </Button>
           </div>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="rememberMe"
-            name="rememberMe"
-            checked={formData.rememberMe}
-            onCheckedChange={(checked) =>
-              setFormData((prev) => ({ ...prev, rememberMe: checked === true }))
-            }
-          />
-          <label
-            htmlFor="rememberMe"
-            className="text-sm text-brand-muted dark:text-white/60 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-          >
-            Lembrar de mim
-          </label>
         </div>
 
         {error && (
