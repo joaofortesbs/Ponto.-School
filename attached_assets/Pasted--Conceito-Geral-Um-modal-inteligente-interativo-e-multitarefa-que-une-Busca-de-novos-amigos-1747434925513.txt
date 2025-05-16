@@ -1,0 +1,159 @@
+🧠 Conceito Geral
+Um modal inteligente, interativo e multitarefa, que une:
+
+🔍 Busca de novos amigos
+
+⏳ Gerenciamento de solicitações pendentes
+
+👁️ Visualização rápida de perfis com expansão lateral fluida
+
+🎯 Ações contextuais (seguir, solicitar, aceitar, rejeitar)
+
+Tudo isso com animações suaves, design futurista e uma estrutura que não fecha ou recarrega o modal, criando uma experiência contínua, fluida e agradável — o usuário nunca perde o contexto.
+
+🧊 Estrutura Visual Geral do Modal (2 painéis)
+plaintext
+Copiar
+Editar
+┌────────────────────────────────────────────────────────────────────────────┐
+│            MODAL DE ADICIONAR AMIGOS — PONTO.SCHOOL                       │
+├────────────────────────────────────────────────────────────────────────────┤
+│ TAB: [ 🔍 Buscar Pessoas ]   [ ⏳ Pendentes ]                               │
+│                                                                            │
+│ 🔎 Barra de busca: digite nome, e-mail ou @username                        │
+│                                                                            │
+│ 🧑 Lista de usuários encontrados                                           │
+│   ┌──────────────┐                                                        │
+│   │ Avatar       │ Nome + Bio  + Status    ➕ Solicitar / ✅ Seguir        │
+│   │              │ Clique no card ➝ expande perfil à direita              │
+│   └──────────────┘                                                        │
+│                                                                            │
+│ 👉 Quando o card é clicado, abre um “Painel de Perfil” à direita          │
+│    sem fechar ou recarregar nada                                          │
+│                                                                            │
+│ 💬 Rodapé com política de privacidade e botão de fechar                   │
+└────────────────────────────────────────────────────────────────────────────┘
+📐 Detalhes Técnicos e Visuais (com Sofisticação Extrema)
+🧩 Painel Principal (Esquerda — 60% da largura do modal)
+📌 Cabeçalho
+Título: “Adicionar amigos” — fonte text-2xl font-extrabold
+
+Subtítulo: "Conecte-se com estudantes como você"
+
+Botões de navegação: tabs animadas
+
+🔎 Barra de busca
+Placeholder: "Digite nome, e-mail ou @username"
+
+Estilo: vidro com blur, borda luminosa onFocus
+
+Ícone de busca à esquerda
+
+Shimmer loader enquanto busca
+
+🧑 Resultados de busca
+Cada card tem:
+
+Avatar circular com efeito de borda flutuante
+
+Nome (bold), username (semibold), bio (truncate elegante)
+
+Indicador de conta: 🔒 Privado | 🔓 Público
+
+Botão: "➕ Solicitar" (privado) ou "✅ Seguir" (público)
+
+Ícone de olho no canto do card → "👁 Ver perfil"
+
+🧠 Expansão de Perfil (Direita — 40% da largura, animada)
+Quando um card é clicado:
+
+➡️ Um painel lateral se expande com animação slide-in + blur, empurrando suavemente o conteúdo original sem sumir com ele.
+
+👤 Conteúdo do Painel de Perfil
+Elemento	Descrição
+Capa	Banner do usuário com gradiente animado ou imagem
+Avatar em destaque	Avatar grande com animação flutuante e borda em neon
+Nome completo + @	Estilo headline + subtítulo sutil
+Bio completa	Texto fluido com scroll ou truncamento com "ver mais"
+Matéria favorita	Ícone e destaque visual (Ex: 💡 Matemática)
+Nível educacional	Tag elegante: Ensino Médio, Pré-Vestibular, etc.
+Status social	Nº de seguidores, amigos, posts
+Botão de ação	"Solicitar amizade" ou "Seguir" — com feedback animado
+Botão extra	"Ver mais no perfil completo" ➝ link para o perfil em página completa
+
+Detalhes:
+Fundo com efeito glassmorphism translúcido, sombra suave, bordas curvas
+
+Todos os elementos animados com Framer Motion para suavidade
+
+Botões com efeitos táteis (scale on click, pulse ao hover)
+
+🧾 Aba de Solicitações Pendentes (⏳)
+Mesmo layout da esquerda, com cards de quem te solicitou amizade.
+
+Cada card tem:
+
+Avatar, nome, username
+
+Texto: "quer ser seu amigo" ou "solicitou seguir você"
+
+Botões: "✅ Aceitar" e "❌ Rejeitar"
+
+Feedback visual imediato ao clicar
+
+🧠 Pensando na Programação
+Estados principais:
+searchQuery, searchResults, selectedUser, activeTab
+
+isProfileOpen, isLoading, requestStatus
+
+Componentes sugeridos:
+<ModalAdicionarAmigos />
+
+<Tabs />
+
+<SearchBar />
+
+<UserCard />
+
+<UserProfilePanel />
+
+<PendingRequestCard />
+
+Lógicas:
+Ao clicar em um usuário: setSelectedUser(user) → ativa painel lateral
+
+Painel pode ter botão "voltar" (mobile) ou "fechar visualização"
+
+Otimizado para performance: lazy load dos dados de perfil detalhado
+
+Pode usar React Portal + Zustand ou Context API para estado global suave
+
+📱 Responsividade
+Em telas pequenas, o painel de perfil vira um slide de baixo para cima
+
+Os dois painéis (lista e perfil) se tornam seções empilhadas e navegáveis por swipe ou botão
+
+🌈 Estética e Identidade Visual da Ponto.School
+Tema: Noturno inteligente com tons roxo, azul petróleo, branco gelo
+
+Estilo visual: Neofuturista, com toques de glassmorphism + hover glow
+
+Tipografia: Plus Jakarta Sans, Inter ou Satoshi
+
+Ícones: Lucide + Phosphor Icons
+
+Animações: Framer Motion (soft spring + slide + fade)
+
+Microinterações: Botões pulsam sutilmente ao hover, cards escurecem levemente
+
+✅ Resultado
+Um sistema de adicionar amigos imersivo, sofisticado, envolvente e visualmente impactante que:
+
+Valoriza o design moderno
+
+Respeita a identidade da sua EdTech
+
+Facilita conexões entre estudantes
+
+Dá orgulho de usar a plataforma
