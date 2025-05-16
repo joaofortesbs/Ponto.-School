@@ -250,7 +250,7 @@ export function LoginForm() {
       <form onSubmit={handleSubmit} className="space-y-4 relative z-10">
         <div className="space-y-2">
           <label className="text-sm font-medium text-brand-black dark:text-white drop-shadow-sm">
-            Nome de Usuário ou E-mail
+            E-mail
           </label>
           <div className="relative group">
             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-hover:text-brand-primary transition-colors duration-200 z-10" />
@@ -259,7 +259,7 @@ export function LoginForm() {
               name="email"
               value={formData.email}
               onChange={handleChange}
-              placeholder="Digite seu nome de usuário ou e-mail"
+              placeholder="Digite seu e-mail"
               className="pl-10 h-11 bg-white/30 dark:bg-white/8 backdrop-blur-md border-[#FF6B00]/10 dark:border-[#FF6B00]/20 focus:border-[#FF6B00]/60 dark:focus:border-[#FF6B00]/60 transition-all duration-300 hover:border-[#FF6B00]/30 rounded-lg"
               required
               style={{
