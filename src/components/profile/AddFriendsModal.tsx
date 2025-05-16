@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -139,11 +138,11 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
   const [isLoading, setIsLoading] = useState(false);
   const [pendingRequests, setPendingRequests] = useState<PendingRequestType[]>(mockPendingRequests);
   const [userRelations, setUserRelations] = useState<{[key: string]: 'none' | 'requested' | 'following'}>({});
-  
+
   // Referências para melhorar desempenho
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const resultsContainerRef = useRef<HTMLDivElement>(null);
-  
+
   // Estados de UI
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [filter, setFilter] = useState<'all' | 'online' | 'suggested'>('all');
@@ -158,12 +157,12 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
     }
 
     setIsLoading(true);
-    
+
     // Limpar timeout anterior se existir
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }
-    
+
     // Definir novo timeout
     searchTimeoutRef.current = setTimeout(() => {
       // Filtrar resultados com base na consulta
@@ -171,7 +170,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
         user.name.toLowerCase().includes(query.toLowerCase()) || 
         user.username.toLowerCase().includes(query.toLowerCase())
       );
-      
+
       // Aplicar ordenação
       const sortedResults = [...results].sort((a, b) => {
         if (sortOrder === 'alphabetical') {
@@ -181,7 +180,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
           return b.followersCount - a.followersCount;
         }
       });
-      
+
       // Aplicar filtro adicional
       let finalResults = sortedResults;
       if (filter === 'online') {
@@ -192,7 +191,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
         finalResults = sortedResults.filter(user => 
           user.favoriteSubject === 'Matemática' || user.favoriteSubject === 'Programação');
       }
-      
+
       setFilteredResults(finalResults);
       setIsLoading(false);
     }, 300);
@@ -201,7 +200,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
   // Atualizar resultados quando a busca mudar
   useEffect(() => {
     performSearch(searchQuery);
-    
+
     // Cleanup
     return () => {
       if (searchTimeoutRef.current) {
@@ -218,7 +217,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
       const hasSentRequest = pendingRequests.some(req => 
         req.user.id === user.id && req.type === 'sent'
       );
-      
+
       if (hasSentRequest) {
         initialRelations[user.id] = 'requested';
       } else {
@@ -248,7 +247,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
       case 'request':
         // Simular uma solicitação enviada
         setUserRelations(prev => ({...prev, [userId]: 'requested'}));
-        
+
         // Adicionar à lista de solicitações pendentes
         const requestedUser = mockUsers.find(user => user.id === userId);
         if (requestedUser) {
@@ -261,16 +260,16 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
           setPendingRequests(prev => [...prev, newRequest]);
         }
         break;
-        
+
       case 'follow':
         setUserRelations(prev => ({...prev, [userId]: 'following'}));
         break;
-        
+
       case 'accept':
         // Remover das solicitações pendentes e adicionar como amigo
         setPendingRequests(prev => prev.filter(req => !(req.user.id === userId && req.type === 'received')));
         break;
-        
+
       case 'reject':
         // Apenas remover das solicitações pendentes
         setPendingRequests(prev => prev.filter(req => !(req.user.id === userId && req.type === 'received')));
@@ -281,7 +280,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
   // Componente de cartão de usuário otimizado
   const UserCard = React.memo(({ user }: { user: UserType }) => {
     const relation = userRelations[user.id] || 'none';
-    
+
     return (
       <motion.div 
         className="bg-gradient-to-br from-[#0c1a2b]/95 to-[#0c1a2b]/85 backdrop-blur-lg rounded-xl p-4 mb-3 hover:from-[#001427] hover:to-[#0c1a2b] transition-all duration-300 border border-white/10 shadow-xl hover:shadow-2xl hover:border-[#FF6B00]/30 group"
@@ -289,7 +288,8 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
         whileTap={{ scale: 0.99 }}
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        transition={{ type: "spring", stiffness: 300, damping: 30, duration: 0.3 }}
+        layoutId={`card-${user.id}`}
         onClick={() => setSelectedUser(user)}
         layout
       >
@@ -302,7 +302,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                 {user.name.charAt(0)}
               </AvatarFallback>
             </Avatar>
-            
+
             {/* Status indicator */}
             {user.lastActive === 'Agora mesmo' ? (
               <div className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full bg-emerald-500 border-2 border-[#0c1a2b] shadow-lg"></div>
@@ -312,19 +312,19 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
               <div className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full bg-slate-400 border-2 border-[#0c1a2b] shadow-lg"></div>
             )}
           </div>
-          
+
           <div className="flex-1 space-y-0.5">
             <h3 className="text-white font-bold text-base group-hover:text-[#FF6B00] transition-colors duration-300">{user.name}</h3>
             <p className="text-[#64748B] text-sm font-medium">@{user.username}</p>
             <p className="text-white/80 text-xs line-clamp-1">{user.bio}</p>
-            
+
             {/* Last active status (new) */}
             <div className="flex items-center gap-1 mt-0.5">
               <Clock className="h-3 w-3 text-gray-400" />
               <span className="text-[10px] text-gray-400">{user.lastActive}</span>
             </div>
           </div>
-          
+
           <div className="flex flex-col gap-2 items-end">
             <span className="inline-flex items-center text-xs font-medium text-white/70 gap-1.5 bg-white/5 px-2 py-1 rounded-full">
               {user.isPrivate ? (
@@ -337,7 +337,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                 </>
               )}
             </span>
-            
+
             {user.isPrivate ? (
               <Button 
                 variant="secondary" 
@@ -379,14 +379,14 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
       </motion.div>
     );
   });
-  
+
   // Memo para não rerenderizar
   UserCard.displayName = 'UserCard';
 
   // Renderizar card de solicitação pendente otimizado
-  const PendingRequestCard = React.memo(({ request }: { request: PendingRequestType }) => {
+  const PendingRequestCard = React.memo(({ request, layoutId }: { request: PendingRequestType, layoutId: string }) => {
     const { user, type } = request;
-    
+
     return (
       <motion.div 
         className="bg-gradient-to-br from-[#0c1a2b]/95 to-[#0c1a2b]/85 backdrop-blur-lg rounded-xl p-4 mb-3 hover:from-[#001427] hover:to-[#0c1a2b] transition-all duration-300 border border-white/10 shadow-xl hover:shadow-2xl hover:border-[#FF6B00]/30 group"
@@ -394,7 +394,8 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
         whileTap={{ scale: 0.99 }}
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        transition={{ type: "spring", stiffness: 300, damping: 30, duration: 0.3 }}
+        layoutId={layoutId}
         onClick={() => setSelectedUser(user)}
         layout
       >
@@ -407,11 +408,11 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                 {user.name.charAt(0)}
               </AvatarFallback>
             </Avatar>
-            
+
             {/* Status indicator - blue for pending */}
             <div className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full bg-blue-500 border-2 border-[#0c1a2b] shadow-lg"></div>
           </div>
-          
+
           <div className="flex-1 space-y-0.5">
             <h3 className="text-white font-bold text-base group-hover:text-[#FF6B00] transition-colors duration-300">{user.name}</h3>
             <p className="text-[#64748B] text-sm font-medium">@{user.username}</p>
@@ -432,7 +433,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
               }
             </p>
           </div>
-          
+
           {type === 'received' && (
             <div className="flex gap-2">
               <Button 
@@ -459,7 +460,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
               </Button>
             </div>
           )}
-          
+
           {type === 'sent' && (
             <span className="text-amber-400 text-xs bg-amber-400/10 px-3 py-1 rounded-full font-medium">Aguardando</span>
           )}
@@ -467,16 +468,16 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
       </motion.div>
     );
   });
-  
+
   // Memo para não rerenderizar
   PendingRequestCard.displayName = 'PendingRequestCard';
 
   // Renderizar painel de perfil expandido
   const UserProfilePanel = () => {
     if (!selectedUser) return null;
-    
+
     const relation = userRelations[selectedUser.id] || 'none';
-    
+
     return (
       <motion.div
         className="h-full overflow-y-auto py-6 px-4 flex flex-col custom-scrollbar"
@@ -492,7 +493,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        
+
         {/* Capa com efeito parallax */}
         <div className="relative h-36 -mx-4 -mt-6 mb-4 overflow-hidden rounded-t-xl">
           {selectedUser.coverUrl ? (
@@ -518,7 +519,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
               <div className="absolute inset-0 bg-gradient-to-t from-[#001427]/95 to-transparent"></div>
             </div>
           )}
-          
+
           {/* Pequeno menu de ações na capa */}
           <div className="absolute top-3 right-3 flex gap-2 z-20">
             <motion.button 
@@ -545,7 +546,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
             </motion.button>
           </div>
         </div>
-        
+
         {/* Avatar em destaque */}
         <div className="flex flex-col items-center -mt-16 mb-5">
           <motion.div
@@ -561,7 +562,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                 {selectedUser.name.charAt(0)}
               </AvatarFallback>
             </Avatar>
-            
+
             {/* Badge status */}
             {selectedUser.isPrivate ? (
               <div className="absolute -bottom-1 -right-1 bg-amber-500 text-white p-1.5 rounded-full shadow-lg">
@@ -574,7 +575,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
             )}
           </motion.div>
         </div>
-        
+
         {/* Informações do perfil */}
         <div className="text-center space-y-4">
           <motion.div 
@@ -586,7 +587,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
             <h2 className="text-2xl font-bold text-white">{selectedUser.name}</h2>
             <p className="text-[#64748B] text-sm font-medium">@{selectedUser.username}</p>
           </motion.div>
-          
+
           <motion.div
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -595,7 +596,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
           >
             <p className="text-white/80 text-sm leading-relaxed">{selectedUser.bio}</p>
           </motion.div>
-          
+
           <motion.div
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -608,7 +609,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                 {selectedUser.favoriteSubject}
               </div>
             )}
-            
+
             {selectedUser.educationLevel && (
               <div className="inline-flex items-center gap-2 bg-blue-500/10 text-blue-400 text-sm px-3 py-1.5 rounded-full">
                 <MapPin className="h-3.5 w-3.5" />
@@ -616,7 +617,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
               </div>
             )}
           </motion.div>
-          
+
           {/* Estatísticas */}
           <motion.div 
             className="grid grid-cols-3 gap-3 px-2 mt-4"
@@ -637,7 +638,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
               <p className="text-white/60 text-xs">Publicações</p>
             </div>
           </motion.div>
-          
+
           {/* Botões de ação */}
           <motion.div 
             className="space-y-3 px-2 mt-6"
@@ -693,10 +694,10 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                 ) : 'Seguir perfil'}
               </Button>
             )}
-            
+
             <Button
               variant="outline"
-              className="w-full rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-white py-6 transition-all duration-300"
+className="w-full rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-white py-6 transition-all duration-300"
               onClick={() => {
                 // Aqui iria a navegação para o perfil completo
                 onOpenChange(false);
@@ -705,7 +706,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
               Ver perfil completo
             </Button>
           </motion.div>
-          
+
           {/* Indicador de atividade */}
           <motion.div 
             className="mt-4"
@@ -722,7 +723,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
       </motion.div>
     );
   };
-  
+
   // Interface vazia quando nenhum resultado é encontrado
   const EmptyState = ({ type }: { type: 'search' | 'pending' }) => (
     <motion.div
@@ -870,14 +871,14 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
-                    
+
                     {isLoading && (
                       <div className="absolute inset-y-0 right-3 flex items-center">
                         <div className="h-4 w-4 border-2 border-white/40 border-t-transparent rounded-full animate-spin"></div>
                       </div>
                     )}
                   </div>
-                  
+
                   {/* Botão de filtro */}
                   <div className="ml-2 relative">
                     <Button
@@ -888,7 +889,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                     >
                       <Filter className="h-4 w-4" />
                     </Button>
-                    
+
                     <AnimatePresence>
                       {showFilterDropdown && <FilterDropdown />}
                     </AnimatePresence>
@@ -902,12 +903,12 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                   {searchQuery.trim() === '' && (
                     <EmptyState type="search" />
                   )}
-                  
+
                   {searchQuery.trim() !== '' && filteredResults.length === 0 && !isLoading && (
                     <EmptyState type="search" />
                   )}
-                  
-                  <AnimatePresence>
+
+                  <AnimatePresence mode="wait">
                     {filteredResults.map(user => (
                       <UserCard key={user.id} user={user} />
                     ))}
@@ -922,46 +923,46 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                     Solicitações de amizade
                   </h3>
                 </div>
-                
+
                 <div className="overflow-y-auto max-h-[200px] pr-2 custom-scrollbar">
                   {pendingRequests.filter(req => req.type === 'received').length === 0 && (
                     <EmptyState type="pending" />
                   )}
-                  
-                  <AnimatePresence>
+
+                  <AnimatePresence mode="wait">
                     {pendingRequests
                       .filter(req => req.type === 'received')
                       .map(request => (
-                        <PendingRequestCard key={request.id} request={request} />
+                        <PendingRequestCard key={request.id} request={request} layoutId={`request-${request.id}`} />
                       ))}
                   </AnimatePresence>
                 </div>
-                
+
                 <div className="mt-6 mb-4 bg-gradient-to-r from-[#072e4f]/50 to-[#001427]/50 p-3 rounded-lg">
                   <h3 className="text-white font-medium flex items-center gap-2">
                     <span className="bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full text-xs font-medium">enviadas</span>
                     Solicitações pendentes
                   </h3>
                 </div>
-                
+
                 <div className="overflow-y-auto max-h-[200px] pr-2 custom-scrollbar">
                   {pendingRequests.filter(req => req.type === 'sent').length === 0 && (
                     <div className="flex flex-col items-center justify-center py-8 px-4 text-center bg-white/5 rounded-xl">
                       <p className="text-white/60 text-sm">Você não enviou solicitações recentemente</p>
                     </div>
                   )}
-                  
-                  <AnimatePresence>
+
+                  <AnimatePresence mode="wait">
                     {pendingRequests
                       .filter(req => req.type === 'sent')
                       .map(request => (
-                        <PendingRequestCard key={request.id} request={request} />
+                        <PendingRequestCard key={request.id} request={request} layoutId={`sent-${request.id}`} />
                       ))}
                   </AnimatePresence>
                 </div>
               </TabsContent>
             </Tabs>
-            
+
             <div className="absolute bottom-4 left-6 right-6 text-white/40 text-xs flex justify-between">
               <p>Ao aceitar, você permitirá que o usuário veja seu conteúdo privado.</p>
               <button 
@@ -972,9 +973,9 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
               </button>
             </div>
           </div>
-          
+
           {/* Painel de perfil expandido */}
-          <AnimatePresence>
+          <AnimatePresence mode="wait">
             {selectedUser && (
               <motion.div 
                 className={`${selectedUser ? 'block' : 'hidden'} border-l border-white/10 bg-gradient-to-br from-[#0A2540]/90 to-[#001427]/90 backdrop-blur-xl md:w-[45%] relative`}
@@ -982,6 +983,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                 animate={{ width: "100%", opacity: 1 }}
                 exit={{ width: 0, opacity: 0 }}
                 transition={{ duration: 0.3, ease: "easeInOut" }}
+                layoutId={`profile-panel-${selectedUser.id}`}
               >
                 <UserProfilePanel />
               </motion.div>

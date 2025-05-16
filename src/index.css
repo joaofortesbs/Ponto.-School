@@ -999,6 +999,33 @@ body.modal-open {
 }
 
 /* Regras para otimizar a renderização e carregamento inicial */
+
+/* Classe para controlar animações únicas */
+.animate-once {
+  animation-iteration-count: 1;
+  animation-fill-mode: forwards;
+}
+
+/* Otimizações para animações dentro de modais */
+.modal-content-container {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Prevenção de animações desnecessárias em rerenders */
+@media (prefers-reduced-motion: no-preference) {
+  .animation-optimized {
+    transition: none !important;
+    animation: none !important;
+  }
+  
+  .animation-optimized.animation-active {
+    transition: all 0.3s ease-out !important;
+    animation: fadeIn 0.3s ease-out forwards !important;
+  }
+}
+
 * {
   will-change: auto;
   box-sizing: border-box;
