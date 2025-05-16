@@ -351,40 +351,6 @@ export function LoginForm() {
           <span className="absolute inset-0 bg-gradient-to-r from-brand-primary to-[#FF8C40] opacity-0 group-hover:opacity-100 transition-opacity duration-500"></span>
         </Button>
 
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-gray-200 dark:border-gray-700/50" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-white/70 dark:bg-[#0A2540]/70 px-2 text-muted-foreground backdrop-blur-sm">
-              Ou continue com
-            </span>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <Button variant="outline" className="h-11 bg-white/15 dark:bg-white/3 backdrop-blur-2xl border border-white/25 dark:border-white/8 hover:bg-white/25 dark:hover:bg-white/8 transition-all duration-300 hover:shadow-lg group rounded-lg relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 group-hover:translate-x-full transition-all duration-1500 ease-in-out"></div>
-            <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#FF6B00]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <img
-              src="https://www.svgrepo.com/show/506498/google.svg"
-              alt="Google"
-              className="w-5 h-5 mr-2"
-            />
-            <span className="relative z-10">Google</span>
-          </Button>
-          <Button variant="outline" className="h-11 bg-white/15 dark:bg-white/3 backdrop-blur-2xl border border-white/25 dark:border-white/8 hover:bg-white/25 dark:hover:bg-white/8 transition-all duration-300 hover:shadow-lg group rounded-lg relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 group-hover:translate-x-full transition-all duration-1500 ease-in-out"></div>
-            <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#FF6B00]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <img
-              src="https://www.svgrepo.com/show/521654/facebook.svg"
-              alt="Facebook"
-              className="w-5 h-5 mr-2"
-            />
-            <span className="relative z-10">Facebook</span>
-          </Button>
-        </div>
-
         <p className="text-center text-sm text-brand-muted dark:text-white/70">
           Ainda não tem conta?{" "}
           <Button
