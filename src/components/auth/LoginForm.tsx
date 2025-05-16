@@ -423,3 +423,4 @@ const handleLogin = async (e: React.FormEvent) => {
     } catch (err) {
       console.error("Erro ao fazer login:", err);
     }
+};
