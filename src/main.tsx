@@ -28,6 +28,7 @@ function inicializarTeiasComPrioridadeMaxima() {
         .auth-page-loading {
           background: linear-gradient(135deg, rgba(0,20,39,1) 0%, rgba(41,51,92,1) 100%);
         }
+      `;
 
 /**
  * Função para evitar recargas automáticas indesejadas da aplicação
