@@ -660,12 +660,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                 {relation === 'requested' ? (
                   <div className="flex items-center gap-2">
                     <span>Solicitação enviada</span>
-                    <motion.div
-                      animate={{ scale: [1, 1.2, 1] }}
-                      transition={{ repeat: Infinity, duration: 1.5 }}
-                    >
-                      <CheckCircle2 className="h-5 w-5" />
-                    </motion.div>
+                    <CheckCircle2 className="h-5 w-5" />
                   </div>
                 ) : 'Solicitar amizade'}
               </Button>
@@ -681,12 +676,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                 {relation === 'following' ? (
                   <div className="flex items-center gap-2">
                     <span>Seguindo</span>
-                    <motion.div
-                      animate={{ scale: [1, 1.2, 1] }}
-                      transition={{ repeat: Infinity, duration: 1.5 }}
-                    >
-                      <CheckCircle2 className="h-5 w-5" />
-                    </motion.div>
+                    <CheckCircle2 className="h-5 w-5" />
                   </div>
                 ) : 'Seguir perfil'}
               </Button>
