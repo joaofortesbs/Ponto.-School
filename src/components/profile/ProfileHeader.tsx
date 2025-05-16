@@ -939,8 +939,8 @@ export default function ProfileHeader({
           </motion.div>
         </div>
 
-        {/* Nível destacado */}
-        <div className="absolute top-3 left-3 z-10">
+        {/* Nível destacado e Adicionar amigos */}
+        <div className="absolute top-3 left-3 z-10 flex items-center gap-2">
           <motion.div
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
@@ -949,6 +949,16 @@ export default function ProfileHeader({
           >
             <Zap className="h-3 w-3 mr-1" />
             Nível {userProfile?.level || 1}
+          </motion.div>
+          
+          <motion.div
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.7, duration: 0.3 }}
+            className="bg-white/20 backdrop-blur-sm text-white text-xs py-0.5 px-2 rounded-full flex items-center shadow-lg cursor-not-allowed opacity-80"
+          >
+            <UserPlus className="h-3 w-3 mr-1" />
+            + Adicionar amigos
           </motion.div>
         </div>
       </div>
