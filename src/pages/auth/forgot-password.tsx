@@ -66,6 +66,17 @@ export default function ForgotPasswordPage() {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Divisão com asterisco - igual ao do login */}
+            <div className="mb-4 flex items-center">
+              <div className="flex-1 border-t border-gray-300 dark:border-gray-700"></div>
+              <div className="mx-4 text-gray-400">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2v20m7.0711-17.071L4.9289 19.071M22 12H2m17.0711 7.0711L4.9289 4.9289"></path>
+                </svg>
+              </div>
+              <div className="flex-1 border-t border-gray-300 dark:border-gray-700"></div>
+            </div>
+
             <div className="space-y-2">
               <label className="text-sm font-medium text-brand-black dark:text-white drop-shadow-sm">
                 E-mail
@@ -95,22 +106,11 @@ export default function ForgotPasswordPage() {
               </div>
             </div>
 
-            {error && <div className="text-sm text-red-500 text-center">{error}</div>}
-            
-            {/* Divisão com asterisco - igual ao do login */}
-            <div className="my-4 flex items-center">
-              <div className="flex-1 border-t border-gray-300 dark:border-gray-700"></div>
-              <div className="mx-4 text-gray-400">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none">
-                  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2v20m7.0711-17.071L4.9289 19.071M22 12H2m17.0711 7.0711L4.9289 4.9289"></path>
-                </svg>
-              </div>
-              <div className="flex-1 border-t border-gray-300 dark:border-gray-700"></div>
-            </div>
+            {error && <div className="text-sm text-red-500 text-center mt-2">{error}</div>}
 
             <Button
               type="submit"
-              className="w-full h-11 text-base bg-[#0D00F5] hover:bg-[#0D00F5]/90 text-white transition-all duration-300 shadow-md hover:shadow-lg hover:shadow-[#0D00F5]/20 relative overflow-hidden group"
+              className="w-full h-11 text-base bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white transition-all duration-300 shadow-md hover:shadow-lg hover:shadow-[#FF6B00]/20 relative overflow-hidden group"
               disabled={loading}
             >
               <span className="relative z-10">
