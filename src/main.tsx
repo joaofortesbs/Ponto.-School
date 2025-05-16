@@ -79,6 +79,37 @@ window.addEventListener('unhandledrejection', (event) => {
   // Não cancela o evento para permitir outros handlers
 });
 
+// Impedir recargas automáticas indesejadas da página
+if (import.meta.hot) {
+  // Prevenir que certos erros façam a página recarregar completamente
+  import.meta.hot.on('vite:beforeUpdate', (data) => {
+    // Verificar se a atualização foi solicitada pelo usuário
+    if (!window.__USER_TRIGGERED_RELOAD) {
+      // Se o erro for em um arquivo CSS ou algum recurso não crítico, aceitar atualizações parciais
+      // mas prevenir recargas completas da página
+      if (data && data.updates && data.updates.some(update => update.type === 'css-update')) {
+        console.log('Aceitando atualização de CSS sem recarregar a página');
+      } else {
+        // Caso seja uma atualização de módulo JavaScript significativa,
+        // mostrar uma notificação para o usuário antes de aplicar
+        const shouldReload = false; // Por padrão, não recarregar automaticamente
+        
+        if (!shouldReload) {
+          console.log('Atualização detectada mas não aplicada para evitar interrupção');
+          // Opcional: isso pode ser modificado para mostrar uma notificação ao usuário
+          // permitindo que ele escolha quando atualizar
+          return;
+        }
+      }
+    }
+  });
+}
+
+// Desativar a reconexão automática do servidor WebSocket do Vite em produção
+if (import.meta.env.PROD) {
+  window.__VITE_PREVENT_RECONNECT = true;
+}
+
 console.log("Iniciando aplicação...");
 
 // Inicializar a aplicação com otimização de renderização
