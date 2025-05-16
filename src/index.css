@@ -2,11 +2,6 @@
 @import "./styles/animations.css";
 @import "./styles/hide-scrollbar.css";
 @import "./styles/typewriter-loader.css";
-@import "./styles/notebook.css";
-@import "./styles/header-animations.css";
-@import "./styles/carousel-effects.css";
-@import "./styles/modern-scanner.css";
-@import "./styles/rotina-calendar.css";
 
 /* Estilo para tópicos selecionados - apenas borda laranja (sem animação) */
 .topic-selected {
@@ -14,6 +9,12 @@
   position: relative;
   box-shadow: 0 0 10px rgba(255, 107, 0, 0.4);
 }
+
+@import "./styles/notebook.css";
+@import "./styles/header-animations.css";
+@import "./styles/carousel-effects.css";
+@import "./styles/modern-scanner.css";
+@import "./styles/rotina-calendar.css";
 
 /* Estilos para corrigir problemas de altura em componentes específicos */
 .mode-epictus-turbo-advanced {
@@ -277,8 +278,6 @@
   background-image: 
     linear-gradient(to right, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
-  background-size: 20px 20px;
-}
 
 /* Ensure modals and dialogs are always on top */
 
@@ -742,101 +741,6 @@ svg.neural-connections {
   }
   to {
     opacity: 1;
-
-/* Correção para problemas de z-index */
-.welcome-modal-root,
-.welcome-modal-root * {
-  z-index: 999999 !important;
-}
-
-/* Garantir que modais sejam exibidos corretamente */
-[role="dialog"] {
-  z-index: 999999 !important;
-  position: relative;
-}
-
-/* Correção de posicionamento para modais fixos */
-[data-state="open"][role="dialog"] {
-  position: fixed !important;
-  inset: 0 !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-}
-
-/* Garantir que backdrops cubram toda a tela */
-[data-state="open"] .fixed.inset-0 {
-  position: fixed !important;
-  top: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  left: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-}
-
-/* Correção para possíveis problemas de estilização em navegadores específicos */
-@supports (backdrop-filter: blur(4px)) {
-  .backdrop-blur-sm {
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-  }
-}
-
-/* Correção para problemas com sobreposição de elementos fixos */
-body {
-  overflow-x: hidden;
-}
-
-/* Priorização da exibição do modal de boas-vindas */
-body:has(.welcome-modal-overlay) {
-  overflow: hidden !important;
-}
-
-.welcome-modal-content {
-  max-height: 90vh !important;
-  overflow-y: auto !important;
-  position: relative !important;
-  z-index: 999999 !important;
-}
-
-/* Evitar problemas com foco em elementos internos do modal */
-.welcome-modal-content:focus,
-.welcome-modal-content:focus-within {
-  outline: none !important;
-}
-
-/* Correção para problemas de recarregamento automático com focus/blur events */
-*:focus {
-  outline: none;
-}
-
-/* Prevenir overflow horizontal que causa recargas */
-html, body {
-  overscroll-behavior: none;
-  max-width: 100vw;
-}
-
-/* Melhoria para renderização de elementos fixos */
-.fixed {
-  transform: translateZ(0);
-  will-change: transform;
-}
-
-/* Otimizações para navegadores móveis */
-@media (max-width: 768px) {
-  .welcome-modal-content {
-    width: 90% !important;
-    max-height: 80vh !important;
-  }
-}
-
-/* Garantir que dropdowns e tooltips apareçam sempre por cima */
-[data-radix-popper-content-wrapper] {
-  z-index: 999999 !important;
-  position: fixed !important;
-}
-
     transform: translateY(0);
   }
 }

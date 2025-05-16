@@ -286,35 +286,6 @@ function App() {
     };
   }, [location.pathname]);
 
-  useEffect(() => {
-    // Verificar se já mostrou o modal de boas-vindas nesta sessão
-    const hasShownWelcomeModal = sessionStorage.getItem('welcomeModalShown');
-
-    // Verificar se existe uma flag para forçar exibição do modal
-    const forceShowModal = sessionStorage.getItem('forceShowWelcomeModal') === 'true';
-
-    // Verificar se o usuário está acessando pela primeira vez após login
-    const isFirstSessionAfterLogin = sessionStorage.getItem('isFirstSessionAfterLogin') === 'true';
-
-    if (!hasShownWelcomeModal || forceShowModal || isFirstSessionAfterLogin) {
-      // Limpar flags que forçam a exibição
-      sessionStorage.removeItem('forceShowWelcomeModal');
-      sessionStorage.removeItem('isFirstSessionAfterLogin');
-
-      // Mostrar o modal e marcar como exibido
-      setShowWelcomeModal(true);
-      sessionStorage.setItem('welcomeModalShown', 'true');
-
-      // Prevenir scroll enquanto modal estiver aberto
-      document.body.style.overflow = 'hidden';
-    }
-
-    // Cleanup function
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, []);
-
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <UsernameProvider>
