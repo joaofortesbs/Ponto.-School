@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -282,13 +281,9 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
     const relation = userRelations[user.id] || 'none';
 
     return (
-      <motion.div 
+      <div 
         className="bg-gradient-to-br from-[#0c1a2b]/95 to-[#0c1a2b]/85 backdrop-blur-lg rounded-xl p-4 mb-3 hover:from-[#001427] hover:to-[#0c1a2b] transition-all duration-300 border border-white/10 shadow-xl hover:shadow-2xl hover:border-[#FF6B00]/30 group"
-        whileHover={{ scale: 1.02, y: -2 }}
-        whileTap={{ scale: 0.99 }}
-        layoutId={`card-${user.id}`}
         onClick={() => setSelectedUser(user)}
-        layout
       >
         <div className="flex items-center gap-4">
           <div className="relative">
@@ -385,16 +380,9 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
     const { user, type } = request;
 
     return (
-      <motion.div 
+      <div 
         className="bg-gradient-to-br from-[#0c1a2b]/95 to-[#0c1a2b]/85 backdrop-blur-lg rounded-xl p-4 mb-3 hover:from-[#001427] hover:to-[#0c1a2b] transition-all duration-300 border border-white/10 shadow-xl hover:shadow-2xl hover:border-[#FF6B00]/30 group"
-        whileHover={{ scale: 1.02, y: -2 }}
-        whileTap={{ scale: 0.99 }}
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ type: "spring", stiffness: 300, damping: 30, duration: 0.3 }}
-        layoutId={layoutId}
         onClick={() => setSelectedUser(user)}
-        layout
       >
         <div className="flex items-center gap-4">
           <div className="relative">
@@ -476,12 +464,8 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
     const relation = userRelations[selectedUser.id] || 'none';
 
     return (
-      <motion.div
+      <div
         className="h-full overflow-y-auto py-6 px-4 flex flex-col custom-scrollbar"
-        initial={{ opacity: 0, x: 50 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: 50 }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
       >
         {/* Botão voltar para mobile */}
         <button 
@@ -491,27 +475,23 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
           <ArrowLeft className="h-5 w-5" />
         </button>
 
-        {/* Capa com efeito parallax */}
+        {/* Capa */}
         <div className="relative h-36 -mx-4 -mt-6 mb-4 overflow-hidden rounded-t-xl">
           {selectedUser.coverUrl ? (
-            <motion.div 
+            <div 
               className="absolute inset-0 w-full h-full bg-[#0A2540]"
-              whileHover={{ scale: 1.05 }}
-              transition={{ duration: 0.5 }}
             >
               <img 
                 src={selectedUser.coverUrl} 
                 alt="Capa" 
-                className="w-full h-full object-cover transition-transform duration-500"
+                className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#001427]/95 via-[#001427]/70 to-transparent"></div>
-            </motion.div>
+            </div>
           ) : (
             <div className="w-full h-full bg-gradient-to-r from-[#001427] via-[#072e4f] to-[#0A2540]">
-              <motion.div 
+              <div 
                 className="absolute inset-0 bg-[url('/images/pattern-grid.svg')] opacity-20"
-                animate={{ backgroundPosition: ["0% 0%", "100% 100%"] }}
-                transition={{ duration: 20, repeat: Infinity, repeatType: "reverse" }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#001427]/95 to-transparent"></div>
             </div>
@@ -519,38 +499,29 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
 
           {/* Pequeno menu de ações na capa */}
           <div className="absolute top-3 right-3 flex gap-2 z-20">
-            <motion.button 
+            <button 
               className="p-2 rounded-full bg-black/30 backdrop-blur-md text-white/80 hover:text-white hover:bg-black/50 transition-all"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
             >
               <Bookmark className="h-4 w-4" />
-            </motion.button>
-            <motion.button 
+            </button>
+            <button 
               className="p-2 rounded-full bg-black/30 backdrop-blur-md text-white/80 hover:text-white hover:bg-black/50 transition-all"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
             >
               <Eye className="h-4 w-4" />
-            </motion.button>
-            <motion.button 
+            </button>
+            <button 
               className="md:flex hidden p-2 rounded-full bg-black/30 backdrop-blur-md text-white/80 hover:text-white hover:bg-black/50 transition-all"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
               onClick={() => setSelectedUser(null)}
             >
               <X className="h-4 w-4" />
-            </motion.button>
+            </button>
           </div>
         </div>
 
         {/* Avatar em destaque */}
         <div className="flex flex-col items-center -mt-16 mb-5">
-          <motion.div
+          <div
             className="relative"
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: "spring", stiffness: 300, damping: 20, delay: 0.1 }}
           >
             <div className="absolute -inset-1 bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] rounded-full opacity-90 blur-sm"></div>
             <Avatar className="h-28 w-28 border-4 border-[#0A2540] shadow-2xl">
@@ -575,29 +546,20 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
 
         {/* Informações do perfil */}
         <div className="text-center space-y-4">
-          <motion.div 
+          <div 
             className="space-y-1"
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.2 }}
           >
             <h2 className="text-2xl font-bold text-white">{selectedUser.name}</h2>
             <p className="text-[#64748B] text-sm font-medium">@{selectedUser.username}</p>
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.3 }}
+          <div
             className="px-6"
           >
             <p className="text-white/80 text-sm leading-relaxed">{selectedUser.bio}</p>
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.4 }}
+          <div
             className="flex flex-wrap justify-center gap-2 px-2"
           >
             {selectedUser.favoriteSubject && (
@@ -613,14 +575,11 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                 {selectedUser.educationLevel}
               </div>
             )}
-          </motion.div>
+          </div>
 
           {/* Estatísticas */}
-          <motion.div 
+          <div 
             className="grid grid-cols-3 gap-3 px-2 mt-4"
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.5 }}
           >
             <div className="bg-gradient-to-br from-white/5 to-white/3 backdrop-blur-sm rounded-xl p-3 shadow-inner">
               <p className="text-xl font-bold text-white">{selectedUser.followersCount}</p>
@@ -634,14 +593,11 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
               <p className="text-xl font-bold text-white">{selectedUser.postsCount}</p>
               <p className="text-white/60 text-xs">Publicações</p>
             </div>
-          </motion.div>
+          </div>
 
           {/* Botões de ação */}
-          <motion.div 
+          <div 
             className="space-y-3 px-2 mt-6"
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.6 }}
           >
             {selectedUser.isPrivate ? (
               <Button 
@@ -695,17 +651,14 @@ className="w-full rounded-xl bg-white/5 hover:bg-white/10 border border-white/10
           </motion.div>
 
           {/* Indicador de atividade */}
-          <motion.div 
+          <div 
             className="mt-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.7 }}
           >
             <p className="text-white/40 text-xs flex items-center justify-center gap-1">
-              <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span className="inline-block h-2 w-2 rounded-full bg-emerald-500"></span>
               {selectedUser.lastActive === 'Agora mesmo' ? 'Online agora' : `Visto ${selectedUser.lastActive}`}
             </p>
-          </motion.div>
+          </div>
         </div>
       </motion.div>
     );
@@ -713,11 +666,8 @@ className="w-full rounded-xl bg-white/5 hover:bg-white/10 border border-white/10
 
   // Interface vazia quando nenhum resultado é encontrado
   const EmptyState = ({ type }: { type: 'search' | 'pending' }) => (
-    <motion.div
+    <div
       className="flex flex-col items-center justify-center py-12 px-4 text-center"
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.2 }}
     >
       <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4">
         {type === 'search' ? (
@@ -747,11 +697,8 @@ className="w-full rounded-xl bg-white/5 hover:bg-white/10 border border-white/10
 
   // Filtros para a busca
   const FilterDropdown = () => (
-    <motion.div 
+    <div 
       className="absolute right-0 top-full mt-2 bg-[#0A2540] rounded-xl border border-white/10 shadow-xl z-30 w-48 overflow-hidden"
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
     >
       <div className="p-2">
         <h4 className="text-white text-xs px-2 py-1 font-medium">Filtrar por:</h4>
@@ -809,14 +756,12 @@ className="w-full rounded-xl bg-white/5 hover:bg-white/10 border border-white/10
                 </h2>
                 <p className="text-white/60 text-sm">Conecte-se com estudantes como você</p>
               </div>
-              <motion.button 
+              <button 
                 className="text-white/60 hover:text-white p-2.5 rounded-full hover:bg-white/10 transition-all duration-300"
-                whileHover={{ rotate: 90 }}
-                whileTap={{ scale: 0.9 }}
                 onClick={() => onOpenChange(false)}
               >
                 <X className="h-5 w-5" />
-              </motion.button>
+              </button>
             </div>
 
             <Tabs defaultValue="buscar" className="w-full" onValueChange={setActiveTab}>
@@ -877,9 +822,7 @@ className="w-full rounded-xl bg-white/5 hover:bg-white/10 border border-white/10
                       <Filter className="h-4 w-4" />
                     </Button>
 
-                    <AnimatePresence>
-                      {showFilterDropdown && <FilterDropdown />}
-                    </AnimatePresence>
+                    {showFilterDropdown && <FilterDropdown />}
                   </div>
                 </div>
 
@@ -895,11 +838,9 @@ className="w-full rounded-xl bg-white/5 hover:bg-white/10 border border-white/10
                     <EmptyState type="search" />
                   )}
 
-                  <AnimatePresence mode="wait">
-                    {filteredResults.map(user => (
-                      <UserCard key={user.id} user={user} />
-                    ))}
-                  </AnimatePresence>
+                  {filteredResults.map(user => (
+                    <UserCard key={user.id} user={user} />
+                  ))}
                 </div>
               </TabsContent>
 
@@ -916,13 +857,11 @@ className="w-full rounded-xl bg-white/5 hover:bg-white/10 border border-white/10
                     <EmptyState type="pending" />
                   )}
 
-                  <AnimatePresence mode="wait">
-                    {pendingRequests
-                      .filter(req => req.type === 'received')
-                      .map(request => (
-                        <PendingRequestCard key={request.id} request={request} layoutId={`request-${request.id}`} />
-                      ))}
-                  </AnimatePresence>
+                  {pendingRequests
+                    .filter(req => req.type === 'received')
+                    .map(request => (
+                      <PendingRequestCard key={request.id} request={request} layoutId={`request-${request.id}`} />
+                    ))}
                 </div>
 
                 <div className="mt-6 mb-4 bg-gradient-to-r from-[#072e4f]/50 to-[#001427]/50 p-3 rounded-lg">
@@ -939,13 +878,11 @@ className="w-full rounded-xl bg-white/5 hover:bg-white/10 border border-white/10
                     </div>
                   )}
 
-                  <AnimatePresence mode="wait">
-                    {pendingRequests
-                      .filter(req => req.type === 'sent')
-                      .map(request => (
-                        <PendingRequestCard key={request.id} request={request} layoutId={`sent-${request.id}`} />
-                      ))}
-                  </AnimatePresence>
+                  {pendingRequests
+                    .filter(req => req.type === 'sent')
+                    .map(request => (
+                      <PendingRequestCard key={request.id} request={request} layoutId={`sent-${request.id}`} />
+                    ))}
                 </div>
               </TabsContent>
             </Tabs>
@@ -962,20 +899,13 @@ className="w-full rounded-xl bg-white/5 hover:bg-white/10 border border-white/10
           </div>
 
           {/* Painel de perfil expandido */}
-          <AnimatePresence mode="wait">
-            {selectedUser && (
-              <motion.div 
-                className={`${selectedUser ? 'block' : 'hidden'} border-l border-white/10 bg-gradient-to-br from-[#0A2540]/90 to-[#001427]/90 backdrop-blur-xl md:w-[45%] relative`}
-                initial={{ width: 0, opacity: 0 }}
-                animate={{ width: "100%", opacity: 1 }}
-                exit={{ width: 0, opacity: 0 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
-                layoutId={`profile-panel-${selectedUser.id}`}
-              >
-                <UserProfilePanel />
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {selectedUser && (
+            <div 
+              className={`${selectedUser ? 'block' : 'hidden'} border-l border-white/10 bg-gradient-to-br from-[#0A2540]/90 to-[#001427]/90 backdrop-blur-xl md:w-[45%] relative`}
+            >
+              <UserProfilePanel />
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
