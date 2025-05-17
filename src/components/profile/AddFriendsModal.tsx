@@ -1458,6 +1458,6 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
       </DialogContent>
     </Dialog>
   );
-};
+}
 
 export default AddFriendsModal;
