@@ -1,0 +1,71 @@
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase"; // ajuste o caminho
+import { Input } from "@/components/ui/input";
+
+const AddFriendModal = ({ currentUserId }) => {
+  const [search, setSearch] = useState("");
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (search.length === 0) {
+      setResults([]);
+      return;
+    }
+
+    const delayDebounceFn = setTimeout(async () => {
+      setLoading(true);
+
+      const { data, error } = await supabase
+        .from("users")
+        .select("id, username, avatar_url")
+        .ilike("username", `%${search}%`) // <- busca parcial
+        .neq("id", currentUserId);
+
+      if (error) {
+        console.error("Erro ao buscar usuários:", error);
+        setResults([]);
+      } else {
+        setResults(data);
+      }
+
+      setLoading(false);
+    }, 500); // debounce de 500ms
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [search]);
+
+  return (
+    <div className="space-y-4">
+      <Input
+        placeholder="Pesquisar por nome de usuário"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
+
+      {loading && <p>Buscando usuários...</p>}
+
+      {!loading && results.length === 0 && search.length > 0 && (
+        <p>Nenhum usuário encontrado.</p>
+      )}
+
+      <div className="space-y-2">
+        {results.map((user) => (
+          <div key={user.id} className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <img
+                src={user.avatar_url || "/default-avatar.png"}
+                alt="avatar"
+                className="w-8 h-8 rounded-full"
+              />
+              <span>{user.username}</span>
+            </div>
+            <button className="bg-blue-500 text-white px-3 py-1 rounded">
+              Adicionar
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
