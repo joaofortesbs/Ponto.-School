@@ -585,9 +585,6 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                       if (e.target.value) {
                         const newDate = new Date(e.target.value);
                         setStartDate(newDate);
-                        if (!endDate || newDate > endDate) {
-                          setEndDate(newDate);
-                        }
                       }
                     }}
                     className="w-full"
@@ -603,9 +600,6 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                       if (e.target.value) {
                         const newDate = new Date(e.target.value);
                         setEndDate(newDate);
-                        if (!startDate) {
-                          setStartDate(newDate);
-                        }
                       }
                     }}
                     className="w-full"
@@ -638,6 +632,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                       }}
                       numberOfMonths={1}
                       className="rounded-md border"
+                      disabled={false}
                       initialFocus
                     />
                   </div>
