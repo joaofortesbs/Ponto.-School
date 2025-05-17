@@ -11,6 +11,7 @@ import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { getUserEvents, addEvent, updateEvent, deleteEvent, CalendarEvent } from "@/services/calendarEventService";
 
 // Components
 import MonthView from "@/components/agenda/calendar-views/month-view";
@@ -147,47 +148,85 @@ export default function AgendaPage() {
     }
   }, [viewParam]);
 
-  // Dados de eventos para o calendário (vazio por padrão)
+  // Estado para armazenar eventos do calendário
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  // Mapeamento de eventos por dia para facilitar a renderização
   const [eventData, setEventData] = useState<Record<number, any[]>>({});
+  // Estado para indicar carregamento
+  const [loading, setLoading] = useState(false);
 
-  // Função para formatar eventos próximos a partir do eventData
+  // Buscar eventos do usuário ao carregar a página
+  useEffect(() => {
+    const fetchEvents = async () => {
+      setLoading(true);
+      try {
+        const userEvents = await getUserEvents();
+        setEvents(userEvents);
+        
+        // Organizar eventos por dia para o formato esperado pelo calendário
+        const eventsByDay: Record<number, any[]> = {};
+        
+        userEvents.forEach(event => {
+          const eventDate = new Date(event.startDate);
+          const day = eventDate.getDate();
+          
+          if (!eventsByDay[day]) {
+            eventsByDay[day] = [];
+          }
+          
+          eventsByDay[day].push({
+            ...event,
+            color: event.color || getEventColor(event.type),
+            time: event.startTime || "00:00"
+          });
+        });
+        
+        setEventData(eventsByDay);
+      } catch (error) {
+        console.error("Erro ao carregar eventos:", error);
+        toast({
+          title: "Erro ao carregar eventos",
+          description: "Não foi possível carregar seus eventos. Tente novamente mais tarde.",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchEvents();
+  }, []);
+
+  // Função para formatar eventos próximos a partir dos eventos
   const getUpcomingEvents = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0); // Normaliza a data atual para comparação
     const upcoming: any[] = [];
     
-    // Percorre todos os dias com eventos
-    Object.keys(eventData).forEach(day => {
-      const dayEvents = eventData[parseInt(day)] || [];
+    events.forEach(event => {
+      const eventDate = new Date(event.startDate);
+      eventDate.setHours(0, 0, 0, 0); // Normaliza a data do evento para comparação
       
-      // Para cada evento nesse dia
-      dayEvents.forEach(event => {
-        if (event.startDate) {
-          const eventDate = new Date(event.startDate);
-          eventDate.setHours(0, 0, 0, 0); // Normaliza a data do evento para comparação
-          
-          // Adiciona eventos que ocorrem hoje ou no futuro
-          if (eventDate >= today) {
-            // Formata a data com date-fns
-            const formattedDate = format(eventDate, "dd/MM/yyyy", { locale: ptBR });
-            
-            upcoming.push({
-              id: event.id,
-              type: event.type,
-              title: event.title,
-              day: formattedDate,
-              discipline: event.discipline || "Geral",
-              isOnline: event.isOnline || false,
-              color: event.color,
-              details: event.details,
-              startTime: event.startTime || event.time || "00:00",
-              // Guardar a data original para ordenação
-              originalDate: eventDate,
-              originalTime: event.startTime || event.time || "00:00"
-            });
-          }
-        }
-      });
+      // Adiciona eventos que ocorrem hoje ou no futuro
+      if (eventDate >= today) {
+        // Formata a data com date-fns
+        const formattedDate = format(eventDate, "dd/MM/yyyy", { locale: ptBR });
+        
+        upcoming.push({
+          id: event.id,
+          type: event.type,
+          title: event.title,
+          day: formattedDate,
+          discipline: event.discipline || "Geral",
+          isOnline: event.isOnline || false,
+          color: event.color || getEventColor(event.type),
+          details: event.details,
+          startTime: event.startTime || "00:00",
+          // Guardar a data original para ordenação
+          originalDate: eventDate,
+          originalTime: event.startTime || "00:00"
+        });
+      }
     });
     
     // Ordena eventos cronologicamente (por data e hora)
@@ -215,7 +254,7 @@ export default function AgendaPage() {
     return upcoming;
   };
 
-  // Array de eventos próximos atualizado a partir do eventData
+  // Array de eventos próximos atualizado a partir dos eventos
   const upcomingEventsData = getUpcomingEvents();
 
   // Sample AI recommendations
@@ -489,173 +528,254 @@ export default function AgendaPage() {
   };
 
   // Add new event
-  const handleAddEvent = (newEvent: any) => {
-    if (newEvent.startDate) {
-      const eventDate = new Date(newEvent.startDate);
-      const day = eventDate.getDate();
-
-      // Add color based on event type
-      const eventWithColor = {
+  const handleAddEvent = async (newEvent: any) => {
+    try {
+      // Adicionar evento ao banco de dados
+      const savedEvent = await addEvent({
         ...newEvent,
         color: getEventColor(newEvent.type),
-        time: newEvent.startTime || "00:00",
-      };
-
-      // Add the event to the eventData state
-      const updatedEvents = { ...eventData };
-      if (updatedEvents[day]) {
-        updatedEvents[day] = [...updatedEvents[day], eventWithColor];
-      } else {
-        updatedEvents[day] = [eventWithColor];
+      });
+      
+      if (savedEvent) {
+        // Atualizar o estado local com o novo evento
+        setEvents(prevEvents => [...prevEvents, savedEvent]);
+        
+        // Atualizar o eventData para o calendário
+        const eventDate = new Date(savedEvent.startDate);
+        const day = eventDate.getDate();
+        
+        const eventForCalendar = {
+          ...savedEvent,
+          color: savedEvent.color || getEventColor(savedEvent.type),
+          time: savedEvent.startTime || "00:00",
+        };
+        
+        setEventData(prev => {
+          const updated = { ...prev };
+          if (updated[day]) {
+            updated[day] = [...updated[day], eventForCalendar];
+          } else {
+            updated[day] = [eventForCalendar];
+          }
+          return updated;
+        });
+        
+        // Exibe uma mensagem de sucesso
+        toast({
+          title: "Evento adicionado",
+          description: "O evento foi adicionado com sucesso ao seu calendário e listado em Próximos Eventos.",
+        });
       }
-
-      setEventData(updatedEvents);
-      
-      // Força atualização do componente de próximos eventos
-      setTimeout(() => {
-        const upcomingEventsUpdated = getUpcomingEvents();
-        // Este console.log ajuda a verificar se os eventos estão sendo atualizados corretamente
-        console.log("Próximos eventos atualizados:", upcomingEventsUpdated);
-      }, 100);
-      
-      // Exibe uma mensagem de sucesso
+    } catch (error) {
+      console.error("Erro ao adicionar evento:", error);
       toast({
-        title: "Evento adicionado",
-        description: "O evento foi adicionado com sucesso ao seu calendário e listado em Próximos Eventos.",
+        title: "Erro ao adicionar evento",
+        description: "Ocorreu um erro ao adicionar o evento. Tente novamente.",
+        variant: "destructive"
       });
     }
   };
 
   // Edit event
-  const handleEditEvent = (editedEvent: any) => {
-    const updatedEvents = { ...eventData };
-
-    // Find the event in all days and update it
-    let eventFound = false;
-
-    Object.keys(updatedEvents).forEach((day) => {
-      const dayNum = parseInt(day);
-      const eventIndex = updatedEvents[dayNum].findIndex(
-        (event) => event.id === editedEvent.id,
-      );
-
-      if (eventIndex !== -1) {
-        // Update the event in place
-        updatedEvents[dayNum][eventIndex] = {
-          ...editedEvent,
-          color: getEventColor(editedEvent.type),
-          time: editedEvent.startTime || editedEvent.time || "00:00",
-        };
-        eventFound = true;
-      }
-    });
-
-    // If the event wasn't found (rare case) or if the date changed
-    if (!eventFound && editedEvent.startDate) {
-      const newDay = new Date(editedEvent.startDate).getDate();
-      handleDeleteEvent(editedEvent.id);
-
-      // Add to the new day
-      const eventWithColor = {
+  const handleEditEvent = async (editedEvent: any) => {
+    try {
+      // Atualizar evento no banco de dados
+      const updatedEvent = await updateEvent({
         ...editedEvent,
-        color: getEventColor(editedEvent.type),
-        time: editedEvent.startTime || "00:00",
-      };
-
-      if (updatedEvents[newDay]) {
-        updatedEvents[newDay] = [...updatedEvents[newDay], eventWithColor];
-      } else {
-        updatedEvents[newDay] = [eventWithColor];
+        color: editedEvent.color || getEventColor(editedEvent.type),
+      });
+      
+      if (updatedEvent) {
+        // Atualizar o estado local
+        setEvents(prevEvents => 
+          prevEvents.map(event => 
+            event.id === updatedEvent.id ? updatedEvent : event
+          )
+        );
+        
+        // Reorganizar os eventos por dia para o calendário
+        const newEventData: Record<number, any[]> = {};
+        
+        // Remover o evento antigo de todos os dias
+        events.forEach(event => {
+          if (event.id !== updatedEvent.id) {
+            const eventDate = new Date(event.startDate);
+            const day = eventDate.getDate();
+            
+            if (!newEventData[day]) {
+              newEventData[day] = [];
+            }
+            
+            newEventData[day].push({
+              ...event,
+              color: event.color || getEventColor(event.type),
+              time: event.startTime || "00:00",
+            });
+          }
+        });
+        
+        // Adicionar o evento atualizado ao dia correto
+        const updatedDate = new Date(updatedEvent.startDate);
+        const updatedDay = updatedDate.getDate();
+        
+        if (!newEventData[updatedDay]) {
+          newEventData[updatedDay] = [];
+        }
+        
+        newEventData[updatedDay].push({
+          ...updatedEvent,
+          color: updatedEvent.color || getEventColor(updatedEvent.type),
+          time: updatedEvent.startTime || "00:00",
+        });
+        
+        setEventData(newEventData);
+        
+        // Exibe uma mensagem de sucesso
+        toast({
+          title: "Evento atualizado",
+          description: "O evento foi atualizado com sucesso.",
+        });
       }
+    } catch (error) {
+      console.error("Erro ao atualizar evento:", error);
+      toast({
+        title: "Erro ao atualizar evento",
+        description: "Ocorreu um erro ao atualizar o evento. Tente novamente.",
+        variant: "destructive"
+      });
     }
-
-    setEventData(updatedEvents);
-    
-    // Exibe uma mensagem de sucesso
-    toast({
-      title: "Evento atualizado",
-      description: "O evento foi atualizado com sucesso.",
-    });
   };
 
   // Delete event
-  const handleDeleteEvent = (eventId: string) => {
-    const updatedEvents = { ...eventData };
-
-    // Find and remove the event
-    Object.keys(updatedEvents).forEach((day) => {
-      const dayNum = parseInt(day);
-      updatedEvents[dayNum] = updatedEvents[dayNum].filter(
-        (event) => event.id !== eventId,
-      );
-
-      // Remove the day if it has no events
-      if (updatedEvents[dayNum].length === 0) {
-        delete updatedEvents[dayNum];
+  const handleDeleteEvent = async (eventId: string) => {
+    try {
+      // Excluir evento do banco de dados
+      const success = await deleteEvent(eventId);
+      
+      if (success) {
+        // Atualizar o estado local
+        setEvents(prevEvents => prevEvents.filter(event => event.id !== eventId));
+        
+        // Atualizar o eventData para o calendário
+        const updatedEvents = { ...eventData };
+        
+        // Encontrar e remover o evento
+        Object.keys(updatedEvents).forEach((day) => {
+          const dayNum = parseInt(day);
+          updatedEvents[dayNum] = updatedEvents[dayNum].filter(
+            (event) => event.id !== eventId,
+          );
+          
+          // Remover o dia se não tiver mais eventos
+          if (updatedEvents[dayNum].length === 0) {
+            delete updatedEvents[dayNum];
+          }
+        });
+        
+        setEventData(updatedEvents);
+        
+        // Exibe uma mensagem de sucesso
+        toast({
+          title: "Evento excluído",
+          description: "O evento foi excluído com sucesso.",
+        });
       }
-    });
-
-    setEventData(updatedEvents);
+    } catch (error) {
+      console.error("Erro ao excluir evento:", error);
+      toast({
+        title: "Erro ao excluir evento",
+        description: "Ocorreu um erro ao excluir o evento. Tente novamente.",
+        variant: "destructive"
+      });
+    }
   };
 
   // Handle event drag and drop
-  const handleEventDrop = (event: any, newDay: number) => {
-    // First, remove the event from its original day
-    const updatedEvents = { ...eventData };
-    let eventToMove = null;
-
-    // Find and remove the event from its original day
-    Object.keys(updatedEvents).forEach((day) => {
-      const dayNum = parseInt(day);
-      const eventIndex = updatedEvents[dayNum].findIndex(
-        (e) => e.id === event.id,
-      );
-
-      if (eventIndex !== -1) {
-        // Save the event before removing it
-        eventToMove = { ...updatedEvents[dayNum][eventIndex] };
-
-        // Remove the event from its original day
-        updatedEvents[dayNum] = updatedEvents[dayNum].filter(
-          (e) => e.id !== event.id,
+  const handleEventDrop = async (event: any, newDay: number) => {
+    try {
+      // Encontrar o evento original
+      const originalEvent = events.find(e => e.id === event.id);
+      
+      if (!originalEvent) {
+        console.error("Evento não encontrado:", event.id);
+        return;
+      }
+      
+      // Criar uma cópia do evento com a nova data
+      const oldDate = new Date(originalEvent.startDate);
+      const newDate = new Date(oldDate);
+      newDate.setDate(newDay);
+      
+      // Atualizar a data de início
+      const updatedEvent = {
+        ...originalEvent,
+        startDate: newDate.toISOString()
+      };
+      
+      // Atualizar também a data de término se existir
+      if (originalEvent.endDate) {
+        const oldEndDate = new Date(originalEvent.endDate);
+        const dayDiff = Math.round(
+          (oldEndDate.getTime() - oldDate.getTime()) / (1000 * 60 * 60 * 24),
         );
-
-        // Remove the day if it has no events
-        if (updatedEvents[dayNum].length === 0) {
-          delete updatedEvents[dayNum];
-        }
+        const newEndDate = new Date(newDate);
+        newEndDate.setDate(newDate.getDate() + dayDiff);
+        updatedEvent.endDate = newEndDate.toISOString();
       }
-    });
-
-    // If we found the event, add it to the new day
-    if (eventToMove) {
-      // Update the event's date if it has one
-      if (eventToMove.startDate) {
-        const oldDate = new Date(eventToMove.startDate);
-        const newDate = new Date(oldDate);
-        newDate.setDate(newDay);
-        eventToMove.startDate = newDate;
-
-        // Also update endDate if it exists
-        if (eventToMove.endDate) {
-          const oldEndDate = new Date(eventToMove.endDate);
-          const dayDiff = Math.round(
-            (oldEndDate.getTime() - oldDate.getTime()) / (1000 * 60 * 60 * 24),
+      
+      // Salvar a mudança no banco de dados
+      const savedEvent = await updateEvent(updatedEvent);
+      
+      if (savedEvent) {
+        // Atualizar o estado local
+        setEvents(prevEvents => 
+          prevEvents.map(e => e.id === savedEvent.id ? savedEvent : e)
+        );
+        
+        // Atualizar o eventData para o calendário
+        const updatedEvents = { ...eventData };
+        
+        // Remover o evento do dia original
+        Object.keys(updatedEvents).forEach((day) => {
+          const dayNum = parseInt(day);
+          updatedEvents[dayNum] = updatedEvents[dayNum].filter(
+            (e) => e.id !== event.id,
           );
-          const newEndDate = new Date(newDate);
-          newEndDate.setDate(newDate.getDate() + dayDiff);
-          eventToMove.endDate = newEndDate;
+          
+          // Remover o dia se não tiver mais eventos
+          if (updatedEvents[dayNum].length === 0) {
+            delete updatedEvents[dayNum];
+          }
+        });
+        
+        // Adicionar o evento ao novo dia
+        const eventForCalendar = {
+          ...savedEvent,
+          color: savedEvent.color || getEventColor(savedEvent.type),
+          time: savedEvent.startTime || "00:00",
+        };
+        
+        if (updatedEvents[newDay]) {
+          updatedEvents[newDay] = [...updatedEvents[newDay], eventForCalendar];
+        } else {
+          updatedEvents[newDay] = [eventForCalendar];
         }
+        
+        setEventData(updatedEvents);
+        
+        // Notificar o usuário sobre a mudança
+        toast({
+          title: "Evento movido",
+          description: `O evento foi movido para o dia ${newDay}.`,
+        });
       }
-
-      // Add the event to the new day
-      if (updatedEvents[newDay]) {
-        updatedEvents[newDay] = [...updatedEvents[newDay], eventToMove];
-      } else {
-        updatedEvents[newDay] = [eventToMove];
-      }
-
-      setEventData(updatedEvents);
+    } catch (error) {
+      console.error("Erro ao mover evento:", error);
+      toast({
+        title: "Erro ao mover evento",
+        description: "Ocorreu um erro ao mover o evento. Tente novamente.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -1217,6 +1337,7 @@ export default function AgendaPage() {
                     onEventDrop={handleEventDrop}
                     setCalendarView={setCalendarView}
                     calendarView={calendarView}
+                    loading={loading}
                   />
                 )}
                 {calendarView === "week" && (

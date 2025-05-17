@@ -1,4 +1,3 @@
-
 import React from "react";
 import {
   format,
@@ -28,9 +27,10 @@ interface MonthViewProps {
   eventData: Record<number, any[]>;
   getEventIcon: (type: string) => React.ReactNode;
   openEventDetails: (event: any) => void;
-  onEventDrop?: (event: any, day: number) => void;
+  onEventDrop: (event: any, day: number) => void;
   setCalendarView: (view: string) => void;
   calendarView: string;
+  loading?: boolean;
 }
 
 const MonthView: React.FC<MonthViewProps> = ({
@@ -44,6 +44,7 @@ const MonthView: React.FC<MonthViewProps> = ({
   onEventDrop,
   setCalendarView,
   calendarView,
+  loading,
 }) => {
   const [year, setYear] = React.useState(currentYear);
   const [month, setMonth] = React.useState(currentMonth);
@@ -129,7 +130,7 @@ const MonthView: React.FC<MonthViewProps> = ({
       onEventDrop(event, day);
     }
   };
-  
+
   // Handler para alternar a visualização do calendário
   const handleViewChange = (view: string) => {
     console.log("Changing view to:", view);
