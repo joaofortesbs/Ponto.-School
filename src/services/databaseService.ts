@@ -223,8 +223,12 @@ export const addResponse = async (responseData: Omit<Response, "id">): Promise<R
       timestamp: data.timestamp,
       status: data.status,
       price: data.price,
-      responseTime: data.response_timeme,
-  };
+      responseTime: data.response_time
+    };
+  } catch (error) {
+    console.error('Erro ao adicionar resposta:', error);
+    return null;
+  }
 };
 
 export const getResponsesByRequestId = async (requestId: string): Promise<Response[]> => {
