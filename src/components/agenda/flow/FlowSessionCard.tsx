@@ -142,6 +142,15 @@ const FlowSessionCard: React.FC = () => {
     setTimer(interval);
   };
 
+  // Array to store completed sessions history
+  const [sessionHistory, setSessionHistory] = useState<Array<{
+    id: number;
+    date: string;
+    duration: string;
+    subjects: string[];
+    progress: number;
+  }>>([]);
+
   // Handle end session
   const endSession = () => {
     setSessionState("completed");
@@ -154,8 +163,38 @@ const FlowSessionCard: React.FC = () => {
     }
   };
 
+  // Save session to history
+  const saveSessionToHistory = () => {
+    const subjectNames = selectedSubjects.map((subjectId) => {
+      const subject = subjects.find((s) => s.id === subjectId);
+      return subject ? subject.name : "Disciplina";
+    });
+
+    const newSession = {
+      id: Date.now(),
+      date: new Date().toLocaleString("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      }),
+      duration: formatTime(elapsedTime),
+      subjects: subjectNames,
+      progress: Math.min(100, Math.round(calculateProgress()))
+    };
+
+    // Add the new session to history
+    setSessionHistory([newSession, ...sessionHistory]);
+  };
+
   // Handle reset session
   const resetSession = () => {
+    // Save the completed session to history if it was completed
+    if (sessionState === "completed") {
+      saveSessionToHistory();
+    }
+
     setSessionState("idle");
     setElapsedTime(0);
     setSelectedSubjects([]);
@@ -1115,194 +1154,279 @@ const FlowSessionCard: React.FC = () => {
               Histórico de sessões
             </h4>
             <div className="space-y-3">
-              {[
-                {
-                  id: 1,
-                  date: "Hoje, 10:30",
-                  duration: "01:45:00",
-                  subjects: ["Matemática", "Física"],
-                  progress: 100,
-                },
-                {
-                  id: 2,
-                  date: "Ontem, 15:20",
-                  duration: "02:15:00",
-                  subjects: ["Química", "Biologia"],
-                  progress: 90,
-                },
-                {
-                  id: 3,
-                  date: "22/07/2023, 09:15",
-                  duration: "01:30:00",
-                  subjects: ["História", "Matemática"],
-                  progress: 100,
-                },
-                {
-                  id: 4,
-                  date: "20/07/2023, 14:00",
-                  duration: "00:45:00",
-                  subjects: ["Física"],
-                  progress: 75,
-                },
-              ].map((session) => (
-                <div
-                  key={session.id}
-                  className="bg-white dark:bg-[#1E293B] rounded-lg p-3 border border-gray-200 dark:border-gray-700 hover:border-[#FF6B00]/30 cursor-pointer transition-all"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-[#F8F9FA] dark:bg-[#29335C] flex items-center justify-center">
-                        <Clock className="h-4 w-4 text-[#FF6B00]" />
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium text-[#29335C] dark:text-white">
-                          Sessão de estudo
+              {sessionHistory.length > 0 ? (
+                // Show session history when available
+                sessionHistory.map((session) => (
+                  <div
+                    key={session.id}
+                    className="bg-white dark:bg-[#1E293B] rounded-lg p-3 border border-gray-200 dark:border-gray-700 hover:border-[#FF6B00]/30 cursor-pointer transition-all"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-[#F8F9FA] dark:bg-[#29335C] flex items-center justify-center">
+                          <Clock className="h-4 w-4 text-[#FF6B00]" />
                         </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                          {session.date}
+                        <div>
+                          <div className="text-sm font-medium text-[#29335C] dark:text-white">
+                            Sessão de estudo
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                            {session.date}
+                          </div>
                         </div>
                       </div>
+                      <div className="text-sm font-medium text-[#FF6B00]">
+                        {session.duration}
+                      </div>
                     </div>
-                    <div className="text-sm font-medium text-[#FF6B00]">
-                      {session.duration}
+                    <div className="flex justify-between items-center">
+                      <div className="flex gap-1 flex-wrap">
+                        {session.subjects.map((subject, index) => (
+                          <Badge
+                            key={index}
+                            variant="outline"
+                            className="text-xs border-[#FF6B00]/30 bg-transparent text-[#FF6B00] mb-1"
+                          >
+                            {subject}
+                          </Badge>
+                        ))}
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {session.progress}% concluído
+                      </div>
                     </div>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <div className="flex gap-1">
-                      {session.subjects.map((subject, index) => (
-                        <Badge
-                          key={index}
-                          variant="outline"
-                          className="text-xs border-[#FF6B00]/30 bg-transparent text-[#FF6B00]"
-                        >
-                          {subject}
-                        </Badge>
-                      ))}
-                    </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                      {session.progress}% concluído
-                    </div>
+                ))
+              ) : (
+                // Empty state for history
+                <div className="py-12 flex flex-col items-center justify-center text-center">
+                  <div className="w-16 h-16 rounded-full bg-[#F8F9FA] dark:bg-[#29335C]/50 flex items-center justify-center mb-4">
+                    <Clock className="h-8 w-8 text-[#FF6B00]/60" />
                   </div>
+                  <h3 className="text-lg font-bold text-[#29335C] dark:text-white mb-2">
+                    Sem sessões registradas
+                  </h3>
+                  <p className="text-gray-500 dark:text-gray-400 max-w-md mb-4">
+                    Complete sua primeira sessão de estudo para começar a registrar seu histórico de aprendizado.
+                  </p>
+                  <Button
+                    variant="outline"
+                    className="border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10"
+                    onClick={() => setCurrentTab("prepare")}
+                  >
+                    <Play className="h-4 w-4 mr-2" /> Iniciar Primeira Sessão
+                  </Button>
                 </div>
-              ))}
+              )}
             </div>
           </div>
         </TabsContent>
 
         {/* Stats Tab */}
         <TabsContent value="stats" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div className="bg-[#F8F9FA] dark:bg-[#29335C]/30 rounded-lg p-4 border border-[#FF6B00]/10">
-              <h4 className="font-semibold text-[#29335C] dark:text-white flex items-center gap-2 mb-2">
-                <Clock className="h-4 w-4 text-[#FF6B00]" />
-                Tempo Total
-              </h4>
-              <div className="text-3xl font-bold text-[#FF6B00]">24h 30m</div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">
-                Nos últimos 30 dias
-              </div>
-            </div>
-            <div className="bg-[#F8F9FA] dark:bg-[#29335C]/30 rounded-lg p-4 border border-[#FF6B00]/10">
-              <h4 className="font-semibold text-[#29335C] dark:text-white flex items-center gap-2 mb-2">
-                <BookOpenCheck className="h-4 w-4 text-[#FF6B00]" />
-                Sessões Realizadas
-              </h4>
-              <div className="text-3xl font-bold text-[#FF6B00]">18</div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">
-                Nos últimos 30 dias
-              </div>
-            </div>
-            <div className="bg-[#F8F9FA] dark:bg-[#29335C]/30 rounded-lg p-4 border border-[#FF6B00]/10">
-              <h4 className="font-semibold text-[#29335C] dark:text-white flex items-center gap-2 mb-2">
-                <Target className="h-4 w-4 text-[#FF6B00]" />
-                Eficiência Média
-              </h4>
-              <div className="text-3xl font-bold text-[#FF6B00]">85%</div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">
-                Metas atingidas
-              </div>
-            </div>
-          </div>
+          {/* Calculate stats from session history */}
+          {(() => {
+            // Get sessions from last 30 days
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            
+            // Filter recent sessions
+            const recentSessions = sessionHistory.filter(session => {
+              const sessionDate = new Date(session.date.split(',')[0].split('/').reverse().join('-'));
+              return sessionDate >= thirtyDaysAgo;
+            });
+            
+            // Calculate total time in seconds
+            const totalTimeInSeconds = recentSessions.reduce((total, session) => {
+              const [hours, minutes, seconds] = session.duration.split(':').map(Number);
+              return total + (hours * 3600 + minutes * 60 + seconds);
+            }, 0);
+            
+            // Format total time
+            const totalHours = Math.floor(totalTimeInSeconds / 3600);
+            const totalMinutes = Math.floor((totalTimeInSeconds % 3600) / 60);
+            
+            // Calculate average efficiency
+            const avgEfficiency = recentSessions.length > 0
+              ? Math.round(recentSessions.reduce((sum, session) => sum + session.progress, 0) / recentSessions.length)
+              : 0;
+            
+            // Get subject stats if we have sessions
+            let subjectStats: {[key: string]: number} = {};
+            recentSessions.forEach(session => {
+              session.subjects.forEach(subject => {
+                // Estimate time per subject by dividing session time by number of subjects
+                const [hours, minutes, seconds] = session.duration.split(':').map(Number);
+                const sessionSeconds = hours * 3600 + minutes * 60 + seconds;
+                const secondsPerSubject = sessionSeconds / session.subjects.length;
+                
+                subjectStats[subject] = (subjectStats[subject] || 0) + secondsPerSubject;
+              });
+            });
+            
+            // Convert subject times to hours and minutes
+            const formattedSubjectStats = Object.entries(subjectStats).map(([subject, seconds]) => {
+              const hours = Math.floor(seconds / 3600);
+              const minutes = Math.floor((seconds % 3600) / 60);
+              return {
+                subject,
+                time: `${hours}h ${minutes}m`,
+                seconds,
+                percentage: totalTimeInSeconds > 0 ? Math.round((seconds / totalTimeInSeconds) * 100) : 0
+              };
+            }).sort((a, b) => b.seconds - a.seconds);
+            
+            return (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  <div className="bg-[#F8F9FA] dark:bg-[#29335C]/30 rounded-lg p-4 border border-[#FF6B00]/10">
+                    <h4 className="font-semibold text-[#29335C] dark:text-white flex items-center gap-2 mb-2">
+                      <Clock className="h-4 w-4 text-[#FF6B00]" />
+                      Tempo Total
+                    </h4>
+                    <div className="text-3xl font-bold text-[#FF6B00]">
+                      {totalHours}h {totalMinutes}m
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      Nos últimos 30 dias
+                    </div>
+                  </div>
+                  <div className="bg-[#F8F9FA] dark:bg-[#29335C]/30 rounded-lg p-4 border border-[#FF6B00]/10">
+                    <h4 className="font-semibold text-[#29335C] dark:text-white flex items-center gap-2 mb-2">
+                      <BookOpenCheck className="h-4 w-4 text-[#FF6B00]" />
+                      Sessões Realizadas
+                    </h4>
+                    <div className="text-3xl font-bold text-[#FF6B00]">
+                      {recentSessions.length}
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      Nos últimos 30 dias
+                    </div>
+                  </div>
+                  <div className="bg-[#F8F9FA] dark:bg-[#29335C]/30 rounded-lg p-4 border border-[#FF6B00]/10">
+                    <h4 className="font-semibold text-[#29335C] dark:text-white flex items-center gap-2 mb-2">
+                      <Target className="h-4 w-4 text-[#FF6B00]" />
+                      Eficiência Média
+                    </h4>
+                    <div className="text-3xl font-bold text-[#FF6B00]">
+                      {recentSessions.length > 0 ? `${avgEfficiency}%` : '-'}
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      Metas atingidas
+                    </div>
+                  </div>
+                </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-[#F8F9FA] dark:bg-[#29335C]/30 rounded-lg p-4 border border-[#FF6B00]/10">
-              <h4 className="font-semibold text-[#29335C] dark:text-white flex items-center gap-2 mb-4">
-                <BookOpen className="h-4 w-4 text-[#FF6B00]" />
-                Tempo por disciplina
-              </h4>
-              <div className="space-y-3">
-                {subjects.map((subject, index) => (
-                  <div key={subject.id} className="space-y-1">
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-[#F8F9FA] dark:bg-[#29335C] flex items-center justify-center">
-                          {subject.icon}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-[#F8F9FA] dark:bg-[#29335C]/30 rounded-lg p-4 border border-[#FF6B00]/10">
+                    <h4 className="font-semibold text-[#29335C] dark:text-white flex items-center gap-2 mb-4">
+                      <BookOpen className="h-4 w-4 text-[#FF6B00]" />
+                      Tempo por disciplina
+                    </h4>
+                    {formattedSubjectStats.length > 0 ? (
+                      <div className="space-y-3">
+                        {formattedSubjectStats.map((stat, index) => (
+                          <div key={index} className="space-y-1">
+                            <div className="flex justify-between items-center">
+                              <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 rounded-full bg-[#F8F9FA] dark:bg-[#29335C] flex items-center justify-center">
+                                  <span className="text-[#FF6B00] font-bold">
+                                    {stat.subject.charAt(0)}
+                                  </span>
+                                </div>
+                                <span className="text-sm text-[#29335C] dark:text-white">
+                                  {stat.subject}
+                                </span>
+                              </div>
+                              <span className="text-sm font-medium text-[#FF6B00]">
+                                {stat.time}
+                              </span>
+                            </div>
+                            <Progress
+                              value={stat.percentage}
+                              className="h-1.5 bg-[#FF6B00]/10"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="min-h-[200px] flex items-center justify-center">
+                        <div className="text-center py-8">
+                          <div className="w-12 h-12 rounded-full bg-[#F8F9FA] dark:bg-[#29335C]/50 flex items-center justify-center mx-auto mb-4">
+                            <BookOpen className="h-6 w-6 text-[#FF6B00]/60" />
+                          </div>
+                          <p className="text-gray-500 dark:text-gray-400">
+                            Complete sessões de estudo para visualizar estatísticas por disciplina
+                          </p>
                         </div>
-                        <span className="text-sm text-[#29335C] dark:text-white">
-                          {subject.name}
-                        </span>
                       </div>
-                      <span className="text-sm font-medium text-[#FF6B00]">
-                        {5 - index}h {(index * 15) % 60}m
-                      </span>
-                    </div>
-                    <Progress
-                      value={80 - index * 15}
-                      className="h-1.5 bg-[#FF6B00]/10"
-                    />
+                    )}
                   </div>
-                ))}
-              </div>
-            </div>
 
-            <div className="bg-[#F8F9FA] dark:bg-[#29335C]/30 rounded-lg p-4 border border-[#FF6B00]/10">
-              <h4 className="font-semibold text-[#29335C] dark:text-white flex items-center gap-2 mb-4">
-                <Sparkles className="h-4 w-4 text-[#FF6B00]" />
-                Conquistas desbloqueadas
-              </h4>
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  {
-                    title: "Maratonista",
-                    description: "10 horas de estudo",
-                    icon: <Clock className="h-5 w-5 text-[#FF6B00]" />,
-                  },
-                  {
-                    title: "Multidisciplinar",
-                    description: "5 disciplinas estudadas",
-                    icon: <BookOpen className="h-5 w-5 text-[#FF6B00]" />,
-                  },
-                  {
-                    title: "Consistente",
-                    description: "7 dias seguidos",
-                    icon: <BookOpenCheck className="h-5 w-5 text-[#FF6B00]" />,
-                  },
-                  {
-                    title: "Focado",
-                    description: "2h sem interrupções",
-                    icon: <Target className="h-5 w-5 text-[#FF6B00]" />,
-                  },
-                ].map((achievement, index) => (
-                  <div
-                    key={index}
-                    className="bg-white dark:bg-[#1E293B] rounded-lg p-3 border border-gray-200 dark:border-gray-700 flex items-center gap-2"
-                  >
-                    <div className="w-10 h-10 rounded-full bg-[#FF6B00]/10 flex items-center justify-center">
-                      {achievement.icon}
-                    </div>
-                    <div>
-                      <div className="text-sm font-medium text-[#29335C] dark:text-white">
-                        {achievement.title}
+                  <div className="bg-[#F8F9FA] dark:bg-[#29335C]/30 rounded-lg p-4 border border-[#FF6B00]/10">
+                    <h4 className="font-semibold text-[#29335C] dark:text-white flex items-center gap-2 mb-4">
+                      <Sparkles className="h-4 w-4 text-[#FF6B00]" />
+                      {recentSessions.length > 0 ? "Conquistas desbloqueadas" : "Conquistas a desbloquear"}
+                    </h4>
+                    
+                    {recentSessions.length > 0 ? (
+                      <div className="grid grid-cols-2 gap-3">
+                        {/* Show achievements based on actual stats */}
+                        {[
+                          totalTimeInSeconds >= 3600 && {
+                            title: "Primeiro Passo",
+                            description: "1 hora de estudo",
+                            icon: <Clock className="h-5 w-5 text-[#FF6B00]" />,
+                          },
+                          formattedSubjectStats.length >= 2 && {
+                            title: "Multidisciplinar",
+                            description: `${formattedSubjectStats.length} disciplinas estudadas`,
+                            icon: <BookOpen className="h-5 w-5 text-[#FF6B00]" />,
+                          },
+                          recentSessions.length >= 3 && {
+                            title: "Consistente",
+                            description: `${recentSessions.length} sessões realizadas`,
+                            icon: <BookOpenCheck className="h-5 w-5 text-[#FF6B00]" />,
+                          },
+                          // Add achievements as stats improve
+                        ].filter(Boolean).map((achievement, index) => (
+                          achievement && (
+                            <div
+                              key={index}
+                              className="bg-white dark:bg-[#1E293B] rounded-lg p-3 border border-gray-200 dark:border-gray-700 flex items-center gap-2"
+                            >
+                              <div className="w-10 h-10 rounded-full bg-[#FF6B00]/10 flex items-center justify-center">
+                                {achievement.icon}
+                              </div>
+                              <div>
+                                <div className="text-sm font-medium text-[#29335C] dark:text-white">
+                                  {achievement.title}
+                                </div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                  {achievement.description}
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        ))}
                       </div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">
-                        {achievement.description}
+                    ) : (
+                      <div className="min-h-[200px] flex items-center justify-center">
+                        <div className="text-center py-8">
+                          <div className="w-12 h-12 rounded-full bg-[#F8F9FA] dark:bg-[#29335C]/50 flex items-center justify-center mx-auto mb-4">
+                            <Sparkles className="h-6 w-6 text-[#FF6B00]/60" />
+                          </div>
+                          <p className="text-gray-500 dark:text-gray-400 max-w-md">
+                            Estude regularmente para desbloquear conquistas e acompanhar seu progresso
+                          </p>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
-                ))}
-              </div>
-            </div>
-          </div>
+                </div>
+              </>
+            );
+          })()}
         </TabsContent>
       </Tabs>
 
