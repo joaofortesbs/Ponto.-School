@@ -200,8 +200,6 @@ export const updateEvent = async (event: CalendarEvent): Promise<CalendarEvent |
       updatedAt: new Date().toISOString()
     });
 
-    console.log("Tentando atualizar evento no DB:", dbEvent);
-
     const { data, error } = await supabase
       .from("calendar_events")
       .update(dbEvent)
@@ -210,97 +208,18 @@ export const updateEvent = async (event: CalendarEvent): Promise<CalendarEvent |
       .single();
 
     if (error) {
-      console.error("Erro ao atualizar evento no DB:", error);
+      console.error("Erro ao atualizar evento:", error);
       // Fallback para armazenamento local em caso de erro
-      const updatedEvent = updateEventLocally(event);
-      console.log("Evento atualizado localmente como fallback:", updatedEvent);
-      
-      // Atualizar variável global se existir
-      try {
-        if (window.agendaEventData) {
-          const eventDate = new Date(event.startDate);
-          const day = eventDate.getDate();
-          
-          if (window.agendaEventData[day]) {
-            // Encontrar e atualizar o evento no array do dia
-            const eventIndex = window.agendaEventData[day].findIndex(e => e.id === event.id);
-            if (eventIndex >= 0) {
-              window.agendaEventData[day][eventIndex] = {
-                ...event,
-                color: event.type ? getEventTypeColor(event.type) : 'gray'
-              };
-              console.log("Evento atualizado na variável global");
-              
-              // Disparar evento para notificar outros componentes
-              window.dispatchEvent(new CustomEvent('agenda-events-updated', { 
-                detail: { events: window.agendaEventData }
-              }));
-            }
-          }
-        }
-      } catch (globalUpdateError) {
-        console.warn("Erro ao atualizar variável global:", globalUpdateError);
-      }
-      
+      updateEventLocally(event);
       return event;
     }
 
-    const formattedEvent = formatDBEventForApp(data);
-    console.log("Evento atualizado com sucesso no DB:", formattedEvent);
-    
-    // Atualizar a variável global para sincronizar visualizações
-    try {
-      if (window.agendaEventData) {
-        const eventDate = new Date(formattedEvent.startDate);
-        const day = eventDate.getDate();
-        
-        if (window.agendaEventData[day]) {
-          // Encontrar e atualizar o evento no array do dia
-          const eventIndex = window.agendaEventData[day].findIndex(e => e.id === formattedEvent.id);
-          if (eventIndex >= 0) {
-            window.agendaEventData[day][eventIndex] = {
-              ...formattedEvent,
-              color: formattedEvent.type ? getEventTypeColor(formattedEvent.type) : 'gray'
-            };
-          }
-          
-          // Disparar evento para notificar outros componentes
-          window.dispatchEvent(new CustomEvent('agenda-events-updated', { 
-            detail: { events: window.agendaEventData }
-          }));
-        }
-      }
-    } catch (globalUpdateError) {
-      console.warn("Erro ao atualizar variável global:", globalUpdateError);
-    }
-    
-    return formattedEvent;
+    return formatDBEventForApp(data);
   } catch (error) {
     console.error("Erro ao atualizar evento:", error);
     // Fallback para armazenamento local em caso de erro
     updateEventLocally(event);
     return event;
-  }
-};
-
-// Função auxiliar para determinar a cor do evento baseada no tipo
-const getEventTypeColor = (type: string): string => {
-  switch (type.toLowerCase()) {
-    case "aula":
-      return "blue";
-    case "trabalho":
-    case "tarefa":
-      return "amber";
-    case "prova":
-      return "red";
-    case "reuniao":
-      return "green";
-    case "lembrete":
-      return "yellow";
-    case "evento":
-      return "purple";
-    default:
-      return "gray";
   }
 };
 

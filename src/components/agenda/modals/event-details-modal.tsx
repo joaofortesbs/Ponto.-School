@@ -65,25 +65,53 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
   };
 
   const handleEdit = async () => {
-    if (!event) return;
+    if (onEditEvent) {
+      try {
+        // Importar serviços necessários
+        const { updateEvent } = await import('@/services/calendarEventService');
 
-    try {
-      // Primeiro fechar o modal de detalhes
-      setOpen(false);
+        const editedEvent = {
+          ...event,
+          title: editedTitle,
+          description: editedDescription,
+          type: editedType,
+          discipline: editedDiscipline,
+          location: editedLocation,
+          isOnline: editedIsOnline,
+          meetingLink: editedMeetingLink,
+          startTime: editedStartTime,
+          startDate: editedDate ? format(editedDate, 'yyyy-MM-dd') : event.startDate,
+          endTime: editedEndTime,
+        };
 
-      // Após um curto delay, abrir o modal de edição
-      setTimeout(() => {
-        if (onEdit && event) {
-          onEdit(event);
+        // Salvar no banco de dados
+        const updatedEvent = await updateEvent(editedEvent);
+
+        if (updatedEvent) {
+          toast({
+            title: "Evento atualizado",
+            description: "O evento foi atualizado com sucesso no banco de dados."
+          });
+        } else {
+          toast({
+            title: "Aviso",
+            description: "O evento foi atualizado localmente, mas houve um problema ao salvá-lo no servidor.",
+            variant: "warning"
+          });
         }
-      }, 300);
-    } catch (error) {
-      console.error("Erro ao preparar edição do evento:", error);
-      toast({
-        title: "Erro ao editar evento",
-        description: "Não foi possível iniciar a edição. Tente novamente.",
-        variant: "destructive"
-      });
+
+        // Atualizar a interface independentemente do resultado do banco
+        onEditEvent(editedEvent);
+        onOpenChange(false);
+
+      } catch (error) {
+        console.error("Erro ao editar evento:", error);
+        toast({
+          title: "Erro ao editar evento",
+          description: "Ocorreu um erro ao atualizar o evento. Tente novamente.",
+          variant: "destructive"
+        });
+      }
     }
   };
 
