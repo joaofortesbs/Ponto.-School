@@ -34,6 +34,19 @@ CREATE POLICY friend_requests_select_policy ON public.friend_requests
     TO authenticated 
     USING (auth.uid() = sender_id OR auth.uid() = receiver_id);
 
+-- Certifique-se de que a política de visualização de perfis existe
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT FROM pg_policies 
+        WHERE tablename = 'profiles' 
+        AND policyname = 'Allow profiles select for all authenticated users'
+    ) THEN
+        EXECUTE 'CREATE POLICY "Allow profiles select for all authenticated users" ON public.profiles FOR SELECT TO authenticated USING (true)';
+    END IF;
+END
+$$;
+
 -- Update: Only the receiver can update a request (to accept/reject)
 CREATE POLICY friend_requests_update_policy ON public.friend_requests 
     FOR UPDATE 

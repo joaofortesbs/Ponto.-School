@@ -323,24 +323,30 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
     // Definir novo timeout
     searchTimeoutRef.current = setTimeout(async () => {
       try {
-        // Tentar buscar do Supabase
+        // Buscar do Supabase - melhorada para capturar mais resultados
         const { data, error } = await supabase
           .from('profiles')
           .select('id, full_name, username, avatar_url, bio')
           .or(`username.ilike.%${query}%,full_name.ilike.%${query}%`)
-          .limit(10);
+          .neq('id', currentUserId || '') // Não mostrar o usuário atual
+          .limit(20);
 
-        if (error) throw error;
+        if (error) {
+          console.error("Erro na busca do Supabase:", error);
+          throw error;
+        }
+
+        console.log("Resultados da busca no Supabase:", data);
 
         // Transformar dados do Supabase no formato UserType
         if (data && data.length > 0) {
           const formattedResults: UserType[] = data.map(user => ({
             id: user.id,
-            name: user.full_name || user.username,
+            name: user.full_name || user.username || 'Usuário',
             username: user.username || 'user',
             bio: user.bio || 'Sem biografia',
             isPrivate: false, // Assumindo não privado por padrão
-            avatar: user.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`,
+            avatar: user.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username || user.id}`,
             followersCount: 0,
             friendsCount: 0,
             postsCount: 0,
@@ -365,8 +371,15 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
           } 
 
           setFilteredResults(finalResults);
+          toast({
+            title: finalResults.length > 0 ? "Usuários encontrados" : "Nenhum usuário encontrado",
+            description: finalResults.length > 0 
+              ? `Encontramos ${finalResults.length} usuário(s) com base na sua busca.` 
+              : "Tente outro termo ou verifique a ortografia.",
+            duration: 3000,
+          });
         } else {
-          // Se não há resultados do Supabase, filtra os dados mockados (desenvolvimento)
+          // Se não há resultados do Supabase, verificar se devemos mostrar dados mock
           if (process.env.NODE_ENV === 'development') {
             console.log('Usando dados mock para pesquisa (sem resultados do Supabase)');
             const results = mockUsers.filter(user => 
@@ -391,6 +404,11 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
             setFilteredResults(finalResults);
           } else {
             setFilteredResults([]);
+            toast({
+              title: "Nenhum usuário encontrado",
+              description: "Tente outro termo de busca ou verifique a ortografia.",
+              duration: 3000,
+            });
           }
         }
       } catch (error) {
@@ -407,12 +425,17 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
           setFilteredResults(results);
         } else {
           setFilteredResults([]);
+          toast({
+            title: "Erro na busca",
+            description: "Ocorreu um erro ao buscar usuários. Tente novamente mais tarde.",
+            duration: 3000,
+          });
         }
       } finally {
         setIsLoading(false);
       }
     }, 300);
-  }, [filter, sortOrder, savedProfiles, selectedFilters]);
+  }, [filter, sortOrder, savedProfiles, selectedFilters, currentUserId]);
 
   // Atualizar resultados quando a busca mudar
   useEffect(() => {
@@ -1345,15 +1368,31 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                     </div>
                     <Input 
                       className="w-full pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/40 focus:border-[#FF6B00]/50 focus:ring-[#FF6B00]/30 rounded-xl py-6"
-                      placeholder="Digite nome, e-mail ou @username"
+                      placeholder="Digite nome, @username ou parte do nome"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          performSearch(searchQuery);
+                        }
+                      }}
                     />
 
                     {isLoading && (
                       <div className="absolute inset-y-0 right-3 flex items-center">
-                        <div className="h-4 w-4 border-2 border-white/40 border-t-transparent rounded-full animate-spin"></div>
+                        <div className="h-4 w-4 border-2 border-[#FF6B00]/70 border-t-transparent rounded-full animate-spin"></div>
                       </div>
+                    )}
+                    
+                    {!isLoading && searchQuery.trim() !== '' && (
+                      <button 
+                        onClick={() => performSearch(searchQuery)}
+                        className="absolute inset-y-0 right-3 p-2 text-white/60 hover:text-white/90 transition-colors"
+                        title="Buscar"
+                      >
+                        <span className="sr-only">Buscar</span>
+                        <Search className="h-4 w-4" />
+                      </button>
                     )}
                   </div>
 
