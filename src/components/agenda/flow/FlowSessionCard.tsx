@@ -105,6 +105,59 @@ const FlowSessionCard: React.FC = () => {
       }
     };
   }, [timer]);
+  
+  // Carregar histórico de sessões do banco de dados
+  useEffect(() => {
+    const loadSessionHistory = async () => {
+      try {
+        // Importar o cliente supabase
+        const { supabase } = await import("@/lib/supabase");
+        
+        // Verificar se o usuário está autenticado
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          // Buscar sessões do usuário
+          const { data, error } = await supabase
+            .from("flow_sessions")
+            .select("*")
+            .eq("user_id", user.id)
+            .order("date", { ascending: false });
+            
+          if (error) {
+            console.error("Erro ao carregar histórico de sessões:", error);
+          } else if (data) {
+            // Transformar os dados para o formato usado pelo componente
+            const formattedSessions: FlowSession[] = data.map(session => ({
+              id: session.id,
+              date: new Date(session.date).toLocaleString("pt-BR", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit"
+              }),
+              duration: session.duration_formatted,
+              subjects: session.subjects,
+              progress: session.progress,
+              elapsedTimeSeconds: session.duration_seconds
+            }));
+            
+            setSessionHistory(formattedSessions);
+            console.log(`Carregadas ${formattedSessions.length} sessões de flow do banco de dados`);
+          }
+        }
+      } catch (error) {
+        console.error("Erro ao carregar histórico de sessões:", error);
+      } finally {
+        setInitialHistoryLoaded(true);
+      }
+    };
+    
+    if (!initialHistoryLoaded) {
+      loadSessionHistory();
+    }
+  }, [initialHistoryLoaded]);
 
   // Handle start session
   const startSession = () => {
@@ -142,14 +195,19 @@ const FlowSessionCard: React.FC = () => {
     setTimer(interval);
   };
 
-  // Array to store completed sessions history
-  const [sessionHistory, setSessionHistory] = useState<Array<{
+  // Interface para as sessões de flow
+  interface FlowSession {
     id: number;
     date: string;
     duration: string;
     subjects: string[];
     progress: number;
-  }>>([]);
+    elapsedTimeSeconds?: number;
+  }
+
+  // Array to store completed sessions history
+  const [sessionHistory, setSessionHistory] = useState<FlowSession[]>([]);
+  const [initialHistoryLoaded, setInitialHistoryLoaded] = useState(false);
 
   // Handle end session
   const endSession = () => {
@@ -164,7 +222,7 @@ const FlowSessionCard: React.FC = () => {
   };
 
   // Save session to history
-  const saveSessionToHistory = () => {
+  const saveSessionToHistory = async () => {
     const subjectNames = selectedSubjects.map((subjectId) => {
       const subject = subjects.find((s) => s.id === subjectId);
       return subject ? subject.name : "Disciplina";
@@ -181,11 +239,44 @@ const FlowSessionCard: React.FC = () => {
       }),
       duration: formatTime(elapsedTime),
       subjects: subjectNames,
-      progress: Math.min(100, Math.round(calculateProgress()))
+      progress: Math.min(100, Math.round(calculateProgress())),
+      elapsedTimeSeconds: elapsedTime // Armazenar tempo em segundos para cálculos futuros
     };
 
-    // Add the new session to history
+    // Add the new session to local history
     setSessionHistory([newSession, ...sessionHistory]);
+
+    try {
+      // Importar o cliente supabase
+      const { supabase } = await import("@/lib/supabase");
+      
+      // Verificar se o usuário está autenticado
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        // Salvar a sessão no banco de dados
+        const { data, error } = await supabase
+          .from("flow_sessions")
+          .insert({
+            user_id: user.id,
+            date: new Date().toISOString(),
+            duration_seconds: elapsedTime,
+            duration_formatted: formatTime(elapsedTime),
+            subjects: subjectNames,
+            progress: Math.min(100, Math.round(calculateProgress())),
+            session_goal: sessionGoal || null,
+            notes: notes || null
+          });
+          
+        if (error) {
+          console.error("Erro ao salvar sessão de flow:", error);
+        } else {
+          console.log("Sessão de flow salva com sucesso no banco de dados");
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao salvar sessão de flow:", error);
+    }
   };
 
   // Handle reset session
