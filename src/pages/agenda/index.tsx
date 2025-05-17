@@ -70,6 +70,7 @@ import {
   MoreHorizontal,
   ChevronRight,
   Info,
+  ChevronLeft,
 } from "lucide-react";
 
 export default function AgendaPage() {

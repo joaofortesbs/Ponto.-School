@@ -2,7 +2,7 @@ import React from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Video } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, Video } from "lucide-react";
 
 interface DayViewProps {
   selectedDay: Date | null;
