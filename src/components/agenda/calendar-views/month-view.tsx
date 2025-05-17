@@ -1,4 +1,3 @@
-
 import React from "react";
 import {
   format,
@@ -18,19 +17,16 @@ import {
 } from "lucide-react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
+import DraggableEvent from "./draggable-event";
 import DroppableDay from "./droppable-day";
+import { CalendarEvent } from "@/services/calendarEventService";
 
 interface MonthViewProps {
-  currentYear: number;
-  currentMonth: number;
-  selectedDay: Date | null;
-  setSelectedDay: (day: Date) => void;
-  eventData: Record<number, any[]>;
-  getEventIcon: (type: string) => React.ReactNode;
-  openEventDetails: (event: any) => void;
-  onEventDrop?: (event: any, day: number) => void;
-  setCalendarView: (view: string) => void;
-  calendarView: string;
+  currentDate: Date;
+  events: CalendarEvent[];
+  onDateClick: (date: Date) => void;
+  onEventClick: (event: CalendarEvent) => void;
+  onMoveEvent?: (event: CalendarEvent, newDate: Date) => void;
 }
 
 const MonthView: React.FC<MonthViewProps> = ({
@@ -129,7 +125,7 @@ const MonthView: React.FC<MonthViewProps> = ({
       onEventDrop(event, day);
     }
   };
-  
+
   // Handler para alternar a visualização do calendário
   const handleViewChange = (view: string) => {
     console.log("Changing view to:", view);
