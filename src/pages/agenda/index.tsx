@@ -180,22 +180,36 @@ export default function AgendaPage() {
               isOnline: event.isOnline || false,
               color: event.color,
               details: event.details,
-              startTime: event.startTime || event.time || "00:00"
+              startTime: event.startTime || event.time || "00:00",
+              // Guardar a data original para ordenação
+              originalDate: eventDate,
+              originalTime: event.startTime || event.time || "00:00"
             });
           }
         }
       });
     });
     
-    // Ordena eventos por data (do mais próximo ao mais distante)
+    // Ordena eventos cronologicamente (por data e hora)
     upcoming.sort((a, b) => {
-      const [dayA, monthA, yearA] = a.day.split('/').map(Number);
-      const [dayB, monthB, yearB] = b.day.split('/').map(Number);
+      // Primeiro compara por data
+      const dateComparison = a.originalDate.getTime() - b.originalDate.getTime();
       
-      const dateA = new Date(yearA, monthA - 1, dayA);
-      const dateB = new Date(yearB, monthB - 1, dayB);
+      // Se for a mesma data, compara pelo horário
+      if (dateComparison === 0) {
+        const [hoursA, minutesA] = a.originalTime.split(':').map(Number);
+        const [hoursB, minutesB] = b.originalTime.split(':').map(Number);
+        
+        // Compara horas
+        if (hoursA !== hoursB) {
+          return hoursA - hoursB;
+        }
+        
+        // Se as horas forem iguais, compara minutos
+        return minutesA - minutesB;
+      }
       
-      return dateA.getTime() - dateB.getTime();
+      return dateComparison;
     });
     
     return upcoming;
