@@ -156,7 +156,11 @@ const initialReminders = [
 
 const Agenda = () => {
   // State hooks
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date>(() => {
+    const today = new Date();
+    // Garantir que a data está em formato válido
+    return new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  });
   const [events, setEvents] = useState(initialEvents);
   const [tasks, setTasks] = useState(initialTasks);
   const [reminders, setReminders] = useState(initialReminders);
