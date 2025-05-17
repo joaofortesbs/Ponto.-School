@@ -12,6 +12,7 @@ export interface FlowSession {
   session_goal?: string | null;
   notes?: string | null;
   timestamp?: string;
+  session_title?: string;
 }
 
 /**

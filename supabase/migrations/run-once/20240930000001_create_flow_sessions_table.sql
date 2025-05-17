@@ -14,6 +14,7 @@ BEGIN
           progress INTEGER NOT NULL,
           session_goal TEXT,
           notes TEXT,
+          session_title TEXT,
           created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
         );
 

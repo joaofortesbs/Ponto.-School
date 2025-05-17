@@ -25,6 +25,7 @@ import {
   List,
   Maximize2,
   Pause,
+  Pencil,
   Play,
   Plus,
   RefreshCw,
@@ -107,6 +108,11 @@ const FlowSessionCard: React.FC = () => {
     };
   }, [timer]);
   
+  // Função para recarregar o histórico de sessões
+  const loadSessions = async () => {
+    setInitialHistoryLoaded(false);
+  };
+
   // Carregar histórico de sessões de forma robusta (Supabase + localStorage)
   useEffect(() => {
     const loadSessionHistory = async () => {
@@ -277,6 +283,10 @@ const FlowSessionCard: React.FC = () => {
     subjects: string[];
     progress: number;
     elapsedTimeSeconds?: number;
+    session_goal?: string | null;
+    notes?: string | null;
+    timestamp?: string;
+    session_title?: string;
   }
 
   // Array to store completed sessions history
@@ -316,7 +326,8 @@ const FlowSessionCard: React.FC = () => {
       elapsedTimeSeconds: elapsedTime, // Armazenar tempo em segundos para cálculos futuros
       session_goal: sessionGoal || null,
       notes: notes || null,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      session_title: sessionGoal ? `Estudo: ${sessionGoal.substring(0, 30)}${sessionGoal.length > 30 ? '...' : ''}` : "Sessão de estudo"
     };
 
     // Add the new session to local history
@@ -1359,17 +1370,100 @@ const FlowSessionCard: React.FC = () => {
         {/* History Tab */}
         <TabsContent value="history" className="space-y-6">
           <div className="bg-[#F8F9FA] dark:bg-[#29335C]/30 rounded-lg p-4 border border-[#FF6B00]/10">
-            <h4 className="font-semibold text-[#29335C] dark:text-white flex items-center gap-2 mb-4">
-              <Clock className="h-4 w-4 text-[#FF6B00]" />
-              Histórico de sessões
-            </h4>
+            <div className="flex justify-between items-center mb-4">
+              <h4 className="font-semibold text-[#29335C] dark:text-white flex items-center gap-2">
+                <Clock className="h-4 w-4 text-[#FF6B00]" />
+                Histórico de sessões
+              </h4>
+              
+              {sessionHistory.length > 0 && (
+                <div className="flex gap-2">
+                  <Select 
+                    onValueChange={(value) => {
+                      // Filtrar por disciplina
+                      if (value === "todas") {
+                        loadSessions();
+                      } else {
+                        const filteredSessions = sessionHistory.filter(session => 
+                          session.subjects.some(subject => 
+                            subject.toLowerCase().includes(value.toLowerCase())
+                          )
+                        );
+                        setSessionHistory(filteredSessions);
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="h-8 w-[140px] text-xs border-[#FF6B00]/30 focus:border-[#FF6B00] focus:ring-[#FF6B00]/30">
+                      <SelectValue placeholder="Filtrar por disciplina" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="todas">Todas as disciplinas</SelectItem>
+                      {Array.from(new Set(sessionHistory.flatMap(s => s.subjects))).map((subject, idx) => (
+                        <SelectItem key={idx} value={subject}>
+                          {subject}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  
+                  <Select 
+                    onValueChange={(value) => {
+                      // Filtrar por duração
+                      const filteredSessions = [...sessionHistory];
+                      
+                      switch(value) {
+                        case "recentes":
+                          filteredSessions.sort((a, b) => {
+                            const dateA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+                            const dateB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+                            return dateB - dateA;
+                          });
+                          break;
+                        case "antigas":
+                          filteredSessions.sort((a, b) => {
+                            const dateA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+                            const dateB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+                            return dateA - dateB;
+                          });
+                          break;
+                        case "longas":
+                          filteredSessions.sort((a, b) => 
+                            (b.elapsedTimeSeconds || 0) - (a.elapsedTimeSeconds || 0)
+                          );
+                          break;
+                        case "curtas":
+                          filteredSessions.sort((a, b) => 
+                            (a.elapsedTimeSeconds || 0) - (b.elapsedTimeSeconds || 0)
+                          );
+                          break;
+                        default:
+                          break;
+                      }
+                      
+                      setSessionHistory(filteredSessions);
+                    }}
+                  >
+                    <SelectTrigger className="h-8 w-[120px] text-xs border-[#FF6B00]/30 focus:border-[#FF6B00] focus:ring-[#FF6B00]/30">
+                      <SelectValue placeholder="Ordenar por" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="recentes">Mais recentes</SelectItem>
+                      <SelectItem value="antigas">Mais antigas</SelectItem>
+                      <SelectItem value="longas">Mais longas</SelectItem>
+                      <SelectItem value="curtas">Mais curtas</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+            
             <div className="space-y-3">
               {sessionHistory.length > 0 ? (
                 // Show session history when available
                 sessionHistory.map((session) => (
                   <div
                     key={session.id}
-                    className="bg-white dark:bg-[#1E293B] rounded-lg p-3 border border-gray-200 dark:border-gray-700 hover:border-[#FF6B00]/30 cursor-pointer transition-all"
+                    className="bg-white dark:bg-[#1E293B] rounded-lg p-3 border border-gray-200 dark:border-gray-700 hover:border-[#FF6B00]/30 transition-all"
                   >
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
@@ -1377,16 +1471,99 @@ const FlowSessionCard: React.FC = () => {
                           <Clock className="h-4 w-4 text-[#FF6B00]" />
                         </div>
                         <div>
-                          <div className="text-sm font-medium text-[#29335C] dark:text-white">
-                            Sessão de estudo
+                          <div 
+                            className="text-sm font-medium text-[#29335C] dark:text-white cursor-pointer hover:text-[#FF6B00] transition-colors flex items-center gap-1"
+                            onClick={() => {
+                              // Implementação de renomear sessão
+                              const sessionTitle = session.session_title || "Sessão de estudo";
+                              const newTitle = window.prompt("Digite o novo nome para esta sessão:", sessionTitle);
+                              
+                              if (newTitle !== null && newTitle.trim() !== "") {
+                                const updatedSessions = sessionHistory.map(s => 
+                                  s.id === session.id ? {...s, session_title: newTitle.trim()} : s
+                                );
+                                setSessionHistory(updatedSessions);
+                                
+                                // Salvar alterações localmente
+                                saveToLocalStorage(updatedSessions);
+                                
+                                // Tentar atualizar no Supabase se possível
+                                try {
+                                  const updateSession = async () => {
+                                    const { supabase } = await import("@/lib/supabase");
+                                    const { data: { user } } = await supabase.auth.getUser();
+                                    
+                                    if (user) {
+                                      const { error } = await supabase
+                                        .from("flow_sessions")
+                                        .update({ session_title: newTitle.trim() })
+                                        .eq("id", session.id);
+                                        
+                                      if (error) {
+                                        console.error("Erro ao atualizar sessão:", error);
+                                      }
+                                    }
+                                  };
+                                  
+                                  updateSession();
+                                } catch (error) {
+                                  console.error("Erro ao atualizar sessão:", error);
+                                }
+                              }
+                            }}
+                          >
+                            {session.session_title || "Sessão de estudo"}
+                            <Pencil className="h-3 w-3 opacity-50" />
                           </div>
                           <div className="text-xs text-gray-500 dark:text-gray-400">
                             {session.date}
                           </div>
                         </div>
                       </div>
-                      <div className="text-sm font-medium text-[#FF6B00]">
-                        {session.duration}
+                      <div className="flex items-center gap-2">
+                        <div className="text-sm font-medium text-[#FF6B00]">
+                          {session.duration}
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 rounded-full hover:bg-red-100 dark:hover:bg-red-900/20 hover:text-red-500"
+                          onClick={() => {
+                            // Implementação de excluir sessão
+                            if (window.confirm("Tem certeza que deseja excluir esta sessão?")) {
+                              const updatedSessions = sessionHistory.filter(s => s.id !== session.id);
+                              setSessionHistory(updatedSessions);
+                              
+                              // Salvar alterações localmente
+                              saveToLocalStorage(updatedSessions);
+                              
+                              // Tentar excluir do Supabase se possível
+                              try {
+                                const deleteSession = async () => {
+                                  const { supabase } = await import("@/lib/supabase");
+                                  const { data: { user } } = await supabase.auth.getUser();
+                                  
+                                  if (user) {
+                                    const { error } = await supabase
+                                      .from("flow_sessions")
+                                      .delete()
+                                      .eq("id", session.id);
+                                      
+                                    if (error) {
+                                      console.error("Erro ao excluir sessão:", error);
+                                    }
+                                  }
+                                };
+                                
+                                deleteSession();
+                              } catch (error) {
+                                console.error("Erro ao excluir sessão:", error);
+                              }
+                            }
+                          }}
+                        >
+                          <Trash className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
                     <div className="flex justify-between items-center">
