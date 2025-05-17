@@ -204,12 +204,16 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
             lastActive: user.last_active || 'Indisponível'
           }));
 
+          // Obter ID do usuário atual
+          const currentUserResult = await supabase.auth.getUser();
+          const currentUserId = currentUserResult.data.user?.id;
+
           // Verificar status de amizade para cada usuário
           const userIds = mappedUsers.map(user => user.id);
           const { data: friendRequests, error: requestsError } = await supabase
             .from('friend_requests')
             .select('*')
-            .or(`sender_id.eq.${(await supabase.auth.getUser()).data.user?.id},receiver_id.eq.${(await supabase.auth.getUser()).data.user?.id}`)
+            .or(`sender_id.eq.${currentUserId},receiver_id.eq.${currentUserId}`)
             .in('sender_id', userIds)
             .in('receiver_id', userIds);
 
@@ -221,7 +225,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
           if (friendRequests) {
             const newRelations = { ...userRelations };
             friendRequests.forEach(req => {
-              if (req.sender_id === (await supabase.auth.getUser()).data.user?.id) {
+              if (req.sender_id === currentUserId) {
                 // Solicitação enviada pelo usuário atual
                 newRelations[req.receiver_id] = req.status === 'accepted' ? 'following' : 'requested';
               } else if (req.status === 'accepted') {
@@ -341,7 +345,8 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
   useEffect(() => {
     const fetchUserRelations = async () => {
       try {
-        const currentUserId = (await supabase.auth.getUser()).data.user?.id;
+        const currentUserResult = await supabase.auth.getUser();
+        const currentUserId = currentUserResult.data.user?.id;
         if (!currentUserId) return;
 
         // Buscar solicitações de amizade no Supabase
@@ -464,11 +469,16 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
     };
 
     // Buscar dados reais se o usuário estiver autenticado
-    if ((await supabase.auth.getUser()).data.user) {
-      fetchUserRelations();
-    } else {
-      initializeWithMockData();
+    const fetchData = async () => {
+      const user = (await supabase.auth.getUser()).data.user;
+      if (user) {
+        await fetchUserRelations();
+      } else {
+        initializeWithMockData();
+      }
     }
+
+    fetchData();
   }, []);
 
   // Efeito para não rerenderizar o filtro ao trocar de aba
