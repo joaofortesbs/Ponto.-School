@@ -75,18 +75,6 @@ import {
   ChevronLeft,
 } from "lucide-react";
 
-// Calendar Event Interface
-interface CalendarEvent {
-  id: string;
-  title: string;
-  startDate: Date;
-  endDate: Date;
-  description: string;
-}
-
-// Import Calendar Event service
-import { getAllEvents } from "@/services/calendarEventService";
-
 export default function AgendaPage() {
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -107,7 +95,7 @@ export default function AgendaPage() {
   const [showEpictusAIModal, setShowEpictusAIModal] = useState(false);
   const [showEpictusCalendarModal, setShowEpictusCalendarModal] =
     useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [showSetGoalModal, setShowSetGoalModal] = useState(false);
   const [showAddTaskModal, setShowAddTaskModal] = useState(false);
   const [showAISuggestionsModal, setShowAISuggestionsModal] = useState(false);
@@ -167,66 +155,63 @@ export default function AgendaPage() {
     const today = new Date();
     today.setHours(0, 0, 0, 0); // Normaliza a data atual para comparação
     const upcoming: any[] = [];
-
-    // Verifica se eventData existe antes de processar
-    if (eventData && typeof eventData === 'object') {
-      // Percorre todos os dias com eventos
-      Object.keys(eventData).forEach(day => {
-        const dayEvents = eventData[parseInt(day)] || [];
-
-        // Para cada evento nesse dia
-        dayEvents.forEach(event => {
-          if (event && event.startDate) {
-            const eventDate = new Date(event.startDate);
-            eventDate.setHours(0, 0, 0, 0); // Normaliza a data do evento para comparação
-
-            // Adiciona eventos que ocorrem hoje ou no futuro
-            if (eventDate >= today) {
-              // Formata a data com date-fns
-              const formattedDate = format(eventDate, "dd/MM/yyyy", { locale: ptBR });
-
-              upcoming.push({
-                id: event.id,
-                type: event.type,
-                title: event.title,
-                day: formattedDate,
-                discipline: event.discipline || "Geral",
-                isOnline: event.isOnline || false,
-                color: event.color,
-                details: event.details,
-                startTime: event.startTime || event.time || "00:00",
-                // Guardar a data original para ordenação
-                originalDate: eventDate,
-                originalTime: event.startTime || event.time || "00:00"
-              });
-            }
+    
+    // Percorre todos os dias com eventos
+    Object.keys(eventData).forEach(day => {
+      const dayEvents = eventData[parseInt(day)] || [];
+      
+      // Para cada evento nesse dia
+      dayEvents.forEach(event => {
+        if (event.startDate) {
+          const eventDate = new Date(event.startDate);
+          eventDate.setHours(0, 0, 0, 0); // Normaliza a data do evento para comparação
+          
+          // Adiciona eventos que ocorrem hoje ou no futuro
+          if (eventDate >= today) {
+            // Formata a data com date-fns
+            const formattedDate = format(eventDate, "dd/MM/yyyy", { locale: ptBR });
+            
+            upcoming.push({
+              id: event.id,
+              type: event.type,
+              title: event.title,
+              day: formattedDate,
+              discipline: event.discipline || "Geral",
+              isOnline: event.isOnline || false,
+              color: event.color,
+              details: event.details,
+              startTime: event.startTime || event.time || "00:00",
+              // Guardar a data original para ordenação
+              originalDate: eventDate,
+              originalTime: event.startTime || event.time || "00:00"
+            });
           }
-        });
+        }
       });
-    }
-
+    });
+    
     // Ordena eventos cronologicamente (por data e hora)
     upcoming.sort((a, b) => {
       // Primeiro compara por data
       const dateComparison = a.originalDate.getTime() - b.originalDate.getTime();
-
+      
       // Se for a mesma data, compara pelo horário
       if (dateComparison === 0) {
         const [hoursA, minutesA] = a.originalTime.split(':').map(Number);
         const [hoursB, minutesB] = b.originalTime.split(':').map(Number);
-
+        
         // Compara horas
         if (hoursA !== hoursB) {
           return hoursA - hoursB;
         }
-
+        
         // Se as horas forem iguais, compara minutos
         return minutesA - minutesB;
       }
-
+      
       return dateComparison;
     });
-
+    
     return upcoming;
   };
 
@@ -504,14 +489,40 @@ export default function AgendaPage() {
   };
 
   // Add new event
-  const handleAddEvent = async (newEvent: Omit<CalendarEvent, 'id'>) => {
-    try {
-      // O evento já foi salvo no banco de dados pelo modal
-      // Agora apenas atualizamos a interface
-      const updatedEvents = await getAllEvents();
-      setEvents(updatedEvents);
-    } catch (error) {
-      console.error("Erro ao atualizar lista de eventos:", error);
+  const handleAddEvent = (newEvent: any) => {
+    if (newEvent.startDate) {
+      const eventDate = new Date(newEvent.startDate);
+      const day = eventDate.getDate();
+
+      // Add color based on event type
+      const eventWithColor = {
+        ...newEvent,
+        color: getEventColor(newEvent.type),
+        time: newEvent.startTime || "00:00",
+      };
+
+      // Add the event to the eventData state
+      const updatedEvents = { ...eventData };
+      if (updatedEvents[day]) {
+        updatedEvents[day] = [...updatedEvents[day], eventWithColor];
+      } else {
+        updatedEvents[day] = [eventWithColor];
+      }
+
+      setEventData(updatedEvents);
+      
+      // Força atualização do componente de próximos eventos
+      setTimeout(() => {
+        const upcomingEventsUpdated = getUpcomingEvents();
+        // Este console.log ajuda a verificar se os eventos estão sendo atualizados corretamente
+        console.log("Próximos eventos atualizados:", upcomingEventsUpdated);
+      }, 100);
+      
+      // Exibe uma mensagem de sucesso
+      toast({
+        title: "Evento adicionado",
+        description: "O evento foi adicionado com sucesso ao seu calendário e listado em Próximos Eventos.",
+      });
     }
   };
 
@@ -559,7 +570,7 @@ export default function AgendaPage() {
     }
 
     setEventData(updatedEvents);
-
+    
     // Exibe uma mensagem de sucesso
     toast({
       title: "Evento atualizado",
@@ -715,44 +726,6 @@ export default function AgendaPage() {
     }
   };
 
-  // Calendar State
-  const [events, setEvents] = useState<CalendarEvent[]>([]);
-
-  // Calendar View
-  const [view, setView] = useState<"month" | "week" | "day">("month");
-
-  useEffect(() => {
-    // Carregar eventos do banco de dados
-    const loadEvents = async () => {
-      try {
-        const loadedEvents = await getAllEvents();
-        setEvents(loadedEvents);
-      } catch (error) {
-        console.error("Erro ao carregar eventos:", error);
-      }
-    };
-
-    loadEvents();
-    setView("month");
-  }, []);
-
-  useEffect(() => {
-    // Pré-processar eventos para organização por dia e hora
-    const processedData: any = {};
-    if (events && Array.isArray(events)) {
-      events.forEach((event) => {
-        if (event && event.start) {
-          const hour = new Date(event.start).getHours();
-          if (!processedData[hour]) {
-            processedData[hour] = [];
-          }
-          processedData[hour].push(event);
-        }
-      });
-    }
-    setEventData(processedData);
-  }, [events]);
-
   return (
     <div className="container mx-auto p-6 max-w-[1400px]">
       {/* Modals */}
@@ -850,236 +823,629 @@ export default function AgendaPage() {
           {/* Summary Cards Row */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
             {/* Card 1: Eventos do Dia */}
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md overflow-hidden border border-gray-100 dark:border-slate-700">
-              <div className="p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Eventos de Hoje
-                  </h3>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                    {format(currentDate, "EEEE, d 'de' MMMM", { locale: ptBR })}
-                  </span>
+            <div className="bg-[#001427] rounded-xl overflow-hidden shadow-lg border border-[#29335C]/30 transform hover:translate-y-[-2px] transition-all duration-300 backdrop-blur-sm">
+              <div className="p-3 border-b border-[#29335C]/30 bg-gradient-to-r from-[#FF6B00]/90 to-[#FF8C40]/90">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-sm shadow-inner">
+                      <CalendarIcon className="h-4 w-4 text-white" />
+                    </div>
+                    <h3 className="text-sm font-bold text-white">
+                      Eventos do Dia
+                    </h3>
+                  </div>
+                  <Badge className="bg-white/20 text-white hover:bg-white/30 transition-colors px-2 py-0.5 text-xs">
+                    0
+                  </Badge>
                 </div>
-                <div className="space-y-3">
-                  {todayEventsData.map((event) => (
-                    <div
-                      key={event.id}
-                      className="flex items-start p-2 hover:bg-gray-50 dark:hover:bg-slate-700/50 rounded-lg transition-colors duration-150 cursor-pointer border border-transparent hover:border-gray-200 dark:hover:border-slate-600"
-                      onClick={() => openEventDetails(event)}
-                    >
-                      <div
-                        className={`w-8 h-8 rounded-lg flex items-center justify-center mr-3 ${
-                          event.type === "aula"
-                            ? "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
-                            : "bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400"
-                        }`}
-                      >
-                        {getEventIcon(event.type)}
+              </div>
+              <div className="p-4 flex flex-col items-center justify-center text-center">
+                <div className="w-16 h-16 rounded-full bg-[#29335C]/40 flex items-center justify-center mb-3">
+                  <CalendarIcon className="h-7 w-7 text-gray-400" />
+                </div>
+                <h4 className="text-sm font-medium text-gray-300 mb-2">
+                  Nenhum evento programado para hoje
+                </h4>
+                <p className="text-xs text-gray-500 mb-3">
+                  Adicione seus eventos para organizar sua rotina acadêmica
+                </p>
+                <Button
+                  className="w-full mt-1 bg-[#FF6B00]/90 hover:bg-[#FF8C40] text-white rounded-lg transition-colors text-xs h-8"
+                  onClick={() => setShowAddEventModal(true)}
+                >
+                  <Plus className="h-3.5 w-3.5 mr-1" /> Adicionar Evento
+                </Button>
+              </div>
+            </div>
+
+            {/* Card 2: Desempenho Semanal */}
+            <div className="bg-[#001427] rounded-xl overflow-hidden shadow-lg border border-[#29335C]/30 transform hover:translate-y-[-2px] transition-all duration-300 backdrop-blur-sm">
+              <div className="p-3 border-b border-[#29335C]/30 bg-gradient-to-r from-[#FF6B00]/90 to-[#FF8C40]/90">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-sm shadow-inner">
+                      <BarChart3 className="h-4 w-4 text-white" />
+                    </div>
+                    <h3 className="text-sm font-bold text-white">
+                      Desempenho Semanal
+                    </h3>
+                  </div>
+                </div>
+              </div>
+              <div className="p-4 flex flex-col items-center justify-center text-center">
+                <div className="w-16 h-16 rounded-full bg-[#29335C]/40 flex items-center justify-center mb-3">
+                  <BarChart3 className="h-7 w-7 text-gray-400" />
+                </div>
+                <h4 className="text-sm font-medium text-gray-300 mb-2">
+                  Sem dados de desempenho
+                </h4>
+                <p className="text-xs text-gray-500 mb-3">
+                  Complete tarefas e atividades para visualizar seu progresso
+                </p>
+                <Button className="w-full mt-1 bg-[#FF6B00]/90 hover:bg-[#FF8C40] text-white rounded-lg transition-colors text-xs h-8">
+                  <LineChart className="h-3.5 w-3.5 mr-1" /> Ver Detalhes
+                </Button>
+              </div>
+            </div>
+
+            {/* Card 3: Ranking */}
+            <div className="bg-[#001427] rounded-xl overflow-hidden shadow-lg border border-[#29335C]/30 transform hover:translate-y-[-2px] transition-all duration-300 backdrop-blur-sm">
+              <div className="p-3 border-b border-[#29335C]/30 bg-gradient-to-r from-[#FF6B00]/90 to-[#FF8C40]/90">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-sm shadow-inner">
+                      <Trophy className="h-4 w-4 text-white" />
+                    </div>
+                    <h3 className="text-sm font-bold text-white">Ranking</h3>
+                  </div>
+                </div>
+              </div>
+              <div className="p-4 flex flex-col items-center justify-center text-center">
+                <div className="w-16 h-16 rounded-full bg-[#29335C]/40 flex items-center justify-center mb-3">
+                  <Trophy className="h-7 w-7 text-gray-400" />
+                </div>
+                <h4 className="text-sm font-medium text-gray-300 mb-2">
+                  Posição no Ranking: 0
+                </h4>
+                <p className="text-xs text-gray-500 mb-3">
+                  0 pontos - Participe das atividades para subir no ranking
+                </p>
+                <Button className="w-full mt-1 bg-[#FF6B00]/90 hover:bg-[#FF8C40] text-white rounded-lg transition-colors text-xs h-8">
+                  <Users className="h-3.5 w-3.5 mr-1" /> Ver Ranking
+                </Button>
+              </div>
+            </div>
+
+            {/* Card 4: Pontos */}
+            <div className="bg-[#001427] rounded-xl overflow-hidden shadow-lg border border-[#29335C]/30 transform hover:translate-y-[-2px] transition-all duration-300 backdrop-blur-sm">
+              <div className="p-3 border-b border-[#29335C]/30 bg-gradient-to-r from-[#FF6B00]/90 to-[#FF8C40]/90">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-sm shadow-inner">
+                      <Coins className="h-4 w-4 text-white" />
+                    </div>
+                    <h3 className="text-sm font-bold text-white">Pontos</h3>
+                  </div>
+                </div>
+              </div>
+              <div className="p-4 flex flex-col items-center justify-center text-center">
+                <div className="w-16 h-16 rounded-full bg-[#29335C]/40 flex items-center justify-center mb-3">
+                  <Coins className="h-7 w-7 text-gray-400" />
+                </div>
+                <h4 className="text-sm font-medium text-gray-300 mb-2">
+                  0 pontos
+                </h4>
+                <p className="text-xs text-gray-500 mb-3">
+                  Complete desafios e tarefas para ganhar pontos e recompensas
+                </p>
+                <Button className="w-full mt-1 bg-[#FF6B00]/90 hover:bg-[#FF8C40] text-white rounded-lg transition-colors text-xs h-8">
+                  <Award className="h-3.5 w-3.5 mr-1" /> Conquistas
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Eventos do Dia Card */}
+          <div className="bg-[#001427] rounded-xl overflow-hidden shadow-lg mb-8 border border-[#29335C]/30 transform hover:translate-y-[-2px] transition-all duration-300">
+            <div className="p-4 border-b border-[#29335C]/30">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <CalendarIcon className="h-5 w-5 text-[#FF6B00]" />
+                  <h3 className="text-base font-bold text-white">
+                    Eventos do Dia
+                  </h3>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-gray-400 hover:text-white hover:bg-[#29335C]/50 rounded-full"
+                >
+                  <Info className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            <div className="p-8 flex flex-col items-center justify-center">
+              <div className="w-20 h-20 rounded-full bg-[#29335C]/30 flex items-center justify-center mb-4">
+                <CalendarIcon className="h-8 w-8 text-gray-500" />
+              </div>
+              <h3 className="text-lg font-semibold text-white mb-2">
+                Nenhum evento para hoje
+              </h3>
+              <p className="text-gray-400 text-sm mb-6 text-center max-w-md">
+                Comece a organizar sua agenda adicionando aulas, trabalhos, provas ou compromissos importantes
+              </p>
+              <Button
+                className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white rounded-lg transition-all duration-300 shadow-md"
+                onClick={() => setShowAddEventModal(true)}
+              >
+                <Plus className="h-4 w-4 mr-2" /> Adicionar Evento
+              </Button>
+            </div>
+          </div>
+
+          {/* Main Content Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Left Column */}
+            <div className="space-y-8">
+              {/* Study Time Card */}
+              <div className="bg-white dark:bg-[#1E293B] rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border border-[#FF6B00]/10 dark:border-[#FF6B00]/20 transform hover:translate-y-[-3px]">
+                <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="bg-white/20 p-1.5 rounded-lg shadow-inner">
+                        <Clock className="h-5 w-5 text-white" />
                       </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                            {event.title}
-                          </h4>
-                          {getStatusBadge(event.status)}
-                        </div>
-                        <div className="flex items-center justify-between mt-1">
-                          <span className="text-xs text-gray-500 dark:text-gray-400">
-                            {event.time}
-                          </span>
-                          <div className="flex items-center gap-1">
-                            <span className="text-xs text-gray-500 dark:text-gray-400">
-                              {event.discipline}
+                      <h3 className="text-base font-bold text-white">
+                        Tempo de Estudo
+                      </h3>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="bg-white/10 rounded-lg p-0.5 flex text-xs">
+                        <button
+                          className={`px-2 py-0.5 ${timeRange === "semana" ? "bg-white/20 text-white" : "text-white/80 hover:bg-white/10"} rounded-l-md`}
+                          onClick={() => handleTimeRangeChange("semana")}
+                        >
+                          Semana
+                        </button>
+                        <button
+                          className={`px-2 py-0.5 ${timeRange === "mes" ? "bg-white/20 text-white" : "text-white/80 hover:bg-white/10"}`}
+                          onClick={() => handleTimeRangeChange("mes")}
+                        >
+                          Mês
+                        </button>
+                        <button
+                          className={`px-2 py-0.5 ${timeRange === "ano" ? "bg-white/20 text-white" : "text-white/80 hover:bg-white/10"} rounded-r-md`}
+                          onClick={() => handleTimeRangeChange("ano")}
+                        >
+                          Ano
+                        </button>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 text-white/80 hover:text-white hover:bg-white/10 rounded-full"
+                        title="Definir Meta"
+                        onClick={() => setShowSetGoalModal(true)}
+                      >
+                        <Target className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-6">
+                  <div className="space-y-6">
+                    {/* Weekly Progress */}
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-500 dark:text-white/60">
+                          Progresso semanal
+                        </span>
+                        <span className="text-sm font-medium text-gray-900 dark:text-white">
+                          0/30h
+                        </span>
+                      </div>
+                      <Progress
+                        value={0}
+                        className="h-2 bg-gray-100 dark:bg-gray-800"
+                        indicatorClassName="bg-[#FF6B00]"
+                      />
+                    </div>
+
+                    {/* Daily Study Graph */}
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium text-gray-800 dark:text-white">
+                        Estudo diário
+                      </h4>
+                      <div className="grid grid-cols-7 gap-1 h-12">
+                        {['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'].map((day, i) => (
+                          <div key={i} className="flex flex-col items-center">
+                            <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-t-sm h-1"></div>
+                            <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                              {day}
                             </span>
-                            {event.isOnline && (
-                              <div className="w-2 h-2 rounded-full bg-green-500" />
-                            )}
                           </div>
-                        </div>
+                        ))}
                       </div>
                     </div>
-                  ))}
+
+                    {/* Subject Breakdown */}
+                    <div className="space-y-3">
+                      <h4 className="text-sm font-medium text-gray-800 dark:text-white">
+                        Estudo por matéria
+                      </h4>
+                      {['Matemática', 'Física', 'Química', 'Biologia'].map((subject, i) => (
+                        <div key={i} className="space-y-1">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-500 dark:text-white/60">
+                              {subject}
+                            </span>
+                            <span className="font-medium text-gray-900 dark:text-white">
+                              0h
+                            </span>
+                          </div>
+                          <Progress
+                            value={0}
+                            className="h-1.5 bg-gray-100 dark:bg-gray-800"
+                            indicatorClassName="bg-[#FF6B00]"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Subject Progress Card */}
+              <div className="bg-white dark:bg-[#1E293B] rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border border-[#FF6B00]/10 dark:border-[#FF6B00]/20 transform hover:translate-y-[-3px]">
+                <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-white/20 p-1.5 rounded-lg shadow-inner">
+                      <PieChart className="h-5 w-5 text-white" />
+                    </div>
+                    <h3 className="text-base font-bold text-white">
+                      Progresso por Disciplina
+                    </h3>
+                  </div>
+                </div>
+                <div className="p-8 flex flex-col items-center justify-center">
+                  <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
+                    <PieChart className="h-8 w-8 text-gray-400" />
+                  </div>
+                  <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                    Nenhuma disciplina registrada
+                  </h4>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 text-center max-w-md">
+                    Adicione disciplinas e acompanhe seu progresso em cada uma delas
+                  </p>
                   <Button
-                    className="w-full h-8 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-gray-200"
-                    variant="ghost"
-                    onClick={() => setShowAddEventModal(true)}
+                    variant="link"
+                    size="sm"
+                    className="h-6 p-0 text-[#FF6B00] hover:text-[#FF8C40] transition-colors font-medium"
                   >
-                    <Plus className="h-3 w-3 mr-1" /> Adicionar evento
+                    Definir Metas <ExternalLink className="h-3 w-3 ml-1" />
                   </Button>
                 </div>
               </div>
             </div>
-            {/* More cards would go here */}
-          </div>
 
-          {/* Add your other dashboard components here */}
+            {/* Right Column */}
+            <div className="space-y-8">
+              {/* Pending Tasks */}
+              <div className="bg-white dark:bg-[#1E293B] rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border border-[#FF6B00]/10 dark:border-[#FF6B00]/20 transform hover:translate-y-[-3px]">
+                <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-white/20 p-1.5 rounded-lg shadow-inner">
+                      <CheckSquare className="h-5 w-5 text-white" />
+                    </div>
+                    <h3 className="text-base font-bold text-white">
+                      Tarefas Pendentes
+                    </h3>
+                  </div>
+                  <Badge className="bg-white/20 text-white hover:bg-white/30 transition-colors px-3 py-1 font-medium">
+                    0 tarefas
+                  </Badge>
+                </div>
+                <div className="p-8 flex flex-col items-center justify-center">
+                  <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
+                    <CheckSquare className="h-8 w-8 text-gray-400" />
+                  </div>
+                  <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                    Nenhuma tarefa pendente
+                  </h4>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 text-center max-w-md">
+                    Adicione tarefas para organizar seus estudos e acompanhar seu progresso
+                  </p>
+                  <Button
+                    size="sm"
+                    className="h-9 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300"
+                    onClick={() => setShowAddTaskModal(true)}
+                  >
+                    <Plus className="h-4 w-4 mr-2" /> Nova Tarefa
+                  </Button>
+                </div>
+              </div>
+
+              {/* Recomendações do Epictus IA */}
+              <div className="bg-white dark:bg-[#1E293B] rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border border-[#FF6B00]/10 dark:border-[#FF6B00]/20 transform hover:translate-y-[-3px]">
+                <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-white/20 p-1.5 rounded-lg shadow-inner">
+                      <Sparkles className="h-5 w-5 text-white" />
+                    </div>
+                    <h3 className="text-base font-bold text-white">
+                      Recomendações do Epictus IA
+                    </h3>
+                  </div>
+                </div>
+                <div className="p-8 flex flex-col items-center justify-center">
+                  <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
+                    <Sparkles className="h-8 w-8 text-gray-400" />
+                  </div>
+                  <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                    Nenhuma recomendação disponível
+                  </h4>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 text-center max-w-md">
+                    À medida que você utiliza a plataforma, o Epictus IA irá analisar seu desempenho e fornecer recomendações personalizadas
+                  </p>
+                  <Button
+                    className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300"
+                    onClick={() => setShowEpictusAIModal(true)}
+                  >
+                    <Sparkles className="h-4 w-4 mr-2" /> Explorar Epictus IA
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
         </TabsContent>
 
         {/* Calendário Tab */}
         <TabsContent value="calendario" className="mt-0">
-          <DndProvider backend={HTML5Backend}>
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md overflow-hidden border border-gray-100 dark:border-slate-700 p-6">
-              <div className="flex flex-col md:flex-row gap-6">
-                <div className="w-full md:w-3/4">
-                  {/* Calendar Header */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
-                    <div className="flex items-center gap-3">
-                      <h2 className="text-xl font-bold text-gray-800 dark:text-white">
-                        Calendário
-                      </h2>
-                      {/* Calendar View Toggle */}
-                      <div className="flex items-center space-x-1 bg-gray-100 dark:bg-slate-700 p-1 rounded-lg">
-                        <Button
-                          variant={calendarView === "month" ? "default" : "ghost"}
-                          size="sm"
-                          className={`h-8 ${
-                            calendarView === "month"
-                              ? "bg-white dark:bg-slate-600 text-gray-800 dark:text-white shadow-sm"
-                              : "text-gray-600 dark:text-gray-300"
-                          }`}
-                          onClick={() => setCalendarView("month")}
-                        >
-                          Mês
-                        </Button>
-                        <Button
-                          variant={calendarView === "week" ? "default" : "ghost"}
-                          size="sm"
-                          className={`h-8 ${
-                            calendarView === "week"
-                              ? "bg-white dark:bg-slate-600 text-gray-800 dark:text-white shadow-sm"
-                              : "text-gray-600 dark:text-gray-300"
-                          }`}
-                          onClick={() => setCalendarView("week")}
-                        >
-                          Semana
-                        </Button>
-                        <Button
-                          variant={calendarView === "day" ? "default" : "ghost"}
-                          size="sm"
-                          className={`h-8 ${
-                            calendarView === "day"
-                              ? "bg-white dark:bg-slate-600 text-gray-800 dark:text-white shadow-sm"
-                              : "text-gray-600 dark:text-gray-300"
-                          }`}
-                          onClick={() => setCalendarView("day")}
-                        >
-                          Dia
-                        </Button>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Calendar Column */}
+            <div className="lg:col-span-9">
+              <div className="bg-[#001427] rounded-b-xl overflow-hidden shadow-md">
+                {calendarView === "month" && (
+                  <MonthView
+                    currentYear={currentYear}
+                    currentMonth={currentMonth}
+                    selectedDay={selectedDay}
+                    setSelectedDay={setSelectedDay}
+                    eventData={eventData}
+                    getEventIcon={getEventIcon}
+                    openEventDetails={openEventDetails}
+                    onEventDrop={handleEventDrop}
+                    setCalendarView={setCalendarView}
+                    calendarView={calendarView}
+                  />
+                )}
+                {calendarView === "week" && (
+                  <>
+                    <div className="p-4 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white flex justify-between items-center">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-white/20 p-1.5 rounded-lg shadow-inner">
+                          <CalendarIcon className="h-5 w-5 text-white" />
+                        </div>
+                        <h3 className="font-bold text-lg tracking-wide">
+                          Visualização Semanal
+                        </h3>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <div className="flex rounded-md overflow-hidden">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className={`h-8 rounded-none ${calendarView === "day" ? "bg-white text-[#FF6B00]" : "text-white hover:bg-white/20"}`}
+                            onClick={() => setCalendarView("day")}
+                          >
+                            Dia
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className={`h-8 rounded-none ${calendarView === "week" ? "bg-white text-[#FF6B00]" : "text-white hover:bg-white/20"}`}
+                            onClick={() => setCalendarView("week")}
+                          >
+                            Semana
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className={`h-8 rounded-none ${calendarView === "month" ? "bg-white text-[#FF6B00]" : "text-white hover:bg-white/20"}`}
+                            onClick={() => setCalendarView("month")}
+                          >
+                            Mês
+                          </Button>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-white hover:bg-white/20 rounded-full"
+                          >
+                            <ChevronLeft className="h-5 w-5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 text-white hover:bg-white/20 rounded-lg px-3"
+                            onClick={() => setSelectedDay(new Date())}
+                          >
+                            Hoje
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-white hover:bg-white/20 rounded-full"
+                          >
+                            <ChevronRight className="h-5 w-5" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
-
-                    {/* Month/Year Navigation */}
-                    <div className="flex items-center">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-9 w-9 p-0 rounded-full"
-                      >
-                        <ChevronLeft className="h-5 w-5" />
-                      </Button>
-                      <span className="text-sm font-medium mx-2 min-w-[100px] text-center text-gray-800 dark:text-white">
-                        {format(currentDate, "MMMM yyyy", { locale: ptBR })}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-9 w-9 p-0 rounded-full"
-                      >
-                        <ChevronRight className="h-5 w-5" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="ml-2 h-9 rounded-lg text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-gray-200"
-                        onClick={() => {
-                          const today = new Date();
-                          setSelectedDay(today);
-                        }}
-                      >
-                        Hoje
-                      </Button>
+                    <WeekView openEventDetails={openEventDetails} />
+                  </>
+                )}
+                {calendarView === "day" && (
+                  <>
+                    <div className="p-4 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white flex justify-between items-center">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-white/20 p-1.5 rounded-lg shadow-inner">
+                          <CalendarIcon className="h-5 w-5 text-white" />
+                        </div>
+                        <h3 className="font-bold text-lg tracking-wide">
+                          Visualização Diária
+                        </h3>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <div className="flex rounded-md overflow-hidden">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className={`h-8 rounded-none ${calendarView === "day" ? "bg-white text-[#FF6B00]" : "text-white hover:bg-white/20"}`}
+                            onClick={() => setCalendarView("day")}
+                          >
+                            Dia
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className={`h-8 rounded-none ${calendarView === "week" ? "bg-white text-[#FF6B00]" : "text-white hover:bg-white/20"}`}
+                            onClick={() => setCalendarView("week")}
+                          >
+                            Semana
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className={`h-8 rounded-none ${calendarView === "month" ? "bg-white text-[#FF6B00]" : "text-white hover:bg-white/20"}`}
+                            onClick={() => setCalendarView("month")}
+                          >
+                            Mês
+                          </Button>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-white hover:bg-white/20 rounded-full"
+                          >
+                            <ChevronLeft className="h-5 w-5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 text-white hover:bg-white/20 rounded-lg px-3"
+                            onClick={() => setSelectedDay(new Date())}
+                          >
+                            Hoje
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-white hover:bg-white/20 rounded-full"
+                          >
+                            <ChevronRight className="h-5 w-5" />
+                          </Button>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-
-                  {/* Calendar View */}
-                  <div className="calendar-container">
-                    {calendarView === "month" && (
-                      <MonthView
-                        eventData={eventData}
-                        selectedDay={selectedDay}
-                        setSelectedDay={setSelectedDay}
-                        onEventClick={openEventDetails}
-                        onAddEvent={() => setShowAddEventModal(true)}
-                        onEventDrop={handleEventDrop}
-                      />
-                    )}
-                    {calendarView === "week" && (
-                      <WeekView
-                        eventData={eventData}
-                        selectedDay={selectedDay}
-                        setSelectedDay={setSelectedDay}
-                        onEventClick={openEventDetails}
-                        onAddEvent={() => setShowAddEventModal(true)}
-                      />
-                    )}
-                    {calendarView === "day" && (
-                      <DayView
-                        eventData={eventData}
-                        selectedDay={selectedDay}
-                        setSelectedDay={setSelectedDay}
-                        onEventClick={openEventDetails}
-                        onAddEvent={() => setShowAddEventModal(true)}
-                      />
-                    )}
-                  </div>
-                </div>
-
-                {/* Sidebar */}
-                <div className="w-full md:w-1/4 mt-4 md:mt-0">
-                  <div className="space-y-6">
-                    {/* Mini month calendar */}
-                    <div className="bg-gray-50 dark:bg-slate-700 rounded-xl p-4">
-                      <h3 className="text-sm font-medium mb-3 text-gray-700 dark:text-gray-300">
-                        Próximos Eventos
-                      </h3>
-                      <UpcomingEvents
-                        events={upcomingEventsData}
-                        onEventClick={openEventDetails}
-                        getEventIcon={getEventIcon}
-                      />
-                    </div>
-
-                    {/* AI Mentor Widget */}
-                    <AIMentor onAction={() => setShowEpictusAIModal(true)} />
-
-                    {/* EpictusAI Widget */}
-                    <EpictusAIWidget onAction={() => setShowEpictusAIModal(true)} />
-                  </div>
-                </div>
+                    <DayView
+                      selectedDay={selectedDay}
+                      openEventDetails={openEventDetails}
+                    />
+                  </>
+                )}
               </div>
             </div>
-          </DndProvider>
 
-          {/* Add Event Modal */}
-          {showAddEventModal && (
-            <AddEventModal
-              open={showAddEventModal}
-              onOpenChange={setShowAddEventModal}
-              onSave={handleAddEvent}
-              selectedDate={selectedDay || new Date()}
-            />
-          )}
+            {/* Sidebar */}
+            <div className="lg:col-span-3 space-y-6">
+              <div className="bg-white dark:bg-[#1E293B] rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border border-[#FF6B00]/10 dark:border-[#FF6B00]/20">
+                <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="bg-white/20 p-1.5 rounded-lg shadow-inner">
+                      <CalendarIcon className="h-5 w-5 text-white" />
+                    </div>
+                    <h3 className="text-base font-bold text-white">
+                      Próximos Eventos
+                    </h3>
+                  </div>
+                  <Badge className="bg-white/20 text-white hover:bg-white/30 transition-colors px-2 py-1">
+                    {upcomingEventsData.length} eventos
+                  </Badge>
+                </div>
+                <div className="p-4 flex flex-col">
+                  {upcomingEventsData.length > 0 ? (
+                    <div className="divide-y divide-[#FF6B00]/10 dark:divide-[#FF6B00]/20 w-full max-h-[400px] overflow-y-auto custom-scrollbar pr-1">
+                      {upcomingEventsData.map((event) => (
+                        <div
+                          key={event.id}
+                          className="p-4 hover:bg-[#FF6B00]/5 cursor-pointer transition-colors group"
+                          onClick={() => openEventDetails(event)}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="mt-1">
+                              <div 
+                                className={`w-8 h-8 rounded-full bg-${event.color}-100 dark:bg-${event.color}-900/30 flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow`}
+                              >
+                                {getEventIcon(event.type)}
+                              </div>
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="font-medium text-gray-900 dark:text-white text-sm group-hover:text-[#FF6B00] transition-colors">
+                                {event.title}
+                              </h4>
+                              <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                <Clock className="h-3 w-3 mr-1 text-[#FF6B00]" />{" "}
+                                {event.day} {event.startTime ? `às ${event.startTime}` : ""}
+                              </div>
+                              <div className="mt-1">
+                                <Badge
+                                  variant="outline"
+                                  className="text-xs border-[#FF6B00]/30 bg-transparent text-[#FF6B00] group-hover:bg-[#FF6B00]/10 transition-colors"
+                                >
+                                  {event.discipline}
+                                </Badge>
+                                {event.isOnline && (
+                                  <Badge
+                                    variant="outline"
+                                    className="text-xs border-blue-300/30 bg-transparent text-blue-500 ml-1 group-hover:bg-blue-500/10 transition-colors"
+                                  >
+                                    Online
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-4 flex flex-col items-center justify-center text-center">
+                      <div className="w-16 h-16 rounded-full bg-[#FF6B00]/10 flex items-center justify-center mb-4">
+                        <CalendarIcon className="h-8 w-8 text-[#FF6B00]/40" />
+                      </div>
+                      <h4 className="text-base font-medium text-gray-700 dark:text-gray-300 mb-2">Nenhum evento próximo</h4>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 text-center max-w-md">
+                        Seus próximos eventos serão exibidos aqui à medida que você os adicionar ao seu calendário
+                      </p>
+                      <Button
+                        onClick={() => setShowAddEventModal(true)}
+                        className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white rounded-lg shadow-md transition-all duration-300 hover:shadow-lg"
+                      >
+                        <Plus className="h-4 w-4 mr-2" /> Adicionar Evento
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
 
-          {/* Event Details Modal */}
-          {showEventDetailsModal && selectedEvent && (
-            <EventDetailsModal
-              open={showEventDetailsModal}
-              onOpenChange={setShowEventDetailsModal}
-              event={selectedEvent}
-              onEdit={handleEditEvent}
-              onDelete={handleDeleteEvent}
-            />
-          )}
+              <EpictusAIWidget
+                onOpenAssistant={() => setShowEpictusAIModal(true)}
+              />
+            </div>
+          </div>
         </TabsContent>
 
         {/* Flow Tab */}
@@ -1090,44 +1456,104 @@ export default function AgendaPage() {
         {/* Tarefas Tab */}
         <TabsContent value="tarefas" className="mt-0">
           <TasksView
-            initialTasks={tasksData}
-            showAddTaskModal={() => setShowAddTaskModal(true)}
+            onOpenAddTask={() => setShowAddTaskModal(true)}
+            onOpenAISuggestions={() => setShowAISuggestionsModal(true)}
           />
+          {/* Add Task Modal */}
           {showAddTaskModal && (
             <AddTaskModal
               open={showAddTaskModal}
               onOpenChange={setShowAddTaskModal}
-              onSave={handleAddTask}
+              onAddTask={handleAddTask}
             />
           )}
+          {/* AI Suggestions Modal */}
+          <EpictusAISuggestionsModal
+            open={showAISuggestionsModal}
+            onOpenChange={setShowAISuggestionsModal}
+          />
         </TabsContent>
 
         {/* Desafios Tab */}
         <TabsContent value="desafios" className="mt-0">
           <ChallengesView />
         </TabsContent>
-
         {/* Rotina Tab */}
         <TabsContent value="rotina" className="mt-0">
-          <div className="p-8 flex flex-col items-center justify-center min-h-[400px] bg-white dark:bg-slate-800 rounded-xl shadow-md border border-gray-100 dark:border-slate-700">
-            <div className="max-w-md text-center">
-              <Clock className="w-16 h-16 mx-auto mb-6 text-[#FF6B00]" />
-              <h2 className="text-2xl font-bold mb-2 text-gray-800 dark:text-white">
-                Rotina Inteligente
-              </h2>
-              <p className="mb-6 text-gray-600 dark:text-gray-300">
-                Otimize seus horários de estudo com a ajuda da IA. Crie uma rotina
-                personalizada baseada no seu perfil e objetivos.
-              </p>
-              <Button
-                className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white rounded-lg shadow-md transition-all duration-300 hover:shadow-lg transform hover:scale-[1.02]"
-              >
-                <Sparkles className="h-4 w-4 mr-2" /> Criar Rotina Inteligente
-              </Button>
-            </div>
-          </div>
+          <div>Essa interface está em desenvolvimento</div>
         </TabsContent>
       </Tabs>
+
+      {/* Add Event Modal */}
+      {showAddEventModal && (
+        <AddEventModal
+          open={showAddEventModal}
+          onOpenChange={setShowAddEventModal}
+          onAddEvent={handleAddEvent}
+          selectedDate={selectedDay}
+        />
+      )}
+
+      {/* Event Details Modal */}
+      {showEventDetailsModal && selectedEvent && (
+        <EventDetailsModal
+          open={showEventDetailsModal}
+          onOpenChange={setShowEventDetailsModal}
+          event={selectedEvent}
+          onEditEvent={handleEditEvent}
+          onDeleteEvent={handleDeleteEvent}
+        />
+      )}
+
+      {/* Set Goal Modal */}
+      {showSetGoalModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-[#1E293B] rounded-lg p-6 max-w-md w-full">
+            <h2 className="text-xl font-bold mb-4">Definir Meta de Estudo</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Meta de horas por semana
+                </label>
+                <Input
+                  type="number"
+                  placeholder="40"
+                  defaultValue={studyTimeData.goal}
+                  className="border-[#FF6B00]/30 focus:border-[#FF6B00] focus:ring-[#FF6B00]/30 rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Disciplina com foco
+                </label>
+                <select className="w-full border-[#FF6B00]/30 focus:border-[#FF6B00] focus:ring-[#FF6B00]/30 rounded-lg p-2 text-sm">
+                  <option value="all">Todas as disciplinas</option>
+                  <option value="matematica">Matemática</option>
+                  <option value="fisica">Física</option>
+                  <option value="quimica">Química</option>
+                  <option value="biologia">Biologia</option>
+                  <option value="historia">História</option>
+                </select>
+              </div>
+              <div className="flex justify-end gap-2 mt-6">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowSetGoalModal(false)}
+                  className="border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10 rounded-lg transition-colors"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white rounded-lg shadow-md transition-all duration-300 hover:shadow-lg"
+                  onClick={() => setShowSetGoalModal(false)}
+                >
+                  Salvar
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

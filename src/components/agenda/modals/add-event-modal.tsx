@@ -140,50 +140,50 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
     }
   };
 
-  const handleSubmit = async () => {
-    try {
-      if (!title || !eventType || !startDate) {
-        alert("Por favor, preencha os campos obrigatórios: título, tipo e data de início");
-        return;
-      }
-
-      const newEvent = {
-        title,
-        type: eventType,
-        discipline,
-        description,
-        professor,
-        startDate,
-        endDate,
-        startTime,
-        endTime,
-        duration,
-        isOnline,
-        location,
-        meetingLink,
-        reminders,
-        repeat: repeat || 'none',
-        guests,
-        visibility: visibility || 'private',
-        attachments: attachments.map((file) => file.name),
-        // color, // Assuming color is not needed from original.
-        // details // Assuming details is not needed from original.
-      };
-
-      // Salvar no banco de dados (replace this with your actual save function)
-      // await addEvent(newEvent); // Assuming addEvent is defined elsewhere.
-
-      // Notificar componente pai
-      if (onAddEvent) {
-          onAddEvent(newEvent);
-      }
-
-      onOpenChange(false);
-      resetForm();
-    } catch (error) {
-      console.error("Erro ao salvar evento:", error);
-      alert("O evento não pôde ser salvo no banco de dados. Tente novamente.");
+  const handleSubmit = () => {
+    // Validate required fields
+    if (!title.trim()) {
+      alert("Por favor, insira um título para o evento.");
+      return;
     }
+
+    if (!startDate) {
+      alert("Por favor, selecione uma data de início.");
+      return;
+    }
+
+    // Create event object
+    const newEvent = {
+      id: `event-${Date.now()}`,
+      type: eventType,
+      title,
+      description,
+      discipline,
+      professor,
+      startDate,
+      endDate,
+      startTime,
+      endTime,
+      duration,
+      location,
+      isOnline,
+      meetingLink,
+      attachments: attachments.map((file) => file.name), // Just store names for demo
+      reminders,
+      repeat,
+      guests,
+      visibility,
+      createdAt: new Date(),
+    };
+
+    // Call the onAddEvent callback with the new event
+    if (onAddEvent) {
+      onAddEvent(newEvent);
+    }
+
+    // Reset form and close modal
+    resetForm();
+    onOpenChange(false);
   };
 
   const resetForm = () => {

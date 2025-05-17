@@ -27,42 +27,16 @@ interface UpcomingEventsProps {
   events: UpcomingEvent[];
 }
 
-export default function UpcomingEvents({ events = [], onEventClick, getEventIcon }) {
-  // Verifica se events é um array válido
-  if (!Array.isArray(events)) {
-    return <div className="p-3 text-sm text-gray-500">Nenhum evento encontrado</div>;
-  }
+const UpcomingEvents: React.FC<UpcomingEventsProps> = ({ events = [] }) => {
+  // Sample last flow session data
+  const lastFlowSession = {
+    date: "Hoje, 10:30",
+    duration: "01:45:00",
+    subjects: ["Matemática", "Física"],
+    progress: 85,
+  };
 
-  // Organiza eventos por dia para agrupamento
-  const eventsByDay = events.reduce((acc, event) => {
-    if (!acc[event.day]) {
-      acc[event.day] = [];
-    }
-    acc[event.day].push(event);
-    return acc;
-  }, {});
+  return <FlowSummaryCard lastSession={lastFlowSession} />;
+};
 
-  return (
-    <div className="space-y-4">
-      {Object.keys(eventsByDay).length > 0 ? (
-        Object.keys(eventsByDay).map((day) => (
-          <div key={day} className="space-y-2">
-            <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400">
-              {day}
-            </h4>
-            {eventsByDay[day].map((event) => (
-              <div
-                key={event.id}
-                className="flex items-start p-2 bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-100 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700/50 cursor-pointer transition-colors duration-150"
-                onClick={() => onEventClick(event)}
-              >
-              </div>
-            ))}
-          </div>
-        ))
-      ) : (
-        <div className="p-3 text-sm text-gray-500">Nenhum evento encontrado</div>
-      )}
-    </div>
-  );
-}
+export default UpcomingEvents;

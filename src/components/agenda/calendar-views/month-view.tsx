@@ -18,17 +18,15 @@ import {
 } from "lucide-react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
-import DraggableEvent from "./draggable-event";
 import DroppableDay from "./droppable-day";
-import { CalendarEvent } from "@/services/calendarEventService";
 
 interface MonthViewProps {
   currentYear: number;
   currentMonth: number;
   selectedDay: Date | null;
   setSelectedDay: (day: Date) => void;
-  eventData?: Record<number, any[]>;
-  getEventIcon?: (event: any) => React.ReactNode;
+  eventData: Record<number, any[]>;
+  getEventIcon: (type: string) => React.ReactNode;
   openEventDetails: (event: any) => void;
   onEventDrop?: (event: any, day: number) => void;
   setCalendarView: (view: string) => void;
@@ -40,7 +38,7 @@ const MonthView: React.FC<MonthViewProps> = ({
   currentMonth,
   selectedDay,
   setSelectedDay,
-  eventData = {},
+  eventData,
   getEventIcon,
   openEventDetails,
   onEventDrop,
@@ -131,7 +129,7 @@ const MonthView: React.FC<MonthViewProps> = ({
       onEventDrop(event, day);
     }
   };
-
+  
   // Handler para alternar a visualização do calendário
   const handleViewChange = (view: string) => {
     console.log("Changing view to:", view);
@@ -233,8 +231,8 @@ const MonthView: React.FC<MonthViewProps> = ({
                   const dayNumber = day.getDate();
                   const isCurrentMonthDay = isSameMonth(day, currentDate);
                   const isTodayDay = isToday(day);
-                  const dayEvents = isCurrentMonthDay && eventData[dayNumber]
-                    ? eventData[dayNumber]
+                  const dayEvents = isCurrentMonthDay
+                    ? eventData[dayNumber] || []
                     : [];
                   const isSelected =
                     selectedDay &&
@@ -280,7 +278,8 @@ const MonthView: React.FC<MonthViewProps> = ({
                     )}
                   </div>
                 );
-              })}
+              }),
+            )}
             </div>
           </DndProvider>
         </div>
