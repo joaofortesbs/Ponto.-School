@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 // Components
 import MonthView from "@/components/agenda/calendar-views/month-view";
@@ -151,6 +153,7 @@ export default function AgendaPage() {
   // Função para formatar eventos próximos a partir do eventData
   const getUpcomingEvents = () => {
     const today = new Date();
+    today.setHours(0, 0, 0, 0); // Normaliza a data atual para comparação
     const upcoming: any[] = [];
     
     // Percorre todos os dias com eventos
@@ -161,17 +164,23 @@ export default function AgendaPage() {
       dayEvents.forEach(event => {
         if (event.startDate) {
           const eventDate = new Date(event.startDate);
+          eventDate.setHours(0, 0, 0, 0); // Normaliza a data do evento para comparação
+          
           // Adiciona eventos que ocorrem hoje ou no futuro
           if (eventDate >= today) {
+            // Formata a data com date-fns
+            const formattedDate = format(eventDate, "dd/MM/yyyy", { locale: ptBR });
+            
             upcoming.push({
               id: event.id,
               type: event.type,
               title: event.title,
-              day: format(eventDate, "dd/MM/yyyy", { locale: ptBR }),
+              day: formattedDate,
               discipline: event.discipline || "Geral",
               isOnline: event.isOnline || false,
               color: event.color,
-              details: event.details
+              details: event.details,
+              startTime: event.startTime || event.time || "00:00"
             });
           }
         }
@@ -180,8 +189,12 @@ export default function AgendaPage() {
     
     // Ordena eventos por data (do mais próximo ao mais distante)
     upcoming.sort((a, b) => {
-      const dateA = new Date(a.day.split('/').reverse().join('-'));
-      const dateB = new Date(b.day.split('/').reverse().join('-'));
+      const [dayA, monthA, yearA] = a.day.split('/').map(Number);
+      const [dayB, monthB, yearB] = b.day.split('/').map(Number);
+      
+      const dateA = new Date(yearA, monthA - 1, dayA);
+      const dateB = new Date(yearB, monthB - 1, dayB);
+      
       return dateA.getTime() - dateB.getTime();
     });
     
@@ -464,7 +477,8 @@ export default function AgendaPage() {
   // Add new event
   const handleAddEvent = (newEvent: any) => {
     if (newEvent.startDate) {
-      const day = new Date(newEvent.startDate).getDate();
+      const eventDate = new Date(newEvent.startDate);
+      const day = eventDate.getDate();
 
       // Add color based on event type
       const eventWithColor = {
@@ -483,10 +497,17 @@ export default function AgendaPage() {
 
       setEventData(updatedEvents);
       
+      // Força atualização do componente de próximos eventos
+      setTimeout(() => {
+        const upcomingEventsUpdated = getUpcomingEvents();
+        // Este console.log ajuda a verificar se os eventos estão sendo atualizados corretamente
+        console.log("Próximos eventos atualizados:", upcomingEventsUpdated);
+      }, 100);
+      
       // Exibe uma mensagem de sucesso
       toast({
         title: "Evento adicionado",
-        description: "O evento foi adicionado com sucesso ao seu calendário.",
+        description: "O evento foi adicionado com sucesso ao seu calendário e listado em Próximos Eventos.",
       });
     }
   };
@@ -1352,7 +1373,7 @@ export default function AgendaPage() {
                           <div className="flex items-start gap-3">
                             <div className="mt-1">
                               <div 
-                                className={`w-8 h-8 rounded-full bg-${event.color || "[#FF6B00]"}/10 dark:bg-${event.color || "[#FF6B00]"}/20 flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow group-hover:bg-${event.color || "[#FF6B00]"}/20 dark:group-hover:bg-${event.color || "[#FF6B00]"}/30`}
+                                className={`w-8 h-8 rounded-full bg-${event.color}-100 dark:bg-${event.color}-900/30 flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow`}
                               >
                                 {getEventIcon(event.type)}
                               </div>
@@ -1363,7 +1384,7 @@ export default function AgendaPage() {
                               </h4>
                               <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 mt-1">
                                 <Clock className="h-3 w-3 mr-1 text-[#FF6B00]" />{" "}
-                                {event.day}
+                                {event.day} {event.startTime ? `às ${event.startTime}` : ""}
                               </div>
                               <div className="mt-1">
                                 <Badge
@@ -1372,6 +1393,14 @@ export default function AgendaPage() {
                                 >
                                   {event.discipline}
                                 </Badge>
+                                {event.isOnline && (
+                                  <Badge
+                                    variant="outline"
+                                    className="text-xs border-blue-300/30 bg-transparent text-blue-500 ml-1 group-hover:bg-blue-500/10 transition-colors"
+                                  >
+                                    Online
+                                  </Badge>
+                                )}
                               </div>
                             </div>
                           </div>

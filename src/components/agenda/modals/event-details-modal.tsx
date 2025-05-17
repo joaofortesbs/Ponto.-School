@@ -26,6 +26,9 @@ import {
   Globe,
   Calendar,
 } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface EventDetailsModalProps {
   open: boolean;
@@ -278,6 +281,12 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
                 <FileText className="h-4 w-4 mr-1" /> Ver Materiais
               </Button>
             )}
+             <div className="mt-4 space-y-4">
+              <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                <Calendar className="h-4 w-4 mr-2 text-[#FF6B00]" />
+                {event.startDate && format(new Date(event.startDate), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+              </div>
+          </div>
             <DialogClose asChild>
               <Button variant="outline">Fechar</Button>
             </DialogClose>
