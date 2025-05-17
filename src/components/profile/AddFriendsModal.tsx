@@ -11,6 +11,13 @@ import {
   MoreVertical, MessageSquare, Ban, Flag, Share2
 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
+import { createClient } from "@supabase/supabase-js";
+
+// Conexão com o Supabase
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL || "",
+  import.meta.env.VITE_SUPABASE_ANON_KEY || ""
+);
 
 // Tipos de usuário
 interface UserType {
@@ -152,7 +159,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
   const [sortOrder, setSortOrder] = useState<'alphabetical' | 'recent'>('recent');
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
 
-  // Otimizações para debounce de pesquisa
+  // Otimizações para debounce de pesquisa com integração Supabase
   const performSearch = useCallback((query: string) => {
     if (query.trim() === '') {
       setFilteredResults([]);
@@ -168,56 +175,93 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
     }
 
     // Definir novo timeout
-    searchTimeoutRef.current = setTimeout(() => {
-      // Filtrar resultados com base na consulta
-      const results = mockUsers.filter(user => 
-        user.name.toLowerCase().includes(query.toLowerCase()) || 
-        user.username.toLowerCase().includes(query.toLowerCase())
-      );
-
-      // Aplicar ordenação
-      const sortedResults = [...results].sort((a, b) => {
-        if (sortOrder === 'alphabetical') {
-          return a.name.localeCompare(b.name);
-        } else {
-          // Para 'recent', poderia ser baseado na data de registro ou última atividade
-          return b.followersCount - a.followersCount;
+    searchTimeoutRef.current = setTimeout(async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+          // Se não houver usuário logado, usar os dados mockados
+          const results = mockUsers.filter(user => 
+            user.name.toLowerCase().includes(query.toLowerCase()) || 
+            user.username.toLowerCase().includes(query.toLowerCase())
+          );
+          
+          setFilteredResults(results);
+          setIsLoading(false);
+          return;
         }
-      });
+        
+        // Para demonstração, continuar usando os dados mockados,
+        // mas em produção buscaria do Supabase com:
+        /*
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id, name, username, bio, avatar, is_private, followers_count, friends_count, posts_count, favorite_subject, education_level, last_active')
+          .or(`username.ilike.%${query}%,name.ilike.%${query}%`)
+          .neq('id', user.id) // não mostrar o próprio usuário
+          .limit(10);
+          
+        if (error) throw error;
+        */
+        
+        // Filtrar resultados com base na consulta (usando mock para demonstração)
+        const results = mockUsers.filter(mockUser => 
+          mockUser.name.toLowerCase().includes(query.toLowerCase()) || 
+          mockUser.username.toLowerCase().includes(query.toLowerCase())
+        );
 
-      // Aplicar filtros múltiplos e o filtro principal
-      let finalResults = sortedResults;
-      
-      // Se estamos no filtro 'saved', esse tem prioridade
-      if (filter === 'saved') {
-        finalResults = sortedResults.filter(user => savedProfiles[user.id]);
-      } 
-      // Aplicar filtros selecionados pelo usuário
-      else if (selectedFilters.length > 0) {
-        finalResults = sortedResults.filter(user => {
-          const isOnline = selectedFilters.includes('online') ? 
-            (user.lastActive === 'Agora mesmo' || user.lastActive?.includes('min')) : false;
-          
-          const isSuggested = selectedFilters.includes('suggested') ? 
-            (user.favoriteSubject === 'Matemática' || user.favoriteSubject === 'Programação') : false;
-          
-          const isRecent = selectedFilters.includes('recent') ? true : false; // Todos são considerados recentes para este exemplo
-          
-          // O usuário corresponde a pelo menos um dos filtros selecionados
-          return isOnline || isSuggested || isRecent;
+        // Aplicar ordenação
+        const sortedResults = [...results].sort((a, b) => {
+          if (sortOrder === 'alphabetical') {
+            return a.name.localeCompare(b.name);
+          } else {
+            // Para 'recent', poderia ser baseado na data de registro ou última atividade
+            return b.followersCount - a.followersCount;
+          }
         });
-      }
-      // Se não há filtros selecionados, mas estamos em um filtro principal
-      else if (filter === 'online') {
-        finalResults = sortedResults.filter(user => 
-          user.lastActive === 'Agora mesmo' || user.lastActive?.includes('min'));
-      } else if (filter === 'suggested') {
-        finalResults = sortedResults.filter(user => 
-          user.favoriteSubject === 'Matemática' || user.favoriteSubject === 'Programação');
-      }
 
-      setFilteredResults(finalResults);
-      setIsLoading(false);
+        // Aplicar filtros múltiplos e o filtro principal
+        let finalResults = sortedResults;
+        
+        // Se estamos no filtro 'saved', esse tem prioridade
+        if (filter === 'saved') {
+          finalResults = sortedResults.filter(user => savedProfiles[user.id]);
+        } 
+        // Aplicar filtros selecionados pelo usuário
+        else if (selectedFilters.length > 0) {
+          finalResults = sortedResults.filter(user => {
+            const isOnline = selectedFilters.includes('online') ? 
+              (user.lastActive === 'Agora mesmo' || user.lastActive?.includes('min')) : false;
+            
+            const isSuggested = selectedFilters.includes('suggested') ? 
+              (user.favoriteSubject === 'Matemática' || user.favoriteSubject === 'Programação') : false;
+            
+            const isRecent = selectedFilters.includes('recent') ? true : false; // Todos são considerados recentes para este exemplo
+            
+            // O usuário corresponde a pelo menos um dos filtros selecionados
+            return isOnline || isSuggested || isRecent;
+          });
+        }
+        // Se não há filtros selecionados, mas estamos em um filtro principal
+        else if (filter === 'online') {
+          finalResults = sortedResults.filter(user => 
+            user.lastActive === 'Agora mesmo' || user.lastActive?.includes('min'));
+        } else if (filter === 'suggested') {
+          finalResults = sortedResults.filter(user => 
+            user.favoriteSubject === 'Matemática' || user.favoriteSubject === 'Programação');
+        }
+
+        setFilteredResults(finalResults);
+      } catch (error) {
+        console.error("Erro na busca:", error);
+        toast({
+          title: "Erro na busca",
+          description: "Não foi possível completar a busca de usuários",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
     }, 300);
   }, [filter, sortOrder, savedProfiles, selectedFilters]);
 
@@ -233,22 +277,85 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
     };
   }, [searchQuery, performSearch]);
 
-  // Inicializar estado das relações com os usuários
+  // Inicializar estado das relações com os usuários e buscar solicitações existentes
   useEffect(() => {
     const initialRelations: {[key: string]: 'none' | 'requested' | 'following'} = {};
     mockUsers.forEach(user => {
-      // Verificar se existe solicitação pendente enviada
-      const hasSentRequest = pendingRequests.some(req => 
-        req.user.id === user.id && req.type === 'sent'
-      );
-
-      if (hasSentRequest) {
-        initialRelations[user.id] = 'requested';
-      } else {
-        initialRelations[user.id] = 'none';
-      }
+      initialRelations[user.id] = 'none';
     });
-    setUserRelations(initialRelations);
+    
+    // Carregar solicitações de amizade do Supabase
+    const fetchFriendRequests = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) return;
+        
+        // Buscar solicitações enviadas
+        const { data: sentRequests, error: sentError } = await supabase
+          .from('friend_requests')
+          .select('*')
+          .eq('sender_id', user.id)
+          .eq('status', 'pending');
+          
+        if (sentError) throw sentError;
+        
+        // Buscar solicitações recebidas
+        const { data: receivedRequests, error: receivedError } = await supabase
+          .from('friend_requests')
+          .select('*')
+          .eq('receiver_id', user.id)
+          .eq('status', 'pending');
+          
+        if (receivedError) throw receivedError;
+
+        // Converter para o formato usado pelo componente
+        const mappedRequests: PendingRequestType[] = [];
+
+        if (sentRequests) {
+          const sentMapped = sentRequests.map(req => {
+            // Encontrar o usuário correspondente
+            const requestUser = mockUsers.find(u => u.id === req.receiver_id) || mockUsers[0];
+            initialRelations[req.receiver_id] = 'requested';
+            
+            return {
+              id: req.id,
+              user: requestUser,
+              type: 'sent' as const,
+              date: new Date(req.created_at).toISOString().split('T')[0]
+            };
+          });
+          mappedRequests.push(...sentMapped);
+        }
+        
+        if (receivedRequests) {
+          const receivedMapped = receivedRequests.map(req => {
+            // Encontrar o usuário correspondente
+            const requestUser = mockUsers.find(u => u.id === req.sender_id) || mockUsers[0];
+            
+            return {
+              id: req.id,
+              user: requestUser,
+              type: 'received' as const,
+              date: new Date(req.created_at).toISOString().split('T')[0]
+            };
+          });
+          mappedRequests.push(...receivedMapped);
+        }
+        
+        setPendingRequests(mappedRequests);
+        setUserRelations(initialRelations);
+      } catch (error) {
+        console.error("Erro ao buscar solicitações de amizade:", error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível carregar as solicitações de amizade",
+          variant: "destructive"
+        });
+      }
+    };
+    
+    fetchFriendRequests();
   }, []);
 
   // Efeito para não rerenderizar o filtro ao trocar de aba
@@ -306,42 +413,163 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
   }, [showProfileActions]);
 
   // Função para gerenciar relacionamentos de usuário
-  const handleRelationAction = (userId: string, action: 'request' | 'follow' | 'unfollow' | 'accept' | 'reject') => {
-    switch (action) {
-      case 'request':
-        // Simular uma solicitação enviada
-        setUserRelations(prev => ({...prev, [userId]: 'requested'}));
+  const handleRelationAction = async (userId: string, action: 'request' | 'follow' | 'unfollow' | 'accept' | 'reject') => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Erro de autenticação",
+          description: "Você precisa estar logado para realizar esta ação",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      switch (action) {
+        case 'request':
+          // Exibir estado de carregamento
+          setUserRelations(prev => ({...prev, [userId]: 'requested'}));
+          
+          // Enviar solicitação para o Supabase
+          const { data: newRequest, error: requestError } = await supabase
+            .from('friend_requests')
+            .insert({
+              sender_id: user.id,
+              receiver_id: userId,
+              status: 'pending'
+            })
+            .select()
+            .single();
+            
+          if (requestError) {
+            // Reverter estado em caso de erro
+            setUserRelations(prev => ({...prev, [userId]: 'none'}));
+            
+            toast({
+              title: "Erro ao enviar solicitação",
+              description: requestError.message,
+              variant: "destructive"
+            });
+            return;
+          }
+          
+          // Adicionar à lista de solicitações pendentes
+          const requestedUser = mockUsers.find(user => user.id === userId);
+          if (requestedUser && newRequest) {
+            const formattedRequest: PendingRequestType = {
+              id: newRequest.id,
+              user: requestedUser,
+              type: 'sent',
+              date: new Date(newRequest.created_at).toISOString().split('T')[0]
+            };
+            setPendingRequests(prev => [...prev, formattedRequest]);
+            
+            toast({
+              title: "Solicitação enviada",
+              description: `Solicitação enviada para ${requestedUser.name}`,
+              duration: 3000,
+            });
+          }
+          break;
 
-        // Adicionar à lista de solicitações pendentes
-        const requestedUser = mockUsers.find(user => user.id === userId);
-        if (requestedUser) {
-          const newRequest: PendingRequestType = {
-            id: `req-${Date.now()}`,
-            user: requestedUser,
-            type: 'sent',
-            date: new Date().toISOString().split('T')[0]
-          };
-          setPendingRequests(prev => [...prev, newRequest]);
-        }
-        break;
+        case 'follow':
+          setUserRelations(prev => ({...prev, [userId]: 'following'}));
+          // Lógica para seguir usuário (se implementada no futuro)
+          toast({
+            title: "Seguindo",
+            description: "Você começou a seguir este usuário",
+            duration: 3000,
+          });
+          break;
+          
+        case 'unfollow':
+          setUserRelations(prev => ({...prev, [userId]: 'none'}));
+          // Lógica para deixar de seguir usuário (se implementada no futuro)
+          toast({
+            title: "Deixou de seguir",
+            description: "Você deixou de seguir este usuário",
+            duration: 3000,
+          });
+          break;
 
-      case 'follow':
-        setUserRelations(prev => ({...prev, [userId]: 'following'}));
-        break;
-        
-      case 'unfollow':
-        setUserRelations(prev => ({...prev, [userId]: 'none'}));
-        break;
+        case 'accept':
+          // Encontrar solicitação correspondente
+          const requestToAccept = pendingRequests.find(
+            req => req.user.id === userId && req.type === 'received'
+          );
+          
+          if (requestToAccept) {
+            // Atualizar status no Supabase
+            const { error: acceptError } = await supabase
+              .from('friend_requests')
+              .update({ status: 'accepted' })
+              .eq('id', requestToAccept.id);
+              
+            if (acceptError) {
+              toast({
+                title: "Erro ao aceitar solicitação",
+                description: acceptError.message,
+                variant: "destructive"
+              });
+              return;
+            }
+            
+            // Remover das solicitações pendentes
+            setPendingRequests(prev => 
+              prev.filter(req => !(req.id === requestToAccept.id))
+            );
+            
+            toast({
+              title: "Solicitação aceita",
+              description: `Você e ${requestToAccept.user.name} agora são amigos!`,
+              duration: 3000,
+            });
+          }
+          break;
 
-      case 'accept':
-        // Remover das solicitações pendentes e adicionar como amigo
-        setPendingRequests(prev => prev.filter(req => !(req.user.id === userId && req.type === 'received')));
-        break;
-
-      case 'reject':
-        // Apenas remover das solicitações pendentes
-        setPendingRequests(prev => prev.filter(req => !(req.user.id === userId && req.type === 'received')));
-        break;
+        case 'reject':
+          // Encontrar solicitação correspondente
+          const requestToReject = pendingRequests.find(
+            req => req.user.id === userId && req.type === 'received'
+          );
+          
+          if (requestToReject) {
+            // Atualizar status no Supabase
+            const { error: rejectError } = await supabase
+              .from('friend_requests')
+              .update({ status: 'rejected' })
+              .eq('id', requestToReject.id);
+              
+            if (rejectError) {
+              toast({
+                title: "Erro ao rejeitar solicitação",
+                description: rejectError.message,
+                variant: "destructive"
+              });
+              return;
+            }
+            
+            // Remover das solicitações pendentes
+            setPendingRequests(prev => 
+              prev.filter(req => !(req.id === requestToReject.id))
+            );
+            
+            toast({
+              title: "Solicitação rejeitada",
+              description: "A solicitação de amizade foi rejeitada",
+              duration: 3000,
+            });
+          }
+          break;
+      }
+    } catch (error: any) {
+      console.error("Erro ao gerenciar relacionamento:", error);
+      toast({
+        title: "Erro",
+        description: error.message || "Ocorreu um erro ao processar sua solicitação",
+        variant: "destructive"
+      });
     }
   };
 
