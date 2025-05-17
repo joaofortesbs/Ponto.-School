@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
 
 // Components
 import MonthView from "@/components/agenda/calendar-views/month-view";
@@ -1239,7 +1241,7 @@ export default function AgendaPage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Calendar Column */}
             <div className="lg:col-span-9">
-              
+
               <div className="bg-[#001427] rounded-b-xl overflow-hidden shadow-md">
                 {calendarView === "month" && (
                   <MonthView
@@ -1350,8 +1352,6 @@ export default function AgendaPage() {
             onOpenChange={setShowAISuggestionsModal}
           />
         </TabsContent>
-
-
 
         {/* Desafios Tab */}
         <TabsContent value="desafios" className="mt-0">

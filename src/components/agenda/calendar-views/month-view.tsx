@@ -1,3 +1,4 @@
+
 import React from "react";
 import {
   format,
@@ -162,30 +163,31 @@ const MonthView: React.FC<MonthViewProps> = ({
               </Button>
             </div>
             <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-white hover:bg-white/20 rounded-full"
-              onClick={handlePrevMonth}
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 text-white hover:bg-white/20 rounded-lg px-3"
-              onClick={handleToday}
-            >
-              Hoje
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-white hover:bg-white/20 rounded-full"
-              onClick={handleNextMonth}
-            >
-              <ChevronRight className="h-5 w-5" />
-            </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-white hover:bg-white/20 rounded-full"
+                onClick={handlePrevMonth}
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 text-white hover:bg-white/20 rounded-lg px-3"
+                onClick={handleToday}
+              >
+                Hoje
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-white hover:bg-white/20 rounded-full"
+                onClick={handleNextMonth}
+              >
+                <ChevronRight className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
         </div>
 
