@@ -1,3 +1,7 @@
+The code checks if eventData exists and is an object before attempting to access its properties to prevent the "Cannot read properties of undefined (reading 'map')" error.
+```
+
+```replit_final_file
 import React from "react";
 import {
   format,

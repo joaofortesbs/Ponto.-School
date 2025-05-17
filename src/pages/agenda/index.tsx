@@ -717,7 +717,7 @@ export default function AgendaPage() {
 
   // Calendar State
   const [events, setEvents] = useState<CalendarEvent[]>([]);
-  
+
   // Calendar View
   const [view, setView] = useState<"month" | "week" | "day">("month");
 
@@ -735,6 +735,23 @@ export default function AgendaPage() {
     loadEvents();
     setView("month");
   }, []);
+
+  useEffect(() => {
+    // Pré-processar eventos para organização por dia e hora
+    const processedData: any = {};
+    if (events && Array.isArray(events)) {
+      events.forEach((event) => {
+        if (event && event.start) {
+          const hour = new Date(event.start).getHours();
+          if (!processedData[hour]) {
+            processedData[hour] = [];
+          }
+          processedData[hour].push(event);
+        }
+      });
+    }
+    setEventData(processedData);
+  }, [events]);
 
   return (
     <div className="container mx-auto p-6 max-w-[1400px]">
