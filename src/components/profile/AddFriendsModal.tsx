@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -236,7 +235,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
     searchTimeoutRef.current = setTimeout(async () => {
       try {
         console.log("Realizando busca por:", query);
-        
+
         // Construir condições de busca mais amplas (username, full_name e email)
         // Buscar do Supabase usando .ilike para busca parcial case-insensitive
         const { data, error } = await supabase
@@ -249,7 +248,10 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
 
         if (error) {
           console.error("Erro na busca do Supabase:", error);
+          document.getElementById('search-error-message')?.classList.remove('hidden');
           throw error;
+        } else {
+          document.getElementById('search-error-message')?.classList.add('hidden');
         }
 
         console.log("Resultados da busca no Supabase:", data);
@@ -259,10 +261,10 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
           const formattedResults: UserType[] = data.map(user => {
             // Gerar um username válido se não existir
             const validUsername = user.username || user.email?.split('@')[0] || `user_${user.id.substring(0, 6)}`;
-            
+
             // Gerar um nome de exibição válido
             const displayName = user.full_name || validUsername || 'Usuário';
-            
+
             return {
               id: user.id,
               name: displayName,
@@ -289,7 +291,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
 
           // Aplicar filtros adicionais
           let finalResults = sortedResults;
-          
+
           if (filter === 'saved') {
             finalResults = sortedResults.filter(user => savedProfiles[user.id]);
           } 
@@ -305,7 +307,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
         } else {
           console.log(`Nenhum resultado no Supabase para a busca "${query}"`);
           setFilteredResults([]);
-          
+
           // Não usamos mais dados mock como fallback
         }
       } catch (error) {
@@ -321,7 +323,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
       }
     }, 500); // 500ms para reduzir chamadas ao Supabase
   }, [filter, sortOrder, savedProfiles, currentUserId]);
-  
+
   // Função para calcular tempo relativo (ex: "5 min atrás")
   const getRelativeTimeString = (date: Date): string => {
     const now = new Date();
@@ -330,12 +332,12 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
     const diffMin = Math.round(diffSec / 60);
     const diffHour = Math.round(diffMin / 60);
     const diffDay = Math.round(diffHour / 24);
-    
+
     if (diffSec < 60) return 'Agora mesmo';
     if (diffMin < 60) return `${diffMin} min atrás`;
     if (diffHour < 24) return `${diffHour}h atrás`;
     if (diffDay < 7) return `${diffDay} dias atrás`;
-    
+
     return 'Há mais de uma semana';
   };
 
@@ -393,7 +395,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
     } else {
       // Ao abrir o modal
       setActiveTab("buscar");
-      
+
       // Buscar usuários recentes para exibir quando o modal abre
       const fetchInitialUsers = async () => {
         try {
@@ -414,10 +416,10 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
             const formattedResults: UserType[] = data.map(user => {
               // Gerar um username válido se não existir
               const validUsername = user.username || user.email?.split('@')[0] || `user_${user.id.substring(0, 6)}`;
-              
+
               // Gerar um nome de exibição válido
               const displayName = user.full_name || validUsername || 'Usuário';
-              
+
               return {
                 id: user.id,
                 name: displayName,
@@ -431,7 +433,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                 lastActive: getRelativeTimeString(new Date(user.updated_at || Date.now()))
               };
             });
-            
+
             setFilteredResults(formattedResults);
           }
         } catch (error) {
@@ -459,7 +461,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
       const timeoutId = setTimeout(() => {
         document.addEventListener('mousedown', handleClickOutside);
       }, 100);
-      
+
       return () => {
         clearTimeout(timeoutId);
         document.removeEventListener('mousedown', handleClickOutside);
@@ -536,7 +538,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
             duration: 3000,
           });
           break;
-          
+
         case 'unfollow':
           // Desfazer a amizade/deixar de seguir
           const { error: unfollowError } = await supabase
@@ -800,6 +802,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                 size="sm" 
                 className="bg-white/10 hover:bg-white/15 text-white rounded-full px-4 transition-all duration-300"
                 onClick={(e) => {
+                  ```text
                   e.stopPropagation();
                   handleRelationAction(user.id, 'reject');
                 }}
@@ -1338,7 +1341,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                         <div className="h-4 w-4 border-2 border-[#FF6B00]/70 border-t-transparent rounded-full animate-spin"></div>
                       </div>
                     )}
-                    
+
                     {!isLoading && searchQuery.trim() !== '' && (
                       <button 
                         onClick={() => performSearch(searchQuery)}
@@ -1391,18 +1394,33 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                   )}
 
                   {searchQuery.trim() !== '' && filteredResults.length === 0 && !isLoading && (
-                    <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
-                      <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4">
-                        <Search className="h-6 w-6 text-white/40" />
-                      </div>
-                      <h3 className="text-white/80 text-lg font-medium mb-2">
-                        Nenhum usuário encontrado
-                      </h3>
-                      <p className="text-white/50 text-sm max-w-xs">
-                        Não encontramos resultados para "{searchQuery}". Tente outro termo ou verifique a ortografia.
-                      </p>
+                  <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
+                    <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4">
+                      <Search className="h-6 w-6 text-white/40" />
                     </div>
-                  )}
+                    <h3 className="text-white/80 text-lg font-medium mb-2">
+                      Nenhum usuário encontrado
+                    </h3>
+                    <p className="text-white/50 text-sm max-w-xs">
+                      Nenhum usuário correspondente à busca "{searchQuery}". Tente termos diferentes ou verifique a ortografia.
+                    </p>
+                  </div>
+                )}
+
+                {/* Mensagem de erro visual */}
+                {searchQuery.trim() !== '' && isLoading === false && searchQuery.length >= 3 && (
+                  <div className="mb-4 bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 hidden" id="search-error-message">
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="h-5 w-5 text-amber-500 mt-0.5" />
+                      <div>
+                        <p className="text-amber-400 text-sm font-medium">Erro na busca</p>
+                        <p className="text-white/70 text-xs mt-1">
+                          Ocorreu um erro ao buscar usuários. Verifique sua conexão e tente novamente mais tarde.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                   {searchQuery.trim() !== '' && filteredResults.length > 0 && (
                     <div className="mb-3 bg-white/5 rounded-lg p-3">
@@ -1415,20 +1433,20 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                   {filteredResults.map(user => (
                     <UserCard key={user.id} user={user} />
                   ))}
-                  
+
                   {searchQuery.trim() !== '' && filteredResults.length === 0 && !isLoading && (
-                    <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
-                      <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4">
-                        <Search className="h-6 w-6 text-white/40" />
-                      </div>
-                      <h3 className="text-white/80 text-lg font-medium mb-2">
-                        Nenhum usuário encontrado
-                      </h3>
-                      <p className="text-white/50 text-sm max-w-xs">
-                        Nenhum usuário correspondente à busca "{searchQuery}". Tente termos diferentes ou verifique a ortografia.
-                      </p>
+                  <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
+                    <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4">
+                      <Search className="h-6 w-6 text-white/40" />
                     </div>
-                  )}
+                    <h3 className="text-white/80 text-lg font-medium mb-2">
+                      Nenhum usuário encontrado
+                    </h3>
+                    <p className="text-white/50 text-sm max-w-xs">
+                      Nenhum usuário correspondente à busca "{searchQuery}". Tente termos diferentes ou verifique a ortografia.
+                    </p>
+                  </div>
+                )}
                 </div>
               </TabsContent>
 
