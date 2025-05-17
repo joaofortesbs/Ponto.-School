@@ -907,7 +907,6 @@ export default function AgendaPage() {
       }, 100);
     } catch (error){
       console.error("Error adding task:", error);
-      ```
       toast({
         title: "Erro ao adicionar tarefa",
         description: "Ocorreu um erro ao adicionar a tarefa. Tente novamente.",
