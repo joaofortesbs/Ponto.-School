@@ -96,7 +96,8 @@ const EditReminderModal: React.FC<EditReminderModalProps> = ({
               <Label htmlFor="time">Data/Hora</Label>
               <Input
                 id="time"
-                value={reminder?.dueDate ? new Date(reminder.dueDate).toISOString().slice(0, 16) : ""}
+                type="datetime-local"
+                value={time}
                 onChange={(e) => setTime(e.target.value)}
                 required
               />

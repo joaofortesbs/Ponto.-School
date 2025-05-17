@@ -71,8 +71,8 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
 
   const [startDate, setStartDate] = useState(now.toISOString().slice(0, 10));
   const [endDate, setEndDate] = useState(now.toISOString().slice(0, 10));
-  const [startTime, setStartTime] = useState(nowISO.slice(11, 16));
-  const [endTime, setEndTime] = useState(laterISO.slice(11, 16));
+  const [startTime, setStartTime] = useState(now.toTimeString().slice(0, 5));
+  const [endTime, setEndTime] = useState(new Date(now.getTime() + 60*60*1000).toTimeString().slice(0, 5));
   const [duration, setDuration] = useState("");
   const [location, setLocation] = useState("");
   const [isOnline, setIsOnline] = useState(false);
