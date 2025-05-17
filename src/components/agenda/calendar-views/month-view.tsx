@@ -1,7 +1,4 @@
-The code checks if eventData exists and is an object before attempting to access its properties to prevent the "Cannot read properties of undefined (reading 'map')" error.
-```
 
-```replit_final_file
 import React from "react";
 import {
   format,
@@ -26,11 +23,16 @@ import DroppableDay from "./droppable-day";
 import { CalendarEvent } from "@/services/calendarEventService";
 
 interface MonthViewProps {
-  currentDate: Date;
-  events: CalendarEvent[];
-  onDateClick: (date: Date) => void;
-  onEventClick: (event: CalendarEvent) => void;
-  onMoveEvent?: (event: CalendarEvent, newDate: Date) => void;
+  currentYear: number;
+  currentMonth: number;
+  selectedDay: Date | null;
+  setSelectedDay: (day: Date) => void;
+  eventData?: Record<number, any[]>;
+  getEventIcon?: (event: any) => React.ReactNode;
+  openEventDetails: (event: any) => void;
+  onEventDrop?: (event: any, day: number) => void;
+  setCalendarView: (view: string) => void;
+  calendarView: string;
 }
 
 const MonthView: React.FC<MonthViewProps> = ({
@@ -231,8 +233,8 @@ const MonthView: React.FC<MonthViewProps> = ({
                   const dayNumber = day.getDate();
                   const isCurrentMonthDay = isSameMonth(day, currentDate);
                   const isTodayDay = isToday(day);
-                  const dayEvents = isCurrentMonthDay
-                    ? eventData[dayNumber] || []
+                  const dayEvents = isCurrentMonthDay && eventData[dayNumber]
+                    ? eventData[dayNumber]
                     : [];
                   const isSelected =
                     selectedDay &&
@@ -278,8 +280,7 @@ const MonthView: React.FC<MonthViewProps> = ({
                     )}
                   </div>
                 );
-              }),
-            )}
+              })}
             </div>
           </DndProvider>
         </div>
