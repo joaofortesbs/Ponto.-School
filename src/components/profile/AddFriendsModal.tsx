@@ -8,7 +8,7 @@ import {
   Search, X, Eye, Lock, Unlock, ChevronLeft, ArrowLeft, 
   UserCheck, MapPin, BookOpen, Bookmark, Users, 
   Clock, CheckCircle2, AlertCircle, Bell, Filter,
-  MoreVertical, MessageSquare, Ban, Flag, Share2
+  MoreVertical, MessageSquare, Ban, Flag, Share2, RefreshCw
 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/lib/supabase";
@@ -452,9 +452,12 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
           if (error) {
             console.error('Erro na conexão com Supabase:', error);
             setSearchError('Não foi possível conectar ao serviço. Verifique sua conexão.');
+			return false;
           }
+		  return true;
         } catch (err) {
           console.error('Falha ao verificar conexão com Supabase:', err);
+		  return false;
         }
       };
 
@@ -1403,80 +1406,85 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
               </TabsList>
 
               <TabsContent value="buscar" className="mt-0 focus-visible:outline-none">
-                <div className="relative mb-6 flex items-center">
-                  <div className="relative flex-1">
-                    <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                      <Search className="h-4 w-4 text-white/60" />
-                    </div>
-                    <Input 
-                      className="w-full pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/40 focus:border-[#FF6B00]/50 focus:ring-[#FF6B00]/30 rounded-xl py-6"
-                      placeholder="Digite nome, @username ou parte do nome"
-                      value={searchQuery}
-                      onChange={(e) => {
-                        setSearchQuery(e.target.value);
-                        // Iniciar a busca automaticamente quando o usuário digita
-                        if (e.target.value.trim().length >= 3) {
-                          searchUsers(e.target.value);
-                        } else if (e.target.value.trim() === '') {
-                          setFilteredResults([]);
-                        }
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          searchUsers(searchQuery);
-                        }
-                      }}
-                      autoFocus
-                    />
+                
+<div className="relative mb-6 flex items-center">
+          <div className="relative flex-1">
+            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+              <Search className="h-4 w-4 text-white/60" />
+            </div>
+            <Input 
+              className="w-full pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/40 focus:border-[#FF6B00]/50 focus:ring-[#FF6B00]/30 rounded-xl py-6"
+              placeholder="Digite nome, @username ou parte do nome"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+				setSearchError(null);
+                // Iniciar a busca automaticamente quando o usuário digita
+                if (e.target.value.trim().length >= 3) {
+                  searchUsers(e.target.value);
+                } else if (e.target.value.trim() === '') {
+                  setFilteredResults([]);
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+				  if (searchQuery.trim().length >= 3) {
+                    searchUsers(searchQuery);
+                  } else if (searchQuery.trim().length > 0) {
+					setSearchError('Digite pelo menos 3 caracteres para buscar.');
+				  }
+                }
+              }}
+              autoFocus
+            />
 
-                    {isLoading && (
-                      <div className="absolute inset-y-0 right-3 flex items-center">
-                        <div className="h-4 w-4 border-2 border-[#FF6B00]/70 border-t-transparent rounded-full animate-spin"></div>
-                      </div>
-                    )}
+            {isLoading && (
+              <div className="absolute inset-y-0 right-3 flex items-center">
+                <div className="h-4 w-4 border-2 border-[#FF6B00]/70 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            )}
 
-                    {!isLoading && searchQuery.trim() !== '' && (
-                      <button 
-                        onClick={() => searchUsers(searchQuery)}
-                        className="absolute inset-y-0 right-3 p-2 text-white/60 hover:text-white/90 transition-colors"
-                        title="Buscar"
-                      >
-                        <span className="sr-only">Buscar</span>
-                        <Search className="h-4 w-4" />
-                      </button>
-                    )}
-                  </div>
+            {!isLoading && searchQuery.trim() !== '' && (
+              <button 
+			    onClick={() => {
+				  if (searchQuery.trim().length >= 3) {
+                    searchUsers(searchQuery);
+                  } else {
+					setSearchError('Digite pelo menos 3 caracteres para buscar.');
+				  }
+				}}
+                className="absolute inset-y-0 right-3 p-2 text-white/60 hover:text-white/90 transition-colors"
+                title="Buscar"
+              >
+                <span className="sr-only">Buscar</span>
+                <Search className="h-4 w-4" />
+              </button>
+            )}
+          </div>
 
-                  {/* Botão de Perfis Salvos */}
-                  <div className="ml-2">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className={`h-10 w-10 rounded-full ${filter === 'saved' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white'}`}
-                      onClick={() => {
-                        setFilter(filter === 'saved' ? 'all' : 'saved');
-                        searchUsers(searchQuery);
-                      }}
-                      title="Mostrar perfis salvos"
-                    >
-                      <Bookmark className={`h-4 w-4 ${filter === 'saved' ? 'fill-amber-400' : ''}`} />
-                    </Button>
-                  </div>
-
-                  {/* Botão de filtro */}
-                  <div className="ml-2 relative">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-10 w-10 rounded-full bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white"
-                      onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-                    >
-                      <Filter className="h-4 w-4" />
-                    </Button>
-
-                    {showFilterDropdown && <FilterDropdown />}
-                  </div>
-                </div>
+		  {/* Botão de reconexão quando houver erro */}
+		  {searchError && (
+              <button
+                className="ml-2 p-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 rounded-full transition-all duration-200"
+                onClick={async () => {
+                  setSearchError(null);
+                  const isConnected = await checkSupabaseConnection();
+                  if (isConnected) {
+                    if (searchQuery.trim().length >= 3) {
+                      searchUsers(searchQuery);
+                    } else {
+                      setSearchError('Digite pelo menos 3 caracteres para buscar.');
+                    }
+                  } else {
+                    setSearchError('Não foi possível reconectar. Verifique sua conexão.');
+                  }
+                }}
+                title="Tentar reconectar"
+              >
+                <RefreshCw className="h-4 w-4" />
+              </button>
+            )}
+        </div>
 
                 {searchError && (
                   <div className="bg-gradient-to-br from-[#0c1a2b]/95 to-[#0c1a2b]/85 backdrop-blur-lg rounded-xl p-4 mb-3 border border-red-500/30 shadow-xl">
