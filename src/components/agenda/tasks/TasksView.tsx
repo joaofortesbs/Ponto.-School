@@ -94,11 +94,38 @@ const TasksView: React.FC<TasksViewProps> = ({
     };
   }, []);
 
-  // Carregar tarefas de exemplo
-  useEffect(() => {
-    const sampleTasks: Task[] = [];
+  // Importar o serviço de tarefas
+  import { taskService } from "@/services/taskService";
+  import { getCurrentUser } from "@/services/databaseService";
 
-    setTasks(sampleTasks);
+  // Carregar tarefas do usuário
+  useEffect(() => {
+    const loadUserTasks = async () => {
+      try {
+        // Obter usuário atual
+        const user = await getCurrentUser();
+        
+        if (user && user.id) {
+          // Carregar tarefas sincronizadas (do Supabase ou local, o mais recente)
+          const userTasks = await taskService.syncTasks(user.id);
+          if (userTasks && userTasks.length > 0) {
+            setTasks(userTasks);
+            console.log(`Carregadas ${userTasks.length} tarefas do usuário ${user.id}`);
+          } else {
+            console.log("Nenhuma tarefa encontrada para o usuário");
+            setTasks([]);
+          }
+        } else {
+          console.warn("Usuário não autenticado, não é possível carregar tarefas");
+          setTasks([]);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar tarefas do usuário:", error);
+        setTasks([]);
+      }
+    };
+
+    loadUserTasks();
   }, []);
 
   // Filtrar tarefas com base nos filtros e na busca
@@ -197,8 +224,8 @@ const TasksView: React.FC<TasksViewProps> = ({
 
   // Mover tarefa para outro status
   const handleMoveTask = (taskId: string, newStatus: TaskStatus) => {
-    setTasks((currentTasks) =>
-      currentTasks.map((task) => {
+    setTasks((currentTasks) => {
+      const updatedTasks = currentTasks.map((task) => {
         if (task.id === taskId) {
           // Se estiver movendo para concluído, definir progresso como 100%
           const newProgress =
@@ -219,14 +246,30 @@ const TasksView: React.FC<TasksViewProps> = ({
           return updatedTask;
         }
         return task;
-      }),
-    );
+      });
+      
+      // Salvar no banco de dados/localStorage
+      const saveTasksAsync = async () => {
+        try {
+          const user = await getCurrentUser();
+          if (user && user.id) {
+            await taskService.saveTasks(user.id, updatedTasks);
+          }
+        } catch (err) {
+          console.error("Erro ao salvar tarefas após mover:", err);
+        }
+      };
+      
+      saveTasksAsync();
+      
+      return updatedTasks;
+    });
   };
 
   // Marcar tarefa como concluída/não concluída
   const handleCompleteTask = (taskId: string, completed: boolean) => {
-    setTasks((currentTasks) =>
-      currentTasks.map((task) => {
+    setTasks((currentTasks) => {
+      const updatedTasks = currentTasks.map((task) => {
         if (task.id === taskId) {
           const newStatus = completed ? "concluido" : "a-fazer";
           const updatedTask = {
@@ -239,16 +282,49 @@ const TasksView: React.FC<TasksViewProps> = ({
           return updatedTask;
         }
         return task;
-      }),
-    );
+      });
+      
+      // Salvar no banco de dados/localStorage
+      const saveTasksAsync = async () => {
+        try {
+          const user = await getCurrentUser();
+          if (user && user.id) {
+            await taskService.saveTasks(user.id, updatedTasks);
+          }
+        } catch (err) {
+          console.error("Erro ao salvar tarefas após concluir:", err);
+        }
+      };
+      
+      saveTasksAsync();
+      
+      return updatedTasks;
+    });
   };
 
   // Atualizar tarefa
   const handleUpdateTask = (updatedTask: Task) => {
-    const updatedTasks = tasks.map((task) =>
-      task.id === updatedTask.id ? updatedTask : task,
-    );
-    setTasks(updatedTasks);
+    setTasks((currentTasks) => {
+      const updatedTasks = currentTasks.map((task) =>
+        task.id === updatedTask.id ? updatedTask : task,
+      );
+      
+      // Salvar no banco de dados/localStorage
+      const saveTasksAsync = async () => {
+        try {
+          const user = await getCurrentUser();
+          if (user && user.id) {
+            await taskService.saveTasks(user.id, updatedTasks);
+          }
+        } catch (err) {
+          console.error("Erro ao salvar tarefas após atualização:", err);
+        }
+      };
+      
+      saveTasksAsync();
+      
+      return updatedTasks;
+    });
 
     // Mostrar toast de confirmação
     toast({
@@ -259,8 +335,26 @@ const TasksView: React.FC<TasksViewProps> = ({
 
   // Excluir tarefa
   const handleDeleteTask = (taskId: string) => {
-    const updatedTasks = tasks.filter((task) => task.id !== taskId);
-    setTasks(updatedTasks);
+    setTasks((currentTasks) => {
+      const updatedTasks = currentTasks.filter((task) => task.id !== taskId);
+      
+      // Salvar no banco de dados/localStorage
+      const saveTasksAsync = async () => {
+        try {
+          const user = await getCurrentUser();
+          if (user && user.id) {
+            await taskService.saveTasks(user.id, updatedTasks);
+          }
+        } catch (err) {
+          console.error("Erro ao salvar tarefas após exclusão:", err);
+        }
+      };
+      
+      saveTasksAsync();
+      
+      return updatedTasks;
+    });
+    
     setShowTaskDetails(false);
 
     // Mostrar toast de confirmação
@@ -271,7 +365,7 @@ const TasksView: React.FC<TasksViewProps> = ({
   };
 
   // Adicionar nova tarefa
-  const handleAddTask = (taskData: any) => {
+  const handleAddTask = async (taskData: any) => {
     try {
       console.log("Adding task:", taskData);
 
@@ -313,7 +407,31 @@ const TasksView: React.FC<TasksViewProps> = ({
       };
 
       // Add the new task to the beginning of the tasks array immediately
-      setTasks((prevTasks) => [newTask, ...prevTasks]);
+      setTasks((prevTasks) => {
+        const updatedTasks = [newTask, ...prevTasks];
+        
+        // Salvar no banco de dados/localStorage
+        const saveTasksAsync = async () => {
+          try {
+            const user = await getCurrentUser();
+            if (user && user.id) {
+              const saved = await taskService.saveTasks(user.id, updatedTasks);
+              if (!saved) {
+                console.warn("Não foi possível salvar tarefas no banco de dados nem localmente");
+              }
+            } else {
+              console.warn("Usuário não autenticado, tarefas salvas apenas na sessão atual");
+            }
+          } catch (err) {
+            console.error("Erro ao salvar tarefas:", err);
+          }
+        };
+        
+        // Executar salvamento assíncrono para não bloquear a UI
+        saveTasksAsync();
+        
+        return updatedTasks;
+      });
 
       // Close the modal
       setShowAddTask(false);
@@ -330,11 +448,27 @@ const TasksView: React.FC<TasksViewProps> = ({
       if (dueDate < now && newTask.status === "a-fazer") {
         // Update the task to be marked as overdue
         setTimeout(() => {
-          setTasks((prevTasks) =>
-            prevTasks.map((task) =>
+          setTasks((prevTasks) => {
+            const updatedTasks = prevTasks.map((task) =>
               task.id === newTask.id ? { ...task, status: "atrasado" } : task,
-            ),
-          );
+            );
+            
+            // Salvar no banco de dados/localStorage
+            const saveTasksAsync = async () => {
+              try {
+                const user = await getCurrentUser();
+                if (user && user.id) {
+                  await taskService.saveTasks(user.id, updatedTasks);
+                }
+              } catch (err) {
+                console.error("Erro ao salvar tarefas atualizadas:", err);
+              }
+            };
+            
+            saveTasksAsync();
+            
+            return updatedTasks;
+          });
         }, 100);
       }
 

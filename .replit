@@ -164,6 +164,15 @@ mode = "sequential"
 task = "shell.exec"
 args = "npx supabase migration up"
 
+[[workflows.workflow]]
+name = "Aplicar Migração de Tarefas"
+author = 42059808
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npx supabase migration up"
+
 [auth]
 pageEnabled = false
 buttonEnabled = false
