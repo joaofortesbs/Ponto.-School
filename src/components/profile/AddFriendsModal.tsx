@@ -74,6 +74,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
   const [filter, setFilter] = useState<'all' | 'online' | 'suggested' | 'saved'>('all');
   const [sortOrder, setSortOrder] = useState<'alphabetical' | 'recent'>('recent');
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
+  const [searchError, setSearchError] = useState<string | null>(null);
 
   // Buscar o ID do usuário atual
   useEffect(() => {
@@ -392,6 +393,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
       setShowProfileActions(false);
       setSearchQuery('');
       setFilteredResults([]);
+      setSearchError(null);
     } else {
       // Ao abrir o modal
       setActiveTab("buscar");
@@ -443,6 +445,20 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
         }
       };
 
+      // Verifica se o Supabase está funcionando corretamente
+      const checkSupabaseConnection = async () => {
+        try {
+          const { data, error } = await supabase.from('profiles').select('count', { count: 'exact', head: true });
+          if (error) {
+            console.error('Erro na conexão com Supabase:', error);
+            setSearchError('Não foi possível conectar ao serviço. Verifique sua conexão.');
+          }
+        } catch (err) {
+          console.error('Falha ao verificar conexão com Supabase:', err);
+        }
+      };
+
+      checkSupabaseConnection();
       fetchInitialUsers();
     }
   }, [open, currentUserId]);
@@ -1258,6 +1274,84 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
     );
   };
 
+  // Função de busca de usuários no Supabase
+  const searchUsers = async (query: string) => {
+    if (!query.trim()) {
+      setFilteredResults([]);
+      setSearchError(null);
+      return;
+    }
+
+    setIsLoading(true);
+    setSearchError(null);
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, username, avatar_url, bio, email, is_private, updated_at')
+        .or(`username.ilike.%${query}%,full_name.ilike.%${query}%,email.ilike.%${query}%`)
+        .neq('id', currentUserId || '')
+        .order('updated_at', { ascending: false })
+        .limit(50);
+
+      if (error) {
+        console.error("Erro na busca do Supabase:", error);
+        setSearchError('Ocorreu um erro ao buscar usuários. Tente novamente mais tarde.');
+        setFilteredResults([]);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        const formattedResults: UserType[] = data.map(user => {
+          const validUsername = user.username || user.email?.split('@')[0] || `user_${user.id.substring(0, 6)}`;
+          const displayName = user.full_name || validUsername || 'Usuário';
+
+          return {
+            id: user.id,
+            name: displayName,
+            username: validUsername,
+            bio: user.bio || `Olá! Sou ${displayName} na plataforma Epictus.`,
+            isPrivate: user.is_private || false,
+            avatar: user.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${validUsername}`,
+            followersCount: 0,
+            friendsCount: 0,
+            postsCount: 0,
+            lastActive: getRelativeTimeString(new Date(user.updated_at || Date.now()))
+          };
+        });
+
+        setFilteredResults(formattedResults);
+      } else {
+        setFilteredResults([]);
+        setSearchError('Nenhum usuário encontrado com esse termo de busca.');
+      }
+    } catch (error) {
+      console.error("Erro na busca de usuários:", error);
+      setFilteredResults([]);
+      setSearchError('Ocorreu um erro ao buscar usuários. Tente novamente mais tarde.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Função onSubmit aprimorada para tratamento de erros e validação
+  const onSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSearchError(null);
+
+    if (!searchQuery.trim()) {
+      setSearchError('Por favor, digite um termo para buscar usuários.');
+      return;
+    }
+
+    if (searchQuery.trim().length < 3) {
+      setSearchError('Digite pelo menos 3 caracteres para buscar.');
+      return;
+    }
+
+    searchUsers(searchQuery);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl p-0 bg-gradient-to-b from-[#0A2540] to-[#001427] border-white/10 overflow-hidden rounded-xl shadow-2xl backdrop-blur-lg">
@@ -1322,14 +1416,14 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                         setSearchQuery(e.target.value);
                         // Iniciar a busca automaticamente quando o usuário digita
                         if (e.target.value.trim().length >= 3) {
-                          performSearch(e.target.value);
+                          searchUsers(e.target.value);
                         } else if (e.target.value.trim() === '') {
                           setFilteredResults([]);
                         }
                       }}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
-                          performSearch(searchQuery);
+                          searchUsers(searchQuery);
                         }
                       }}
                       autoFocus
@@ -1343,7 +1437,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
 
                     {!isLoading && searchQuery.trim() !== '' && (
                       <button 
-                        onClick={() => performSearch(searchQuery)}
+                        onClick={() => searchUsers(searchQuery)}
                         className="absolute inset-y-0 right-3 p-2 text-white/60 hover:text-white/90 transition-colors"
                         title="Buscar"
                       >
@@ -1361,7 +1455,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                       className={`h-10 w-10 rounded-full ${filter === 'saved' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white'}`}
                       onClick={() => {
                         setFilter(filter === 'saved' ? 'all' : 'saved');
-                        performSearch(searchQuery);
+                        searchUsers(searchQuery);
                       }}
                       title="Mostrar perfis salvos"
                     >
@@ -1383,6 +1477,17 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                     {showFilterDropdown && <FilterDropdown />}
                   </div>
                 </div>
+
+                {searchError && (
+                  <div className="bg-gradient-to-br from-[#0c1a2b]/95 to-[#0c1a2b]/85 backdrop-blur-lg rounded-xl p-4 mb-3 border border-red-500/30 shadow-xl">
+                    <div className="flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-500 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                      </svg>
+                      <div className="text-red-500 text-sm">{searchError}</div>
+                    </div>
+                  </div>
+                )}
 
                 <div 
                   className="overflow-y-auto max-h-[420px] pr-2 custom-scrollbar"
