@@ -140,7 +140,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     // Validate required fields
     if (!title.trim()) {
       alert("Por favor, insira um título para o evento.");
@@ -152,38 +152,59 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
       return;
     }
 
-    // Create event object
-    const newEvent = {
-      id: `event-${Date.now()}`,
-      type: eventType,
-      title,
-      description,
-      discipline,
-      professor,
-      startDate,
-      endDate,
-      startTime,
-      endTime,
-      duration,
-      location,
-      isOnline,
-      meetingLink,
-      attachments: attachments.map((file) => file.name), // Just store names for demo
-      reminders,
-      repeat,
-      guests,
-      visibility,
-      createdAt: new Date(),
-    };
+    try {
+      // Importar o serviço de eventos
+      const { addEvent } = await import('@/services/calendarEventService');
+      const { getCurrentUser } = await import('@/services/databaseService');
+      
+      // Obter usuário atual
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        alert("Erro ao obter usuário atual. O evento será salvo localmente.");
+      }
+      
+      // Create event object
+      const newEvent = {
+        type: eventType,
+        title,
+        description,
+        discipline,
+        professor,
+        startDate: startDate.toISOString(),
+        endDate: endDate ? endDate.toISOString() : undefined,
+        startTime,
+        endTime,
+        duration,
+        location,
+        isOnline,
+        meetingLink,
+        attachments: attachments.map((file) => file.name), // Just store names for demo
+        reminders,
+        repeat,
+        guests,
+        visibility,
+        userId: currentUser?.id || 'anonymous',
+      };
 
-    // Call the onAddEvent callback with the new event
-    if (onAddEvent) {
-      onAddEvent(newEvent);
+      // Salvar evento no banco de dados
+      const savedEvent = await addEvent(newEvent);
+      
+      // Call the onAddEvent callback with the new event
+      if (onAddEvent) {
+        onAddEvent(savedEvent || { 
+          ...newEvent, 
+          id: `event-${Date.now()}`,
+          createdAt: new Date().toISOString() 
+        });
+      }
+
+      // Reset form and close modal
+      resetForm();
+      onOpenChange(false);
+    } catch (error) {
+      console.error("Erro ao salvar evento:", error);
+      alert("Ocorreu um erro ao salvar o evento. Tente novamente.");
     }
-
-    // Reset form and close modal
-    resetForm();
-    onOpenChange(false);
   };
 
   const resetForm = () => {

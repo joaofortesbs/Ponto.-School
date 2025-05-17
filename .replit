@@ -146,6 +146,15 @@ mode = "sequential"
 task = "shell.exec"
 args = "node scripts/drop-codigos-grupos-tables.js"
 
+[[workflows.workflow]]
+name = "Aplicar Migração Calendário"
+author = 42059808
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npx supabase migration up"
+
 [auth]
 pageEnabled = false
 buttonEnabled = false

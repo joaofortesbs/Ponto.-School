@@ -71,11 +71,24 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
     onOpenChange(false);
   };
 
-  const handleDelete = () => {
-    if (onDeleteEvent && event.id) {
-      onDeleteEvent(event.id);
+  const handleDelete = async () => {
+    try {
+      // Importar o serviço de eventos
+      const { deleteEvent } = await import('@/services/calendarEventService');
+
+      // Excluir o evento do banco de dados
+      await deleteEvent(event.id);
+
+      // Notificar o componente pai
+      if (onDeleteEvent) {
+        onDeleteEvent(event.id);
+      }
+
+      onOpenChange(false);
+    } catch (error) {
+      console.error("Erro ao excluir evento:", error);
+      alert("Ocorreu um erro ao excluir o evento. Tente novamente.");
     }
-    onOpenChange(false);
   };
 
   return (

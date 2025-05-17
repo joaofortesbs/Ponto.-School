@@ -150,27 +150,47 @@ export default function AgendaPage() {
   // Dados de eventos para o calendário (vazio por padrão)
   const [eventData, setEventData] = useState<Record<number, any[]>>({});
 
+  useEffect(() => {
+    // Sincronizar eventos locais com o banco de dados quando o usuário estiver autenticado
+    const syncEvents = async () => {
+      try {
+        const { getCurrentUser } = await import('@/services/databaseService');
+        const { syncLocalEvents } = await import('@/services/calendarEventService');
+
+        const currentUser = await getCurrentUser();
+        if (currentUser) {
+          await syncLocalEvents(currentUser.id);
+          console.log("Eventos sincronizados com sucesso!");
+        }
+      } catch (error) {
+        console.error("Erro ao sincronizar eventos:", error);
+      }
+    };
+
+    syncEvents();
+  }, []);
+
   // Função para formatar eventos próximos a partir do eventData
   const getUpcomingEvents = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0); // Normaliza a data atual para comparação
     const upcoming: any[] = [];
-    
+
     // Percorre todos os dias com eventos
     Object.keys(eventData).forEach(day => {
       const dayEvents = eventData[parseInt(day)] || [];
-      
+
       // Para cada evento nesse dia
       dayEvents.forEach(event => {
         if (event.startDate) {
           const eventDate = new Date(event.startDate);
           eventDate.setHours(0, 0, 0, 0); // Normaliza a data do evento para comparação
-          
+
           // Adiciona eventos que ocorrem hoje ou no futuro
           if (eventDate >= today) {
             // Formata a data com date-fns
             const formattedDate = format(eventDate, "dd/MM/yyyy", { locale: ptBR });
-            
+
             upcoming.push({
               id: event.id,
               type: event.type,
@@ -189,29 +209,29 @@ export default function AgendaPage() {
         }
       });
     });
-    
+
     // Ordena eventos cronologicamente (por data e hora)
     upcoming.sort((a, b) => {
       // Primeiro compara por data
       const dateComparison = a.originalDate.getTime() - b.originalDate.getTime();
-      
+
       // Se for a mesma data, compara pelo horário
       if (dateComparison === 0) {
         const [hoursA, minutesA] = a.originalTime.split(':').map(Number);
         const [hoursB, minutesB] = b.originalTime.split(':').map(Number);
-        
+
         // Compara horas
         if (hoursA !== hoursB) {
           return hoursA - hoursB;
         }
-        
+
         // Se as horas forem iguais, compara minutos
         return minutesA - minutesB;
       }
-      
+
       return dateComparison;
     });
-    
+
     return upcoming;
   };
 
@@ -510,14 +530,14 @@ export default function AgendaPage() {
       }
 
       setEventData(updatedEvents);
-      
+
       // Força atualização do componente de próximos eventos
       setTimeout(() => {
         const upcomingEventsUpdated = getUpcomingEvents();
         // Este console.log ajuda a verificar se os eventos estão sendo atualizados corretamente
         console.log("Próximos eventos atualizados:", upcomingEventsUpdated);
       }, 100);
-      
+
       // Exibe uma mensagem de sucesso
       toast({
         title: "Evento adicionado",
@@ -570,7 +590,7 @@ export default function AgendaPage() {
     }
 
     setEventData(updatedEvents);
-    
+
     // Exibe uma mensagem de sucesso
     toast({
       title: "Evento atualizado",
