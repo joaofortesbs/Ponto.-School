@@ -31,81 +31,6 @@ interface UserType {
   lastActive?: string;
 }
 
-// Mock data para desenvolvimento e fallback caso o Supabase não esteja disponível
-const mockUsers: UserType[] = [
-  {
-    id: '1',
-    name: 'Ana Silva',
-    username: 'ana',
-    bio: 'Apaixonada por História',
-    isPrivate: true,
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ana',
-    coverUrl: '/images/tempo-image-20250329T020811458Z.png',
-    followersCount: 150,
-    friendsCount: 75,
-    postsCount: 12,
-    favoriteSubject: 'Matemática',
-    educationLevel: 'Ensino Médio',
-    lastActive: '2 min atrás'
-  },
-  {
-    id: '2',
-    name: 'Lucas Rocha',
-    username: 'lucas',
-    bio: 'Curioso por tecnologia',
-    isPrivate: false,
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Lucas',
-    followersCount: 89,
-    friendsCount: 42,
-    postsCount: 7,
-    favoriteSubject: 'Física',
-    educationLevel: 'Pré-Vestibular',
-    lastActive: '14 min atrás'
-  },
-  {
-    id: '3',
-    name: 'Mariana Costa',
-    username: 'mari',
-    bio: 'Estudante de medicina, apaixonada por biologia molecular',
-    isPrivate: false,
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mari',
-    followersCount: 210,
-    friendsCount: 93,
-    postsCount: 25,
-    favoriteSubject: 'Biologia',
-    educationLevel: 'Graduação',
-    lastActive: 'Agora mesmo'
-  },
-  {
-    id: '4',
-    name: 'Pedro Alves',
-    username: 'palves',
-    bio: 'Programador e entusiasta de matemática aplicada',
-    isPrivate: true,
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Pedro',
-    followersCount: 102,
-    friendsCount: 57,
-    postsCount: 15,
-    favoriteSubject: 'Programação',
-    educationLevel: 'Graduação',
-    lastActive: '1h atrás'
-  },
-  {
-    id: '5',
-    name: 'Juliana Mendes',
-    username: 'jumendes',
-    bio: 'Estudante de literatura, leitora ávida e escritora nas horas vagas',
-    isPrivate: false,
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Juliana',
-    followersCount: 175,
-    friendsCount: 68,
-    postsCount: 34,
-    favoriteSubject: 'Literatura',
-    educationLevel: 'Graduação',
-    lastActive: '30 min atrás'
-  }
-];
-
 interface PendingRequestType {
   id: string;
   user: UserType;
@@ -113,20 +38,7 @@ interface PendingRequestType {
   date: string;
 }
 
-const mockPendingRequests: PendingRequestType[] = [
-  {
-    id: 'req1',
-    user: mockUsers[2],
-    type: 'received',
-    date: '2023-05-15'
-  },
-  {
-    id: 'req2',
-    user: mockUsers[4],
-    type: 'sent',
-    date: '2023-05-14'
-  }
-];
+// Não usamos mais dados mock - apenas interfaces para tipagem
 
 interface FriendRequest {
   id: string;
@@ -148,7 +60,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
   const [filteredResults, setFilteredResults] = useState<UserType[]>([]);
   const [selectedUser, setSelectedUser] = useState<UserType | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [pendingRequests, setPendingRequests] = useState<PendingRequestType[]>(mockPendingRequests);
+  const [pendingRequests, setPendingRequests] = useState<PendingRequestType[]>([]);
   const [userRelations, setUserRelations] = useState<{[key: string]: 'none' | 'requested' | 'following'}>({});
   const [savedProfiles, setSavedProfiles] = useState<{[key: string]: boolean}>({});
   const [showProfileActions, setShowProfileActions] = useState(false);
@@ -323,13 +235,17 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
     // Definir novo timeout
     searchTimeoutRef.current = setTimeout(async () => {
       try {
+        console.log("Realizando busca por:", query);
+        
+        // Construir condições de busca mais amplas (username, full_name e email)
         // Buscar do Supabase usando .ilike para busca parcial case-insensitive
         const { data, error } = await supabase
           .from('profiles')
-          .select('id, full_name, username, avatar_url, bio')
-          .or(`username.ilike.%${query}%,full_name.ilike.%${query}%`)
+          .select('id, full_name, username, avatar_url, bio, email, is_private, updated_at')
+          .or(`username.ilike.%${query}%,full_name.ilike.%${query}%,email.ilike.%${query}%`)
           .neq('id', currentUserId || '') // Não mostrar o usuário atual
-          .limit(20);
+          .order('updated_at', { ascending: false }) // Ordenar por atividade mais recente
+          .limit(50); // Aumentamos o limite para ter mais resultados
 
         if (error) {
           console.error("Erro na busca do Supabase:", error);
@@ -340,97 +256,88 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
 
         // Transformar dados do Supabase no formato UserType
         if (data && data.length > 0) {
-          const formattedResults: UserType[] = data.map(user => ({
-            id: user.id,
-            name: user.full_name || user.username || 'Usuário',
-            username: user.username || 'user',
-            bio: user.bio || 'Sem biografia',
-            isPrivate: false, // Assumindo não privado por padrão
-            avatar: user.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username || user.id}`,
-            followersCount: 0,
-            friendsCount: 0,
-            postsCount: 0,
-            lastActive: 'Recentemente'
-          }));
+          const formattedResults: UserType[] = data.map(user => {
+            // Gerar um username válido se não existir
+            const validUsername = user.username || user.email?.split('@')[0] || `user_${user.id.substring(0, 6)}`;
+            
+            // Gerar um nome de exibição válido
+            const displayName = user.full_name || validUsername || 'Usuário';
+            
+            return {
+              id: user.id,
+              name: displayName,
+              username: validUsername,
+              bio: user.bio || `Olá! Sou ${displayName} na plataforma Epictus.`,
+              isPrivate: user.is_private || false,
+              avatar: user.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${validUsername}`,
+              followersCount: 0,
+              friendsCount: 0,
+              postsCount: 0,
+              lastActive: getRelativeTimeString(new Date(user.updated_at || Date.now()))
+            };
+          });
 
           // Aplicar ordenação
           const sortedResults = [...formattedResults].sort((a, b) => {
             if (sortOrder === 'alphabetical') {
               return a.name.localeCompare(b.name);
             } else {
-              // Para recent, sem informação real, manter ordem da API
+              // Por padrão, manter a ordem por data de atualização que já vem do Supabase
               return 0;
             }
           });
 
-          // Aplicar filtros adicionais como no código original
+          // Aplicar filtros adicionais
           let finalResults = sortedResults;
           
           if (filter === 'saved') {
             finalResults = sortedResults.filter(user => savedProfiles[user.id]);
           } 
 
-          setFilteredResults(finalResults);
-          
-          if (finalResults.length > 0) {
-            console.log(`Encontrados ${finalResults.length} usuários para a busca "${query}"`);
+          // Se não houver resultados após os filtros, mostrar mensagem
+          if (finalResults.length === 0) {
+            console.log(`Nenhum usuário encontrado para a busca "${query}" após aplicar filtros`);
           } else {
-            console.log(`Nenhum usuário encontrado para a busca "${query}"`);
+            console.log(`Encontrados ${finalResults.length} usuários para a busca "${query}"`);
           }
+
+          setFilteredResults(finalResults);
         } else {
           console.log(`Nenhum resultado no Supabase para a busca "${query}"`);
           setFilteredResults([]);
           
-          // Apenas em desenvolvimento, usar dados mock como fallback
-          if (process.env.NODE_ENV === 'development') {
-            console.log('Usando dados mock como fallback em ambiente de desenvolvimento');
-            const results = mockUsers.filter(user => 
-              user.name.toLowerCase().includes(query.toLowerCase()) || 
-              user.username.toLowerCase().includes(query.toLowerCase())
-            );
-            
-            const sortedResults = [...results].sort((a, b) => {
-              if (sortOrder === 'alphabetical') {
-                return a.name.localeCompare(b.name);
-              } else {
-                return b.followersCount - a.followersCount;
-              }
-            });
-            
-            let finalResults = sortedResults;
-            
-            if (filter === 'saved') {
-              finalResults = sortedResults.filter(user => savedProfiles[user.id]);
-            } 
-            
-            setFilteredResults(finalResults);
-          }
+          // Não usamos mais dados mock como fallback
         }
       } catch (error) {
         console.error("Erro na busca de usuários:", error);
-        
-        // Fallback para dados mockados em caso de erro (apenas desenvolvimento)
-        if (process.env.NODE_ENV === 'development') {
-          console.log('Usando dados mock após erro (desenvolvimento)');
-          const results = mockUsers.filter(user => 
-            user.name.toLowerCase().includes(query.toLowerCase()) || 
-            user.username.toLowerCase().includes(query.toLowerCase())
-          );
-          
-          setFilteredResults(results);
-        } else {
-          setFilteredResults([]);
-          toast({
-            title: "Erro na busca",
-            description: "Ocorreu um erro ao buscar usuários. Tente novamente mais tarde.",
-            duration: 3000,
-          });
-        }
+        setFilteredResults([]);
+        toast({
+          title: "Erro na busca",
+          description: "Ocorreu um erro ao buscar usuários. Tente novamente mais tarde.",
+          duration: 3000,
+        });
       } finally {
         setIsLoading(false);
       }
-    }, 500); // Aumentado para 500ms para reduzir chamadas ao Supabase
-  }, [filter, sortOrder, savedProfiles, selectedFilters, currentUserId]);
+    }, 500); // 500ms para reduzir chamadas ao Supabase
+  }, [filter, sortOrder, savedProfiles, currentUserId]);
+  
+  // Função para calcular tempo relativo (ex: "5 min atrás")
+  const getRelativeTimeString = (date: Date): string => {
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffSec = Math.round(diffMs / 1000);
+    const diffMin = Math.round(diffSec / 60);
+    const diffHour = Math.round(diffMin / 60);
+    const diffDay = Math.round(diffHour / 24);
+    
+    if (diffSec < 60) return 'Agora mesmo';
+    if (diffMin < 60) return `${diffMin} min atrás`;
+    if (diffHour < 24) return `${diffHour}h atrás`;
+    if (diffDay < 7) return `${diffDay} dias atrás`;
+    
+    return 'Há mais de uma semana';
+  };
 
   // Atualizar resultados quando a busca mudar e tiver pelo menos 3 caracteres
   useEffect(() => {
@@ -448,23 +355,8 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
     };
   }, [searchQuery, performSearch]);
 
-  // Inicializar estado das relações com os usuários
-  useEffect(() => {
-    const initialRelations: {[key: string]: 'none' | 'requested' | 'following'} = {};
-    mockUsers.forEach(user => {
-      // Verificar se existe solicitação pendente enviada
-      const hasSentRequest = pendingRequests.some(req => 
-        req.user.id === user.id && req.type === 'sent'
-      );
-
-      if (hasSentRequest) {
-        initialRelations[user.id] = 'requested';
-      } else {
-        initialRelations[user.id] = 'none';
-      }
-    });
-    setUserRelations(initialRelations);
-  }, []);
+  // Inicializar estado das relações com os usuários - agora é feito ao carregar solicitações de amizade
+  // Este useEffect foi removido pois a funcionalidade foi integrada no useEffect que busca as solicitações
 
   // Efeito para não rerenderizar o filtro ao trocar de aba
   useEffect(() => {
@@ -502,16 +394,16 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
       // Ao abrir o modal
       setActiveTab("buscar");
       
-      // Buscar usuários populares/recentes para exibir quando o modal abre
+      // Buscar usuários recentes para exibir quando o modal abre
       const fetchInitialUsers = async () => {
         try {
           setIsLoading(true);
           const { data, error } = await supabase
             .from('profiles')
-            .select('id, full_name, username, avatar_url, bio')
+            .select('id, full_name, username, avatar_url, bio, email, is_private, updated_at')
             .neq('id', currentUserId || '')
-            .order('created_at', { ascending: false })
-            .limit(5);
+            .order('updated_at', { ascending: false })
+            .limit(10);
 
           if (error) {
             console.error("Erro ao buscar usuários iniciais:", error);
@@ -519,18 +411,26 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
           }
 
           if (data && data.length > 0) {
-            const formattedResults: UserType[] = data.map(user => ({
-              id: user.id,
-              name: user.full_name || user.username || 'Usuário',
-              username: user.username || 'user',
-              bio: user.bio || 'Sem biografia',
-              isPrivate: false,
-              avatar: user.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username || user.id}`,
-              followersCount: 0,
-              friendsCount: 0,
-              postsCount: 0,
-              lastActive: 'Recentemente'
-            }));
+            const formattedResults: UserType[] = data.map(user => {
+              // Gerar um username válido se não existir
+              const validUsername = user.username || user.email?.split('@')[0] || `user_${user.id.substring(0, 6)}`;
+              
+              // Gerar um nome de exibição válido
+              const displayName = user.full_name || validUsername || 'Usuário';
+              
+              return {
+                id: user.id,
+                name: displayName,
+                username: validUsername,
+                bio: user.bio || `Olá! Sou ${displayName} na plataforma Epictus.`,
+                isPrivate: user.is_private || false,
+                avatar: user.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${validUsername}`,
+                followersCount: 0,
+                friendsCount: 0,
+                postsCount: 0,
+                lastActive: getRelativeTimeString(new Date(user.updated_at || Date.now()))
+              };
+            });
             
             setFilteredResults(formattedResults);
           }
@@ -1504,10 +1404,10 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                     </div>
                   )}
 
-                  {filteredResults.length > 0 && (
+                  {searchQuery.trim() !== '' && filteredResults.length > 0 && (
                     <div className="mb-3 bg-white/5 rounded-lg p-3">
                       <p className="text-white/70 text-sm">
-                        {filteredResults.length} {filteredResults.length === 1 ? 'usuário encontrado' : 'usuários encontrados'}
+                        {filteredResults.length} {filteredResults.length === 1 ? 'usuário encontrado' : 'usuários encontrados'} para "{searchQuery}"
                       </p>
                     </div>
                   )}
@@ -1515,6 +1415,20 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                   {filteredResults.map(user => (
                     <UserCard key={user.id} user={user} />
                   ))}
+                  
+                  {searchQuery.trim() !== '' && filteredResults.length === 0 && !isLoading && (
+                    <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
+                      <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4">
+                        <Search className="h-6 w-6 text-white/40" />
+                      </div>
+                      <h3 className="text-white/80 text-lg font-medium mb-2">
+                        Nenhum usuário encontrado
+                      </h3>
+                      <p className="text-white/50 text-sm max-w-xs">
+                        Nenhum usuário correspondente à busca "{searchQuery}". Tente termos diferentes ou verifique a ortografia.
+                      </p>
+                    </div>
+                  )}
                 </div>
               </TabsContent>
 
