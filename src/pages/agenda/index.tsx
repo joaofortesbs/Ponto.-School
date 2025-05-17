@@ -940,10 +940,10 @@ export default function AgendaPage() {
                   <Trophy className="h-7 w-7 text-gray-400" />
                 </div>
                 <h4 className="text-sm font-medium text-gray-300 mb-2">
-                  Ranking não disponível
+                  Posição no Ranking: 0
                 </h4>
                 <p className="text-xs text-gray-500 mb-3">
-                  Participe das atividades para entrar no ranking de estudantes
+                  0 pontos - Participe das atividades para subir no ranking
                 </p>
                 <Button className="w-full mt-1 bg-[#FF6B00]/90 hover:bg-[#FF8C40] text-white rounded-lg transition-colors text-xs h-8">
                   <Users className="h-3.5 w-3.5 mr-1" /> Ver Ranking
@@ -1091,12 +1091,10 @@ export default function AgendaPage() {
                       <h4 className="text-sm font-medium text-gray-800 dark:text-white">
                         Estudo diário
                       </h4>
-                      <div className="grid grid-cols-7 gap-1 h-20">
+                      <div className="grid grid-cols-7 gap-1 h-12">
                         {['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'].map((day, i) => (
                           <div key={i} className="flex flex-col items-center">
-                            <div className="flex-1 w-full flex items-end">
-                              <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-t-sm h-1"></div>
-                            </div>
+                            <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-t-sm h-1"></div>
                             <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                               {day}
                             </span>
@@ -1127,15 +1125,6 @@ export default function AgendaPage() {
                           />
                         </div>
                       ))}
-                    </div>
-
-                    <div className="pt-2">
-                      <Button
-                        className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white rounded-lg transition-all duration-300"
-                        onClick={() => setShowSetGoalModal(true)}
-                      >
-                        <Target className="h-4 w-4 mr-2" /> Definir Meta de Estudo
-                      </Button>
                     </div>
                   </div>
                 </div>
