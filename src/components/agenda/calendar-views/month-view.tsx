@@ -29,6 +29,7 @@ interface MonthViewProps {
   openEventDetails: (event: any) => void;
   onEventDrop?: (event: any, day: number) => void;
   setCalendarView: (view: string) => void;
+  calendarView: string;
 }
 
 const MonthView: React.FC<MonthViewProps> = ({
@@ -41,6 +42,7 @@ const MonthView: React.FC<MonthViewProps> = ({
   openEventDetails,
   onEventDrop,
   setCalendarView,
+  calendarView,
 }) => {
   const [year, setYear] = React.useState(currentYear);
   const [month, setMonth] = React.useState(currentMonth);
@@ -132,7 +134,34 @@ const MonthView: React.FC<MonthViewProps> = ({
               {format(currentDate, "MMMM yyyy", { locale: ptBR })}
             </h3>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
+            <div className="flex rounded-md overflow-hidden">
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`h-8 rounded-none ${calendarView === "day" ? "bg-white text-[#FF6B00]" : "text-white hover:bg-white/20"}`}
+                onClick={() => setCalendarView("day")}
+              >
+                Dia
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`h-8 rounded-none ${calendarView === "week" ? "bg-white text-[#FF6B00]" : "text-white hover:bg-white/20"}`}
+                onClick={() => setCalendarView("week")}
+              >
+                Semana
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`h-8 rounded-none ${calendarView === "month" ? "bg-white text-[#FF6B00]" : "text-white hover:bg-white/20"}`}
+                onClick={() => setCalendarView("month")}
+              >
+                Mês
+              </Button>
+            </div>
+            <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="icon"

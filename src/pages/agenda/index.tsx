@@ -1252,6 +1252,7 @@ export default function AgendaPage() {
                     openEventDetails={openEventDetails}
                     onEventDrop={handleEventDrop}
                     setCalendarView={setCalendarView}
+                    calendarView={calendarView}
                   />
                 )}
                 {calendarView === "week" && (
