@@ -323,7 +323,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
     // Definir novo timeout
     searchTimeoutRef.current = setTimeout(async () => {
       try {
-        // Buscar do Supabase - melhorada para capturar mais resultados
+        // Buscar do Supabase usando .ilike para busca parcial case-insensitive
         const { data, error } = await supabase
           .from('profiles')
           .select('id, full_name, username, avatar_url, bio')
@@ -371,17 +371,19 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
           } 
 
           setFilteredResults(finalResults);
-          toast({
-            title: finalResults.length > 0 ? "Usuários encontrados" : "Nenhum usuário encontrado",
-            description: finalResults.length > 0 
-              ? `Encontramos ${finalResults.length} usuário(s) com base na sua busca.` 
-              : "Tente outro termo ou verifique a ortografia.",
-            duration: 3000,
-          });
+          
+          if (finalResults.length > 0) {
+            console.log(`Encontrados ${finalResults.length} usuários para a busca "${query}"`);
+          } else {
+            console.log(`Nenhum usuário encontrado para a busca "${query}"`);
+          }
         } else {
-          // Se não há resultados do Supabase, verificar se devemos mostrar dados mock
+          console.log(`Nenhum resultado no Supabase para a busca "${query}"`);
+          setFilteredResults([]);
+          
+          // Apenas em desenvolvimento, usar dados mock como fallback
           if (process.env.NODE_ENV === 'development') {
-            console.log('Usando dados mock para pesquisa (sem resultados do Supabase)');
+            console.log('Usando dados mock como fallback em ambiente de desenvolvimento');
             const results = mockUsers.filter(user => 
               user.name.toLowerCase().includes(query.toLowerCase()) || 
               user.username.toLowerCase().includes(query.toLowerCase())
@@ -402,17 +404,10 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
             } 
             
             setFilteredResults(finalResults);
-          } else {
-            setFilteredResults([]);
-            toast({
-              title: "Nenhum usuário encontrado",
-              description: "Tente outro termo de busca ou verifique a ortografia.",
-              duration: 3000,
-            });
           }
         }
       } catch (error) {
-        console.error("Erro na busca:", error);
+        console.error("Erro na busca de usuários:", error);
         
         // Fallback para dados mockados em caso de erro (apenas desenvolvimento)
         if (process.env.NODE_ENV === 'development') {
@@ -434,12 +429,16 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
       } finally {
         setIsLoading(false);
       }
-    }, 300);
+    }, 500); // Aumentado para 500ms para reduzir chamadas ao Supabase
   }, [filter, sortOrder, savedProfiles, selectedFilters, currentUserId]);
 
-  // Atualizar resultados quando a busca mudar
+  // Atualizar resultados quando a busca mudar e tiver pelo menos 3 caracteres
   useEffect(() => {
-    performSearch(searchQuery);
+    if (searchQuery.trim().length >= 3) {
+      performSearch(searchQuery);
+    } else if (searchQuery.trim() === '') {
+      setFilteredResults([]);
+    }
 
     // Cleanup
     return () => {
@@ -491,13 +490,60 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
     localStorage.setItem('epictus_saved_profiles', JSON.stringify(savedProfiles));
   }, [savedProfiles]);
 
-  // Fechar perfil selecionado quando fechar o modal
+  // Gerenciar estado quando o modal abre/fecha
   useEffect(() => {
     if (!open) {
+      // Ao fechar o modal
       setSelectedUser(null);
       setShowProfileActions(false);
+      setSearchQuery('');
+      setFilteredResults([]);
+    } else {
+      // Ao abrir o modal
+      setActiveTab("buscar");
+      
+      // Buscar usuários populares/recentes para exibir quando o modal abre
+      const fetchInitialUsers = async () => {
+        try {
+          setIsLoading(true);
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('id, full_name, username, avatar_url, bio')
+            .neq('id', currentUserId || '')
+            .order('created_at', { ascending: false })
+            .limit(5);
+
+          if (error) {
+            console.error("Erro ao buscar usuários iniciais:", error);
+            return;
+          }
+
+          if (data && data.length > 0) {
+            const formattedResults: UserType[] = data.map(user => ({
+              id: user.id,
+              name: user.full_name || user.username || 'Usuário',
+              username: user.username || 'user',
+              bio: user.bio || 'Sem biografia',
+              isPrivate: false,
+              avatar: user.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username || user.id}`,
+              followersCount: 0,
+              friendsCount: 0,
+              postsCount: 0,
+              lastActive: 'Recentemente'
+            }));
+            
+            setFilteredResults(formattedResults);
+          }
+        } catch (error) {
+          console.error("Erro ao carregar usuários iniciais:", error);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      fetchInitialUsers();
     }
-  }, [open]);
+  }, [open, currentUserId]);
 
   // Fechar o menu de ações quando clicar fora
   useEffect(() => {
@@ -1184,7 +1230,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
         {type === 'search' 
           ? searchQuery.trim() !== '' 
             ? "Nenhum resultado encontrado" 
-            : "Comece a buscar pessoas"
+            : "Descubra novos amigos"
           : "Sem solicitações pendentes"
         }
       </h3>
@@ -1192,7 +1238,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
         {type === 'search' 
           ? searchQuery.trim() !== '' 
             ? `Não encontramos resultados para "${searchQuery}". Tente outro termo.` 
-            : "Digite um nome ou @username para encontrar pessoas para conectar."
+            : "Digite um nome ou @username para encontrar novos amigos para se conectar. A busca começa após digitar 3 caracteres."
           : "Você não tem solicitações de amizade pendentes no momento."
         }
       </p>
@@ -1370,12 +1416,21 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                       className="w-full pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/40 focus:border-[#FF6B00]/50 focus:ring-[#FF6B00]/30 rounded-xl py-6"
                       placeholder="Digite nome, @username ou parte do nome"
                       value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        // Iniciar a busca automaticamente quando o usuário digita
+                        if (e.target.value.trim().length >= 3) {
+                          performSearch(e.target.value);
+                        } else if (e.target.value.trim() === '') {
+                          setFilteredResults([]);
+                        }
+                      }}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           performSearch(searchQuery);
                         }
                       }}
+                      autoFocus
                     />
 
                     {isLoading && (
@@ -1436,7 +1491,25 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                   )}
 
                   {searchQuery.trim() !== '' && filteredResults.length === 0 && !isLoading && (
-                    <EmptyState type="search" />
+                    <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
+                      <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4">
+                        <Search className="h-6 w-6 text-white/40" />
+                      </div>
+                      <h3 className="text-white/80 text-lg font-medium mb-2">
+                        Nenhum usuário encontrado
+                      </h3>
+                      <p className="text-white/50 text-sm max-w-xs">
+                        Não encontramos resultados para "{searchQuery}". Tente outro termo ou verifique a ortografia.
+                      </p>
+                    </div>
+                  )}
+
+                  {filteredResults.length > 0 && (
+                    <div className="mb-3 bg-white/5 rounded-lg p-3">
+                      <p className="text-white/70 text-sm">
+                        {filteredResults.length} {filteredResults.length === 1 ? 'usuário encontrado' : 'usuários encontrados'}
+                      </p>
+                    </div>
                   )}
 
                   {filteredResults.map(user => (
