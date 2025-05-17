@@ -64,33 +64,92 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
     }
   };
 
-  const handleEdit = () => {
+  const handleEdit = async () => {
     if (onEditEvent) {
-      onEditEvent(event);
+      try {
+        // Importar serviços necessários
+        const { updateEvent } = await import('@/services/calendarEventService');
+
+        const editedEvent = {
+          ...event,
+          title: editedTitle,
+          description: editedDescription,
+          type: editedType,
+          discipline: editedDiscipline,
+          location: editedLocation,
+          isOnline: editedIsOnline,
+          meetingLink: editedMeetingLink,
+          startTime: editedStartTime,
+          startDate: editedDate ? format(editedDate, 'yyyy-MM-dd') : event.startDate,
+          endTime: editedEndTime,
+        };
+
+        // Salvar no banco de dados
+        const updatedEvent = await updateEvent(editedEvent);
+
+        if (updatedEvent) {
+          toast({
+            title: "Evento atualizado",
+            description: "O evento foi atualizado com sucesso no banco de dados."
+          });
+        } else {
+          toast({
+            title: "Aviso",
+            description: "O evento foi atualizado localmente, mas houve um problema ao salvá-lo no servidor.",
+            variant: "warning"
+          });
+        }
+
+        // Atualizar a interface independentemente do resultado do banco
+        onEditEvent(editedEvent);
+        onOpenChange(false);
+
+      } catch (error) {
+        console.error("Erro ao editar evento:", error);
+        toast({
+          title: "Erro ao editar evento",
+          description: "Ocorreu um erro ao atualizar o evento. Tente novamente.",
+          variant: "destructive"
+        });
+      }
     }
-    onOpenChange(false);
   };
 
   const handleDelete = async () => {
-    if (onDeleteEvent && event?.id) {
+    if (onDeleteEvent) {
       try {
-        // Importar a função de deletar do serviço
+        // Importar serviços necessários
         const { deleteEvent } = await import('@/services/calendarEventService');
 
-        // Deletar do banco de dados
-        const success = await deleteEvent(event.id);
+        // Excluir do banco de dados
+        const deleted = await deleteEvent(event.id);
 
-        if (success) {
-          console.log("Evento excluído com sucesso");
-          onDeleteEvent(event.id);
+        if (deleted) {
+          toast({
+            title: "Evento excluído",
+            description: "O evento foi excluído com sucesso do banco de dados."
+          });
         } else {
-          console.error("Erro ao excluir evento");
+          toast({
+            title: "Aviso",
+            description: "O evento foi removido localmente, mas houve um problema ao excluí-lo no servidor.",
+            variant: "warning"
+          });
         }
+
+        // Atualizar a interface independentemente do resultado do banco
+        onDeleteEvent(event.id);
+        onOpenChange(false);
+
       } catch (error) {
         console.error("Erro ao excluir evento:", error);
+        toast({
+          title: "Erro ao excluir evento",
+          description: "Ocorreu um erro ao excluir o evento. Tente novamente.",
+          variant: "destructive"
+        });
       }
     }
-    onOpenChange(false);
   };
 
   return (
