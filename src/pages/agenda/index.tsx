@@ -714,8 +714,7 @@ export default function AgendaPage() {
 
   // Calendar State
   const [events, setEvents] = useState<CalendarEvent[]>([]);
-  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
-
+  
   // Calendar View
   const [view, setView] = useState<"month" | "week" | "day">("month");
 
