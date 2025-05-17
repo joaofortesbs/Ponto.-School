@@ -31,7 +31,7 @@ const AddReminderModal: React.FC<AddReminderModalProps> = ({
   onAddReminder,
 }) => {
   const [title, setTitle] = useState("");
-  const [time, setTime] = useState("");
+  const [time, setTime] = useState(new Date().toISOString().slice(0, 16));
   const [discipline, setDiscipline] = useState("");
   const [type, setType] = useState<"event" | "task" | "meeting" | "other">(
     "event",

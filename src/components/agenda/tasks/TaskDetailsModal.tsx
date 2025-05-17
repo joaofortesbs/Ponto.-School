@@ -508,9 +508,11 @@ const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                       value={
                         editedTask.reminderTime
                           ? typeof editedTask.reminderTime === 'string' 
-                            ? editedTask.reminderTime.slice(0, 16)
+                            ? (editedTask.reminderTime.includes('T') 
+                               ? editedTask.reminderTime.slice(0, 16)
+                               : new Date().toISOString().slice(0, 16))
                             : new Date(editedTask.reminderTime).toISOString().slice(0, 16)
-                          : ""
+                          : new Date().toISOString().slice(0, 16)
                       }
                       onChange={(e) =>
                         setEditedTask({
