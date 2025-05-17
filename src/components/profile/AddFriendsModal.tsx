@@ -757,12 +757,7 @@ className="w-full rounded-xl bg-white/5 hover:bg-white/10 border border-white/10
           >
             <Bookmark className="h-4 w-4" /> Sugeridos
           </button>
-          <button 
-            className={`flex items-center gap-2 w-full px-3 py-2 rounded-md ${filter === 'saved' ? 'bg-[#FF6B00]/20 text-[#FF6B00]' : 'text-white/70 hover:bg-white/5'}`}
-            onClick={() => { setFilter('saved'); setShowFilterDropdown(false); }}
-          >
-            <Bookmark className="h-4 w-4" /> Salvos
-          </button>
+          {/* Opção "Salvos" removida daqui e adicionada como botão separado */}
         </div>
         <h4 className="text-white text-xs px-2 py-1 mt-2 font-medium">Ordenar por:</h4>
         <div className="mt-1 space-y-1">
@@ -851,6 +846,21 @@ className="w-full rounded-xl bg-white/5 hover:bg-white/10 border border-white/10
                         <div className="h-4 w-4 border-2 border-white/40 border-t-transparent rounded-full animate-spin"></div>
                       </div>
                     )}
+                  </div>
+
+                  {/* Botão de Perfis Salvos */}
+                  <div className="ml-2">
+                    <Button
+                      variant="outline"
+                      className={`h-10 px-3 rounded-full ${filter === 'saved' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white'}`}
+                      onClick={() => {
+                        setFilter(filter === 'saved' ? 'all' : 'saved');
+                        performSearch(searchQuery);
+                      }}
+                    >
+                      <Bookmark className={`h-4 w-4 mr-1.5 ${filter === 'saved' ? 'fill-amber-400' : ''}`} />
+                      <span className="text-xs font-medium">Salvos</span>
+                    </Button>
                   </div>
 
                   {/* Botão de filtro */}
