@@ -62,13 +62,13 @@ const EpictusCalendar: React.FC<EpictusCalendarProps> = ({
             className="flex-1 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white border-none"
             onClick={onOpenCalendarModal}
           >
-            <Calendar className="h-4 w-4 mr-1" /> Organizar Calendário
+            <Calendar className="h-4 w-4 mr-1" /> Começar Agora
           </Button>
           <Button
             variant="outline"
             className="flex-1 border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10"
           >
-            <CheckSquare className="h-4 w-4 mr-1" /> Criar Checklist
+            <CheckSquare className="h-4 w-4 mr-1" /> Saiba Mais
           </Button>
         </div>
       </CardContent>

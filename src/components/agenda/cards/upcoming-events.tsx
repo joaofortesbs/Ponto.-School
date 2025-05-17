@@ -24,19 +24,12 @@ interface UpcomingEvent {
 }
 
 interface UpcomingEventsProps {
-  events: UpcomingEvent[];
+  events?: UpcomingEvent[];
 }
 
 const UpcomingEvents: React.FC<UpcomingEventsProps> = ({ events = [] }) => {
-  // Sample last flow session data
-  const lastFlowSession = {
-    date: "Hoje, 10:30",
-    duration: "01:45:00",
-    subjects: ["Matemática", "Física"],
-    progress: 85,
-  };
-
-  return <FlowSummaryCard lastSession={lastFlowSession} />;
+  // Não passamos uma sessão de flow para mostrar o estado para novos usuários
+  return <FlowSummaryCard />;
 };
 
 export default UpcomingEvents;
