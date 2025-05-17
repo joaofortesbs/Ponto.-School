@@ -803,6 +803,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                     <span className="bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full text-[10px] font-medium">solicitação enviada</span>
                     <span className="text-white/60">• {new Date(request.date).toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit'})}</span>
                   </span>
+                ```text
                 )
               }
             </p>
@@ -1433,95 +1434,61 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
 
               <TabsContent value="buscar" className="mt-0 focus-visible:outline-none">
 
-<div className="relative mb-6 flex items-center">
-          <div className="relative flex-1">
-            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-              <Search className="h-4 w-4 text-white/60" />
-            </div>
-            <Input 
-              className="w-full pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/40 focus:border-[#FF6B00]/50 focus:ring-[#FF6B00]/30 rounded-xl py-6"
-              placeholder="Digite nome, @username ou parte do nome"
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-				setSearchError(null);
-                // Iniciar a busca automaticamente quando o usuário digita
-                if (e.target.value.trim().length >= 3) {
-                  searchUsers(e.target.value);
-                } else if (e.target.value.trim() === '') {
-                  setFilteredResults([]);
-                }
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-				  if (searchQuery.trim().length >= 3) {
-                    searchUsers(searchQuery);
-                  } else if (searchQuery.trim().length > 0) {
-					setSearchError('Digite pelo menos 3 caracteres para buscar.');
-				  }
-                }
-              }}
-              autoFocus
-            />
-
-            {isLoading && (
-              <div className="absolute inset-y-0 right-3 flex items-center">
-                <div className="h-4 w-4 border-2 border-[#FF6B00]/70 border-t-transparent rounded-full animate-spin"></div>
+          <div className="relative mb-6">
+            <div className="relative flex items-center">
+              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                <Search className="h-4 w-4 text-white/60" />
               </div>
-            )}
-
-            {!isLoading && searchQuery.trim() !== '' && (
-              <button 
-			    onClick={() => {
-				  if (searchQuery.trim().length >= 3) {
-                    searchUsers(searchQuery);
-                  } else {
-					setSearchError('Digite pelo menos 3 caracteres para buscar.');
-				  }
-				}}
-                className="absolute inset-y-0 right-3 p-2 text-white/60 hover:text-white/90 transition-colors"
-                title="Buscar"
-              >
-                <span className="sr-only">Buscar</span>
-                <Search className="h-4 w-4" />
-              </button>
-            )}
-          </div>
-
-		  {/* Botão de reconexão quando houver erro */}
-		  {searchError && (
-              <button
-                className="ml-2 p-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 rounded-full transition-all duration-200"
-                onClick={async () => {
+              <Input 
+                className="w-full pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/40 focus:border-[#FF6B00]/50 focus:ring-[#FF6B00]/30 rounded-xl py-6"
+                placeholder="Digite nome, @username ou parte do nome"
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
                   setSearchError(null);
-                  const isConnected = await verifySupabaseConnection();
-                  if (isConnected) {
-                    if (searchQuery.trim().length >= 3) {
-                      searchUsers(searchQuery);
-                    } else {
-                      setSearchError('Digite pelo menos 3 caracteres para buscar.');
-                    }
-                  } else {
-                    setSearchError('Não foi possível reconectar. Verifique sua conexão.');
+
+                  // Limpar resultados se o campo estiver vazio
+                  if (e.target.value.trim() === '') {
+                    setFilteredResults([]);
                   }
                 }}
-                title="Tentar reconectar"
-              >
-                <RefreshCw className="h-4 w-4" />
-              </button>
-            )}
-        </div>
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && searchQuery.trim().length >= 2) {
+                    searchUsers(searchQuery);
+                  }
+                }}
+                autoFocus
+              />
 
-                {searchError && (
-                  <div className="bg-gradient-to-br from-[#0c1a2b]/95 to-[#0c1a2b]/85 backdrop-blur-lg rounded-xl p-4 mb-3 border border-red-500/30 shadow-xl">
-                    <div className="flex items-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-500 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                      </svg>
-                      <div className="text-red-500 text-sm">{searchError}</div>
-                    </div>
-                  </div>
-                )}
+              {isLoading ? (
+                <div className="absolute inset-y-0 right-3 flex items-center">
+                  <div className="h-4 w-4 border-2 border-[#FF6B00]/70 border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              ) : (
+                <button 
+                  onClick={() => {
+                    if (searchQuery.trim().length >= 2) {
+                      searchUsers(searchQuery);
+                    }
+                  }}
+                  className="absolute inset-y-0 right-3 p-2 text-white/60 hover:text-white/90 transition-colors"
+                  title="Buscar"
+                  disabled={searchQuery.trim().length < 2}
+                >
+                  <Search className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+
+            {searchError && (
+              <div className="mt-2 px-3 py-2 bg-red-500/10 border border-red-500/20 rounded-lg">
+                <div className="flex items-center text-sm text-red-400">
+                  <AlertCircle className="h-4 w-4 mr-2" />
+                  {searchError}
+                </div>
+              </div>
+            )}
+          </div>
 
                 <div 
                   className="overflow-y-auto max-h-[420px] pr-2 custom-scrollbar"
