@@ -1,111 +1,128 @@
 
+// Serviço para gerenciar tarefas - funciona com Supabase ou localStorage
 import { supabase } from "@/lib/supabase";
-import { getWebPersistence, setWebPersistence } from "@/lib/web-persistence";
-import { Task } from "@/components/agenda/tasks/TasksView";
+import { checkSupabaseConnection } from "@/lib/supabase";
+import { getCurrentUser } from "@/services/databaseService";
 
-const TASKS_LOCAL_STORAGE_KEY = "user_tasks";
+export interface Task {
+  id: string;
+  title: string;
+  description?: string;
+  status: 'a-fazer' | 'em-andamento' | 'concluido' | 'atrasado';
+  priority: 'alta' | 'média' | 'baixa';
+  dueDate?: string;
+  category?: string;
+  tags?: string[];
+  createdAt: string;
+  updatedAt: string;
+}
 
-/**
- * Serviço para gerenciar tarefas com persistência em banco de dados e fallback local
- */
+export const LOCAL_STORAGE_KEY_PREFIX = "user_tasks_";
+
 export const taskService = {
   /**
-   * Salvar tarefas para um usuário
+   * Salvar tarefas no banco de dados e localmente
    * @param userId ID do usuário
-   * @param tasks Array de tarefas
-   * @returns boolean indicando sucesso
+   * @param tasks Lista de tarefas
+   * @returns Verdadeiro se a operação foi bem-sucedida
    */
   async saveTasks(userId: string, tasks: Task[]): Promise<boolean> {
-    if (!userId || !tasks) {
-      console.error("ID do usuário ou tarefas inválidos");
+    if (!userId) {
+      console.error("ID do usuário inválido");
       return false;
     }
 
-    // Primeiro, salvar localmente para garantir que os dados não sejam perdidos
-    const localSaveSuccess = await this.saveTasksLocally(userId, tasks);
+    const timestamp = new Date().toISOString();
+    
+    // Salvar localmente primeiro (como backup)
+    this.saveTasksLocally(userId, tasks);
     
     try {
-      // Tentar salvar no Supabase
-      const { error } = await supabase
-        .from("user_tasks")
-        .upsert(
-          { 
-            user_id: userId, 
-            tasks: JSON.stringify(tasks), 
-            updated_at: new Date().toISOString() 
-          },
-          { onConflict: "user_id" }
-        );
+      // Verificar conexão com Supabase
+      const isConnected = await checkSupabaseConnection();
+      
+      if (!isConnected) {
+        console.warn("Sem conexão com Supabase, tarefas salvas apenas localmente");
+        return true; // Consideramos sucesso se salvou localmente
+      }
 
-      if (error) {
-        console.warn("Erro ao salvar tarefas no Supabase, usando apenas armazenamento local:", error);
-        // Retorna o resultado do salvamento local
-        return localSaveSuccess;
+      // Verificar se já existe registro para este usuário
+      const { data: existingData, error: checkError } = await supabase
+        .from("user_tasks")
+        .select("id")
+        .eq("user_id", userId)
+        .single();
+      
+      if (checkError && checkError.code !== 'PGRST116') {
+        console.error("Erro ao verificar tarefas existentes:", checkError);
+        return true; // Retornamos true pois já salvamos localmente
+      }
+
+      // Preparar dados para JSON
+      const tasksJSON = JSON.stringify(tasks);
+
+      if (existingData) {
+        // Atualizar registro existente
+        const { error: updateError } = await supabase
+          .from("user_tasks")
+          .update({ 
+            tasks: tasksJSON,
+            updated_at: timestamp 
+          })
+          .eq("user_id", userId);
+
+        if (updateError) {
+          console.error("Erro ao atualizar tarefas no Supabase:", updateError);
+          return true; // Retornamos true pois já salvamos localmente
+        }
+      } else {
+        // Criar novo registro
+        const { error: insertError } = await supabase
+          .from("user_tasks")
+          .insert({ 
+            user_id: userId, 
+            tasks: tasksJSON,
+            created_at: timestamp,
+            updated_at: timestamp 
+          });
+
+        if (insertError) {
+          console.error("Erro ao inserir tarefas no Supabase:", insertError);
+          return true; // Retornamos true pois já salvamos localmente
+        }
       }
       
-      console.log(`Tarefas do usuário ${userId} salvas com sucesso (${tasks.length} tarefas)`);
+      console.log("Tarefas salvas com sucesso no Supabase e localmente");
       return true;
     } catch (err) {
-      console.error("Erro ao salvar tarefas no Supabase:", err);
-      // Retorna o resultado do salvamento local
-      return localSaveSuccess;
+      console.error("Erro ao salvar tarefas:", err);
+      return true; // Retornamos true pois já salvamos localmente
     }
   },
 
   /**
-   * Salvar tarefas localmente
+   * Salvar tarefas apenas localmente (função auxiliar)
    * @param userId ID do usuário
-   * @param tasks Array de tarefas
-   * @returns boolean indicando sucesso
+   * @param tasks Lista de tarefas
    */
-  async saveTasksLocally(userId: string, tasks: Task[]): Promise<boolean> {
+  saveTasksLocally(userId: string, tasks: Task[]): void {
     try {
-      if (!userId) {
-        console.error("ID do usuário inválido");
-        return false;
-      }
-
-      // Obter mapa de tarefas por usuário do armazenamento local
-      const allTasks = getWebPersistence(TASKS_LOCAL_STORAGE_KEY) || {};
-      
-      // Atualizar tarefas do usuário específico
-      allTasks[userId] = {
-        tasks: tasks || [],
-        updatedAt: new Date().toISOString()
+      const key = `${LOCAL_STORAGE_KEY_PREFIX}${userId}`;
+      const data = {
+        tasks,
+        updated_at: new Date().getTime()
       };
-
-      // Salvar o mapa atualizado
-      const success = setWebPersistence(TASKS_LOCAL_STORAGE_KEY, allTasks);
-      
-      if (success) {
-        console.log(`Tarefas do usuário ${userId} salvas localmente (${tasks.length} tarefas)`);
-      } else {
-        console.error("Falha ao salvar tarefas localmente");
-      }
-      
-      return success;
+      localStorage.setItem(key, JSON.stringify(data));
+      console.log("Tarefas salvas localmente com sucesso");
     } catch (err) {
       console.error("Erro ao salvar tarefas localmente:", err);
-      
-      // Última tentativa: salvar apenas as tarefas deste usuário
-      try {
-        const success = setWebPersistence(`${TASKS_LOCAL_STORAGE_KEY}_${userId}`, {
-          tasks: tasks || [],
-          updatedAt: new Date().toISOString()
-        });
-        
-        return success;
-      } catch (finalError) {
-        console.error("Falha total ao salvar tarefas localmente:", finalError);
-        return false;
-      }
     }
   },
 
   /**
-   * Carregar tarefas de um usuário
+   * Carregar tarefas do usuário (tenta Supabase primeiro, depois local)
    * @param userId ID do usuário
-   * @returns Array de tarefas do usuário
+   * @returns Lista de tarefas
    */
   async loadTasks(userId: string): Promise<Task[]> {
     if (!userId) {
@@ -115,71 +132,49 @@ export const taskService = {
 
     try {
       // Tentar carregar do Supabase primeiro
-      const { data, error } = await supabase
-        .from("user_tasks")
-        .select("tasks, updated_at")
-        .eq("user_id", userId)
-        .single();
+      const isConnected = await checkSupabaseConnection();
+      
+      if (isConnected) {
+        const { data, error } = await supabase
+          .from("user_tasks")
+          .select("tasks")
+          .eq("user_id", userId)
+          .single();
 
-      // Se dados forem carregados do Supabase com sucesso
-      if (data && !error) {
-        const tasks = typeof data.tasks === 'string' 
-          ? JSON.parse(data.tasks) 
-          : (data.tasks || []);
-          
-        // Validar que os dados são um array
-        if (!Array.isArray(tasks)) {
-          console.warn("Dados do Supabase não são um array válido");
-          return await this.loadTasksLocally(userId);
+        if (!error && data && data.tasks) {
+          console.log("Tarefas carregadas do Supabase com sucesso");
+          return typeof data.tasks === 'string' 
+            ? JSON.parse(data.tasks) 
+            : (Array.isArray(data.tasks) ? data.tasks : []);
         }
-        
-        console.log(`Carregadas ${tasks.length} tarefas do usuário ${userId} do Supabase`);
-        
-        // Atualizar dados locais com os dados do servidor como backup
-        this.saveTasksLocally(userId, tasks);
-        return tasks;
       }
 
-      // Se houve erro ou não há dados no Supabase, carregar do armazenamento local
-      return await this.loadTasksLocally(userId);
+      // Se falhar, carregar do armazenamento local
+      return this.loadTasksLocally(userId);
     } catch (err) {
-      console.error("Erro ao carregar tarefas do Supabase:", err);
-      // Tentar carregar localmente como fallback
-      return await this.loadTasksLocally(userId);
+      console.error("Erro ao carregar tarefas:", err);
+      return this.loadTasksLocally(userId);
     }
   },
 
   /**
-   * Carregar tarefas de um usuário do armazenamento local
+   * Carregar tarefas do armazenamento local
    * @param userId ID do usuário
-   * @returns Array de tarefas do usuário
+   * @returns Lista de tarefas
    */
-  async loadTasksLocally(userId: string): Promise<Task[]> {
+  loadTasksLocally(userId: string): Task[] {
     try {
-      if (!userId) {
-        console.error("ID do usuário inválido");
+      const key = `${LOCAL_STORAGE_KEY_PREFIX}${userId}`;
+      const json = localStorage.getItem(key);
+      
+      if (!json) {
+        console.log("Nenhuma tarefa encontrada localmente");
         return [];
       }
       
-      // Obter mapa de tarefas por usuário
-      const allTasks = getWebPersistence(TASKS_LOCAL_STORAGE_KEY) || {};
-      
-      // Verificar se há tarefas para este usuário
-      if (allTasks[userId]?.tasks) {
-        const tasks = allTasks[userId].tasks;
-        console.log(`Carregadas ${tasks.length} tarefas do usuário ${userId} do armazenamento local`);
-        return Array.isArray(tasks) ? tasks : [];
-      }
-      
-      // Verificar armazenamento alternativo
-      const backupTasks = getWebPersistence(`${TASKS_LOCAL_STORAGE_KEY}_${userId}`);
-      if (backupTasks?.tasks) {
-        console.log(`Carregadas ${backupTasks.tasks.length} tarefas do usuário ${userId} do armazenamento de backup`);
-        return Array.isArray(backupTasks.tasks) ? backupTasks.tasks : [];
-      }
-      
-      console.log(`Nenhuma tarefa encontrada para o usuário ${userId}`);
-      return [];
+      const data = JSON.parse(json);
+      console.log("Tarefas carregadas localmente com sucesso");
+      return Array.isArray(data.tasks) ? data.tasks : [];
     } catch (err) {
       console.error("Erro ao carregar tarefas localmente:", err);
       return [];
@@ -198,10 +193,35 @@ export const taskService = {
     }
 
     try {
+      // Carregar dados do armazenamento local
+      const key = `${LOCAL_STORAGE_KEY_PREFIX}${userId}`;
+      const localJson = localStorage.getItem(key);
+      
+      let localTasks: Task[] = [];
+      let localUpdatedAt: number = 0;
+      
+      if (localJson) {
+        try {
+          const localData = JSON.parse(localJson);
+          localTasks = Array.isArray(localData.tasks) ? localData.tasks : [];
+          localUpdatedAt = localData.updated_at || 0;
+        } catch (err) {
+          console.warn("Erro ao carregar tarefas locais:", err);
+        }
+      }
+
       // Carregar dados do Supabase
       let supabaseTasks: Task[] = [];
       let supabaseUpdatedAt: number = 0;
       let supabaseError = false;
+      
+      // Verificar conexão com Supabase
+      const isConnected = await checkSupabaseConnection();
+      
+      if (!isConnected) {
+        console.warn("Sem conexão com Supabase, usando apenas dados locais");
+        return localTasks;
+      }
       
       try {
         const { data, error } = await supabase
@@ -233,29 +253,6 @@ export const taskService = {
         supabaseError = true;
       }
 
-      // Carregar dados locais
-      let localTasks: Task[] = [];
-      let localUpdatedAt: number = 0;
-      
-      try {
-        const allTasks = getWebPersistence(TASKS_LOCAL_STORAGE_KEY) || {};
-        const userData = allTasks[userId];
-        
-        if (userData) {
-          localTasks = Array.isArray(userData.tasks) ? userData.tasks : [];
-          localUpdatedAt = new Date(userData.updatedAt).getTime();
-        } else {
-          // Verificar armazenamento alternativo
-          const backupData = getWebPersistence(`${TASKS_LOCAL_STORAGE_KEY}_${userId}`);
-          if (backupData) {
-            localTasks = Array.isArray(backupData.tasks) ? backupData.tasks : [];
-            localUpdatedAt = new Date(backupData.updatedAt).getTime();
-          }
-        }
-      } catch (err) {
-        console.warn("Erro ao carregar tarefas locais:", err);
-      }
-
       // Decidir quais dados usar
       let finalTasks: Task[] = [];
       
@@ -268,6 +265,8 @@ export const taskService = {
       else if (supabaseTasks.length > 0 && localTasks.length === 0) {
         finalTasks = supabaseTasks;
         console.log("Usando dados do Supabase (não há dados locais)");
+        // Atualizar armazenamento local com dados do Supabase
+        this.saveTasksLocally(userId, supabaseTasks);
       } 
       // Se só tem dados locais
       else if (localTasks.length > 0 && supabaseTasks.length === 0) {
@@ -293,104 +292,147 @@ export const taskService = {
       return finalTasks;
     } catch (err) {
       console.error("Erro ao sincronizar tarefas:", err);
-      // Tentar carregar localmente como fallback
-      return await this.loadTasksLocally(userId);
+      // Em caso de erro, retornar os dados locais como fallback
+      return this.loadTasksLocally(userId);
     }
   },
-  
+
   /**
    * Adicionar uma nova tarefa
    * @param userId ID do usuário
-   * @param newTask Nova tarefa
-   * @returns Tarefa adicionada ou null em caso de falha
+   * @param task Nova tarefa
+   * @returns Verdadeiro se a operação foi bem-sucedida
    */
-  async addTask(userId: string, newTask: Task): Promise<Task | null> {
-    try {
-      if (!userId || !newTask) {
-        console.error("ID do usuário ou tarefa inválidos");
-        return null;
-      }
+  async addTask(userId: string, task: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>): Promise<boolean> {
+    if (!userId) {
+      console.error("ID do usuário inválido");
+      return false;
+    }
 
-      // Carregar tarefas existentes
+    try {
+      // Primeiro, carregar tarefas existentes
       const existingTasks = await this.loadTasks(userId);
       
-      // Adicionar nova tarefa no início da lista
-      const updatedTasks = [newTask, ...existingTasks];
+      // Criar nova tarefa com campos adicionais
+      const newTask: Task = {
+        ...task,
+        id: `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
       
-      // Salvar tarefas atualizadas
-      const success = await this.saveTasks(userId, updatedTasks);
-      
-      return success ? newTask : null;
+      // Adicionar à lista e salvar
+      const updatedTasks = [...existingTasks, newTask];
+      return await this.saveTasks(userId, updatedTasks);
     } catch (err) {
       console.error("Erro ao adicionar tarefa:", err);
-      return null;
+      return false;
     }
   },
-  
+
   /**
    * Atualizar uma tarefa existente
    * @param userId ID do usuário
-   * @param updatedTask Tarefa atualizada
-   * @returns Boolean indicando sucesso
+   * @param taskId ID da tarefa
+   * @param updates Atualizações para a tarefa
+   * @returns Verdadeiro se a operação foi bem-sucedida
    */
-  async updateTask(userId: string, updatedTask: Task): Promise<boolean> {
-    try {
-      if (!userId || !updatedTask || !updatedTask.id) {
-        console.error("ID do usuário ou tarefa inválidos");
-        return false;
-      }
+  async updateTask(userId: string, taskId: string, updates: Partial<Task>): Promise<boolean> {
+    if (!userId || !taskId) {
+      console.error("ID do usuário ou da tarefa inválido");
+      return false;
+    }
 
+    try {
       // Carregar tarefas existentes
-      const existingTasks = await this.loadTasks(userId);
+      const tasks = await this.loadTasks(userId);
       
       // Encontrar e atualizar a tarefa
-      const taskIndex = existingTasks.findIndex(task => task.id === updatedTask.id);
-      
-      if (taskIndex === -1) {
-        console.warn("Tarefa não encontrada para atualização");
-        return false;
-      }
-      
-      // Atualizar a tarefa
-      existingTasks[taskIndex] = updatedTask;
+      const updatedTasks = tasks.map(task => {
+        if (task.id === taskId) {
+          return {
+            ...task,
+            ...updates,
+            updatedAt: new Date().toISOString()
+          };
+        }
+        return task;
+      });
       
       // Salvar tarefas atualizadas
-      return await this.saveTasks(userId, existingTasks);
+      return await this.saveTasks(userId, updatedTasks);
     } catch (err) {
       console.error("Erro ao atualizar tarefa:", err);
       return false;
     }
   },
-  
+
   /**
    * Excluir uma tarefa
    * @param userId ID do usuário
    * @param taskId ID da tarefa
-   * @returns Boolean indicando sucesso
+   * @returns Verdadeiro se a operação foi bem-sucedida
    */
   async deleteTask(userId: string, taskId: string): Promise<boolean> {
-    try {
-      if (!userId || !taskId) {
-        console.error("ID do usuário ou tarefa inválidos");
-        return false;
-      }
+    if (!userId || !taskId) {
+      console.error("ID do usuário ou da tarefa inválido");
+      return false;
+    }
 
+    try {
       // Carregar tarefas existentes
-      const existingTasks = await this.loadTasks(userId);
+      const tasks = await this.loadTasks(userId);
       
       // Filtrar a tarefa a ser excluída
-      const updatedTasks = existingTasks.filter(task => task.id !== taskId);
-      
-      if (updatedTasks.length === existingTasks.length) {
-        console.warn("Tarefa não encontrada para exclusão");
-        return false;
-      }
+      const updatedTasks = tasks.filter(task => task.id !== taskId);
       
       // Salvar tarefas atualizadas
       return await this.saveTasks(userId, updatedTasks);
     } catch (err) {
       console.error("Erro ao excluir tarefa:", err);
       return false;
+    }
+  },
+
+  /**
+   * Obter tarefas filtradas por status
+   * @param userId ID do usuário
+   * @param status Status da tarefa
+   * @returns Lista de tarefas filtradas
+   */
+  async getTasksByStatus(userId: string, status: Task['status']): Promise<Task[]> {
+    if (!userId) {
+      console.error("ID do usuário inválido");
+      return [];
+    }
+
+    try {
+      const tasks = await this.loadTasks(userId);
+      return tasks.filter(task => task.status === status);
+    } catch (err) {
+      console.error("Erro ao buscar tarefas por status:", err);
+      return [];
+    }
+  },
+
+  /**
+   * Obter tarefas filtradas por categoria
+   * @param userId ID do usuário
+   * @param category Categoria da tarefa
+   * @returns Lista de tarefas filtradas
+   */
+  async getTasksByCategory(userId: string, category: string): Promise<Task[]> {
+    if (!userId) {
+      console.error("ID do usuário inválido");
+      return [];
+    }
+
+    try {
+      const tasks = await this.loadTasks(userId);
+      return tasks.filter(task => task.category === category);
+    } catch (err) {
+      console.error("Erro ao buscar tarefas por categoria:", err);
+      return [];
     }
   }
 };

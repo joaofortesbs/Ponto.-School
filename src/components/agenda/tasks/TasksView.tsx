@@ -103,7 +103,7 @@ const TasksView: React.FC<TasksViewProps> = ({
       try {
         // Obter usuário atual
         const user = await getCurrentUser();
-        
+
         if (user && user.id) {
           // Iniciar com mensagem de carregamento
           if (isMounted) {
@@ -113,15 +113,15 @@ const TasksView: React.FC<TasksViewProps> = ({
               duration: 2000,
             });
           }
-          
+
           // Carregar tarefas sincronizadas (do Supabase ou local, o mais recente)
           const userTasks = await taskService.syncTasks(user.id);
-          
+
           if (isMounted) {
             if (userTasks && userTasks.length > 0) {
               setTasks(userTasks);
               console.log(`Carregadas ${userTasks.length} tarefas do usuário ${user.id}`);
-              
+
               // Verificar se existem tarefas de emergência para mesclar
               try {
                 const emergencyTasks = JSON.parse(localStorage.getItem('emergency_tasks') || '[]');
@@ -129,18 +129,18 @@ const TasksView: React.FC<TasksViewProps> = ({
                   // Remover duplicatas
                   const existingIds = userTasks.map(t => t.id);
                   const newEmergencyTasks = emergencyTasks.filter(t => !existingIds.includes(t.id));
-                  
+
                   if (newEmergencyTasks.length > 0) {
                     // Mesclar e salvar
                     const mergedTasks = [...newEmergencyTasks, ...userTasks];
                     await taskService.saveTasks(user.id, mergedTasks);
                     setTasks(mergedTasks);
-                    
+
                     toast({
                       title: "Tarefas recuperadas",
                       description: `${newEmergencyTasks.length} tarefa(s) foram recuperadas com sucesso.`,
                     });
-                    
+
                     // Limpar tarefas de emergência
                     localStorage.removeItem('emergency_tasks');
                   }
@@ -155,7 +155,7 @@ const TasksView: React.FC<TasksViewProps> = ({
           }
         } else {
           console.warn("Usuário não autenticado, verificando tarefas em armazenamento de emergência");
-          
+
           if (isMounted) {
             try {
               const emergencyTasks = JSON.parse(localStorage.getItem('emergency_tasks') || '[]');
@@ -190,7 +190,7 @@ const TasksView: React.FC<TasksViewProps> = ({
     };
 
     loadUserTasks();
-    
+
     // Configurar intervalo para sincronização periódica
     const syncInterval = setInterval(async () => {
       try {
@@ -203,7 +203,7 @@ const TasksView: React.FC<TasksViewProps> = ({
         console.error("Erro na sincronização periódica:", e);
       }
     }, 5 * 60 * 1000); // A cada 5 minutos
-    
+
     return () => {
       isMounted = false;
       clearInterval(syncInterval);
@@ -329,7 +329,7 @@ const TasksView: React.FC<TasksViewProps> = ({
         }
         return task;
       });
-      
+
       // Salvar no banco de dados/localStorage
       const saveTasksAsync = async () => {
         try {
@@ -341,9 +341,9 @@ const TasksView: React.FC<TasksViewProps> = ({
           console.error("Erro ao salvar tarefas após mover:", err);
         }
       };
-      
+
       saveTasksAsync();
-      
+
       return updatedTasks;
     });
   };
@@ -378,18 +378,18 @@ const TasksView: React.FC<TasksViewProps> = ({
       if (user && user.id) {
         // Atualizar a tarefa específica
         const success = await taskService.updateTask(user.id, updatedTask);
-        
+
         if (!success) {
           // Se a atualização falhar, tentar atualizar todas as tarefas
           console.warn("Falha ao atualizar tarefa individual, tentando atualizar lista completa");
-          
+
           const allTasks = tasks.map(task => 
             task.id === taskId ? updatedTask : task
           );
-          
+
           await taskService.saveTasks(user.id, allTasks);
         }
-        
+
         // Mostrar toast apenas para tarefas concluídas (feedback positivo)
         if (completed) {
           toast({
@@ -400,7 +400,7 @@ const TasksView: React.FC<TasksViewProps> = ({
         }
       } else {
         console.warn("Usuário não autenticado, alterações não serão salvas permanentemente");
-        
+
         // Salvar em localStorage de emergência
         try {
           localStorage.setItem('emergency_tasks', JSON.stringify(tasks.map(task => 
@@ -409,7 +409,7 @@ const TasksView: React.FC<TasksViewProps> = ({
         } catch (e) {
           console.error("Erro ao salvar em armazenamento de emergência:", e);
         }
-        
+
         toast({
           title: completed ? "Tarefa concluída" : "Tarefa reaberta",
           description: "Entre em sua conta para salvar estas alterações permanentemente.",
@@ -419,7 +419,7 @@ const TasksView: React.FC<TasksViewProps> = ({
       }
     } catch (err) {
       console.error("Erro ao concluir/reabrir tarefa:", err);
-      
+
       toast({
         title: "Erro ao salvar alteração",
         description: "Ocorreu um problema ao salvar o status da tarefa.",
@@ -434,7 +434,7 @@ const TasksView: React.FC<TasksViewProps> = ({
       const updatedTasks = currentTasks.map((task) =>
         task.id === updatedTask.id ? updatedTask : task,
       );
-      
+
       // Salvar no banco de dados/localStorage
       const saveTasksAsync = async () => {
         try {
@@ -446,9 +446,9 @@ const TasksView: React.FC<TasksViewProps> = ({
           console.error("Erro ao salvar tarefas após atualização:", err);
         }
       };
-      
+
       saveTasksAsync();
-      
+
       return updatedTasks;
     });
 
@@ -463,7 +463,7 @@ const TasksView: React.FC<TasksViewProps> = ({
   const handleDeleteTask = (taskId: string) => {
     setTasks((currentTasks) => {
       const updatedTasks = currentTasks.filter((task) => task.id !== taskId);
-      
+
       // Salvar no banco de dados/localStorage
       const saveTasksAsync = async () => {
         try {
@@ -475,12 +475,12 @@ const TasksView: React.FC<TasksViewProps> = ({
           console.error("Erro ao salvar tarefas após exclusão:", err);
         }
       };
-      
+
       saveTasksAsync();
-      
+
       return updatedTasks;
     });
-    
+
     setShowTaskDetails(false);
 
     // Mostrar toast de confirmação
@@ -490,146 +490,73 @@ const TasksView: React.FC<TasksViewProps> = ({
     });
   };
 
-  // Adicionar nova tarefa
-  const handleAddTask = async (taskData: any) => {
+  const handleAddTask = async (data: any) => {
     try {
-      console.log("Adding task:", taskData);
+      setShowAddTask(false);
+      const user = await getCurrentUser();
 
-      // Validate required fields
-      if (!taskData.title) {
+      if (!user || !user.id) {
         toast({
-          title: "Erro ao adicionar tarefa",
-          description: "O título da tarefa é obrigatório.",
-          variant: "destructive",
+          title: "Erro",
+          description: "Usuário não autenticado.",
+          variant: "destructive"
         });
-        return null;
+        return;
       }
 
-      // Create a new task with all fields properly handled
-      const newTask: Task = {
-        id: taskData.id || `task-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-        title: taskData.title,
-        description: taskData.description || "",
-        discipline: taskData.discipline || "Geral",
-        dueDate: taskData.dueDate || new Date().toISOString(),
-        status: taskData.status || "a-fazer",
-        priority: taskData.priority || "média",
-        progress: taskData.progress || 0,
-        type: taskData.type || "tarefa",
-        professor: taskData.professor || "",
-        subtasks: taskData.subtasks || [],
-        createdAt: taskData.createdAt || new Date().toISOString(),
-        updatedAt: taskData.updatedAt || new Date().toISOString(),
-        tags: taskData.tags || [],
-        reminderSet: taskData.reminderSet || false,
-        reminderTime: taskData.reminderTime,
-        attachments: taskData.attachments || [],
-        timeSpent: taskData.timeSpent || 0,
-        notes: taskData.notes || "",
-        isPersonal:
-          taskData.isPersonal !== undefined ? taskData.isPersonal : true,
-        associatedClass: taskData.associatedClass || "",
+      // Criar objeto de tarefa
+      const newTask = {
+        title: data.title,
+        description: data.description || "",
+        status: data.status as Task['status'],
+        priority: data.priority as Task['priority'],
+        dueDate: data.dueDate ? new Date(data.dueDate).toISOString() : undefined,
+        discipline: data.discipline || "Geral",
+        type: data.type || "tarefa",
+        professor: data.professor || "",
+        subtasks: data.subtasks || [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        tags: data.tags || [],
+        reminderSet: data.reminderSet || false,
+        reminderTime: data.reminderTime,
+        attachments: data.attachments || [],
+        timeSpent: data.timeSpent || 0,
+        notes: data.notes || "",
+        isPersonal: data.isPersonal !== undefined ? data.isPersonal : true,
+        associatedClass: data.associatedClass || "",
+        progress: 0,
         comments: [],
+        id: `task-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
       };
 
-      // Obter usuário antes de prosseguir
-      const user = await getCurrentUser();
-      if (!user || !user.id) {
-        console.warn("Usuário não autenticado, salvando apenas na sessão atual");
-        
-        // Mesmo sem usuário, adicionar à lista atual
-        setTasks((prevTasks) => [newTask, ...prevTasks]);
-        
-        // Salvar em localStorage de emergência
-        try {
-          const emergencyTasks = JSON.parse(localStorage.getItem('emergency_tasks') || '[]');
-          localStorage.setItem('emergency_tasks', JSON.stringify([newTask, ...emergencyTasks]));
-        } catch (e) {
-          console.error("Erro ao salvar em armazenamento de emergência:", e);
-        }
-        
-        // Fechar modal e mostrar toast
-        setShowAddTask(false);
-        
-        toast({
-          title: "Tarefa adicionada",
-          description: "A tarefa foi adicionada, mas você precisa fazer login para salvá-la permanentemente.",
-          variant: "warning",
-        });
-        
-        return newTask;
-      }
-
-      // Usuário autenticado: adicionar direto pelo serviço
+      // Adicionar tarefa
       const addedTask = await taskService.addTask(user.id, newTask);
-      
+
       if (addedTask) {
-        // Adicionar à lista de tarefas na interface
-        setTasks((prevTasks) => [newTask, ...prevTasks]);
-        
-        // Fechar modal
-        setShowAddTask(false);
-        
-        // Mostrar confirmação
         toast({
-          title: "Tarefa adicionada",
-          description: "A nova tarefa foi adicionada e salva com sucesso.",
+          title: "Sucesso",
+          description: "Tarefa adicionada com sucesso!",
+          variant: "default"
         });
-        
-        // Verificar se a tarefa está atrasada
-        const now = new Date();
-        const dueDate = new Date(newTask.dueDate);
-        if (dueDate < now && newTask.status === "a-fazer") {
-          setTimeout(() => {
-            const updatedTask = { ...newTask, status: "atrasado" };
-            // Atualizar a tarefa no estado e no banco
-            setTasks((prevTasks) => 
-              prevTasks.map((task) => task.id === newTask.id ? updatedTask : task)
-            );
-            
-            taskService.updateTask(user.id, updatedTask)
-              .catch(err => console.error("Erro ao atualizar status da tarefa:", err));
-          }, 100);
-        }
-        
-        return addedTask;
+
+        // Recarregar tarefas
+        const updatedTasks = await taskService.loadTasks(user.id);
+        setTasks(updatedTasks);
       } else {
-        // Falha ao adicionar pelo serviço, adicionar pelo menos ao estado
-        setTasks((prevTasks) => [newTask, ...prevTasks]);
-        
-        // Fechar modal
-        setShowAddTask(false);
-        
-        // Notificar usuário sobre o problema
         toast({
-          title: "Tarefa adicionada parcialmente",
-          description: "A tarefa foi adicionada, mas houve um problema ao salvá-la. Tentaremos novamente automaticamente.",
-          variant: "warning",
+          title: "Erro",
+          description: "Não foi possível adicionar a tarefa.",
+          variant: "destructive"
         });
-        
-        // Tentar salvar novamente em segundo plano
-        setTimeout(async () => {
-          try {
-            const allTasks = await taskService.loadTasks(user.id);
-            if (!allTasks.some(t => t.id === newTask.id)) {
-              const updatedTasks = [newTask, ...allTasks];
-              await taskService.saveTasks(user.id, updatedTasks);
-            }
-          } catch (err) {
-            console.error("Erro na segunda tentativa de salvar tarefa:", err);
-          }
-        }, 5000);
-        
-        return newTask;
       }
     } catch (error) {
-      console.error("Error adding task:", error);
+      console.error("Erro ao adicionar tarefa:", error);
       toast({
-        title: "Erro ao adicionar tarefa",
-        description: "Ocorreu um erro ao adicionar a tarefa. Tente novamente.",
-        variant: "destructive",
+        title: "Erro",
+        description: "Ocorreu um erro ao adicionar a tarefa.",
+        variant: "destructive"
       });
-      return null;
     }
   };
 
