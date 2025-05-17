@@ -1,0 +1,69 @@
+💻 CÓDIGO SIMPLES DO COMPONENTE AddFriend.js
+jsx
+Copiar
+Editar
+import { useState, useEffect } from "react";
+import { createClient } from "@supabase/supabase-js";
+
+// Conexão com o Supabase
+const supabase = createClient("https://YOUR_PROJECT.supabase.co", "YOUR_ANON_KEY");
+
+export default function AddFriend({ currentUserId }) {
+  const [search, setSearch] = useState("");
+  const [users, setUsers] = useState([]);
+  const [sent, setSent] = useState([]);
+
+  // Buscar usuários
+  useEffect(() => {
+    if (search.length < 2) return;
+
+    const fetchUsers = async () => {
+      const { data } = await supabase
+        .from("users")
+        .select("id, username")
+        .ilike("username", `%${search}%`)
+        .neq("id", currentUserId); // não mostra o próprio usuário
+
+      setUsers(data || []);
+    };
+
+    fetchUsers();
+  }, [search]);
+
+  // Enviar solicitação de amizade
+  const sendRequest = async (receiverId) => {
+    await supabase.from("friend_requests").insert({
+      sender_id: currentUserId,
+      receiver_id: receiverId,
+      status: "pending",
+    });
+
+    setSent((prev) => [...prev, receiverId]);
+  };
+
+  return (
+    <div style={{ padding: 20 }}>
+      <h2>Adicionar Amigo</h2>
+      <input
+        type="text"
+        placeholder="Buscar usuário..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        style={{ width: "100%", padding: 8, marginBottom: 10 }}
+      />
+
+      {users.map((user) => (
+        <div key={user.id} style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+          <span>{user.username}</span>
+          <button
+            onClick={() => sendRequest(user.id)}
+            disabled={sent.includes(user.id)}
+            style={{
+              padding: "4px 10px",
+              background: sent.includes(user.id) ? "#ccc" : "#22c55e",
+              color: "#fff",
+              border: "none",
+              borderRadius: 4,
+              cursor: sent.includes(user.id) ? "not-allowed" : "pointer",
+            }}
+          >
