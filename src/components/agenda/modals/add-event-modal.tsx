@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { format } from "date-fns";
+import { format, addDays } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -561,68 +561,90 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
             </div>
           )}
 
-          {/* Data de Início */}
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="startDate" className="text-right">
-              Data de Início
+          {/* Calendário para seleção de dias */}
+          <div className="grid grid-cols-4 items-start gap-4">
+            <Label htmlFor="dates" className="text-right pt-2">
+              Datas
             </Label>
-            <div className="col-span-3">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start text-left font-normal"
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {startDate ? (
-                      format(startDate, "dd/MM/yyyy")
-                    ) : (
-                      <span>Selecione uma data</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={startDate}
-                    onSelect={setStartDate}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
-
-          {/* Data de Término (opcional) */}
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="endDate" className="text-right">
-              Data de Término
-            </Label>
-            <div className="col-span-3">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start text-left font-normal"
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {endDate ? (
-                      format(endDate, "dd/MM/yyyy")
-                    ) : (
-                      <span>Mesma data de início</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={endDate}
-                    onSelect={setEndDate}
-                    initialFocus
-                    disabled={(date) => (startDate ? date < startDate : false)}
-                  />
-                </PopoverContent>
-              </Popover>
+            <div className="col-span-3 border rounded-md p-4 bg-white dark:bg-slate-950">
+              <Calendar
+                mode="range"
+                selected={{
+                  from: startDate,
+                  to: endDate || startDate
+                }}
+                onSelect={(range) => {
+                  if (range?.from) {
+                    setStartDate(range.from);
+                    setEndDate(range.to || range.from);
+                  }
+                }}
+                numberOfMonths={1}
+                className="rounded-md border"
+                initialFocus
+              />
+              <div className="mt-3 flex flex-wrap gap-2">
+                {startDate && (
+                  <Badge variant="outline" className="flex items-center gap-1">
+                    <span className="font-semibold">Início:</span> {format(startDate, "dd/MM/yyyy")}
+                  </Badge>
+                )}
+                {endDate && endDate !== startDate && (
+                  <Badge variant="outline" className="flex items-center gap-1">
+                    <span className="font-semibold">Término:</span> {format(endDate, "dd/MM/yyyy")}
+                  </Badge>
+                )}
+              </div>
+              
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    const today = new Date();
+                    setStartDate(today);
+                    setEndDate(today);
+                  }}
+                >
+                  Hoje
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    const today = new Date();
+                    setStartDate(today);
+                    setEndDate(addDays(today, 6));
+                  }}
+                >
+                  Esta semana
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    const today = new Date();
+                    const nextDay = addDays(today, 1);
+                    setStartDate(nextDay);
+                    setEndDate(nextDay);
+                  }}
+                >
+                  Amanhã
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    const today = new Date();
+                    const thisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+                    const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                    setStartDate(thisMonth);
+                    setEndDate(nextMonth);
+                  }}
+                >
+                  Este mês
+                </Button>
+              </div>
             </div>
           </div>
 
