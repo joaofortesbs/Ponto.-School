@@ -29,29 +29,86 @@ export const checkSupabaseConnection = async () => {
       return false;
     }
 
-    // Tentamos uma operação simples para verificar conexão
-    const { data, error } = await supabase.from('profiles').select('count').limit(1);
+    // Tentamos várias abordagens para verificar a conexão
     
-    if (error) {
+    // Abordagem 1: Verificar a tabela profiles
+    try {
+      const { data, error } = await supabase.from('profiles').select('count').limit(1);
+      
+      if (!error) {
+        console.log('Conexão com Supabase estabelecida com sucesso via tabela profiles!');
+        return true;
+      }
+      
       if (error.code === 'PGRST204') {
         // Esta tabela existe, mas não tem dados - a conexão está ok
-        console.log('Conexão com Supabase estabelecida com sucesso!');
+        console.log('Conexão com Supabase estabelecida com sucesso (tabela vazia)!');
         return true;
       }
 
-      // Caso a tabela profiles não exista ainda, tentamos outra operação
-      const { error: healthCheckError } = await supabase.rpc('rpc_ping');
-      
-      if (healthCheckError && healthCheckError.code !== 'PGRST301') {
-        console.error('Erro ao conectar com Supabase:', error);
-        return false;
-      }
+      console.warn('Verificação via profiles falhou:', error.message);
+      // Continuar para a próxima abordagem se houver erro
+    } catch (profileError) {
+      console.warn('Erro ao verificar profiles:', profileError);
+      // Continuar para a próxima abordagem
     }
     
-    console.log('Conexão com Supabase estabelecida com sucesso!');
-    return true;
+    // Abordagem 2: Tentar ping RPC
+    try {
+      const { data: pingData, error: pingError } = await supabase.rpc('rpc_ping');
+      
+      if (!pingError) {
+        console.log('Conexão com Supabase estabelecida com sucesso via ping RPC!');
+        return true;
+      }
+      
+      // PGRST301 significa que a função existe mas não foi encontrada - é aceitável
+      if (pingError.code === 'PGRST301') {
+        console.log('Função ping não encontrada, mas conexão parece estar ok');
+        return true;
+      }
+      
+      console.warn('Verificação via RPC ping falhou:', pingError.message);
+      // Continuar para a próxima abordagem
+    } catch (rpcError) {
+      console.warn('Erro ao fazer ping RPC:', rpcError);
+      // Continuar para a próxima abordagem
+    }
+    
+    // Abordagem 3: Tentar qualquer tabela do sistema
+    try {
+      const { error: authError } = await supabase.from('auth').select('count').limit(1);
+      
+      // Se conseguiu acessar ou se o erro for porque a tabela está vazia ou inacessível, mas não por problemas de conexão
+      if (!authError || authError.code === 'PGRST204' || authError.code === 'PGRST301') {
+        console.log('Conexão com Supabase estabelecida com sucesso via tabela auth!');
+        return true;
+      }
+      
+      console.warn('Verificação via auth falhou:', authError.message);
+    } catch (authCheckError) {
+      console.warn('Erro ao verificar auth:', authCheckError);
+    }
+    
+    // Última tentativa - verificar se o erro é de conexão ou de permissão
+    try {
+      // Tentar o cabeçalho apenas para verificar se o servidor responde
+      const { error: headError } = await supabase.from('profiles').select('count', { head: true });
+      
+      if (!headError || headError.code === 'PGRST204' || headError.code === 'PGRST301') {
+        console.log('Cabeçalho acessível, conexão parece ok!');
+        return true;
+      }
+      
+      // Se chegou até aqui, provavelmente há um problema de conexão real
+      console.error('Todos os métodos de verificação falharam. Erro na conexão com Supabase.');
+      return false;
+    } catch (finalError) {
+      console.error('Erro final na verificação de conexão:', finalError);
+      return false;
+    }
   } catch (error) {
-    console.error('Erro ao conectar com Supabase:', error);
+    console.error('Erro geral ao conectar com Supabase:', error);
     return false;
   }
 };

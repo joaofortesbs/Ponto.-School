@@ -11,7 +11,7 @@ import {
   MoreVertical, MessageSquare, Ban, Flag, Share2, RefreshCw
 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
-import { supabase } from "@/lib/supabase";
+import { checkSupabaseConnection, supabase } from "@/lib/supabase";
 
 // Tipos de usuário
 interface UserType {
@@ -394,14 +394,29 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
       setSearchQuery('');
       setFilteredResults([]);
       setSearchError(null);
+
+      // Limpar qualquer timeout pendente
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
     } else {
       // Ao abrir o modal
       setActiveTab("buscar");
+      setIsLoading(true);
+      setSearchError(null);
 
       // Buscar usuários recentes para exibir quando o modal abre
       const fetchInitialUsers = async () => {
         try {
-          setIsLoading(true);
+          // Primeiro verificar a conexão com o Supabase
+          const isConnected = await verifySupabaseConnection();
+
+          if (!isConnected) {
+            console.error("Não foi possível estabelecer conexão com o Supabase na inicialização");
+            setIsLoading(false);
+            return;
+          }
+
           const { data, error } = await supabase
             .from('profiles')
             .select('id, full_name, username, avatar_url, bio, email, is_private, updated_at')
@@ -411,8 +426,11 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
 
           if (error) {
             console.error("Erro ao buscar usuários iniciais:", error);
+            setSearchError('Não foi possível carregar usuários. Tente novamente mais tarde.');
             return;
           }
+
+          console.log(`Carregados ${data?.length || 0} usuários iniciais`);
 
           if (data && data.length > 0) {
             const formattedResults: UserType[] = data.map(user => {
@@ -437,31 +455,18 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
             });
 
             setFilteredResults(formattedResults);
+          } else {
+            setFilteredResults([]);
           }
-        } catch (error) {
+        } catch (error: any) {
           console.error("Erro ao carregar usuários iniciais:", error);
+          setSearchError(`Erro ao carregar usuários: ${error.message || 'Falha na conexão'}`);
         } finally {
           setIsLoading(false);
         }
       };
 
-      // Verifica se o Supabase está funcionando corretamente
-      const checkSupabaseConnection = async () => {
-        try {
-          const { data, error } = await supabase.from('profiles').select('count', { count: 'exact', head: true });
-          if (error) {
-            console.error('Erro na conexão com Supabase:', error);
-            setSearchError('Não foi possível conectar ao serviço. Verifique sua conexão.');
-			return false;
-          }
-		  return true;
-        } catch (err) {
-          console.error('Falha ao verificar conexão com Supabase:', err);
-		  return false;
-        }
-      };
-
-      checkSupabaseConnection();
+      // Iniciar o carregamento de dados
       fetchInitialUsers();
     }
   }, [open, currentUserId]);
@@ -1355,6 +1360,27 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
     searchUsers(searchQuery);
   };
 
+    // Nova função para verificar a conexão com o Supabase
+	const verifySupabaseConnection = async (): Promise<boolean> => {
+		try {
+			const { data, error } = await supabase
+				.from('profiles')
+				.select('count', { count: 'exact', head: true });
+
+			if (error) {
+				console.error('Erro ao verificar conexão com Supabase:', error);
+				setSearchError('Não foi possível conectar ao serviço. Verifique sua conexão.');
+				return false;
+			}
+
+			return true;
+		} catch (err) {
+			console.error('Falha ao verificar conexão com Supabase:', err);
+			setSearchError('Falha ao verificar conexão com o serviço.');
+			return false;
+		}
+	};
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl p-0 bg-gradient-to-b from-[#0A2540] to-[#001427] border-white/10 overflow-hidden rounded-xl shadow-2xl backdrop-blur-lg">
@@ -1406,7 +1432,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
               </TabsList>
 
               <TabsContent value="buscar" className="mt-0 focus-visible:outline-none">
-                
+
 <div className="relative mb-6 flex items-center">
           <div className="relative flex-1">
             <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
@@ -1468,7 +1494,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                 className="ml-2 p-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 rounded-full transition-all duration-200"
                 onClick={async () => {
                   setSearchError(null);
-                  const isConnected = await checkSupabaseConnection();
+                  const isConnected = await verifySupabaseConnection();
                   if (isConnected) {
                     if (searchQuery.trim().length >= 3) {
                       searchUsers(searchQuery);
