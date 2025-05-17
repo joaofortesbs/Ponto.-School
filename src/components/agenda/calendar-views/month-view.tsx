@@ -136,6 +136,11 @@ const MonthView: React.FC<MonthViewProps> = ({
     setCalendarView(view);
   };
 
+  // Verificar se há eventos no dia
+  const hasEvents = (day: number): boolean => {
+    return eventData && eventData[day] && eventData[day].length > 0;
+  };
+
   return (
     <div className="bg-white dark:bg-[#1E293B] rounded-xl shadow-lg overflow-hidden border border-gray-100 dark:border-gray-800 hover:shadow-xl transition-all duration-300">
       <div className="p-4 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white flex justify-between items-center">

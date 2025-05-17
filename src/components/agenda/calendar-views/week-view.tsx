@@ -76,43 +76,12 @@ const WeekView: React.FC<WeekViewProps> = ({ openEventDetails }) => {
                 {hour}:00
               </div>
               {Array.from({ length: 7 }).map((_, dayIndex) => {
-                // Check if there's an event at this time slot (simplified for demo)
-                const hasEvent = hourIndex === 2 && dayIndex === 3; // Example: 10 AM on Wednesday
                 return (
                   <div
                     key={dayIndex}
-                    className={`p-1 border-r last:border-r-0 border-gray-200 dark:border-gray-700 min-h-[60px] ${hasEvent ? "bg-blue-50 dark:bg-blue-900/10" : ""}`}
+                    className="p-1 border-r last:border-r-0 border-gray-200 dark:border-gray-700 min-h-[60px]"
                   >
-                    {hasEvent && (
-                      <div
-                        className="p-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 text-xs rounded border-l-2 border-blue-500 h-full cursor-pointer hover:bg-blue-200 dark:hover:bg-blue-900/50"
-                        onClick={() =>
-                          openEventDetails({
-                            id: 7,
-                            type: "aula",
-                            title: "Aula de Matemática",
-                            time: "10:00",
-                            color: "blue",
-                            description: "Estudo de funções trigonométricas",
-                            professor: "Prof. Carlos Santos",
-                            location: "Sala Virtual 3",
-                            status: "confirmado",
-                            discipline: "Matemática",
-                            isOnline: true,
-                          })
-                        }
-                      >
-                        <div className="flex items-center">
-                          <Video className="h-3 w-3 mr-1" />
-                          <span className="font-medium">
-                            Aula de Matemática
-                          </span>
-                        </div>
-                        <div className="text-[10px] mt-1">
-                          Prof. Carlos Santos
-                        </div>
-                      </div>
-                    )}
+                    {/* Eventos serão adicionados aqui dinamicamente quando o usuário criar eventos */}
                   </div>
                 );
               })}

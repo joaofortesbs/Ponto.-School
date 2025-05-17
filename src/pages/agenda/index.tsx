@@ -145,136 +145,11 @@ export default function AgendaPage() {
     }
   }, [viewParam]);
 
-  // Sample event data for calendar
-  const [eventData, setEventData] = useState<Record<number, any[]>>({
-    3: [
-      {
-        id: "1",
-        type: "aula",
-        title: "Aula de Matemática",
-        time: "10:00",
-        color: "blue",
-        description:
-          "Estudo de funções trigonométricas e suas aplicações em problemas práticos",
-        professor: "Prof. Carlos Santos",
-        location: "Sala Virtual 3",
-        status: "confirmado",
-        discipline: "Matemática",
-        materials: ["Slides da aula", "Exercícios"],
-        participants: ["João Silva", "Maria Oliveira", "Pedro Santos"],
-        isOnline: true,
-      },
-    ],
-    8: [
-      {
-        id: "2",
-        type: "trabalho",
-        title: "Entrega de Trabalho de Química",
-        time: "14:00",
-        color: "amber",
-        description: "Relatório sobre experimentos de titulação",
-        professor: "Profa. Ana Martins",
-        status: "pendente",
-        discipline: "Química",
-        dueDate: "2023-07-08T14:00:00",
-        progress: 30,
-      },
-    ],
-    15: [
-      {
-        id: "3",
-        type: "aula",
-        title: "Aula de Matemática",
-        time: "10:00",
-        color: "blue",
-        description: "Continuação do estudo de funções trigonométricas",
-        professor: "Prof. Carlos Santos",
-        location: "Sala Virtual 3",
-        status: "confirmado",
-        discipline: "Matemática",
-        isOnline: true,
-      },
-      {
-        id: "4",
-        type: "trabalho",
-        title: "Entrega de Trabalho",
-        time: "14:00",
-        color: "amber",
-        description: "Análise de dados experimentais",
-        professor: "Prof. Roberto Alves",
-        status: "pendente",
-        discipline: "Física",
-        dueDate: "2023-07-15T14:00:00",
-        progress: 50,
-      },
-    ],
-    22: [
-      {
-        id: "5",
-        type: "prova",
-        title: "Prova de Física",
-        time: "14:00",
-        color: "red",
-        description: "Avaliação sobre Mecânica Quântica",
-        professor: "Prof. Roberto Alves",
-        location: "Sala 302",
-        status: "confirmado",
-        discipline: "Física",
-        duration: "2 horas",
-        isOnline: false,
-      },
-    ],
-    27: [
-      {
-        id: "6",
-        type: "reuniao",
-        title: "Grupo de Estudos - Biologia Molecular",
-        time: "15:30",
-        color: "purple",
-        description: "Discussão sobre o projeto de Biologia Molecular",
-        location: "Sala Virtual 5",
-        status: "confirmado",
-        discipline: "Biologia",
-        studyGroup: "Grupo de Biologia Molecular",
-        participants: [
-          "João Silva",
-          "Maria Oliveira",
-          "Pedro Santos",
-          "Ana Costa",
-        ],
-        isOnline: true,
-      },
-    ],
-  });
+  // Dados de eventos para o calendário (vazio por padrão)
+  const [eventData, setEventData] = useState<Record<number, any[]>>({});
 
-  // Sample upcoming events data
-  const upcomingEventsData = [
-    {
-      id: "1",
-      type: "prova",
-      title: "Prova de Física",
-      day: "Amanhã, 14:00 - 16:00",
-      discipline: "Física",
-      location: "Sala 302",
-      isOnline: false,
-    },
-    {
-      id: "2",
-      type: "trabalho",
-      title: "Entrega de Trabalho de Química",
-      day: "Em 2 dias, até 23:59",
-      discipline: "Química",
-      isOnline: true,
-    },
-    {
-      id: "3",
-      type: "reuniao",
-      title: "Grupo de Estudos - Biologia Molecular",
-      day: "Quinta, 15:30 - 17:00",
-      discipline: "Biologia",
-      isOnline: true,
-    },
-  ];
+  // Array de eventos próximos (vazio por padrão)
+  const upcomingEventsData: any[] = [];
 
   // Sample AI recommendations
   const aiRecommendations = [
@@ -1413,38 +1288,58 @@ export default function AgendaPage() {
                     {upcomingEventsData.length} eventos
                   </Badge>
                 </div>
-                <div className="divide-y divide-[#FF6B00]/10 dark:divide-[#FF6B00]/20">
-                  {upcomingEventsData.map((event) => (
-                    <div
-                      key={event.id}
-                      className="p-4 hover:bg-[#FF6B00]/5 cursor-pointer transition-colors group"
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className="mt-1">
-                          <div className="w-8 h-8 rounded-full bg-[#FF6B00]/10 dark:bg-[#FF6B00]/20 flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow group-hover:bg-[#FF6B00]/20 dark:group-hover:bg-[#FF6B00]/30">
-                            {getEventIcon(event.type)}
+                <div className="p-8 flex flex-col items-center justify-center">
+                  {upcomingEventsData.length > 0 ? (
+                    <div className="divide-y divide-[#FF6B00]/10 dark:divide-[#FF6B00]/20 w-full">
+                      {upcomingEventsData.map((event) => (
+                        <div
+                          key={event.id}
+                          className="p-4 hover:bg-[#FF6B00]/5 cursor-pointer transition-colors group"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="mt-1">
+                              <div className="w-8 h-8 rounded-full bg-[#FF6B00]/10 dark:bg-[#FF6B00]/20 flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow group-hover:bg-[#FF6B00]/20 dark:group-hover:bg-[#FF6B00]/30">
+                                {getEventIcon(event.type)}
+                              </div>
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="font-medium text-gray-900 dark:text-white text-sm group-hover:text-[#FF6B00] transition-colors">
+                                {event.title}
+                              </h4>
+                              <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                <Clock className="h-3 w-3 mr-1 text-[#FF6B00]" />{" "}
+                                {event.day}
+                              </div>
+                              <div className="mt-1">
+                                <Badge
+                                  variant="outline"
+                                  className="text-xs border-[#FF6B00]/30 bg-transparent text-[#FF6B00] group-hover:bg-[#FF6B00]/10 transition-colors"
+                                >
+                                  {event.discipline}
+                                </Badge>
+                              </div>
+                            </div>
                           </div>
                         </div>
-                        <div className="flex-1">
-                          <h4 className="font-medium text-gray-900 dark:text-white text-sm group-hover:text-[#FF6B00] transition-colors">
-                            {event.title}
-                          </h4>
-                          <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            <Clock className="h-3 w-3 mr-1 text-[#FF6B00]" />{" "}
-                            {event.day}
-                          </div>
-                          <div className="mt-1">
-                            <Badge
-                              variant="outline"
-                              className="text-xs border-[#FF6B00]/30 bg-transparent text-[#FF6B00] group-hover:bg-[#FF6B00]/10 transition-colors"
-                            >
-                              {event.discipline}
-                            </Badge>
-                          </div>
-                        </div>
-                      </div>
+                      ))}
                     </div>
-                  ))}
+                  ) : (
+                    <>
+                      <div className="w-16 h-16 rounded-full bg-[#FF6B00]/10 flex items-center justify-center mb-4">
+                        <CalendarIcon className="h-8 w-8 text-[#FF6B00]/40" />
+                      </div>
+                      <h4 className="text-base font-medium text-gray-700 dark:text-gray-300 mb-2">Nenhum evento próximo</h4>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 text-center max-w-md">
+                        Seus próximos eventos serão exibidos aqui à medida que você os adicionar ao seu calendário
+                      </p>
+                      <Button
+                        onClick={() => setShowAddEventModal(true)}
+                        className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white rounded-lg shadow-md transition-all duration-300 hover:shadow-lg"
+                      >
+                        <Plus className="h-4 w-4 mr-2" /> Adicionar Evento
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
 
