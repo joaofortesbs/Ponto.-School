@@ -751,7 +751,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
               <div className="absolute inset-0 bg-gradient-to-t from-[#001427]/95 via-[#001427]/70 to-transparent"></div>
             </div>
           ) : (
-            <div className="w-full h-full bg-gradient-to-r from-[#001427] via-[#072e4f] to-[#0A2540]">
+            <div className="w-full h-full bgradient-to-r from-[#001427] via-[#072e4f] to-[#0A2540]">
               <div 
                 className="absolute inset-0 bg-[url('/images/pattern-grid.svg')] opacity-20"
               />
