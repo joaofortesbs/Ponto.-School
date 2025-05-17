@@ -595,56 +595,6 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                   </Badge>
                 )}
               </div>
-              
-              <div className="mt-3 grid grid-cols-2 gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => {
-                    const today = new Date();
-                    setStartDate(today);
-                    setEndDate(today);
-                  }}
-                >
-                  Hoje
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => {
-                    const today = new Date();
-                    setStartDate(today);
-                    setEndDate(addDays(today, 6));
-                  }}
-                >
-                  Esta semana
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => {
-                    const today = new Date();
-                    const nextDay = addDays(today, 1);
-                    setStartDate(nextDay);
-                    setEndDate(nextDay);
-                  }}
-                >
-                  Amanhã
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => {
-                    const today = new Date();
-                    const thisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-                    const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-                    setStartDate(thisMonth);
-                    setEndDate(nextMonth);
-                  }}
-                >
-                  Este mês
-                </Button>
-              </div>
             </div>
           </div>
 
