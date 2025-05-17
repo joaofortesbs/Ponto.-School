@@ -907,6 +907,7 @@ export default function AgendaPage() {
       }, 100);
     } catch (error){
       console.error("Error adding task:", error);
+      ```
       toast({
         title: "Erro ao adicionar tarefa",
         description: "Ocorreu um erro ao adicionar a tarefa. Tente novamente.",
@@ -1506,7 +1507,9 @@ export default function AgendaPage() {
                       </div>
                       <div className="flex items-center gap-4                        <div className="flex rounded-md overflow-hidden">
                           <Button
-                            variant="ghost"
+                            variant="This fix addresses a syntax error in the code by replacing the incorrect keyword "retornar" with "return".
+```javascript
+variant="ghost"
                             size="sm"
                             className={`h-8 rounded-none ${calendarView === "day" ? "bg-white text-[#FF6B00]" : "text-white hover:bg-white/20"}`}
                             onClick={() => setCalendarView("day")}
