@@ -855,676 +855,217 @@ export default function AgendaPage() {
 
         {/* Visão Geral Tab */}
         <TabsContent value="visao-geral" className="mt-0">
-          {/* Summary Cards Row */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            {/* Card 1: Eventos do Dia */}
-            <div className="bg-[#001427] rounded-xl overflow-hidden shadow-lg border border-[#29335C]/30 transform hover:translate-y-[-2px] transition-all duration-300 backdrop-blur-sm">
-              <div className="p-3 border-b border-[#29335C]/30 bg-gradient-to-r from-[#FF6B00]/90 to-[#FF8C40]/90">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-sm shadow-inner">
-                      <CalendarIcon className="h-4 w-4 text-white" />
-                    </div>
-                    <h3 className="text-sm font-bold text-white">
-                      Eventos do Dia
-                    </h3>
-                  </div>
-                  <Badge className="bg-white/20 text-white hover:bg-white/30 transition-colors px-2 py-0.5 text-xs">
-                    {todayEventsData.length}
-                  </Badge>
-                </div>
-              </div>
-              <div className="p-3 space-y-2">
-                {todayEventsData.slice(0, 1).map((event) => (
-                  <div
-                    key={event.id}
-                    className="bg-[#29335C]/50 rounded-lg p-2 hover:bg-[#29335C]/70 transition-all duration-200 cursor-pointer group"
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-[#29335C] flex items-center justify-center">
-                          {getEventIcon(event.type)}
-                        </div>
-                        <div>
-                          <h4 className="font-medium text-white text-xs group-hover:text-[#FF6B00] transition-colors">
-                            {event.title}
-                          </h4>
-                          <div className="flex items-center text-[10px] text-gray-400">
-                            <Clock className="h-2.5 w-2.5 mr-1 text-[#FF6B00]" />{" "}
-                            {event.time}
-                          </div>
-                        </div>
-                      </div>
-                      <div>{getStatusBadge(event.status)}</div>
-                    </div>
-                  </div>
-                ))}
-                <Button
-                  className="w-full mt-1 bg-[#FF6B00]/90 hover:bg-[#FF8C40] text-white rounded-lg transition-colors text-xs h-7"
-                  onClick={() => setShowAddEventModal(true)}
-                >
-                  <Plus className="h-3 w-3 mr-1" /> Ver Todos
-                </Button>
-              </div>
+          {/* Mensagem de boas-vindas */}
+          <div className="bg-white dark:bg-[#1E293B] rounded-xl overflow-hidden shadow-lg mb-8 border border-[#FF6B00]/10 dark:border-[#FF6B00]/20 p-6 text-center">
+            <div className="w-16 h-16 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-full mx-auto flex items-center justify-center mb-4">
+              <CalendarIcon className="h-8 w-8 text-white" />
             </div>
-
-            {/* Card 2: Desempenho Semanal */}
-            <div className="bg-[#001427] rounded-xl overflow-hidden shadow-lg border border-[#29335C]/30 transform hover:translate-y-[-2px] transition-all duration-300 backdrop-blur-sm">
-              <div className="p-3 border-b border-[#29335C]/30 bg-gradient-to-r from-[#FF6B00]/90 to-[#FF8C40]/90">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-sm shadow-inner">
-                      <BarChart3 className="h-4 w-4 text-white" />
-                    </div>
-                    <h3 className="text-sm font-bold text-white">
-                      Desempenho Semanal
-                    </h3>
-                  </div>
-                </div>
-              </div>
-              <div className="p-3">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="text-xs text-white font-medium">
-                    Progresso Geral
-                  </div>
-                  <div className="text-xs text-[#FF6B00] font-bold">78%</div>
-                </div>
-                <Progress value={78} className="h-1.5 mb-3 bg-[#29335C]/50" />
-
-                <div className="space-y-2">
-                  {subjectProgressData.slice(0, 2).map((subject, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between text-xs"
-                    >
-                      <div className="flex items-center gap-1.5">
-                        <div
-                          className="w-1.5 h-1.5 rounded-full"
-                          style={{ backgroundColor: subject.color }}
-                        ></div>
-                        <span className="text-gray-300">{subject.subject}</span>
-                      </div>
-                      <span className="text-white font-medium">
-                        {subject.progress}%
-                      </span>
-                    </div>
-                  ))}
-                </div>
-
-                <Button className="w-full mt-2 bg-[#FF6B00]/90 hover:bg-[#FF8C40] text-white rounded-lg transition-colors text-xs h-7">
-                  <LineChart className="h-3 w-3 mr-1" /> Ver Detalhes
-                </Button>
-              </div>
-            </div>
-
-            {/* Card 3: Ranking */}
-            <div className="bg-[#001427] rounded-xl overflow-hidden shadow-lg border border-[#29335C]/30 transform hover:translate-y-[-2px] transition-all duration-300 backdrop-blur-sm">
-              <div className="p-3 border-b border-[#29335C]/30 bg-gradient-to-r from-[#FF6B00]/90 to-[#FF8C40]/90">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-sm shadow-inner">
-                      <Trophy className="h-4 w-4 text-white" />
-                    </div>
-                    <h3 className="text-sm font-bold text-white">Ranking</h3>
-                  </div>
-                </div>
-              </div>
-              <div className="p-3 text-center">
-                <div className="w-14 h-14 rounded-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] mx-auto flex items-center justify-center mb-1 shadow-lg">
-                  <div className="w-12 h-12 rounded-full bg-[#001427] flex items-center justify-center shadow-inner">
-                    <span className="text-xl font-bold text-[#FF6B00]">
-                      #{rankingData.position}
-                    </span>
-                  </div>
-                </div>
-                <div className="text-xs font-medium text-white mb-1">
-                  Posição {rankingData.position} de {rankingData.total}
-                </div>
-                <div className="flex items-center justify-center text-[10px] text-green-400 font-medium">
-                  <ArrowRight className="h-2.5 w-2.5 mr-0.5 rotate-[-90deg]" />{" "}
-                  Subiu {rankingData.trend} posições
-                </div>
-
-                <Button className="w-full mt-2 bg-[#FF6B00]/90 hover:bg-[#FF8C40] text-white rounded-lg transition-colors text-xs h-7">
-                  <Users className="h-3 w-3 mr-1" /> Ver Ranking
-                </Button>
-              </div>
-            </div>
-
-            {/* Card 4: Pontos */}
-            <div className="bg-[#001427] rounded-xl overflow-hidden shadow-lg border border-[#29335C]/30 transform hover:translate-y-[-2px] transition-all duration-300 backdrop-blur-sm">
-              <div className="p-3 border-b border-[#29335C]/30 bg-gradient-to-r from-[#FF6B00]/90 to-[#FF8C40]/90">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-sm shadow-inner">
-                      <Coins className="h-4 w-4 text-white" />
-                    </div>
-                    <h3 className="text-sm font-bold text-white">Pontos</h3>
-                  </div>
-                </div>
-              </div>
-              <div className="p-3 text-center">
-                <div className="text-2xl font-bold text-[#FF6B00] mb-1">
-                  {rankingData.points}
-                </div>
-                <div className="text-xs text-gray-400 mb-2">
-                  Pontos acumulados
-                </div>
-
-                <div className="mb-2">
-                  <div className="flex justify-between text-[10px] mb-1">
-                    <span className="text-gray-400">Próxima recompensa:</span>
-                    <span className="font-medium text-white">
-                      {rankingData.nextReward}
-                    </span>
-                  </div>
-                  <Progress
-                    value={rankingData.progress}
-                    className="h-1.5 bg-[#29335C]/50"
-                  />
-                </div>
-
-                <Button className="w-full mt-1 bg-[#FF6B00]/90 hover:bg-[#FF8C40] text-white rounded-lg transition-colors text-xs h-7">
-                  <Award className="h-3 w-3 mr-1" /> Conquistas
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {/* Eventos do Dia Card - Based on the image */}
-          <div className="bg-[#001427] rounded-xl overflow-hidden shadow-lg mb-8 border border-[#29335C]/30 transform hover:translate-y-[-2px] transition-all duration-300">
-            <div className="p-4 border-b border-[#29335C]/30">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <CalendarIcon className="h-5 w-5 text-[#FF6B00]" />
-                  <h3 className="text-base font-bold text-white">
-                    Eventos do Dia
-                  </h3>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-gray-400 hover:text-white hover:bg-[#29335C]/50 rounded-full"
-                >
-                  <Info className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            <div className="p-4 space-y-4">
-              {todayEventsData.map((event) => (
-                <div
-                  key={event.id}
-                  className="bg-[#29335C]/50 rounded-lg p-3 hover:bg-[#29335C]/70 transition-all duration-200 cursor-pointer group"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-[#29335C] flex items-center justify-center">
-                        {getEventIcon(event.type)}
-                      </div>
-                      <div>
-                        <h4 className="font-medium text-white text-sm group-hover:text-[#FF6B00] transition-colors">
-                          {event.title}
-                        </h4>
-                        <div className="flex items-center text-xs text-gray-400">
-                          <Clock className="h-3 w-3 mr-1 text-[#FF6B00]" />{" "}
-                          {event.time}
-                        </div>
-                      </div>
-                    </div>
-                    <div>{getStatusBadge(event.status)}</div>
-                  </div>
-                  <div className="flex justify-end gap-2 mt-3">
-                    {event.status === "agora" && event.isOnline && (
-                      <>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-7 text-xs border-[#29335C] bg-[#29335C]/70 text-gray-300 hover:bg-[#29335C] hover:text-white transition-colors"
-                        >
-                          <Bookmark className="h-3 w-3 mr-1" /> Mais tarde
-                        </Button>
-                        <Button
-                          size="sm"
-                          className="h-7 text-xs bg-[#FF6B00] hover:bg-[#FF8C40] text-white transition-colors"
-                        >
-                          <Video className="h-3 w-3 mr-1" /> Entrar na Aula
-                        </Button>
-                      </>
-                    )}
-                    {event.status === "pendente" && (
-                      <>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-7 text-xs border-[#29335C] bg-[#29335C]/70 text-gray-300 hover:bg-[#29335C] hover:text-white transition-colors"
-                        >
-                          <FileEdit className="h-3 w-3 mr-1" /> Editar
-                        </Button>
-                        <Button
-                          size="sm"
-                          className="h-7 text-xs bg-[#FF6B00] hover:bg-[#FF8C40] text-white transition-colors"
-                        >
-                          <CheckSquare className="h-3 w-3 mr-1" /> Concluir
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              ))}
-
-              {/* Próximos Eventos Section */}
-              <div className="mt-6">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-bold text-white">
-                    Próximos Eventos
-                  </h3>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 p-0 text-xs text-[#FF6B00] hover:text-[#FF8C40] transition-colors"
-                  >
-                    Ver todos <ChevronRight className="h-3 w-3 ml-1" />
-                  </Button>
-                </div>
-                <div className="space-y-3">
-                  {upcomingEventsData.slice(0, 2).map((event) => (
-                    <div
-                      key={event.id}
-                      className="bg-[#29335C]/50 rounded-lg p-3 hover:bg-[#29335C]/70 transition-all duration-200 cursor-pointer group"
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-[#29335C] flex items-center justify-center">
-                          {getEventIcon(event.type)}
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="font-medium text-white text-sm group-hover:text-[#FF6B00] transition-colors">
-                            {event.title}
-                          </h4>
-                          <div className="flex items-center text-xs text-gray-400">
-                            <Clock className="h-3 w-3 mr-1 text-[#FF6B00]" />{" "}
-                            {event.day}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Add Event Button */}
-              <Button
-                className="w-full mt-4 bg-[#FF6B00] hover:bg-[#FF8C40] text-white rounded-lg transition-colors"
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Bem-vindo à sua Agenda</h2>
+            <p className="text-gray-600 dark:text-gray-300 mb-6 max-w-xl mx-auto">
+              Organize seus eventos, tarefas e compromissos acadêmicos em um só lugar. Comece adicionando seu primeiro evento ou tarefa.
+            </p>
+            <div className="flex flex-col sm:flex-row justify-center gap-3">
+              <Button 
+                className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white rounded-lg shadow-md transition-all duration-300 hover:shadow-lg"
                 onClick={() => setShowAddEventModal(true)}
               >
-                <Plus className="h-4 w-4 mr-1" /> Adicionar Evento
+                <Plus className="h-4 w-4 mr-2" /> Adicionar Evento
+              </Button>
+              <Button 
+                variant="outline"
+                className="border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10 rounded-lg transition-colors"
+                onClick={() => setShowAddTaskModal(true)}
+              >
+                <CheckSquare className="h-4 w-4 mr-2" /> Adicionar Tarefa
               </Button>
             </div>
           </div>
 
-          {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Left Column */}
-            <div className="space-y-8">
-              {/* Study Time Card */}
-              <div className="bg-white dark:bg-[#1E293B] rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border border-[#FF6B00]/10 dark:border-[#FF6B00]/20 transform hover:translate-y-[-3px]">
-                <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="bg-white/20 p-1.5 rounded-lg shadow-inner">
-                        <Clock className="h-5 w-5 text-white" />
-                      </div>
-                      <h3 className="text-base font-bold text-white">
-                        Tempo de Estudo
-                      </h3>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <div className="bg-white/10 rounded-lg p-0.5 flex text-xs">
-                        <button
-                          className={`px-2 py-0.5 ${timeRange === "semana" ? "bg-white/20 text-white" : "text-white/80 hover:bg-white/10"} rounded-l-md`}
-                          onClick={() => handleTimeRangeChange("semana")}
-                        >
-                          Semana
-                        </button>
-                        <button
-                          className={`px-2 py-0.5 ${timeRange === "mes" ? "bg-white/20 text-white" : "text-white/80 hover:bg-white/10"}`}
-                          onClick={() => handleTimeRangeChange("mes")}
-                        >
-                          Mês
-                        </button>
-                        <button
-                          className={`px-2 py-0.5 ${timeRange === "ano" ? "bg-white/20 text-white" : "text-white/80 hover:bg-white/10"} rounded-r-md`}
-                          onClick={() => handleTimeRangeChange("ano")}
-                        >
-                          Ano
-                        </button>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 text-white/80 hover:text-white hover:bg-white/10 rounded-full"
-                        title="Definir Meta"
-                        onClick={() => setShowSetGoalModal(true)}
-                      >
-                        <Target className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  </div>
+          {/* Cards de Início Rápido */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            {/* Card: Seus Eventos */}
+            <div className="bg-white dark:bg-[#1E293B] rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border border-[#FF6B00]/10 dark:border-[#FF6B00]/20 transform hover:translate-y-[-3px]">
+              <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-4 flex items-center">
+                <div className="bg-white/20 p-1.5 rounded-lg shadow-inner mr-3">
+                  <CalendarIcon className="h-5 w-5 text-white" />
                 </div>
-                <div className="p-4">
-                  <div className="flex items-end justify-between mb-4">
-                    <div>
-                      <div className="text-3xl font-bold text-[#FF6B00]">
-                        {studyTimeData.total}h
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        Meta: {studyTimeData.goal}h
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        {studyTimeData.progress}% da meta
-                      </div>
-                      <div className="flex items-center text-xs text-gray-500 mt-1">
-                        <LineChart className="h-3 w-3 mr-1 text-[#FF6B00]" />{" "}
-                        Progresso{" "}
-                        {timeRange === "semana"
-                          ? "semanal"
-                          : timeRange === "mes"
-                            ? "mensal"
-                            : "anual"}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Daily Study Time Chart */}
-                  <div className="mt-4">
-                    <div className="flex justify-between items-end h-20 mb-1">
-                      {studyTimeData.byDay.map((day, index) => (
-                        <div
-                          key={index}
-                          className="flex flex-col items-center group"
-                        >
-                          <div
-                            className="w-6 bg-gradient-to-t from-[#FF6B00] to-[#FF8C40] rounded-t-sm group-hover:from-[#FF8C40] group-hover:to-[#FF6B00] transition-all duration-300 shadow-sm"
-                            style={{
-                              height: `${(day.hours / 8) * 100}%`,
-                              minHeight: "4px",
-                            }}
-                          ></div>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="flex justify-between text-xs text-gray-500">
-                      {studyTimeData.byDay.map((day, index) => (
-                        <div
-                          key={index}
-                          className="w-6 text-center font-medium"
-                        >
-                          {day.day}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="mt-4 pt-4 border-t border-[#FF6B00]/10 dark:border-[#FF6B00]/20">
-                    <div className="flex justify-between items-center mb-2">
-                      <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Por Disciplina
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <select
-                          className="text-xs bg-transparent border border-[#FF6B00]/30 rounded text-[#FF6B00] py-0.5 px-1"
-                          value={selectedSubject}
-                          onChange={handleSubjectChange}
-                        >
-                          <option value="all">Todas</option>
-                          <option value="matematica">Matemática</option>
-                          <option value="fisica">Física</option>
-                          <option value="quimica">Química</option>
-                        </select>
-                        <Button
-                          variant="link"
-                          size="sm"
-                          className="h-6 p-0 text-xs text-[#FF6B00] hover:text-[#FF8C40] transition-colors"
-                        >
-                          Ver Detalhes <ExternalLink className="h-3 w-3 ml-1" />
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      {studyTimeData.bySubject
-                        .slice(0, 3)
-                        .map((subject, index) => (
-                          <div
-                            key={index}
-                            className="flex items-center justify-between group hover:bg-[#FF6B00]/5 p-1 rounded-md transition-colors cursor-pointer"
-                          >
-                            <div className="flex items-center gap-2">
-                              <div
-                                className="w-2 h-2 rounded-full group-hover:scale-110 transition-transform"
-                                style={{ backgroundColor: subject.color }}
-                              ></div>
-                              <span className="text-xs text-gray-700 dark:text-gray-300 group-hover:text-[#FF6B00] transition-colors">
-                                {subject.subject}
-                              </span>
-                            </div>
-                            <span className="text-xs font-medium group-hover:text-[#FF6B00] transition-colors">
-                              {subject.hours}h
-                            </span>
-                          </div>
-                        ))}
-                    </div>
-                  </div>
-                </div>
+                <h3 className="text-base font-bold text-white">Seus Eventos</h3>
               </div>
-
-              {/* Subject Progress Card */}
-              <div className="bg-white dark:bg-[#1E293B] rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border border-[#FF6B00]/10 dark:border-[#FF6B00]/20 transform hover:translate-y-[-3px]">
-                <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-white/20 p-1.5 rounded-lg shadow-inner">
-                      <PieChart className="h-5 w-5 text-white" />
-                    </div>
-                    <h3 className="text-base font-bold text-white">
-                      Progresso por Disciplina
-                    </h3>
-                  </div>
+              <div className="p-5 flex flex-col items-center justify-center text-center min-h-[200px]">
+                <div className="w-12 h-12 rounded-full bg-[#FF6B00]/10 dark:bg-[#FF6B00]/20 flex items-center justify-center mb-3">
+                  <CalendarIcon className="h-6 w-6 text-[#FF6B00]" />
                 </div>
-                <div className="p-4">
-                  <div className="space-y-4">
-                    {subjectProgressData.map((subject, index) => (
-                      <div
-                        key={index}
-                        className="group hover:bg-[#FF6B00]/5 p-2 rounded-lg transition-colors cursor-pointer"
-                      >
-                        <div className="flex justify-between items-center mb-1">
-                          <div className="flex items-center gap-2">
-                            <div
-                              className="w-3 h-3 rounded-full group-hover:scale-110 transition-transform"
-                              style={{ backgroundColor: subject.color }}
-                            ></div>
-                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-[#FF6B00] transition-colors">
-                              {subject.subject}
-                            </span>
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            <span className="font-medium text-gray-700 dark:text-gray-300 group-hover:text-[#FF6B00] transition-colors">
-                              {subject.progress}%
-                            </span>{" "}
-                            / Meta: {subject.goal}%
-                          </div>
-                        </div>
-                        <div className="relative h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden group-hover:bg-[#FF6B00]/10 transition-colors">
-                          <div
-                            className="absolute top-0 left-0 h-full rounded-full shadow-sm"
-                            style={{
-                              width: `${subject.progress}%`,
-                              backgroundColor: subject.color,
-                              opacity:
-                                subject.progress >= subject.goal ? 1 : 0.7,
-                            }}
-                          ></div>
-                          <div
-                            className="absolute top-0 h-full w-px bg-gray-700 dark:bg-gray-300"
-                            style={{ left: `${subject.goal}%` }}
-                          ></div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-4 pt-4 border-t border-[#FF6B00]/10 dark:border-[#FF6B00]/20 flex justify-between items-center">
-                    <div className="text-xs text-gray-500">
-                      <span className="font-medium text-gray-700 dark:text-gray-300">
-                        Média geral:
-                      </span>{" "}
-                      78%
-                    </div>
-                    <Button
-                      variant="link"
-                      size="sm"
-                      className="h-6 p-0 text-xs text-[#FF6B00] hover:text-[#FF8C40] transition-colors font-medium"
-                    >
-                      Definir Metas <ExternalLink className="h-3 w-3 ml-1" />
-                    </Button>
-                  </div>
-                </div>
+                <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Nenhum evento agendado</h4>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+                  Cadastre seus primeiros eventos para visualizar seu cronograma aqui.
+                </p>
+                <Button 
+                  size="sm"
+                  className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300"
+                  onClick={() => setShowAddEventModal(true)}
+                >
+                  <Plus className="h-3.5 w-3.5 mr-1" /> Adicionar Evento
+                </Button>
               </div>
             </div>
 
-            {/* Right Column */}
-            <div className="space-y-8">
-              {/* Pending Tasks with minimalist design - Movido para cima */}
-              <div className="bg-white dark:bg-[#1E293B] rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border border-[#FF6B00]/10 dark:border-[#FF6B00]/20 transform hover:translate-y-[-3px]">
-                <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-white/20 p-1.5 rounded-lg shadow-inner">
-                      <CheckSquare className="h-5 w-5 text-white" />
-                    </div>
-                    <h3 className="text-base font-bold text-white">
-                      Tarefas Pendentes
-                    </h3>
+            {/* Card: Tarefas Pendentes */}
+            <div className="bg-white dark:bg-[#1E293B] rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border border-[#FF6B00]/10 dark:border-[#FF6B00]/20 transform hover:translate-y-[-3px]">
+              <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-4 flex items-center">
+                <div className="bg-white/20 p-1.5 rounded-lg shadow-inner mr-3">
+                  <CheckSquare className="h-5 w-5 text-white" />
+                </div>
+                <h3 className="text-base font-bold text-white">Tarefas Pendentes</h3>
+              </div>
+              <div className="p-5 flex flex-col items-center justify-center text-center min-h-[200px]">
+                <div className="w-12 h-12 rounded-full bg-[#FF6B00]/10 dark:bg-[#FF6B00]/20 flex items-center justify-center mb-3">
+                  <CheckSquare className="h-6 w-6 text-[#FF6B00]" />
+                </div>
+                <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Nenhuma tarefa pendente</h4>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+                  Adicione suas primeiras tarefas para começar a organizar seus estudos.
+                </p>
+                <Button 
+                  size="sm"
+                  className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300"
+                  onClick={() => setShowAddTaskModal(true)}
+                >
+                  <Plus className="h-3.5 w-3.5 mr-1" /> Adicionar Tarefa
+                </Button>
+              </div>
+            </div>
+
+            {/* Card: Progresso por Disciplina */}
+            <div className="bg-white dark:bg-[#1E293B] rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border border-[#FF6B00]/10 dark:border-[#FF6B00]/20 transform hover:translate-y-[-3px]">
+              <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-4 flex items-center">
+                <div className="bg-white/20 p-1.5 rounded-lg shadow-inner mr-3">
+                  <PieChart className="h-5 w-5 text-white" />
+                </div>
+                <h3 className="text-base font-bold text-white">Progresso por Disciplina</h3>
+              </div>
+              <div className="p-5 flex flex-col items-center justify-center text-center min-h-[200px]">
+                <div className="w-12 h-12 rounded-full bg-[#FF6B00]/10 dark:bg-[#FF6B00]/20 flex items-center justify-center mb-3">
+                  <BarChart3 className="h-6 w-6 text-[#FF6B00]" />
+                </div>
+                <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Sem dados de progresso</h4>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+                  Complete tarefas e eventos para visualizar seu progresso por disciplina.
+                </p>
+                <Button 
+                  size="sm"
+                  variant="outline"
+                  className="border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10 rounded-lg transition-colors"
+                >
+                  <Target className="h-3.5 w-3.5 mr-1" /> Definir Metas
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Seção: Começando com a Agenda */}
+          <div className="bg-white dark:bg-[#1E293B] rounded-xl overflow-hidden shadow-lg mb-8 border border-[#FF6B00]/10 dark:border-[#FF6B00]/20">
+            <div className="p-4 border-b border-[#FF6B00]/10 dark:border-[#FF6B00]/20">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-[#FF6B00]" />
+                <h3 className="text-base font-bold text-gray-900 dark:text-white">
+                  Começando com sua Agenda
+                </h3>
+              </div>
+            </div>
+            <div className="p-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-[#FF6B00]/5 dark:bg-[#FF6B00]/10 rounded-lg p-4 hover:bg-[#FF6B00]/10 dark:hover:bg-[#FF6B00]/20 transition-colors group">
+                  <div className="w-10 h-10 rounded-full bg-[#FF6B00]/20 flex items-center justify-center mb-3 group-hover:bg-[#FF6B00]/30 transition-colors">
+                    <CalendarIcon className="h-5 w-5 text-[#FF6B00]" />
                   </div>
-                  <Badge className="bg-white/20 text-white hover:bg-white/30 transition-colors px-3 py-1 font-medium">
-                    {tasksData.length} tarefas
-                  </Badge>
+                  <h4 className="font-medium text-gray-900 dark:text-white text-sm mb-2">
+                    1. Adicione eventos
+                  </h4>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Cadastre aulas, provas e compromissos para visualizá-los no calendário.
+                  </p>
                 </div>
-                <div className="divide-y divide-[#FF6B00]/10 dark:divide-[#FF6B00]/20">
-                  {tasksData.map((task) => (
-                    <div
-                      key={task.id}
-                      className="p-4 hover:bg-[#FF6B00]/5 cursor-pointer transition-colors group"
-                    >
-                      <div className="flex items-start gap-4">
-                        <Checkbox
-                          id={`task-${task.id}`}
-                          className="mt-1.5 h-5 w-5 border-[#FF6B00]/50 data-[state=checked]:bg-[#FF6B00] data-[state=checked]:text-white"
-                        />
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between">
-                            <label
-                              htmlFor={`task-${task.id}`}
-                              className="font-medium text-gray-900 dark:text-white text-sm cursor-pointer group-hover:text-[#FF6B00] transition-colors"
-                            >
-                              {task.title}
-                            </label>
-                            <Badge
-                              className={`text-xs px-2 ${getPriorityColor(task.priority)}`}
-                            >
-                              {task.priority.charAt(0).toUpperCase() +
-                                task.priority.slice(1)}
-                            </Badge>
-                          </div>
-                          <div className="flex items-center gap-3 mt-2">
-                            <Badge
-                              variant="outline"
-                              className="text-xs border-[#FF6B00]/30 bg-transparent px-2 text-[#FF6B00] group-hover:bg-[#FF6B00]/10 transition-colors flex items-center gap-1"
-                            >
-                              {getTaskIcon(task.discipline)}
-                              <span className="ml-1">{task.discipline}</span>
-                            </Badge>
-                            <span
-                              className={`flex items-center ${task.urgent ? "text-red-500 dark:text-red-400 font-medium" : "text-gray-500 dark:text-gray-400"} text-xs`}
-                            >
-                              <Hourglass className="h-3 w-3 mr-1.5 text-[#FF6B00]" />{" "}
-                              {task.dueDate}
-                            </span>
-                          </div>
-                          <Progress
-                            value={task.progress}
-                            className={`h-2 mt-3 bg-[#FF6B00]/10 dark:bg-[#FF6B00]/20 rounded-full`}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                
+                <div className="bg-[#FF6B00]/5 dark:bg-[#FF6B00]/10 rounded-lg p-4 hover:bg-[#FF6B00]/10 dark:hover:bg-[#FF6B00]/20 transition-colors group">
+                  <div className="w-10 h-10 rounded-full bg-[#FF6B00]/20 flex items-center justify-center mb-3 group-hover:bg-[#FF6B00]/30 transition-colors">
+                    <CheckSquare className="h-5 w-5 text-[#FF6B00]" />
+                  </div>
+                  <h4 className="font-medium text-gray-900 dark:text-white text-sm mb-2">
+                    2. Crie tarefas
+                  </h4>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Adicione trabalhos, leituras e outras atividades com prazos e prioridades.
+                  </p>
                 </div>
-                <div className="p-3 border-t border-[#FF6B00]/10 dark:border-[#FF6B00]/20 flex justify-between items-center">
-                  <Button
-                    variant="link"
-                    className="text-gray-500 hover:text-[#FF6B00] p-0 h-auto text-sm transition-colors"
-                  >
-                    Ver tarefas concluídas
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="h-8 text-xs bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300"
-                    onClick={() => setShowAddTaskModal(true)}
-                  >
-                    <Plus className="h-3.5 w-3.5 mr-1" /> Nova Tarefa
-                  </Button>
+                
+                <div className="bg-[#FF6B00]/5 dark:bg-[#FF6B00]/10 rounded-lg p-4 hover:bg-[#FF6B00]/10 dark:hover:bg-[#FF6B00]/20 transition-colors group">
+                  <div className="w-10 h-10 rounded-full bg-[#FF6B00]/20 flex items-center justify-center mb-3 group-hover:bg-[#FF6B00]/30 transition-colors">
+                    <Target className="h-5 w-5 text-[#FF6B00]" />
+                  </div>
+                  <h4 className="font-medium text-gray-900 dark:text-white text-sm mb-2">
+                    3. Defina metas
+                  </h4>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Estabeleça objetivos de estudo e acompanhe seu progresso por disciplina.
+                  </p>
                 </div>
               </div>
               
-              {/* AI Mentor with elegant design - Movido para baixo */}
-              <div className="bg-white dark:bg-[#1E293B] rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border border-[#FF6B00]/10 dark:border-[#FF6B00]/20 transform hover:translate-y-[-3px]">
-                <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-white/20 p-1.5 rounded-lg shadow-inner">
-                      <Sparkles className="h-5 w-5 text-white" />
-                    </div>
-                    <h3 className="text-base font-bold text-white">
-                      Recomendações do Epictus IA
-                    </h3>
-                  </div>
+              <div className="mt-4 pt-4 border-t border-[#FF6B00]/10 dark:border-[#FF6B00]/20">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                  Ao utilizar a agenda regularmente, você receberá recomendações personalizadas da Epictus IA para otimizar seus estudos.
+                </p>
+                <Button
+                  variant="outline" 
+                  className="w-full border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10 rounded-lg transition-colors"
+                >
+                  <Lightbulb className="h-4 w-4 mr-2" /> Explorar Recursos da Agenda
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Epictus IA Card */}
+          <div className="bg-white dark:bg-[#1E293B] rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border border-[#FF6B00]/10 dark:border-[#FF6B00]/20 transform hover:translate-y-[-3px]">
+            <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="bg-white/20 p-1.5 rounded-lg shadow-inner">
+                  <Sparkles className="h-5 w-5 text-white" />
                 </div>
-                <div className="p-5 space-y-4">
-                  {aiRecommendations.map((rec) => (
-                    <div
-                      key={rec.id}
-                      className="bg-[#FF6B00]/5 dark:bg-[#FF6B00]/10 rounded-lg p-4 hover:bg-[#FF6B00]/10 dark:hover:bg-[#FF6B00]/20 transition-colors shadow-sm hover:shadow-md group cursor-pointer"
-                    >
-                      <div className="flex gap-3">
-                        <div className="mt-0.5 group-hover:scale-110 transition-transform">
-                          {rec.icon}
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="font-medium text-gray-900 dark:text-white text-sm group-hover:text-[#FF6B00] transition-colors">
-                            {rec.title}
-                          </h4>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                            {rec.description}
-                          </p>
-                          <div className="flex gap-2 mt-4">
-                            {rec.actions.map((action, idx) => (
-                              <Button
-                                key={idx}
-                                size="sm"
-                                variant={action.variant}
-                                className={
-                                  action.variant === "outline"
-                                    ? "h-8 text-xs border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10 font-medium flex items-center rounded-lg transition-colors"
-                                    : "h-8 text-xs bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-medium flex items-center rounded-lg shadow-sm hover:shadow-md transition-all duration-300"
-                                }
-                              >
-                                {action.icon}
-                                {action.label}
-                              </Button>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
+                <h3 className="text-base font-bold text-white">
+                  Epictus IA - Assistente de Organização
+                </h3>
+              </div>
+            </div>
+            <div className="p-5">
+              <div className="bg-[#FF6B00]/5 dark:bg-[#FF6B00]/10 rounded-lg p-4 hover:bg-[#FF6B00]/10 dark:hover:bg-[#FF6B00]/20 transition-colors shadow-sm hover:shadow-md group cursor-pointer">
+                <div className="flex gap-3">
+                  <div className="mt-0.5 group-hover:scale-110 transition-transform">
+                    <Lightbulb className="h-5 w-5 text-[#FF6B00]" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-medium text-gray-900 dark:text-white text-sm group-hover:text-[#FF6B00] transition-colors">
+                      Otimize sua organização acadêmica
+                    </h4>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                      Conforme você adiciona eventos e tarefas, a Epictus IA aprenderá seus padrões e fornecerá recomendações personalizadas para melhorar sua rotina de estudos.
+                    </p>
+                    <div className="flex gap-2 mt-4">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 text-xs border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10 font-medium flex items-center rounded-lg transition-colors"
+                      >
+                        <Brain className="h-3.5 w-3.5 mr-1" /> Saiba Mais
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="h-8 text-xs bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-medium flex items-center rounded-lg shadow-sm hover:shadow-md transition-all duration-300"
+                      >
+                        <Plus className="h-3.5 w-3.5 mr-1" /> Começar
+                      </Button>
                     </div>
-                  ))}
+                  </div>
                 </div>
               </div>
             </div>
