@@ -1067,22 +1067,77 @@ export default function AgendaPage() {
                     </div>
                   </div>
                 </div>
-                <div className="p-8 flex flex-col items-center justify-center">
-                  <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
-                    <Clock className="h-8 w-8 text-gray-400" />
+                <div className="p-6">
+                  <div className="space-y-6">
+                    {/* Weekly Progress */}
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-500 dark:text-white/60">
+                          Progresso semanal
+                        </span>
+                        <span className="text-sm font-medium text-gray-900 dark:text-white">
+                          0/30h
+                        </span>
+                      </div>
+                      <Progress
+                        value={0}
+                        className="h-2 bg-gray-100 dark:bg-gray-800"
+                        indicatorClassName="bg-[#FF6B00]"
+                      />
+                    </div>
+
+                    {/* Daily Study Graph */}
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium text-gray-800 dark:text-white">
+                        Estudo diário
+                      </h4>
+                      <div className="grid grid-cols-7 gap-1 h-20">
+                        {['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'].map((day, i) => (
+                          <div key={i} className="flex flex-col items-center">
+                            <div className="flex-1 w-full flex items-end">
+                              <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-t-sm h-1"></div>
+                            </div>
+                            <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                              {day}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Subject Breakdown */}
+                    <div className="space-y-3">
+                      <h4 className="text-sm font-medium text-gray-800 dark:text-white">
+                        Estudo por matéria
+                      </h4>
+                      {['Matemática', 'Física', 'Química', 'Biologia'].map((subject, i) => (
+                        <div key={i} className="space-y-1">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-500 dark:text-white/60">
+                              {subject}
+                            </span>
+                            <span className="font-medium text-gray-900 dark:text-white">
+                              0h
+                            </span>
+                          </div>
+                          <Progress
+                            value={0}
+                            className="h-1.5 bg-gray-100 dark:bg-gray-800"
+                            indicatorClassName="bg-[#FF6B00]"
+                          />
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="pt-2">
+                      <Button
+                        className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white rounded-lg transition-all duration-300"
+                        onClick={() => setShowSetGoalModal(true)}
+                      >
+                        <Target className="h-4 w-4 mr-2" /> Definir Meta de Estudo
+                      </Button>
+                    </div>
                   </div>
-                  <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                    Nenhum tempo registrado
-                  </h4>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 text-center max-w-md">
-                    Comece a registrar seu tempo de estudo para visualizar estatísticas e melhorar seu desempenho
-                  </p>
-                  <Button
-                    className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white rounded-lg transition-all duration-300"
-                    onClick={() => setShowSetGoalModal(true)}
-                  >
-                    <Target className="h-4 w-4 mr-2" /> Definir Meta de Estudo
-                  </Button>
                 </div>
               </div>
 
