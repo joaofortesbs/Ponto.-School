@@ -59,6 +59,7 @@ const FlowSessionCard: React.FC = () => {
     { id: string; name: string; type: string }[]
   >([]);
   const [timer, setTimer] = useState<NodeJS.Timeout | null>(null);
+  const [initialHistoryLoaded, setInitialHistoryLoaded] = useState(false);
   const [dailyTasks, setDailyTasks] = useState<
     { id: string; title: string; completed: boolean; subject: string }[]
   >([
@@ -207,7 +208,6 @@ const FlowSessionCard: React.FC = () => {
 
   // Array to store completed sessions history
   const [sessionHistory, setSessionHistory] = useState<FlowSession[]>([]);
-  const [initialHistoryLoaded, setInitialHistoryLoaded] = useState(false);
 
   // Handle end session
   const endSession = () => {
