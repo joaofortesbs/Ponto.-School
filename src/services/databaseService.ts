@@ -407,8 +407,12 @@ export const getMessagesByRequestId = async (requestId: string): Promise<Message
       requestId: item.request_id,
       content: item.content,
       timestamp: item.timestamp,
-      read: item.readem.read,
-  }));
+      read: item.read
+    }));
+  } catch (error) {
+    console.error('Erro ao buscar mensagens:', error);
+    return [];
+  }
 };
 
 // Funções para feedback
