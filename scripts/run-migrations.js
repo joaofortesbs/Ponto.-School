@@ -1,207 +1,270 @@
-
-// Script para executar migrações do Supabase com tratamento de erros aprimorado
-require('dotenv').config();
-const { createClient } = require('@supabase/supabase-js');
 const fs = require('fs');
 const path = require('path');
+const { exec } = require('child_process');
 
-// Configurações do Supabase
-const supabaseUrl = process.env.VITE_SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+// Configuração
+const CONFIG = {
+  migrationsPath: path.join(__dirname, '..', 'supabase', 'migrations'),
+  runOncePath: path.join(__dirname, '..', 'supabase', 'migrations', 'run-once'),
+  supabaseUrl: process.env.SUPABASE_URL || 'https://ysaqocvbujsmqmbfwkmt.supabase.co',
+  maxRetries: 3,
+  retryDelayMs: 2000
+};
 
-console.log('=== INICIANDO APLICAÇÃO DE MIGRAÇÕES SUPABASE ===');
+// Função para verificar se o diretório existe
+const directoryExists = (directoryPath) => {
+  try {
+    return fs.statSync(directoryPath).isDirectory();
+  } catch (err) {
+    return false;
+  }
+};
 
-// Verificar se as credenciais estão definidas
-if (!supabaseUrl || !supabaseServiceKey) {
-  console.error('ERRO: Credenciais do Supabase não definidas!');
-  console.error('Por favor, configure VITE_SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY no arquivo .env');
+// Função para executar um comando com retry
+const execWithRetry = (command, options = {}) => {
+  return new Promise((resolve, reject) => {
+    let attempts = 0;
+
+    const tryExec = () => {
+      attempts++;
+      console.log(`Executando comando (tentativa ${attempts}/${CONFIG.maxRetries}):`);
+      console.log(`> ${command}`);
+
+      exec(command, options, (error, stdout, stderr) => {
+        if (error) {
+          console.error(`❌ Erro na tentativa ${attempts}:`, error.message);
+          if (attempts < CONFIG.maxRetries) {
+            console.log(`Tentando novamente em ${CONFIG.retryDelayMs / 1000} segundos...`);
+            setTimeout(tryExec, CONFIG.retryDelayMs);
+          } else {
+            console.error(`❌ Falha após ${CONFIG.maxRetries} tentativas.`);
+            reject(error);
+          }
+          return;
+        }
+
+        if (stderr) {
+          console.warn('Aviso:', stderr);
+        }
+
+        resolve(stdout);
+      });
+    };
+
+    tryExec();
+  });
+};
+
+// Função para executar migração via supabase CLI
+const runMigrationViaCLI = async () => {
+  try {
+    console.log('🔄 Tentando executar migrações via Supabase CLI...');
+
+    // Verificar se o CLI está disponível
+    try {
+      await execWithRetry('npx supabase --version');
+      console.log('✅ Supabase CLI disponível');
+    } catch (error) {
+      console.error('❌ Supabase CLI não está disponível:', error.message);
+      return false;
+    }
+
+    // Executar migração
+    try {
+      const result = await execWithRetry('npx supabase migration up');
+      console.log('✅ Migração via CLI executada com sucesso:');
+      console.log(result);
+      return true;
+    } catch (error) {
+      console.error('❌ Falha ao executar migração via CLI:', error.message);
+      return false;
+    }
+  } catch (error) {
+    console.error('❌ Erro ao executar via CLI:', error.message);
+    return false;
+  }
+};
+
+// Função para executar a migração manualmente
+const runMigrationManually = async (sqlFilePath) => {
+  return new Promise((resolve, reject) => {
+    console.log(`Executando migração: ${path.basename(sqlFilePath)}`);
+
+    // Lê o arquivo SQL
+    fs.readFile(sqlFilePath, 'utf8', (err, sqlContent) => {
+      if (err) {
+        console.error(`Erro ao ler arquivo de migração: ${err.message}`);
+        reject(err);
+        return;
+      }
+
+      // Executa o comando SQL via Supabase client
+      // Usa uma abordagem diferente: cria um arquivo temporário JS que executa o SQL
+      const tempJsPath = path.join(__dirname, 'temp-execute-sql.js');
+
+      // Conteúdo do script temporário
+      const scriptContent = `
+const { createClient } = require('@supabase/supabase-js');
+
+// Inicializar cliente Supabase
+const supabaseUrl = '${CONFIG.supabaseUrl}';
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY;
+
+if (!supabaseKey) {
+  console.error('❌ Chave de serviço do Supabase não definida!');
   process.exit(1);
 }
 
-// Criar cliente Supabase
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Função para verificar conexão com o Supabase
-async function checkConnection() {
+async function executeSQL() {
   try {
-    console.log('Verificando conexão com o Supabase...');
-    
-    // Tentando uma operação simples
-    const { data, error } = await supabase.rpc('rpc_ping').catch(() => ({
-      error: { message: 'Função rpc_ping não encontrada' }
-    }));
-    
-    if (error && !error.message.includes('não encontrada')) {
-      // Tentar outra abordagem
-      console.log('Verificação de ping falhou, tentando outra abordagem...');
-      const { error: healthCheckError } = await supabase.from('profiles').select('count');
-      
-      if (healthCheckError) {
-        console.error('Falha na conexão com o Supabase:', healthCheckError);
-        return false;
-      }
-    }
-    
-    console.log('✅ Conexão com o Supabase estabelecida com sucesso!');
-    return true;
-  } catch (error) {
-    console.error('❌ Erro ao verificar conexão com o Supabase:', error);
-    return false;
-  }
-}
+    // Executar SQL
+    const sql = \`${sqlContent.replace(/`/g, '\\`')}\`;
+    console.log('Executando SQL...');
 
-// Função para criar a função execute_sql se não existir
-async function ensureExecuteSqlFunction() {
-  try {
-    console.log('Verificando se a função execute_sql existe...');
-    
-    // Tentamos usar a função para testar se ela existe
-    const { error } = await supabase.rpc('execute_sql', {
-      sql_query: 'SELECT 1'
-    });
-    
-    // Se não existir erro ou o erro for relacionado a permissões, a função provavelmente existe
-    if (!error || error.code === 'PGRST301' || error.message.includes('permission')) {
-      console.log('✅ Função execute_sql parece existir');
-      return true;
-    }
-    
-    console.log('Criando função execute_sql...');
-    
-    // Criamos a função diretamente via SQL
-    const { error: createError } = await supabase.from('_exec_sql').select('*').limit(1);
-    
-    // Se conseguirmos acessar _exec_sql, tentamos criar a função
-    const createFunctionResult = await supabase.rpc('execute_sql', {
-      sql_query: `
-        CREATE OR REPLACE FUNCTION public.execute_sql(sql_query TEXT)
-        RETURNS VOID AS $$
-        BEGIN
-          EXECUTE sql_query;
-        END;
-        $$ LANGUAGE plpgsql SECURITY DEFINER;
-      `
-    }).catch(() => ({ error: null }));
-    
-    if (createFunctionResult.error) {
-      console.warn('⚠️ Não foi possível criar função execute_sql. Algumas migrações podem falhar.');
-      return false;
-    }
-    
-    console.log('✅ Função execute_sql criada com sucesso');
-    return true;
-  } catch (error) {
-    console.error('❌ Erro ao verificar/criar função execute_sql:', error);
-    return false;
-  }
-}
+    // Verifica se a função execute_sql existe
+    const { data: functionExists, error: checkError } = await supabase
+      .from('pg_proc')
+      .select('proname')
+      .eq('proname', 'execute_sql')
+      .maybeSingle();
 
-// Função para aplicar um arquivo de migração
-async function applyMigrationFile(filePath) {
-  try {
-    console.log(`Aplicando migração: ${path.basename(filePath)}`);
-    
-    // Ler o conteúdo do arquivo SQL
-    const sqlContent = fs.readFileSync(filePath, 'utf8');
-    
-    // Executar o SQL usando a função execute_sql
-    const { error } = await supabase.rpc('execute_sql', {
-      sql_query: sqlContent
-    });
-    
-    if (error) {
-      // Alguns erros são aceitáveis, como tabela já existe
-      if (error.message.includes('already exists')) {
-        console.log(`⚠️ Tabela já existe em ${path.basename(filePath)}, continuando...`);
-        return true;
-      }
-      
-      console.error(`❌ Erro ao aplicar migração ${path.basename(filePath)}:`, error);
-      return false;
-    }
-    
-    console.log(`✅ Migração aplicada com sucesso: ${path.basename(filePath)}`);
-    return true;
-  } catch (error) {
-    console.error(`❌ Erro ao aplicar migração ${path.basename(filePath)}:`, error);
-    return false;
-  }
-}
+    if (checkError) {
+      console.log('Aviso ao verificar função execute_sql:', checkError.message);
+      console.log('Tentando executar SQL diretamente...');
 
-// Função principal para aplicar migrações
-async function applyMigrations() {
-  try {
-    // Verificar conexão
-    const connected = await checkConnection();
-    if (!connected) {
-      console.error('❌ Não foi possível conectar ao Supabase. Verifique as credenciais e a conexão.');
-      process.exit(1);
-    }
-    
-    // Verificar função execute_sql
-    await ensureExecuteSqlFunction();
-    
-    // Obter migrações para executar
-    const migrationsFolders = [
-      path.join(__dirname, '..', 'supabase', 'migrations'),
-      path.join(__dirname, '..', 'supabase', 'migrations', 'run-once')
-    ];
-    
-    let migrationsApplied = 0;
-    let migrationsSkipped = 0;
-    let migrationsFailed = 0;
-    
-    // Processar cada pasta de migrações
-    for (const folder of migrationsFolders) {
-      if (!fs.existsSync(folder)) {
-        console.log(`Pasta ${folder} não existe, pulando...`);
-        continue;
+      // Se não conseguimos verificar ou a função não existe, tenta executar diretamente
+      const { data, error } = await supabase.rpc('execute_sql', { sql_query: sql });
+
+      if (error) {
+        console.error('❌ Erro ao executar SQL:', error);
+        process.exit(1);
       }
-      
-      console.log(`\nProcessando migrações da pasta: ${folder}`);
-      
-      // Listar arquivos SQL na pasta
-      const files = fs.readdirSync(folder)
-        .filter(file => file.endsWith('.sql'))
-        .sort(); // Ordenar para garantir que sejam aplicados na ordem correta
-      
-      if (files.length === 0) {
-        console.log('Nenhuma migração encontrada na pasta.');
-        continue;
-      }
-      
-      console.log(`Encontradas ${files.length} migrações para aplicar.\n`);
-      
-      // Aplicar cada arquivo de migração
-      for (const file of files) {
-        const filePath = path.join(folder, file);
-        const applied = await applyMigrationFile(filePath);
-        
-        if (applied) {
-          migrationsApplied++;
-        } else {
-          migrationsFailed++;
-        }
-      }
-    }
-    
-    // Resumo das migrações
-    console.log('\n===== RESUMO DAS MIGRAÇÕES =====');
-    console.log(`Total de migrações aplicadas: ${migrationsApplied}`);
-    console.log(`Total de migrações puladas: ${migrationsSkipped}`);
-    console.log(`Total de migrações com falha: ${migrationsFailed}`);
-    
-    if (migrationsFailed > 0) {
-      console.log('\n⚠️ Algumas migrações falharam. Verifique os logs acima para mais detalhes.');
+
+      console.log('✅ SQL executado com sucesso:', data);
     } else {
-      console.log('\n✅ Todas as migrações foram processadas com sucesso!');
+      console.log('Executando SQL via função auxiliar...');
+      const { data, error } = await supabase.rpc('execute_sql', { sql_query: sql });
+
+      if (error) {
+        console.error('❌ Erro ao executar SQL:', error);
+        process.exit(1);
+      }
+
+      console.log('✅ SQL executado com sucesso:', data);
     }
-    
-  } catch (error) {
-    console.error('❌ Erro durante a aplicação das migrações:', error);
+
+    process.exit(0);
+  } catch (err) {
+    console.error('❌ Erro geral:', err);
     process.exit(1);
   }
 }
 
-// Executar o processo de migração
-applyMigrations();
+executeSQL();
+      `;
+
+      // Escreve o script temporário
+      fs.writeFileSync(tempJsPath, scriptContent);
+
+      // Executa o script
+      execWithRetry(`node ${tempJsPath}`)
+        .then(stdout => {
+          // Remove o arquivo temporário
+          try {
+            fs.unlinkSync(tempJsPath);
+          } catch (e) {
+            console.warn('Aviso: Não foi possível remover o arquivo temporário', e);
+          }
+
+          console.log(stdout);
+          console.log(`✅ Migração concluída: ${path.basename(sqlFilePath)}`);
+          resolve();
+        })
+        .catch(error => {
+          // Remove o arquivo temporário
+          try {
+            fs.unlinkSync(tempJsPath);
+          } catch (e) {
+            console.warn('Aviso: Não foi possível remover o arquivo temporário', e);
+          }
+
+          console.error(`❌ Erro ao executar migração: ${error.message}`);
+          reject(error);
+        });
+    });
+  });
+};
+
+// Função para executar migrações manualmente uma por uma
+const runMigrationsManually = async () => {
+  console.log('🔄 Executando migrações manualmente...');
+
+  // Primeiro executa as migrações principais
+  if (directoryExists(CONFIG.migrationsPath)) {
+    const mainMigrationFiles = fs.readdirSync(CONFIG.migrationsPath)
+      .filter(file => file.endsWith('.sql') && !fs.statSync(path.join(CONFIG.migrationsPath, file)).isDirectory())
+      .sort();
+
+    console.log(`📋 Encontradas ${mainMigrationFiles.length} migrações principais`);
+
+    for (const file of mainMigrationFiles) {
+      const filePath = path.join(CONFIG.migrationsPath, file);
+      try {
+        await runMigrationManually(filePath);
+      } catch (err) {
+        console.error(`❌ Falha na migração ${file}: ${err.message}`);
+        return false;
+      }
+    }
+  }
+
+  // Depois executa as migrações "run-once"
+  if (directoryExists(CONFIG.runOncePath)) {
+    const runOnceMigrationFiles = fs.readdirSync(CONFIG.runOncePath)
+      .filter(file => file.endsWith('.sql'))
+      .sort();
+
+    console.log(`📋 Encontradas ${runOnceMigrationFiles.length} migrações "run-once"`);
+
+    for (const file of runOnceMigrationFiles) {
+      const filePath = path.join(CONFIG.runOncePath, file);
+      try {
+        await runMigrationManually(filePath);
+      } catch (err) {
+        console.error(`❌ Falha na migração run-once ${file}: ${err.message}`);
+        return false;
+      }
+    }
+  }
+
+  return true;
+};
+
+// Função principal
+async function main() {
+  console.log('🚀 Iniciando execução de migrações SQL...');
+
+  // Primeiro tenta via CLI
+  const cliSuccess = await runMigrationViaCLI();
+
+  // Se falhou via CLI, tenta manualmente
+  if (!cliSuccess) {
+    console.log('⚠️ Migração via CLI falhou, tentando método alternativo...');
+    const manualSuccess = await runMigrationsManually();
+
+    if (!manualSuccess) {
+      console.error('❌ Falha em todos os métodos de migração!');
+      process.exit(1);
+    }
+  }
+
+  console.log('✅ Processo de migração concluído com sucesso!');
+}
+
+// Executa a função principal
+main().catch(err => {
+  console.error('❌ Erro no processo de migração:', err);
+  process.exit(1);
+});

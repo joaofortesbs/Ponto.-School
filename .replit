@@ -108,7 +108,7 @@ mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npx supabase migration up"
+args = "node scripts/run-migrations.js"
 
 [[workflows.workflow]]
 name = "Inicializar DB Simples"
