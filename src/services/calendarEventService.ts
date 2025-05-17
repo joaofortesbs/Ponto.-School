@@ -332,6 +332,26 @@ const getAllLocalEvents = (): CalendarEvent[] => {
   }
 };
 
+// Exportar função para ser usada em outros componentes
+export const getAllEvents = async (): Promise<CalendarEvent[]> => {
+  try {
+    const { data, error } = await supabase
+      .from("calendar_events")
+      .select("*")
+      .order("start_date", { ascending: true });
+
+    if (error) {
+      console.error("Erro ao buscar todos os eventos:", error);
+      return getAllLocalEvents();
+    }
+
+    return (data || []).map(formatDBEventForApp);
+  } catch (error) {
+    console.error("Erro ao buscar todos os eventos:", error);
+    return getAllLocalEvents();
+  }
+};
+
 // Obter todos os eventos armazenados localmente para um usuário específico
 const getLocalEvents = (userId: string): CalendarEvent[] => {
   try {
@@ -561,9 +581,18 @@ export const dispatchEventChangeNotification = (eventType: string, event: any) =
 
     window.agendaEventData = formattedEvents;
 
-    window.dispatchEvent(new CustomEvent('agenda-events-updated', { 
-      detail: { events: formattedEvents }
-    }));
+    // Disparar evento geral para garantir que todos os componentes sejam notificados
+    setTimeout(() => {
+      console.log("Disparando evento de atualização global: agenda-events-updated");
+      window.dispatchEvent(new CustomEvent('agenda-events-updated', { 
+        detail: { events: formattedEvents }
+      }));
+      
+      // Disparar eventos específicos para garantir que todos os componentes sejam notificados
+      window.dispatchEvent(new Event('event-added'));
+      window.dispatchEvent(new Event('event-updated'));
+      window.dispatchEvent(new Event('dashboard-refresh'));
+    }, 100);
 
     console.log(`Notificação de evento disparada: ${eventType}`, event.id);
   } catch (err) {

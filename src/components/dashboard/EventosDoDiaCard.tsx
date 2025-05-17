@@ -94,25 +94,47 @@ export const EventosDoDiaCard: React.FC<EventosDoDiaCardProps> = ({ onOpenAddEve
         
         // Obter usuário atual
         const user = await getCurrentUser();
-        if (!user || !user.id) {
-          console.warn("Usuário não autenticado");
-          setLoading(false);
-          return;
+        let userId = "local";
+        
+        if (user?.id) {
+          userId = user.id;
+        } else {
+          console.warn("Usuário não autenticado, usando ID local");
         }
         
-        // Buscar eventos do usuário
-        const events = await getEventsByUserId(user.id);
+        // Buscar eventos do usuário (incluindo locais)
+        const events = await getEventsByUserId(userId);
+        console.log("Todos os eventos carregados:", events.length);
+        
+        // Obter todos os eventos locais como fallback
+        const localEvents = getAllLocalEvents();
+        console.log("Eventos locais encontrados:", localEvents.length);
+        
+        // Combinar eventos (garantindo que não haja duplicatas)
+        const allEvents = [...events];
+        localEvents.forEach(localEvent => {
+          if (!allEvents.some(e => e.id === localEvent.id)) {
+            allEvents.push(localEvent);
+          }
+        });
         
         // Filtrar eventos para hoje
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        
-        const eventsToday = events.filter((event: any) => {
-          const eventDate = new Date(event.startDate);
-          eventDate.setHours(0, 0, 0, 0);
+        const eventsToday = allEvents.filter((event: any) => {
+          if (!event.startDate) return false;
+          
+          let eventDate;
+          try {
+            eventDate = new Date(event.startDate);
+            eventDate.setHours(0, 0, 0, 0);
+          } catch (err) {
+            console.warn("Data inválida para evento:", event.id, event.startDate);
+            return false;
+          }
+          
+          // Verificar se a data é hoje
           return eventDate.getTime() === today.getTime();
         });
         
@@ -123,8 +145,8 @@ export const EventosDoDiaCard: React.FC<EventosDoDiaCardProps> = ({ onOpenAddEve
           return a.startTime.localeCompare(b.startTime);
         });
         
+        console.log(`${eventsToday.length} eventos encontrados para hoje em EventosDoDiaCard`);
         setTodayEvents(eventsToday);
-        console.log(`${eventsToday.length} eventos encontrados para hoje`);
       } catch (error) {
         console.error("Erro ao carregar eventos do dia:", error);
       } finally {
@@ -146,9 +168,13 @@ export const EventosDoDiaCard: React.FC<EventosDoDiaCardProps> = ({ onOpenAddEve
     window.addEventListener('event-added', handleEventUpdate);
     window.addEventListener('event-edited', handleEventUpdate);
     window.addEventListener('event-deleted', handleEventUpdate);
+    window.addEventListener('dashboard-refresh', handleEventUpdate);
     
     // Recarregar a cada 5 minutos para manter atualizado
     const interval = setInterval(loadEvents, 5 * 60 * 1000);
+    
+    // Carregar eventos após um curto atraso para garantir que dados de outros componentes estejam prontos
+    const initialLoadTimeout = setTimeout(loadEvents, 1000);
     
     return () => {
       // Limpar listeners e intervalos
@@ -156,7 +182,9 @@ export const EventosDoDiaCard: React.FC<EventosDoDiaCardProps> = ({ onOpenAddEve
       window.removeEventListener('event-added', handleEventUpdate);
       window.removeEventListener('event-edited', handleEventUpdate);
       window.removeEventListener('event-deleted', handleEventUpdate);
+      window.removeEventListener('dashboard-refresh', handleEventUpdate);
       clearInterval(interval);
+      clearTimeout(initialLoadTimeout);
     };
   }, []);
 
@@ -205,22 +233,22 @@ export const EventosDoDiaCard: React.FC<EventosDoDiaCardProps> = ({ onOpenAddEve
           <div className="w-12 h-12 rounded-full border-2 border-t-[#FF6B00] border-r-[#FF6B00] border-b-transparent border-l-transparent animate-spin"></div>
           <p className="mt-3 text-gray-400 text-sm">Carregando eventos...</p>
         </div>
-      ) : todayEvents.length > 0 ? (
+      ) : todayEvents && todayEvents.length > 0 ? (
         <div className="p-4">
           <div className="space-y-3">
             {todayEvents.map((event, index) => (
               <div
-                key={event.id || index}
+                key={event.id || `today-event-${index}`}
                 className="p-3 bg-[#29335C]/30 rounded-lg hover:bg-[#29335C]/50 cursor-pointer transition-all duration-200"
                 onClick={handleNavigateToCalendar}
               >
                 <div className="flex items-start gap-3">
                   <div className={`flex-shrink-0 w-8 h-8 ${getEventStatusClass(event)} rounded-full flex items-center justify-center`}>
-                    {getEventIcon(event.type)}
+                    {getEventIcon(event.type || 'evento')}
                   </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="font-medium text-white text-sm mb-1 truncate">
-                      {event.title}
+                      {event.title || 'Evento sem título'}
                     </h4>
                     <div className="flex items-center text-xs text-gray-400">
                       <CalendarIcon className="h-3 w-3 mr-1" />
@@ -248,11 +276,10 @@ export const EventosDoDiaCard: React.FC<EventosDoDiaCardProps> = ({ onOpenAddEve
             <CalendarIcon className="h-8 w-8 text-gray-500" />
           </div>
           <h3 className="text-lg font-semibold text-white mb-2">
-            Nenhum evento para hoje
+            Nenhum evento programado para hoje
           </h3>
           <p className="text-gray-400 text-sm text-center mb-6">
-            Comece a organizar sua agenda adicionando aulas, trabalhos, provas
-            ou compromissos importantes
+            Adicione seus eventos para organizar sua rotina acadêmica
           </p>
           <Button
             className="bg-[#FF6B00] hover:bg-[#E85D04] text-white rounded-lg"

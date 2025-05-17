@@ -33,6 +33,8 @@ export const EventosMiniCard: React.FC<EventosMiniCardProps> = ({ onOpenAddEvent
         return <Users className="h-4 w-4" />;
       case "lembrete":
         return <Bell className="h-4 w-4" />;
+      case "evento":
+        return <CalendarIcon className="h-4 w-4" />;
       default:
         return <CalendarIcon className="h-4 w-4" />;
     }
@@ -93,14 +95,17 @@ export const EventosMiniCard: React.FC<EventosMiniCardProps> = ({ onOpenAddEvent
         
         // Obter usuário atual
         const user = await getCurrentUser();
-        if (!user || !user.id) {
-          console.warn("Usuário não autenticado");
-          setLoading(false);
-          return;
+        let userId = "local";
+        
+        if (user?.id) {
+          userId = user.id;
+        } else {
+          console.warn("Usuário não autenticado, usando ID local");
         }
         
-        // Buscar eventos do usuário
-        const events = await getEventsByUserId(user.id);
+        // Buscar eventos do usuário (incluindo locais)
+        const events = await getEventsByUserId(userId);
+        console.log("Eventos carregados:", events.length);
         
         // Filtrar eventos para hoje
         const today = new Date();
@@ -109,9 +114,14 @@ export const EventosMiniCard: React.FC<EventosMiniCardProps> = ({ onOpenAddEvent
         const tomorrow = new Date(today);
         tomorrow.setDate(tomorrow.getDate() + 1);
         
+        // Filtrar eventos para hoje, sendo mais flexível com o formato da data
         const eventsToday = events.filter((event: any) => {
+          if (!event.startDate) return false;
+          
           const eventDate = new Date(event.startDate);
           eventDate.setHours(0, 0, 0, 0);
+          
+          // Verificar se a data é hoje
           return eventDate.getTime() === today.getTime();
         });
         
@@ -123,7 +133,7 @@ export const EventosMiniCard: React.FC<EventosMiniCardProps> = ({ onOpenAddEvent
         });
         
         setTodayEvents(eventsToday);
-        console.log(`${eventsToday.length} eventos encontrados para hoje`);
+        console.log(`${eventsToday.length} eventos encontrados para hoje no MiniCard`);
       } catch (error) {
         console.error("Erro ao carregar eventos do dia:", error);
       } finally {
