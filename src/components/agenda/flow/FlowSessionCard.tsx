@@ -107,7 +107,7 @@ const FlowSessionCard: React.FC = () => {
     };
   }, [timer]);
   
-  // Carregar histórico de sessões do banco de dados
+  // Carregar histórico de sessões de forma robusta (Supabase + localStorage)
   useEffect(() => {
     const loadSessionHistory = async () => {
       try {
@@ -116,40 +116,113 @@ const FlowSessionCard: React.FC = () => {
         
         // Verificar se o usuário está autenticado
         const { data: { user } } = await supabase.auth.getUser();
+        const userId = user?.id || 'anonymous';
         
+        // Primeiro, tentar carregar do localStorage
+        let localSessions: FlowSession[] = [];
+        try {
+          const storedSessions = localStorage.getItem(`flow_sessions_${userId}`);
+          if (storedSessions) {
+            localSessions = JSON.parse(storedSessions);
+            console.log(`Carregadas ${localSessions.length} sessões de flow do armazenamento local`);
+          }
+        } catch (localError) {
+          console.error("Erro ao carregar sessões do armazenamento local:", localError);
+        }
+        
+        // Se o usuário estiver autenticado, tentar carregar do Supabase
+        let remoteSessions: FlowSession[] = [];
         if (user) {
-          // Buscar sessões do usuário
-          const { data, error } = await supabase
-            .from("flow_sessions")
-            .select("*")
-            .eq("user_id", user.id)
-            .order("date", { ascending: false });
+          try {
+            // Verificar se a tabela existe primeiro
+            const { error: checkError } = await supabase
+              .from('flow_sessions')
+              .select('count')
+              .limit(1)
+              .maybeSingle();
             
-          if (error) {
-            console.error("Erro ao carregar histórico de sessões:", error);
-          } else if (data) {
-            // Transformar os dados para o formato usado pelo componente
-            const formattedSessions: FlowSession[] = data.map(session => ({
-              id: session.id,
-              date: new Date(session.date).toLocaleString("pt-BR", {
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit"
-              }),
-              duration: session.duration_formatted,
-              subjects: session.subjects,
-              progress: session.progress,
-              elapsedTimeSeconds: session.duration_seconds
-            }));
-            
-            setSessionHistory(formattedSessions);
-            console.log(`Carregadas ${formattedSessions.length} sessões de flow do banco de dados`);
+            if (!checkError) {
+              // Buscar sessões do usuário
+              const { data, error } = await supabase
+                .from("flow_sessions")
+                .select("*")
+                .eq("user_id", user.id)
+                .order("date", { ascending: false });
+                
+              if (error) {
+                console.error("Erro ao carregar histórico de sessões do Supabase:", error);
+              } else if (data) {
+                // Transformar os dados para o formato usado pelo componente
+                remoteSessions = data.map(session => ({
+                  id: session.id || Date.now(),
+                  date: new Date(session.date).toLocaleString("pt-BR", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit"
+                  }),
+                  duration: session.duration_formatted,
+                  subjects: session.subjects,
+                  progress: session.progress,
+                  elapsedTimeSeconds: session.duration_seconds,
+                  session_goal: session.session_goal,
+                  notes: session.notes,
+                  timestamp: session.date
+                }));
+                
+                console.log(`Carregadas ${remoteSessions.length} sessões de flow do banco de dados`);
+              }
+            } else {
+              console.log("Tabela flow_sessions não encontrada. Usando apenas armazenamento local.");
+            }
+          } catch (remoteError) {
+            console.error("Erro ao carregar do Supabase:", remoteError);
           }
         }
+        
+        // Mesclar sessões remotas e locais, organizando por data mais recente
+        // Convertemos as IDs para string para comparação adequada
+        const mergedSessions = [...remoteSessions];
+        
+        // Adicionar sessões locais que não existem no remoto
+        localSessions.forEach(localSession => {
+          const exists = remoteSessions.some(remoteSession => 
+            remoteSession.id.toString() === localSession.id.toString());
+          
+          if (!exists) {
+            mergedSessions.push(localSession);
+          }
+        });
+        
+        // Ordenar por data mais recente
+        mergedSessions.sort((a, b) => {
+          const dateA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+          const dateB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+          return dateB - dateA;
+        });
+        
+        setSessionHistory(mergedSessions);
+        
+        // Salvar a lista mesclada no localStorage para garantir sincronização
+        if (mergedSessions.length > 0) {
+          localStorage.setItem(`flow_sessions_${userId}`, JSON.stringify(mergedSessions));
+        }
+        
       } catch (error) {
         console.error("Erro ao carregar histórico de sessões:", error);
+        
+        // Tentar carregar apenas do localStorage como último recurso
+        try {
+          const storedSessions = localStorage.getItem(`flow_sessions_anonymous`);
+          if (storedSessions) {
+            const sessions = JSON.parse(storedSessions);
+            setSessionHistory(sessions);
+            console.log(`Carregadas ${sessions.length} sessões de flow do armazenamento local anônimo`);
+          }
+        } catch (fallbackError) {
+          console.error("Falha total ao carregar sessões:", fallbackError);
+        }
       } finally {
         setInitialHistoryLoaded(true);
       }
@@ -221,7 +294,7 @@ const FlowSessionCard: React.FC = () => {
     }
   };
 
-  // Save session to history
+  // Save session to history with robust persistence
   const saveSessionToHistory = async () => {
     const subjectNames = selectedSubjects.map((subjectId) => {
       const subject = subjects.find((s) => s.id === subjectId);
@@ -240,12 +313,20 @@ const FlowSessionCard: React.FC = () => {
       duration: formatTime(elapsedTime),
       subjects: subjectNames,
       progress: Math.min(100, Math.round(calculateProgress())),
-      elapsedTimeSeconds: elapsedTime // Armazenar tempo em segundos para cálculos futuros
+      elapsedTimeSeconds: elapsedTime, // Armazenar tempo em segundos para cálculos futuros
+      session_goal: sessionGoal || null,
+      notes: notes || null,
+      timestamp: new Date().toISOString()
     };
 
     // Add the new session to local history
-    setSessionHistory([newSession, ...sessionHistory]);
+    const updatedHistory = [newSession, ...sessionHistory];
+    setSessionHistory(updatedHistory);
 
+    // Sempre salvar localmente, garantindo persistência mesmo sem conexão
+    saveToLocalStorage(updatedHistory);
+
+    // Tentar salvar no Supabase, se possível
     try {
       // Importar o cliente supabase
       const { supabase } = await import("@/lib/supabase");
@@ -254,28 +335,66 @@ const FlowSessionCard: React.FC = () => {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (user) {
-        // Salvar a sessão no banco de dados
-        const { data, error } = await supabase
-          .from("flow_sessions")
-          .insert({
-            user_id: user.id,
-            date: new Date().toISOString(),
-            duration_seconds: elapsedTime,
-            duration_formatted: formatTime(elapsedTime),
-            subjects: subjectNames,
-            progress: Math.min(100, Math.round(calculateProgress())),
-            session_goal: sessionGoal || null,
-            notes: notes || null
-          });
-          
-        if (error) {
-          console.error("Erro ao salvar sessão de flow:", error);
+        // Verificar se a tabela existe
+        const { error: checkError } = await supabase
+          .from('flow_sessions')
+          .select('count')
+          .limit(1)
+          .maybeSingle();
+
+        // Se não houver erro, a tabela existe e podemos inserir
+        if (!checkError) {
+          // Salvar a sessão no banco de dados
+          const { data, error } = await supabase
+            .from("flow_sessions")
+            .insert({
+              user_id: user.id,
+              date: new Date().toISOString(),
+              duration_seconds: elapsedTime,
+              duration_formatted: formatTime(elapsedTime),
+              subjects: subjectNames,
+              progress: Math.min(100, Math.round(calculateProgress())),
+              session_goal: sessionGoal || null,
+              notes: notes || null
+            });
+            
+          if (error) {
+            console.error("Erro ao salvar sessão de flow no Supabase:", error);
+            console.log("Sessão salva apenas localmente como fallback");
+          } else {
+            console.log("Sessão de flow salva com sucesso no banco de dados e localmente");
+          }
         } else {
-          console.log("Sessão de flow salva com sucesso no banco de dados");
+          console.log("Tabela flow_sessions não encontrada. Usando apenas armazenamento local.");
         }
       }
     } catch (error) {
-      console.error("Erro ao salvar sessão de flow:", error);
+      console.error("Erro ao salvar sessão de flow no Supabase:", error);
+      console.log("Sessão salva apenas localmente como fallback");
+    }
+  };
+
+  // Função para salvar no localStorage
+  const saveToLocalStorage = (sessions: FlowSession[]) => {
+    try {
+      // Obter o ID do usuário atual
+      const getUserId = async () => {
+        try {
+          const { supabase } = await import("@/lib/supabase");
+          const { data } = await supabase.auth.getUser();
+          return data.user?.id || 'anonymous';
+        } catch (error) {
+          return 'anonymous';
+        }
+      };
+      
+      // Salvar de forma assíncrona
+      getUserId().then(userId => {
+        localStorage.setItem(`flow_sessions_${userId}`, JSON.stringify(sessions));
+        console.log(`Histórico de sessões salvo localmente para o usuário ${userId}`);
+      });
+    } catch (error) {
+      console.error("Erro ao salvar sessões localmente:", error);
     }
   };
 
