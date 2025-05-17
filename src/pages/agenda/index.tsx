@@ -152,6 +152,30 @@ export default function AgendaPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Inicializar armazenamento local ao carregar a página
+    const initStorage = async () => {
+      try {
+        const { initLocalStorage, syncLocalEvents } = await import('@/services/calendarEventService');
+        const { getCurrentUser } = await import('@/services/databaseService');
+
+        // Inicializar armazenamento local
+        initLocalStorage();
+
+        // Tentar sincronizar eventos locais com o banco de dados
+        const currentUser = await getCurrentUser();
+        if (currentUser) {
+          await syncLocalEvents(currentUser.id);
+          console.log("Eventos locais sincronizados com o banco de dados");
+        }
+      } catch (error) {
+        console.error("Erro ao inicializar armazenamento local:", error);
+      }
+    };
+
+    initStorage();
+  }, []);
+
+  useEffect(() => {
     // Carregar eventos do banco de dados quando a página é carregada
     const loadEvents = async () => {
       try {
@@ -163,22 +187,22 @@ export default function AgendaPage() {
         if (currentUser) {
           // Primeiro sincronize eventos locais com o banco de dados
           await syncLocalEvents(currentUser.id);
-          
+
           // Depois busque todos os eventos do usuário
           const events = await getEventsByUserId(currentUser.id);
           console.log("Eventos carregados com sucesso:", events.length);
-          
+
           // Converter eventos para o formato necessário para o calendário
           const formattedEvents: Record<number, any[]> = {};
-          
+
           events.forEach(event => {
             const startDate = new Date(event.startDate);
             const key = startDate.getTime();
-            
+
             if (!formattedEvents[key]) {
               formattedEvents[key] = [];
             }
-            
+
             formattedEvents[key].push({
               id: event.id,
               title: event.title,
@@ -194,7 +218,7 @@ export default function AgendaPage() {
               status: "confirmado"
             });
           });
-          
+
           setEventData(formattedEvents);
         }
       } catch (error) {
@@ -1451,8 +1475,7 @@ export default function AgendaPage() {
                             </div>
                             <div className="flex-1">
                               <h4 className="font-medium text-gray-900 dark:text-white text-sm group-hover:text-[#FF6B00] transition-colors">
-                                {event.title}
-                              </h4>
+                                {event.title}                              </h4>
                               <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 mt-1">
                                 <Clock className="h-3 w-3 mr-1 text-[#FF6B00]" />{" "}
                                 {event.day} {event.startTime ? `às ${event.startTime}` : ""}

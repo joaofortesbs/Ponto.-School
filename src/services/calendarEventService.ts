@@ -1,4 +1,3 @@
-
 import { supabase } from "@/lib/supabase";
 
 export interface CalendarEvent {
@@ -131,12 +130,25 @@ export const deleteEvent = async (eventId: string): Promise<boolean> => {
   }
 };
 
-// Functions para armazenamento local como backup
+// Funções para armazenamento local como backup
 const EVENTS_STORAGE_KEY = "calendar_events";
 
 // Salvar todos os eventos localmente
 const saveEventsLocally = (events: CalendarEvent[]) => {
-  localStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(events));
+  try {
+    localStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(events));
+    console.log("Eventos salvos localmente com sucesso", events.length);
+  } catch (error) {
+    console.error("Erro ao salvar eventos localmente:", error);
+  }
+};
+
+// Inicializar o armazenamento local se não existir
+export const initLocalStorage = () => {
+  if (!localStorage.getItem(EVENTS_STORAGE_KEY)) {
+    saveEventsLocally([]);
+    console.log("Armazenamento local de eventos inicializado");
+  }
 };
 
 // Obter todos os eventos armazenados localmente
@@ -144,7 +156,7 @@ const getLocalEvents = (userId: string): CalendarEvent[] => {
   try {
     const eventsJson = localStorage.getItem(EVENTS_STORAGE_KEY);
     if (!eventsJson) return [];
-    
+
     const events: CalendarEvent[] = JSON.parse(eventsJson);
     return events.filter(event => event.userId === userId);
   } catch (error) {
@@ -162,7 +174,7 @@ const saveEventLocally = (event: any) => {
       id: `local-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       createdAt: new Date().toISOString(),
     };
-    
+
     saveEventsLocally([...events, newEvent]);
     return newEvent;
   } catch (error) {
@@ -178,7 +190,7 @@ const updateEventLocally = (event: CalendarEvent) => {
     const updatedEvents = events.map(e => 
       e.id === event.id ? { ...event, updatedAt: new Date().toISOString() } : e
     );
-    
+
     saveEventsLocally(updatedEvents);
     return event;
   } catch (error) {
@@ -192,7 +204,7 @@ const deleteEventLocally = (eventId: string) => {
   try {
     const allEvents = JSON.parse(localStorage.getItem(EVENTS_STORAGE_KEY) || "[]");
     const updatedEvents = allEvents.filter((e: CalendarEvent) => e.id !== eventId);
-    
+
     saveEventsLocally(updatedEvents);
     return true;
   } catch (error) {
@@ -206,12 +218,12 @@ export const syncLocalEvents = async (userId: string): Promise<void> => {
   try {
     const localEvents = getLocalEvents(userId);
     const localOnlyEvents = localEvents.filter(e => e.id.startsWith('local-'));
-    
+
     for (const event of localOnlyEvents) {
       const { id, ...eventData } = event;
       await addEvent({ ...eventData, userId });
     }
-    
+
     // Limpar eventos locais que foram sincronizados
     const remainingEvents = localEvents.filter(e => !e.id.startsWith('local-'));
     saveEventsLocally(remainingEvents);

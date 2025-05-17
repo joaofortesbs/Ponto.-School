@@ -154,14 +154,17 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
 
     try {
       // Importar o serviço de eventos
-      const { addEvent } = await import('@/services/calendarEventService');
+      const { addEvent, initLocalStorage } = await import('@/services/calendarEventService');
       const { getCurrentUser } = await import('@/services/databaseService');
+
+      // Inicializar armazenamento local
+      initLocalStorage();
 
       // Obter usuário atual
       const currentUser = await getCurrentUser();
-      if (!currentUser) {
-        alert("Erro ao obter usuário atual. O evento será salvo localmente.");
-      }
+      
+      // Usar um ID anônimo padrão se não houver usuário
+      const userId = currentUser?.id || `anonymous-${Date.now()}`;
 
       // Create event object
       const newEvent = {
@@ -183,11 +186,19 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
         repeat,
         guests,
         visibility,
-        userId: currentUser?.id || 'anonymous',
+        userId,
       };
+
+      console.log("Tentando salvar evento:", newEvent);
 
       // Salvar evento no banco de dados
       const savedEvent = await addEvent(newEvent);
+
+      if (savedEvent) {
+        console.log("Evento salvo com sucesso:", savedEvent);
+      } else {
+        console.warn("Evento não foi salvo no banco de dados, usando versão local");
+      }
 
       // Call the onAddEvent callback with the new event
       if (onAddEvent) {
@@ -198,12 +209,71 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
         });
       }
 
+      // Também salvar diretamente no localStorage para garantir
+      try {
+        const eventsJson = localStorage.getItem("calendar_events") || "[]";
+        const events = JSON.parse(eventsJson);
+        const eventToSave = savedEvent || { 
+          ...newEvent, 
+          id: `event-${Date.now()}`,
+          createdAt: new Date().toISOString() 
+        };
+        events.push(eventToSave);
+        localStorage.setItem("calendar_events", JSON.stringify(events));
+        console.log("Evento também salvo diretamente no localStorage");
+      } catch (err) {
+        console.error("Erro ao salvar diretamente no localStorage:", err);
+      }
+
       // Reset form and close modal
       resetForm();
       onOpenChange(false);
     } catch (error) {
       console.error("Erro ao salvar evento:", error);
-      alert("Ocorreu um erro ao salvar o evento. Tente novamente.");
+      
+      // Tentar salvar diretamente no localStorage como último recurso
+      try {
+        const eventsJson = localStorage.getItem("calendar_events") || "[]";
+        const events = JSON.parse(eventsJson);
+        const eventToSave = { 
+          type: eventType,
+          title,
+          description,
+          discipline,
+          professor,
+          startDate: startDate.toISOString(),
+          endDate: endDate ? endDate.toISOString() : undefined,
+          startTime,
+          endTime,
+          duration,
+          location,
+          isOnline,
+          meetingLink,
+          attachments: attachments.map((file) => file.name),
+          reminders,
+          repeat,
+          guests,
+          visibility,
+          userId: 'emergency-fallback',
+          id: `emergency-${Date.now()}`,
+          createdAt: new Date().toISOString()
+        };
+        events.push(eventToSave);
+        localStorage.setItem("calendar_events", JSON.stringify(events));
+        console.log("Evento salvo em modo de emergência no localStorage");
+        
+        // Chamar o callback
+        if (onAddEvent) {
+          onAddEvent(eventToSave);
+        }
+        
+        // Fechar o modal
+        resetForm();
+        onOpenChange(false);
+      } catch (err) {
+        console.error("Erro no salvamento de emergência:", err);
+        alert("Ocorreu um erro ao salvar o evento. Tente novamente.");
+      }
     }
   };
 

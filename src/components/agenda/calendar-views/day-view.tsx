@@ -25,23 +25,56 @@ const DayView: React.FC<DayViewProps> = ({ selectedDay, openEventDetails }) => {
         setLoading(true);
 
         // Importar serviços necessários
-        const { getEventsByUserId } = await import('@/services/calendarEventService');
+        const { getEventsByUserId, getAllEvents, initLocalStorage } = await import('@/services/calendarEventService');
         const { getCurrentUser } = await import('@/services/databaseService');
+
+        // Inicializar armazenamento local
+        initLocalStorage();
 
         // Obter usuário atual
         const currentUser = await getCurrentUser();
-        if (!currentUser) {
-          console.warn("Usuário não autenticado, carregando eventos do armazenamento local");
-          setEvents([]);
-          setLoading(false);
-          return;
+        
+        // Buscar eventos (primeiro tenta do usuário atual, depois todos)
+        let userEvents: CalendarEvent[] = [];
+        
+        if (currentUser) {
+          userEvents = await getEventsByUserId(currentUser.id);
+          console.log(`Carregados ${userEvents.length} eventos do usuário ${currentUser.id}`);
+        }
+        
+        // Se não houver eventos do usuário ou usuário não estiver logado, buscar todos os eventos
+        if (userEvents.length === 0) {
+          userEvents = await getAllEvents();
+          console.log(`Carregados ${userEvents.length} eventos de todos os usuários`);
         }
 
-        // Buscar eventos do usuário
-        const userEvents = await getEventsByUserId(currentUser.id);
+        // Se ainda não houver eventos, tentar carregar do localStorage diretamente
+        if (userEvents.length === 0) {
+          try {
+            const eventsJson = localStorage.getItem("calendar_events");
+            if (eventsJson) {
+              userEvents = JSON.parse(eventsJson);
+              console.log(`Carregados ${userEvents.length} eventos diretamente do localStorage`);
+            }
+          } catch (e) {
+            console.error("Erro ao ler eventos do localStorage:", e);
+          }
+        }
+        
         setEvents(userEvents);
       } catch (error) {
         console.error("Erro ao carregar eventos:", error);
+        // Tentar buscar do localStorage como último recurso
+        try {
+          const eventsJson = localStorage.getItem("calendar_events");
+          if (eventsJson) {
+            const localEvents = JSON.parse(eventsJson);
+            setEvents(localEvents);
+            console.log("Eventos carregados do localStorage como fallback");
+          }
+        } catch (e) {
+          console.error("Erro ao ler eventos do localStorage:", e);
+        }
       } finally {
         setLoading(false);
       }
