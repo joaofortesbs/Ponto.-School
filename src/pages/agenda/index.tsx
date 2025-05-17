@@ -1199,7 +1199,7 @@ export default function AgendaPage() {
                   </Button>
                 </div>
               </div>
-              
+
               {/* Recomendações do Epictus IA */}
               <div className="bg-white dark:bg-[#1E293B] rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border border-[#FF6B00]/10 dark:border-[#FF6B00]/20 transform hover:translate-y-[-3px]">
                 <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-4 flex items-center justify-between">
@@ -1239,42 +1239,7 @@ export default function AgendaPage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Calendar Column */}
             <div className="lg:col-span-9">
-              <div className="p-4 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white flex justify-between items-center rounded-t-xl">
-                <div className="flex items-center gap-3">
-                  <div className="bg-white/20 p-1.5 rounded-lg shadow-inner">
-                    <CalendarIcon className="h-5 w-5" />
-                  </div>
-                  <h3 className="font-bold text-lg">Calendário</h3>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center bg-white/10 rounded-lg p-1 shadow-inner">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className={`h-8 text-white hover:bg-white/20 rounded-l-md rounded-r-none ${calendarView === "day" ? "bg-white/20" : ""}`}
-                      onClick={() => setCalendarView("day")}
-                    >
-                      Dia
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className={`h-8 text-white hover:bg-white/20 rounded-none ${calendarView === "week" ? "bg-white/20" : ""}`}
-                      onClick={() => setCalendarView("week")}
-                    >
-                      Semana
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className={`h-8 text-white hover:bg-white/20 rounded-r-md rounded-l-none ${calendarView === "month" ? "bg-white/20" : ""}`}
-                      onClick={() => setCalendarView("month")}
-                    >
-                      Mês
-                    </Button>
-                  </div>
-                </div>
-              </div>
+              
               <div className="bg-[#001427] rounded-b-xl overflow-hidden shadow-md">
                 {calendarView === "month" && (
                   <MonthView
