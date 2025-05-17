@@ -1,106 +1,173 @@
-import React from "react";
+import React, { useState } from "react";
+import { Bell, Clock, X, Check, ChevronDown, ChevronUp, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, Bell, Info, BellOff } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface Notification {
-  id: number;
-  type: string;
+  id: string;
   title: string;
-  description: string;
-  date: string;
-  action?: string;
+  time: string;
+  type: "info" | "warning" | "alert" | "success";
+  read: boolean;
 }
 
 interface NotificationsProps {
   notifications?: Notification[];
+  onNotificationRead?: (id: string) => void;
+  onClearAll?: () => void;
+  isNewUser?: boolean;
 }
 
-const Notifications: React.FC<NotificationsProps> = ({ notifications = [] }) => {
-  const hasNotifications = notifications.length > 0;
+const Notifications: React.FC<NotificationsProps> = ({
+  notifications = [],
+  onNotificationRead,
+  onClearAll,
+  isNewUser = true,
+}) => {
+  const [expanded, setExpanded] = useState<boolean>(true);
+
+  const toggleExpand = () => {
+    setExpanded(!expanded);
+  };
+
+  const markAsRead = (id: string) => {
+    if (onNotificationRead) {
+      onNotificationRead(id);
+    }
+  };
+
+  const clearAll = () => {
+    if (onClearAll) {
+      onClearAll();
+    }
+  };
+
+  // Get notification type color
+  const getNotificationTypeColor = (type: string) => {
+    switch (type) {
+      case "info":
+        return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300";
+      case "warning":
+        return "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300";
+      case "alert":
+        return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300";
+      case "success":
+        return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300";
+      default:
+        return "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300";
+    }
+  };
+
+  const unreadCount = notifications.filter((notification) => !notification.read).length;
 
   return (
-    <div className="bg-[#001427] text-white rounded-lg overflow-hidden shadow-md">
-      <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Bell className="h-5 w-5" />
-          <h3 className="text-base font-bold text-white">Avisos Importantes</h3>
+    <div className="bg-white dark:bg-[#001427] rounded-xl border border-[#29335C]/10 shadow-sm p-5 h-full flex flex-col">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center">
+          <h3 className="text-lg font-semibold flex items-center text-[#001427] dark:text-white">
+            <Bell className="w-5 h-5 mr-2 text-[#FF6B00]" />
+            Notificações
+          </h3>
+          {unreadCount > 0 && (
+            <Badge className="ml-2 bg-[#FF6B00] text-white">{unreadCount}</Badge>
+          )}
         </div>
-        {hasNotifications && (
-          <div className="text-xs text-white/80">
-            {notifications.length} novos avisos
-          </div>
-        )}
+        <div className="flex items-center gap-1">
+          <button
+            onClick={toggleExpand}
+            className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400"
+          >
+            {expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+          </button>
+        </div>
       </div>
 
-      {!hasNotifications ? (
-        <div className="py-12 px-6 flex flex-col items-center justify-center">
-          <div className="w-16 h-16 rounded-full bg-[#29335C]/30 flex items-center justify-center mb-4">
-            <BellOff className="h-8 w-8 text-gray-400" />
-          </div>
-          <h4 className="text-white font-medium text-lg mb-2">Sem notificações</h4>
-          <p className="text-gray-400 text-sm text-center mb-6 max-w-[90%]">
-            Você receberá notificações sobre eventos importantes, prazos e atualizações na plataforma aqui.
-          </p>
-          <Button
-            variant="outline"
-            className="border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10 hover:text-[#FF8C40]"
-          >
-            <Info className="h-4 w-4 mr-1" /> Configurar Notificações
-          </Button>
-        </div>
-      ) : (
-        <div className="divide-y divide-[#29335C]/20">
-          {notifications.map((notification) => {
-            // Get notification icon based on type
-            let NotificationIcon = Bell;
-            let iconColor = "text-gray-500";
-
-            if (notification.type === "urgent") {
-              NotificationIcon = AlertCircle;
-              iconColor = "text-red-500";
-            } else if (notification.type === "important") {
-              NotificationIcon = Info;
-              iconColor = "text-amber-500";
-            } else if (notification.type === "info") {
-              NotificationIcon = Info;
-              iconColor = "text-blue-500";
-            }
-
-            return (
-              <div
-                key={notification.id}
-                className="p-4 hover:bg-[#29335C]/10 cursor-pointer transition-colors"
+      {expanded && (
+        <div className="space-y-4 flex-grow overflow-hidden">
+          {notifications.length === 0 || isNewUser ? (
+            <div className="text-center py-6 flex flex-col items-center">
+              <div className="w-16 h-16 bg-[#FF6B00]/10 rounded-full flex items-center justify-center mb-3">
+                <Bell className="w-6 h-6 text-[#FF6B00]" />
+              </div>
+              <p className="text-gray-700 dark:text-gray-300 font-medium">Nenhuma notificação</p>
+              <p className="text-sm mt-1 text-gray-500 dark:text-gray-400 max-w-xs">
+                Notificações de prazos, eventos e lembretes aparecerão aqui
+              </p>
+              <Button 
+                variant="outline"
+                className="mt-4 border-[#FF6B00] text-[#FF6B00] hover:bg-[#FF6B00]/10"
               >
-                <div className="flex items-start gap-3">
-                  <div className="mt-1">
-                    <NotificationIcon className={`h-5 w-5 ${iconColor}`} />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-medium text-white text-sm">
+                <Settings className="h-4 w-4 mr-1" /> Configurar Notificações
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-3 max-h-[calc(100%-2rem)] overflow-y-auto pr-1">
+              {notifications.map((notification) => (
+                <div
+                  key={notification.id}
+                  className={`border border-[#29335C]/10 rounded-lg p-3 transition duration-200 ${
+                    notification.read
+                      ? "bg-white dark:bg-[#001427]/60"
+                      : "bg-blue-50/50 dark:bg-blue-900/5 border-blue-100 dark:border-blue-900/20"
+                  }`}
+                >
+                  <div className="flex justify-between mb-1">
+                    <h4
+                      className={`font-medium ${
+                        notification.read
+                          ? "text-gray-700 dark:text-gray-300"
+                          : "text-[#001427] dark:text-white"
+                      }`}
+                    >
                       {notification.title}
                     </h4>
-                    <p className="text-xs text-gray-400 mt-1">
-                      {notification.description}
-                    </p>
-                    <div className="flex justify-between items-center mt-2">
-                      <span className="text-xs text-gray-500">
-                        {notification.date}
-                      </span>
-                      {notification.action && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-6 text-xs py-0 px-2 border-red-500/30 text-red-400 hover:bg-red-500/10"
+                    <div className="flex items-center gap-1">
+                      <Badge
+                        variant="outline"
+                        className={`${getNotificationTypeColor(notification.type)} text-xs px-2 py-0`}
+                      >
+                        {notification.type}
+                      </Badge>
+                      {!notification.read && (
+                        <button
+                          onClick={() => markAsRead(notification.id)}
+                          className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400"
+                          aria-label="Mark as read"
                         >
-                          {notification.action}
-                        </Button>
+                          <Check size={14} />
+                        </button>
                       )}
                     </div>
                   </div>
+                  <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                    <Clock className="w-3.5 h-3.5 mr-1" />
+                    <span>{notification.time}</span>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {!isNewUser && notifications.length > 0 && (
+        <div className="mt-4 pt-3 border-t border-[#29335C]/10 flex justify-between">
+          <Button
+            variant="ghost"
+            className="text-[#FF6B00] hover:text-[#FF6B00] hover:bg-[#FF6B00]/10 text-sm"
+            onClick={clearAll}
+          >
+            Limpar Todas
+          </Button>
+          <Button
+            variant="ghost"
+            className="text-[#FF6B00] hover:text-[#FF6B00] hover:bg-[#FF6B00]/10 text-sm"
+            onClick={() => {
+              // Handle settings
+            }}
+          >
+            <Settings className="h-3.5 w-3.5 mr-1" /> Configurações
+          </Button>
         </div>
       )}
     </div>

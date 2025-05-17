@@ -1,78 +1,159 @@
-import React from "react";
+import React, { useState } from "react";
+import { ChevronDown, ChevronUp, Calendar as CalendarIcon, ArrowRight, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Calendar, CheckCircle, CheckSquare, Wand2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
-interface EpictusCalendarProps {
-  onOpenCalendarModal: () => void;
+interface Event {
+  id: string;
+  type: string;
+  title: string;
+  time: string;
+  status?: string;
+  discipline: string;
+  isOnline: boolean;
 }
 
-const EpictusCalendar: React.FC<EpictusCalendarProps> = ({
-  onOpenCalendarModal,
-}) => {
+interface EpictusCalendarProps {
+  events?: Event[];
+  onViewEvent?: (eventId: string) => void;
+  isNewUser?: boolean;
+}
+
+const EpictusCalendar: React.FC<EpictusCalendarProps> = ({ events = [], onViewEvent, isNewUser = true }) => {
+  const [expanded, setExpanded] = useState<boolean>(true);
+
+  const toggleExpand = () => {
+    setExpanded(!expanded);
+  };
+
+  // Get event type icon based on type
+  const getEventIcon = (type: string) => {
+    switch (type) {
+      case "aula":
+        return <span className="text-blue-500">📹</span>;
+      case "trabalho":
+        return <span className="text-amber-500">📝</span>;
+      case "prova":
+        return <span className="text-red-500">📊</span>;
+      case "reuniao":
+        return <span className="text-green-500">👥</span>;
+      default:
+        return <span className="text-purple-500">📅</span>;
+    }
+  };
+
+  // Get status badge based on status
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "agora":
+        return <Badge className="bg-green-500 text-white">Agora</Badge>;
+      case "pendente":
+        return <Badge className="bg-amber-500 text-white">Pendente</Badge>;
+      default:
+        return null;
+    }
+  };
+
+  // Format today's date
+  const today = new Date();
+  const options: Intl.DateTimeFormatOptions = { weekday: 'long', day: 'numeric', month: 'long' };
+  const formattedDate = today.toLocaleDateString('pt-BR', options);
+  const formattedDateTitle = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
+
   return (
-    <Card className="border-none shadow-md bg-gradient-to-br from-[#001427] to-[#29335C] text-white overflow-hidden">
-      <CardHeader className="p-4 flex flex-row items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] flex items-center justify-center">
-            <Wand2 className="h-5 w-5 text-white" />
-          </div>
-          <div>
-            <CardTitle className="text-base font-bold">
-              Epictus Calendário
-            </CardTitle>
-            <CardDescription className="text-gray-300 text-xs">
-              Integração inteligente com seu calendário
-            </CardDescription>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="p-4 pt-0">
-        <div className="bg-[#29335C]/30 rounded-lg p-3 mb-3">
-          <p className="text-sm text-gray-200">
-            Deixe a IA organizar seu calendário:
-          </p>
-          <ul className="mt-2 space-y-1 text-xs text-gray-300">
-            <li className="flex items-center gap-2">
-              <CheckCircle className="h-3 w-3 text-[#FF6B00]" /> Criar eventos
-              automaticamente
-            </li>
-            <li className="flex items-center gap-2">
-              <CheckCircle className="h-3 w-3 text-[#FF6B00]" /> Gerar
-              checklists para suas tarefas
-            </li>
-            <li className="flex items-center gap-2">
-              <CheckCircle className="h-3 w-3 text-[#FF6B00]" /> Organizar seu
-              dia de forma otimizada
-            </li>
-            <li className="flex items-center gap-2">
-              <CheckCircle className="h-3 w-3 text-[#FF6B00]" /> Sugerir
-              horários ideais para estudo
-            </li>
-          </ul>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            className="flex-1 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white border-none"
-            onClick={onOpenCalendarModal}
+    <div className="bg-white dark:bg-[#001427] rounded-xl border border-[#29335C]/10 shadow-sm p-5 h-full flex flex-col">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold flex items-center text-[#001427] dark:text-white">
+          <CalendarIcon className="w-5 h-5 mr-2 text-[#FF6B00]" />
+          Eventos do Dia
+        </h3>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={toggleExpand}
+            className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400"
           >
-            <Calendar className="h-4 w-4 mr-1" /> Começar Agora
-          </Button>
-          <Button
-            variant="outline"
-            className="flex-1 border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10"
-          >
-            <CheckSquare className="h-4 w-4 mr-1" /> Saiba Mais
-          </Button>
+            {expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+          </button>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+
+      {expanded && (
+        <div className="space-y-4 flex-grow overflow-hidden">
+          <div className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            {formattedDateTitle}
+          </div>
+
+          {events.length === 0 || isNewUser ? (
+            <div className="text-center py-6 flex flex-col items-center">
+              <div className="w-16 h-16 bg-[#FF6B00]/10 rounded-full flex items-center justify-center mb-3">
+                <CalendarIcon className="w-6 h-6 text-[#FF6B00]" />
+              </div>
+              <p className="text-gray-700 dark:text-gray-300 font-medium">Nenhum evento hoje</p>
+              <p className="text-sm mt-1 text-gray-500 dark:text-gray-400 max-w-xs">
+                Adicione eventos ao seu calendário para organizar seu dia
+              </p>
+              <Button 
+                className="mt-4 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white"
+              >
+                <Plus className="h-4 w-4 mr-1" /> Adicionar Evento
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-3 max-h-[calc(100%-2rem)] overflow-y-auto pr-1">
+              {events.map((event) => (
+                <div
+                  key={event.id}
+                  className="border border-[#29335C]/10 rounded-lg p-3 bg-white dark:bg-[#001427]/60 hover:bg-gray-50 dark:hover:bg-[#001427]/80 transition-all cursor-pointer"
+                  onClick={() => onViewEvent && onViewEvent(event.id)}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="mt-1 text-xl">{getEventIcon(event.type)}</div>
+                    <div className="flex-grow">
+                      <div className="flex justify-between">
+                        <h4 className="font-medium text-[#001427] dark:text-white">
+                          {event.title}
+                        </h4>
+                        {event.status && getStatusBadge(event.status)}
+                      </div>
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        <div className="flex items-center mb-1 sm:mb-0">
+                          <span className="inline-flex items-center mr-3">
+                            <span className="inline-block w-2 h-2 rounded-full bg-[#FF6B00] mr-1"></span>
+                            {event.discipline}
+                          </span>
+                        </div>
+                        <div className="flex items-center">
+                          <span className="text-xs font-medium">
+                            {event.time}
+                          </span>
+                          {event.isOnline && (
+                            <Badge className="ml-2 text-xs bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                              Online
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="mt-4 pt-3 border-t border-[#29335C]/10">
+        <Button
+          variant="ghost"
+          className="w-full justify-center text-[#FF6B00] hover:text-[#FF6B00] hover:bg-[#FF6B00]/10"
+          onClick={() => {
+            // Handle view all
+          }}
+        >
+          Ver Todos Eventos <ArrowRight className="ml-1 h-4 w-4" />
+        </Button>
+      </div>
+    </div>
   );
 };
 
