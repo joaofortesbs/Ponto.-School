@@ -27,7 +27,7 @@
 .dark .rbc-month-row + .rbc-month-row,
 .dark .rbc-day-slot .rbc-time-slot,
 .dark .rbc-timeslot-group {
-  border-color: #29335C;
+  border-color: #f3f4f6;
 }
 
 .dark .rbc-off-range-bg {
