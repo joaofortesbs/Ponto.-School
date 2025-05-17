@@ -13,7 +13,7 @@ interface DayViewProps {
 const DayView: React.FC<DayViewProps> = ({ selectedDay, openEventDetails }) => {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   const selectedDate = selectedDay || new Date();
   const formattedDate = format(selectedDate, "EEEE, d 'de' MMMM", {
     locale: ptBR,
@@ -23,11 +23,11 @@ const DayView: React.FC<DayViewProps> = ({ selectedDay, openEventDetails }) => {
     const fetchEvents = async () => {
       try {
         setLoading(true);
-        
+
         // Importar serviços necessários
         const { getEventsByUserId } = await import('@/services/calendarEventService');
         const { getCurrentUser } = await import('@/services/databaseService');
-        
+
         // Obter usuário atual
         const currentUser = await getCurrentUser();
         if (!currentUser) {
@@ -36,7 +36,7 @@ const DayView: React.FC<DayViewProps> = ({ selectedDay, openEventDetails }) => {
           setLoading(false);
           return;
         }
-        
+
         // Buscar eventos do usuário
         const userEvents = await getEventsByUserId(currentUser.id);
         setEvents(userEvents);
@@ -62,7 +62,7 @@ const DayView: React.FC<DayViewProps> = ({ selectedDay, openEventDetails }) => {
     const hour = event.startTime 
       ? parseInt(event.startTime.split(':')[0]) 
       : 8; // Default to 8 AM if no start time
-    
+
     if (!eventsByHour[hour]) {
       eventsByHour[hour] = [];
     }
@@ -76,7 +76,7 @@ const DayView: React.FC<DayViewProps> = ({ selectedDay, openEventDetails }) => {
       : event.type === 'prova' 
         ? 'bg-red-100 border-red-300 dark:bg-red-900/30 dark:border-red-700'
         : 'bg-green-100 border-green-300 dark:bg-green-900/30 dark:border-green-700';
-    
+
     return (
       <div 
         key={event.id}

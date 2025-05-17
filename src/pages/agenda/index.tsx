@@ -149,25 +149,62 @@ export default function AgendaPage() {
 
   // Dados de eventos para o calendário (vazio por padrão)
   const [eventData, setEventData] = useState<Record<number, any[]>>({});
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Sincronizar eventos locais com o banco de dados quando o usuário estiver autenticado
-    const syncEvents = async () => {
+    // Carregar eventos do banco de dados quando a página é carregada
+    const loadEvents = async () => {
       try {
+        setIsLoading(true);
         const { getCurrentUser } = await import('@/services/databaseService');
-        const { syncLocalEvents } = await import('@/services/calendarEventService');
+        const { getEventsByUserId, syncLocalEvents, CalendarEvent } = await import('@/services/calendarEventService');
 
         const currentUser = await getCurrentUser();
         if (currentUser) {
+          // Primeiro sincronize eventos locais com o banco de dados
           await syncLocalEvents(currentUser.id);
-          console.log("Eventos sincronizados com sucesso!");
+          
+          // Depois busque todos os eventos do usuário
+          const events = await getEventsByUserId(currentUser.id);
+          console.log("Eventos carregados com sucesso:", events.length);
+          
+          // Converter eventos para o formato necessário para o calendário
+          const formattedEvents: Record<number, any[]> = {};
+          
+          events.forEach(event => {
+            const startDate = new Date(event.startDate);
+            const key = startDate.getTime();
+            
+            if (!formattedEvents[key]) {
+              formattedEvents[key] = [];
+            }
+            
+            formattedEvents[key].push({
+              id: event.id,
+              title: event.title,
+              description: event.description || "",
+              type: event.type || "evento",
+              start: startDate,
+              end: event.endDate ? new Date(event.endDate) : startDate,
+              location: event.location,
+              isOnline: event.isOnline,
+              link: event.meetingLink,
+              subject: event.discipline,
+              professor: event.professor,
+              status: "confirmado"
+            });
+          });
+          
+          setEventData(formattedEvents);
         }
       } catch (error) {
-        console.error("Erro ao sincronizar eventos:", error);
+        console.error("Erro ao carregar eventos:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    syncEvents();
+    loadEvents();
   }, []);
 
   // Função para formatar eventos próximos a partir do eventData

@@ -156,13 +156,13 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
       // Importar o serviço de eventos
       const { addEvent } = await import('@/services/calendarEventService');
       const { getCurrentUser } = await import('@/services/databaseService');
-      
+
       // Obter usuário atual
       const currentUser = await getCurrentUser();
       if (!currentUser) {
         alert("Erro ao obter usuário atual. O evento será salvo localmente.");
       }
-      
+
       // Create event object
       const newEvent = {
         type: eventType,
@@ -188,7 +188,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
 
       // Salvar evento no banco de dados
       const savedEvent = await addEvent(newEvent);
-      
+
       // Call the onAddEvent callback with the new event
       if (onAddEvent) {
         onAddEvent(savedEvent || { 
