@@ -15,7 +15,7 @@
 .dark .rbc-time-view,
 .dark .rbc-agenda-view {
   background-color: #1E293B;
-  border-color: #f3f4f6;
+  border-color: #29335C;
 }
 
 .dark .rbc-header,
@@ -26,19 +26,8 @@
 .dark .rbc-time-header.rbc-overflowing,
 .dark .rbc-month-row + .rbc-month-row,
 .dark .rbc-day-slot .rbc-time-slot,
-.dark .rbc-timeslot-group,
-.dark .rbc-month-view,
-.dark .rbc-time-view,
-.dark .rbc-agenda-view,
-.dark .rbc-month-row,
-.dark .rbc-day-bg,
-.dark .rbc-agenda-table,
-.dark .rbc-agenda-table th,
-.dark .rbc-agenda-table td,
-.dark .rbc-time-header-gutter,
-.dark .rbc-toolbar button,
-.dark .rbc-time-view .rbc-allday-cell {
-  border-color: #f3f4f6;
+.dark .rbc-timeslot-group {
+  border-color: #29335C;
 }
 
 .dark .rbc-off-range-bg {
@@ -51,7 +40,7 @@
 
 .dark .rbc-toolbar button {
   color: #fff;
-  border-color: #f3f4f6;
+  border-color: #29335C;
 }
 
 .dark .rbc-toolbar button:hover {
