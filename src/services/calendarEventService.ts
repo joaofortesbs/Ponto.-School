@@ -8,12 +8,21 @@ export interface CalendarEvent {
   type: string;
   discipline?: string;
   description?: string;
+  professor?: string;
   startDate: Date | string;
   endDate?: Date | string;
   startTime?: string;
+  endTime?: string;
+  duration?: string;
   allDay?: boolean;
   isOnline?: boolean;
   location?: string;
+  meetingLink?: string;
+  reminders?: string[];
+  repeat?: string;
+  guests?: string[];
+  visibility?: string;
+  attachments?: string[];
   color?: string;
   details?: string;
 }
@@ -26,12 +35,21 @@ const formatEventFromApi = (event: any): CalendarEvent => {
     type: event.type,
     discipline: event.discipline,
     description: event.description,
+    professor: event.professor,
     startDate: new Date(event.start_date),
     endDate: event.end_date ? new Date(event.end_date) : undefined,
     startTime: event.start_time,
+    endTime: event.end_time,
+    duration: event.duration,
     allDay: event.all_day,
     isOnline: event.is_online,
     location: event.location,
+    meetingLink: event.meeting_link,
+    reminders: event.reminders || [],
+    repeat: event.repeat || 'none',
+    guests: event.guests || [],
+    visibility: event.visibility || 'private',
+    attachments: event.attachments || [],
     color: event.color,
     details: event.details
   };
@@ -45,12 +63,21 @@ const formatEventForApi = (event: CalendarEvent) => {
     type: event.type,
     discipline: event.discipline,
     description: event.description,
+    professor: event.professor,
     start_date: event.startDate,
     end_date: event.endDate,
     start_time: event.startTime,
+    end_time: event.endTime,
+    duration: event.duration,
     all_day: event.allDay,
     is_online: event.isOnline,
     location: event.location,
+    meeting_link: event.meetingLink,
+    reminders: event.reminders || [],
+    repeat: event.repeat || 'none',
+    guests: event.guests || [],
+    visibility: event.visibility || 'private',
+    attachments: event.attachments || [],
     color: event.color,
     details: event.details
   };
