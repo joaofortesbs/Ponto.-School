@@ -265,8 +265,14 @@ export default function AgendaPage() {
         setEventData(formattedEvents);
         
         // Compartilhar os eventos com outros componentes através do objeto window
-        // Isso permite que o componente day-view acesse os mesmos eventos
+        // Isso permite que os componentes day-view e week-view acessem os mesmos eventos
         window.agendaEventData = formattedEvents;
+        
+        // Força atualização dos componentes de visualização
+        window.dispatchEvent(new CustomEvent('agenda-events-updated', { 
+          detail: { events: formattedEvents }
+        }));
+        
         console.log("Eventos compartilhados globalmente para componentes de visualização");
         
         if (events.length > 0) {

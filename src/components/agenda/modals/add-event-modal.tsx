@@ -177,7 +177,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
         console.warn("Erro ao obter usuário atual:", userError);
         // Continuar mesmo sem usuário
       }
-      
+
       // Usar um ID anônimo padrão se não houver usuário
       const userId = currentUser?.id || `anonymous-${Date.now()}`;
 
@@ -210,7 +210,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
 
       if (savedEvent) {
         console.log("Evento salvo com sucesso:", savedEvent);
-        
+
         // Atualizar toast
         toast({
           id: toastId,
@@ -218,12 +218,12 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
           description: "O evento foi adicionado à sua agenda.",
           variant: "success"
         });
-        
+
         // Call the onAddEvent callback with the new event
         if (onAddEvent) {
           onAddEvent(savedEvent);
         }
-        
+
         // Reset form and close modal
         resetForm();
         onOpenChange(false);
@@ -232,7 +232,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
       }
     } catch (error) {
       console.error("Erro ao salvar evento:", error);
-      
+
       // Atualizar toast para erro
       const { toast } = await import("@/components/ui/use-toast");
       toast({
@@ -241,13 +241,13 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
         description: "Tentando salvar localmente...",
         variant: "destructive"
       });
-      
+
       // Tentar salvar localmente como último recurso
       try {
         // Importar o serviço novamente para garantir acesso
         const { addEvent, initLocalStorage } = await import('@/services/calendarEventService');
         initLocalStorage();
-        
+
         const emergencyEvent = { 
           type: eventType,
           title,
@@ -268,16 +268,16 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
           visibility,
           userId: 'emergency-fallback',
         };
-        
+
         // Tentar salvar usando o serviço que vai garantir o armazenamento local
         const localSavedEvent = await addEvent(emergencyEvent);
-        
+
         if (localSavedEvent) {
           // Chamar o callback
           if (onAddEvent) {
             onAddEvent(localSavedEvent);
           }
-          
+
           // Atualizar toast
           toast({
             id: toastId,
@@ -285,7 +285,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
             description: "O evento foi salvo em seu navegador.",
             variant: "warning"
           });
-          
+
           // Fechar o modal
           resetForm();
           onOpenChange(false);
@@ -294,7 +294,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
         }
       } catch (localError) {
         console.error("Erro no salvamento local:", localError);
-        
+
         // Atualizar toast para falha total
         const { toast } = await import("@/components/ui/use-toast");
         toast({
@@ -304,6 +304,132 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
           variant: "destructive"
         });
       }
+    }
+  };
+
+  // Função para adicionar um evento
+  const handleAddEvent = async () => {
+    if (!selectedDate) return;
+
+    try {
+      const newEventData = {
+        title: title,
+        description: description,
+        type: eventType,
+        startDate: format(selectedDate, 'yyyy-MM-dd'),
+        endDate: format(selectedDate, 'yyyy-MM-dd'),
+        startTime: startTime,
+        endTime: endTime,
+        location: location,
+        isOnline: isOnline,
+        meetingLink: meetingLink,
+        discipline: discipline || "Geral",
+        professor: "",
+        userId: "local" // Será substituído pelo ID real do usuário no serviço
+      };
+
+      // Importar função de serviço
+      const { addEvent, getAllLocalEvents } = await import('@/services/calendarEventService');
+      const { getCurrentUser } = await import('@/services/databaseService');
+
+      let userId = "local";
+
+      try {
+        const currentUser = await getCurrentUser();
+        if (currentUser?.id) {
+          userId = currentUser.id;
+        }
+      } catch (error) {
+        console.warn("Erro ao obter usuário atual:", error);
+      }
+
+      // Adicionar ID do usuário
+      const eventWithUserId = {
+        ...newEventData,
+        userId: userId
+      };
+
+      console.log("Adicionando evento:", eventWithUserId);
+
+      // Adicionar o evento no serviço (banco de dados e/ou armazenamento local)
+      const addedEvent = await addEvent(eventWithUserId);
+
+      if (addedEvent) {
+        console.log("Evento adicionado com sucesso:", addedEvent);
+
+        // Fechar o modal e notificar o componente pai
+        onOpenChange(false);
+
+        if (onAddEvent) {
+          onAddEvent(addedEvent);
+        }
+
+        // Atualizar a variável global para manter consistência entre visualizações
+        try {
+          if (window.agendaEventData) {
+            const day = new Date(addedEvent.startDate).getDate();
+            if (!window.agendaEventData[day]) {
+              window.agendaEventData[day] = [];
+            }
+
+            // Adicionar o evento na estrutura global
+            window.agendaEventData[day].push({
+              ...addedEvent,
+              color: getEventTypeColor(addedEvent.type || "evento")
+            });
+
+            // Disparar evento para notificar outros componentes
+            window.dispatchEvent(new CustomEvent('agenda-events-updated', { 
+              detail: { events: window.agendaEventData }
+            }));
+
+            console.log("Evento adicionado à variável global");
+          }
+        } catch (globalUpdateError) {
+          console.warn("Não foi possível atualizar a variável global:", globalUpdateError);
+        }
+
+        toast({
+          title: "Evento adicionado",
+          description: "O evento foi salvo com sucesso.",
+          variant: "default",
+        });
+      } else {
+        console.error("Falha ao adicionar evento");
+        toast({
+          title: "Erro",
+          description: "Não foi possível adicionar o evento. Tente novamente.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Erro ao adicionar evento:", error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao adicionar o evento. Tente novamente mais tarde.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Função auxiliar para obter cor baseada no tipo de evento
+  const getEventTypeColor = (type: string): string => {
+    switch (type) {
+      case "aula":
+        return "blue";
+      case "trabalho":
+      case "tarefa":
+        return "amber";
+      case "prova":
+        return "red";
+      case "reuniao":
+        return "green";
+      case "lembrete":
+        return "yellow";
+      case "evento":
+        return "purple";
+      default:
+        return "gray";
     }
   };
 
@@ -356,7 +482,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                 <SelectItem value="aula">Aula</SelectItem>
                 <SelectItem value="prova">Prova</SelectItem>
                 <SelectItem value="trabalho">Trabalho</SelectItem>
-                <SelectItem value="reuniao">Reunião</SelectItem>
+                <SelectItem value="reuniao">Reuniao</SelectItem>
                 <SelectItem value="evento">Evento Pessoal</SelectItem>
                 <SelectItem value="lembrete">Lembrete</SelectItem>
               </SelectContent>

@@ -30,18 +30,19 @@ const WeekView: React.FC<WeekViewProps> = ({ openEventDetails }) => {
         setLoading(true);
         console.log("Carregando eventos para visualização semanal...");
 
-        // Usar os eventos já carregados na página principal
+        // Obter eventos do serviço (método direto para garantir dados consistentes)
+        const { getAllLocalEvents, getEventsByUserId } = await import('@/services/calendarEventService');
+        const { getCurrentUser } = await import('@/services/databaseService');
+
+        let allEvents: CalendarEvent[] = [];
+
+        // Primeiro tentar obter eventos de agendaEventData (global)
         try {
-          // Primeiro tentar obter eventos da página Agenda (que já carregou os eventos)
-          const agendaEventData = window.agendaEventData || {};
-          if (Object.keys(agendaEventData).length > 0) {
-            // Converter formato de dados (de dias para array de eventos)
-            const allEvents: CalendarEvent[] = [];
-            
-            Object.keys(agendaEventData).forEach(day => {
-              const dayEvents = agendaEventData[parseInt(day)] || [];
+          if (window.agendaEventData && Object.keys(window.agendaEventData).length > 0) {
+            // Converter formato de dados
+            Object.keys(window.agendaEventData).forEach(day => {
+              const dayEvents = window.agendaEventData[parseInt(day)] || [];
               dayEvents.forEach(event => {
-                // Garantir que todos os eventos tenham os campos necessários
                 if (event.startDate) {
                   allEvents.push({
                     id: event.id,
@@ -65,30 +66,57 @@ const WeekView: React.FC<WeekViewProps> = ({ openEventDetails }) => {
             });
             
             if (allEvents.length > 0) {
-              console.log(`Carregados ${allEvents.length} eventos da página Agenda`);
+              console.log(`Carregados ${allEvents.length} eventos da variável global`);
               setEvents(allEvents);
               setLoading(false);
               return;
             }
           }
         } catch (windowError) {
-          console.warn("Erro ao obter eventos da página Agenda:", windowError);
+          console.warn("Erro ao obter eventos da variável global:", windowError);
         }
 
-        // Se não conseguir obter eventos da página Agenda, buscar do armazenamento local
+        // Se não encontrar na variável global, carregar do serviço
         try {
-          const eventsJson = localStorage.getItem("calendar_events");
-          if (eventsJson) {
-            const localEvents = JSON.parse(eventsJson);
-            setEvents(localEvents);
-            console.log("Eventos carregados do localStorage como fallback:", localEvents.length);
+          let currentUser = null;
+          
+          try {
+            currentUser = await getCurrentUser();
+          } catch (userError) {
+            console.warn("Erro ao obter usuário atual:", userError);
+          }
+          
+          if (currentUser?.id) {
+            // Buscar eventos do usuário no banco
+            const userEvents = await getEventsByUserId(currentUser.id);
+            if (userEvents.length > 0) {
+              allEvents = userEvents;
+              console.log(`Carregados ${allEvents.length} eventos do serviço para o usuário ${currentUser.id}`);
+            }
           } else {
-            console.warn("Nenhum evento encontrado no localStorage");
+            // Sem usuário logado, buscar eventos locais
+            allEvents = getAllLocalEvents();
+            console.log(`Carregados ${allEvents.length} eventos do armazenamento local`);
+          }
+          
+          setEvents(allEvents);
+        } catch (serviceError) {
+          console.error("Erro ao buscar eventos do serviço:", serviceError);
+          
+          // Último recurso: tentar diretamente do localStorage
+          try {
+            const eventsJson = localStorage.getItem("calendar_events");
+            if (eventsJson) {
+              const localEvents = JSON.parse(eventsJson);
+              setEvents(localEvents);
+              console.log("Eventos carregados diretamente do localStorage:", localEvents.length);
+            } else {
+              setEvents([]);
+            }
+          } catch (e) {
+            console.error("Erro ao ler eventos do localStorage:", e);
             setEvents([]);
           }
-        } catch (e) {
-          console.error("Erro ao ler eventos do localStorage:", e);
-          setEvents([]);
         }
       } finally {
         setLoading(false);
@@ -96,7 +124,7 @@ const WeekView: React.FC<WeekViewProps> = ({ openEventDetails }) => {
     };
 
     fetchEvents();
-  }, []);
+  }, [startDate]); // Recarregar quando a data inicial mudar
 
   // Verificar se um evento ocorre em um determinado dia e hora
   const getEventsForDayAndHour = (day: Date, hour: number): CalendarEvent[] => {
