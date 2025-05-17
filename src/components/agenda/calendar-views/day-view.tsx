@@ -25,14 +25,70 @@ const DayView: React.FC<DayViewProps> = ({ selectedDay, openEventDetails }) => {
         setLoading(true);
         console.log("Carregando eventos para visualização diária...");
 
+        // Usar os eventos já carregados na página principal
+        // Isso garante consistência entre as visualizações de mês, semana e dia
+        try {
+          // Primeiro tentar obter eventos da página Agenda (que já carregou os eventos)
+          const agendaEventData = window.agendaEventData || {};
+          if (Object.keys(agendaEventData).length > 0) {
+            // Converter formato de dados (de dias para array de eventos)
+            const allEvents: CalendarEvent[] = [];
+            
+            Object.keys(agendaEventData).forEach(day => {
+              const dayEvents = agendaEventData[parseInt(day)] || [];
+              dayEvents.forEach(event => {
+                // Garantir que todos os eventos tenham os campos necessários
+                if (event.startDate) {
+                  allEvents.push({
+                    id: event.id,
+                    title: event.title,
+                    description: event.description || "",
+                    startDate: event.startDate,
+                    endDate: event.endDate || event.startDate,
+                    startTime: event.startTime || "00:00",
+                    endTime: event.endTime || "23:59",
+                    location: event.location || "",
+                    isOnline: event.isOnline || false,
+                    meetingLink: event.meetingLink || "",
+                    type: event.type || "evento",
+                    discipline: event.discipline || "Geral",
+                    professor: event.professor || "",
+                    userId: event.userId || "local",
+                    createdAt: event.createdAt || new Date().toISOString()
+                  });
+                }
+              });
+            });
+            
+            if (allEvents.length > 0) {
+              console.log(`Carregados ${allEvents.length} eventos da página Agenda`);
+              setEvents(allEvents);
+              setLoading(false);
+              return;
+            }
+          }
+        } catch (windowError) {
+          console.warn("Erro ao obter eventos da página Agenda:", windowError);
+        }
+
+        // Se não conseguir obter eventos da página Agenda, buscar do armazenamento local
         // Importar serviços necessários
-        const { getEventsByUserId, getAllEvents, initLocalStorage, syncLocalEvents } = await import('@/services/calendarEventService');
+        const { getEventsByUserId, getAllEvents, initLocalStorage, syncLocalEvents, getAllLocalEvents } = await import('@/services/calendarEventService');
         const { getCurrentUser } = await import('@/services/databaseService');
 
         // Inicializar armazenamento local
         initLocalStorage();
 
-        // Obter usuário atual
+        // Primeiro tentar obter eventos do localStorage
+        let localEvents = getAllLocalEvents();
+        if (localEvents.length > 0) {
+          console.log(`Carregados ${localEvents.length} eventos do localStorage`);
+          setEvents(localEvents);
+          setLoading(false);
+          return;
+        }
+
+        // Se não tiver eventos no localStorage, buscar do banco de dados
         let currentUser = null;
         try {
           currentUser = await getCurrentUser();
@@ -52,22 +108,9 @@ const DayView: React.FC<DayViewProps> = ({ selectedDay, openEventDetails }) => {
           userEvents = await getEventsByUserId(currentUser.id);
           console.log(`Carregados ${userEvents.length} eventos do usuário ${currentUser.id}`);
         } else {
-          // Se não houver usuário autenticado, tentar carregar eventos locais
-          try {
-            const eventsJson = localStorage.getItem("calendar_events");
-            if (eventsJson) {
-              userEvents = JSON.parse(eventsJson);
-              console.log(`Carregados ${userEvents.length} eventos diretamente do localStorage`);
-            }
-          } catch (e) {
-            console.error("Erro ao ler eventos do localStorage:", e);
-          }
-          
-          // Se ainda não houver eventos, buscar todos (públicos)
-          if (userEvents.length === 0) {
-            userEvents = await getAllEvents();
-            console.log(`Carregados ${userEvents.length} eventos públicos`);
-          }
+          // Se não houver usuário autenticado, buscar todos eventos públicos
+          userEvents = await getAllEvents();
+          console.log(`Carregados ${userEvents.length} eventos públicos`);
         }
         
         if (userEvents.length > 0) {

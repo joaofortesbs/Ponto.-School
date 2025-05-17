@@ -264,6 +264,11 @@ export default function AgendaPage() {
         console.log("Eventos formatados para visualização:", Object.keys(formattedEvents).length, "dias com eventos");
         setEventData(formattedEvents);
         
+        // Compartilhar os eventos com outros componentes através do objeto window
+        // Isso permite que o componente day-view acesse os mesmos eventos
+        window.agendaEventData = formattedEvents;
+        console.log("Eventos compartilhados globalmente para componentes de visualização");
+        
         if (events.length > 0) {
           toast({
             title: "Agenda carregada",
@@ -313,6 +318,9 @@ export default function AgendaPage() {
             });
             
             setEventData(formattedLocalEvents);
+            
+            // Compartilhar os eventos através do objeto window mesmo em caso de erro
+            window.agendaEventData = formattedLocalEvents;
           }
         } catch (localError) {
           console.error("Erro ao carregar eventos do localStorage:", localError);
