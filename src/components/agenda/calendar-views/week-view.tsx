@@ -1,7 +1,8 @@
-import React from "react";
-import { format } from "date-fns";
+import React, { useState } from "react";
+import { format, startOfWeek, addDays } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
-import { CalendarRange, ChevronLeft, ChevronRight, Video } from "lucide-react";
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Video } from "lucide-react";
 
 interface WeekViewProps {
   openEventDetails: (event: any) => void;
@@ -33,10 +34,11 @@ const WeekView: React.FC<WeekViewProps> = ({ openEventDetails }) => {
             Hora
           </div>
           {weekDays.map((date, index) => {
+            const currentDate = new Date();
             const isToday =
-              date.getDate() === today.getDate() &&
-              date.getMonth() === today.getMonth() &&
-              date.getFullYear() === today.getFullYear();
+              date.getDate() === currentDate.getDate() &&
+              date.getMonth() === currentDate.getMonth() &&
+              date.getFullYear() === currentDate.getFullYear();
 
             return (
               <div
