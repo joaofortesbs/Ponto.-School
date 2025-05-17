@@ -7,8 +7,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   Search, X, Eye, Lock, Unlock, ChevronLeft, ArrowLeft, 
   UserCheck, MapPin, BookOpen, Bookmark, Users, 
-  Clock, CheckCircle2, AlertCircle, Bell, Filter
+  Clock, CheckCircle2, AlertCircle, Bell, Filter,
+  MoreVertical, MessageSquare, Ban, Flag, Share2
 } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
 
 // Tipos de usuário
 interface UserType {
@@ -138,6 +140,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
   const [pendingRequests, setPendingRequests] = useState<PendingRequestType[]>(mockPendingRequests);
   const [userRelations, setUserRelations] = useState<{[key: string]: 'none' | 'requested' | 'following'}>({});
   const [savedProfiles, setSavedProfiles] = useState<{[key: string]: boolean}>({});
+  const [showProfileActions, setShowProfileActions] = useState(false);
 
   // Referências para melhorar desempenho
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -276,11 +279,34 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
   useEffect(() => {
     if (!open) {
       setSelectedUser(null);
+      setShowProfileActions(false);
     }
   }, [open]);
 
+  // Fechar o menu de ações quando clicar fora
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showProfileActions) {
+        setShowProfileActions(false);
+      }
+    };
+
+    // Adiciona o event listener com um pequeno delay para evitar 
+    // que o próprio clique que abriu o menu o feche imediatamente
+    if (showProfileActions) {
+      const timeoutId = setTimeout(() => {
+        document.addEventListener('mousedown', handleClickOutside);
+      }, 100);
+      
+      return () => {
+        clearTimeout(timeoutId);
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [showProfileActions]);
+
   // Função para gerenciar relacionamentos de usuário
-  const handleRelationAction = (userId: string, action: 'request' | 'follow' | 'accept' | 'reject') => {
+  const handleRelationAction = (userId: string, action: 'request' | 'follow' | 'unfollow' | 'accept' | 'reject') => {
     switch (action) {
       case 'request':
         // Simular uma solicitação enviada
@@ -301,6 +327,10 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
 
       case 'follow':
         setUserRelations(prev => ({...prev, [userId]: 'following'}));
+        break;
+        
+      case 'unfollow':
+        setUserRelations(prev => ({...prev, [userId]: 'none'}));
         break;
 
       case 'accept':
@@ -678,30 +708,113 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
               <Button 
                 className={`w-full rounded-xl ${
                   relation === 'following' 
-                  ? 'bg-[#FF6B00] hover:bg-[#FF6B00]/90' 
+                  ? 'bg-[#FF6B00] hover:bg-red-600 group/follow' 
                   : 'bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] hover:shadow-lg hover:shadow-[#FF6B00]/20'
-                } text-white py-6 transition-all duration-300`}
-                onClick={() => handleRelationAction(selectedUser.id, 'follow')}
+                } text-white py-6 transition-all duration-300 relative`}
+                onClick={() => {
+                  if (relation === 'following') {
+                    // Lógica para deixar de seguir
+                    handleRelationAction(selectedUser.id, 'unfollow');
+                  } else {
+                    // Lógica para seguir
+                    handleRelationAction(selectedUser.id, 'follow');
+                  }
+                }}
               >
                 {relation === 'following' ? (
-                  <div className="flex items-center gap-2">
-                    <span>Seguindo</span>
-                    <CheckCircle2 className="h-5 w-5" />
-                  </div>
+                  <>
+                    <div className="flex items-center gap-2 group-hover/follow:opacity-0 transition-opacity duration-200">
+                      <span>Seguindo</span>
+                      <CheckCircle2 className="h-5 w-5" />
+                    </div>
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/follow:opacity-100 transition-opacity duration-200">
+                      <span className="flex items-center gap-2">
+                        Deixar de seguir
+                      </span>
+                    </div>
+                  </>
                 ) : 'Seguir perfil'}
               </Button>
             )}
 
-            <Button
-              variant="outline"
-className="w-full rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-white py-6 transition-all duration-300"
-              onClick={() => {
-                // Aqui iria a navegação para o perfil completo
-                onOpenChange(false);
-              }}
-            >
-              Ver perfil completo
-            </Button>
+            <div className="flex gap-3 mt-3">
+              <Button
+                variant="outline"
+                className="flex-1 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-white py-5 transition-all duration-300"
+                onClick={() => {
+                  // Lógica para enviar mensagem
+                  toast({
+                    title: "Mensagem",
+                    description: "Funcionalidade de mensagens em desenvolvimento",
+                    duration: 3000,
+                  });
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="h-4 w-4" />
+                  <span>Enviar mensagem</span>
+                </div>
+              </Button>
+
+              <div className="relative">
+                <Button
+                  variant="outline"
+                  className="rounded-xl aspect-square bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-white py-5 transition-all duration-300"
+                  onClick={() => setShowProfileActions(!showProfileActions)}
+                >
+                  <MoreVertical className="h-5 w-5" />
+                </Button>
+
+                {showProfileActions && (
+                  <div className="absolute right-0 mt-2 w-48 rounded-lg shadow-lg bg-[#0A2540] border border-white/10 z-50">
+                    <div className="py-1">
+                      <button
+                        className="flex w-full items-center px-4 py-3 text-white hover:bg-white/10 transition-colors"
+                        onClick={() => {
+                          setShowProfileActions(false);
+                          toast({
+                            title: "Bloqueado",
+                            description: `Usuário ${selectedUser?.name} bloqueado com sucesso`,
+                            duration: 3000,
+                          });
+                        }}
+                      >
+                        <Ban className="h-4 w-4 mr-3 text-red-500" />
+                        <span>Bloquear</span>
+                      </button>
+                      <button
+                        className="flex w-full items-center px-4 py-3 text-white hover:bg-white/10 transition-colors"
+                        onClick={() => {
+                          setShowProfileActions(false);
+                          toast({
+                            title: "Denunciado",
+                            description: "Denúncia enviada para análise",
+                            duration: 3000,
+                          });
+                        }}
+                      >
+                        <Flag className="h-4 w-4 mr-3 text-amber-500" />
+                        <span>Denunciar</span>
+                      </button>
+                      <button
+                        className="flex w-full items-center px-4 py-3 text-white hover:bg-white/10 transition-colors rounded-b-lg"
+                        onClick={() => {
+                          setShowProfileActions(false);
+                          toast({
+                            title: "Compartilhado",
+                            description: "Link copiado para a área de transferência",
+                            duration: 3000,
+                          });
+                        }}
+                      >
+                        <Share2 className="h-4 w-4 mr-3 text-blue-500" />
+                        <span>Compartilhar</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Indicador de atividade */}
