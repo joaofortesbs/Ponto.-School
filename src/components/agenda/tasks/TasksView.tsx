@@ -21,6 +21,8 @@ import {
   CheckSquare,
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { taskService } from "@/services/taskService";
+import { getCurrentUser } from "@/services/databaseService";
 
 export type TaskPriority = "alta" | "média" | "baixa";
 export type TaskStatus = "a-fazer" | "em-andamento" | "concluido" | "atrasado";
@@ -93,10 +95,6 @@ const TasksView: React.FC<TasksViewProps> = ({
       }
     };
   }, []);
-
-  // Importar o serviço de tarefas
-  import { taskService } from "@/services/taskService";
-  import { getCurrentUser } from "@/services/databaseService";
 
   // Carregar tarefas do usuário
   useEffect(() => {
