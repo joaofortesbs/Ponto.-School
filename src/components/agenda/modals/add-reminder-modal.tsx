@@ -31,7 +31,7 @@ const AddReminderModal: React.FC<AddReminderModalProps> = ({
   onAddReminder,
 }) => {
   const [title, setTitle] = useState("");
-  const [time, setTime] = useState(new Date().toISOString().slice(0, 16));
+  const [time, setTime] = useState("");
   const [discipline, setDiscipline] = useState("");
   const [type, setType] = useState<"event" | "task" | "meeting" | "other">(
     "event",
@@ -86,7 +86,7 @@ const AddReminderModal: React.FC<AddReminderModalProps> = ({
               <Label htmlFor="time">Data/Hora</Label>
               <Input
                 id="time"
-                type="datetime-local"
+                placeholder="Ex: Amanhã, 14:00"
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
                 required

@@ -65,14 +65,14 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
   const [description, setDescription] = useState("");
   const [discipline, setDiscipline] = useState("");
   const [professor, setProfessor] = useState("");
-  const now = new Date();
-  const nowISO = now.toISOString().slice(0, 16);
-  const laterISO = new Date(now.getTime() + 60*60*1000).toISOString().slice(0, 16);
-
-  const [startDate, setStartDate] = useState(now.toISOString().slice(0, 10));
-  const [endDate, setEndDate] = useState(now.toISOString().slice(0, 10));
-  const [startTime, setStartTime] = useState(now.toTimeString().slice(0, 5));
-  const [endTime, setEndTime] = useState(new Date(now.getTime() + 60*60*1000).toTimeString().slice(0, 5));
+  const [startDate, setStartDate] = useState<Date | undefined>(
+    selectedDate || undefined,
+  );
+  const [endDate, setEndDate] = useState<Date | undefined>(
+    selectedDate || undefined,
+  );
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
   const [duration, setDuration] = useState("");
   const [location, setLocation] = useState("");
   const [isOnline, setIsOnline] = useState(false);
@@ -328,7 +328,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {startDate ? (
-                      format(new Date(startDate), "dd/MM/yyyy")
+                      format(startDate, "dd/MM/yyyy")
                     ) : (
                       <span>Selecione uma data</span>
                     )}
@@ -337,8 +337,8 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     mode="single"
-                    selected={startDate ? new Date(startDate) : undefined}
-                    onSelect={(date) => setStartDate(date?.toISOString().slice(0, 10))}
+                    selected={startDate}
+                    onSelect={setStartDate}
                     initialFocus
                   />
                 </PopoverContent>
@@ -360,7 +360,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {endDate ? (
-                      format(new Date(endDate), "dd/MM/yyyy")
+                      format(endDate, "dd/MM/yyyy")
                     ) : (
                       <span>Mesma data de início</span>
                     )}
@@ -369,10 +369,10 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     mode="single"
-                    selected={endDate ? new Date(endDate) : undefined}
-                    onSelect={(date) => setEndDate(date?.toISOString().slice(0, 10))}
+                    selected={endDate}
+                    onSelect={setEndDate}
                     initialFocus
-                    disabled={(date) => (startDate ? date < new Date(startDate) : false)}
+                    disabled={(date) => (startDate ? date < startDate : false)}
                   />
                 </PopoverContent>
               </Popover>

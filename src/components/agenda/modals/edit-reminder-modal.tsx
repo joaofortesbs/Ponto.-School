@@ -43,13 +43,7 @@ const EditReminderModal: React.FC<EditReminderModalProps> = ({
   useEffect(() => {
     if (open) {
       setTitle(reminder.title);
-      // Garantir que a hora esteja no formato correto para o input datetime-local
-      const formattedTime = reminder.time ? 
-        (typeof reminder.time === 'string' && reminder.time.includes('T') ? 
-          reminder.time.slice(0, 16) : 
-          new Date().toISOString().slice(0, 16)) : 
-        new Date().toISOString().slice(0, 16);
-      setTime(formattedTime);
+      setTime(reminder.time);
       setDiscipline(reminder.discipline);
       setType(reminder.type);
       setStatus(reminder.status);
@@ -96,7 +90,6 @@ const EditReminderModal: React.FC<EditReminderModalProps> = ({
               <Label htmlFor="time">Data/Hora</Label>
               <Input
                 id="time"
-                type="datetime-local"
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
                 required
