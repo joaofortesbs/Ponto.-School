@@ -11,6 +11,7 @@ import {
   MoreVertical, MessageSquare, Ban, Flag, Share2
 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
+import { supabase } from "@/lib/supabase";
 
 // Tipos de usuário
 interface UserType {
