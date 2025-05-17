@@ -96,199 +96,7 @@ const TasksView: React.FC<TasksViewProps> = ({
 
   // Carregar tarefas de exemplo
   useEffect(() => {
-    const sampleTasks: Task[] = [
-      {
-        id: "1",
-        title: "Lista de Exercícios - Funções Trigonométricas",
-        description:
-          "Resolver os exercícios 1 a 20 do capítulo 3 do livro de Matemática.",
-        discipline: "Matemática",
-        dueDate: "2023-07-15T18:00:00",
-        status: "em-andamento",
-        priority: "alta",
-        progress: 75,
-        type: "exercício",
-        professor: "Prof. Carlos Santos",
-        attachments: ["lista_exercicios.pdf"],
-        subtasks: [
-          { id: "1-1", title: "Exercícios 1-5", completed: true },
-          { id: "1-2", title: "Exercícios 6-10", completed: true },
-          { id: "1-3", title: "Exercícios 11-15", completed: true },
-          { id: "1-4", title: "Exercícios 16-20", completed: false },
-        ],
-        comments: [
-          {
-            id: "c1",
-            user: "Você",
-            text: "Preciso revisar os exercícios 16-20 antes da aula de amanhã.",
-            timestamp: "2023-07-14T10:30:00",
-          },
-        ],
-        createdAt: "2023-07-10T09:00:00",
-        updatedAt: "2023-07-14T10:30:00",
-        timeSpent: 120,
-        notes: "Revisar conceitos de funções trigonométricas inversas.",
-        tags: ["matemática", "trigonometria", "exercícios"],
-      },
-      {
-        id: "2",
-        title: "Relatório de Experimento - Titulação",
-        description:
-          "Escrever relatório sobre o experimento de titulação realizado no laboratório.",
-        discipline: "Química",
-        dueDate: "2023-07-20T23:59:00",
-        status: "a-fazer",
-        priority: "média",
-        progress: 30,
-        type: "relatório",
-        professor: "Profa. Ana Martins",
-        attachments: ["dados_experimento.xlsx", "template_relatorio.docx"],
-        subtasks: [
-          { id: "2-1", title: "Introdução", completed: true },
-          { id: "2-2", title: "Metodologia", completed: true },
-          { id: "2-3", title: "Resultados", completed: false },
-          { id: "2-4", title: "Discussão", completed: false },
-          { id: "2-5", title: "Conclusão", completed: false },
-        ],
-        createdAt: "2023-07-12T14:00:00",
-        updatedAt: "2023-07-14T16:45:00",
-        timeSpent: 90,
-        tags: ["química", "laboratório", "relatório"],
-        reminderSet: true,
-        reminderTime: "2023-07-19T18:00:00",
-      },
-      {
-        id: "3",
-        title: "Preparação para Prova - Mecânica Quântica",
-        description:
-          "Revisar todos os conceitos de Mecânica Quântica para a prova.",
-        discipline: "Física",
-        dueDate: "2023-07-22T14:00:00",
-        status: "a-fazer",
-        priority: "alta",
-        progress: 10,
-        type: "estudo",
-        professor: "Prof. Roberto Alves",
-        subtasks: [
-          { id: "3-1", title: "Equação de Schrödinger", completed: true },
-          { id: "3-2", title: "Princípio da Incerteza", completed: false },
-          { id: "3-3", title: "Efeito Túnel", completed: false },
-          { id: "3-4", title: "Spin e Momento Angular", completed: false },
-        ],
-        createdAt: "2023-07-15T09:30:00",
-        updatedAt: "2023-07-15T09:30:00",
-        tags: ["física", "mecânica quântica", "prova"],
-        reminderSet: true,
-        reminderTime: "2023-07-21T20:00:00",
-      },
-      {
-        id: "4",
-        title: "Apresentação - Evolução das Espécies",
-        description:
-          "Preparar apresentação sobre a Teoria da Evolução de Darwin.",
-        discipline: "Biologia",
-        dueDate: "2023-07-25T10:00:00",
-        status: "em-andamento",
-        priority: "média",
-        progress: 50,
-        type: "apresentação",
-        professor: "Prof. Marcos Silva",
-        attachments: ["template_slides.pptx"],
-        subtasks: [
-          { id: "4-1", title: "Pesquisa de Conteúdo", completed: true },
-          { id: "4-2", title: "Criação de Slides", completed: true },
-          { id: "4-3", title: "Revisão de Conteúdo", completed: false },
-          { id: "4-4", title: "Ensaio da Apresentação", completed: false },
-        ],
-        createdAt: "2023-07-13T11:20:00",
-        updatedAt: "2023-07-16T15:10:00",
-        timeSpent: 150,
-        tags: ["biologia", "evolução", "apresentação"],
-      },
-      {
-        id: "5",
-        title: "Leitura - O Príncipe (Maquiavel)",
-        description: "Ler os capítulos 1-5 do livro O Príncipe de Maquiavel.",
-        discipline: "História",
-        dueDate: "2023-07-18T23:59:00",
-        status: "atrasado",
-        priority: "baixa",
-        progress: 20,
-        type: "leitura",
-        professor: "Profa. Carla Mendes",
-        subtasks: [
-          { id: "5-1", title: "Capítulo 1", completed: true },
-          { id: "5-2", title: "Capítulo 2", completed: false },
-          { id: "5-3", title: "Capítulo 3", completed: false },
-          { id: "5-4", title: "Capítulo 4", completed: false },
-          { id: "5-5", title: "Capítulo 5", completed: false },
-        ],
-        createdAt: "2023-07-10T16:00:00",
-        updatedAt: "2023-07-10T16:00:00",
-        tags: ["história", "leitura", "filosofia política"],
-      },
-      {
-        id: "6",
-        title: "Projeto Final - Aplicativo de Gestão de Tarefas",
-        description:
-          "Desenvolver um aplicativo de gestão de tarefas usando React Native.",
-        discipline: "Computação",
-        dueDate: "2023-08-10T23:59:00",
-        status: "em-andamento",
-        priority: "alta",
-        progress: 40,
-        type: "projeto",
-        professor: "Prof. André Costa",
-        attachments: ["especificacoes_projeto.pdf", "mockups.fig"],
-        subtasks: [
-          { id: "6-1", title: "Planejamento e Design", completed: true },
-          { id: "6-2", title: "Configuração do Ambiente", completed: true },
-          { id: "6-3", title: "Implementação do Backend", completed: true },
-          { id: "6-4", title: "Implementação do Frontend", completed: false },
-          { id: "6-5", title: "Testes e Depuração", completed: false },
-          { id: "6-6", title: "Documentação", completed: false },
-        ],
-        comments: [
-          {
-            id: "c2",
-            user: "Prof. André Costa",
-            text: "Lembre-se de incluir autenticação de usuários no aplicativo.",
-            timestamp: "2023-07-12T14:30:00",
-          },
-          {
-            id: "c3",
-            user: "Você",
-            text: "Vou implementar usando Firebase Authentication.",
-            timestamp: "2023-07-12T15:45:00",
-          },
-        ],
-        createdAt: "2023-07-01T10:00:00",
-        updatedAt: "2023-07-12T15:45:00",
-        timeSpent: 720,
-        notes: "Considerar adicionar funcionalidade de notificações push.",
-        tags: ["computação", "react native", "projeto", "desenvolvimento"],
-        reminderSet: true,
-        reminderTime: "2023-07-25T18:00:00",
-      },
-      {
-        id: "7",
-        title: "Resumo - Metabolismo Celular",
-        description:
-          "Criar um resumo sobre os processos de metabolismo celular.",
-        discipline: "Biologia",
-        dueDate: "2023-07-19T23:59:00",
-        status: "concluido",
-        priority: "média",
-        progress: 100,
-        type: "resumo",
-        professor: "Prof. Marcos Silva",
-        attachments: ["resumo_metabolismo.pdf"],
-        createdAt: "2023-07-14T09:00:00",
-        updatedAt: "2023-07-16T18:30:00",
-        timeSpent: 180,
-        tags: ["biologia", "metabolismo", "resumo"],
-      },
-    ];
+    const sampleTasks: Task[] = [];
 
     setTasks(sampleTasks);
   }, []);
@@ -389,37 +197,50 @@ const TasksView: React.FC<TasksViewProps> = ({
 
   // Mover tarefa para outro status
   const handleMoveTask = (taskId: string, newStatus: TaskStatus) => {
-    const updatedTasks = tasks.map((task) =>
-      task.id === taskId ? { ...task, status: newStatus } : task,
-    );
-    setTasks(updatedTasks);
+    setTasks((currentTasks) =>
+      currentTasks.map((task) => {
+        if (task.id === taskId) {
+          // Se estiver movendo para concluído, definir progresso como 100%
+          const newProgress =
+            newStatus === "concluido" ? 100 : task.progress;
+          // Se estiver movendo para concluído, registrar data de conclusão
+          const completedAt =
+            newStatus === "concluido"
+              ? new Date().toISOString()
+              : task.completedAt;
 
-    // Mostrar toast de confirmação
-    toast({
-      title: "Tarefa movida",
-      description: `A tarefa foi movida para ${newStatus.replace("-", " ")}.`,
-    });
+          const updatedTask = {
+            ...task,
+            status: newStatus,
+            progress: newProgress,
+            completedAt,
+          };
+
+          return updatedTask;
+        }
+        return task;
+      }),
+    );
   };
 
   // Marcar tarefa como concluída/não concluída
   const handleCompleteTask = (taskId: string, completed: boolean) => {
-    const updatedTasks = tasks.map((task) => {
-      if (task.id === taskId) {
-        const newStatus = completed ? "concluido" : "a-fazer";
-        const progress = completed ? 100 : 0;
-        return { ...task, status: newStatus, progress };
-      }
-      return task;
-    });
-    setTasks(updatedTasks);
+    setTasks((currentTasks) =>
+      currentTasks.map((task) => {
+        if (task.id === taskId) {
+          const newStatus = completed ? "concluido" : "a-fazer";
+          const updatedTask = {
+            ...task,
+            status: newStatus,
+            completedAt: completed ? new Date().toISOString() : undefined,
+            progress: completed ? 100 : task.progress,
+          };
 
-    // Mostrar toast de confirmação
-    toast({
-      title: completed ? "Tarefa concluída" : "Tarefa reaberta",
-      description: completed
-        ? "A tarefa foi marcada como concluída."
-        : "A tarefa foi marcada como não concluída.",
-    });
+          return updatedTask;
+        }
+        return task;
+      }),
+    );
   };
 
   // Atualizar tarefa
