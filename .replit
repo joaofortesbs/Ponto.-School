@@ -146,6 +146,15 @@ mode = "sequential"
 task = "shell.exec"
 args = "node scripts/drop-codigos-grupos-tables.js"
 
+[[workflows.workflow]]
+name = "Configurar Solicitações de Amizade"
+author = 42059808
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node scripts/setup-friend-requests.js"
+
 [auth]
 pageEnabled = false
 buttonEnabled = false
