@@ -162,14 +162,14 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
     const toastId = crypto.randomUUID();
     try {
       // Importar o serviço de eventos e o toast
-      const { addEvent, initLocalStorage } = await import('@/services/calendarEventService');
+      const { addEvent, updateEvent, initLocalStorage } = await import('@/services/calendarEventService');
       const { getCurrentUser } = await import('@/services/databaseService');
       const { toast } = await import("@/components/ui/use-toast");
 
       toast({
         id: toastId,
-        title: "Salvando evento...",
-        description: "Aguarde enquanto seu evento é salvo.",
+        title: selectedDate ? "Atualizando evento..." : "Salvando evento...",
+        description: "Aguarde enquanto seu evento é processado.",
       });
 
       // Inicializar armazenamento local
