@@ -168,39 +168,42 @@ export default function AgendaPage() {
     today.setHours(0, 0, 0, 0); // Normaliza a data atual para comparação
     const upcoming: any[] = [];
 
-    // Percorre todos os dias com eventos
-    Object.keys(eventData).forEach(day => {
-      const dayEvents = eventData[parseInt(day)] || [];
+    // Verifica se eventData existe antes de processar
+    if (eventData && typeof eventData === 'object') {
+      // Percorre todos os dias com eventos
+      Object.keys(eventData).forEach(day => {
+        const dayEvents = eventData[parseInt(day)] || [];
 
-      // Para cada evento nesse dia
-      dayEvents.forEach(event => {
-        if (event.startDate) {
-          const eventDate = new Date(event.startDate);
-          eventDate.setHours(0, 0, 0, 0); // Normaliza a data do evento para comparação
+        // Para cada evento nesse dia
+        dayEvents.forEach(event => {
+          if (event && event.startDate) {
+            const eventDate = new Date(event.startDate);
+            eventDate.setHours(0, 0, 0, 0); // Normaliza a data do evento para comparação
 
-          // Adiciona eventos que ocorrem hoje ou no futuro
-          if (eventDate >= today) {
-            // Formata a data com date-fns
-            const formattedDate = format(eventDate, "dd/MM/yyyy", { locale: ptBR });
+            // Adiciona eventos que ocorrem hoje ou no futuro
+            if (eventDate >= today) {
+              // Formata a data com date-fns
+              const formattedDate = format(eventDate, "dd/MM/yyyy", { locale: ptBR });
 
-            upcoming.push({
-              id: event.id,
-              type: event.type,
-              title: event.title,
-              day: formattedDate,
-              discipline: event.discipline || "Geral",
-              isOnline: event.isOnline || false,
-              color: event.color,
-              details: event.details,
-              startTime: event.startTime || event.time || "00:00",
-              // Guardar a data original para ordenação
-              originalDate: eventDate,
-              originalTime: event.startTime || event.time || "00:00"
-            });
+              upcoming.push({
+                id: event.id,
+                type: event.type,
+                title: event.title,
+                day: formattedDate,
+                discipline: event.discipline || "Geral",
+                isOnline: event.isOnline || false,
+                color: event.color,
+                details: event.details,
+                startTime: event.startTime || event.time || "00:00",
+                // Guardar a data original para ordenação
+                originalDate: eventDate,
+                originalTime: event.startTime || event.time || "00:00"
+              });
+            }
           }
-        }
+        });
       });
-    });
+    }
 
     // Ordena eventos cronologicamente (por data e hora)
     upcoming.sort((a, b) => {

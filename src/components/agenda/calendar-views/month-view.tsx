@@ -34,7 +34,7 @@ const MonthView: React.FC<MonthViewProps> = ({
   currentMonth,
   selectedDay,
   setSelectedDay,
-  eventData,
+  eventData = {},
   getEventIcon,
   openEventDetails,
   onEventDrop,
