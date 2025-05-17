@@ -1,0 +1,89 @@
+import { useState, useEffect } from "react";
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient('https://YOUR_PROJECT.supabase.co', 'YOUR_ANON_KEY');
+
+export default function AddFriendModal({ currentUserId, onClose }) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [results, setResults] = useState([]);
+  const [sentRequests, setSentRequests] = useState({});
+
+  // Busca usuários com base no termo digitado
+  useEffect(() => {
+    const fetchUsers = async () => {
+      if (searchTerm.length < 3) return;
+
+      const { data, error } = await supabase
+        .from('users')
+        .select('id, username, avatar_url') // ajuste conforme seu schema
+        .ilike('username', `%${searchTerm}%`)
+        .neq('id', currentUserId);
+
+      if (!error) setResults(data);
+    };
+
+    const timeout = setTimeout(fetchUsers, 500); // debounce
+    return () => clearTimeout(timeout);
+  }, [searchTerm]);
+
+  const sendFriendRequest = async (receiverId) => {
+    const { data, error } = await supabase
+      .from('friend_requests')
+      .insert([{ sender_id: currentUserId, receiver_id: receiverId, status: 'pending' }]);
+
+    if (!error) {
+      setSentRequests(prev => ({ ...prev, [receiverId]: 'pending' }));
+    }
+  };
+
+  const checkExistingRequests = async () => {
+    const { data, error } = await supabase
+      .from('friend_requests')
+      .select('receiver_id, status')
+      .eq('sender_id', currentUserId);
+
+    if (!error) {
+      const statusMap = {};
+      data.forEach(req => {
+        statusMap[req.receiver_id] = req.status;
+      });
+      setSentRequests(statusMap);
+    }
+  };
+
+  useEffect(() => {
+    checkExistingRequests();
+  }, []);
+
+  return (
+    <div className="modal">
+      <h2>Adicionar amigo</h2>
+      <input
+        type="text"
+        placeholder="Buscar por nome de usuário..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        className="input"
+      />
+
+      <ul className="user-list">
+        {results.map(user => (
+          <li key={user.id} className="user-item">
+            <img src={user.avatar_url} alt="Avatar" className="avatar" />
+            <span>{user.username}</span>
+
+            {sentRequests[user.id] === 'pending' ? (
+              <button className="btn-pending" disabled>Solicitado</button>
+            ) : (
+              <button className="btn-add" onClick={() => sendFriendRequest(user.id)}>
+                Adicionar
+              </button>
+            )}
+          </li>
+        ))}
+      </ul>
+
+      <button className="close-btn" onClick={onClose}>Fechar</button>
+    </div>
+  );
+}
