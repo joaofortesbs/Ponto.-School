@@ -1393,6 +1393,59 @@ export default function AgendaPage() {
 
             {/* Right Column */}
             <div className="space-y-8">
+              {/* AI Mentor with elegant design - Movido para cima */}
+              <div className="bg-white dark:bg-[#1E293B] rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border border-[#FF6B00]/10 dark:border-[#FF6B00]/20 transform hover:translate-y-[-3px]">
+                <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-white/20 p-1.5 rounded-lg shadow-inner">
+                      <Sparkles className="h-5 w-5 text-white" />
+                    </div>
+                    <h3 className="text-base font-bold text-white">
+                      Recomendações do Epictus IA
+                    </h3>
+                  </div>
+                </div>
+                <div className="p-5 space-y-4">
+                  {aiRecommendations.map((rec) => (
+                    <div
+                      key={rec.id}
+                      className="bg-[#FF6B00]/5 dark:bg-[#FF6B00]/10 rounded-lg p-4 hover:bg-[#FF6B00]/10 dark:hover:bg-[#FF6B00]/20 transition-colors shadow-sm hover:shadow-md group cursor-pointer"
+                    >
+                      <div className="flex gap-3">
+                        <div className="mt-0.5 group-hover:scale-110 transition-transform">
+                          {rec.icon}
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-medium text-gray-900 dark:text-white text-sm group-hover:text-[#FF6B00] transition-colors">
+                            {rec.title}
+                          </h4>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                            {rec.description}
+                          </p>
+                          <div className="flex gap-2 mt-4">
+                            {rec.actions.map((action, idx) => (
+                              <Button
+                                key={idx}
+                                size="sm"
+                                variant={action.variant}
+                                className={
+                                  action.variant === "outline"
+                                    ? "h-8 text-xs border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10 font-medium flex items-center rounded-lg transition-colors"
+                                    : "h-8 text-xs bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-medium flex items-center rounded-lg shadow-sm hover:shadow-md transition-all duration-300"
+                                }
+                              >
+                                {action.icon}
+                                {action.label}
+                              </Button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
               {/* Pending Tasks with minimalist design */}
               <div className="bg-white dark:bg-[#1E293B] rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border border-[#FF6B00]/10 dark:border-[#FF6B00]/20 transform hover:translate-y-[-3px]">
                 <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-4 flex items-center justify-between">
@@ -1472,59 +1525,6 @@ export default function AgendaPage() {
                   >
                     <Plus className="h-3.5 w-3.5 mr-1" /> Nova Tarefa
                   </Button>
-                </div>
-              </div>
-
-              {/* AI Mentor with elegant design */}
-              <div className="bg-white dark:bg-[#1E293B] rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border border-[#FF6B00]/10 dark:border-[#FF6B00]/20 transform hover:translate-y-[-3px]">
-                <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-white/20 p-1.5 rounded-lg shadow-inner">
-                      <Sparkles className="h-5 w-5 text-white" />
-                    </div>
-                    <h3 className="text-base font-bold text-white">
-                      Recomendações do Epictus IA
-                    </h3>
-                  </div>
-                </div>
-                <div className="p-5 space-y-4">
-                  {aiRecommendations.map((rec) => (
-                    <div
-                      key={rec.id}
-                      className="bg-[#FF6B00]/5 dark:bg-[#FF6B00]/10 rounded-lg p-4 hover:bg-[#FF6B00]/10 dark:hover:bg-[#FF6B00]/20 transition-colors shadow-sm hover:shadow-md group cursor-pointer"
-                    >
-                      <div className="flex gap-3">
-                        <div className="mt-0.5 group-hover:scale-110 transition-transform">
-                          {rec.icon}
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="font-medium text-gray-900 dark:text-white text-sm group-hover:text-[#FF6B00] transition-colors">
-                            {rec.title}
-                          </h4>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                            {rec.description}
-                          </p>
-                          <div className="flex gap-2 mt-4">
-                            {rec.actions.map((action, idx) => (
-                              <Button
-                                key={idx}
-                                size="sm"
-                                variant={action.variant}
-                                className={
-                                  action.variant === "outline"
-                                    ? "h-8 text-xs border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10 font-medium flex items-center rounded-lg transition-colors"
-                                    : "h-8 text-xs bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-medium flex items-center rounded-lg shadow-sm hover:shadow-md transition-all duration-300"
-                                }
-                              >
-                                {action.icon}
-                                {action.label}
-                              </Button>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
                 </div>
               </div>
             </div>
