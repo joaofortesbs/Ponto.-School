@@ -1,4 +1,3 @@
-
 import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -30,7 +29,7 @@ export const checkSupabaseConnection = async () => {
 
     // Abordagem simples - tentar fazer uma consulta simples
     const { error } = await supabase.from('profiles').select('count', { head: true, count: 'exact' });
-    
+
     if (!error) {
       console.log('Conexão com Supabase estabelecida com sucesso!');
       return true;
@@ -48,7 +47,7 @@ export const checkSupabaseConnection = async () => {
 export const setupSupabaseHealthCheck = async () => {
   try {
     const serviceRoleKey = import.meta.env.SUPABASE_SERVICE_ROLE_KEY;
-    
+
     if (!serviceRoleKey) {
       console.warn('Chave de serviço do Supabase não configurada para criar função de ping');
       return;
@@ -56,7 +55,7 @@ export const setupSupabaseHealthCheck = async () => {
 
     // Usando client com service role key para criar função RPC
     const adminClient = createClient(supabaseUrl || "", serviceRoleKey);
-    
+
     // Criar função RPC para ping
     const { error } = await adminClient.rpc('execute_sql', {
       sql_query: `

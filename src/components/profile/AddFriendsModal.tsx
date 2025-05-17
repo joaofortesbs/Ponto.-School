@@ -64,6 +64,8 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
   const [savedProfiles, setSavedProfiles] = useState<{[key: string]: boolean}>({});
   const [showProfileActions, setShowProfileActions] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [searchResults, setSearchResults] = useState<any[]>([]); // Add this line
+  const [noResults, setNoResults] = useState(false); // Add this line
 
   // Referências para melhorar desempenho
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
