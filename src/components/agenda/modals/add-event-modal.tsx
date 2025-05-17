@@ -582,15 +582,19 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                     type="date"
                     value={startDate ? format(startDate, "yyyy-MM-dd") : ""}
                     onChange={(e) => {
-                      if (e.target.value) {
+                      // Apenas atualizar o state quando o valor for uma data válida completa
+                      const inputValue = e.target.value;
+                      if (inputValue && inputValue.length === 10) { // Formato completo yyyy-MM-dd
                         try {
-                          const newDate = new Date(e.target.value);
+                          const newDate = new Date(inputValue);
                           if (!isNaN(newDate.getTime())) {
                             setStartDate(newDate);
                           }
                         } catch (error) {
                           console.error("Data inválida:", error);
                         }
+                      } else if (!inputValue) {
+                        setStartDate(undefined);
                       }
                     }}
                     className="w-full"
@@ -603,15 +607,19 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                     type="date"
                     value={endDate ? format(endDate, "yyyy-MM-dd") : ""}
                     onChange={(e) => {
-                      if (e.target.value) {
+                      // Apenas atualizar o state quando o valor for uma data válida completa
+                      const inputValue = e.target.value;
+                      if (inputValue && inputValue.length === 10) { // Formato completo yyyy-MM-dd
                         try {
-                          const newDate = new Date(e.target.value);
+                          const newDate = new Date(inputValue);
                           if (!isNaN(newDate.getTime())) {
                             setEndDate(newDate);
                           }
                         } catch (error) {
                           console.error("Data inválida:", error);
                         }
+                      } else if (!inputValue) {
+                        setEndDate(undefined);
                       }
                     }}
                     className="w-full"
