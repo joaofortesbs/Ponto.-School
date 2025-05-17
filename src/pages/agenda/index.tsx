@@ -1241,7 +1241,6 @@ export default function AgendaPage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Calendar Column */}
             <div className="lg:col-span-9">
-
               <div className="bg-[#001427] rounded-b-xl overflow-hidden shadow-md">
                 {calendarView === "month" && (
                   <MonthView

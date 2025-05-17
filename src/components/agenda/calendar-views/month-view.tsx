@@ -124,44 +124,43 @@ const MonthView: React.FC<MonthViewProps> = ({
   };
 
   return (
-    <DndProvider backend={HTML5Backend}>
-      <div className="bg-white dark:bg-[#1E293B] rounded-xl shadow-lg overflow-hidden border border-gray-100 dark:border-gray-800 hover:shadow-xl transition-all duration-300">
-        <div className="p-4 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="bg-white/20 p-1.5 rounded-lg shadow-inner">
-              <CalendarIcon className="h-5 w-5 text-white" />
-            </div>
-            <h3 className="font-bold text-lg tracking-wide">
-              {format(currentDate, "MMMM yyyy", { locale: ptBR })}
-            </h3>
+    <div className="bg-white dark:bg-[#1E293B] rounded-xl shadow-lg overflow-hidden border border-gray-100 dark:border-gray-800 hover:shadow-xl transition-all duration-300">
+      <div className="p-4 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white flex justify-between items-center">
+        <div className="flex items-center gap-3">
+          <div className="bg-white/20 p-1.5 rounded-lg shadow-inner">
+            <CalendarIcon className="h-5 w-5 text-white" />
           </div>
-          <div className="flex items-center gap-4">
-            <div className="flex rounded-md overflow-hidden">
-              <Button
-                variant="ghost"
-                size="sm"
-                className={`h-8 rounded-none ${calendarView === "day" ? "bg-white text-[#FF6B00]" : "text-white hover:bg-white/20"}`}
-                onClick={() => setCalendarView("day")}
-              >
-                Dia
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className={`h-8 rounded-none ${calendarView === "week" ? "bg-white text-[#FF6B00]" : "text-white hover:bg-white/20"}`}
-                onClick={() => setCalendarView("week")}
-              >
-                Semana
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className={`h-8 rounded-none ${calendarView === "month" ? "bg-white text-[#FF6B00]" : "text-white hover:bg-white/20"}`}
-                onClick={() => setCalendarView("month")}
-              >
-                Mês
-              </Button>
-            </div>
+          <h3 className="font-bold text-lg tracking-wide">
+            {format(currentDate, "MMMM yyyy", { locale: ptBR })}
+          </h3>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="flex rounded-md overflow-hidden">
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`h-8 rounded-none ${calendarView === "day" ? "bg-white text-[#FF6B00]" : "text-white hover:bg-white/20"}`}
+              onClick={() => setCalendarView("day")}
+            >
+              Dia
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`h-8 rounded-none ${calendarView === "week" ? "bg-white text-[#FF6B00]" : "text-white hover:bg-white/20"}`}
+              onClick={() => setCalendarView("week")}
+            >
+              Semana
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`h-8 rounded-none ${calendarView === "month" ? "bg-white text-[#FF6B00]" : "text-white hover:bg-white/20"}`}
+              onClick={() => setCalendarView("month")}
+            >
+              Mês
+            </Button>
+          </div>
             <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
@@ -207,36 +206,37 @@ const MonthView: React.FC<MonthViewProps> = ({
           </div>
 
           {/* Calendar grid */}
-          <div className="grid grid-cols-7 gap-2">
-            {weeks.map((week, weekIndex) =>
-              week.map((day, dayIndex) => {
-                const dayNumber = day.getDate();
-                const isCurrentMonthDay = isSameMonth(day, currentDate);
-                const isTodayDay = isToday(day);
-                const dayEvents = isCurrentMonthDay
-                  ? eventData[dayNumber] || []
-                  : [];
-                const isSelected =
-                  selectedDay &&
-                  selectedDay.getDate() === dayNumber &&
-                  selectedDay.getMonth() === day.getMonth() &&
-                  selectedDay.getFullYear() === day.getFullYear();
+          <DndProvider backend={HTML5Backend}>
+            <div className="grid grid-cols-7 gap-2">
+              {weeks.map((week, weekIndex) =>
+                week.map((day, dayIndex) => {
+                  const dayNumber = day.getDate();
+                  const isCurrentMonthDay = isSameMonth(day, currentDate);
+                  const isTodayDay = isToday(day);
+                  const dayEvents = isCurrentMonthDay
+                    ? eventData[dayNumber] || []
+                    : [];
+                  const isSelected =
+                    selectedDay &&
+                    selectedDay.getDate() === dayNumber &&
+                    selectedDay.getMonth() === day.getMonth() &&
+                    selectedDay.getFullYear() === day.getFullYear();
 
-                return (
-                  <div
-                    key={`${weekIndex}-${dayIndex}`}
-                    className="relative group"
-                    onClick={() => setSelectedDay(day)}
-                  >
-                    <DroppableDay
-                      day={dayNumber}
-                      isCurrentMonth={isCurrentMonthDay}
-                      isToday={isTodayDay}
-                      isSelected={isSelected}
-                      events={dayEvents}
-                      onEventClick={openEventDetails}
-                      onEventDrop={(event, day) => handleEventDrop(event, day)}
-                    />
+                  return (
+                    <div
+                      key={`${weekIndex}-${dayIndex}`}
+                      className="relative group"
+                      onClick={() => setSelectedDay(day)}
+                    >
+                      <DroppableDay
+                        day={dayNumber}
+                        isCurrentMonth={isCurrentMonthDay}
+                        isToday={isTodayDay}
+                        isSelected={isSelected}
+                        events={dayEvents}
+                        onEventClick={openEventDetails}
+                        onEventDrop={(event, day) => handleEventDrop(event, day)}
+                      />
 
                     {/* Quick add button that appears on hover or when selected */}
                     {isCurrentMonthDay && (
@@ -262,11 +262,11 @@ const MonthView: React.FC<MonthViewProps> = ({
                 );
               }),
             )}
-          </div>
+            </div>
+          </DndProvider>
         </div>
       </div>
-    </DndProvider>
-  );
+    );
 };
 
 export default MonthView;
