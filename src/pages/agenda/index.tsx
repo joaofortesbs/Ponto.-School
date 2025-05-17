@@ -530,6 +530,8 @@ export default function AgendaPage() {
   // Add new event
   const handleAddEvent = async (newEvent: any) => {
     try {
+      console.log("Recebendo novo evento para adicionar:", newEvent);
+      
       // Adicionar evento ao banco de dados
       const savedEvent = await addEvent({
         ...newEvent,
@@ -537,6 +539,8 @@ export default function AgendaPage() {
       });
       
       if (savedEvent) {
+        console.log("Evento salvo com sucesso:", savedEvent);
+        
         // Atualizar o estado local com o novo evento
         setEvents(prevEvents => [...prevEvents, savedEvent]);
         
@@ -565,12 +569,19 @@ export default function AgendaPage() {
           title: "Evento adicionado",
           description: "O evento foi adicionado com sucesso ao seu calendário e listado em Próximos Eventos.",
         });
+      } else {
+        console.error("Falha ao salvar o evento, retorno nulo");
+        toast({
+          title: "Erro ao adicionar evento",
+          description: "O evento não pôde ser salvo no banco de dados.",
+          variant: "destructive"
+        });
       }
     } catch (error) {
       console.error("Erro ao adicionar evento:", error);
       toast({
         title: "Erro ao adicionar evento",
-        description: "Ocorreu um erro ao adicionar o evento. Tente novamente.",
+        description: "Ocorreu um erro ao adicionar o evento. Verifique o console para mais detalhes.",
         variant: "destructive"
       });
     }

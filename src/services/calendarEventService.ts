@@ -78,27 +78,46 @@ export const getUserEvents = async (): Promise<CalendarEvent[]> => {
 
 // Função para adicionar um novo evento
 export const addEvent = async (event: Omit<CalendarEvent, 'id'>): Promise<CalendarEvent | null> => {
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  if (!user) return null;
-  
-  const newEvent = {
-    ...formatEventForApi({ ...event, id: uuidv4() }),
-    user_id: user.id
-  };
-  
-  const { data, error } = await supabase
-    .from('calendar_events')
-    .insert(newEvent)
-    .select()
-    .single();
-  
-  if (error) {
-    console.error('Erro ao adicionar evento:', error);
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      console.error('Usuário não autenticado');
+      return null;
+    }
+    
+    // Garantir que temos um ID único
+    const eventId = uuidv4();
+    console.log('Criando evento com ID:', eventId);
+    
+    // Preparar o evento para salvar no banco
+    const newEvent = {
+      ...formatEventForApi({ ...event, id: eventId }),
+      user_id: user.id,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+    
+    console.log('Evento formatado para API:', newEvent);
+    
+    const { data, error } = await supabase
+      .from('calendar_events')
+      .insert(newEvent)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Erro ao adicionar evento:', error);
+      console.error('Detalhes do erro:', error.details, error.hint, error.message);
+      return null;
+    }
+    
+    console.log('Evento salvo com sucesso:', data);
+    return formatEventFromApi(data);
+  } catch (error) {
+    console.error('Exceção ao adicionar evento:', error);
     return null;
   }
-  
-  return formatEventFromApi(data);
 };
 
 // Função para atualizar um evento existente
