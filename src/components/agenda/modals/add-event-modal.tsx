@@ -567,97 +567,32 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
             </div>
           )}
 
-          {/* Entrada manual de datas e Calendário para seleção */}
+          {/* Calendário para seleção de datas */}
           <div className="grid grid-cols-4 items-start gap-4">
             <Label htmlFor="dates" className="text-right pt-2">
               Datas
             </Label>
             <div className="col-span-3">
-              {/* Campos para entrada manual de datas */}
-              <div className="flex gap-2 mb-3">
-                <div className="flex-1">
-                  <Label htmlFor="startDate" className="text-sm mb-1 block">Data de início</Label>
-                  <Input
-                    id="startDate"
-                    type="date"
-                    value={startDate ? format(startDate, "yyyy-MM-dd") : ""}
-                    onChange={(e) => {
-                      // Apenas atualizar o state quando o valor for uma data válida completa
-                      const inputValue = e.target.value;
-                      if (inputValue && inputValue.length === 10) { // Formato completo yyyy-MM-dd
-                        try {
-                          const newDate = new Date(inputValue);
-                          if (!isNaN(newDate.getTime())) {
-                            setStartDate(newDate);
-                          }
-                        } catch (error) {
-                          console.error("Data inválida:", error);
-                        }
-                      } else if (!inputValue) {
-                        setStartDate(undefined);
-                      }
-                    }}
-                    className="w-full"
-                  />
-                </div>
-                <div className="flex-1">
-                  <Label htmlFor="endDate" className="text-sm mb-1 block">Data de término</Label>
-                  <Input
-                    id="endDate"
-                    type="date"
-                    value={endDate ? format(endDate, "yyyy-MM-dd") : ""}
-                    onChange={(e) => {
-                      // Apenas atualizar o state quando o valor for uma data válida completa
-                      const inputValue = e.target.value;
-                      if (inputValue && inputValue.length === 10) { // Formato completo yyyy-MM-dd
-                        try {
-                          const newDate = new Date(inputValue);
-                          if (!isNaN(newDate.getTime())) {
-                            setEndDate(newDate);
-                          }
-                        } catch (error) {
-                          console.error("Data inválida:", error);
-                        }
-                      } else if (!inputValue) {
-                        setEndDate(undefined);
-                      }
-                    }}
-                    className="w-full"
-                  />
-                </div>
+              {/* Calendário para seleção de datas */}
+              <div className="border rounded-md p-4 bg-white dark:bg-slate-950">
+                <Calendar
+                  mode="range"
+                  selected={{
+                    from: startDate,
+                    to: endDate || startDate
+                  }}
+                  onSelect={(range) => {
+                    if (range?.from) {
+                      setStartDate(range.from);
+                      setEndDate(range.to || range.from);
+                    }
+                  }}
+                  numberOfMonths={1}
+                  className="rounded-md border"
+                  disabled={false}
+                  initialFocus
+                />
               </div>
-              
-              {/* Calendário visual (expansível) */}
-              <Collapsible>
-                <CollapsibleTrigger asChild>
-                  <Button variant="outline" className="w-full flex items-center justify-center gap-2 mb-2">
-                    <CalendarIcon className="h-4 w-4" />
-                    <span>Selecionar no calendário</span>
-                    <ChevronDown className="h-4 w-4" />
-                  </Button>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <div className="border rounded-md p-4 bg-white dark:bg-slate-950">
-                    <Calendar
-                      mode="range"
-                      selected={{
-                        from: startDate,
-                        to: endDate || startDate
-                      }}
-                      onSelect={(range) => {
-                        if (range?.from) {
-                          setStartDate(range.from);
-                          setEndDate(range.to || range.from);
-                        }
-                      }}
-                      numberOfMonths={1}
-                      className="rounded-md border"
-                      disabled={false}
-                      initialFocus
-                    />
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
               
               <div className="mt-3 flex flex-wrap gap-2">
                 {startDate && (
