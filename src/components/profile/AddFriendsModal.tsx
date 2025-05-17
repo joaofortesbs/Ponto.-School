@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,10 +9,10 @@ import {
   Search, X, Eye, Lock, Unlock, ChevronLeft, ArrowLeft, 
   UserCheck, MapPin, BookOpen, Bookmark, Users, 
   Clock, CheckCircle2, AlertCircle, Bell, Filter,
-  MoreVertical, MessageSquare, Ban, Flag, Share2, RefreshCw
+  MoreVertical, MessageSquare, Ban, Flag, Share2
 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
-import { checkSupabaseConnection, supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
 
 // Tipos de usuário
 interface UserType {
@@ -64,19 +65,16 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
   const [savedProfiles, setSavedProfiles] = useState<{[key: string]: boolean}>({});
   const [showProfileActions, setShowProfileActions] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [searchResults, setSearchResults] = useState<any[]>([]); // Add this line
-  const [noResults, setNoResults] = useState(false); // Add this line
 
   // Referências para melhorar desempenho
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const resultsContainerRef = useRef<HTMLDivElement | null>(null);
+  const resultsContainerRef = useRef<HTMLDivElement>(null);
 
   // Estados de UI
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [filter, setFilter] = useState<'all' | 'online' | 'suggested' | 'saved'>('all');
   const [sortOrder, setSortOrder] = useState<'alphabetical' | 'recent'>('recent');
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
-  const [searchError, setSearchError] = useState<string | null>(null);
 
   // Buscar o ID do usuário atual
   useEffect(() => {
@@ -238,7 +236,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
     searchTimeoutRef.current = setTimeout(async () => {
       try {
         console.log("Realizando busca por:", query);
-
+        
         // Construir condições de busca mais amplas (username, full_name e email)
         // Buscar do Supabase usando .ilike para busca parcial case-insensitive
         const { data, error } = await supabase
@@ -251,10 +249,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
 
         if (error) {
           console.error("Erro na busca do Supabase:", error);
-          document.getElementById('search-error-message')?.classList.remove('hidden');
           throw error;
-        } else {
-          document.getElementById('search-error-message')?.classList.add('hidden');
         }
 
         console.log("Resultados da busca no Supabase:", data);
@@ -264,10 +259,10 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
           const formattedResults: UserType[] = data.map(user => {
             // Gerar um username válido se não existir
             const validUsername = user.username || user.email?.split('@')[0] || `user_${user.id.substring(0, 6)}`;
-
+            
             // Gerar um nome de exibição válido
             const displayName = user.full_name || validUsername || 'Usuário';
-
+            
             return {
               id: user.id,
               name: displayName,
@@ -294,7 +289,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
 
           // Aplicar filtros adicionais
           let finalResults = sortedResults;
-
+          
           if (filter === 'saved') {
             finalResults = sortedResults.filter(user => savedProfiles[user.id]);
           } 
@@ -310,7 +305,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
         } else {
           console.log(`Nenhum resultado no Supabase para a busca "${query}"`);
           setFilteredResults([]);
-
+          
           // Não usamos mais dados mock como fallback
         }
       } catch (error) {
@@ -326,7 +321,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
       }
     }, 500); // 500ms para reduzir chamadas ao Supabase
   }, [filter, sortOrder, savedProfiles, currentUserId]);
-
+  
   // Função para calcular tempo relativo (ex: "5 min atrás")
   const getRelativeTimeString = (date: Date): string => {
     const now = new Date();
@@ -335,12 +330,12 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
     const diffMin = Math.round(diffSec / 60);
     const diffHour = Math.round(diffMin / 60);
     const diffDay = Math.round(diffHour / 24);
-
+    
     if (diffSec < 60) return 'Agora mesmo';
     if (diffMin < 60) return `${diffMin} min atrás`;
     if (diffHour < 24) return `${diffHour}h atrás`;
     if (diffDay < 7) return `${diffDay} dias atrás`;
-
+    
     return 'Há mais de uma semana';
   };
 
@@ -395,58 +390,34 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
       setShowProfileActions(false);
       setSearchQuery('');
       setFilteredResults([]);
-      setSearchResults([]);
-      setSearchError(null);
-      setNoResults(false);
-
-      // Limpar qualquer timeout pendente
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current);
-      }
     } else {
       // Ao abrir o modal
       setActiveTab("buscar");
-      setIsLoading(true);
-      setSearchError(null);
-      setNoResults(false);
-
+      
       // Buscar usuários recentes para exibir quando o modal abre
       const fetchInitialUsers = async () => {
         try {
-          // Verificar a conexão com o Supabase primeiro
-          const isConnected = await checkSupabaseConnection();
-
-          if (!isConnected) {
-            console.error("Não foi possível estabelecer conexão com o Supabase na inicialização");
-            setSearchError('Não foi possível conectar ao serviço. Tente novamente mais tarde.');
-            setIsLoading(false);
-            return;
-          }
-
-          // Usar uma consulta mais simples e robusta para obter os perfis mais recentes
+          setIsLoading(true);
           const { data, error } = await supabase
             .from('profiles')
-            .select('id, full_name, username, avatar_url, bio, is_private, updated_at')
+            .select('id, full_name, username, avatar_url, bio, email, is_private, updated_at')
             .neq('id', currentUserId || '')
             .order('updated_at', { ascending: false })
             .limit(10);
 
           if (error) {
             console.error("Erro ao buscar usuários iniciais:", error);
-            setSearchError('Não foi possível carregar usuários. Tente novamente mais tarde.');
             return;
           }
-
-          console.log(`Carregados ${data?.length || 0} usuários iniciais com sucesso`);
 
           if (data && data.length > 0) {
             const formattedResults: UserType[] = data.map(user => {
               // Gerar um username válido se não existir
-              const validUsername = user.username || `user_${user.id.substring(0, 6)}`;
-
+              const validUsername = user.username || user.email?.split('@')[0] || `user_${user.id.substring(0, 6)}`;
+              
               // Gerar um nome de exibição válido
               const displayName = user.full_name || validUsername || 'Usuário';
-
+              
               return {
                 id: user.id,
                 name: displayName,
@@ -460,22 +431,16 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                 lastActive: getRelativeTimeString(new Date(user.updated_at || Date.now()))
               };
             });
-
+            
             setFilteredResults(formattedResults);
-            setSearchResults(formattedResults);
-          } else {
-            setFilteredResults([]);
-            setSearchResults([]);
           }
-        } catch (error: any) {
+        } catch (error) {
           console.error("Erro ao carregar usuários iniciais:", error);
-          setSearchError('Não foi possível carregar usuários. Tente novamente mais tarde.');
         } finally {
           setIsLoading(false);
         }
       };
 
-      // Iniciar o carregamento de dados
       fetchInitialUsers();
     }
   }, [open, currentUserId]);
@@ -494,7 +459,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
       const timeoutId = setTimeout(() => {
         document.addEventListener('mousedown', handleClickOutside);
       }, 100);
-
+      
       return () => {
         clearTimeout(timeoutId);
         document.removeEventListener('mousedown', handleClickOutside);
@@ -571,7 +536,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
             duration: 3000,
           });
           break;
-
+          
         case 'unfollow':
           // Desfazer a amizade/deixar de seguir
           const { error: unfollowError } = await supabase
@@ -1291,123 +1256,6 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
     );
   };
 
-  // Função de busca de usuários no Supabase
-  const searchUsers = async (query: string) => {
-    if (!query.trim()) {
-      setFilteredResults([]);
-      setSearchError(null);
-      setNoResults(false);
-      return;
-    }
-
-    setIsLoading(true);
-    setSearchError(null);
-    setNoResults(false);
-
-    // Verifica a conexão com o Supabase antes de continuar
-    const isConnected = await verifySupabaseConnection();
-    if (!isConnected) {
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      console.log(`Buscando usuários com o termo: "${query}"`);
-
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name, username, avatar_url, bio, email, is_private, updated_at')
-        .or(`username.ilike.%${query}%,full_name.ilike.%${query}%`)
-        .neq('id', currentUserId || '')
-        .order('updated_at', { ascending: false })
-        .limit(20);
-
-      if (error) {
-        console.error("Erro na busca do Supabase:", error);
-        setSearchError('Ocorreu um erro ao buscar usuários. Tente novamente mais tarde.');
-        setFilteredResults([]);
-        return;
-      }
-
-      console.log(`Encontrados ${data?.length || 0} resultados para a busca "${query}"`);
-
-      if (data && data.length > 0) {
-        const formattedResults: UserType[] = data.map(user => {
-          const validUsername = user.username || user.email?.split('@')[0] || `user_${user.id.substring(0, 6)}`;
-          const displayName = user.full_name || validUsername || 'Usuário';
-
-          return {
-            id: user.id,
-            name: displayName,
-            username: validUsername,
-            bio: user.bio || `Olá! Sou ${displayName} na plataforma Epictus.`,
-            isPrivate: user.is_private || false,
-            avatar: user.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${validUsername}`,
-            followersCount: 0,
-            friendsCount: 0,
-            postsCount: 0,
-            lastActive: getRelativeTimeString(new Date(user.updated_at || Date.now()))
-          };
-        });
-
-        setFilteredResults(formattedResults);
-        setSearchResults(formattedResults);
-      } else {
-        setFilteredResults([]);
-        setSearchResults([]);
-        setNoResults(true);
-      }
-    } catch (error) {
-      console.error("Erro na busca de usuários:", error);
-      setFilteredResults([]);
-      setSearchError('Ocorreu um erro ao buscar usuários. Tente novamente mais tarde.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Função onSubmit aprimorada para tratamento de erros e validação
-  const onSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setSearchError(null);
-
-    if (!searchQuery.trim()) {
-      setSearchError('Por favor, digite um termo para buscar usuários.');
-      return;
-    }
-
-    if (searchQuery.trim().length < 3) {
-      setSearchError('Digite pelo menos 3 caracteres para buscar.');
-      return;
-    }
-
-    searchUsers(searchQuery);
-  };
-
-    // Nova função para verificar a conexão com o Supabase
-	const verifySupabaseConnection = async (): Promise<boolean> => {
-		try {
-			// Usar uma consulta mais simples e robusta
-			const { data, error } = await supabase
-				.from('profiles')
-				.select('id')
-				.limit(1);
-
-			if (error) {
-				console.error('Erro ao verificar conexão com Supabase:', error);
-				setSearchError('Não foi possível conectar ao serviço. Verifique sua conexão.');
-				return false;
-			}
-
-      console.log('Conexão com Supabase estabelecida com sucesso!');
-			return true;
-		} catch (err) {
-			console.error('Falha ao verificar conexão com Supabase:', err);
-			setSearchError('Falha ao verificar conexão com o serviço.');
-			return false;
-		}
-	};
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl p-0 bg-gradient-to-b from-[#0A2540] to-[#001427] border-white/10 overflow-hidden rounded-xl shadow-2xl backdrop-blur-lg">
@@ -1459,167 +1307,128 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
               </TabsList>
 
               <TabsContent value="buscar" className="mt-0 focus-visible:outline-none">
+                <div className="relative mb-6 flex items-center">
+                  <div className="relative flex-1">
+                    <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                      <Search className="h-4 w-4 text-white/60" />
+                    </div>
+                    <Input 
+                      className="w-full pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/40 focus:border-[#FF6B00]/50 focus:ring-[#FF6B00]/30 rounded-xl py-6"
+                      placeholder="Digite nome, @username ou parte do nome"
+                      value={searchQuery}
+                      onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        // Iniciar a busca automaticamente quando o usuário digita
+                        if (e.target.value.trim().length >= 3) {
+                          performSearch(e.target.value);
+                        } else if (e.target.value.trim() === '') {
+                          setFilteredResults([]);
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          performSearch(searchQuery);
+                        }
+                      }}
+                      autoFocus
+                    />
 
-          <div className="relative mb-6">
-            <div className="relative flex items-center">
-              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                <Search className="h-4 w-4 text-white/60" />
-              </div>
-              <Input 
-                className="w-full pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/40 focus:border-[#FF6B00]/50 focus:ring-[#FF6B00]/30 rounded-xl py-6"
-                placeholder="Digite nome, @username ou parte do nome"
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setSearchError(null);
-                  setNoResults(false);
+                    {isLoading && (
+                      <div className="absolute inset-y-0 right-3 flex items-center">
+                        <div className="h-4 w-4 border-2 border-[#FF6B00]/70 border-t-transparent rounded-full animate-spin"></div>
+                      </div>
+                    )}
+                    
+                    {!isLoading && searchQuery.trim() !== '' && (
+                      <button 
+                        onClick={() => performSearch(searchQuery)}
+                        className="absolute inset-y-0 right-3 p-2 text-white/60 hover:text-white/90 transition-colors"
+                        title="Buscar"
+                      >
+                        <span className="sr-only">Buscar</span>
+                        <Search className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
 
-                  // Limpar resultados se o campo estiver vazio
-                  if (e.target.value.trim() === '') {
-                    setFilteredResults([]);
-                    setSearchResults([]);
-                  }
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && searchQuery.trim().length >= 2) {
-                    searchUsers(searchQuery);
-                  }
-                }}
-                autoFocus
-              />
+                  {/* Botão de Perfis Salvos */}
+                  <div className="ml-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className={`h-10 w-10 rounded-full ${filter === 'saved' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white'}`}
+                      onClick={() => {
+                        setFilter(filter === 'saved' ? 'all' : 'saved');
+                        performSearch(searchQuery);
+                      }}
+                      title="Mostrar perfis salvos"
+                    >
+                      <Bookmark className={`h-4 w-4 ${filter === 'saved' ? 'fill-amber-400' : ''}`} />
+                    </Button>
+                  </div>
 
-              {isLoading ? (
-                <div className="absolute inset-y-0 right-3 flex items-center">
-                  <div className="h-4 w-4 border-2 border-[#FF6B00]/70 border-t-transparent rounded-full animate-spin"></div>
+                  {/* Botão de filtro */}
+                  <div className="ml-2 relative">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-10 w-10 rounded-full bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white"
+                      onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+                    >
+                      <Filter className="h-4 w-4" />
+                    </Button>
+
+                    {showFilterDropdown && <FilterDropdown />}
+                  </div>
                 </div>
-              ) : (
-                <button 
-                  onClick={() => {
-                    if (searchQuery.trim().length >= 2) {
-                      searchUsers(searchQuery);
-                    } else if (searchQuery.trim() !== '') {
-                      setSearchError('Digite pelo menos 2 caracteres para buscar');
-                    }
-                  }}
-                  className="absolute inset-y-0 right-3 p-2 text-white/60 hover:text-white/90 transition-colors"
-                  title="Buscar"
-                  disabled={searchQuery.trim().length < 2}
-                >
-                  <Search className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-
-            {searchError && (
-              <div className="mt-2 px-3 py-2 bg-red-500/10 border border-red-500/20 rounded-lg">
-                <div className="flex items-center text-sm text-red-400">
-                  <AlertCircle className="h-4 w-4 mr-2" />
-                  {searchError}
-                </div>
-              </div>
-            )}
-
-            {/* Botão de reconexão caso haja erro */}
-            {searchError && searchError.includes('conectar') && (
-              <div className="mt-2 flex justify-center">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => {
-                    setSearchError(null);
-                    setIsLoading(true);
-                    verifySupabaseConnection().then(connected => {
-                      if (connected && searchQuery.trim().length >= 2) {
-                        searchUsers(searchQuery);
-                      } else {
-                        setIsLoading(false);
-                      }
-                    });
-                  }}
-                  className="bg-white/10 text-white border-white/20 hover:bg-white/20"
-                >
-                  <RefreshCw className="h-4 w-4 mr-2" /> Tentar novamente
-                </Button>
-              </div>
-            )}
-          </div>
 
                 <div 
                   className="overflow-y-auto max-h-[420px] pr-2 custom-scrollbar"
                   ref={resultsContainerRef}
                 >
-                  {/* Estado inicial - campo vazio */}
-                {searchQuery.trim() === '' && (
-                  <EmptyState type="search" />
-                )}
+                  {searchQuery.trim() === '' && (
+                    <EmptyState type="search" />
+                  )}
 
-                {/* Estado de busca com resultados */}
-                {searchQuery.trim() !== '' && filteredResults.length > 0 && (
-                  <div className="mb-3 bg-white/5 rounded-lg p-3">
-                    <p className="text-white/70 text-sm">
-                      {filteredResults.length} {filteredResults.length === 1 ? 'usuário encontrado' : 'usuários encontrados'} para "{searchQuery}"
-                    </p>
-                  </div>
-                )}
-
-                {/* Listagem de resultados */}
-                {filteredResults.map(user => (
-                  <UserCard key={user.id} user={user} />
-                ))}
-
-                {/* Estado de sem resultados */}
-                {searchQuery.trim() !== '' && filteredResults.length === 0 && !isLoading && noResults && (
-                  <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
-                    <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4">
-                      <Search className="h-6 w-6 text-white/40" />
-                    </div>
-                    <h3 className="text-white/80 text-lg font-medium mb-2">
-                      Nenhum usuário encontrado
-                    </h3>
-                    <p className="text-white/50 text-sm max-w-xs">
-                      Nenhum usuário correspondente à busca "{searchQuery}". Tente termos diferentes ou verifique a ortografia.
-                    </p>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => {
-                        // Limpar e tentar com outro termo sugerido
-                        const suggestions = ['João', 'Maria', 'Pedro', 'Ana'];
-                        const randomSuggestion = suggestions[Math.floor(Math.random() * suggestions.length)];
-                        setSearchQuery(randomSuggestion);
-                        searchUsers(randomSuggestion);
-                      }}
-                      className="mt-4 bg-gradient-to-r from-[#FF6B00]/20 to-[#FF9B50]/10 text-[#FF9B50] border-[#FF6B00]/30 hover:bg-[#FF6B00]/30"
-                    >
-                      Sugerir busca
-                    </Button>
-                  </div>
-                )}
-
-                {/* Indicador de carregamento de busca em andamento */}
-                {isLoading && searchQuery.trim() !== '' && (
-                  <div className="flex flex-col items-center justify-center py-8 text-center">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] animate-pulse flex items-center justify-center mb-4">
-                      <div className="w-8 h-8 rounded-full bg-[#0c1a2b] flex items-center justify-center">
-                        <div className="h-5 w-5 border-2 border-[#FF6B00] border-t-transparent rounded-full animate-spin"></div>
+                  {searchQuery.trim() !== '' && filteredResults.length === 0 && !isLoading && (
+                    <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
+                      <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4">
+                        <Search className="h-6 w-6 text-white/40" />
                       </div>
-                    </div>
-                    <p className="text-white/60 text-sm">Buscando usuários...</p>
-                  </div>
-                )}
-
-                {/* Mensagem de erro visual (visível somente quando ativada) */}
-                <div className="mb-4 bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 hidden" id="search-error-message">
-                  <div className="flex items-start gap-2">
-                    <AlertCircle className="h-5 w-5 text-amber-500 mt-0.5" />
-                    <div>
-                      <p className="text-amber-400 text-sm font-medium">Erro na busca</p>
-                      <p className="text-white/70 text-xs mt-1">
-                        Ocorreu um erro ao buscar usuários. Verifique sua conexão e tente novamente mais tarde.
+                      <h3 className="text-white/80 text-lg font-medium mb-2">
+                        Nenhum usuário encontrado
+                      </h3>
+                      <p className="text-white/50 text-sm max-w-xs">
+                        Não encontramos resultados para "{searchQuery}". Tente outro termo ou verifique a ortografia.
                       </p>
                     </div>
-                  </div>
-                </div>
+                  )}
+
+                  {searchQuery.trim() !== '' && filteredResults.length > 0 && (
+                    <div className="mb-3 bg-white/5 rounded-lg p-3">
+                      <p className="text-white/70 text-sm">
+                        {filteredResults.length} {filteredResults.length === 1 ? 'usuário encontrado' : 'usuários encontrados'} para "{searchQuery}"
+                      </p>
+                    </div>
+                  )}
+
+                  {filteredResults.map(user => (
+                    <UserCard key={user.id} user={user} />
+                  ))}
+                  
+                  {searchQuery.trim() !== '' && filteredResults.length === 0 && !isLoading && (
+                    <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
+                      <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4">
+                        <Search className="h-6 w-6 text-white/40" />
+                      </div>
+                      <h3 className="text-white/80 text-lg font-medium mb-2">
+                        Nenhum usuário encontrado
+                      </h3>
+                      <p className="text-white/50 text-sm max-w-xs">
+                        Nenhum usuário correspondente à busca "{searchQuery}". Tente termos diferentes ou verifique a ortografia.
+                      </p>
+                    </div>
+                  )}
                 </div>
               </TabsContent>
 

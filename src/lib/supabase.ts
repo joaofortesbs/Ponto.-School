@@ -1,3 +1,4 @@
+
 import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -19,48 +20,38 @@ export const supabase = createClient(supabaseUrl || "", supabaseAnonKey || "", {
   },
 });
 
-// Função auxiliar para verificar a conexão - aprimorada com retry
-export const checkSupabaseConnection = async (retryCount = 3) => {
+// Função auxiliar para verificar a conexão
+export const checkSupabaseConnection = async () => {
   try {
+    // Primeiro verificamos se o cliente supabase foi inicializado
     if (!supabase) {
       console.error('Cliente Supabase não inicializado corretamente');
       return false;
     }
 
-    // Abordagem mais simples e confiável - tentar fazer uma consulta básica
-    for (let i = 0; i <= retryCount; i++) {
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('id')
-          .limit(1)
-          .maybeSingle();
+    // Tentamos uma operação simples para verificar conexão
+    const { data, error } = await supabase.from('profiles').select('count').limit(1);
+    
+    if (error) {
+      if (error.code === 'PGRST204') {
+        // Esta tabela existe, mas não tem dados - a conexão está ok
+        console.log('Conexão com Supabase estabelecida com sucesso!');
+        return true;
+      }
 
-        if (!error) {
-          console.log('Conexão com Supabase estabelecida com sucesso!');
-          return true;
-        } else if (i < retryCount) {
-          console.warn(`Tentativa ${i+1} falhou, tentando novamente...`);
-          // Aumentar o atraso a cada tentativa (backoff exponencial)
-          await new Promise(resolve => setTimeout(resolve, 500 * Math.pow(2, i)));
-        } else {
-          console.warn('Verificação de conexão falhou após tentativas:', error.message);
-          return false;
-        }
-      } catch (innerError) {
-        if (i < retryCount) {
-          console.warn(`Exceção na tentativa ${i+1}, tentando novamente...`);
-          // Aumentar o atraso a cada tentativa (backoff exponencial)
-          await new Promise(resolve => setTimeout(resolve, 500 * Math.pow(2, i)));
-        } else {
-          throw innerError;
-        }
+      // Caso a tabela profiles não exista ainda, tentamos outra operação
+      const { error: healthCheckError } = await supabase.rpc('rpc_ping');
+      
+      if (healthCheckError && healthCheckError.code !== 'PGRST301') {
+        console.error('Erro ao conectar com Supabase:', error);
+        return false;
       }
     }
     
-    return false;
+    console.log('Conexão com Supabase estabelecida com sucesso!');
+    return true;
   } catch (error) {
-    console.error('Erro ao verificar conexão com Supabase:', error);
+    console.error('Erro ao conectar com Supabase:', error);
     return false;
   }
 };
@@ -69,7 +60,7 @@ export const checkSupabaseConnection = async (retryCount = 3) => {
 export const setupSupabaseHealthCheck = async () => {
   try {
     const serviceRoleKey = import.meta.env.SUPABASE_SERVICE_ROLE_KEY;
-
+    
     if (!serviceRoleKey) {
       console.warn('Chave de serviço do Supabase não configurada para criar função de ping');
       return;
@@ -77,7 +68,7 @@ export const setupSupabaseHealthCheck = async () => {
 
     // Usando client com service role key para criar função RPC
     const adminClient = createClient(supabaseUrl || "", serviceRoleKey);
-
+    
     // Criar função RPC para ping
     const { error } = await adminClient.rpc('execute_sql', {
       sql_query: `
