@@ -28,6 +28,7 @@ interface MonthViewProps {
   getEventIcon: (type: string) => React.ReactNode;
   openEventDetails: (event: any) => void;
   onEventDrop?: (event: any, day: number) => void;
+  setCalendarView: (view: string) => void;
 }
 
 const MonthView: React.FC<MonthViewProps> = ({
@@ -39,6 +40,7 @@ const MonthView: React.FC<MonthViewProps> = ({
   getEventIcon,
   openEventDetails,
   onEventDrop,
+  setCalendarView,
 }) => {
   const [year, setYear] = React.useState(currentYear);
   const [month, setMonth] = React.useState(currentMonth);
