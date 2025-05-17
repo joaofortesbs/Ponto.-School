@@ -87,7 +87,7 @@ export const addEvent = async (event: Omit<CalendarEvent, "id" | "createdAt">): 
       id: uuidv4(),
       createdAt: new Date().toISOString(),
     };
-    
+
     const dbEvent = formatEventForDB(eventWithMeta);
     console.log("Tentando salvar evento no DB:", dbEvent);
 
@@ -146,10 +146,10 @@ export const getEventsByUserId = async (userId: string): Promise<CalendarEvent[]
     console.error("UserId inválido:", userId);
     return [];
   }
-  
+
   try {
     console.log("Buscando eventos para o usuário:", userId);
-    
+
     const { data, error } = await supabase
       .from("calendar_events")
       .select("*")
@@ -166,13 +166,13 @@ export const getEventsByUserId = async (userId: string): Promise<CalendarEvent[]
 
     const formattedEvents = (data || []).map(formatDBEventForApp);
     console.log(`${formattedEvents.length} eventos encontrados para o usuário ${userId}`);
-    
+
     // Mesclar com eventos locais
     const localEvents = getLocalEvents(userId);
     const localOnlyEvents = localEvents.filter(le => 
       !formattedEvents.some(fe => fe.id === le.id)
     );
-    
+
     return [...formattedEvents, ...localOnlyEvents];
   } catch (error) {
     console.error("Erro ao buscar eventos do usuário:", error);
@@ -188,13 +188,13 @@ export const updateEvent = async (event: CalendarEvent): Promise<CalendarEvent |
       console.error("ID é obrigatório para atualizar um evento");
       return null;
     }
-    
+
     if (event.id.startsWith('local-')) {
       // Para eventos locais, atualizar apenas no localStorage
       updateEventLocally(event);
       return event;
     }
-    
+
     const dbEvent = formatEventForDB({
       ...event,
       updatedAt: new Date().toISOString()
@@ -226,34 +226,70 @@ export const updateEvent = async (event: CalendarEvent): Promise<CalendarEvent |
 // Remover um evento
 export const deleteEvent = async (eventId: string): Promise<boolean> => {
   try {
-    if (!eventId) {
-      console.error("ID é obrigatório para excluir um evento");
-      return false;
-    }
-    
-    if (eventId.startsWith('local-')) {
-      // Para eventos locais, excluir apenas no localStorage
-      return deleteEventLocally(eventId);
-    }
+    // Obter uma cópia do evento antes de excluí-lo para notificação
+    const events = getAllLocalEvents();
+    const eventToDelete = events.find(event => event.id === eventId);
 
-    const { error } = await supabase
-      .from("calendar_events")
-      .delete()
-      .eq("id", eventId);
+    // Tentar excluir do Supabase se conectado
+    const isConnected = await checkSupabaseConnection();
 
-    if (error) {
-      console.error("Erro ao remover evento:", error);
-      // Fallback para armazenamento local em caso de erro
+    if (isConnected) {
+      try {
+        const { error } = await supabase
+          .from('calendar_events')
+          .delete()
+          .eq('id', eventId);
+
+        if (error) {
+          console.error("Erro ao excluir evento do Supabase:", error);
+          console.log("Excluindo apenas localmente devido a erro no Supabase");
+          deleteEventLocally(eventId);
+
+          // Notificar sobre a exclusão
+          if (eventToDelete) {
+            dispatchEventChangeNotification('event-deleted', { id: eventId, ...eventToDelete });
+          }
+
+          return true;  // Consideramos sucesso se excluiu localmente
+        }
+
+        console.log("Evento excluído com sucesso do Supabase:", eventId);
+
+        // Também excluímos localmente para manter sincronizado
+        deleteEventLocally(eventId);
+
+        // Notificar sobre a exclusão
+        if (eventToDelete) {
+          dispatchEventChangeNotification('event-deleted', { id: eventId, ...eventToDelete });
+        }
+
+        return true;
+      } catch (error) {
+        console.error("Erro ao excluir evento do Supabase:", error);
+        deleteEventLocally(eventId);
+
+        // Notificar sobre a exclusão
+        if (eventToDelete) {
+          dispatchEventChangeNotification('event-deleted', { id: eventId, ...eventToDelete });
+        }
+
+        return true;  // Consideramos sucesso se excluiu localmente
+      }
+    } else {
+      // Se não estiver conectado, excluir apenas localmente
+      console.log("Sem conexão com Supabase, excluindo evento apenas localmente");
       deleteEventLocally(eventId);
-      return true; // Retornar sucesso mesmo em caso de erro no DB, já que o evento foi removido localmente
-    }
 
-    return true;
+      // Notificar sobre a exclusão
+      if (eventToDelete) {
+        dispatchEventChangeNotification('event-deleted', { id: eventId, ...eventToDelete });
+      }
+
+      return true;
+    }
   } catch (error) {
-    console.error("Erro ao remover evento:", error);
-    // Fallback para armazenamento local em caso de erro
-    deleteEventLocally(eventId);
-    return true; // Consideramos sucesso já que removemos localmente
+    console.error("Erro ao excluir evento:", error);
+    return false;
   }
 };
 
@@ -300,7 +336,7 @@ const getAllLocalEvents = (): CalendarEvent[] => {
 const getLocalEvents = (userId: string): CalendarEvent[] => {
   try {
     if (!userId) return [];
-    
+
     const eventsJson = localStorage.getItem(EVENTS_STORAGE_KEY);
     if (!eventsJson) return [];
 
@@ -316,7 +352,7 @@ const getLocalEvents = (userId: string): CalendarEvent[] => {
 const saveEventLocally = (event: any) => {
   try {
     const allEvents = getAllLocalEvents();
-    
+
     const newEvent = {
       ...event,
       id: event.id || `local-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -325,9 +361,9 @@ const saveEventLocally = (event: any) => {
 
     // Remover qualquer duplicata
     const filteredEvents = allEvents.filter(e => e.id !== newEvent.id);
-    
+
     saveEventsLocally([...filteredEvents, newEvent]);
-    
+
     console.log("Evento salvo localmente com ID:", newEvent.id);
     return newEvent;
   } catch (error) {
@@ -375,17 +411,17 @@ export const syncLocalEvents = async (userId: string): Promise<void> => {
       console.error("UserId é necessário para sincronizar eventos");
       return;
     }
-    
+
     console.log("Iniciando sincronização de eventos locais para o usuário:", userId);
     const localEvents = getLocalEvents(userId);
     const localOnlyEvents = localEvents.filter(e => e.id.startsWith('local-'));
-    
+
     console.log(`${localOnlyEvents.length} eventos locais encontrados para sincronização`);
-    
+
     for (const event of localOnlyEvents) {
       const { id, ...eventData } = event;
       const result = await addEvent({ ...eventData, userId });
-      
+
       if (result) {
         console.log("Evento sincronizado com sucesso:", id, "->", result.id);
       }
@@ -400,5 +436,244 @@ export const syncLocalEvents = async (userId: string): Promise<void> => {
     }
   } catch (error) {
     console.error("Erro ao sincronizar eventos locais:", error);
+  }
+};
+
+// Função para salvar evento
+export const saveEvent = async (event: any): Promise<boolean> => {
+  try {
+    if (!event.id) {
+      event.id = `evt-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    }
+
+    // Se não tiver timestamp, adicionar
+    if (!event.createdAt) {
+      event.createdAt = new Date().toISOString();
+    }
+
+    // Sempre atualizar o timestamp de atualização
+    event.updatedAt = new Date().toISOString();
+
+    // Tentar salvar no Supabase se conectado
+    const isConnected = await checkSupabaseConnection();
+
+    if (isConnected) {
+      try {
+        const { data, error } = await supabase
+          .from('calendar_events')
+          .upsert(
+            {
+              id: event.id,
+              user_id: event.userId,
+              title: event.title,
+              description: event.description || '',
+              start_date: event.startDate,
+              end_date: event.endDate || event.startDate,
+              start_time: event.startTime || null,
+              end_time: event.endTime || null,
+              location: event.location || '',
+              is_online: event.isOnline || false,
+              meeting_link: event.meetingLink || '',
+              type: event.type || 'evento',
+              discipline: event.discipline || 'Geral',
+              professor: event.professor || '',
+              created_at: event.createdAt,
+              updated_at: event.updatedAt
+            },
+            { onConflict: 'id' }
+          );
+
+        if (error) {
+          console.error("Erro ao salvar evento no Supabase:", error);
+          console.log("Salvando apenas localmente devido a erro no Supabase");
+          saveEventLocally(event);
+
+          // Notificar sobre a mudança
+          dispatchEventChangeNotification('event-added', event);
+
+          return true;  // Consideramos sucesso se salvou localmente
+        }
+
+        console.log("Evento salvo com sucesso no Supabase:", event.id);
+
+        // Também salvamos localmente para acesso offline
+        saveEventLocally(event);
+
+        // Notificar sobre a mudança
+        dispatchEventChangeNotification('event-added', event);
+
+        return true;
+      } catch (error) {
+        console.error("Erro ao salvar evento no Supabase:", error);
+        saveEventLocally(event);
+
+        // Notificar sobre a mudança
+        dispatchEventChangeNotification('event-added', event);
+
+        return true;  // Consideramos sucesso se salvou localmente
+      }
+    } else {
+      // Se não estiver conectado, salvar apenas localmente
+      console.log("Sem conexão com Supabase, salvando evento apenas localmente");
+      saveEventLocally(event);
+
+      // Notificar sobre a mudança
+      dispatchEventChangeNotification('event-added', event);
+
+      return true;
+    }
+  } catch (error) {
+    console.error("Erro ao salvar evento:", error);
+    return false;
+  }
+};
+
+// Função para disparar notificações de mudanças em eventos
+export const dispatchEventChangeNotification = (eventType: string, event: any) => {
+  try {
+    // Os tipos de evento possíveis são: 'event-added', 'event-edited', 'event-deleted'
+    window.dispatchEvent(new CustomEvent(eventType, { 
+      detail: { event }
+    }));
+
+    // Também notificar sobre atualização geral de eventos
+    const allEvents = getAllLocalEvents();
+    const formattedEvents: Record<number, any[]> = {};
+
+    allEvents.forEach(evt => {
+      try {
+        const startDate = new Date(evt.startDate);
+        const day = startDate.getDate();
+
+        if (!formattedEvents[day]) {
+          formattedEvents[day] = [];
+        }
+
+        formattedEvents[day].push({
+          ...evt,
+          start: startDate,
+          end: evt.endDate ? new Date(evt.endDate) : startDate
+        });
+      } catch (err) {
+        console.error("Erro ao formatar evento para notificação:", err);
+      }
+    });
+
+    window.agendaEventData = formattedEvents;
+
+    window.dispatchEvent(new CustomEvent('agenda-events-updated', { 
+      detail: { events: formattedEvents }
+    }));
+
+    console.log(`Notificação de evento disparada: ${eventType}`, event.id);
+  } catch (err) {
+    console.error("Erro ao disparar notificação de mudança em evento:", err);
+  }
+};
+
+// Função auxiliar para salvar evento localmente
+export const saveEventLocally = (event: any): void => {
+  try {
+    // Certificar-se de que a chave de armazenamento existe
+    initLocalStorage();
+
+    // Obter eventos existentes
+    const eventsJson = localStorage.getItem(EVENTS_STORAGE_KEY);
+    let events = [];
+
+    if (eventsJson) {
+      events = JSON.parse(eventsJson);
+    }
+
+    // Verificar se o evento já existe para atualizar
+    const existingIndex = events.findIndex((e: any) => e.id === event.id);
+    const isUpdate = existingIndex >= 0;
+
+    if (isUpdate) {
+      // Atualizar evento existente
+      events[existingIndex] = event;
+    } else {
+      // Adicionar novo evento
+      events.push(event);
+    }
+
+    // Salvar de volta ao localStorage
+    localStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(events));
+    console.log(`Evento ${isUpdate ? 'atualizado' : 'adicionado'} localmente:`, event.id);
+
+    // Não disparamos o evento aqui, pois a função principal saveEvent já faz isso
+    // Isso evita duplicidade de notificações
+  } catch (error) {
+    console.error("Erro ao salvar evento localmente:", error);
+  }
+};
+
+// Função para excluir evento
+export const deleteEvent = async (eventId: string): Promise<boolean> => {
+  try {
+    // Obter uma cópia do evento antes de excluí-lo para notificação
+    const events = getAllLocalEvents();
+    const eventToDelete = events.find(event => event.id === eventId);
+
+    // Tentar excluir do Supabase se conectado
+    const isConnected = await checkSupabaseConnection();
+
+    if (isConnected) {
+      try {
+        const { error } = await supabase
+          .from('calendar_events')
+          .delete()
+          .eq('id', eventId);
+
+        if (error) {
+          console.error("Erro ao excluir evento do Supabase:", error);
+          console.log("Excluindo apenas localmente devido a erro no Supabase");
+          deleteEventLocally(eventId);
+
+          // Notificar sobre a exclusão
+          if (eventToDelete) {
+            dispatchEventChangeNotification('event-deleted', { id: eventId, ...eventToDelete });
+          }
+
+          return true;  // Consideramos sucesso se excluiu localmente
+        }
+
+        console.log("Evento excluído com sucesso do Supabase:", eventId);
+
+        // Também excluímos localmente para manter sincronizado
+        deleteEventLocally(eventId);
+
+        // Notificar sobre a exclusão
+        if (eventToDelete) {
+          dispatchEventChangeNotification('event-deleted', { id: eventId, ...eventToDelete });
+        }
+
+        return true;
+      } catch (error) {
+        console.error("Erro ao excluir evento do Supabase:", error);
+        deleteEventLocally(eventId);
+
+        // Notificar sobre a exclusão
+        if (eventToDelete) {
+          dispatchEventChangeNotification('event-deleted', { id: eventId, ...eventToDelete });
+        }
+
+        return true;  // Consideramos sucesso se excluiu localmente
+      }
+    } else {
+      // Se não estiver conectado, excluir apenas localmente
+      console.log("Sem conexão com Supabase, excluindo evento apenas localmente");
+      deleteEventLocally(eventId);
+
+      // Notificar sobre a exclusão
+      if (eventToDelete) {
+        dispatchEventChangeNotification('event-deleted', { id: eventId, ...eventToDelete });
+      }
+
+      return true;
+    }
+  } catch (error) {
+    console.error("Erro ao excluir evento:", error);
+    return false;
   }
 };

@@ -701,6 +701,19 @@ export default function AgendaPage() {
 
       setEventData(updatedEvents);
 
+      // Compartilhar os eventos atualizados através do objeto window
+      window.agendaEventData = updatedEvents;
+
+      // Disparar evento de adição para notificar outros componentes
+      window.dispatchEvent(new CustomEvent('event-added', { 
+        detail: { event: eventWithColor }
+      }));
+
+      // Força atualização dos componentes de visualização
+      window.dispatchEvent(new CustomEvent('agenda-events-updated', { 
+        detail: { events: updatedEvents }
+      }));
+
       // Força atualização do componente de próximos eventos
       setTimeout(() => {
         const upcomingEventsUpdated = getUpcomingEvents();
@@ -722,6 +735,7 @@ export default function AgendaPage() {
 
     // Find the event in all days and update it
     let eventFound = false;
+    let updatedEventWithColor = null;
 
     Object.keys(updatedEvents).forEach((day) => {
       const dayNum = parseInt(day);
@@ -731,11 +745,13 @@ export default function AgendaPage() {
 
       if (eventIndex !== -1) {
         // Update the event in place
-        updatedEvents[dayNum][eventIndex] = {
+        updatedEventWithColor = {
           ...editedEvent,
           color: getEventColor(editedEvent.type),
           time: editedEvent.startTime || editedEvent.time || "00:00",
         };
+        
+        updatedEvents[dayNum][eventIndex] = updatedEventWithColor;
         eventFound = true;
       }
     });
@@ -746,20 +762,35 @@ export default function AgendaPage() {
       handleDeleteEvent(editedEvent.id);
 
       // Add to the new day
-      const eventWithColor = {
+      updatedEventWithColor = {
         ...editedEvent,
         color: getEventColor(editedEvent.type),
         time: editedEvent.startTime || "00:00",
       };
 
       if (updatedEvents[newDay]) {
-        updatedEvents[newDay] = [...updatedEvents[newDay], eventWithColor];
+        updatedEvents[newDay] = [...updatedEvents[newDay], updatedEventWithColor];
       } else {
-        updatedEvents[newDay] = [eventWithColor];
+        updatedEvents[newDay] = [updatedEventWithColor];
       }
     }
 
     setEventData(updatedEvents);
+    
+    // Compartilhar os eventos atualizados através do objeto window
+    window.agendaEventData = updatedEvents;
+
+    // Disparar evento de edição para notificar outros componentes
+    if (updatedEventWithColor) {
+      window.dispatchEvent(new CustomEvent('event-edited', { 
+        detail: { event: updatedEventWithColor }
+      }));
+    }
+
+    // Força atualização dos componentes de visualização
+    window.dispatchEvent(new CustomEvent('agenda-events-updated', { 
+      detail: { events: updatedEvents }
+    }));
 
     // Exibe uma mensagem de sucesso
     toast({
@@ -771,6 +802,16 @@ export default function AgendaPage() {
   // Delete event
   const handleDeleteEvent = (eventId: string) => {
     const updatedEvents = { ...eventData };
+    let deletedEvent = null;
+
+    // Find and store the event before removing it (for notification)
+    Object.keys(updatedEvents).forEach((day) => {
+      const dayNum = parseInt(day);
+      const event = updatedEvents[dayNum].find(event => event.id === eventId);
+      if (event && !deletedEvent) {
+        deletedEvent = event;
+      }
+    });
 
     // Find and remove the event
     Object.keys(updatedEvents).forEach((day) => {
@@ -786,6 +827,28 @@ export default function AgendaPage() {
     });
 
     setEventData(updatedEvents);
+    
+    // Compartilhar os eventos atualizados através do objeto window
+    window.agendaEventData = updatedEvents;
+
+    // Disparar evento de exclusão para notificar outros componentes
+    if (deletedEvent) {
+      window.dispatchEvent(new CustomEvent('event-deleted', { 
+        detail: { eventId, event: deletedEvent }
+      }));
+    }
+
+    // Força atualização dos componentes de visualização
+    window.dispatchEvent(new CustomEvent('agenda-events-updated', { 
+      detail: { events: updatedEvents }
+    }));
+    
+    // Exibe uma mensagem de sucesso
+    toast({
+      title: "Evento excluído",
+      description: "O evento foi removido com sucesso.",
+      variant: "destructive"
+    });
   };
 
   // Handle event drag and drop

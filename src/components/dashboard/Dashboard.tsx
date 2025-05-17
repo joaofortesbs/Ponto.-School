@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import MetricsGrid from "./MetricsGrid";
 import TopMetrics from "./TopMetrics";
 import PromotionalBanner from "./PromotionalBanner";
@@ -10,6 +11,7 @@ import EventosDoDiaCard from "./EventosDoDiaCard";
 import EventosMiniCard from "./EventosMiniCard";
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [showBanner, setShowBanner] = useState(true);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isMetricsLoading, setIsMetricsLoading] = useState(false); // Inicializado como false para carregar imediatamente

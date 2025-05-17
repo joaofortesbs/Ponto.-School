@@ -131,12 +131,32 @@ export const EventosMiniCard: React.FC<EventosMiniCardProps> = ({ onOpenAddEvent
       }
     };
     
+    // Carregar eventos inicialmente
     loadEvents();
+    
+    // Escutar por atualizações de eventos do calendário
+    const handleEventUpdate = () => {
+      console.log("EventosMiniCard: Detectada atualização de eventos, recarregando...");
+      loadEvents();
+    };
+    
+    // Registrar listeners para eventos de atualização
+    window.addEventListener('agenda-events-updated', handleEventUpdate);
+    window.addEventListener('event-added', handleEventUpdate);
+    window.addEventListener('event-edited', handleEventUpdate);
+    window.addEventListener('event-deleted', handleEventUpdate);
     
     // Recarregar a cada 5 minutos para manter atualizado
     const interval = setInterval(loadEvents, 5 * 60 * 1000);
     
-    return () => clearInterval(interval);
+    return () => {
+      // Limpar listeners e intervalos
+      window.removeEventListener('agenda-events-updated', handleEventUpdate);
+      window.removeEventListener('event-added', handleEventUpdate);
+      window.removeEventListener('event-edited', handleEventUpdate);
+      window.removeEventListener('event-deleted', handleEventUpdate);
+      clearInterval(interval);
+    };
   }, []);
 
   // Navegar para a página de agenda no modo calendário
