@@ -152,45 +152,38 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
       return;
     }
 
-    try {
-      // Create event object
-      const newEvent = {
-        id: `event-${Date.now()}`,
-        type: eventType,
-        title,
-        description,
-        discipline,
-        professor,
-        startDate: startDate.toISOString(), // Converter para formato ISO
-        endDate: endDate ? endDate.toISOString() : undefined, // Converter para formato ISO se existir
-        startTime,
-        endTime,
-        duration,
-        location,
-        isOnline,
-        meetingLink,
-        attachments: attachments.map((file) => file.name), // Just store names for demo
-        reminders,
-        repeat,
-        guests,
-        visibility,
-        createdAt: new Date().toISOString(),
-      };
+    // Create event object
+    const newEvent = {
+      id: `event-${Date.now()}`,
+      type: eventType,
+      title,
+      description,
+      discipline,
+      professor,
+      startDate,
+      endDate,
+      startTime,
+      endTime,
+      duration,
+      location,
+      isOnline,
+      meetingLink,
+      attachments: attachments.map((file) => file.name), // Just store names for demo
+      reminders,
+      repeat,
+      guests,
+      visibility,
+      createdAt: new Date(),
+    };
 
-      console.log("Enviando evento:", newEvent);
-
-      // Call the onAddEvent callback with the new event
-      if (onAddEvent) {
-        onAddEvent(newEvent);
-      }
-
-      // Reset form and close modal
-      resetForm();
-      onOpenChange(false);
-    } catch (error) {
-      console.error("Erro ao criar evento:", error);
-      alert("Ocorreu um erro ao criar o evento. Verifique o console para mais detalhes.");
+    // Call the onAddEvent callback with the new event
+    if (onAddEvent) {
+      onAddEvent(newEvent);
     }
+
+    // Reset form and close modal
+    resetForm();
+    onOpenChange(false);
   };
 
   const resetForm = () => {

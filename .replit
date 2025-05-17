@@ -146,15 +146,6 @@ mode = "sequential"
 task = "shell.exec"
 args = "node scripts/drop-codigos-grupos-tables.js"
 
-[[workflows.workflow]]
-name = "Aplicar Migração de Calendário"
-author = 42059808
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "node scripts/apply-calendar-migration.js"
-
 [auth]
 pageEnabled = false
 buttonEnabled = false
