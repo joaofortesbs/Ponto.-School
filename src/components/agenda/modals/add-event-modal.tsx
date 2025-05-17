@@ -583,8 +583,14 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                     value={startDate ? format(startDate, "yyyy-MM-dd") : ""}
                     onChange={(e) => {
                       if (e.target.value) {
-                        const newDate = new Date(e.target.value);
-                        setStartDate(newDate);
+                        try {
+                          const newDate = new Date(e.target.value);
+                          if (!isNaN(newDate.getTime())) {
+                            setStartDate(newDate);
+                          }
+                        } catch (error) {
+                          console.error("Data inválida:", error);
+                        }
                       }
                     }}
                     className="w-full"
@@ -598,8 +604,14 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                     value={endDate ? format(endDate, "yyyy-MM-dd") : ""}
                     onChange={(e) => {
                       if (e.target.value) {
-                        const newDate = new Date(e.target.value);
-                        setEndDate(newDate);
+                        try {
+                          const newDate = new Date(e.target.value);
+                          if (!isNaN(newDate.getTime())) {
+                            setEndDate(newDate);
+                          }
+                        } catch (error) {
+                          console.error("Data inválida:", error);
+                        }
                       }
                     }}
                     className="w-full"
