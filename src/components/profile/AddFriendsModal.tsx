@@ -69,7 +69,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
 
   // Referências para melhorar desempenho
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const resultsContainerRef = useRef<HTMLDivElement>(null);
+  const resultsContainerRef = useRef<HTMLDivElement | null>(null);
 
   // Estados de UI
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
@@ -809,8 +809,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                 ) 
                 : (
                   <span className="inline-flex items-center gap-1">
-                    ```text
-<span className="bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full text-[10px] font-medium">solicitação enviada</span>
+                    <span className="bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full text-[10px] font-medium">solicitação enviada</span>
                     <span className="text-white/60">• {new Date(request.date).toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit'})}</span>
                   </span>
                 )
@@ -1549,11 +1548,27 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                   className="overflow-y-auto max-h-[420px] pr-2 custom-scrollbar"
                   ref={resultsContainerRef}
                 >
-                  {searchQuery.trim() === '' && (
-                    <EmptyState type="search" />
-                  )}
+                  {/* Estado inicial - campo vazio */}
+                {searchQuery.trim() === '' && (
+                  <EmptyState type="search" />
+                )}
 
-                  {searchQuery.trim() !== '' && filteredResults.length ===0 && !isLoading && (
+                {/* Estado de busca com resultados */}
+                {searchQuery.trim() !== '' && filteredResults.length > 0 && (
+                  <div className="mb-3 bg-white/5 rounded-lg p-3">
+                    <p className="text-white/70 text-sm">
+                      {filteredResults.length} {filteredResults.length === 1 ? 'usuário encontrado' : 'usuários encontrados'} para "{searchQuery}"
+                    </p>
+                  </div>
+                )}
+
+                {/* Listagem de resultados */}
+                {filteredResults.map(user => (
+                  <UserCard key={user.id} user={user} />
+                ))}
+
+                {/* Estado de sem resultados */}
+                {searchQuery.trim() !== '' && filteredResults.length === 0 && !isLoading && noResults && (
                   <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
                     <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4">
                       <Search className="h-6 w-6 text-white/40" />
@@ -1564,62 +1579,47 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                     <p className="text-white/50 text-sm max-w-xs">
                       Nenhum usuário correspondente à busca "{searchQuery}". Tente termos diferentes ou verifique a ortografia.
                     </p>
-
-                    {/* Sugestões offline caso o Supabase não esteja disponível */}
-                    {searchError && searchError.includes('conectar') && (
-                      <div className="mt-4 bg-white/5 p-4 rounded-lg">
-                        <h4 className="text-white/80 text-sm font-medium mb-2">Você pode tentar:</h4>
-                        <ul className="text-left text-white/60 text-xs space-y-1">
-                          <li>• Verificar sua conexão com a internet</li>
-                          <li>• Recarregar a página</li>
-                          <li>• Tentar a busca novamente em alguns instantes</li>
-                          <li>• Digitar termos mais específicos na busca</li>
-                        </ul>
-                      </div>
-                    )}
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        // Limpar e tentar com outro termo sugerido
+                        const suggestions = ['João', 'Maria', 'Pedro', 'Ana'];
+                        const randomSuggestion = suggestions[Math.floor(Math.random() * suggestions.length)];
+                        setSearchQuery(randomSuggestion);
+                        searchUsers(randomSuggestion);
+                      }}
+                      className="mt-4 bg-gradient-to-r from-[#FF6B00]/20 to-[#FF9B50]/10 text-[#FF9B50] border-[#FF6B00]/30 hover:bg-[#FF6B00]/30"
+                    >
+                      Sugerir busca
+                    </Button>
                   </div>
                 )}
 
-                {/* Mensagem de erro visual */}
-                {searchQuery.trim() !== '' && isLoading === false && searchQuery.length >= 3 && (
-                  <div className="mb-4 bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 hidden" id="search-error-message">
-                    <div className="flex items-start gap-2">
-                      <AlertCircle className="h-5 w-5 text-amber-500 mt-0.5" />
-                      <div>
-                        <p className="text-amber-400 text-sm font-medium">Erro na busca</p>
-                        <p className="text-white/70 text-xs mt-1">
-                          Ocorreu um erro ao buscar usuários. Verifique sua conexão e tente novamente mais tarde.
-                        </p>
+                {/* Indicador de carregamento de busca em andamento */}
+                {isLoading && searchQuery.trim() !== '' && (
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] animate-pulse flex items-center justify-center mb-4">
+                      <div className="w-8 h-8 rounded-full bg-[#0c1a2b] flex items-center justify-center">
+                        <div className="h-5 w-5 border-2 border-[#FF6B00] border-t-transparent rounded-full animate-spin"></div>
                       </div>
                     </div>
+                    <p className="text-white/60 text-sm">Buscando usuários...</p>
                   </div>
                 )}
 
-                  {searchQuery.trim() !== '' && filteredResults.length > 0 && (
-                    <div className="mb-3 bg-white/5 rounded-lg p-3">
-                      <p className="text-white/70 text-sm">
-                        {filteredResults.length} {filteredResults.length === 1 ? 'usuário encontrado' : 'usuários encontrados'} para "{searchQuery}"
+                {/* Mensagem de erro visual (visível somente quando ativada) */}
+                <div className="mb-4 bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 hidden" id="search-error-message">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="h-5 w-5 text-amber-500 mt-0.5" />
+                    <div>
+                      <p className="text-amber-400 text-sm font-medium">Erro na busca</p>
+                      <p className="text-white/70 text-xs mt-1">
+                        Ocorreu um erro ao buscar usuários. Verifique sua conexão e tente novamente mais tarde.
                       </p>
                     </div>
-                  )}
-
-                  {filteredResults.map(user => (
-                    <UserCard key={user.id} user={user} />
-                  ))}
-
-                  {searchQuery.trim() !== '' && filteredResults.length === 0 && !isLoading && (
-                  <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
-                    <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4">
-                      <Search className="h-6 w-6 text-white/40" />
-                    </div>
-                    <h3 className="text-white/80 text-lg font-medium mb-2">
-                      Nenhum usuário encontrado
-                    </h3>
-                    <p className="text-white/50 text-sm max-w-xs">
-                      Nenhum usuário correspondente à busca "{searchQuery}". Tente termos diferentes ou verifique a ortografia.
-                    </p>
                   </div>
-                )}
+                </div>
                 </div>
               </TabsContent>
 

@@ -20,7 +20,7 @@ export const supabase = createClient(supabaseUrl || "", supabaseAnonKey || "", {
 });
 
 // Função auxiliar para verificar a conexão - aprimorada com retry
-export const checkSupabaseConnection = async (retryCount = 2) => {
+export const checkSupabaseConnection = async (retryCount = 3) => {
   try {
     if (!supabase) {
       console.error('Cliente Supabase não inicializado corretamente');
@@ -41,8 +41,8 @@ export const checkSupabaseConnection = async (retryCount = 2) => {
           return true;
         } else if (i < retryCount) {
           console.warn(`Tentativa ${i+1} falhou, tentando novamente...`);
-          // Pequeno atraso entre tentativas
-          await new Promise(resolve => setTimeout(resolve, 500));
+          // Aumentar o atraso a cada tentativa (backoff exponencial)
+          await new Promise(resolve => setTimeout(resolve, 500 * Math.pow(2, i)));
         } else {
           console.warn('Verificação de conexão falhou após tentativas:', error.message);
           return false;
@@ -50,8 +50,8 @@ export const checkSupabaseConnection = async (retryCount = 2) => {
       } catch (innerError) {
         if (i < retryCount) {
           console.warn(`Exceção na tentativa ${i+1}, tentando novamente...`);
-          // Pequeno atraso entre tentativas
-          await new Promise(resolve => setTimeout(resolve, 500));
+          // Aumentar o atraso a cada tentativa (backoff exponencial)
+          await new Promise(resolve => setTimeout(resolve, 500 * Math.pow(2, i)));
         } else {
           throw innerError;
         }
