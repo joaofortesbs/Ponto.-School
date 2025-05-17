@@ -148,8 +148,48 @@ export default function AgendaPage() {
   // Dados de eventos para o calendário (vazio por padrão)
   const [eventData, setEventData] = useState<Record<number, any[]>>({});
 
-  // Array de eventos próximos (vazio por padrão)
-  const upcomingEventsData: any[] = [];
+  // Função para formatar eventos próximos a partir do eventData
+  const getUpcomingEvents = () => {
+    const today = new Date();
+    const upcoming: any[] = [];
+    
+    // Percorre todos os dias com eventos
+    Object.keys(eventData).forEach(day => {
+      const dayEvents = eventData[parseInt(day)] || [];
+      
+      // Para cada evento nesse dia
+      dayEvents.forEach(event => {
+        if (event.startDate) {
+          const eventDate = new Date(event.startDate);
+          // Adiciona eventos que ocorrem hoje ou no futuro
+          if (eventDate >= today) {
+            upcoming.push({
+              id: event.id,
+              type: event.type,
+              title: event.title,
+              day: format(eventDate, "dd/MM/yyyy", { locale: ptBR }),
+              discipline: event.discipline || "Geral",
+              isOnline: event.isOnline || false,
+              color: event.color,
+              details: event.details
+            });
+          }
+        }
+      });
+    });
+    
+    // Ordena eventos por data (do mais próximo ao mais distante)
+    upcoming.sort((a, b) => {
+      const dateA = new Date(a.day.split('/').reverse().join('-'));
+      const dateB = new Date(b.day.split('/').reverse().join('-'));
+      return dateA.getTime() - dateB.getTime();
+    });
+    
+    return upcoming;
+  };
+
+  // Array de eventos próximos atualizado a partir do eventData
+  const upcomingEventsData = getUpcomingEvents();
 
   // Sample AI recommendations
   const aiRecommendations = [
@@ -442,6 +482,12 @@ export default function AgendaPage() {
       }
 
       setEventData(updatedEvents);
+      
+      // Exibe uma mensagem de sucesso
+      toast({
+        title: "Evento adicionado",
+        description: "O evento foi adicionado com sucesso ao seu calendário.",
+      });
     }
   };
 
@@ -489,6 +535,12 @@ export default function AgendaPage() {
     }
 
     setEventData(updatedEvents);
+    
+    // Exibe uma mensagem de sucesso
+    toast({
+      title: "Evento atualizado",
+      description: "O evento foi atualizado com sucesso.",
+    });
   };
 
   // Delete event
@@ -1288,17 +1340,20 @@ export default function AgendaPage() {
                     {upcomingEventsData.length} eventos
                   </Badge>
                 </div>
-                <div className="p-8 flex flex-col items-center justify-center">
+                <div className="p-4 flex flex-col">
                   {upcomingEventsData.length > 0 ? (
                     <div className="divide-y divide-[#FF6B00]/10 dark:divide-[#FF6B00]/20 w-full">
                       {upcomingEventsData.map((event) => (
                         <div
                           key={event.id}
                           className="p-4 hover:bg-[#FF6B00]/5 cursor-pointer transition-colors group"
+                          onClick={() => openEventDetails(event)}
                         >
                           <div className="flex items-start gap-3">
                             <div className="mt-1">
-                              <div className="w-8 h-8 rounded-full bg-[#FF6B00]/10 dark:bg-[#FF6B00]/20 flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow group-hover:bg-[#FF6B00]/20 dark:group-hover:bg-[#FF6B00]/30">
+                              <div 
+                                className={`w-8 h-8 rounded-full bg-${event.color || "[#FF6B00]"}/10 dark:bg-${event.color || "[#FF6B00]"}/20 flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow group-hover:bg-${event.color || "[#FF6B00]"}/20 dark:group-hover:bg-${event.color || "[#FF6B00]"}/30`}
+                              >
                                 {getEventIcon(event.type)}
                               </div>
                             </div>
@@ -1324,7 +1379,7 @@ export default function AgendaPage() {
                       ))}
                     </div>
                   ) : (
-                    <>
+                    <div className="p-4 flex flex-col items-center justify-center text-center">
                       <div className="w-16 h-16 rounded-full bg-[#FF6B00]/10 flex items-center justify-center mb-4">
                         <CalendarIcon className="h-8 w-8 text-[#FF6B00]/40" />
                       </div>
@@ -1338,7 +1393,7 @@ export default function AgendaPage() {
                       >
                         <Plus className="h-4 w-4 mr-2" /> Adicionar Evento
                       </Button>
-                    </>
+                    </div>
                   )}
                 </div>
               </div>
