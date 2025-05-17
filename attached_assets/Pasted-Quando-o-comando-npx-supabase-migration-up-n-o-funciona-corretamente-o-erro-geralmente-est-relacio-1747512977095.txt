@@ -1,0 +1,68 @@
+Quando o comando npx supabase migration up não funciona corretamente, o erro geralmente está relacionado a algum dos seguintes pontos:
+
+✅ Passo 1 — Verifique se há mensagens de erro no terminal
+Quando você executa:
+
+bash
+Copiar
+Editar
+npx supabase migration up
+Se ele não funcionar, ele geralmente mostra uma mensagem de erro. Leia com atenção.
+
+Se você já tem uma mensagem de erro específica, me mande aqui e posso resolver exatamente com base nela. Mas enquanto isso, aqui estão as verificações e soluções mais comuns:
+
+✅ Passo 2 — Verifique se o Supabase local está rodando
+Antes de rodar o comando de migração, você precisa ter iniciado o Supabase CLI localmente com:
+
+bash
+Copiar
+Editar
+npx supabase start
+Se o Supabase não estiver em execução, o comando de migration falha silenciosamente ou retorna um erro de conexão.
+
+✅ Passo 3 — Verifique se há uma pasta de migração válida
+As migrações são armazenadas dentro da pasta supabase/migrations/.
+
+Verifique se:
+
+Você tem arquivos .sql dentro dessa pasta.
+
+Esses arquivos foram criados com o comando npx supabase migration new nome_da_migracao.
+
+Se a pasta estiver vazia, o comando npx supabase migration up não terá nada para aplicar.
+
+✅ Passo 4 — Verifique se o banco de dados local está sincronizado
+Se você fez alterações manuais no banco local (por SQL diretamente, por exemplo), pode haver divergências com as migrações.
+
+Nesse caso, tente:
+
+bash
+Copiar
+Editar
+npx supabase db reset
+⚠️ Atenção: isso vai apagar os dados do seu banco local e aplicar todas as migrações novamente do zero.
+
+✅ Passo 5 — Verifique se você está no diretório raiz do projeto
+O Supabase CLI depende da estrutura de pastas correta.
+
+Certifique-se de estar no mesmo nível do seu projeto onde existe o arquivo supabase/config.toml antes de rodar os comandos.
+
+✅ Passo 6 — Atualize o Supabase CLI
+O Supabase CLI muda frequentemente. Se estiver desatualizado, alguns comandos podem falhar.
+
+Atualize com:
+
+bash
+Copiar
+Editar
+npm install -g supabase
+Ou, se estiver usando o npx, nada precisa ser feito — ele sempre busca a versão mais recente.
+
+✅ Passo 7 — Tente rodar com verbose
+Se não funcionar ainda, execute com log detalhado:
+
+bash
+Copiar
+Editar
+npx supabase migration up --debug
+Ele mostrará todos os logs detalhados que ajudam a identificar onde está o problema.
