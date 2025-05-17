@@ -1377,7 +1377,7 @@ export default function AgendaPage() {
                 </div>
                 <div className="p-4 flex flex-col">
                   {upcomingEventsData.length > 0 ? (
-                    <div className="divide-y divide-[#FF6B00]/10 dark:divide-[#FF6B00]/20 w-full">
+                    <div className="divide-y divide-[#FF6B00]/10 dark:divide-[#FF6B00]/20 w-full max-h-[400px] overflow-y-auto custom-scrollbar pr-1">
                       {upcomingEventsData.map((event) => (
                         <div
                           key={event.id}
