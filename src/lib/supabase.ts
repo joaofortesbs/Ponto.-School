@@ -19,8 +19,8 @@ export const supabase = createClient(supabaseUrl || "", supabaseAnonKey || "", {
   },
 });
 
-// Função auxiliar para verificar a conexão - simplificada e robusta
-export const checkSupabaseConnection = async () => {
+// Função auxiliar para verificar a conexão - aprimorada com retry
+export const checkSupabaseConnection = async (retryCount = 2) => {
   try {
     if (!supabase) {
       console.error('Cliente Supabase não inicializado corretamente');
@@ -28,18 +28,37 @@ export const checkSupabaseConnection = async () => {
     }
 
     // Abordagem mais simples e confiável - tentar fazer uma consulta básica
-    const { error } = await supabase
-      .from('profiles')
-      .select('id')
-      .limit(1);
+    for (let i = 0; i <= retryCount; i++) {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id')
+          .limit(1)
+          .maybeSingle();
 
-    if (!error) {
-      console.log('Conexão com Supabase estabelecida com sucesso!');
-      return true;
-    } else {
-      console.warn('Verificação de conexão falhou:', error.message);
-      return false;
+        if (!error) {
+          console.log('Conexão com Supabase estabelecida com sucesso!');
+          return true;
+        } else if (i < retryCount) {
+          console.warn(`Tentativa ${i+1} falhou, tentando novamente...`);
+          // Pequeno atraso entre tentativas
+          await new Promise(resolve => setTimeout(resolve, 500));
+        } else {
+          console.warn('Verificação de conexão falhou após tentativas:', error.message);
+          return false;
+        }
+      } catch (innerError) {
+        if (i < retryCount) {
+          console.warn(`Exceção na tentativa ${i+1}, tentando novamente...`);
+          // Pequeno atraso entre tentativas
+          await new Promise(resolve => setTimeout(resolve, 500));
+        } else {
+          throw innerError;
+        }
+      }
     }
+    
+    return false;
   } catch (error) {
     console.error('Erro ao verificar conexão com Supabase:', error);
     return false;

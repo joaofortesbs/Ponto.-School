@@ -415,7 +415,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
         try {
           // Verificar a conexão com o Supabase primeiro
           const isConnected = await checkSupabaseConnection();
-          
+
           if (!isConnected) {
             console.error("Não foi possível estabelecer conexão com o Supabase na inicialização");
             setSearchError('Não foi possível conectar ao serviço. Tente novamente mais tarde.');
@@ -809,7 +809,8 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                 ) 
                 : (
                   <span className="inline-flex items-center gap-1">
-                    <span className="bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full text-[10px] font-medium">solicitação enviada</span>
+                    ```text
+<span className="bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full text-[10px] font-medium">solicitação enviada</span>
                     <span className="text-white/60">• {new Date(request.date).toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit'})}</span>
                   </span>
                 )
@@ -1303,7 +1304,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
     setIsLoading(true);
     setSearchError(null);
     setNoResults(false);
-    
+
     // Verifica a conexão com o Supabase antes de continuar
     const isConnected = await verifySupabaseConnection();
     if (!isConnected) {
@@ -1313,7 +1314,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
 
     try {
       console.log(`Buscando usuários com o termo: "${query}"`);
-      
+
       const { data, error } = await supabase
         .from('profiles')
         .select('id, full_name, username, avatar_url, bio, email, is_private, updated_at')
@@ -1518,7 +1519,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                 </div>
               </div>
             )}
-            
+
             {/* Botão de reconexão caso haja erro */}
             {searchError && searchError.includes('conectar') && (
               <div className="mt-2 flex justify-center">
@@ -1552,7 +1553,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                     <EmptyState type="search" />
                   )}
 
-                  {searchQuery.trim() !== '' && filteredResults.length === 0 && !isLoading && (
+                  {searchQuery.trim() !== '' && filteredResults.length ===0 && !isLoading && (
                   <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
                     <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4">
                       <Search className="h-6 w-6 text-white/40" />
@@ -1563,6 +1564,19 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                     <p className="text-white/50 text-sm max-w-xs">
                       Nenhum usuário correspondente à busca "{searchQuery}". Tente termos diferentes ou verifique a ortografia.
                     </p>
+
+                    {/* Sugestões offline caso o Supabase não esteja disponível */}
+                    {searchError && searchError.includes('conectar') && (
+                      <div className="mt-4 bg-white/5 p-4 rounded-lg">
+                        <h4 className="text-white/80 text-sm font-medium mb-2">Você pode tentar:</h4>
+                        <ul className="text-left text-white/60 text-xs space-y-1">
+                          <li>• Verificar sua conexão com a internet</li>
+                          <li>• Recarregar a página</li>
+                          <li>• Tentar a busca novamente em alguns instantes</li>
+                          <li>• Digitar termos mais específicos na busca</li>
+                        </ul>
+                      </div>
+                    )}
                   </div>
                 )}
 
