@@ -905,7 +905,7 @@ export default function AgendaPage() {
           }
         }, 200); // Small delay to ensure DOM is ready
       }, 100);
-    } catch (error) {
+    } catch (error){
       console.error("Error adding task:", error);
       toast({
         title: "Erro ao adicionar tarefa",
