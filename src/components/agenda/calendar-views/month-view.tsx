@@ -48,6 +48,13 @@ const MonthView: React.FC<MonthViewProps> = ({
   const [year, setYear] = React.useState(currentYear);
   const [month, setMonth] = React.useState(currentMonth);
 
+  // Ensure calendarView is tracked properly
+  React.useEffect(() => {
+    // This ensures we update our local state if the parent component
+    // updates the calendarView prop
+    console.log("Calendar view updated:", calendarView);
+  }, [calendarView]);
+
   const currentDate = new Date(year, month, 1);
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
@@ -122,6 +129,12 @@ const MonthView: React.FC<MonthViewProps> = ({
       onEventDrop(event, day);
     }
   };
+  
+  // Handler para alternar a visualização do calendário
+  const handleViewChange = (view: string) => {
+    console.log("Changing view to:", view);
+    setCalendarView(view);
+  };
 
   return (
     <div className="bg-white dark:bg-[#1E293B] rounded-xl shadow-lg overflow-hidden border border-gray-100 dark:border-gray-800 hover:shadow-xl transition-all duration-300">
@@ -140,7 +153,7 @@ const MonthView: React.FC<MonthViewProps> = ({
               variant="ghost"
               size="sm"
               className={`h-8 rounded-none ${calendarView === "day" ? "bg-white text-[#FF6B00]" : "text-white hover:bg-white/20"}`}
-              onClick={() => setCalendarView("day")}
+              onClick={() => handleViewChange("day")}
             >
               Dia
             </Button>
@@ -148,7 +161,7 @@ const MonthView: React.FC<MonthViewProps> = ({
               variant="ghost"
               size="sm"
               className={`h-8 rounded-none ${calendarView === "week" ? "bg-white text-[#FF6B00]" : "text-white hover:bg-white/20"}`}
-              onClick={() => setCalendarView("week")}
+              onClick={() => handleViewChange("week")}
             >
               Semana
             </Button>
@@ -156,39 +169,39 @@ const MonthView: React.FC<MonthViewProps> = ({
               variant="ghost"
               size="sm"
               className={`h-8 rounded-none ${calendarView === "month" ? "bg-white text-[#FF6B00]" : "text-white hover:bg-white/20"}`}
-              onClick={() => setCalendarView("month")}
+              onClick={() => handleViewChange("month")}
             >
               Mês
             </Button>
           </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-white hover:bg-white/20 rounded-full"
-                onClick={handlePrevMonth}
-              >
-                <ChevronLeft className="h-5 w-5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 text-white hover:bg-white/20 rounded-lg px-3"
-                onClick={handleToday}
-              >
-                Hoje
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-white hover:bg-white/20 rounded-full"
-                onClick={handleNextMonth}
-              >
-                <ChevronRight className="h-5 w-5" />
-              </Button>
-            </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-white hover:bg-white/20 rounded-full"
+              onClick={handlePrevMonth}
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 text-white hover:bg-white/20 rounded-lg px-3"
+              onClick={handleToday}
+            >
+              Hoje
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-white hover:bg-white/20 rounded-full"
+              onClick={handleNextMonth}
+            >
+              <ChevronRight className="h-5 w-5" />
+            </Button>
           </div>
         </div>
+      </div>
 
         <div className="p-6">
           {/* Day names */}

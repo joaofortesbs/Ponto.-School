@@ -17,34 +17,8 @@ const DayView: React.FC<DayViewProps> = ({ selectedDay, openEventDetails }) => {
 
   return (
     <div className="bg-white dark:bg-[#1E293B] rounded-xl shadow-md overflow-hidden">
-      <div className="p-4 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <CalendarDays className="h-5 w-5" />
-          <h3 className="font-bold text-lg capitalize">{formattedDate}</h3>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-white hover:bg-white/20"
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 text-white hover:bg-white/20"
-          >
-            Hoje
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-white hover:bg-white/20"
-          >
-            <ChevronRight className="h-5 w-5" />
-          </Button>
-        </div>
+      <div className="p-4 flex items-center justify-center">
+        <h3 className="font-bold text-lg capitalize text-gray-800 dark:text-gray-200">{formattedDate}</h3>
       </div>
 
       <div className="p-4">

@@ -8,50 +8,22 @@ interface WeekViewProps {
 }
 
 const WeekView: React.FC<WeekViewProps> = ({ openEventDetails }) => {
-  const today = new Date();
-  const startOfWeek = new Date(today);
-  const day = today.getDay();
-  startOfWeek.setDate(today.getDate() - day);
+  const [startDate, setStartDate] = useState(startOfWeek(new Date(), { weekStartsOn: 1 }));
 
-  const weekDays = Array.from({ length: 7 }, (_, i) => {
-    const date = new Date(startOfWeek);
-    date.setDate(startOfWeek.getDate() + i);
-    return date;
-  });
+  // Calculate end date (6 days from start date)
+  const endDate = addDays(startDate, 6);
+
+  // Format date range for display
+  const dateRangeText = `${format(startDate, "d")} - ${format(endDate, "d")} de ${format(startDate, "MMMM", { locale: ptBR })}`;
+
+  // Generate days of the week
+  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(startDate, i));
 
   return (
     <div className="bg-white dark:bg-[#1E293B] rounded-xl shadow-md overflow-hidden">
-      <div className="p-4 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <CalendarRange className="h-5 w-5" />
-          <h3 className="font-bold text-lg">
-            Semana de {format(weekDays[0], "dd/MM")} a{" "}
-            {format(weekDays[6], "dd/MM/yyyy")}
-          </h3>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-white hover:bg-white/20"
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 text-white hover:bg-white/20"
-          >
-            Hoje
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-white hover:bg-white/20"
-          >
-            <ChevronRight className="h-5 w-5" />
-          </Button>
-        </div>
+      {/* Week Indicator */}
+      <div className="p-4 flex items-center justify-center">
+        <h3 className="font-bold text-lg text-gray-800 dark:text-gray-200">Semana: {dateRangeText}</h3>
       </div>
 
       <div className="p-4">

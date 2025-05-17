@@ -1257,13 +1257,141 @@ export default function AgendaPage() {
                   />
                 )}
                 {calendarView === "week" && (
-                  <WeekView openEventDetails={openEventDetails} />
+                  <>
+                    <div className="p-4 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white flex justify-between items-center">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-white/20 p-1.5 rounded-lg shadow-inner">
+                          <CalendarIcon className="h-5 w-5 text-white" />
+                        </div>
+                        <h3 className="font-bold text-lg tracking-wide">
+                          Visualização Semanal
+                        </h3>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <div className="flex rounded-md overflow-hidden">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className={`h-8 rounded-none ${calendarView === "day" ? "bg-white text-[#FF6B00]" : "text-white hover:bg-white/20"}`}
+                            onClick={() => setCalendarView("day")}
+                          >
+                            Dia
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className={`h-8 rounded-none ${calendarView === "week" ? "bg-white text-[#FF6B00]" : "text-white hover:bg-white/20"}`}
+                            onClick={() => setCalendarView("week")}
+                          >
+                            Semana
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className={`h-8 rounded-none ${calendarView === "month" ? "bg-white text-[#FF6B00]" : "text-white hover:bg-white/20"}`}
+                            onClick={() => setCalendarView("month")}
+                          >
+                            Mês
+                          </Button>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-white hover:bg-white/20 rounded-full"
+                          >
+                            <ChevronLeft className="h-5 w-5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 text-white hover:bg-white/20 rounded-lg px-3"
+                            onClick={() => setSelectedDay(new Date())}
+                          >
+                            Hoje
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-white hover:bg-white/20 rounded-full"
+                          >
+                            <ChevronRight className="h-5 w-5" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                    <WeekView openEventDetails={openEventDetails} />
+                  </>
                 )}
                 {calendarView === "day" && (
-                  <DayView
-                    selectedDay={selectedDay}
-                    openEventDetails={openEventDetails}
-                  />
+                  <>
+                    <div className="p-4 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white flex justify-between items-center">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-white/20 p-1.5 rounded-lg shadow-inner">
+                          <CalendarIcon className="h-5 w-5 text-white" />
+                        </div>
+                        <h3 className="font-bold text-lg tracking-wide">
+                          Visualização Diária
+                        </h3>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <div className="flex rounded-md overflow-hidden">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className={`h-8 rounded-none ${calendarView === "day" ? "bg-white text-[#FF6B00]" : "text-white hover:bg-white/20"}`}
+                            onClick={() => setCalendarView("day")}
+                          >
+                            Dia
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className={`h-8 rounded-none ${calendarView === "week" ? "bg-white text-[#FF6B00]" : "text-white hover:bg-white/20"}`}
+                            onClick={() => setCalendarView("week")}
+                          >
+                            Semana
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className={`h-8 rounded-none ${calendarView === "month" ? "bg-white text-[#FF6B00]" : "text-white hover:bg-white/20"}`}
+                            onClick={() => setCalendarView("month")}
+                          >
+                            Mês
+                          </Button>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-white hover:bg-white/20 rounded-full"
+                          >
+                            <ChevronLeft className="h-5 w-5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 text-white hover:bg-white/20 rounded-lg px-3"
+                            onClick={() => setSelectedDay(new Date())}
+                          >
+                            Hoje
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-white hover:bg-white/20 rounded-full"
+                          >
+                            <ChevronRight className="h-5 w-5" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                    <DayView
+                      selectedDay={selectedDay}
+                      openEventDetails={openEventDetails}
+                    />
+                  </>
                 )}
               </div>
             </div>
