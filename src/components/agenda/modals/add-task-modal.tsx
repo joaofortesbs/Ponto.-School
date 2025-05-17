@@ -358,7 +358,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
                 <SelectValue placeholder="Selecione o professor" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Nenhum</SelectItem>
+                <SelectItem value="nenhum">Nenhum</SelectItem>
                 {professors.map((prof) => (
                   <SelectItem key={prof.id} value={prof.id}>
                     {prof.name}
@@ -378,7 +378,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
                 <SelectValue placeholder="Selecione a turma" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Nenhuma</SelectItem>
+                <SelectItem value="nenhuma">Nenhuma</SelectItem>
                 {classes.map((cls) => (
                   <SelectItem key={cls.id} value={cls.id}>
                     {cls.name}
