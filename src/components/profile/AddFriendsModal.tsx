@@ -802,7 +802,6 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                 size="sm" 
                 className="bg-white/10 hover:bg-white/15 text-white rounded-full px-4 transition-all duration-300"
                 onClick={(e) => {
-                  ```text
                   e.stopPropagation();
                   handleRelationAction(user.id, 'reject');
                 }}
