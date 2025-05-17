@@ -176,7 +176,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
           .from('profiles')
           .select('*')
           .or(`display_name.ilike.%${query}%,username.ilike.%${query}%`)
-          .neq('id', supabase.auth.user()?.id) // Excluir o usuário atual
+          .neq('id', (await supabase.auth.getUser()).data.user?.id) // Excluir o usuário atual
           .limit(20);
 
         if (error) {
@@ -209,7 +209,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
           const { data: friendRequests, error: requestsError } = await supabase
             .from('friend_requests')
             .select('*')
-            .or(`sender_id.eq.${supabase.auth.user()?.id},receiver_id.eq.${supabase.auth.user()?.id}`)
+            .or(`sender_id.eq.${(await supabase.auth.getUser()).data.user?.id},receiver_id.eq.${(await supabase.auth.getUser()).data.user?.id}`)
             .in('sender_id', userIds)
             .in('receiver_id', userIds);
 
@@ -221,7 +221,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
           if (friendRequests) {
             const newRelations = { ...userRelations };
             friendRequests.forEach(req => {
-              if (req.sender_id === supabase.auth.user()?.id) {
+              if (req.sender_id === (await supabase.auth.getUser()).data.user?.id) {
                 // Solicitação enviada pelo usuário atual
                 newRelations[req.receiver_id] = req.status === 'accepted' ? 'following' : 'requested';
               } else if (req.status === 'accepted') {
@@ -243,19 +243,19 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
 
           // Aplicar filtros
           let finalResults = sortedResults;
-          
+
           if (filter === 'saved') {
             finalResults = sortedResults.filter(user => savedProfiles[user.id]);
           } else if (selectedFilters.length > 0) {
             finalResults = sortedResults.filter(user => {
               const isOnline = selectedFilters.includes('online') ? 
                 (user.lastActive === 'Agora mesmo' || user.lastActive?.includes('min')) : false;
-              
+
               const isSuggested = selectedFilters.includes('suggested') ? 
                 (user.favoriteSubject === 'Matemática' || user.favoriteSubject === 'Programação') : false;
-              
+
               const isRecent = selectedFilters.includes('recent') ? true : false;
-              
+
               return isOnline || isSuggested || isRecent;
             });
           } else if (filter === 'online') {
@@ -278,8 +278,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
       } finally {
         setIsLoading(false);
       }
-    }, 300);
-  }, [filter, sortOrder, savedProfiles, selectedFilters, userRelations]);
+    }, [filter, sortOrder, savedProfiles, selectedFilters, userRelations]);
 
   // Função de fallback para pesquisar nos dados mock
   const searchMockUsers = (query: string) => {
@@ -300,19 +299,19 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
 
     // Aplicar filtros
     let finalResults = sortedResults;
-    
+
     if (filter === 'saved') {
       finalResults = sortedResults.filter(user => savedProfiles[user.id]);
     } else if (selectedFilters.length > 0) {
       finalResults = sortedResults.filter(user => {
         const isOnline = selectedFilters.includes('online') ? 
           (user.lastActive === 'Agora mesmo' || user.lastActive?.includes('min')) : false;
-        
+
         const isSuggested = selectedFilters.includes('suggested') ? 
           (user.favoriteSubject === 'Matemática' || user.favoriteSubject === 'Programação') : false;
-        
+
         const isRecent = selectedFilters.includes('recent') ? true : false;
-        
+
         return isOnline || isSuggested || isRecent;
       });
     } else if (filter === 'online') {
@@ -342,7 +341,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
   useEffect(() => {
     const fetchUserRelations = async () => {
       try {
-        const currentUserId = supabase.auth.user()?.id;
+        const currentUserId = (await supabase.auth.getUser()).data.user?.id;
         if (!currentUserId) return;
 
         // Buscar solicitações de amizade no Supabase
@@ -361,20 +360,20 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
           const initialRelations: {[key: string]: 'none' | 'requested' | 'following'} = {};
           const receivedRequests: PendingRequestType[] = [];
           const sentRequests: PendingRequestType[] = [];
-          
+
           // Processar solicitações do banco de dados
           for (const request of friendRequests) {
             if (request.sender_id === currentUserId) {
               // Solicitação enviada pelo usuário atual
               initialRelations[request.receiver_id] = request.status === 'accepted' ? 'following' : 'requested';
-              
+
               // Buscar informações do usuário para mostrar na lista
               const { data: userData } = await supabase
                 .from('profiles')
                 .select('*')
                 .eq('id', request.receiver_id)
                 .single();
-                
+
               if (userData && request.status === 'pending') {
                 const userObj: UserType = {
                   id: userData.id,
@@ -388,7 +387,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                   postsCount: userData.posts_count || 0,
                   lastActive: userData.last_active || 'Indisponível'
                 };
-                
+
                 sentRequests.push({
                   id: request.id,
                   user: userObj,
@@ -401,14 +400,14 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
               if (request.status === 'accepted') {
                 initialRelations[request.sender_id] = 'following';
               }
-              
+
               // Buscar informações do usuário para mostrar na lista
               const { data: userData } = await supabase
                 .from('profiles')
                 .select('*')
                 .eq('id', request.sender_id)
                 .single();
-                
+
               if (userData && request.status === 'pending') {
                 const userObj: UserType = {
                   id: userData.id,
@@ -422,7 +421,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                   postsCount: userData.posts_count || 0,
                   lastActive: userData.last_active || 'Indisponível'
                 };
-                
+
                 receivedRequests.push({
                   id: request.id,
                   user: userObj,
@@ -432,7 +431,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
               }
             }
           }
-          
+
           // Atualizar estados
           setUserRelations(initialRelations);
           setPendingRequests([...receivedRequests, ...sentRequests]);
@@ -445,7 +444,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
         initializeWithMockData();
       }
     };
-    
+
     // Inicializar com dados mock para fallback
     const initializeWithMockData = () => {
       const initialRelations: {[key: string]: 'none' | 'requested' | 'following'} = {};
@@ -463,9 +462,9 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
       });
       setUserRelations(initialRelations);
     };
-    
+
     // Buscar dados reais se o usuário estiver autenticado
-    if (supabase.auth.user()) {
+    if ((await supabase.auth.getUser()).data.user) {
       fetchUserRelations();
     } else {
       initializeWithMockData();
@@ -518,7 +517,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
       const timeoutId = setTimeout(() => {
         document.addEventListener('mousedown', handleClickOutside);
       }, 100);
-      
+
       return () => {
         clearTimeout(timeoutId);
         document.removeEventListener('mousedown', handleClickOutside);
@@ -535,11 +534,11 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
           const { error: requestError } = await supabase
             .from('friend_requests')
             .insert([{ 
-              sender_id: supabase.auth.user()?.id, 
+              sender_id: (await supabase.auth.getUser()).data.user?.id, 
               receiver_id: userId, 
               status: 'pending' 
             }]);
-            
+
           if (requestError) {
             console.error('Erro ao enviar solicitação:', requestError);
             toast({
@@ -549,7 +548,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
             });
             return;
           }
-          
+
           // Atualizar estado local
           setUserRelations(prev => ({...prev, [userId]: 'requested'}));
 
@@ -570,7 +569,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
           // Em um sistema real, poderia ser salvo no banco de dados
           setUserRelations(prev => ({...prev, [userId]: 'following'}));
           break;
-          
+
         case 'unfollow':
           // Em um sistema real, poderia ser removido do banco de dados
           setUserRelations(prev => ({...prev, [userId]: 'none'}));
@@ -583,10 +582,10 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
             .update({ status: 'accepted' })
             .match({ 
               sender_id: userId, 
-              receiver_id: supabase.auth.user()?.id,
+              receiver_id: (await supabase.auth.getUser()).data.user?.id,
               status: 'pending'
             });
-            
+
           if (acceptError) {
             console.error('Erro ao aceitar solicitação:', acceptError);
             toast({
@@ -596,7 +595,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
             });
             return;
           }
-          
+
           // Remover das solicitações pendentes e adicionar como amigo
           setPendingRequests(prev => prev.filter(req => !(req.user.id === userId && req.type === 'received')));
           break;
@@ -608,10 +607,10 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
             .update({ status: 'rejected' })
             .match({ 
               sender_id: userId, 
-              receiver_id: supabase.auth.user()?.id,
+              receiver_id: (await supabase.auth.getUser()).data.user?.id,
               status: 'pending'
             });
-            
+
           if (rejectError) {
             console.error('Erro ao rejeitar solicitação:', rejectError);
             toast({
@@ -621,7 +620,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
             });
             return;
           }
-          
+
           // Apenas remover das solicitações pendentes
           setPendingRequests(prev => prev.filter(req => !(req.user.id === userId && req.type === 'received')));
           break;
@@ -781,7 +780,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                 ? (
                   <span className="inline-flex items-center gap-1">
                     <span className="bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full text-[10px] font-medium">solicitação recebida</span>
-                    <span className="text-white/60">• {new Date(request.date).toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit'})}</span>
+                    <span className="text-white/60">•{new Date(request.date).toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit'})}</span>
                   </span>
                 ) 
                 : (
