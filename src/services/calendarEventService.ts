@@ -332,25 +332,8 @@ const getAllLocalEvents = (): CalendarEvent[] => {
   }
 };
 
-// Exportar função para ser usada em outros componentes
-export const getAllEvents = async (): Promise<CalendarEvent[]> => {
-  try {
-    const { data, error } = await supabase
-      .from("calendar_events")
-      .select("*")
-      .order("start_date", { ascending: true });
-
-    if (error) {
-      console.error("Erro ao buscar todos os eventos:", error);
-      return getAllLocalEvents();
-    }
-
-    return (data || []).map(formatDBEventForApp);
-  } catch (error) {
-    console.error("Erro ao buscar todos os eventos:", error);
-    return getAllLocalEvents();
-  }
-};
+// Esta função já está definida anteriormente no arquivo
+// Não é necessário defini-la novamente
 
 // Obter todos os eventos armazenados localmente para um usuário específico
 const getLocalEvents = (userId: string): CalendarEvent[] => {
