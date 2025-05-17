@@ -147,6 +147,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [filter, setFilter] = useState<'all' | 'online' | 'suggested' | 'saved'>('all');
   const [sortOrder, setSortOrder] = useState<'alphabetical' | 'recent'>('recent');
+  const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
 
   // Otimizações para debounce de pesquisa
   const performSearch = useCallback((query: string) => {
@@ -181,24 +182,41 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
         }
       });
 
-      // Aplicar filtro adicional
+      // Aplicar filtros múltiplos e o filtro principal
       let finalResults = sortedResults;
-      if (filter === 'online') {
+      
+      // Se estamos no filtro 'saved', esse tem prioridade
+      if (filter === 'saved') {
+        finalResults = sortedResults.filter(user => savedProfiles[user.id]);
+      } 
+      // Aplicar filtros selecionados pelo usuário
+      else if (selectedFilters.length > 0) {
+        finalResults = sortedResults.filter(user => {
+          const isOnline = selectedFilters.includes('online') ? 
+            (user.lastActive === 'Agora mesmo' || user.lastActive?.includes('min')) : false;
+          
+          const isSuggested = selectedFilters.includes('suggested') ? 
+            (user.favoriteSubject === 'Matemática' || user.favoriteSubject === 'Programação') : false;
+          
+          const isRecent = selectedFilters.includes('recent') ? true : false; // Todos são considerados recentes para este exemplo
+          
+          // O usuário corresponde a pelo menos um dos filtros selecionados
+          return isOnline || isSuggested || isRecent;
+        });
+      }
+      // Se não há filtros selecionados, mas estamos em um filtro principal
+      else if (filter === 'online') {
         finalResults = sortedResults.filter(user => 
           user.lastActive === 'Agora mesmo' || user.lastActive?.includes('min'));
       } else if (filter === 'suggested') {
-        // Filtro de sugestões (poderia ser baseado em interesses comuns)
         finalResults = sortedResults.filter(user => 
           user.favoriteSubject === 'Matemática' || user.favoriteSubject === 'Programação');
-      } else if (filter === 'saved') {
-        // Filtro de perfis salvos
-        finalResults = sortedResults.filter(user => savedProfiles[user.id]);
       }
 
       setFilteredResults(finalResults);
       setIsLoading(false);
     }, 300);
-  }, [filter, sortOrder, savedProfiles]);
+  }, [filter, sortOrder, savedProfiles, selectedFilters]);
 
   // Atualizar resultados quando a busca mudar
   useEffect(() => {
@@ -732,51 +750,115 @@ className="w-full rounded-xl bg-white/5 hover:bg-white/10 border border-white/10
   );
 
   // Filtros para a busca
-  const FilterDropdown = () => (
-    <div 
-      className="absolute right-0 top-full mt-2 bg-[#0A2540] rounded-xl border border-white/10 shadow-xl z-30 w-48 overflow-hidden"
-    >
-      <div className="p-2">
-        <h4 className="text-white text-xs px-2 py-1 font-medium">Filtrar por:</h4>
-        <div className="mt-1 space-y-1">
-          <button 
-            className={`flex items-center gap-2 w-full px-3 py-2 rounded-md ${filter === 'all' ? 'bg-[#FF6B00]/20 text-[#FF6B00]' : 'text-white/70 hover:bg-white/5'}`}
-            onClick={() => { setFilter('all'); setShowFilterDropdown(false); }}
-          >
-            <Users className="h-4 w-4" /> Todos
-          </button>
-          <button 
-            className={`flex items-center gap-2 w-full px-3 py-2 rounded-md ${filter === 'online' ? 'bg-[#FF6B00/20 text-[#FF6B00]' : 'text-white/70 hover:bg-white/5'}`}
-            onClick={() => { setFilter('online'); setShowFilterDropdown(false); }}
-          >
-            <Bell className="h-4 w-4" /> Online agora
-          </button>
-          <button 
-            className={`flex items-center gap-2 w-full px-3 py-2 rounded-md ${filter === 'suggested' ? 'bg-[#FF6B00]/20 text-[#FF6B00]' : 'text-white/70 hover:bg-white/5'}`}
-            onClick={() => { setFilter('suggested'); setShowFilterDropdown(false); }}
-          >
-            <Bookmark className="h-4 w-4" /> Sugeridos
-          </button>
-          {/* Opção "Salvos" removida daqui e adicionada como botão separado */}
-        </div>
-        <h4 className="text-white text-xs px-2 py-1 mt-2 font-medium">Ordenar por:</h4>
-        <div className="mt-1 space-y-1">
-          <button 
-            className={`flex items-center gap-2 w-full px-3 py-2 rounded-md ${sortOrder === 'alphabetical' ? 'bg-[#FF6B00]/20 text-[#FF6B00]' : 'text-white/70 hover:bg-white/5'}`}
-            onClick={() => { setSortOrder('alphabetical'); setShowFilterDropdown(false); }}
-          >
-            Alfabética
-          </button>
-          <button 
-            className={`flex items-center gap-2 w-full px-3 py-2 rounded-md ${sortOrder === 'recent' ? 'bg-[#FF6B00]/20 text-[#FF6B00]' : 'text-white/70 hover:bg-white/5'}`}
-            onClick={() => { setSortOrder('recent'); setShowFilterDropdown(false); }}
-          >
-            Mais populares
-          </button>
+  const FilterDropdown = () => {
+    // Toggle para adicionar/remover filtro da lista de selecionados
+    const toggleFilter = (filterName: string) => {
+      setSelectedFilters(prev => {
+        if (prev.includes(filterName)) {
+          return prev.filter(f => f !== filterName);
+        } else {
+          return [...prev, filterName];
+        }
+      });
+    };
+
+    // Aplicar filtros e fechar dropdown
+    const applyFilters = () => {
+      performSearch(searchQuery);
+      setShowFilterDropdown(false);
+    };
+
+    return (
+      <div 
+        className="absolute right-0 top-full mt-2 bg-[#0A2540] rounded-xl border border-white/10 shadow-xl z-30 w-56 overflow-hidden"
+      >
+        <div className="p-2">
+          <div className="flex justify-between items-center mb-2">
+            <h4 className="text-white text-xs px-2 py-1 font-medium">Filtrar por (múltiplos):</h4>
+            <button 
+              className="text-xs text-amber-400 hover:text-amber-300 px-2 py-1"
+              onClick={() => setSelectedFilters([])}
+            >
+              Limpar
+            </button>
+          </div>
+          <div className="mt-1 space-y-1">
+            <div 
+              className={`flex items-center gap-2 w-full px-3 py-2 rounded-md ${selectedFilters.includes('online') ? 'bg-[#FF6B00]/20 text-[#FF6B00]' : 'text-white/70 hover:bg-white/5'}`}
+              onClick={() => toggleFilter('online')}
+              role="button"
+            >
+              <div className="flex items-center justify-center w-4 h-4">
+                {selectedFilters.includes('online') ? (
+                  <CheckCircle2 className="h-4 w-4" />
+                ) : (
+                  <div className="w-3 h-3 border border-white/40 rounded-sm"></div>
+                )}
+              </div>
+              <Bell className="h-4 w-4 ml-1" /> Online agora
+            </div>
+            <div 
+              className={`flex items-center gap-2 w-full px-3 py-2 rounded-md ${selectedFilters.includes('suggested') ? 'bg-[#FF6B00]/20 text-[#FF6B00]' : 'text-white/70 hover:bg-white/5'}`}
+              onClick={() => toggleFilter('suggested')}
+              role="button"
+            >
+              <div className="flex items-center justify-center w-4 h-4">
+                {selectedFilters.includes('suggested') ? (
+                  <CheckCircle2 className="h-4 w-4" />
+                ) : (
+                  <div className="w-3 h-3 border border-white/40 rounded-sm"></div>
+                )}
+              </div>
+              <Bookmark className="h-4 w-4 ml-1" /> Sugeridos
+            </div>
+            <div 
+              className={`flex items-center gap-2 w-full px-3 py-2 rounded-md ${selectedFilters.includes('recent') ? 'bg-[#FF6B00]/20 text-[#FF6B00]' : 'text-white/70 hover:bg-white/5'}`}
+              onClick={() => toggleFilter('recent')}
+              role="button"
+            >
+              <div className="flex items-center justify-center w-4 h-4">
+                {selectedFilters.includes('recent') ? (
+                  <CheckCircle2 className="h-4 w-4" />
+                ) : (
+                  <div className="w-3 h-3 border border-white/40 rounded-sm"></div>
+                )}
+              </div>
+              <Clock className="h-4 w-4 ml-1" /> Recentes
+            </div>
+          </div>
+
+          <div className="border-t border-white/10 my-2"></div>
+
+          <h4 className="text-white text-xs px-2 py-1 font-medium">Ordenar por:</h4>
+          <div className="mt-1 space-y-1">
+            <button 
+              className={`flex items-center gap-2 w-full px-3 py-2 rounded-md ${sortOrder === 'alphabetical' ? 'bg-[#FF6B00]/20 text-[#FF6B00]' : 'text-white/70 hover:bg-white/5'}`}
+              onClick={() => { setSortOrder('alphabetical'); }}
+            >
+              Alfabética
+            </button>
+            <button 
+              className={`flex items-center gap-2 w-full px-3 py-2 rounded-md ${sortOrder === 'recent' ? 'bg-[#FF6B00]/20 text-[#FF6B00]' : 'text-white/70 hover:bg-white/5'}`}
+              onClick={() => { setSortOrder('recent'); }}
+            >
+              Mais populares
+            </button>
+          </div>
+
+          <div className="mt-3 flex justify-end">
+            <Button
+              variant="default"
+              size="sm"
+              className="bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] text-white hover:opacity-90 rounded-lg px-4"
+              onClick={applyFilters}
+            >
+              Aplicar
+            </Button>
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -852,14 +934,15 @@ className="w-full rounded-xl bg-white/5 hover:bg-white/10 border border-white/10
                   <div className="ml-2">
                     <Button
                       variant="outline"
-                      className={`h-10 px-3 rounded-full ${filter === 'saved' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white'}`}
+                      size="icon"
+                      className={`h-10 w-10 rounded-full ${filter === 'saved' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white'}`}
                       onClick={() => {
                         setFilter(filter === 'saved' ? 'all' : 'saved');
                         performSearch(searchQuery);
                       }}
+                      title="Mostrar perfis salvos"
                     >
-                      <Bookmark className={`h-4 w-4 mr-1.5 ${filter === 'saved' ? 'fill-amber-400' : ''}`} />
-                      <span className="text-xs font-medium">Salvos</span>
+                      <Bookmark className={`h-4 w-4 ${filter === 'saved' ? 'fill-amber-400' : ''}`} />
                     </Button>
                   </div>
 
