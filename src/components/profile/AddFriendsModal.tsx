@@ -395,7 +395,9 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
       setShowProfileActions(false);
       setSearchQuery('');
       setFilteredResults([]);
+      setSearchResults([]);
       setSearchError(null);
+      setNoResults(false);
 
       // Limpar qualquer timeout pendente
       if (searchTimeoutRef.current) {
@@ -406,22 +408,25 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
       setActiveTab("buscar");
       setIsLoading(true);
       setSearchError(null);
+      setNoResults(false);
 
       // Buscar usuários recentes para exibir quando o modal abre
       const fetchInitialUsers = async () => {
         try {
-          // Primeiro verificar a conexão com o Supabase
-          const isConnected = await verifySupabaseConnection();
-
+          // Verificar a conexão com o Supabase primeiro
+          const isConnected = await checkSupabaseConnection();
+          
           if (!isConnected) {
             console.error("Não foi possível estabelecer conexão com o Supabase na inicialização");
+            setSearchError('Não foi possível conectar ao serviço. Tente novamente mais tarde.');
             setIsLoading(false);
             return;
           }
 
+          // Usar uma consulta mais simples e robusta para obter os perfis mais recentes
           const { data, error } = await supabase
             .from('profiles')
-            .select('id, full_name, username, avatar_url, bio, email, is_private, updated_at')
+            .select('id, full_name, username, avatar_url, bio, is_private, updated_at')
             .neq('id', currentUserId || '')
             .order('updated_at', { ascending: false })
             .limit(10);
@@ -432,12 +437,12 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
             return;
           }
 
-          console.log(`Carregados ${data?.length || 0} usuários iniciais`);
+          console.log(`Carregados ${data?.length || 0} usuários iniciais com sucesso`);
 
           if (data && data.length > 0) {
             const formattedResults: UserType[] = data.map(user => {
               // Gerar um username válido se não existir
-              const validUsername = user.username || user.email?.split('@')[0] || `user_${user.id.substring(0, 6)}`;
+              const validUsername = user.username || `user_${user.id.substring(0, 6)}`;
 
               // Gerar um nome de exibição válido
               const displayName = user.full_name || validUsername || 'Usuário';
@@ -457,12 +462,14 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
             });
 
             setFilteredResults(formattedResults);
+            setSearchResults(formattedResults);
           } else {
             setFilteredResults([]);
+            setSearchResults([]);
           }
         } catch (error: any) {
           console.error("Erro ao carregar usuários iniciais:", error);
-          setSearchError(`Erro ao carregar usuários: ${error.message || 'Falha na conexão'}`);
+          setSearchError('Não foi possível carregar usuários. Tente novamente mais tarde.');
         } finally {
           setIsLoading(false);
         }
@@ -1289,20 +1296,31 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
     if (!query.trim()) {
       setFilteredResults([]);
       setSearchError(null);
+      setNoResults(false);
       return;
     }
 
     setIsLoading(true);
     setSearchError(null);
+    setNoResults(false);
+    
+    // Verifica a conexão com o Supabase antes de continuar
+    const isConnected = await verifySupabaseConnection();
+    if (!isConnected) {
+      setIsLoading(false);
+      return;
+    }
 
     try {
+      console.log(`Buscando usuários com o termo: "${query}"`);
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('id, full_name, username, avatar_url, bio, email, is_private, updated_at')
-        .or(`username.ilike.%${query}%,full_name.ilike.%${query}%,email.ilike.%${query}%`)
+        .or(`username.ilike.%${query}%,full_name.ilike.%${query}%`)
         .neq('id', currentUserId || '')
         .order('updated_at', { ascending: false })
-        .limit(50);
+        .limit(20);
 
       if (error) {
         console.error("Erro na busca do Supabase:", error);
@@ -1310,6 +1328,8 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
         setFilteredResults([]);
         return;
       }
+
+      console.log(`Encontrados ${data?.length || 0} resultados para a busca "${query}"`);
 
       if (data && data.length > 0) {
         const formattedResults: UserType[] = data.map(user => {
@@ -1331,9 +1351,11 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
         });
 
         setFilteredResults(formattedResults);
+        setSearchResults(formattedResults);
       } else {
         setFilteredResults([]);
-        setSearchError('Nenhum usuário encontrado com esse termo de busca.');
+        setSearchResults([]);
+        setNoResults(true);
       }
     } catch (error) {
       console.error("Erro na busca de usuários:", error);
@@ -1365,9 +1387,11 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
     // Nova função para verificar a conexão com o Supabase
 	const verifySupabaseConnection = async (): Promise<boolean> => {
 		try {
+			// Usar uma consulta mais simples e robusta
 			const { data, error } = await supabase
 				.from('profiles')
-				.select('count', { count: 'exact', head: true });
+				.select('id')
+				.limit(1);
 
 			if (error) {
 				console.error('Erro ao verificar conexão com Supabase:', error);
@@ -1375,6 +1399,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
 				return false;
 			}
 
+      console.log('Conexão com Supabase estabelecida com sucesso!');
 			return true;
 		} catch (err) {
 			console.error('Falha ao verificar conexão com Supabase:', err);
@@ -1447,10 +1472,12 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
                   setSearchError(null);
+                  setNoResults(false);
 
                   // Limpar resultados se o campo estiver vazio
                   if (e.target.value.trim() === '') {
                     setFilteredResults([]);
+                    setSearchResults([]);
                   }
                 }}
                 onKeyDown={(e) => {
@@ -1470,6 +1497,8 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                   onClick={() => {
                     if (searchQuery.trim().length >= 2) {
                       searchUsers(searchQuery);
+                    } else if (searchQuery.trim() !== '') {
+                      setSearchError('Digite pelo menos 2 caracteres para buscar');
                     }
                   }}
                   className="absolute inset-y-0 right-3 p-2 text-white/60 hover:text-white/90 transition-colors"
@@ -1487,6 +1516,30 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ open, onOpenChange })
                   <AlertCircle className="h-4 w-4 mr-2" />
                   {searchError}
                 </div>
+              </div>
+            )}
+            
+            {/* Botão de reconexão caso haja erro */}
+            {searchError && searchError.includes('conectar') && (
+              <div className="mt-2 flex justify-center">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    setSearchError(null);
+                    setIsLoading(true);
+                    verifySupabaseConnection().then(connected => {
+                      if (connected && searchQuery.trim().length >= 2) {
+                        searchUsers(searchQuery);
+                      } else {
+                        setIsLoading(false);
+                      }
+                    });
+                  }}
+                  className="bg-white/10 text-white border-white/20 hover:bg-white/20"
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" /> Tentar novamente
+                </Button>
               </div>
             )}
           </div>

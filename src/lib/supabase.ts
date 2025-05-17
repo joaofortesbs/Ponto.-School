@@ -19,7 +19,7 @@ export const supabase = createClient(supabaseUrl || "", supabaseAnonKey || "", {
   },
 });
 
-// Função auxiliar para verificar a conexão - simplificada
+// Função auxiliar para verificar a conexão - simplificada e robusta
 export const checkSupabaseConnection = async () => {
   try {
     if (!supabase) {
@@ -27,8 +27,11 @@ export const checkSupabaseConnection = async () => {
       return false;
     }
 
-    // Abordagem simples - tentar fazer uma consulta simples
-    const { error } = await supabase.from('profiles').select('count', { head: true, count: 'exact' });
+    // Abordagem mais simples e confiável - tentar fazer uma consulta básica
+    const { error } = await supabase
+      .from('profiles')
+      .select('id')
+      .limit(1);
 
     if (!error) {
       console.log('Conexão com Supabase estabelecida com sucesso!');
