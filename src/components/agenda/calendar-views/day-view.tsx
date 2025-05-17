@@ -23,33 +23,36 @@ const DayView: React.FC<DayViewProps> = ({ selectedDay, openEventDetails }) => {
     const fetchEvents = async () => {
       try {
         setLoading(true);
+        console.log("Carregando eventos para visualização diária...");
 
         // Importar serviços necessários
-        const { getEventsByUserId, getAllEvents, initLocalStorage } = await import('@/services/calendarEventService');
+        const { getEventsByUserId, getAllEvents, initLocalStorage, syncLocalEvents } = await import('@/services/calendarEventService');
         const { getCurrentUser } = await import('@/services/databaseService');
 
         // Inicializar armazenamento local
         initLocalStorage();
 
         // Obter usuário atual
-        const currentUser = await getCurrentUser();
+        let currentUser = null;
+        try {
+          currentUser = await getCurrentUser();
+          console.log("Usuário atual:", currentUser?.id || "usuário não autenticado");
+        } catch (userError) {
+          console.warn("Erro ao obter usuário atual:", userError);
+        }
         
-        // Buscar eventos (primeiro tenta do usuário atual, depois todos)
+        // Buscar eventos do usuário se estiver autenticado
         let userEvents: CalendarEvent[] = [];
         
-        if (currentUser) {
+        if (currentUser?.id) {
+          // Primeiro sincronizar eventos locais com o banco de dados
+          await syncLocalEvents(currentUser.id);
+          
+          // Depois buscar todos os eventos do usuário
           userEvents = await getEventsByUserId(currentUser.id);
           console.log(`Carregados ${userEvents.length} eventos do usuário ${currentUser.id}`);
-        }
-        
-        // Se não houver eventos do usuário ou usuário não estiver logado, buscar todos os eventos
-        if (userEvents.length === 0) {
-          userEvents = await getAllEvents();
-          console.log(`Carregados ${userEvents.length} eventos de todos os usuários`);
-        }
-
-        // Se ainda não houver eventos, tentar carregar do localStorage diretamente
-        if (userEvents.length === 0) {
+        } else {
+          // Se não houver usuário autenticado, tentar carregar eventos locais
           try {
             const eventsJson = localStorage.getItem("calendar_events");
             if (eventsJson) {
@@ -59,21 +62,38 @@ const DayView: React.FC<DayViewProps> = ({ selectedDay, openEventDetails }) => {
           } catch (e) {
             console.error("Erro ao ler eventos do localStorage:", e);
           }
+          
+          // Se ainda não houver eventos, buscar todos (públicos)
+          if (userEvents.length === 0) {
+            userEvents = await getAllEvents();
+            console.log(`Carregados ${userEvents.length} eventos públicos`);
+          }
         }
         
-        setEvents(userEvents);
+        if (userEvents.length > 0) {
+          setEvents(userEvents);
+          console.log("Eventos carregados com sucesso:", userEvents.length);
+        } else {
+          console.warn("Nenhum evento encontrado para exibição");
+          setEvents([]);
+        }
       } catch (error) {
         console.error("Erro ao carregar eventos:", error);
+        
         // Tentar buscar do localStorage como último recurso
         try {
           const eventsJson = localStorage.getItem("calendar_events");
           if (eventsJson) {
             const localEvents = JSON.parse(eventsJson);
             setEvents(localEvents);
-            console.log("Eventos carregados do localStorage como fallback");
+            console.log("Eventos carregados do localStorage como fallback:", localEvents.length);
+          } else {
+            console.warn("Nenhum evento encontrado no localStorage");
+            setEvents([]);
           }
         } catch (e) {
           console.error("Erro ao ler eventos do localStorage:", e);
+          setEvents([]);
         }
       } finally {
         setLoading(false);

@@ -152,16 +152,31 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
       return;
     }
 
+    // Mostrar uma notificação de carregamento
+    const toastId = crypto.randomUUID();
     try {
-      // Importar o serviço de eventos
+      // Importar o serviço de eventos e o toast
       const { addEvent, initLocalStorage } = await import('@/services/calendarEventService');
       const { getCurrentUser } = await import('@/services/databaseService');
+      const { toast } = await import("@/components/ui/use-toast");
+
+      toast({
+        id: toastId,
+        title: "Salvando evento...",
+        description: "Aguarde enquanto seu evento é salvo.",
+      });
 
       // Inicializar armazenamento local
       initLocalStorage();
 
       // Obter usuário atual
-      const currentUser = await getCurrentUser();
+      let currentUser = null;
+      try {
+        currentUser = await getCurrentUser();
+      } catch (userError) {
+        console.warn("Erro ao obter usuário atual:", userError);
+        // Continuar mesmo sem usuário
+      }
       
       // Usar um ID anônimo padrão se não houver usuário
       const userId = currentUser?.id || `anonymous-${Date.now()}`;
@@ -174,10 +189,9 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
         discipline,
         professor,
         startDate: startDate.toISOString(),
-        endDate: endDate ? endDate.toISOString() : undefined,
+        endDate: endDate ? endDate.toISOString() : startDate.toISOString(), // Garantir que endDate tenha um valor
         startTime,
         endTime,
-        duration,
         location,
         isOnline,
         meetingLink,
@@ -196,56 +210,54 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
 
       if (savedEvent) {
         console.log("Evento salvo com sucesso:", savedEvent);
-      } else {
-        console.warn("Evento não foi salvo no banco de dados, usando versão local");
-      }
-
-      // Call the onAddEvent callback with the new event
-      if (onAddEvent) {
-        onAddEvent(savedEvent || { 
-          ...newEvent, 
-          id: `event-${Date.now()}`,
-          createdAt: new Date().toISOString() 
+        
+        // Atualizar toast
+        toast({
+          id: toastId,
+          title: "Evento salvo com sucesso",
+          description: "O evento foi adicionado à sua agenda.",
+          variant: "success"
         });
+        
+        // Call the onAddEvent callback with the new event
+        if (onAddEvent) {
+          onAddEvent(savedEvent);
+        }
+        
+        // Reset form and close modal
+        resetForm();
+        onOpenChange(false);
+      } else {
+        throw new Error("Falha ao salvar evento");
       }
-
-      // Também salvar diretamente no localStorage para garantir
-      try {
-        const eventsJson = localStorage.getItem("calendar_events") || "[]";
-        const events = JSON.parse(eventsJson);
-        const eventToSave = savedEvent || { 
-          ...newEvent, 
-          id: `event-${Date.now()}`,
-          createdAt: new Date().toISOString() 
-        };
-        events.push(eventToSave);
-        localStorage.setItem("calendar_events", JSON.stringify(events));
-        console.log("Evento também salvo diretamente no localStorage");
-      } catch (err) {
-        console.error("Erro ao salvar diretamente no localStorage:", err);
-      }
-
-      // Reset form and close modal
-      resetForm();
-      onOpenChange(false);
     } catch (error) {
       console.error("Erro ao salvar evento:", error);
       
-      // Tentar salvar diretamente no localStorage como último recurso
+      // Atualizar toast para erro
+      const { toast } = await import("@/components/ui/use-toast");
+      toast({
+        id: toastId,
+        title: "Erro ao salvar evento",
+        description: "Tentando salvar localmente...",
+        variant: "destructive"
+      });
+      
+      // Tentar salvar localmente como último recurso
       try {
-        const eventsJson = localStorage.getItem("calendar_events") || "[]";
-        const events = JSON.parse(eventsJson);
-        const eventToSave = { 
+        // Importar o serviço novamente para garantir acesso
+        const { addEvent, initLocalStorage } = await import('@/services/calendarEventService');
+        initLocalStorage();
+        
+        const emergencyEvent = { 
           type: eventType,
           title,
           description,
           discipline,
           professor,
           startDate: startDate.toISOString(),
-          endDate: endDate ? endDate.toISOString() : undefined,
+          endDate: endDate ? endDate.toISOString() : startDate.toISOString(),
           startTime,
           endTime,
-          duration,
           location,
           isOnline,
           meetingLink,
@@ -255,24 +267,42 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
           guests,
           visibility,
           userId: 'emergency-fallback',
-          id: `emergency-${Date.now()}`,
-          createdAt: new Date().toISOString()
         };
-        events.push(eventToSave);
-        localStorage.setItem("calendar_events", JSON.stringify(events));
-        console.log("Evento salvo em modo de emergência no localStorage");
         
-        // Chamar o callback
-        if (onAddEvent) {
-          onAddEvent(eventToSave);
+        // Tentar salvar usando o serviço que vai garantir o armazenamento local
+        const localSavedEvent = await addEvent(emergencyEvent);
+        
+        if (localSavedEvent) {
+          // Chamar o callback
+          if (onAddEvent) {
+            onAddEvent(localSavedEvent);
+          }
+          
+          // Atualizar toast
+          toast({
+            id: toastId,
+            title: "Evento salvo localmente",
+            description: "O evento foi salvo em seu navegador.",
+            variant: "warning"
+          });
+          
+          // Fechar o modal
+          resetForm();
+          onOpenChange(false);
+        } else {
+          throw new Error("Falha no salvamento local");
         }
+      } catch (localError) {
+        console.error("Erro no salvamento local:", localError);
         
-        // Fechar o modal
-        resetForm();
-        onOpenChange(false);
-      } catch (err) {
-        console.error("Erro no salvamento de emergência:", err);
-        alert("Ocorreu um erro ao salvar o evento. Tente novamente.");
+        // Atualizar toast para falha total
+        const { toast } = await import("@/components/ui/use-toast");
+        toast({
+          id: toastId,
+          title: "Falha ao salvar evento",
+          description: "Não foi possível salvar o evento. Tente novamente.",
+          variant: "destructive"
+        });
       }
     }
   };

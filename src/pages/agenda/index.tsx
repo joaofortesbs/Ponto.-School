@@ -155,18 +155,11 @@ export default function AgendaPage() {
     // Inicializar armazenamento local ao carregar a página
     const initStorage = async () => {
       try {
-        const { initLocalStorage, syncLocalEvents } = await import('@/services/calendarEventService');
-        const { getCurrentUser } = await import('@/services/databaseService');
+        const { initLocalStorage } = await import('@/services/calendarEventService');
 
         // Inicializar armazenamento local
         initLocalStorage();
-
-        // Tentar sincronizar eventos locais com o banco de dados
-        const currentUser = await getCurrentUser();
-        if (currentUser) {
-          await syncLocalEvents(currentUser.id);
-          console.log("Eventos locais sincronizados com o banco de dados");
-        }
+        console.log("Armazenamento local inicializado");
       } catch (error) {
         console.error("Erro ao inicializar armazenamento local:", error);
       }
@@ -180,49 +173,150 @@ export default function AgendaPage() {
     const loadEvents = async () => {
       try {
         setIsLoading(true);
+        console.log("Carregando eventos para a página de agenda...");
+        
         const { getCurrentUser } = await import('@/services/databaseService');
-        const { getEventsByUserId, syncLocalEvents, CalendarEvent } = await import('@/services/calendarEventService');
+        const { getEventsByUserId, syncLocalEvents, getAllLocalEvents } = await import('@/services/calendarEventService');
+        const { toast } = await import("@/components/ui/use-toast");
 
-        const currentUser = await getCurrentUser();
-        if (currentUser) {
+        let currentUser = null;
+        
+        try {
+          currentUser = await getCurrentUser();
+        } catch (userError) {
+          console.warn("Erro ao obter usuário atual:", userError);
+          // Continuar sem usuário
+        }
+
+        let events = [];
+        
+        if (currentUser?.id) {
+          console.log("Usuário autenticado:", currentUser.id);
+          
           // Primeiro sincronize eventos locais com o banco de dados
           await syncLocalEvents(currentUser.id);
+          console.log("Sincronização de eventos locais concluída");
 
           // Depois busque todos os eventos do usuário
-          const events = await getEventsByUserId(currentUser.id);
-          console.log("Eventos carregados com sucesso:", events.length);
+          events = await getEventsByUserId(currentUser.id);
+          console.log("Eventos carregados do banco de dados:", events.length);
+        } else {
+          console.log("Usuário não autenticado, carregando eventos locais");
+          
+          // Se não houver usuário autenticado, use apenas eventos locais
+          const { getAllLocalEvents } = await import('@/services/calendarEventService');
+          events = getAllLocalEvents();
+          console.log("Eventos carregados do armazenamento local:", events.length);
+        }
 
-          // Converter eventos para o formato necessário para o calendário
-          const formattedEvents: Record<number, any[]> = {};
+        if (events.length === 0) {
+          console.warn("Nenhum evento encontrado");
+          setEventData({});
+          setIsLoading(false);
+          return;
+        }
+        
+        // Converter eventos para o formato necessário para o calendário
+        const formattedEvents: Record<number, any[]> = {};
 
-          events.forEach(event => {
+        events.forEach(event => {
+          try {
             const startDate = new Date(event.startDate);
-            const key = startDate.getTime();
-
-            if (!formattedEvents[key]) {
-              formattedEvents[key] = [];
+            
+            if (isNaN(startDate.getTime())) {
+              console.warn("Data inválida para evento:", event);
+              return; // Pular este evento
+            }
+            
+            // Usar o dia do mês como chave para agrupar eventos do mesmo dia
+            const day = startDate.getDate();
+            
+            if (!formattedEvents[day]) {
+              formattedEvents[day] = [];
             }
 
-            formattedEvents[key].push({
+            const formattedEvent = {
               id: event.id,
               title: event.title,
               description: event.description || "",
               type: event.type || "evento",
+              startDate: event.startDate,
+              startTime: event.startTime || "00:00",
+              endTime: event.endTime || "23:59",
               start: startDate,
               end: event.endDate ? new Date(event.endDate) : startDate,
-              location: event.location,
-              isOnline: event.isOnline,
-              link: event.meetingLink,
-              subject: event.discipline,
-              professor: event.professor,
-              status: "confirmado"
-            });
-          });
+              location: event.location || "",
+              isOnline: event.isOnline || false,
+              meetingLink: event.meetingLink || "",
+              discipline: event.discipline || "Geral",
+              professor: event.professor || "",
+              color: getEventColor(event.type || "evento"),
+              status: "confirmado",
+              userId: event.userId
+            };
 
-          setEventData(formattedEvents);
+            formattedEvents[day].push(formattedEvent);
+          } catch (eventError) {
+            console.error("Erro ao processar evento:", event, eventError);
+          }
+        });
+
+        console.log("Eventos formatados para visualização:", Object.keys(formattedEvents).length, "dias com eventos");
+        setEventData(formattedEvents);
+        
+        if (events.length > 0) {
+          toast({
+            title: "Agenda carregada",
+            description: `${events.length} eventos carregados com sucesso.`,
+            variant: "success"
+          });
         }
       } catch (error) {
         console.error("Erro ao carregar eventos:", error);
+        
+        const { toast } = await import("@/components/ui/use-toast");
+        toast({
+          title: "Erro ao carregar eventos",
+          description: "Tente recarregar a página.",
+          variant: "destructive"
+        });
+        
+        // Tentar carregar do localStorage diretamente como último recurso
+        try {
+          const eventsJson = localStorage.getItem("calendar_events");
+          if (eventsJson) {
+            const localEvents = JSON.parse(eventsJson);
+            console.log("Tentando carregar eventos diretamente do localStorage:", localEvents.length);
+            
+            // Converter eventos locais para o formato do calendário
+            const formattedLocalEvents: Record<number, any[]> = {};
+            
+            localEvents.forEach(event => {
+              try {
+                const startDate = new Date(event.startDate);
+                const day = startDate.getDate();
+                
+                if (!formattedLocalEvents[day]) {
+                  formattedLocalEvents[day] = [];
+                }
+                
+                formattedLocalEvents[day].push({
+                  ...event,
+                  start: startDate,
+                  end: event.endDate ? new Date(event.endDate) : startDate,
+                  color: getEventColor(event.type || "evento"),
+                  status: "confirmado"
+                });
+              } catch (eventError) {
+                console.error("Erro ao processar evento local:", event, eventError);
+              }
+            });
+            
+            setEventData(formattedLocalEvents);
+          }
+        } catch (localError) {
+          console.error("Erro ao carregar eventos do localStorage:", localError);
+        }
       } finally {
         setIsLoading(false);
       }
