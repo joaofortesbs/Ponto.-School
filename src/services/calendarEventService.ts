@@ -274,11 +274,17 @@ const saveEventsLocally = (events: CalendarEvent[]) => {
 
 // Inicializar o armazenamento local se não existir
 export const initLocalStorage = () => {
-  if (!localStorage.getItem(EVENTS_STORAGE_KEY)) {
-    saveEventsLocally([]);
-    console.log("Armazenamento local de eventos inicializado");
-  } else {
-    console.log("Armazenamento local de eventos já existe");
+  try {
+    if (!localStorage.getItem(EVENTS_STORAGE_KEY)) {
+      saveEventsLocally([]);
+      console.log("Armazenamento local de eventos inicializado");
+    } else {
+      console.log("Armazenamento local de eventos já existe");
+    }
+    return true;
+  } catch (error) {
+    console.error("Erro ao inicializar armazenamento local:", error);
+    return false;
   }
 };
 

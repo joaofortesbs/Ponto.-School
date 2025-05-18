@@ -383,16 +383,19 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
               ...addedEvent,
               color: getEventTypeColor(addedEvent.type || "evento")
             });
-
-            // Disparar evento para notificar outros componentes
-            window.dispatchEvent(new CustomEvent('agenda-events-updated', { 
-              detail: { events: window.agendaEventData }
-            }));
-
-            console.log("Evento adicionado à variável global");
           }
         } catch (globalUpdateError) {
           console.warn("Não foi possível atualizar a variável global:", globalUpdateError);
+        }
+
+        // Disparar evento para notificar todos os componentes que dependem dos eventos
+        try {
+          window.dispatchEvent(new CustomEvent('agenda-events-updated', { 
+            detail: { event: addedEvent }
+          }));
+          console.log("Evento de notificação disparado para todos os componentes");
+        } catch (eventError) {
+          console.warn("Erro ao disparar evento de notificação:", eventError);
         }
 
         toast({
@@ -593,7 +596,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                   initialFocus
                 />
               </div>
-              
+
               <div className="mt-3 flex flex-wrap gap-2">
                 {startDate && (
                   <Badge variant="outline" className="flex items-center gap-1">
