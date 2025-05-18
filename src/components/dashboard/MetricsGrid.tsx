@@ -4,6 +4,7 @@ import SubjectProgressCard from "./SubjectProgressCard";
 import UpcomingClassesCard from "./UpcomingClassesCard";
 import AIMentorCard from "./AIMentorCard";
 import NewsFeedCard from "./NewsFeedCard";
+import PendingTasksCard from "./PendingTasksCard";
 
 interface MetricsGridProps {
   studyTimeData?: {
@@ -75,7 +76,7 @@ const MetricsGrid = ({
         <AIMentorCard />
       </div>
 
-      {/* Third Row */}
+      {/* Third Row - Card removido de Eventos do Dia, apenas Tarefas Pendentes */}
       <div className="col-span-12">
         <NewsFeedCard />
       </div>
