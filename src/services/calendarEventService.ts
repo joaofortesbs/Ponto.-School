@@ -105,8 +105,17 @@ export const addEvent = async (event: Omit<CalendarEvent, "id" | "createdAt">): 
       return eventWithMeta;
     }
 
-    console.log("Evento salvo com sucesso no DB:", data);
-    return formatDBEventForApp(data);
+    const formattedEvent = formatDBEventForApp(data);
+    console.log("Evento salvo com sucesso no DB:", formattedEvent);
+    
+    // Notificar a interface sobre o novo evento
+    try {
+      window.dispatchEvent(new CustomEvent('agenda-events-updated'));
+    } catch (e) {
+      console.warn("Não foi possível emitir evento de atualização:", e);
+    }
+    
+    return formattedEvent;
   } catch (error) {
     console.error("Erro ao adicionar evento:", error);
     // Fallback para armazenamento local em caso de erro
@@ -115,8 +124,16 @@ export const addEvent = async (event: Omit<CalendarEvent, "id" | "createdAt">): 
       id: uuidv4(),
       createdAt: new Date().toISOString(),
     };
-    saveEventLocally(eventWithMeta);
-    return eventWithMeta;
+    const savedEvent = saveEventLocally(eventWithMeta);
+    
+    // Notificar a interface sobre o novo evento
+    try {
+      window.dispatchEvent(new CustomEvent('agenda-events-updated'));
+    } catch (e) {
+      console.warn("Não foi possível emitir evento de atualização:", e);
+    }
+    
+    return savedEvent || eventWithMeta;
   }
 };
 

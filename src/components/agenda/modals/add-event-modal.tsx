@@ -235,6 +235,9 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
           detail: { event: savedEvent }
         }));
 
+        // Disparar explicitamente um evento para o card de Eventos do Dia
+        window.dispatchEvent(new CustomEvent('agenda-events-updated'));
+
         // Reset form and close modal
         resetForm();
         onOpenChange(false);
@@ -603,7 +606,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                   initialFocus
                 />
               </div>
-              
+
               <div className="mt-3 flex flex-wrap gap-2">
                 {startDate && (
                   <Badge variant="outline" className="flex items-center gap-1">

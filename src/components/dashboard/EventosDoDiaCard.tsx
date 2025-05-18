@@ -72,17 +72,20 @@ const EventosDoDiaCard = () => {
 
   // Manipulador para quando eventos são atualizados globalmente
   const handleAgendaEventsUpdated = (event: any) => {
+    console.log("Evento agenda-events-updated recebido, recarregando eventos do dia");
     loadTodayEvents();
   };
 
   // Manipulador para quando um evento é adicionado
   const handleEventAdded = (event: any) => {
+    console.log("Evento event-added recebido", event.detail?.event);
     if (event.detail && event.detail.event) {
       const newEvent = event.detail.event;
       const eventDate = new Date(newEvent.startDate);
       
       // Verificar se o evento é para hoje
       if (isSameDay(eventDate, today)) {
+        console.log("Evento é para hoje, adicionando aos eventos do dia", newEvent);
         setTodayEvents(prev => {
           // Evitar duplicatas
           const existingEventIndex = prev.findIndex(e => e.id === newEvent.id);
@@ -95,6 +98,9 @@ const EventosDoDiaCard = () => {
         });
       }
     }
+    
+    // Sempre recarregar eventos para garantir a sincronização
+    loadTodayEvents();
   };
 
   // Função para verificar se duas datas são o mesmo dia
@@ -129,9 +135,15 @@ const EventosDoDiaCard = () => {
       
       // Filtrar eventos para hoje e do usuário correto
       const todayDate = format(today, 'yyyy-MM-dd');
+      console.log("Filtrando eventos para a data:", todayDate);
       const filteredEvents = allEvents.filter(event => {
         const eventDate = event.startDate?.substring(0, 10);
-        return eventDate === todayDate && (event.userId === userId || !event.userId);
+        const isToday = eventDate === todayDate;
+        const isUserEvent = event.userId === userId || !event.userId;
+        if (isToday && isUserEvent) {
+          console.log("Evento encontrado para hoje:", event.title);
+        }
+        return isToday && isUserEvent;
       });
 
       // Ordenar eventos por hora
