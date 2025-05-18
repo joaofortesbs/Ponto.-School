@@ -89,7 +89,6 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
   const [guests, setGuests] = useState<string[]>([]);
   const [newGuest, setNewGuest] = useState("");
   const [visibility, setVisibility] = useState("private");
-  const [isAllDay, setIsAllDay] = useState(false);
 
   // Sample disciplines
   const disciplines = [
@@ -147,105 +146,170 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
+    // Validate required fields
+    if (!title.trim()) {
+      alert("Por favor, insira um título para o evento.");
+      return;
+    }
 
+    if (!startDate) {
+      alert("Por favor, selecione uma data de início.");
+      return;
+    }
+
+    // Mostrar uma notificação de carregamento
+    const toastId = crypto.randomUUID();
     try {
-      // Verify form has minimum required fields
-      if (!title || !startDate) {
-        const { toast } = await import("@/components/ui/use-toast");
-        toast({
-          title: "Campos obrigatórios",
-          description: "Título e data são campos obrigatórios.",
-          variant: "destructive",
-        });
-        return;
+      // Importar o serviço de eventos e o toast
+      const { addEvent, initLocalStorage } = await import('@/services/calendarEventService');
+      const { getCurrentUser } = await import('@/services/databaseService');
+      const { toast } = await import("@/components/ui/use-toast");
+
+      toast({
+        id: toastId,
+        title: "Salvando evento...",
+        description: "Aguarde enquanto seu evento é salvo.",
+      });
+
+      // Inicializar armazenamento local
+      initLocalStorage();
+
+      // Obter usuário atual
+      let currentUser = null;
+      try {
+        currentUser = await getCurrentUser();
+      } catch (userError) {
+        console.warn("Erro ao obter usuário atual:", userError);
+        // Continuar mesmo sem usuário
       }
+
+      // Usar um ID anônimo padrão se não houver usuário
+      const userId = currentUser?.id || `anonymous-${Date.now()}`;
 
       // Create event object
       const newEvent = {
-        id: uuidv4(),
+        type: eventType,
         title,
         description,
-        type: eventType,
+        discipline,
+        professor,
         startDate: startDate.toISOString(),
-        endDate: endDate ? endDate.toISOString() : startDate.toISOString(),
+        endDate: endDate ? endDate.toISOString() : startDate.toISOString(), // Garantir que endDate tenha um valor
         startTime,
         endTime,
-        isAllDay,
         location,
         isOnline,
         meetingLink,
-        discipline,
-        professor,
-        createdAt: new Date().toISOString(),
+        attachments: attachments.map((file) => file.name), // Just store names for demo
+        reminders,
+        repeat,
+        guests,
+        visibility,
+        userId,
       };
 
-      let userId = null;
-      try {
-        const { getCurrentUser } = await import('@/services/databaseService');
-        const user = await getCurrentUser();
-        if (user) {
-          userId = user.id;
-          newEvent.userId = userId;
+      console.log("Tentando salvar evento:", newEvent);
+
+      // Salvar evento no banco de dados
+      const savedEvent = await addEvent(newEvent);
+
+      if (savedEvent) {
+        console.log("Evento salvo com sucesso:", savedEvent);
+
+        // Atualizar toast
+        toast({
+          id: toastId,
+          title: "Evento salvo com sucesso",
+          description: "O evento foi adicionado à sua agenda.",
+          variant: "success"
+        });
+
+        // Call the onAddEvent callback with the new event
+        if (onAddEvent) {
+          onAddEvent(savedEvent);
         }
-      } catch (userError) {
-        console.log("Usuário não autenticado, salvando evento localmente.");
+
+        // Reset form and close modal
+        resetForm();
+        onOpenChange(false);
+      } else {
+        throw new Error("Falha ao salvar evento");
       }
-
-      const { addEvent, syncLocalEvents } = await import('@/services/calendarEventService');
-      await addEvent(newEvent);
-
-      // Sync with database if user is logged in
-      if (userId) {
-        try {
-          await syncLocalEvents(userId);
-        } catch (syncError) {
-          console.error("Erro ao sincronizar eventos:", syncError);
-        }
-      }
-
-      // Clear form
-      setTitle("");
-      setDescription("");
-      setEventType("evento");
-      setStartTime("");
-      setEndTime("");
-      setIsAllDay(false);
-      setLocation("");
-      setIsOnline(false);
-      setMeetingLink("");
-      setDiscipline("");
-      setProfessor("");
-
-      // Call parent callback if provided
-      if (onAddEvent) {
-        onAddEvent(newEvent);
-      }
-
-      // Close modal
-      onOpenChange(false);
-
-      // Show success toast
-      const { toast } = await import("@/components/ui/use-toast");
-      toast({
-        title: "Evento adicionado",
-        description: "O evento foi adicionado com sucesso.",
-      });
-
-      // Trigger a refresh of events in the parent component and EventosDoDiaCard
-      window.dispatchEvent(new CustomEvent('agenda-events-updated', { 
-        detail: { events: newEvent } 
-      }));
-
     } catch (error) {
-      console.error("Erro ao adicionar evento:", error);
+      console.error("Erro ao salvar evento:", error);
+
+      // Atualizar toast para erro
       const { toast } = await import("@/components/ui/use-toast");
       toast({
-        title: "Erro",
-        description: "Não foi possível adicionar o evento.",
-        variant: "destructive",
+        id: toastId,
+        title: "Erro ao salvar evento",
+        description: "Tentando salvar localmente...",
+        variant: "destructive"
       });
+
+      // Tentar salvar localmente como último recurso
+      try {
+        // Importar o serviço novamente para garantir acesso
+        const { addEvent, initLocalStorage } = await import('@/services/calendarEventService');
+        initLocalStorage();
+
+        const emergencyEvent = { 
+          type: eventType,
+          title,
+          description,
+          discipline,
+          professor,
+          startDate: startDate.toISOString(),
+          endDate: endDate ? endDate.toISOString() : startDate.toISOString(),
+          startTime,
+          endTime,
+          location,
+          isOnline,
+          meetingLink,
+          attachments: attachments.map((file) => file.name),
+          reminders,
+          repeat,
+          guests,
+          visibility,
+          userId: 'emergency-fallback',
+        };
+
+        // Tentar salvar usando o serviço que vai garantir o armazenamento local
+        const localSavedEvent = await addEvent(emergencyEvent);
+
+        if (localSavedEvent) {
+          // Chamar o callback
+          if (onAddEvent) {
+            onAddEvent(localSavedEvent);
+          }
+
+          // Atualizar toast
+          toast({
+            id: toastId,
+            title: "Evento salvo localmente",
+            description: "O evento foi salvo em seu navegador.",
+            variant: "warning"
+          });
+
+          // Fechar o modal
+          resetForm();
+          onOpenChange(false);
+        } else {
+          throw new Error("Falha no salvamento local");
+        }
+      } catch (localError) {
+        console.error("Erro no salvamento local:", localError);
+
+        // Atualizar toast para falha total
+        const { toast } = await import("@/components/ui/use-toast");
+        toast({
+          id: toastId,
+          title: "Falha ao salvar evento",
+          description: "Não foi possível salvar o evento. Tente novamente.",
+          variant: "destructive"
+        });
+      }
     }
   };
 
@@ -319,22 +383,18 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
               ...addedEvent,
               color: getEventTypeColor(addedEvent.type || "evento")
             });
+
+            // Disparar evento para notificar outros componentes
+            window.dispatchEvent(new CustomEvent('agenda-events-updated', { 
+              detail: { events: window.agendaEventData }
+            }));
+
+            console.log("Evento adicionado à variável global");
           }
         } catch (globalUpdateError) {
           console.warn("Não foi possível atualizar a variável global:", globalUpdateError);
         }
 
-        // Disparar evento para notificar todos os componentes que dependem dos eventos
-        try {
-          window.dispatchEvent(new CustomEvent('agenda-events-updated', { 
-            detail: { event: addedEvent }
-          }));
-          console.log("Evento de notificação disparado para todos os componentes");
-        } catch (eventError) {
-          console.warn("Erro ao disparar evento de notificação:", eventError);
-        }
-
-        const { toast } = await import("@/components/ui/use-toast");
         toast({
           title: "Evento adicionado",
           description: "O evento foi salvo com sucesso.",
@@ -342,7 +402,6 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
         });
       } else {
         console.error("Falha ao adicionar evento");
-        const { toast } = await import("@/components/ui/use-toast");
         toast({
           title: "Erro",
           description: "Não foi possível adicionar o evento. Tente novamente.",
@@ -351,7 +410,6 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
       }
     } catch (error) {
       console.error("Erro ao adicionar evento:", error);
-      const { toast } = await import("@/components/ui/use-toast");
       toast({
         title: "Erro",
         description: "Ocorreu um erro ao adicionar o evento. Tente novamente mais tarde.",
@@ -535,7 +593,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                   initialFocus
                 />
               </div>
-
+              
               <div className="mt-3 flex flex-wrap gap-2">
                 {startDate && (
                   <Badge variant="outline" className="flex items-center gap-1">

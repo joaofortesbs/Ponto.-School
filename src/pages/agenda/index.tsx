@@ -28,7 +28,6 @@ import AddTaskModal from "@/components/agenda/modals/add-task-modal";
 import EventDetailsModal from "@/components/agenda/modals/event-details-modal";
 import TasksView from "@/components/agenda/tasks/TasksView";
 import ChallengesView from "@/components/agenda/challenges/ChallengesView";
-import EventosDoDiaCard from "@/components/agenda/cards/eventos-do-dia-card";
 
 // Icons
 import {
@@ -175,13 +174,13 @@ export default function AgendaPage() {
       try {
         setIsLoading(true);
         console.log("Carregando eventos para a página de agenda...");
-
+        
         const { getCurrentUser } = await import('@/services/databaseService');
         const { getEventsByUserId, syncLocalEvents, getAllLocalEvents } = await import('@/services/calendarEventService');
         const { toast } = await import("@/components/ui/use-toast");
 
         let currentUser = null;
-
+        
         try {
           currentUser = await getCurrentUser();
         } catch (userError) {
@@ -190,10 +189,10 @@ export default function AgendaPage() {
         }
 
         let events = [];
-
+        
         if (currentUser?.id) {
           console.log("Usuário autenticado:", currentUser.id);
-
+          
           // Primeiro sincronize eventos locais com o banco de dados
           await syncLocalEvents(currentUser.id);
           console.log("Sincronização de eventos locais concluída");
@@ -203,7 +202,7 @@ export default function AgendaPage() {
           console.log("Eventos carregados do banco de dados:", events.length);
         } else {
           console.log("Usuário não autenticado, carregando eventos locais");
-
+          
           // Se não houver usuário autenticado, use apenas eventos locais
           const { getAllLocalEvents } = await import('@/services/calendarEventService');
           events = getAllLocalEvents();
@@ -216,22 +215,22 @@ export default function AgendaPage() {
           setIsLoading(false);
           return;
         }
-
+        
         // Converter eventos para o formato necessário para o calendário
         const formattedEvents: Record<number, any[]> = {};
 
         events.forEach(event => {
           try {
             const startDate = new Date(event.startDate);
-
+            
             if (isNaN(startDate.getTime())) {
               console.warn("Data inválida para evento:", event);
               return; // Pular este evento
             }
-
+            
             // Usar o dia do mês como chave para agrupar eventos do mesmo dia
             const day = startDate.getDate();
-
+            
             if (!formattedEvents[day]) {
               formattedEvents[day] = [];
             }
@@ -264,18 +263,18 @@ export default function AgendaPage() {
 
         console.log("Eventos formatados para visualização:", Object.keys(formattedEvents).length, "dias com eventos");
         setEventData(formattedEvents);
-
+        
         // Compartilhar os eventos com outros componentes através do objeto window
         // Isso permite que os componentes day-view e week-view acessem os mesmos eventos
         window.agendaEventData = formattedEvents;
-
+        
         // Força atualização dos componentes de visualização
         window.dispatchEvent(new CustomEvent('agenda-events-updated', { 
           detail: { events: formattedEvents }
         }));
-
+        
         console.log("Eventos compartilhados globalmente para componentes de visualização");
-
+        
         if (events.length > 0) {
           toast({
             title: "Agenda carregada",
@@ -285,33 +284,33 @@ export default function AgendaPage() {
         }
       } catch (error) {
         console.error("Erro ao carregar eventos:", error);
-
+        
         const { toast } = await import("@/components/ui/use-toast");
         toast({
           title: "Erro ao carregar eventos",
           description: "Tente recarregar a página.",
           variant: "destructive"
         });
-
+        
         // Tentar carregar do localStorage diretamente como último recurso
         try {
           const eventsJson = localStorage.getItem("calendar_events");
           if (eventsJson) {
             const localEvents = JSON.parse(eventsJson);
             console.log("Tentando carregar eventos diretamente do localStorage:", localEvents.length);
-
+            
             // Converter eventos locais para o formato do calendário
             const formattedLocalEvents: Record<number, any[]> = {};
-
+            
             localEvents.forEach(event => {
               try {
                 const startDate = new Date(event.startDate);
                 const day = startDate.getDate();
-
+                
                 if (!formattedLocalEvents[day]) {
                   formattedLocalEvents[day] = [];
                 }
-
+                
                 formattedLocalEvents[day].push({
                   ...event,
                   start: startDate,
@@ -323,9 +322,9 @@ export default function AgendaPage() {
                 console.error("Erro ao processar evento local:", event, eventError);
               }
             });
-
+            
             setEventData(formattedLocalEvents);
-
+            
             // Compartilhar os eventos através do objeto window mesmo em caso de erro
             window.agendaEventData = formattedLocalEvents;
           }
@@ -1673,26 +1672,6 @@ export default function AgendaPage() {
         </TabsContent>
       </Tabs>
 
-      
-          
-            
-              
-                
-                  
-                  
-                
-                  
-                   {/* Espaço para outro card */}
-                
-              
-            
-            
-              
-              
-            
-          
-        
-
       {/* Add Event Modal */}
       {showAddEventModal && (
         <AddEventModal
@@ -1763,6 +1742,6 @@ export default function AgendaPage() {
           </div>
         </div>
       )}
-    
+    </div>
   );
 }
