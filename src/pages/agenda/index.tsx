@@ -74,7 +74,6 @@ import {
   Info,
   ChevronLeft,
 } from "lucide-react";
-import EventosDoDiaCard from "@/components/dashboard/EventosDoDiaCard";
 
 export default function AgendaPage() {
   const { toast } = useToast();
@@ -175,13 +174,13 @@ export default function AgendaPage() {
       try {
         setIsLoading(true);
         console.log("Carregando eventos para a página de agenda...");
-
+        
         const { getCurrentUser } = await import('@/services/databaseService');
         const { getEventsByUserId, syncLocalEvents, getAllLocalEvents } = await import('@/services/calendarEventService');
         const { toast } = await import("@/components/ui/use-toast");
 
         let currentUser = null;
-
+        
         try {
           currentUser = await getCurrentUser();
         } catch (userError) {
@@ -190,10 +189,10 @@ export default function AgendaPage() {
         }
 
         let events = [];
-
+        
         if (currentUser?.id) {
           console.log("Usuário autenticado:", currentUser.id);
-
+          
           // Primeiro sincronize eventos locais com o banco de dados
           await syncLocalEvents(currentUser.id);
           console.log("Sincronização de eventos locais concluída");
@@ -203,7 +202,7 @@ export default function AgendaPage() {
           console.log("Eventos carregados do banco de dados:", events.length);
         } else {
           console.log("Usuário não autenticado, carregando eventos locais");
-
+          
           // Se não houver usuário autenticado, use apenas eventos locais
           const { getAllLocalEvents } = await import('@/services/calendarEventService');
           events = getAllLocalEvents();
@@ -216,22 +215,22 @@ export default function AgendaPage() {
           setIsLoading(false);
           return;
         }
-
+        
         // Converter eventos para o formato necessário para o calendário
         const formattedEvents: Record<number, any[]> = {};
 
         events.forEach(event => {
           try {
             const startDate = new Date(event.startDate);
-
+            
             if (isNaN(startDate.getTime())) {
               console.warn("Data inválida para evento:", event);
               return; // Pular este evento
             }
-
+            
             // Usar o dia do mês como chave para agrupar eventos do mesmo dia
             const day = startDate.getDate();
-
+            
             if (!formattedEvents[day]) {
               formattedEvents[day] = [];
             }
@@ -264,18 +263,18 @@ export default function AgendaPage() {
 
         console.log("Eventos formatados para visualização:", Object.keys(formattedEvents).length, "dias com eventos");
         setEventData(formattedEvents);
-
+        
         // Compartilhar os eventos com outros componentes através do objeto window
         // Isso permite que os componentes day-view e week-view acessem os mesmos eventos
         window.agendaEventData = formattedEvents;
-
+        
         // Força atualização dos componentes de visualização
         window.dispatchEvent(new CustomEvent('agenda-events-updated', { 
           detail: { events: formattedEvents }
         }));
-
+        
         console.log("Eventos compartilhados globalmente para componentes de visualização");
-
+        
         if (events.length > 0) {
           toast({
             title: "Agenda carregada",
@@ -285,33 +284,33 @@ export default function AgendaPage() {
         }
       } catch (error) {
         console.error("Erro ao carregar eventos:", error);
-
+        
         const { toast } = await import("@/components/ui/use-toast");
         toast({
           title: "Erro ao carregar eventos",
           description: "Tente recarregar a página.",
           variant: "destructive"
         });
-
+        
         // Tentar carregar do localStorage diretamente como último recurso
         try {
           const eventsJson = localStorage.getItem("calendar_events");
           if (eventsJson) {
             const localEvents = JSON.parse(eventsJson);
             console.log("Tentando carregar eventos diretamente do localStorage:", localEvents.length);
-
+            
             // Converter eventos locais para o formato do calendário
             const formattedLocalEvents: Record<number, any[]> = {};
-
+            
             localEvents.forEach(event => {
               try {
                 const startDate = new Date(event.startDate);
                 const day = startDate.getDate();
-
+                
                 if (!formattedLocalEvents[day]) {
                   formattedLocalEvents[day] = [];
                 }
-
+                
                 formattedLocalEvents[day].push({
                   ...event,
                   start: startDate,
@@ -323,9 +322,9 @@ export default function AgendaPage() {
                 console.error("Erro ao processar evento local:", event, eventError);
               }
             });
-
+            
             setEventData(formattedLocalEvents);
-
+            
             // Compartilhar os eventos através do objeto window mesmo em caso de erro
             window.agendaEventData = formattedLocalEvents;
           }
@@ -701,19 +700,6 @@ export default function AgendaPage() {
 
       setEventData(updatedEvents);
 
-      // Compartilhar os eventos atualizados através do objeto window
-      window.agendaEventData = updatedEvents;
-
-      // Disparar evento de adição para notificar outros componentes
-      window.dispatchEvent(new CustomEvent('event-added', { 
-        detail: { event: eventWithColor }
-      }));
-
-      // Força atualização dos componentes de visualização
-      window.dispatchEvent(new CustomEvent('agenda-events-updated', { 
-        detail: { events: updatedEvents }
-      }));
-
       // Força atualização do componente de próximos eventos
       setTimeout(() => {
         const upcomingEventsUpdated = getUpcomingEvents();
@@ -735,7 +721,6 @@ export default function AgendaPage() {
 
     // Find the event in all days and update it
     let eventFound = false;
-    let updatedEventWithColor = null;
 
     Object.keys(updatedEvents).forEach((day) => {
       const dayNum = parseInt(day);
@@ -745,13 +730,11 @@ export default function AgendaPage() {
 
       if (eventIndex !== -1) {
         // Update the event in place
-        updatedEventWithColor = {
+        updatedEvents[dayNum][eventIndex] = {
           ...editedEvent,
           color: getEventColor(editedEvent.type),
           time: editedEvent.startTime || editedEvent.time || "00:00",
         };
-        
-        updatedEvents[dayNum][eventIndex] = updatedEventWithColor;
         eventFound = true;
       }
     });
@@ -762,35 +745,20 @@ export default function AgendaPage() {
       handleDeleteEvent(editedEvent.id);
 
       // Add to the new day
-      updatedEventWithColor = {
+      const eventWithColor = {
         ...editedEvent,
         color: getEventColor(editedEvent.type),
         time: editedEvent.startTime || "00:00",
       };
 
       if (updatedEvents[newDay]) {
-        updatedEvents[newDay] = [...updatedEvents[newDay], updatedEventWithColor];
+        updatedEvents[newDay] = [...updatedEvents[newDay], eventWithColor];
       } else {
-        updatedEvents[newDay] = [updatedEventWithColor];
+        updatedEvents[newDay] = [eventWithColor];
       }
     }
 
     setEventData(updatedEvents);
-    
-    // Compartilhar os eventos atualizados através do objeto window
-    window.agendaEventData = updatedEvents;
-
-    // Disparar evento de edição para notificar outros componentes
-    if (updatedEventWithColor) {
-      window.dispatchEvent(new CustomEvent('event-edited', { 
-        detail: { event: updatedEventWithColor }
-      }));
-    }
-
-    // Força atualização dos componentes de visualização
-    window.dispatchEvent(new CustomEvent('agenda-events-updated', { 
-      detail: { events: updatedEvents }
-    }));
 
     // Exibe uma mensagem de sucesso
     toast({
@@ -802,16 +770,6 @@ export default function AgendaPage() {
   // Delete event
   const handleDeleteEvent = (eventId: string) => {
     const updatedEvents = { ...eventData };
-    let deletedEvent = null;
-
-    // Find and store the event before removing it (for notification)
-    Object.keys(updatedEvents).forEach((day) => {
-      const dayNum = parseInt(day);
-      const event = updatedEvents[dayNum].find(event => event.id === eventId);
-      if (event && !deletedEvent) {
-        deletedEvent = event;
-      }
-    });
 
     // Find and remove the event
     Object.keys(updatedEvents).forEach((day) => {
@@ -827,28 +785,6 @@ export default function AgendaPage() {
     });
 
     setEventData(updatedEvents);
-    
-    // Compartilhar os eventos atualizados através do objeto window
-    window.agendaEventData = updatedEvents;
-
-    // Disparar evento de exclusão para notificar outros componentes
-    if (deletedEvent) {
-      window.dispatchEvent(new CustomEvent('event-deleted', { 
-        detail: { eventId, event: deletedEvent }
-      }));
-    }
-
-    // Força atualização dos componentes de visualização
-    window.dispatchEvent(new CustomEvent('agenda-events-updated', { 
-      detail: { events: updatedEvents }
-    }));
-    
-    // Exibe uma mensagem de sucesso
-    toast({
-      title: "Evento excluído",
-      description: "O evento foi removido com sucesso.",
-      variant: "destructive"
-    });
   };
 
   // Handle event drag and drop

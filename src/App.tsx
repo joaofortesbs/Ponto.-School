@@ -286,22 +286,6 @@ function App() {
     };
   }, [location.pathname]);
 
-  // Iniciar temporizador para carregar logo no cabeçalho após o timeout
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setForceRender(true);
-      console.log("Timeout de carregamento atingido. Forçando renderização.");
-    }, 3000); // 3 segundos de timeout
-
-    // Inicializar armazenamento de eventos do calendário
-    import("@/services/calendarEventService").then(module => {
-      module.initLocalStorage();
-      console.log("Armazenamento local de eventos inicializado");
-    });
-
-    return () => clearTimeout(timer);
-  }, []);
-
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <UsernameProvider>

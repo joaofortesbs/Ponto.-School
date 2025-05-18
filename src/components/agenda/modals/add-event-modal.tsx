@@ -162,7 +162,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
     const toastId = crypto.randomUUID();
     try {
       // Importar o serviço de eventos e o toast
-      const { addEvent, initLocalStorage, dispatchEventChangeNotification } = await import('@/services/calendarEventService');
+      const { addEvent, initLocalStorage } = await import('@/services/calendarEventService');
       const { getCurrentUser } = await import('@/services/databaseService');
       const { toast } = await import("@/components/ui/use-toast");
 
@@ -217,14 +217,6 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
       if (savedEvent) {
         console.log("Evento salvo com sucesso:", savedEvent);
 
-        // Disparar notificações manualmente para garantir que todos os componentes sejam notificados
-        dispatchEventChangeNotification('event-added', savedEvent);
-
-        // Forçar atualização dos componentes de dashboard
-        setTimeout(() => {
-          window.dispatchEvent(new Event('dashboard-refresh'));
-        }, 300);
-
         // Atualizar toast
         toast({
           id: toastId,
@@ -259,7 +251,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
       // Tentar salvar localmente como último recurso
       try {
         // Importar o serviço novamente para garantir acesso
-        const { addEvent, initLocalStorage, dispatchEventChangeNotification } = await import('@/services/calendarEventService');
+        const { addEvent, initLocalStorage } = await import('@/services/calendarEventService');
         initLocalStorage();
 
         const emergencyEvent = { 
@@ -287,14 +279,6 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
         const localSavedEvent = await addEvent(emergencyEvent);
 
         if (localSavedEvent) {
-          // Disparar notificações manualmente para garantir que todos os componentes sejam notificados
-          dispatchEventChangeNotification('event-added', localSavedEvent);
-
-          // Forçar atualização dos componentes de dashboard
-          setTimeout(() => {
-            window.dispatchEvent(new Event('dashboard-refresh'));
-          }, 300);
-
           // Chamar o callback
           if (onAddEvent) {
             onAddEvent(localSavedEvent);

@@ -1,17 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import MetricsGrid from "./MetricsGrid";
 import TopMetrics from "./TopMetrics";
 import PromotionalBanner from "./PromotionalBanner";
 import { profileService } from "@/services/profileService";
 import { UserProfile } from "@/types/user-profile";
-import NewsFeedCard from "./NewsFeedCard";
-import StudyTimeCard from "./StudyTimeCard";
-import EventosDoDiaCard from "./EventosDoDiaCard";
-import EventosMiniCard from "./EventosMiniCard";
 
 export default function Dashboard() {
-  const navigate = useNavigate();
   const [showBanner, setShowBanner] = useState(true);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isMetricsLoading, setIsMetricsLoading] = useState(false); // Inicializado como false para carregar imediatamente
@@ -29,7 +23,7 @@ export default function Dashboard() {
             console.error('Erro ao parsear perfil em cache:', e);
           }
         }
-
+        
         // Buscar do backend em segundo plano
         const profile = await profileService.getCurrentUserProfile();
         if (profile) {
@@ -66,9 +60,6 @@ export default function Dashboard() {
       ) : (
         <MetricsGrid />
       )}
-      <NewsFeedCard />
-            <StudyTimeCard />
-            <EventosMiniCard onOpenAddEvent={() => navigate("/agenda?view=calendario&action=add")} />
     </div>
   );
 }
