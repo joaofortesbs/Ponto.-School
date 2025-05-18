@@ -86,6 +86,7 @@ const EventosDoDiaCard = () => {
       // Verificar se o evento é para hoje
       if (isSameDay(eventDate, today)) {
         console.log("Evento é para hoje, adicionando aos eventos do dia", newEvent);
+        // Adicionar evento ao estado imediatamente
         setTodayEvents(prev => {
           // Evitar duplicatas
           const existingEventIndex = prev.findIndex(e => e.id === newEvent.id);
@@ -94,13 +95,19 @@ const EventosDoDiaCard = () => {
             updatedEvents[existingEventIndex] = newEvent;
             return updatedEvents;
           }
-          return [...prev, newEvent];
+          return [...prev, newEvent].sort((a, b) => {
+            const timeA = a.startTime || '23:59';
+            const timeB = b.startTime || '23:59';
+            return timeA.localeCompare(timeB);
+          });
         });
       }
     }
     
-    // Sempre recarregar eventos para garantir a sincronização
-    loadTodayEvents();
+    // Ainda assim recarregar eventos para garantir sincronização completa
+    setTimeout(() => {
+      loadTodayEvents();
+    }, 300);
   };
 
   // Função para verificar se duas datas são o mesmo dia

@@ -87,7 +87,7 @@ export const addEvent = async (event: Omit<CalendarEvent, "id" | "createdAt">): 
       id: uuidv4(),
       createdAt: new Date().toISOString(),
     };
-    
+
     const dbEvent = formatEventForDB(eventWithMeta);
     console.log("Tentando salvar evento no DB:", dbEvent);
 
@@ -107,14 +107,22 @@ export const addEvent = async (event: Omit<CalendarEvent, "id" | "createdAt">): 
 
     const formattedEvent = formatDBEventForApp(data);
     console.log("Evento salvo com sucesso no DB:", formattedEvent);
-    
+
     // Notificar a interface sobre o novo evento
     try {
+      // Disparar evento específico para "Eventos do Dia"
+      window.dispatchEvent(new CustomEvent('event-added', { 
+        detail: { event: formattedEvent }
+      }));
+
+      // Disparar evento geral de atualização da agenda
       window.dispatchEvent(new CustomEvent('agenda-events-updated'));
+
+      console.log("Eventos de atualização disparados com sucesso");
     } catch (e) {
       console.warn("Não foi possível emitir evento de atualização:", e);
     }
-    
+
     return formattedEvent;
   } catch (error) {
     console.error("Erro ao adicionar evento:", error);
@@ -125,14 +133,22 @@ export const addEvent = async (event: Omit<CalendarEvent, "id" | "createdAt">): 
       createdAt: new Date().toISOString(),
     };
     const savedEvent = saveEventLocally(eventWithMeta);
-    
+
     // Notificar a interface sobre o novo evento
     try {
+      // Disparar evento específico para "Eventos do Dia"
+      window.dispatchEvent(new CustomEvent('event-added', { 
+        detail: { event: formattedEvent }
+      }));
+
+      // Disparar evento geral de atualização da agenda
       window.dispatchEvent(new CustomEvent('agenda-events-updated'));
+
+      console.log("Eventos de atualização disparados com sucesso");
     } catch (e) {
       console.warn("Não foi possível emitir evento de atualização:", e);
     }
-    
+
     return savedEvent || eventWithMeta;
   }
 };
@@ -163,10 +179,10 @@ export const getEventsByUserId = async (userId: string): Promise<CalendarEvent[]
     console.error("UserId inválido:", userId);
     return [];
   }
-  
+
   try {
     console.log("Buscando eventos para o usuário:", userId);
-    
+
     const { data, error } = await supabase
       .from("calendar_events")
       .select("*")
@@ -183,13 +199,13 @@ export const getEventsByUserId = async (userId: string): Promise<CalendarEvent[]
 
     const formattedEvents = (data || []).map(formatDBEventForApp);
     console.log(`${formattedEvents.length} eventos encontrados para o usuário ${userId}`);
-    
+
     // Mesclar com eventos locais
     const localEvents = getLocalEvents(userId);
     const localOnlyEvents = localEvents.filter(le => 
       !formattedEvents.some(fe => fe.id === le.id)
     );
-    
+
     return [...formattedEvents, ...localOnlyEvents];
   } catch (error) {
     console.error("Erro ao buscar eventos do usuário:", error);
@@ -205,13 +221,13 @@ export const updateEvent = async (event: CalendarEvent): Promise<CalendarEvent |
       console.error("ID é obrigatório para atualizar um evento");
       return null;
     }
-    
+
     if (event.id.startsWith('local-')) {
       // Para eventos locais, atualizar apenas no localStorage
       updateEventLocally(event);
       return event;
     }
-    
+
     const dbEvent = formatEventForDB({
       ...event,
       updatedAt: new Date().toISOString()
@@ -247,7 +263,7 @@ export const deleteEvent = async (eventId: string): Promise<boolean> => {
       console.error("ID é obrigatório para excluir um evento");
       return false;
     }
-    
+
     if (eventId.startsWith('local-')) {
       // Para eventos locais, excluir apenas no localStorage
       return deleteEventLocally(eventId);
@@ -317,7 +333,7 @@ export const getAllLocalEvents = (): CalendarEvent[] => {
 const getLocalEvents = (userId: string): CalendarEvent[] => {
   try {
     if (!userId) return [];
-    
+
     const eventsJson = localStorage.getItem(EVENTS_STORAGE_KEY);
     if (!eventsJson) return [];
 
@@ -333,7 +349,7 @@ const getLocalEvents = (userId: string): CalendarEvent[] => {
 const saveEventLocally = (event: any) => {
   try {
     const allEvents = getAllLocalEvents();
-    
+
     const newEvent = {
       ...event,
       id: event.id || `local-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -342,9 +358,9 @@ const saveEventLocally = (event: any) => {
 
     // Remover qualquer duplicata
     const filteredEvents = allEvents.filter(e => e.id !== newEvent.id);
-    
+
     saveEventsLocally([...filteredEvents, newEvent]);
-    
+
     console.log("Evento salvo localmente com ID:", newEvent.id);
     return newEvent;
   } catch (error) {
@@ -392,17 +408,17 @@ export const syncLocalEvents = async (userId: string): Promise<void> => {
       console.error("UserId é necessário para sincronizar eventos");
       return;
     }
-    
+
     console.log("Iniciando sincronização de eventos locais para o usuário:", userId);
     const localEvents = getLocalEvents(userId);
     const localOnlyEvents = localEvents.filter(e => e.id.startsWith('local-'));
-    
+
     console.log(`${localOnlyEvents.length} eventos locais encontrados para sincronização`);
-    
+
     for (const event of localOnlyEvents) {
       const { id, ...eventData } = event;
       const result = await addEvent({ ...eventData, userId });
-      
+
       if (result) {
         console.log("Evento sincronizado com sucesso:", id, "->", result.id);
       }

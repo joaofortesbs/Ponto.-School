@@ -221,7 +221,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
         toast({
           id: toastId,
           title: "Evento salvo com sucesso",
-          description: "O evento foi adicionado à sua agenda.",
+          description: "O evento foi adicionado à sua agenda e listado em Eventos do Dia.",
           variant: "success"
         });
 
