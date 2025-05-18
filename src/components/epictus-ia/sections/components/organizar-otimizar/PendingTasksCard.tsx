@@ -14,7 +14,7 @@ export default function PendingTasksCard() {
   const { theme } = useTheme();
   
   return (
-    <Card className={`p-5 border ${theme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-gray-50 border-gray-200"}`}>
+    <Card className={`p-5 border ${theme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-gray-50 border-gray-200"} h-[500px]`}>
       <h3 className={`text-lg font-semibold mb-4 ${theme === "dark" ? "text-white" : "text-gray-900"} flex items-center`}>
         <span className="relative">
           Tarefas Pendentes

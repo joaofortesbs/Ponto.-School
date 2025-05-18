@@ -116,7 +116,7 @@ const PendingTasksCard = ({
   };
 
   return (
-    <Card className="w-full h-[420px] bg-white dark:bg-[#001427]/20 border-brand-border dark:border-white/10">
+    <Card className="w-full h-[520px] bg-white dark:bg-[#001427]/20 border-brand-border dark:border-white/10">
       <CardHeader className="flex flex-row items-center justify-between p-4 border-b">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-[#E0E1DD]/20">
@@ -139,7 +139,7 @@ const PendingTasksCard = ({
         </button>
       </CardHeader>
       <CardContent className="p-0">
-        <ScrollArea className="h-[320px] w-full pr-4">
+        <ScrollArea className="h-[420px] w-full pr-4">
           <div className="space-y-4 p-4">
             {tasks
               .filter((task) => !task.completed)
