@@ -230,6 +230,11 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
           onAddEvent(savedEvent);
         }
 
+        // Emitir evento personalizado para atualizar outros componentes
+        window.dispatchEvent(new CustomEvent('event-added', { 
+          detail: { event: savedEvent }
+        }));
+
         // Reset form and close modal
         resetForm();
         onOpenChange(false);
@@ -369,6 +374,11 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
         if (onAddEvent) {
           onAddEvent(addedEvent);
         }
+
+        // Emitir evento personalizado para atualizar outros componentes
+        window.dispatchEvent(new CustomEvent('event-added', { 
+          detail: { event: addedEvent }
+        }));
 
         // Atualizar a variável global para manter consistência entre visualizações
         try {

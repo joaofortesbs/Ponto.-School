@@ -88,9 +88,27 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
         const updatedEvent = await updateEvent(editedEvent);
 
         if (updatedEvent) {
+          console.log("Evento atualizado com sucesso:", updatedEvent);
+
+          // Notificar componente pai sobre a atualização
+          if (onEditEvent) {
+            onEditEvent(updatedEvent);
+          }
+
+          // Emitir evento para atualizar outros componentes
+          window.dispatchEvent(new CustomEvent('event-added', { 
+            detail: { event: updatedEvent }
+          }));
+          window.dispatchEvent(new CustomEvent('agenda-events-updated'));
+
+          // Fechar modal
+          setIsEditing(false);
+          onOpenChange(false);
+
           toast({
             title: "Evento atualizado",
-            description: "O evento foi atualizado com sucesso no banco de dados."
+            description: "As alterações foram salvas com sucesso.",
+            variant: "default",
           });
         } else {
           toast({
@@ -125,17 +143,27 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
         const deleted = await deleteEvent(event.id);
 
         if (deleted) {
-          toast({
-            title: "Evento excluído",
-            description: "O evento foi excluído com sucesso do banco de dados."
-          });
-        } else {
-          toast({
-            title: "Aviso",
-            description: "O evento foi removido localmente, mas houve um problema ao excluí-lo no servidor.",
-            variant: "warning"
-          });
+        console.log("Evento removido com sucesso:", event.id);
+        toast({
+          title: "Evento removido",
+          description: "O evento foi removido com sucesso.",
+          variant: "default",
+        });
+        onOpenChange(false);
+        if (onDeleteEvent) {
+          onDeleteEvent(event.id);
         }
+
+        // Notificar outros componentes sobre a exclusão
+        window.dispatchEvent(new CustomEvent('agenda-events-updated'));
+      } else {
+        console.error("Erro ao remover evento");
+        toast({
+          title: "Erro",
+          description: "Ocorreu um erro ao remover o evento. Tente novamente.",
+          variant: "destructive",
+        });
+      }
 
         // Atualizar a interface independentemente do resultado do banco
         onDeleteEvent(event.id);

@@ -283,7 +283,7 @@ export const initLocalStorage = () => {
 };
 
 // Obter todos os eventos armazenados localmente
-const getAllLocalEvents = (): CalendarEvent[] => {
+export const getAllLocalEvents = (): CalendarEvent[] => {
   try {
     const eventsJson = localStorage.getItem(EVENTS_STORAGE_KEY);
     if (!eventsJson) return [];
