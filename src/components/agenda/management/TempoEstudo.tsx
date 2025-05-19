@@ -12,9 +12,12 @@ const TempoEstudo = () => {
   const [goalHours, setGoalHours] = useState<number>(40);
   const [progress, setProgress] = useState<number>(0);
   const [weeklyData, setWeeklyData] = useState<{ day: string; hours: number; percentage: number }[]>([]);
+  const [monthlyData, setMonthlyData] = useState<{ day: string; hours: number; percentage: number }[]>([]);
+  const [yearlyData, setYearlyData] = useState<{ month: string; hours: number; percentage: number }[]>([]);
   const [topSubjects, setTopSubjects] = useState<{ subject: string; hours: number; percentage: number; color: string }[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isNoData, setIsNoData] = useState<boolean>(false);
+  const [viewMode, setViewMode] = useState<"semana" | "mes" | "ano">("semana");
 
   // Cores para os principais assuntos
   const subjectColors = ["#FF6B00", "#FF8C40", "#E85D04", "#DC2F02", "#9D0208"];
@@ -69,31 +72,89 @@ const TempoEstudo = () => {
         weeklyStats[day] = 0;
       });
 
-      // Preencher com dados reais
+      // Processar dados por dia do mês (últimos 30 dias)
+      const today = new Date();
+      const monthlyStats: { [key: string]: number } = {};
+      
+      // Inicializar últimos 30 dias com zeros
+      for (let i = 0; i < 30; i++) {
+        const date = new Date();
+        date.setDate(today.getDate() - i);
+        const dayKey = `${date.getDate()}/${date.getMonth() + 1}`;
+        monthlyStats[dayKey] = 0;
+      }
+      
+      // Processar dados por mês do ano
+      const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+      const yearlyStats: { [key: string]: number } = {};
+      
+      // Inicializar meses com zeros
+      monthNames.forEach(month => {
+        yearlyStats[month] = 0;
+      });
+
+      // Preencher dados para todas as visualizações
       sessions.forEach(session => {
         try {
           const sessionDate = session.timestamp ? new Date(session.timestamp) : new Date(session.date);
           const dayOfWeek = daysOfWeek[sessionDate.getDay()];
+          const dayOfMonth = `${sessionDate.getDate()}/${sessionDate.getMonth() + 1}`;
+          const month = monthNames[sessionDate.getMonth()];
 
           // Calcular horas da sessão em segundos
           const sessionSeconds = session.elapsedTimeSeconds || 0;
 
-          // Adicionar ao dia correspondente
+          // Adicionar ao dia da semana correspondente
           weeklyStats[dayOfWeek] = (weeklyStats[dayOfWeek] || 0) + sessionSeconds;
+          
+          // Adicionar ao dia do mês correspondente se estiver dentro do intervalo de 30 dias
+          const dayDiff = Math.floor((today.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24));
+          if (dayDiff < 30) {
+            monthlyStats[dayOfMonth] = (monthlyStats[dayOfMonth] || 0) + sessionSeconds;
+          }
+          
+          // Adicionar ao mês correspondente
+          yearlyStats[month] = (yearlyStats[month] || 0) + sessionSeconds;
         } catch (e) {
           console.error("Erro ao processar data da sessão:", e);
         }
       });
 
-      // Converter segundos para horas e calcular percentagens para visualização
+      // Converter segundos para horas e calcular percentagens para visualização semanal
       const maxDaySeconds = Math.max(...Object.values(weeklyStats));
       const weekData = daysOfWeek.map(day => ({
         day,
         hours: Math.floor(weeklyStats[day] / 3600),
         percentage: maxDaySeconds > 0 ? Math.round((weeklyStats[day] / maxDaySeconds) * 100) : 0
       }));
-
       setWeeklyData(weekData);
+
+      // Converter segundos para horas e calcular percentagens para visualização mensal
+      const sortedMonthDays = Object.entries(monthlyStats)
+        .sort((a, b) => {
+          const [dayA, monthA] = a[0].split('/').map(Number);
+          const [dayB, monthB] = b[0].split('/').map(Number);
+          if (monthA !== monthB) return monthA - monthB;
+          return dayA - dayB;
+        })
+        .slice(0, 15); // Mostrar apenas 15 dias para não sobrecarregar o gráfico
+      
+      const maxMonthSeconds = Math.max(...sortedMonthDays.map(([_, seconds]) => seconds));
+      const monthData = sortedMonthDays.map(([day, seconds]) => ({
+        day,
+        hours: Math.floor(seconds / 3600),
+        percentage: maxMonthSeconds > 0 ? Math.round((seconds / maxMonthSeconds) * 100) : 0
+      }));
+      setMonthlyData(monthData);
+
+      // Converter segundos para horas e calcular percentagens para visualização anual
+      const maxYearSeconds = Math.max(...Object.values(yearlyStats));
+      const yearData = monthNames.map(month => ({
+        month,
+        hours: Math.floor(yearlyStats[month] / 3600),
+        percentage: maxYearSeconds > 0 ? Math.round((yearlyStats[month] / maxYearSeconds) * 100) : 0
+      }));
+      setYearlyData(yearData);
     }
   }, [loading, sessions]);
 
@@ -141,46 +202,120 @@ const TempoEstudo = () => {
           <div>
             <div className="flex justify-between items-baseline mb-1">
               <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center">
-                <Target className="h-4 w-4 mr-1 text-[#FF6B00]" /> Meta semanal
+                <Target className="h-4 w-4 mr-1 text-[#FF6B00]" /> 
+                {viewMode === "semana" && "Meta semanal"}
+                {viewMode === "mes" && "Meta mensal"}
+                {viewMode === "ano" && "Meta anual"}
               </h3>
-              <span className="text-sm font-semibold text-[#29335C] dark:text-white">{totalHours}/{goalHours}h</span>
+              <span className="text-sm font-semibold text-[#29335C] dark:text-white">
+                {totalHours}/
+                {viewMode === "semana" && goalHours}
+                {viewMode === "mes" && (goalHours * 4)}
+                {viewMode === "ano" && (goalHours * 52)}h
+              </span>
             </div>
             <div className="relative">
               <Progress 
-                value={progress} 
+                value={
+                  viewMode === "semana" 
+                    ? progress 
+                    : viewMode === "mes" 
+                      ? Math.min(Math.round((totalHours / (goalHours * 4)) * 100), 100)
+                      : Math.min(Math.round((totalHours / (goalHours * 52)) * 100), 100)
+                } 
                 className="h-2.5 bg-[#FF6B00]/10" 
               />
               <span className="absolute text-[10px] text-[#FF6B00] font-medium right-0 bottom-4">
-                {progress}%
+                {viewMode === "semana" 
+                  ? progress 
+                  : viewMode === "mes" 
+                    ? Math.min(Math.round((totalHours / (goalHours * 4)) * 100), 100)
+                    : Math.min(Math.round((totalHours / (goalHours * 52)) * 100), 100)
+                }%
               </span>
             </div>
           </div>
 
-          {/* Gráfico de horas por dia */}
+          {/* Gráfico dinâmico baseado no modo de visualização */}
           <div>
             <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center mb-3">
-              <BarChart3 className="h-4 w-4 mr-1 text-[#FF6B00]" /> Horas por dia
+              <BarChart3 className="h-4 w-4 mr-1 text-[#FF6B00]" /> 
+              {viewMode === "semana" && "Horas por dia"}
+              {viewMode === "mes" && "Horas nos últimos 15 dias"}
+              {viewMode === "ano" && "Horas por mês"}
             </h3>
-            <div className="flex items-end justify-between h-[120px] mt-2 gap-1">
-              {weeklyData.map((item, index) => (
-                <div key={index} className="flex flex-col items-center flex-1">
-                  <div className="relative w-full flex justify-center mb-1">
-                    <div 
-                      className="w-full bg-[#FF6B00]/80 hover:bg-[#FF6B00] rounded-sm transition-all"
-                      style={{ height: `${Math.max(item.percentage, 5)}px` }}
-                    ></div>
-                    {item.hours > 0 && (
-                      <span className="absolute -top-5 text-xs font-medium">
-                        {item.hours}h
-                      </span>
-                    )}
+            
+            {/* Visualização Semanal */}
+            {viewMode === "semana" && (
+              <div className="flex items-end justify-between h-[120px] mt-2 gap-1">
+                {weeklyData.map((item, index) => (
+                  <div key={index} className="flex flex-col items-center flex-1">
+                    <div className="relative w-full flex justify-center mb-1">
+                      <div 
+                        className="w-full bg-[#FF6B00]/80 hover:bg-[#FF6B00] rounded-sm transition-all"
+                        style={{ height: `${Math.max(item.percentage, 5)}px` }}
+                      ></div>
+                      {item.hours > 0 && (
+                        <span className="absolute -top-5 text-xs font-medium">
+                          {item.hours}h
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      {item.day}
+                    </span>
                   </div>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                    {item.day}
-                  </span>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
+            
+            {/* Visualização Mensal */}
+            {viewMode === "mes" && (
+              <div className="flex items-end justify-between h-[120px] mt-2 overflow-x-auto pb-2">
+                {monthlyData.map((item, index) => (
+                  <div key={index} className="flex flex-col items-center min-w-[25px]">
+                    <div className="relative w-full flex justify-center mb-1">
+                      <div 
+                        className="w-5 bg-[#FF6B00]/80 hover:bg-[#FF6B00] rounded-sm transition-all"
+                        style={{ height: `${Math.max(item.percentage, 5)}px` }}
+                      ></div>
+                      {item.hours > 0 && (
+                        <span className="absolute -top-5 text-xs font-medium whitespace-nowrap">
+                          {item.hours}h
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                      {item.day}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {/* Visualização Anual */}
+            {viewMode === "ano" && (
+              <div className="flex items-end justify-between h-[120px] mt-2 gap-1">
+                {yearlyData.map((item, index) => (
+                  <div key={index} className="flex flex-col items-center flex-1">
+                    <div className="relative w-full flex justify-center mb-1">
+                      <div 
+                        className="w-full bg-[#FF6B00]/80 hover:bg-[#FF6B00] rounded-sm transition-all"
+                        style={{ height: `${Math.max(item.percentage, 5)}px` }}
+                      ></div>
+                      {item.hours > 0 && (
+                        <span className="absolute -top-5 text-xs font-medium">
+                          {item.hours}h
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      {item.month}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Top disciplinas */}
@@ -237,9 +372,24 @@ const TempoEstudo = () => {
           <h3 className="text-white font-semibold text-sm">Tempo de Estudo</h3>
         </div>
         <div className="flex items-center gap-1 text-xs">
-          <span className="bg-white/20 px-2 py-0.5 rounded-md cursor-pointer hover:bg-white/30 transition-colors">Semana</span>
-          <span className="px-2 py-0.5 rounded-md cursor-pointer hover:bg-white/30 transition-colors">Mês</span>
-          <span className="px-2 py-0.5 rounded-md cursor-pointer hover:bg-white/30 transition-colors">Ano</span>
+          <span 
+            className={`px-2 py-0.5 rounded-md cursor-pointer transition-colors ${viewMode === "semana" ? "bg-white/20 font-medium" : "hover:bg-white/30"}`}
+            onClick={() => setViewMode("semana")}
+          >
+            Semana
+          </span>
+          <span 
+            className={`px-2 py-0.5 rounded-md cursor-pointer transition-colors ${viewMode === "mes" ? "bg-white/20 font-medium" : "hover:bg-white/30"}`}
+            onClick={() => setViewMode("mes")}
+          >
+            Mês
+          </span>
+          <span 
+            className={`px-2 py-0.5 rounded-md cursor-pointer transition-colors ${viewMode === "ano" ? "bg-white/20 font-medium" : "hover:bg-white/30"}`}
+            onClick={() => setViewMode("ano")}
+          >
+            Ano
+          </span>
           <button className="p-1 rounded-full hover:bg-white/30 transition-colors">
             <Settings className="h-4 w-4 text-white" />
           </button>
