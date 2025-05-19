@@ -131,17 +131,7 @@ const TempoEstudo = () => {
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
           <div className="w-full">
-            <CardTitle className="flex items-center gap-2 text-white font-medium bg-[#FF6B00] p-2 rounded-md">
-              <Clock className="h-5 w-5" /> Tempo de Estudo
-              <div className="ml-auto flex items-center gap-1 text-xs">
-                <span className="bg-white/20 px-2 py-0.5 rounded-md cursor-pointer hover:bg-white/30 transition-colors">Semana</span>
-                <span className="px-2 py-0.5 rounded-md cursor-pointer hover:bg-white/30 transition-colors">Mês</span>
-                <span className="px-2 py-0.5 rounded-md cursor-pointer hover:bg-white/30 transition-colors">Ano</span>
-                <button className="p-1 rounded-full hover:bg-white/30 transition-colors">
-                  <Settings className="h-4 w-4" />
-                </button>
-              </div>
-            </CardTitle>
+            {/* Título removido do CardHeader */}
           </div>
         </div>
       </CardHeader>
@@ -237,15 +227,31 @@ const TempoEstudo = () => {
   );
 
   return (
-    <Card className="h-full overflow-hidden border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow">
-      {isLoading ? (
-        <LoadingState />
-      ) : isNoData ? (
-        <EmptyState />
-      ) : (
-        <MainContent />
-      )}
-    </Card>
+    <div className="flex flex-col h-full">
+      {/* Título preenchido acima do card */}
+      <div className="flex items-center justify-between bg-[#FF6B00] text-white p-2 rounded-t-md mb-0 font-medium">
+        <div className="flex items-center gap-2">
+          <Clock className="h-5 w-5" /> Tempo de Estudo
+        </div>
+        <div className="flex items-center gap-1 text-xs">
+          <span className="bg-white/20 px-2 py-0.5 rounded-md cursor-pointer hover:bg-white/30 transition-colors">Semana</span>
+          <span className="px-2 py-0.5 rounded-md cursor-pointer hover:bg-white/30 transition-colors">Mês</span>
+          <span className="px-2 py-0.5 rounded-md cursor-pointer hover:bg-white/30 transition-colors">Ano</span>
+          <button className="p-1 rounded-full hover:bg-white/30 transition-colors">
+            <Settings className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+      <Card className="h-full overflow-hidden border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow rounded-t-none">
+        {isLoading ? (
+          <LoadingState />
+        ) : isNoData ? (
+          <EmptyState />
+        ) : (
+          <MainContent />
+        )}
+      </Card>
+    </div>
   );
 };
 
