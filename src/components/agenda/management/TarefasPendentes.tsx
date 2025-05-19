@@ -46,7 +46,7 @@ const defaultTasks: Task[] = [
 const TarefasPendentes = () => {
   const [tasks, setTasks] = useState<Task[]>(defaultTasks);
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<"pendentes" | "hoje" | "semana">("pendentes");
+  const [viewMode, setViewMode] = useState<"pendentes" | "em-andamento" | "concluido">("pendentes");
 
   const handleAddTask = (newTask: any) => {
     // Format the due date for display
@@ -95,41 +95,61 @@ const TarefasPendentes = () => {
     baixa: "bg-blue-500/10 text-blue-500 border-blue-500/30",
   };
 
-  const EmptyState = () => (
-    <div className="flex flex-col items-center justify-center h-full p-6 text-center">
-      <div className="w-16 h-16 rounded-full bg-[#FF6B00]/10 flex items-center justify-center mb-4">
-        <CheckSquare className="h-8 w-8 text-[#FF6B00]" />
-      </div>
-      <h3 className="text-lg font-semibold text-[#29335C] dark:text-white mb-2">
-        Sem tarefas pendentes
-      </h3>
-      <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 max-w-[250px]">
-        Adicione novas tarefas para organizar seu fluxo de trabalho.
-      </p>
-      <Button
-        onClick={() => setIsAddTaskModalOpen(true)}
-        className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white"
-      >
-        <Plus className="h-4 w-4 mr-2" /> Adicionar Tarefa
-      </Button>
-    </div>
-  );
-
-  const MainContent = () => (
-    <>
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-start">
-          <div className="w-full">
-            {/* Título removido do CardHeader */}
-          </div>
+  const EmptyState = () => {
+    let title = "Sem tarefas pendentes";
+    let description = "Adicione novas tarefas para organizar seu fluxo de trabalho.";
+    
+    if (viewMode === "em-andamento") {
+      title = "Sem tarefas em andamento";
+      description = "Nenhuma tarefa está em andamento no momento.";
+    } else if (viewMode === "concluido") {
+      title = "Sem tarefas concluídas";
+      description = "Complete suas tarefas para vê-las aqui.";
+    }
+    
+    return (
+      <div className="flex flex-col items-center justify-center h-full p-6 text-center">
+        <div className="w-16 h-16 rounded-full bg-[#FF6B00]/10 flex items-center justify-center mb-4">
+          <CheckSquare className="h-8 w-8 text-[#FF6B00]" />
         </div>
-      </CardHeader>
-      <CardContent className="pt-0">
-        <ScrollArea className="h-[300px] pr-2">
-          <div className="space-y-2 pb-4">
-            {tasks
-              .filter((task) => !task.completed)
-              .map((task) => (
+        <h3 className="text-lg font-semibold text-[#29335C] dark:text-white mb-2">
+          {title}
+        </h3>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 max-w-[250px]">
+          {description}
+        </p>
+        <Button
+          onClick={() => setIsAddTaskModalOpen(true)}
+          className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white"
+        >
+          <Plus className="h-4 w-4 mr-2" /> Adicionar Tarefa
+        </Button>
+      </div>
+    );
+  };
+
+  const MainContent = () => {
+    // Filtrar tarefas com base no viewMode selecionado
+    const filteredTasks = tasks.filter((task) => {
+      if (viewMode === "pendentes") return !task.completed && task.priority !== "concluido";
+      if (viewMode === "em-andamento") return !task.completed && task.priority === "media";
+      if (viewMode === "concluido") return task.completed;
+      return true;
+    });
+    
+    return (
+      <>
+        <CardHeader className="pb-2">
+          <div className="flex justify-between items-start">
+            <div className="w-full">
+              {/* Título removido do CardHeader */}
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <ScrollArea className="h-[300px] pr-2">
+            <div className="space-y-2 pb-4">
+              {filteredTasks.map((task) => (
                 <div
                   key={task.id}
                   className="p-3 border border-gray-100 dark:border-gray-800 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
@@ -205,27 +225,37 @@ const TarefasPendentes = () => {
             className={`px-2 py-0.5 rounded-md cursor-pointer transition-colors ${viewMode === "pendentes" ? "bg-white/20 font-medium" : "hover:bg-white/30"}`}
             onClick={() => setViewMode("pendentes")}
           >
-            Pendentes
+            Pendente
           </span>
           <span 
-            className={`px-2 py-0.5 rounded-md cursor-pointer transition-colors ${viewMode === "hoje" ? "bg-white/20 font-medium" : "hover:bg-white/30"}`}
-            onClick={() => setViewMode("hoje")}
+            className={`px-2 py-0.5 rounded-md cursor-pointer transition-colors ${viewMode === "em-andamento" ? "bg-white/20 font-medium" : "hover:bg-white/30"}`}
+            onClick={() => setViewMode("em-andamento")}
           >
-            Hoje
+            Em Andamento
           </span>
           <span 
-            className={`px-2 py-0.5 rounded-md cursor-pointer transition-colors ${viewMode === "semana" ? "bg-white/20 font-medium" : "hover:bg-white/30"}`}
-            onClick={() => setViewMode("semana")}
+            className={`px-2 py-0.5 rounded-md cursor-pointer transition-colors ${viewMode === "concluido" ? "bg-white/20 font-medium" : "hover:bg-white/30"}`}
+            onClick={() => setViewMode("concluido")}
           >
-            Semana
+            Concluído
           </span>
-          <button className="p-1 rounded-full hover:bg-white/30 transition-colors" onClick={() => setIsAddTaskModalOpen(true)}>
-            <Plus className="h-4 w-4 text-white" />
-          </button>
+          <div className="flex items-center gap-1">
+            <div className="bg-white/20 text-white text-xs px-2 py-0.5 rounded-full">
+              {tasks.length} tarefas
+            </div>
+            <button className="p-1 rounded-full hover:bg-white/30 transition-colors" onClick={() => setIsAddTaskModalOpen(true)}>
+              <Plus className="h-4 w-4 text-white" />
+            </button>
+          </div>
         </div>
       </div>
 
-      {tasks.filter((task) => !task.completed).length === 0 ? (
+      {tasks.filter((task) => {
+        if (viewMode === "pendentes") return !task.completed && task.priority !== "concluido";
+        if (viewMode === "em-andamento") return !task.completed && task.priority === "media";
+        if (viewMode === "concluido") return task.completed;
+        return true;
+      }).length === 0 ? (
         <EmptyState />
       ) : (
         <MainContent />
