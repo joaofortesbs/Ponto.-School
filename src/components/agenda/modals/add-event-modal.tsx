@@ -235,7 +235,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
           detail: { event: savedEvent }
         }));
 
-        // Disparar explicitamente um evento para o card de Eventos do Dia
+        // Disparar evento específico para o card de Eventos do Dia
         window.dispatchEvent(new CustomEvent('agenda-events-updated'));
 
         // Reset form and close modal

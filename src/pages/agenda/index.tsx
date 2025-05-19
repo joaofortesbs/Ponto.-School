@@ -169,6 +169,7 @@ export default function AgendaPage() {
     initStorage();
   }, []);
 
+  // Efeito para carregar eventos quando a página é carregada
   useEffect(() => {
     // Carregar eventos do banco de dados quando a página é carregada
     const loadEvents = async () => {
@@ -209,6 +210,11 @@ export default function AgendaPage() {
           events = getAllLocalEvents();
           console.log("Eventos carregados do armazenamento local:", events.length);
         }
+
+        // Disparar evento de atualização global para outros componentes
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('agenda-events-updated'));
+        }, 500);
 
         if (events.length === 0) {
           console.warn("Nenhum evento encontrado");
@@ -898,6 +904,7 @@ export default function AgendaPage() {
           const tasksView = document.querySelector(
             '[data-testid="tasks-view"]',
           );
+          ```
           if (tasksView) {
             const refreshEvent = new CustomEvent("refresh-tasks", {
               detail: newTask,
@@ -1021,7 +1028,7 @@ export default function AgendaPage() {
           </div>
 
           {/* Main Content Grid */}
-          
+
         </TabsContent>
 
         {/* Calendário Tab */}

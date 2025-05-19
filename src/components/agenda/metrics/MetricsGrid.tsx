@@ -10,18 +10,23 @@ interface MetricsGridProps {
   onViewPerformanceDetails?: () => void;
   onViewRanking?: () => void;
   onViewChallenges?: () => void;
+  onViewAllEvents?: () => void;
 }
 
 const MetricsGrid: React.FC<MetricsGridProps> = ({
   onAddEvent,
   onViewPerformanceDetails,
   onViewRanking,
-  onViewChallenges
+  onViewChallenges,
+  onViewAllEvents
 }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       <div className="h-[260px]">
-        <EventosDoDia onAddEvent={onAddEvent} />
+        <EventosDoDia 
+          onAddEvent={onAddEvent} 
+          onViewAllEvents={onViewAllEvents} 
+        />
       </div>
       <div className="h-[260px]">
         <DesempenhoSemanal onViewDetails={onViewPerformanceDetails} />
