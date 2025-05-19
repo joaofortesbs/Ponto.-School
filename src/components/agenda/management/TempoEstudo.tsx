@@ -245,7 +245,7 @@ const TempoEstudo = () => {
           </button>
         </div>
       </div>
-      <Card className="h-full overflow-hidden border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow rounded-t-none">
+      <Card className="h-full overflow-hidden border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow">
         {isLoading ? (
           <LoadingState />
         ) : isNoData ? (
