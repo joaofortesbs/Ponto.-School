@@ -16,32 +16,7 @@ interface Task {
   priority?: "alta" | "media" | "baixa";
 }
 
-const defaultTasks: Task[] = [
-  {
-    id: "1",
-    title: "Entrega de Relatório - Física",
-    dueDate: "2024-03-25",
-    subject: "Física",
-    completed: false,
-    priority: "alta",
-  },
-  {
-    id: "2",
-    title: "Questionário - Matemática",
-    dueDate: "2024-03-26",
-    subject: "Matemática",
-    completed: false,
-    priority: "media",
-  },
-  {
-    id: "3",
-    title: "Apresentação - Biologia",
-    dueDate: "2024-03-27",
-    subject: "Biologia",
-    completed: false,
-    priority: "baixa",
-  },
-];
+const defaultTasks: Task[] = [];
 
 const TarefasPendentes = () => {
   const [tasks, setTasks] = useState<Task[]>(defaultTasks);
@@ -101,10 +76,10 @@ const TarefasPendentes = () => {
         <CheckSquare className="h-8 w-8 text-[#FF6B00]" />
       </div>
       <h3 className="text-lg font-semibold text-[#29335C] dark:text-white mb-2">
-        Sem tarefas pendentes
+        Nenhuma tarefa adicionada
       </h3>
       <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 max-w-[250px]">
-        Adicione novas tarefas para organizar seu fluxo de trabalho.
+        Comece adicionando suas tarefas para organizar seu fluxo de trabalho.
       </p>
       <Button
         onClick={() => setIsAddTaskModalOpen(true)}
