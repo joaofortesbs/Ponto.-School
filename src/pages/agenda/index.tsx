@@ -902,9 +902,9 @@ export default function AgendaPage() {
         // Refresh the tasks view
         setTimeout(() => {
           const tasksView = document.querySelector(
-            '[data-testid="tasks-view"]',
+            '[data-testid="tasks-view"]'
           );
-          ```
+          
           if (tasksView) {
             const refreshEvent = new CustomEvent("refresh-tasks", {
               detail: newTask,
