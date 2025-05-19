@@ -195,7 +195,7 @@ const EventosDoDia: React.FC<EventosDoDiaProps> = ({
             </div>
             
             {/* Fixed button - alinhado com o botão do card de Desempenho Semanal */}
-            <div className="mt-4 p-4 bg-white dark:bg-gradient-to-b dark:from-[#001427]/80 dark:to-[#001427] border-t border-gray-100 dark:border-[#0D2238]/40 z-10 w-full backdrop-blur-sm">
+            <div className="mt-4 p-4 border-t border-gray-100 dark:border-[#0D2238]/40 z-10 w-full">
               <Button 
                 className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF7B20] hover:to-[#FF9C50] text-white rounded-md shadow-md transition-all duration-300"
                 onClick={onViewAllEvents}
