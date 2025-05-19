@@ -21,20 +21,20 @@ const MetricsGrid: React.FC<MetricsGridProps> = ({
   onViewAllEvents
 }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      <div className="h-[260px]">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="h-[260px] transform hover:-translate-y-1 transition-transform duration-300">
         <EventosDoDia 
           onAddEvent={onAddEvent} 
           onViewAllEvents={onViewAllEvents} 
         />
       </div>
-      <div className="h-[260px]">
+      <div className="h-[260px] transform hover:-translate-y-1 transition-transform duration-300">
         <DesempenhoSemanal onViewDetails={onViewPerformanceDetails} />
       </div>
-      <div className="h-[260px]">
+      <div className="h-[260px] transform hover:-translate-y-1 transition-transform duration-300">
         <Ranking onViewRanking={onViewRanking} />
       </div>
-      <div className="h-[260px]">
+      <div className="h-[260px] transform hover:-translate-y-1 transition-transform duration-300">
         <Pontos onViewChallenges={onViewChallenges} />
       </div>
     </div>
