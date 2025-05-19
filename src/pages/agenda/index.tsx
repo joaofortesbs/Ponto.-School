@@ -1024,6 +1024,7 @@ export default function AgendaPage() {
               onViewPerformanceDetails={() => setActiveTab("flow")}
               onViewRanking={() => setActiveTab("desafios")}
               onViewChallenges={() => setActiveTab("desafios")}
+              onViewAllEvents={() => setActiveTab("calendario")}
             />
           </div>
 
