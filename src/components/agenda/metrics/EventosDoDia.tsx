@@ -165,7 +165,8 @@ const EventosDoDia: React.FC<EventosDoDiaProps> = ({
           </div>
         ) : eventos.length > 0 ? (
           <div className="flex-1 flex flex-col">
-            <div className="overflow-y-auto flex-1">
+            {/* Área de rolagem com altura flexível */}
+            <div className="overflow-y-auto hide-scrollbar" style={{ maxHeight: "calc(100% - 50px)", flexGrow: 1 }}>
               {eventos.map((evento) => (
                 <div key={evento.id} className="p-2 hover:bg-[#0D2238]/80 transition-colors border-b border-[#0D2238]">
                   <div className="flex items-center gap-3">
@@ -190,12 +191,15 @@ const EventosDoDia: React.FC<EventosDoDiaProps> = ({
                 </div>
               ))}
             </div>
-            <Button 
-              className="m-2 bg-[#FF6B00] hover:bg-[#FF8C40] text-white rounded-md"
-              onClick={onViewAllEvents}
-            >
-              <ExternalLink className="h-3 w-3 mr-2" /> Ver Todos
-            </Button>
+            {/* Barra de ações fixada na parte inferior */}
+            <div className="border-t border-[#0D2238] p-2 mt-auto bg-[#001427]">
+              <Button 
+                className="w-full bg-[#FF6B00] hover:bg-[#FF8C40] text-white rounded-md"
+                onClick={onViewAllEvents}
+              >
+                <ExternalLink className="h-3 w-3 mr-2" /> Ver Todos
+              </Button>
+            </div>
           </div>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center p-4 text-center">
