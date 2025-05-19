@@ -1,130 +1,262 @@
 
-import React from "react";
-import { Clock, ExternalLink } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { BarChart3, Clock, ExternalLink, Settings, Target, Zap, Info } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import useFlowSessions from "@/hooks/useFlowSessions";
 
 const TempoEstudo = () => {
-  const diasDaSemana = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+  // Estados para armazenar dados de tempo de estudo
+  const [totalHours, setTotalHours] = useState<number>(0);
+  const [goalHours, setGoalHours] = useState<number>(40);
+  const [progress, setProgress] = useState<number>(0);
+  const [weeklyData, setWeeklyData] = useState<{ day: string; hours: number; percentage: number }[]>([]);
+  const [topSubjects, setTopSubjects] = useState<{ subject: string; hours: number; percentage: number; color: string }[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isNoData, setIsNoData] = useState<boolean>(false);
+
+  // Cores para os principais assuntos
+  const subjectColors = ["#FF6B00", "#FF8C40", "#E85D04", "#DC2F02", "#9D0208"];
+
+  // Usar hook de sessões de Flow
+  const { sessions, loading, getStats } = useFlowSessions();
+
+  // Efeito para carregar e processar dados das sessões de Flow
+  useEffect(() => {
+    if (!loading) {
+      setIsLoading(false);
+      
+      // Obter estatísticas das sessões de Flow
+      const stats = getStats();
+      
+      // Verificar se existem dados
+      if (stats.sessionsCount === 0) {
+        setIsNoData(true);
+        return;
+      }
+      
+      // Calcular total de horas
+      const totalSeconds = stats.totalTimeInSeconds || 0;
+      const hours = Math.floor(totalSeconds / 3600);
+      setTotalHours(hours);
+      
+      // Calcular progresso em relação à meta
+      const calculatedProgress = Math.min(Math.round((hours / goalHours) * 100), 100);
+      setProgress(calculatedProgress);
+      
+      // Processar dados por disciplina
+      const subjectData = Object.entries(stats.subjectStats || {}).map(([subject, seconds], index) => {
+        const subjectHours = Math.floor(seconds / 3600);
+        const percentage = totalSeconds > 0 ? Math.round((seconds / totalSeconds) * 100) : 0;
+        
+        return {
+          subject,
+          hours: subjectHours,
+          percentage,
+          color: subjectColors[index % subjectColors.length]
+        };
+      }).sort((a, b) => b.hours - a.hours).slice(0, 5);
+      
+      setTopSubjects(subjectData);
+      
+      // Processar dados por dia da semana
+      const daysOfWeek = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+      const weeklyStats: { [key: string]: number } = {};
+      
+      // Inicializar com zeros
+      daysOfWeek.forEach(day => {
+        weeklyStats[day] = 0;
+      });
+      
+      // Preencher com dados reais
+      sessions.forEach(session => {
+        try {
+          const sessionDate = session.timestamp ? new Date(session.timestamp) : new Date(session.date);
+          const dayOfWeek = daysOfWeek[sessionDate.getDay()];
+          
+          // Calcular horas da sessão em segundos
+          const sessionSeconds = session.elapsedTimeSeconds || 0;
+          
+          // Adicionar ao dia correspondente
+          weeklyStats[dayOfWeek] = (weeklyStats[dayOfWeek] || 0) + sessionSeconds;
+        } catch (e) {
+          console.error("Erro ao processar data da sessão:", e);
+        }
+      });
+      
+      // Converter segundos para horas e calcular percentagens para visualização
+      const maxDaySeconds = Math.max(...Object.values(weeklyStats));
+      const weekData = daysOfWeek.map(day => ({
+        day,
+        hours: Math.floor(weeklyStats[day] / 3600),
+        percentage: maxDaySeconds > 0 ? Math.round((weeklyStats[day] / maxDaySeconds) * 100) : 0
+      }));
+      
+      setWeeklyData(weekData);
+    }
+  }, [loading, sessions]);
+
+  // Componente de estado vazio para novos usuários
+  const EmptyState = () => (
+    <div className="flex flex-col items-center justify-center h-full p-6 text-center">
+      <div className="w-16 h-16 rounded-full bg-[#FF6B00]/10 flex items-center justify-center mb-4">
+        <Clock className="h-8 w-8 text-[#FF6B00]" />
+      </div>
+      <h3 className="text-lg font-semibold text-[#29335C] dark:text-white mb-2">
+        Sem registros de estudo
+      </h3>
+      <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 max-w-[250px]">
+        Registre seu tempo de estudo utilizando o Flow para visualizar suas estatísticas aqui.
+      </p>
+      <Button
+        onClick={() => window.location.href = "/agenda?view=flow"}
+        className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white"
+      >
+        <Zap className="h-4 w-4 mr-2" /> Iniciar Flow
+      </Button>
+    </div>
+  );
+
+  // Componente de carregamento
+  const LoadingState = () => (
+    <div className="flex items-center justify-center h-full">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF6B00]"></div>
+    </div>
+  );
+
+  // Conteúdo principal quando há dados
+  const MainContent = () => (
+    <>
+      <CardHeader className="pb-2">
+        <div className="flex justify-between items-start">
+          <div>
+            <CardTitle className="text-xl font-bold text-[#29335C] dark:text-white flex items-center">
+              Tempo de Estudo
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="h-4 w-4 text-gray-400 ml-2 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="w-[200px] text-sm">
+                      Dados baseados nas suas sessões de Flow registradas. Inicie novas sessões para atualizar.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </CardTitle>
+            <CardDescription className="text-gray-500 dark:text-gray-400">
+              Acompanhe seu progresso semanal
+            </CardDescription>
+          </div>
+          <Button variant="ghost" size="icon" className="text-gray-500 hover:text-[#FF6B00]">
+            <Settings className="h-5 w-5" />
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="pt-0">
+        <div className="space-y-4">
+          {/* Progresso em relação à meta */}
+          <div>
+            <div className="flex justify-between items-baseline mb-1">
+              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center">
+                <Target className="h-4 w-4 mr-1 text-[#FF6B00]" /> Meta semanal
+              </h3>
+              <span className="text-sm font-semibold text-[#29335C] dark:text-white">{totalHours}/{goalHours}h</span>
+            </div>
+            <div className="relative">
+              <Progress 
+                value={progress} 
+                className="h-2.5 bg-[#FF6B00]/10" 
+              />
+              <span className="absolute text-[10px] text-[#FF6B00] font-medium right-0 bottom-4">
+                {progress}%
+              </span>
+            </div>
+          </div>
+
+          {/* Gráfico de horas por dia */}
+          <div>
+            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center mb-3">
+              <BarChart3 className="h-4 w-4 mr-1 text-[#FF6B00]" /> Horas por dia
+            </h3>
+            <div className="flex items-end justify-between h-[120px] mt-2 gap-1">
+              {weeklyData.map((item, index) => (
+                <div key={index} className="flex flex-col items-center flex-1">
+                  <div className="relative w-full flex justify-center mb-1">
+                    <div 
+                      className="w-full bg-[#FF6B00]/80 hover:bg-[#FF6B00] rounded-sm transition-all"
+                      style={{ height: `${Math.max(item.percentage, 5)}px` }}
+                    ></div>
+                    {item.hours > 0 && (
+                      <span className="absolute -top-5 text-xs font-medium">
+                        {item.hours}h
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    {item.day}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Top disciplinas */}
+          {topSubjects.length > 0 && (
+            <div>
+              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center mb-3">
+                <Zap className="h-4 w-4 mr-1 text-[#FF6B00]" /> Top disciplinas
+              </h3>
+              <div className="space-y-2">
+                {topSubjects.map((subject, index) => (
+                  <div key={index} className="flex items-center">
+                    <div 
+                      className="w-3 h-3 rounded-full mr-2" 
+                      style={{ backgroundColor: subject.color }}
+                    ></div>
+                    <span className="text-xs flex-1 text-gray-700 dark:text-gray-300">
+                      {subject.subject}
+                    </span>
+                    <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                      {subject.hours}h
+                    </span>
+                    <span className="text-xs ml-2 text-gray-400 dark:text-gray-500 w-8 text-right">
+                      {subject.percentage}%
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Ver detalhes */}
+          <div className="pt-2">
+            <Button 
+              variant="outline" 
+              className="w-full border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10"
+              onClick={() => window.location.href = "/agenda?view=flow"}
+            >
+              <ExternalLink className="h-4 w-4 mr-2" /> Ver detalhes completos
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </>
+  );
 
   return (
-    <div className="bg-[#001427] rounded-xl overflow-hidden h-full border border-[#0D2238]">
-      <div className="bg-[#FF6B00] p-3 flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <Clock className="text-white h-5 w-5" />
-          <h3 className="text-white font-medium">Tempo de Estudo</h3>
-        </div>
-        <div className="flex gap-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-white h-6 px-2 text-xs bg-[#FF6B00]/50 hover:bg-[#FF6B00]/70"
-          >
-            Semana
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-white h-6 px-2 text-xs hover:bg-[#FF6B00]/70"
-          >
-            Mês
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-white h-6 px-2 text-xs hover:bg-[#FF6B00]/70"
-          >
-            Ano
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-white h-6 w-6 p-0 hover:bg-[#FF6B00]/70"
-          >
-            <span className="sr-only">Opções</span>
-            <i className="text-white text-xs">ⓘ</i>
-          </Button>
-        </div>
-      </div>
-
-      <div className="p-4 flex flex-col h-[calc(100%-56px)]">
-        <div className="flex items-baseline gap-1">
-          <span className="text-3xl font-bold text-white">32h</span>
-          <span className="text-gray-400 text-xs">Meta: 40h</span>
-        </div>
-
-        <div className="mt-1 flex items-center gap-2 text-xs text-gray-400">
-          <div className="w-full bg-[#0D2238] h-2 rounded-full overflow-hidden">
-            <div
-              className="bg-[#FF6B00] h-full rounded-full"
-              style={{ width: "80%" }}
-            ></div>
-          </div>
-          <span className="whitespace-nowrap">80% da meta</span>
-        </div>
-
-        <div className="text-xs text-gray-400 mt-1 flex justify-end">
-          <span>Progresso semanal</span>
-        </div>
-
-        <div className="mt-5 flex justify-between">
-          {diasDaSemana.map((dia, index) => (
-            <div key={index} className="flex flex-col items-center gap-1">
-              <div
-                className="h-24 w-4 bg-[#0D2238] rounded-full overflow-hidden relative"
-                style={{ opacity: index === 6 ? 0.5 : 1 }}
-              >
-                <div
-                  className="bg-[#FF6B00] absolute bottom-0 left-0 right-0"
-                  style={{
-                    height: `${
-                      [60, 45, 80, 30, 50, 25, 15][index]
-                    }%`,
-                  }}
-                ></div>
-              </div>
-              <span className="text-gray-400 text-xs">{dia}</span>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-5">
-          <div className="flex justify-between items-center">
-            <span className="text-gray-300 text-sm">Por Disciplina</span>
-            <div className="flex items-center gap-2">
-              <select className="bg-[#0D2238] text-white text-xs p-1 rounded border border-[#0D2238] outline-none">
-                <option>Todas</option>
-              </select>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="flex items-center gap-1 text-[#FF6B00] hover:text-[#FF6B00] hover:bg-[#0D2238] p-1 h-auto text-xs"
-              >
-                <span>Ver Detalhes</span>
-                <ExternalLink className="h-3 w-3" />
-              </Button>
-            </div>
-          </div>
-
-          <div className="mt-2 space-y-2">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-[#FF6B00]"></div>
-              <span className="text-gray-300 text-sm flex-1">Matemática</span>
-              <span className="text-gray-400 text-xs">10h</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-[#FF6B00]"></div>
-              <span className="text-gray-300 text-sm flex-1">Física</span>
-              <span className="text-gray-400 text-xs">8h</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-[#FF6B00]"></div>
-              <span className="text-gray-300 text-sm flex-1">Química</span>
-              <span className="text-gray-400 text-xs">6h</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <Card className="h-full overflow-hidden border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow">
+      {isLoading ? (
+        <LoadingState />
+      ) : isNoData ? (
+        <EmptyState />
+      ) : (
+        <MainContent />
+      )}
+    </Card>
   );
 };
 
