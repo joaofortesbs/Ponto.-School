@@ -28,6 +28,7 @@ import AddTaskModal from "@/components/agenda/modals/add-task-modal";
 import EventDetailsModal from "@/components/agenda/modals/event-details-modal";
 import TasksView from "@/components/agenda/tasks/TasksView";
 import ChallengesView from "@/components/agenda/challenges/ChallengesView";
+import MetricsGrid from "@/components/agenda/metrics/MetricsGrid";
 
 // Icons
 import {
@@ -1010,7 +1011,14 @@ export default function AgendaPage() {
         {/* Visão Geral Tab */}
         <TabsContent value="visao-geral" className="mt-0">
           {/* Summary Cards Row */}
-          
+          <div className="mb-6">
+            <MetricsGrid 
+              onAddEvent={() => setShowAddEventModal(true)}
+              onViewPerformanceDetails={() => setActiveTab("flow")}
+              onViewRanking={() => setActiveTab("desafios")}
+              onViewChallenges={() => setActiveTab("desafios")}
+            />
+          </div>
 
           {/* Main Content Grid */}
           
