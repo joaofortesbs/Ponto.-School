@@ -227,9 +227,9 @@ const TempoEstudo = () => {
   );
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Título preenchido acima do card - estilo igual ao EventosDoDia */}
-      <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-3 flex items-center justify-between shadow-md" style={{ height: "52px", width: "100%" }}>
+    <Card className="h-full overflow-hidden border border-gray-200 dark:border-gray-800 shadow-md hover:shadow-md transition-shadow flex flex-col bg-white dark:bg-gradient-to-b dark:from-[#001427] dark:to-[#001a2f] rounded-xl">
+      {/* Título dentro do card com o mesmo estilo do EventosDoDia */}
+      <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-3 flex items-center justify-between shadow-md">
         <div className="flex items-center">
           <div className="bg-white/10 p-1.5 rounded-lg mr-2">
             <Clock className="h-4 w-4 text-white" />
@@ -245,7 +245,6 @@ const TempoEstudo = () => {
           </button>
         </div>
       </div>
-      <Card className="h-full overflow-hidden border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow">
         {isLoading ? (
           <LoadingState />
         ) : isNoData ? (
@@ -254,7 +253,6 @@ const TempoEstudo = () => {
           <MainContent />
         )}
       </Card>
-    </div>
   );
 };
 
