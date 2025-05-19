@@ -41,6 +41,9 @@ const TarefasPendentes = () => {
     // Adiciona o event listener para tarefas adicionadas externamente
     window.addEventListener('task-added' as any, handleExternalTaskAddition);
 
+    // Log para confirmar que o listener está ativo
+    console.log("TarefasPendentes: Listener de eventos de tarefas configurado");
+
     // Limpa o event listener quando o componente é desmontado
     return () => {
       window.removeEventListener('task-added' as any, handleExternalTaskAddition);
@@ -61,6 +64,12 @@ const TarefasPendentes = () => {
       let dueDate;
       try {
         dueDate = new Date(newTask.dueDate);
+        
+        // Verificar se a data é válida
+        if (isNaN(dueDate.getTime())) {
+          console.warn("Data inválida, usando data atual como fallback");
+          dueDate = today;
+        }
       } catch (error) {
         console.error("Erro ao processar data de vencimento:", error);
         dueDate = today; // Fallback para hoje em caso de erro
@@ -77,6 +86,9 @@ const TarefasPendentes = () => {
       }
     }
 
+    // Verificar se já existe uma tarefa com o mesmo ID
+    const existingTaskIndex = tasks.findIndex(task => task.id === (newTask.id || `task-${Date.now()}`));
+    
     const task: Task = {
       id: newTask.id || `task-${Date.now()}`,
       title: newTask.title,
@@ -85,13 +97,23 @@ const TarefasPendentes = () => {
           ? newTask.dueDate.split("T")[0] 
           : newTask.dueDate 
         : new Date().toISOString().split("T")[0]),
-      subject: newTask.discipline || "Geral",
-      completed: false,
+      subject: newTask.discipline || newTask.subject || "Geral",
+      completed: Boolean(newTask.completed),
       priority: (newTask.priority || "media").toLowerCase(),
     };
 
     console.log("Tarefa formatada para exibição:", task);
-    setTasks(prevTasks => [...prevTasks, task]);
+    
+    // Se já existe uma tarefa com esse ID, atualiza em vez de adicionar
+    if (existingTaskIndex >= 0) {
+      const updatedTasks = [...tasks];
+      updatedTasks[existingTaskIndex] = task;
+      setTasks(updatedTasks);
+      console.log("Tarefa atualizada com sucesso");
+    } else {
+      setTasks(prevTasks => [...prevTasks, task]);
+      console.log("Nova tarefa adicionada com sucesso");
+    }
   };
 
   const toggleTaskCompletion = (taskId: string) => {

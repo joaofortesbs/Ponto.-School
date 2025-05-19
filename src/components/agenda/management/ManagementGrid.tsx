@@ -1,5 +1,4 @@
-
-import React from "react";
+import React, { useEffect } from "react";
 import TempoEstudo from "./TempoEstudo";
 import TarefasPendentes from "./TarefasPendentes";
 import ProgressoDisciplina from "./ProgressoDisciplina";
@@ -18,6 +17,19 @@ const ManagementGrid: React.FC<ManagementGridProps> = ({
   onViewStudyTime,
   onSetGoals
 }) => {
+  // Garantir que o evento de task-added está sendo propagado corretamente
+  useEffect(() => {
+    const handleTaskAdded = (event: any) => {
+      console.log("ManagementGrid: Evento de tarefa adicionada capturado:", event.detail);
+    };
+
+    window.addEventListener('task-added', handleTaskAdded);
+
+    return () => {
+      window.removeEventListener('task-added', handleTaskAdded);
+    };
+  }, []);
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
       <div className="h-[480px] management-card-container">
