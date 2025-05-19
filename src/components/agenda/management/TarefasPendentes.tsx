@@ -14,7 +14,6 @@ interface Task {
   subject: string;
   completed: boolean;
   priority?: "alta" | "media" | "baixa";
-  status: "pendente" | "em_andamento" | "concluido";
 }
 
 const defaultTasks: Task[] = [
@@ -25,7 +24,6 @@ const defaultTasks: Task[] = [
     subject: "Física",
     completed: false,
     priority: "alta",
-    status: "pendente",
   },
   {
     id: "2",
@@ -34,7 +32,6 @@ const defaultTasks: Task[] = [
     subject: "Matemática",
     completed: false,
     priority: "media",
-    status: "em_andamento",
   },
   {
     id: "3",
@@ -43,14 +40,13 @@ const defaultTasks: Task[] = [
     subject: "Biologia",
     completed: false,
     priority: "baixa",
-    status: "concluido",
   },
 ];
 
 const TarefasPendentes = () => {
   const [tasks, setTasks] = useState<Task[]>(defaultTasks);
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
-  const [viewMode, setViewMode: React.Dispatch<React.SetStateAction<"pendente" | "em_andamento" | "concluido">>] = useState<"pendente" | "em_andamento" | "concluido">("pendente");
+  const [viewMode, setViewMode] = useState<"pendentes" | "hoje" | "semana">("pendentes");
 
   const handleAddTask = (newTask: any) => {
     // Format the due date for display
@@ -80,7 +76,6 @@ const TarefasPendentes = () => {
       subject: newTask.discipline || "Geral",
       completed: false,
       priority: newTask.priority || "media",
-      status: "pendente",
     };
 
     setTasks([...tasks, task]);
@@ -133,7 +128,7 @@ const TarefasPendentes = () => {
         <ScrollArea className="h-[300px] pr-2">
           <div className="space-y-2 pb-4">
             {tasks
-              .filter((task) => task.status === viewMode)
+              .filter((task) => !task.completed)
               .map((task) => (
                 <div
                   key={task.id}
@@ -207,22 +202,22 @@ const TarefasPendentes = () => {
         </div>
         <div className="flex items-center gap-1 text-xs">
           <span 
-            className={`px-2 py-0.5 rounded-md cursor-pointer transition-colors ${viewMode === "pendente" ? "bg-white/20 font-medium" : "hover:bg-white/30"}`}
-            onClick={() => setViewMode("pendente")}
+            className={`px-2 py-0.5 rounded-md cursor-pointer transition-colors ${viewMode === "pendentes" ? "bg-white/20 font-medium" : "hover:bg-white/30"}`}
+            onClick={() => setViewMode("pendentes")}
           >
-            Pendente
+            Pendentes
           </span>
           <span 
-            className={`px-2 py-0.5 rounded-md cursor-pointer transition-colors ${viewMode === "em_andamento" ? "bg-white/20 font-medium" : "hover:bg-white/30"}`}
-            onClick={() => setViewMode("em_andamento")}
+            className={`px-2 py-0.5 rounded-md cursor-pointer transition-colors ${viewMode === "hoje" ? "bg-white/20 font-medium" : "hover:bg-white/30"}`}
+            onClick={() => setViewMode("hoje")}
           >
-            Em Andamento
+            Hoje
           </span>
           <span 
-            className={`px-2 py-0.5 rounded-md cursor-pointer transition-colors ${viewMode === "concluido" ? "bg-white/20 font-medium" : "hover:bg-white/30"}`}
-            onClick={() => setViewMode("concluido")}
+            className={`px-2 py-0.5 rounded-md cursor-pointer transition-colors ${viewMode === "semana" ? "bg-white/20 font-medium" : "hover:bg-white/30"}`}
+            onClick={() => setViewMode("semana")}
           >
-            Concluído
+            Semana
           </span>
           <button className="p-1 rounded-full hover:bg-white/30 transition-colors" onClick={() => setIsAddTaskModalOpen(true)}>
             <Plus className="h-4 w-4 text-white" />
@@ -230,7 +225,7 @@ const TarefasPendentes = () => {
         </div>
       </div>
 
-      {tasks.filter((task) => task.status === viewMode).length === 0 ? (
+      {tasks.filter((task) => !task.completed).length === 0 ? (
         <EmptyState />
       ) : (
         <MainContent />
@@ -244,4 +239,5 @@ const TarefasPendentes = () => {
     </Card>
   );
 };
+
 export default TarefasPendentes;
