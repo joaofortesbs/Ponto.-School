@@ -1,115 +1,242 @@
-
-import React from "react";
-import { FileText, Clock, Plus } from "lucide-react";
+import React, { useState } from "react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Clock, Calendar, CheckSquare, Plus, ExternalLink, Settings } from "lucide-react";
+import AddTaskModal from "../modals/add-task-modal";
+
+interface Task {
+  id: string;
+  title: string;
+  dueDate: string;
+  subject: string;
+  completed: boolean;
+  priority?: "alta" | "media" | "baixa";
+}
+
+const defaultTasks: Task[] = [
+  {
+    id: "1",
+    title: "Entrega de Relatório - Física",
+    dueDate: "2024-03-25",
+    subject: "Física",
+    completed: false,
+    priority: "alta",
+  },
+  {
+    id: "2",
+    title: "Questionário - Matemática",
+    dueDate: "2024-03-26",
+    subject: "Matemática",
+    completed: false,
+    priority: "media",
+  },
+  {
+    id: "3",
+    title: "Apresentação - Biologia",
+    dueDate: "2024-03-27",
+    subject: "Biologia",
+    completed: false,
+    priority: "baixa",
+  },
+];
 
 const TarefasPendentes = () => {
-  const tarefas = [
-    {
-      id: 1,
-      titulo: "Lista de Exercícios - Funções Trigonométricas",
-      disciplina: "Matemática",
-      vencimento: "Vence hoje, 18:00",
-      progresso: 75,
-      prioridade: "Alta"
-    },
-    {
-      id: 2,
-      titulo: "Relatório de Experimento - Titulação",
-      disciplina: "Química",
-      vencimento: "Vence em 2 dias",
-      progresso: 40,
-      prioridade: "Média"
-    },
-    {
-      id: 3,
-      titulo: "Preparação para Prova - Mecânica Quântica",
-      disciplina: "Física",
-      vencimento: "Vence em 1 dia",
-      progresso: 20,
-      prioridade: "Alta"
+  const [tasks, setTasks] = useState<Task[]>(defaultTasks);
+  const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<"pendentes" | "hoje" | "semana">("pendentes");
+
+  const handleAddTask = (newTask: any) => {
+    // Format the due date for display
+    let dueDateDisplay = "";
+    if (newTask.dueDate) {
+      const today = new Date();
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      const dueDate = new Date(newTask.dueDate);
+
+      if (dueDate.toDateString() === today.toDateString()) {
+        dueDateDisplay = `hoje, ${newTask.startTime || "23:59"}`;
+      } else if (dueDate.toDateString() === tomorrow.toDateString()) {
+        dueDateDisplay = `amanhã, ${newTask.startTime || "23:59"}`;
+      } else {
+        const diffTime = Math.abs(dueDate.getTime() - today.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        dueDateDisplay = `em ${diffDays} dias`;
+      }
     }
-  ];
 
-  return (
-    <div className="bg-[#001427] rounded-xl overflow-hidden h-full border border-[#0D2238]">
-      <div className="bg-[#FF6B00] p-3 flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <FileText className="text-white h-5 w-5" />
-          <h3 className="text-white font-medium">Tarefas Pendentes</h3>
-        </div>
-        <div className="bg-white text-[#FF6B00] rounded px-2 py-0.5 text-xs font-medium">
-          3 tarefas
-        </div>
+    const task: Task = {
+      id: `task-${Date.now()}`,
+      title: newTask.title,
+      dueDate: dueDateDisplay || newTask.dueDate.toISOString().split("T")[0],
+      subject: newTask.discipline || "Geral",
+      completed: false,
+      priority: newTask.priority || "media",
+    };
+
+    setTasks([...tasks, task]);
+  };
+
+  const toggleTaskCompletion = (taskId: string) => {
+    setTasks(
+      tasks.map((task) =>
+        task.id === taskId ? { ...task, completed: !task.completed } : task
+      )
+    );
+  };
+
+  const priorityColors = {
+    alta: "bg-red-500/10 text-red-500 border-red-500/30",
+    media: "bg-orange-500/10 text-orange-500 border-orange-500/30",
+    baixa: "bg-blue-500/10 text-blue-500 border-blue-500/30",
+  };
+
+  const EmptyState = () => (
+    <div className="flex flex-col items-center justify-center h-full p-6 text-center">
+      <div className="w-16 h-16 rounded-full bg-[#FF6B00]/10 flex items-center justify-center mb-4">
+        <CheckSquare className="h-8 w-8 text-[#FF6B00]" />
       </div>
+      <h3 className="text-lg font-semibold text-[#29335C] dark:text-white mb-2">
+        Sem tarefas pendentes
+      </h3>
+      <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 max-w-[250px]">
+        Adicione novas tarefas para organizar seu fluxo de trabalho.
+      </p>
+      <Button
+        onClick={() => setIsAddTaskModalOpen(true)}
+        className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white"
+      >
+        <Plus className="h-4 w-4 mr-2" /> Adicionar Tarefa
+      </Button>
+    </div>
+  );
 
-      <div className="p-4 flex flex-col h-[calc(100%-56px)] overflow-hidden">
-        <div className="space-y-4 flex-1 overflow-y-auto">
-          {tarefas.map((tarefa) => (
-            <div key={tarefa.id} className="space-y-1">
-              <div className="flex items-center gap-2">
-                <div className="w-5 h-5 border border-gray-500 rounded flex-shrink-0"></div>
-                <div className="flex-1">
-                  <div className="flex justify-between">
-                    <span className="text-white text-sm">{tarefa.titulo}</span>
-                    <span className={`text-xs px-1.5 py-0.5 rounded ${
-                      tarefa.prioridade === "Alta" 
-                        ? "bg-red-950/50 text-red-400" 
-                        : "bg-yellow-950/50 text-yellow-400"
-                    }`}>
-                      {tarefa.prioridade}
-                    </span>
+  const MainContent = () => (
+    <>
+      <CardHeader className="pb-2">
+        <div className="flex justify-between items-start">
+          <div className="w-full">
+            {/* Título removido do CardHeader */}
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="pt-0">
+        <ScrollArea className="h-[300px] pr-2">
+          <div className="space-y-2 pb-4">
+            {tasks
+              .filter((task) => !task.completed)
+              .map((task) => (
+                <div
+                  key={task.id}
+                  className="p-3 border border-gray-100 dark:border-gray-800 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+                >
+                  <div className="flex items-start gap-3">
+                    <Checkbox
+                      id={`task-${task.id}`}
+                      checked={task.completed}
+                      onCheckedChange={() => toggleTaskCompletion(task.id)}
+                      className="mt-1 data-[state=checked]:bg-[#FF6B00] data-[state=checked]:border-[#FF6B00]"
+                    />
+                    <div className="flex-1 space-y-1">
+                      <div className="flex items-start justify-between">
+                        <label
+                          htmlFor={`task-${task.id}`}
+                          className="font-medium text-sm cursor-pointer"
+                        >
+                          {task.title}
+                        </label>
+                        {task.priority && (
+                          <Badge
+                            variant="outline"
+                            className={`text-xs ${
+                              priorityColors[task.priority as keyof typeof priorityColors]
+                            }`}
+                          >
+                            {task.priority}
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 space-x-3">
+                        <span className="flex items-center">
+                          <Calendar className="h-3 w-3 mr-1" /> {task.dueDate}
+                        </span>
+                        <span className="flex items-center">
+                          <span className="w-2 h-2 rounded-full bg-blue-500 mr-1"></span>
+                          {task.subject}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-1 pl-7">
-                <div className="w-4 h-4 rounded-full bg-opacity-30 flex items-center justify-center">
-                  {tarefa.disciplina === "Matemática" && (
-                    <span className="text-xs text-orange-400">∑</span>
-                  )}
-                  {tarefa.disciplina === "Química" && (
-                    <span className="text-xs text-orange-400">⚗️</span>
-                  )}
-                  {tarefa.disciplina === "Física" && (
-                    <span className="text-xs text-orange-400">⚛️</span>
-                  )}
-                </div>
-                <span className="text-orange-400 text-xs">{tarefa.disciplina}</span>
-                <div className="mx-1 text-gray-500">|</div>
-                <Clock className="h-3 w-3 text-red-400" />
-                <span className="text-red-400 text-xs">{tarefa.vencimento}</span>
-              </div>
-              <div className="pl-7 pt-1">
-                <div className="w-full bg-[#0D2238] h-2 rounded-full overflow-hidden">
-                  <div
-                    className={`h-full rounded-full ${
-                      tarefa.prioridade === "Alta" ? "bg-red-500" : "bg-yellow-500"
-                    }`}
-                    style={{ width: `${tarefa.progresso}%` }}
-                  ></div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+              ))}
+          </div>
+        </ScrollArea>
 
-        <div className="mt-4 pt-3 border-t border-[#0D2238]">
+        {/* Ver todas as tarefas */}
+        <div className="pt-2">
           <Button 
-            variant="ghost" 
-            className="text-gray-400 text-sm hover:text-gray-300 p-0 h-auto"
+            variant="outline" 
+            className="w-full border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10"
+            onClick={() => window.location.href = "/agenda?view=tasks"}
           >
-            Ver tarefas concluídas
+            <ExternalLink className="h-4 w-4 mr-2" /> Ver todas as tarefas
           </Button>
         </div>
+      </CardContent>
+    </>
+  );
 
-        <Button 
-          className="absolute bottom-4 right-4 bg-[#FF6B00] hover:bg-[#FF8C40] rounded-full h-10 w-10 p-0"
-        >
-          <Plus className="h-5 w-5 text-white" />
-          <span className="sr-only">Nova Tarefa</span>
-        </Button>
+  return (
+    <Card className="h-full overflow-hidden border border-gray-200 dark:border-gray-800 shadow-md hover:shadow-md transition-shadow flex flex-col bg-white dark:bg-gradient-to-b dark:from-[#001427] dark:to-[#001a2f] rounded-xl">
+      {/* Título dentro do card com o mesmo estilo do TempoEstudo */}
+      <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-3 flex items-center justify-between shadow-md">
+        <div className="flex items-center">
+          <div className="bg-white/10 p-1.5 rounded-lg mr-2">
+            <CheckSquare className="h-4 w-4 text-white" />
+          </div>
+          <h3 className="text-white font-semibold text-sm">Tarefas Pendentes</h3>
+        </div>
+        <div className="flex items-center gap-1 text-xs">
+          <span 
+            className={`px-2 py-0.5 rounded-md cursor-pointer transition-colors ${viewMode === "pendentes" ? "bg-white/20 font-medium" : "hover:bg-white/30"}`}
+            onClick={() => setViewMode("pendentes")}
+          >
+            Pendentes
+          </span>
+          <span 
+            className={`px-2 py-0.5 rounded-md cursor-pointer transition-colors ${viewMode === "hoje" ? "bg-white/20 font-medium" : "hover:bg-white/30"}`}
+            onClick={() => setViewMode("hoje")}
+          >
+            Hoje
+          </span>
+          <span 
+            className={`px-2 py-0.5 rounded-md cursor-pointer transition-colors ${viewMode === "semana" ? "bg-white/20 font-medium" : "hover:bg-white/30"}`}
+            onClick={() => setViewMode("semana")}
+          >
+            Semana
+          </span>
+          <button className="p-1 rounded-full hover:bg-white/30 transition-colors" onClick={() => setIsAddTaskModalOpen(true)}>
+            <Plus className="h-4 w-4 text-white" />
+          </button>
+        </div>
       </div>
-    </div>
+
+      {tasks.filter((task) => !task.completed).length === 0 ? (
+        <EmptyState />
+      ) : (
+        <MainContent />
+      )}
+
+      <AddTaskModal
+        open={isAddTaskModalOpen}
+        onOpenChange={setIsAddTaskModalOpen}
+        onAddTask={handleAddTask}
+      />
+    </Card>
   );
 };
 
