@@ -247,6 +247,14 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
         comments: [],
       };
 
+      // Emitir um evento personalizado para notificar outros componentes sobre a nova tarefa
+      const taskAddedEvent = new CustomEvent('task-added', {
+        detail: newTask,
+        bubbles: true
+      });
+      window.dispatchEvent(taskAddedEvent);
+      console.log("Evento de tarefa adicionada disparado:", newTask);
+
       // Call onAddTask first to ensure the task is added
       if (onAddTask) {
         onAddTask(newTask);

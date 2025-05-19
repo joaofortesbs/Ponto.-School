@@ -52,6 +52,7 @@ const TarefasPendentes = () => {
   React.useEffect(() => {
     const handleExternalTaskAddition = (event: CustomEvent) => {
       if (event.detail) {
+        console.log("TarefasPendentes: Evento de tarefa adicionada recebido:", event.detail);
         handleAddTask(event.detail);
       }
     };
@@ -66,6 +67,8 @@ const TarefasPendentes = () => {
   }, []);
 
   const handleAddTask = (newTask: any) => {
+    console.log("Processando nova tarefa:", newTask);
+    
     // Format the due date for display
     let dueDateDisplay = "";
     if (newTask.dueDate) {
@@ -73,7 +76,14 @@ const TarefasPendentes = () => {
       const tomorrow = new Date(today);
       tomorrow.setDate(tomorrow.getDate() + 1);
 
-      const dueDate = new Date(newTask.dueDate);
+      // Converter a data se for uma string ISO
+      let dueDate;
+      try {
+        dueDate = new Date(newTask.dueDate);
+      } catch (error) {
+        console.error("Erro ao processar data de vencimento:", error);
+        dueDate = today; // Fallback para hoje em caso de erro
+      }
 
       if (dueDate.toDateString() === today.toDateString()) {
         dueDateDisplay = `hoje, ${newTask.startTime || "23:59"}`;
@@ -87,15 +97,20 @@ const TarefasPendentes = () => {
     }
 
     const task: Task = {
-      id: `task-${Date.now()}`,
+      id: newTask.id || `task-${Date.now()}`,
       title: newTask.title,
-      dueDate: dueDateDisplay || newTask.dueDate.toISOString().split("T")[0],
+      dueDate: dueDateDisplay || (typeof newTask.dueDate === 'string' 
+        ? newTask.dueDate.includes('T') 
+          ? newTask.dueDate.split("T")[0] 
+          : newTask.dueDate 
+        : new Date().toISOString().split("T")[0]),
       subject: newTask.discipline || "Geral",
       completed: false,
-      priority: newTask.priority || "media",
+      priority: (newTask.priority || "media").toLowerCase(),
     };
 
-    setTasks([...tasks, task]);
+    console.log("Tarefa formatada para exibição:", task);
+    setTasks(prevTasks => [...prevTasks, task]);
   };
 
   const toggleTaskCompletion = (taskId: string) => {
