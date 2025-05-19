@@ -48,6 +48,23 @@ const TarefasPendentes = () => {
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"pendentes" | "hoje" | "semana">("pendentes");
 
+  // Escuta por eventos externos de adição de tarefas
+  React.useEffect(() => {
+    const handleExternalTaskAddition = (event: CustomEvent) => {
+      if (event.detail) {
+        handleAddTask(event.detail);
+      }
+    };
+
+    // Adiciona o event listener para tarefas adicionadas externamente
+    window.addEventListener('task-added' as any, handleExternalTaskAddition);
+
+    // Limpa o event listener quando o componente é desmontado
+    return () => {
+      window.removeEventListener('task-added' as any, handleExternalTaskAddition);
+    };
+  }, []);
+
   const handleAddTask = (newTask: any) => {
     // Format the due date for display
     let dueDateDisplay = "";
@@ -89,6 +106,28 @@ const TarefasPendentes = () => {
     );
   };
 
+  // Função auxiliar para verificar se uma data está na semana atual
+  const isDateInCurrentWeek = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const today = new Date();
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay());
+    
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    
+    return date >= startOfWeek && date <= endOfWeek;
+  };
+
+  // Função auxiliar para verificar se uma data é hoje
+  const isToday = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const today = new Date();
+    return date.getDate() === today.getDate() && 
+           date.getMonth() === today.getMonth() && 
+           date.getFullYear() === today.getFullYear();
+  };
+
   const priorityColors = {
     alta: "bg-red-500/10 text-red-500 border-red-500/30",
     media: "bg-orange-500/10 text-orange-500 border-orange-500/30",
@@ -128,7 +167,30 @@ const TarefasPendentes = () => {
         <ScrollArea className="h-[300px] pr-2">
           <div className="space-y-2 pb-4">
             {tasks
-              .filter((task) => !task.completed)
+              .filter((task) => {
+                // Filtra com base no modo de visualização selecionado
+                if (!task.completed) {
+                  if (viewMode === "pendentes") {
+                    return true;
+                  }
+                  if (viewMode === "hoje") {
+                    if (typeof task.dueDate === 'string') {
+                      if (task.dueDate.includes('hoje')) return true;
+                      if (task.dueDate.includes('-')) return isToday(task.dueDate);
+                    }
+                    return false;
+                  }
+                  if (viewMode === "semana") {
+                    if (typeof task.dueDate === 'string') {
+                      if (task.dueDate.includes('hoje') || task.dueDate.includes('amanhã')) return true;
+                      if (task.dueDate.includes('em ') && parseInt(task.dueDate.split(' ')[1]) <= 7) return true;
+                      if (task.dueDate.includes('-')) return isDateInCurrentWeek(task.dueDate);
+                    }
+                    return false;
+                  }
+                }
+                return false;
+              })
               .map((task) => (
                 <div
                   key={task.id}
@@ -162,7 +224,10 @@ const TarefasPendentes = () => {
                       </div>
                       <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 space-x-3">
                         <span className="flex items-center">
-                          <Calendar className="h-3 w-3 mr-1" /> {task.dueDate}
+                          <Calendar className="h-3 w-3 mr-1" /> 
+                          {typeof task.dueDate === 'string' && task.dueDate.includes('-') 
+                            ? new Date(task.dueDate).toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit'})
+                            : task.dueDate}
                         </span>
                         <span className="flex items-center">
                           <span className="w-2 h-2 rounded-full bg-blue-500 mr-1"></span>
