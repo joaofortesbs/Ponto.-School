@@ -22,19 +22,19 @@ const MetricsGrid: React.FC<MetricsGridProps> = ({
 }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-      <div className="h-[260px] metrics-grid-card">
+      <div className="h-[260px]">
         <EventosDoDia 
           onAddEvent={onAddEvent} 
           onViewAllEvents={onViewAllEvents} 
         />
       </div>
-      <div className="h-[260px] metrics-grid-card">
+      <div className="h-[260px]">
         <DesempenhoSemanal onViewDetails={onViewPerformanceDetails} />
       </div>
-      <div className="h-[260px] metrics-grid-card">
+      <div className="h-[260px]">
         <Ranking onViewRanking={onViewRanking} />
       </div>
-      <div className="h-[260px] metrics-grid-card">
+      <div className="h-[260px]">
         <Pontos onViewChallenges={onViewChallenges} />
       </div>
     </div>
