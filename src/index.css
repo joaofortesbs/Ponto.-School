@@ -935,7 +935,7 @@ svg.neural-connections {
   background-color: rgba(15, 25, 35, 0.95) !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
 }```text
-/* Estilos para ícones específicos*/
+/* Estilos para ícones específicos */
 .calendar-icon {
   color: #FF6B00 !important;
   font-size: 1.25rem !important;
@@ -2533,80 +2533,4 @@ textarea:hover,
 .profile-3d-text:hover {
   text-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   transform: translateY(-1px);
-}
-
-/* Customização do scrollbar para cards de métricas */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 4px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(13, 34, 56, 0.1);
-  border-radius: 10px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: linear-gradient(to bottom, rgba(255, 107, 0, 0.6), rgba(255, 140, 64, 0.6));
-  border-radius: 10px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(to bottom, rgba(255, 107, 0, 0.8), rgba(255, 140, 64, 0.8));
-}
-
-/* Efeito de sombras e brilhos para cards */
-.card-glow {
-  box-shadow: 0 0 15px rgba(255, 107, 0, 0.15);
-  transition: box-shadow 0.3s ease;
-}
-
-.card-glow:hover {
-  box-shadow: 0 0 20px rgba(255, 107, 0, 0.25);
-}
-
-/* Estilos para os cards da grade de métricas */
-.metrics-card {
-  transition: all 0.3s ease;
-  transform: translateZ(0);
-  backface-visibility: hidden;
-}
-
-.metrics-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-}
-
-/* Estilos específicos para modo claro */
-.light-mode-card {
-  background-color: white;
-  border-color: rgba(229, 231, 235, 1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-}
-
-.light-mode-card:hover {
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-}
-
-/* Estilos para containers dos cards */
-.metrics-card-container {
-  transition: transform 0.3s ease;
-}
-
-.metrics-card-container:hover {
-  transform: translateY(-2px);
-}
-
-/* Estilos para corrigir problemas de altura em componentes específicos */
-.metrics-card {
-  min-height: 300px;
-  height: 100%;
-}
-
-/* Estilos para componentes de progresso */
-[role="progressbar"] {
-  transition: width 0.5s ease-in-out;
-}
-
-.progress-indicator {
-  transition: width 0.5s ease-in-out;
 }
