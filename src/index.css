@@ -97,6 +97,27 @@
   background: rgba(255, 107, 0, 0.5);
 }
 
+
+/* Garantir que a barra de rolagem seja visível no componente EventosDoDia */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px !important;
+  display: block !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(13, 34, 56, 0.4) !important;
+  border-radius: 6px !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 107, 0, 0.6) !important;
+  border-radius: 6px !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 107, 0, 0.8) !important;
+}
+
 /* Para Firefox */
 .custom-scrollbar {
   scrollbar-width: thin;
