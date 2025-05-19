@@ -164,9 +164,9 @@ const EventosDoDia: React.FC<EventosDoDiaProps> = ({
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF6B00]"></div>
           </div>
         ) : eventos.length > 0 ? (
-          <div className="flex-1 flex flex-col">
-            {/* Área de rolagem com altura flexível */}
-            <div className="overflow-y-auto hide-scrollbar" style={{ maxHeight: "calc(100% - 50px)", flexGrow: 1 }}>
+          <div className="flex-1 flex flex-col h-full">
+            {/* Área de rolagem com altura fixa para garantir espaço para o botão */}
+            <div className="overflow-y-auto scrollbar-thin scrollbar-thumb-[#0D2238] scrollbar-track-[#001427]" style={{ height: "calc(100% - 48px)" }}>
               {eventos.map((evento) => (
                 <div key={evento.id} className="p-2 hover:bg-[#0D2238]/80 transition-colors border-b border-[#0D2238]">
                   <div className="flex items-center gap-3">
@@ -191,13 +191,13 @@ const EventosDoDia: React.FC<EventosDoDiaProps> = ({
                 </div>
               ))}
             </div>
-            {/* Barra de ações fixada na parte inferior */}
-            <div className="border-t border-[#0D2238] p-2 mt-auto bg-[#001427]">
+            {/* Botão fixo na parte inferior */}
+            <div className="border-t border-[#0D2238] p-2 bg-[#001427] mt-auto sticky bottom-0">
               <Button 
-                className="w-full bg-[#FF6B00] hover:bg-[#FF8C40] text-white rounded-md"
+                className="w-full bg-[#FF6B00] hover:bg-[#FF8C40] text-white rounded-md h-10 font-medium text-sm"
                 onClick={onViewAllEvents}
               >
-                <ExternalLink className="h-3 w-3 mr-2" /> Ver Todos
+                <ExternalLink className="h-4 w-4 mr-2" /> Ver Todos
               </Button>
             </div>
           </div>
