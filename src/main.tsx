@@ -1,43 +1,26 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
-import App from "./App.tsx";
-import "./index.css";
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+import './index.css';
 import { BrowserRouter } from "react-router-dom";
 import './lib/username-initializer.ts'
 import { preInitializeWebNodes } from './lib/web-persistence.ts'
 
-// PRIORIDADE MÁXIMA: Inicializar teias antes de qualquer outro código
-// Esta função é executada imediatamente, antes mesmo da montagem do React
+// Inicialização dos componentes visuais
 function inicializarTeiasComPrioridadeMaxima() {
   console.log("Inicializando sistema de teias com prioridade máxima");
-
   try {
-    // Executa sincronamente para garantir disponibilidade imediata
-    preInitializeWebNodes();
-
-    // Método para garantir disponibilidade em páginas de autenticação
-    if (window.location.pathname.includes('/login') || window.location.pathname.includes('/register')) {
-      console.log("Página de autenticação detectada, preparando teias prioritárias");
-
-      // Adiciona um fundo temporário para melhorar a experiência visual enquanto carrega
+    // Adicionar estilo de carregamento
+    if (document.body) {
       document.body.classList.add('auth-page-loading');
-
-      // Adiciona um estilo global temporário para garantir que o container das teias seja visível imediatamente
       const style = document.createElement('style');
       style.textContent = `
         .auth-page-loading {
-          background: linear-gradient(135deg, rgba(0,20,39,1) 0%, rgba(41,51,92,1) 100%);
+          background-color: #f5f7fa;
+          transition: background-color 0.3s ease;
         }
-
-        body::before {
-          content: '';
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: linear-gradient(135deg, rgba(0,20,39,0.95) 0%, rgba(41,51,92,0.95) 100%);
-          z-index: -1;
+        .dark .auth-page-loading {
+          background-color: #0f172a;
         }
       `;
       document.head.appendChild(style);
@@ -79,7 +62,7 @@ window.addEventListener('unhandledrejection', (event) => {
   // Não cancela o evento para permitir outros handlers
 });
 
-// Impedir recargas automáticas indesejadas da página
+// Prevenção de recargas automáticas indesejadas da página
 if (import.meta.hot) {
   // Prevenir que certos erros façam a página recarregar completamente
   import.meta.hot.on('vite:beforeUpdate', (data) => {
@@ -93,7 +76,7 @@ if (import.meta.hot) {
         // Caso seja uma atualização de módulo JavaScript significativa,
         // mostrar uma notificação para o usuário antes de aplicar
         const shouldReload = false; // Por padrão, não recarregar automaticamente
-        
+
         if (!shouldReload) {
           console.log('Atualização detectada mas não aplicada para evitar interrupção');
           // Opcional: isso pode ser modificado para mostrar uma notificação ao usuário
