@@ -934,8 +934,7 @@ svg.neural-connections {
 .dark .icon-nav-button:hover {
   background-color: rgba(15, 25, 35, 0.95) !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
-}
-
+}```text
 /* Estilos para ícones específicos */
 .calendar-icon {
   color: #FF6B00 !important;
@@ -1092,7 +1091,8 @@ body.modal-open {
 
 /* Prevenção de animações desnecessárias em rerenders */
 @media (prefers-reduced-motion: no-preference) {
-  .animation-optimized {
+  .animate-smooth-hover,
+  .transition-all {
     transition: none !important;
     animation: none !important;
   }
@@ -1181,59 +1181,28 @@ body.modal-open {
 
 /* Custom scrollbar for the modal */
 .custom-scrollbar::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-  margin: 3px;
+  background: #0D2238;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 107, 0, 0.3);
+  background: #FF6B00;
   border-radius: 10px;
-  transition: all 0.3s ease;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 107, 0, 0.6);
+  background: #FF8C40;
 }
 
+/* Garantir espaço adequado para o botão "Ver Todos" */
 .custom-scrollbar {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 107, 0, 0.3) transparent;
-  will-change: transform;
-  overscroll-behavior: contain;
-}
-
-/* Animações suaves para o modal de amigos */
-@keyframes modal-fade-in {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes profile-slide-in {
-  from { opacity: 0; transform: translateX(30px); }
-  to { opacity: 1; transform: translateX(0); }
-}
-
-@keyframes avatar-pulse {
-  0% { box-shadow: 0 0 0 0 rgba(255, 107, 0, 0.6); }
-  70% { box-shadow: 0 0 0 10px rgba(255, 107, 0, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(255, 107, 0, 0); }
-}
-
-.modal-animation {
-  animation: modal-fade-in 0.3s ease forwards;
-}
-
-.profile-animation {
-  animation: profile-slide-in 0.3s ease forwards;
-}
-
-.avatar-pulse {
-  animation: avatar-pulse 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+  margin-bottom: 0;
+  padding-bottom: 0;
+  overflow-y: auto;
+  max-height: 200px;
 }
 
     --secondary-foreground: 210 40% 98%;
