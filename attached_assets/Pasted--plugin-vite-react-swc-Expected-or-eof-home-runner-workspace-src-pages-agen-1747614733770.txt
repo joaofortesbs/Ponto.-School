@@ -1,0 +1,180 @@
+[plugin:vite:react-swc] × Expected ';', '}' or <eof>
+      ╭─[/home/runner/workspace/src/pages/agenda/index.tsx:904:1]
+  904 │               const tasksView = document.querySelector(
+  905 │                 '[data-testid="tasks-view"]',
+  906 │               );
+  907 │ ╭─▶           ```
+  908 │ │             if (tasksView) {
+  909 │ │               const refreshEvent = new CustomEvent("refresh-tasks", {
+  910 │ │                 detail: newTask,
+  911 │ │               });
+  912 │ │               tasksView.dispatchEvent(refreshEvent);
+  913 │ │             }
+  914 │ │           }, 200); // Small delay to ensure DOM is ready
+  915 │ │         }, 100);
+  916 │ │       } catch (error) {
+  917 │ │         console.error("Error adding task:", error);
+  918 │ │         toast({
+  919 │ │           title: "Erro ao adicionar tarefa",
+  920 │ │           description: "Ocorreu um erro ao adicionar a tarefa. Tente novamente.",
+  921 │ │           variant: "destructive",
+  922 │ │         });
+  923 │ │       }
+  924 │ │     };
+  925 │ │   
+  926 │ │     return (
+  927 │ │       <div className="container mx-auto p-6 max-w-[1400px]">
+  928 │ │         {/* Modals */}
+  929 │ │         <EpictusAIAssistantModal
+  930 │ │           open={showEpictusAIModal}
+  931 │ │           onOpenChange={setShowEpictusAIModal}
+  932 │ │         />
+  933 │ │   
+  934 │ │         {/* Page Header */}
+  935 │ │         <div className="flex items-center justify-between mb-6">
+  936 │ │           <div className="flex items-center gap-3">
+  937 │ │             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] flex items-center justify-center shadow-md">
+  938 │ │               <ClipboardList className="h-6 w-6 text-white" />
+  939 │ │             </div>
+  940 │ │             <div>
+  941 │ │               <h1 className="text-3xl font-bold text-[#001427] dark:text-white bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] bg-clip-text text-transparent">
+  942 │ │                 Agenda
+  943 │ │               </h1>
+  944 │ │               <p className="text-[#778DA9] dark:text-gray-400 text-sm">
+  945 │ │                 Organize seus eventos, tarefas e compromissos acadêmicos
+  946 │ │               </p>
+  947 │ │             </div>
+  948 │ │           </div>
+  949 │ │           <div className="flex items-center gap-3">
+  950 │ │             <div className="relative">
+  951 │ │               <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#FF6B00]">
+  952 │ │                 <Search className="h-4 w-4" />
+  953 │ │               </div>
+  954 │ │               <Input
+  955 │ │                 placeholder="Buscar eventos..."
+  956 │ │                 className="pl-9 w-[250px] border-[#FF6B00]/30 focus:border-[#FF6B00] focus:ring-[#FF6B00]/30 rounded-lg"
+  957 │ │                 value={searchQuery}
+  958 │ │                 onChange={handleSearchInput}
+  959 │ │               />
+  960 │ │             </div>
+  961 │ │             <Button
+  962 │ │               className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white rounded-lg shadow-md transition-all duration-300 hover:shadow-lg transform hover:scale-[1.02]"
+  963 │ │               onClick={() => setShowAddEventModal(true)}
+  964 │ │             >
+  965 │ │               <Plus className="h-4 w-4 mr-1" /> Adicionar Evento
+  966 │ │             </Button>
+  967 │ │           </div>
+  968 │ │         </div>
+  969 │ │   
+  970 │ │         {/* Main Content */}
+  971 │ │         <Tabs
+  972 │ │           value={activeTab}
+  973 │ │           onValueChange={setActiveTab}
+  974 │ │           className="space-y-4"
+  975 │ │         >
+  976 │ │           <div className="flex justify-center items-center mb-6">
+  977 │ │             <TabsList className="bg-[#29335C]/10 dark:bg-[#29335C]/30 p-2 rounded-xl shadow-md">
+  978 │ │               <TabsTrigger
+  979 │ │                 value="visao-geral"
+  980 │ │                 className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#FF6B00] data-[state=active]:to-[#FF8C40] data-[state=active]:text-white px-4 py-2 text-base font-medium transition-all duration-300 rounded-lg"
+  981 │ │               >
+  982 │ │                 <Home className="h-5 w-5 mr-1" /> Visão Geral
+  983 │ │               </TabsTrigger>
+  984 │ │               <TabsTrigger
+  985 │ │                 value="calendario"
+  986 │ │                 className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#FF6B00] data-[state=active]:to-[#FF8C40] data-[state=active]:text-white px-4 py-2 text-base font-medium transition-all duration-300 rounded-lg"
+  987 │ │               >
+  988 │ │                 <CalendarIcon className="h-5 w-5 mr-1" /> Calendário
+  989 │ │               </TabsTrigger>
+  990 │ │               <TabsTrigger
+  991 │ │                 value="flow"
+  992 │ │                 className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#FF6B00] data-[state=active]:to-[#FF8C40] data-[state=active]:text-white px-4 py-2 text-base font-medium transition-all duration-300 rounded-lg"
+  993 │ │               >
+  994 │ │                 <BookOpenCheck className="h-5 w-5 mr-1" /> Flow
+  995 │ │               </TabsTrigger>
+  996 │ │               <TabsTrigger
+  997 │ │                 value="tarefas"
+  998 │ │                 className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#FF6B00] data-[state=active]:to-[#FF8C40] data-[state=active]:text-white px-4 py-2 text-base font-medium transition-all duration-300 rounded-lg"
+  999 │ │               >
+ 1000 │ │                 <CheckSquare className="h-5 w-5 mr-1" /> Tarefas
+ 1001 │ │               </TabsTrigger>
+ 1002 │ │   
+ 1003 │ │               <TabsTrigger
+ 1004 │ │                 value="desafios"
+ 1005 │ │                 className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#FF6B00] data-[state=active]:to-[#FF8C40] data-[state=active]:text-white px-4 py-2 text-base font-medium transition-all duration-300 rounded-lg"
+ 1006 │ │               >
+ 1007 │ │                 <Target className="h-5 w-5 mr-1" /> Desafios
+ 1008 │ │               </TabsTrigger>
+ 1009 │ │               <TabsTrigger
+ 1010 │ │                 value="rotina"
+ 1011 │ │                 className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#FF6B00] data-[state=active]:to-[#FF8C40] data-[state=active]:text-white px-4 py-2 text-base font-medium transition-all duration-300 rounded-lg"
+ 1012 │ │               >
+ 1013 │ │                 <Clock className="h-5 w-5 mr-1" /> Rotina
+ 1014 │ │               </TabsTrigger>
+ 1015 │ │             </TabsList>
+ 1016 │ │           </div>
+ 1017 │ │   
+ 1018 │ │           {/* Visão Geral Tab */}
+ 1019 │ │           <TabsContent value="visao-geral" className="mt-0">
+ 1020 │ │             {/* Summary Cards Row */}
+ 1021 │ │             <div className="mb-6">
+ 1022 │ │               <MetricsGrid 
+ 1023 │ │                 onAddEvent={() => setShowAddEventModal(true)}
+ 1024 │ │                 onViewPerformanceDetails={() => setActiveTab("flow")}
+ 1025 │ │                 onViewRanking={() => setActiveTab("desafios")}
+ 1026 │ │                 onViewChallenges={() => setActiveTab("desafios")}
+ 1027 │ │               />
+ 1028 │ │             </div>
+ 1029 │ │   
+ 1030 │ │             {/* Main Content Grid */}
+ 1031 │ │   
+ 1032 │ │           </TabsContent>
+ 1033 │ │   
+ 1034 │ │           {/* Calendário Tab */}
+ 1035 │ │           <TabsContent value="calendario" className="mt-0">
+ 1036 │ │             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+ 1037 │ │               {/* Calendar Column */}
+ 1038 │ │               <div className="lg:col-span-9">
+ 1039 │ │                 <div className="bg-[#001427] rounded-b-xl overflow-hidden shadow-md">
+ 1040 │ │                   {calendarView === "month" && (
+ 1041 │ │                     <MonthView
+ 1042 │ │                       currentYear={currentYear}
+ 1043 │ │                       currentMonth={currentMonth}
+ 1044 │ │                       selectedDay={selectedDay}
+ 1045 │ │                       setSelectedDay={setSelectedDay}
+ 1046 │ │                       eventData={eventData}
+ 1047 │ │                       getEventIcon={getEventIcon}
+ 1048 │ │                       openEventDetails={openEventDetails}
+ 1049 │ │                       onEventDrop={handleEventDrop}
+ 1050 │ │                       setCalendarView={setCalendarView}
+ 1051 │ │                       calendarView={calendarView}
+ 1052 │ │                     />
+ 1053 │ │                   )}
+ 1054 │ │                   {calendarView === "week" && (
+ 1055 │ │                     <>
+ 1056 │ │                       <div className="p-4 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white flex justify-between items-center">
+ 1057 │ │                         <div className="flex items-center gap-3">
+ 1058 │ │                           <div className="bg-white/20 p-1.5 rounded-lg shadow-inner">
+ 1059 │ │                             <CalendarIcon className="h-5 w-5 text-white" />
+ 1060 │ │                           </div>
+ 1061 │ │                           <h3 className="font-bold text-lg tracking-wide">
+ 1062 │ │                             Visualização Semanal
+ 1063 │ │                           </h3>
+ 1064 │ │                         </div>
+ 1065 │ │                         <div className="flex items-center gap-4">
+ 1066 │ │                           <div className="flex rounded-md overflow-hidden">
+ 1067 │ │                             <Button
+ 1068 │ │                               variant="ghost"
+ 1069 │ │                               size="sm"
+ 1070 │ ├─▶                             className={`h-8 rounded-none ${calendarView === "day" ? "bg-white text-[#FF6B00]" : "text-white hover:bg-white/20"}`}
+      · ╰───                                        ─
+      · ╰──── This is the expression part of an expression statement
+ 1071 │                                 onClick={() => setCalendarView("day")}
+ 1072 │                               >
+ 1073 │                                 Dia
+      ╰────
+
+
+Caused by:
+    Syntax Error
+/home/runner/workspace/src/pages/agenda/index.tsx:904:1
