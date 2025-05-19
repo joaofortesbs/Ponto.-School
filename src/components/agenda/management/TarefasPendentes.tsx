@@ -29,22 +29,37 @@ const TarefasPendentes = () => {
     console.log("TarefasPendentes inicializado com tarefas:", tasks);
   }, []);
 
+  // Referência para o elemento DOM do componente
+  const cardRef = React.useRef<HTMLDivElement>(null);
+  
   // Escuta por eventos externos de adição de tarefas
   React.useEffect(() => {
+    // Função para manipular eventos de adição de tarefas
     const handleExternalTaskAddition = (event: CustomEvent) => {
       if (event.detail) {
         console.log("TarefasPendentes: Evento de tarefa adicionada recebido:", event.detail);
-        handleAddTask(event.detail);
+        // Prevenir possível duplicação ao processar o mesmo evento múltiplas vezes
+        if (!event.defaultPrevented) {
+          handleAddTask(event.detail);
+          // Não marcar como preventDefault para permitir que outros componentes também processem
+        }
       }
     };
 
-    // Adiciona o event listener tanto no window quanto no próprio componente
+    // Adiciona o event listener no window
     window.addEventListener('task-added' as any, handleExternalTaskAddition);
     
-    // Referência ao elemento atual para adicionar listener diretamente
+    // Adiciona o event listener diretamente ao componente atual usando a ref
+    if (cardRef.current) {
+      cardRef.current.addEventListener('task-added' as any, handleExternalTaskAddition);
+      console.log("TarefasPendentes: Listener adicionado ao elemento do card");
+    }
+    
+    // Referência ao elemento com data-attribute para redundância
     const currentElement = document.querySelector('[data-tasks-container="true"]');
-    if (currentElement) {
+    if (currentElement && currentElement !== cardRef.current) {
       currentElement.addEventListener('task-added' as any, handleExternalTaskAddition);
+      console.log("TarefasPendentes: Listener adicionado ao elemento com data-attribute");
     }
 
     // Log para confirmar que o listener está ativo
@@ -53,14 +68,24 @@ const TarefasPendentes = () => {
     // Limpa o event listener quando o componente é desmontado
     return () => {
       window.removeEventListener('task-added' as any, handleExternalTaskAddition);
-      if (currentElement) {
+      
+      if (cardRef.current) {
+        cardRef.current.removeEventListener('task-added' as any, handleExternalTaskAddition);
+      }
+      
+      if (currentElement && currentElement !== cardRef.current) {
         currentElement.removeEventListener('task-added' as any, handleExternalTaskAddition);
       }
     };
   }, []);
 
   const handleAddTask = (newTask: any) => {
-    console.log("Processando nova tarefa:", newTask);
+    console.log("TarefasPendentes: Processando nova tarefa:", newTask);
+    
+    if (!newTask.title) {
+      console.warn("TarefasPendentes: Tarefa sem título recebida, ignorando");
+      return;
+    }
     
     // Format the due date for display
     let dueDateDisplay = "";
@@ -76,11 +101,11 @@ const TarefasPendentes = () => {
         
         // Verificar se a data é válida
         if (isNaN(dueDate.getTime())) {
-          console.warn("Data inválida, usando data atual como fallback");
+          console.warn("TarefasPendentes: Data inválida, usando data atual como fallback");
           dueDate = today;
         }
       } catch (error) {
-        console.error("Erro ao processar data de vencimento:", error);
+        console.error("TarefasPendentes: Erro ao processar data de vencimento:", error);
         dueDate = today; // Fallback para hoje em caso de erro
       }
 
@@ -96,10 +121,14 @@ const TarefasPendentes = () => {
     }
 
     // Criar um ID confiável com base no timestamp ou usar o fornecido
-    const taskId = newTask.id || `task-${Date.now()}`;
+    const taskId = newTask.id || `task-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
     
-    // Verificar se já existe uma tarefa com o mesmo ID
-    const existingTaskIndex = tasks.findIndex(task => task.id === taskId);
+    // Verificar se já existe uma tarefa com o mesmo ID ou com título muito similar
+    const existingTaskIndex = tasks.findIndex(task => 
+      task.id === taskId || 
+      (task.title === newTask.title && 
+       (task.subject === newTask.discipline || task.subject === newTask.subject))
+    );
     
     const task: Task = {
       id: taskId,
@@ -114,38 +143,41 @@ const TarefasPendentes = () => {
       priority: (newTask.priority || "media").toLowerCase(),
     };
 
-    console.log("Tarefa formatada para exibição:", task);
+    console.log("TarefasPendentes: Tarefa formatada para exibição:", task);
     
-    // Se já existe uma tarefa com esse ID, atualiza em vez de adicionar
-    if (existingTaskIndex >= 0) {
-      setTasks(prevTasks => {
+    // Usar função de atualização de estado que não depende do estado anterior
+    // para garantir que sempre teremos o estado mais atual
+    setTasks(prevTasks => {
+      // Se já existe uma tarefa com esse ID ou similar, atualiza em vez de adicionar
+      if (existingTaskIndex >= 0) {
         const updatedTasks = [...prevTasks];
         updatedTasks[existingTaskIndex] = task;
-        console.log("Tarefa atualizada com sucesso, novo estado:", updatedTasks);
+        console.log("TarefasPendentes: Tarefa atualizada com sucesso, novo estado:", updatedTasks);
         return updatedTasks;
-      });
-    } else {
-      setTasks(prevTasks => {
-        const newTasks = [...prevTasks, task];
-        console.log("Nova tarefa adicionada com sucesso, novo estado:", newTasks);
+      } else {
+        // Adiciona a nova tarefa ao início da lista para maior visibilidade
+        const newTasks = [task, ...prevTasks];
+        console.log("TarefasPendentes: Nova tarefa adicionada com sucesso, novo estado:", newTasks);
         return newTasks;
-      });
-    }
-    
-    // Verificar se a adição funcionou após um curto delay
-    setTimeout(() => {
-      const taskAdded = tasks.some(t => t.id === taskId);
-      if (!taskAdded) {
-        console.log("Adição da tarefa pode não ter funcionado, tentando novamente...");
-        setTasks(prevTasks => {
-          // Só adiciona se ainda não existir
-          if (!prevTasks.some(t => t.id === taskId)) {
-            return [...prevTasks, task];
-          }
-          return prevTasks;
-        });
       }
-    }, 200);
+    });
+    
+    // Verificar se a adição funcionou após um curto delay e tentar novamente se necessário
+    setTimeout(() => {
+      setTasks(prevTasks => {
+        const taskExists = prevTasks.some(t => 
+          t.id === taskId || 
+          (t.title === newTask.title && 
+           (t.subject === newTask.discipline || t.subject === newTask.subject))
+        );
+        
+        if (!taskExists) {
+          console.log("TarefasPendentes: Adição da tarefa não foi detectada, adicionando novamente...");
+          return [task, ...prevTasks];
+        }
+        return prevTasks;
+      });
+    }, 300);
   };
 
   const toggleTaskCompletion = (taskId: string) => {
@@ -306,7 +338,12 @@ const TarefasPendentes = () => {
   );
 
   return (
-    <Card data-tasks-container="true" className="h-full overflow-hidden border border-gray-200 dark:border-gray-800 shadow-md hover:shadow-md transition-shadow flex flex-col bg-white dark:bg-gradient-to-b dark:from-[#001427] dark:to-[#001a2f] rounded-xl">
+    <Card 
+      ref={cardRef}
+      data-tasks-container="true" 
+      data-pending-tasks="true" 
+      className="h-full overflow-hidden border border-gray-200 dark:border-gray-800 shadow-md hover:shadow-md transition-shadow flex flex-col bg-white dark:bg-gradient-to-b dark:from-[#001427] dark:to-[#001a2f] rounded-xl"
+    >
       {/* Título dentro do card com o mesmo estilo do TempoEstudo */}
       <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-3 flex items-center justify-between shadow-md">
         <div className="flex items-center">

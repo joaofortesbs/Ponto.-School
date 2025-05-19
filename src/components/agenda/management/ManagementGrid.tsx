@@ -21,19 +21,15 @@ const ManagementGrid: React.FC<ManagementGridProps> = ({
   useEffect(() => {
     const handleTaskAdded = (event: any) => {
       console.log("ManagementGrid: Evento de tarefa adicionada capturado:", event.detail);
-      
-      // Propagar o evento para os componentes filhos diretamente
-      if (event.detail) {
-        setTimeout(() => {
-          // Propagar para TarefasPendentes especificamente
-          const tarefasComponent = document.querySelector('[data-tasks-container="true"]');
-          if (tarefasComponent) {
-            tarefasComponent.dispatchEvent(new CustomEvent('task-added', {
-              detail: event.detail,
-              bubbles: true
-            }));
-          }
-        }, 100); // Pequeno delay para garantir que o componente esteja renderizado
+
+      // Propagar o evento explicitamente para o componente TarefasPendentes
+      const tarefasPendentesElement = document.querySelector('[data-pending-tasks="true"]');
+      if (tarefasPendentesElement) {
+        console.log("ManagementGrid: Propagando evento para TarefasPendentes");
+        tarefasPendentesElement.dispatchEvent(new CustomEvent('task-added', {
+          detail: event.detail,
+          bubbles: true
+        }));
       }
     };
 
