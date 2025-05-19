@@ -950,7 +950,7 @@ body.modal-open {
   padding-right: 15px !important; /* Compensar a barra de rolagem */
   top: 0 !important;
   left: 0 !important;
-  right: 0 !important;
+Removing the metric grid styles.	right: 0 !important;
   bottom: 0 !important;
   z-index: 9990 !important;
 }
@@ -1045,7 +1045,7 @@ body.modal-open {
     transition: none !important;
     animation: none !important;
   }
-  
+
   .animation-optimized.animation-active {
     transition: all 0.3s ease-out !important;
     animation: fadeIn 0.3s ease-out forwards !important;
@@ -1775,6 +1775,8 @@ textarea:hover,
   transform: translateY(-1px);
 }
 
+/* Os estilos da grade de métricas foram removidos */
+
 /* Importações já incluídas no início do arquivo */
 
 /* Animações para o modal */
@@ -2454,6 +2456,8 @@ textarea:hover,
   transform: translateY(-1px);
 }
 
+/* Os estilos da grade de métricas foram removidos */
+
 /* Importações já incluídas no início do arquivo */
 
 /* Animações para o modal */
@@ -2487,7 +2491,6 @@ textarea:hover,
   animation: fadeOut 0.2s ease-in-out forwards;
 }
 
-/* Adding styles for topic navigation with arrows and ensuring complete CSS file output */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

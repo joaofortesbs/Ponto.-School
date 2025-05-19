@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import TopMetrics from "./TopMetrics";
 import PromotionalBanner from "./PromotionalBanner";
 import { profileService } from "@/services/profileService";
 import { UserProfile } from "@/types/user-profile";
@@ -53,7 +52,6 @@ export default function Dashboard() {
                 return firstName;
               })()}!
       </h1>
-      <TopMetrics />
     </div>
   );
 }
