@@ -904,7 +904,7 @@ export default function AgendaPage() {
           const tasksView = document.querySelector(
             '[data-testid="tasks-view"]'
           );
-          
+
           if (tasksView) {
             const refreshEvent = new CustomEvent("refresh-tasks", {
               detail: newTask,
@@ -1033,7 +1033,7 @@ export default function AgendaPage() {
 
         {/* Calendário Tab */}
         <TabsContent value="calendario" className="mt-0">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6" data-section="calendar-view">
             {/* Calendar Column */}
             <div className="lg:col-span-9">
               <div className="bg-[#001427] rounded-b-xl overflow-hidden shadow-md">
