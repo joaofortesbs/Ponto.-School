@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { CalendarIcon, PlusIcon, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -34,7 +33,7 @@ const EventosDoDia: React.FC<EventosDoDiaProps> = ({
     try {
       // Obter todos os eventos
       let todosEventos: Evento[] = [];
-      
+
       // Verificar se existe a variável global de eventos
       if (window.agendaEventData) {
         // Converter os eventos para um formato simples
@@ -51,29 +50,29 @@ const EventosDoDia: React.FC<EventosDoDiaProps> = ({
           todosEventos = localEvents;
         }
       }
-      
+
       // Filtrar apenas eventos de hoje
       const hoje = new Date();
       hoje.setHours(0, 0, 0, 0);
       const amanha = new Date(hoje);
       amanha.setDate(amanha.getDate() + 1);
-      
+
       const eventosDeHoje = todosEventos.filter(evento => {
         if (!evento.startDate) return false;
-        
+
         const dataEvento = new Date(evento.startDate);
         dataEvento.setHours(0, 0, 0, 0);
-        
+
         return dataEvento.getTime() === hoje.getTime();
       });
-      
+
       // Ordenar por horário
       eventosDeHoje.sort((a, b) => {
         const timeA = a.startTime || "00:00";
         const timeB = b.startTime || "00:00";
         return timeA.localeCompare(timeB);
       });
-      
+
       setEventos(eventosDeHoje);
     } catch (error) {
       console.error("Erro ao buscar eventos do dia:", error);
@@ -86,33 +85,33 @@ const EventosDoDia: React.FC<EventosDoDiaProps> = ({
   // Carregar eventos ao montar o componente
   useEffect(() => {
     buscarEventosDeHoje();
-    
+
     // Escutar por atualizações de eventos
     const handleEventUpdate = () => {
       console.log("EventosDoDia: Evento de atualização recebido");
       buscarEventosDeHoje();
     };
-    
+
     window.addEventListener('event-added', handleEventUpdate);
     window.addEventListener('agenda-events-updated', handleEventUpdate);
-    
+
     return () => {
       window.removeEventListener('event-added', handleEventUpdate);
       window.removeEventListener('agenda-events-updated', handleEventUpdate);
     };
   }, []);
-  
+
   // Função para renderizar o status do evento
   const renderStatus = (evento: Evento) => {
     const agora = new Date();
     const [horaInicio, minutoInicio] = (evento.startTime || "").split(":").map(Number);
     const [horaFim, minutoFim] = (evento.endTime || "").split(":").map(Number);
-    
+
     if (isNaN(horaInicio) || isNaN(minutoInicio)) return null;
-    
+
     const inicioHoje = new Date();
     inicioHoje.setHours(horaInicio, minutoInicio, 0);
-    
+
     const fimHoje = new Date();
     if (!isNaN(horaFim) && !isNaN(minutoFim)) {
       fimHoje.setHours(horaFim, minutoFim, 0);
@@ -120,91 +119,82 @@ const EventosDoDia: React.FC<EventosDoDiaProps> = ({
       // Se não tiver horário de fim, assume 1 hora após o início
       fimHoje.setHours(horaInicio + 1, minutoInicio, 0);
     }
-    
+
     if (agora >= inicioHoje && agora <= fimHoje) {
-      return <span className="metrics-status-badge status-agora">Agora</span>;
+      return <Badge className="bg-green-500 text-white ml-auto">Agora</Badge>;
     } else if (agora < inicioHoje) {
-      return <span className="metrics-status-badge status-pendente">Pendente</span>;
+      return <Badge className="bg-amber-500 text-white ml-auto">Pendente</Badge>;
     } else {
-      return <span className="metrics-status-badge status-concluido">Concluído</span>;
+      return <Badge className="bg-gray-500 text-white ml-auto">Concluído</Badge>;
     }
   };
 
   // Função para obter ícone do tipo de evento
   const getEventIcon = (type: string) => {
-    const iconClasses = "h-4 w-4";
-    
     switch (type) {
       case "aula":
       case "aula_ao_vivo":
       case "aula_gravada":
-        return (
-          <div className="bg-gradient-to-br from-blue-600/20 to-blue-800/40 p-2 rounded-full">
-            <CalendarIcon className={`${iconClasses} text-blue-500`} />
-          </div>
-        );
+        return <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-full">
+          <CalendarIcon className="h-4 w-4 text-blue-600 dark:text-blue-300" />
+        </div>;
       default:
-        return (
-          <div className="bg-gradient-to-br from-orange-600/20 to-orange-800/40 p-2 rounded-full">
-            <CalendarIcon className={`${iconClasses} text-orange-500`} />
-          </div>
-        );
+        return <div className="bg-orange-100 dark:bg-orange-900/30 p-2 rounded-full">
+          <CalendarIcon className="h-4 w-4 text-orange-600 dark:text-orange-300" />
+        </div>;
     }
   };
 
   return (
-    <div className="metrics-card h-full flex flex-col">
-      <div className="metrics-card-header flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <CalendarIcon className="h-5 w-5 text-white" />
+    <div className="flex flex-col h-full bg-[#001427] rounded-lg overflow-hidden relative">
+      <div className="bg-[#FF6B00] p-3 flex items-center justify-between">
+        <div className="flex items-center">
+          <CalendarIcon className="h-5 w-5 text-white mr-2" />
           <h3 className="text-white font-medium text-sm">Eventos do Dia</h3>
         </div>
-        <div className="flex items-center justify-center w-6 h-6 bg-white/20 backdrop-blur-sm text-white rounded-full text-xs font-medium">
+        <div className="bg-white rounded-full w-5 h-5 flex items-center justify-center text-xs text-[#FF6B00] font-medium">
           {eventos.length}
         </div>
       </div>
-      
-      <div className="flex-1 flex flex-col">
+
+      <div className="flex-1 flex flex-col p-0">
         {isLoading ? (
-          <div className="flex-1 flex items-center justify-center p-8">
-            <div className="relative w-10 h-10">
-              <div className="absolute inset-0 rounded-full border-t-2 border-r-2 border-[#FF6B00] animate-spin"></div>
-              <div className="absolute inset-2 rounded-full border-t-2 border-r-2 border-[#FF8C40] animate-spin" style={{animationDuration: '1.2s'}}></div>
-            </div>
+          <div className="flex-1 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF6B00]"></div>
           </div>
         ) : eventos.length > 0 ? (
-          <div className="flex-1 flex flex-col">
-            <div className="overflow-y-auto custom-scrollbar flex-1" style={{ maxHeight: "130px", height: "130px" }}>
+          <div className="flex-1 flex flex-col relative">
+            {/* Scrollable area for events - altura reduzida para alinhar com o botão do card de Desempenho Semanal */}
+            <div className="overflow-y-auto custom-scrollbar" style={{ maxHeight: "130px", height: "130px" }}>
               {eventos.map((evento) => (
-                <div key={evento.id} className="metrics-event-item group">
-                  <div className="flex items-center gap-3">
-                    <div className="flex-shrink-0 group-hover:scale-110 transition-transform">
-                      {getEventIcon(evento.type)}
+                <div key={evento.id} className="p-2.5 hover:bg-[#0D2238] transition-all duration-200 border-b border-[#0D2238]/50 hover:border-[#FF6B00]/20">
+                <div className="flex items-center gap-3">
+                  <div className="flex-shrink-0">
+                    {getEventIcon(evento.type)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-white text-sm font-medium truncate">{evento.title}</h4>
+                      {renderStatus(evento)}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-white text-sm font-medium truncate group-hover:text-[#FF8C40] transition-colors">
-                          {evento.title}
-                        </h4>
-                        {renderStatus(evento)}
-                      </div>
-                      <div className="text-[#8393A0] text-xs flex items-center mt-1">
-                        <span className="inline-flex items-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          {evento.startTime || ""} {evento.endTime ? `- ${evento.endTime}` : ""}
-                        </span>
-                      </div>
+                    <div className="text-[#8393A0] text-xs flex items-center mt-1">
+                      <span className="inline-flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1 text-[#FF6B00]/70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        {evento.startTime || ""} {evento.endTime ? `- ${evento.endTime}` : ""}
+                      </span>
                     </div>
                   </div>
                 </div>
+              </div>
               ))}
             </div>
-            
-            <div className="p-4 mt-auto">
+
+            {/* Fixed button - alinhado com o botão do card de Desempenho Semanal */}
+            <div className="mt-4 p-4 bg-[#001427] border-t border-[#0D2238] z-10 w-full">
               <Button 
-                className="metrics-card-button w-full text-white rounded-md font-medium"
+                className="w-full bg-[#FF6B00] hover:bg-[#FF8C40] text-white rounded-md"
                 onClick={onViewAllEvents}
               >
                 <ExternalLink className="h-4 w-4 mr-2" /> Ver Todos
@@ -212,8 +202,8 @@ const EventosDoDia: React.FC<EventosDoDiaProps> = ({
             </div>
           </div>
         ) : (
-          <div className="metrics-empty-state flex-1">
-            <div className="metrics-empty-icon">
+          <div className="flex-1 flex flex-col items-center justify-center p-4 text-center">
+            <div className="bg-[#0D2238] p-4 rounded-full mb-3">
               <CalendarIcon className="h-8 w-8 text-[#8393A0]" />
             </div>
             <p className="text-white text-sm font-medium mb-1">Nenhum evento programado para hoje</p>
@@ -222,7 +212,7 @@ const EventosDoDia: React.FC<EventosDoDiaProps> = ({
             </p>
             <Button 
               onClick={onAddEvent}
-              className="metrics-card-button w-full text-white rounded-md"
+              className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white rounded-md w-full"
             >
               <PlusIcon className="h-4 w-4 mr-2" /> Adicionar Evento
             </Button>
