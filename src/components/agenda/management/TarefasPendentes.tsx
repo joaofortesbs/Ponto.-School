@@ -46,7 +46,7 @@ const defaultTasks: Task[] = [
 const TarefasPendentes = () => {
   const [tasks, setTasks] = useState<Task[]>(defaultTasks);
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<"pendentes" | "hoje" | "semana">("pendentes");
+  const [viewMode, setViewMode] = useState<"pendente" | "em-andamento" | "concluido">("pendente");
 
   const handleAddTask = (newTask: any) => {
     // Format the due date for display
@@ -128,7 +128,12 @@ const TarefasPendentes = () => {
         <ScrollArea className="h-[300px] pr-2">
           <div className="space-y-2 pb-4">
             {tasks
-              .filter((task) => !task.completed)
+              .filter((task) => {
+                if (viewMode === "pendente") return !task.completed;
+                if (viewMode === "em-andamento") return !task.completed && task.priority === "media";
+                if (viewMode === "concluido") return task.completed;
+                return true;
+              })
               .map((task) => (
                 <div
                   key={task.id}
@@ -202,22 +207,22 @@ const TarefasPendentes = () => {
         </div>
         <div className="flex items-center gap-1 text-xs">
           <span 
-            className={`px-2 py-0.5 rounded-md cursor-pointer transition-colors ${viewMode === "pendentes" ? "bg-white/20 font-medium" : "hover:bg-white/30"}`}
-            onClick={() => setViewMode("pendentes")}
+            className={`px-2 py-0.5 rounded-md cursor-pointer transition-colors ${viewMode === "pendente" ? "bg-white/20 font-medium" : "hover:bg-white/30"}`}
+            onClick={() => setViewMode("pendente")}
           >
-            Pendentes
+            Pendente
           </span>
           <span 
-            className={`px-2 py-0.5 rounded-md cursor-pointer transition-colors ${viewMode === "hoje" ? "bg-white/20 font-medium" : "hover:bg-white/30"}`}
-            onClick={() => setViewMode("hoje")}
+            className={`px-2 py-0.5 rounded-md cursor-pointer transition-colors ${viewMode === "em-andamento" ? "bg-white/20 font-medium" : "hover:bg-white/30"}`}
+            onClick={() => setViewMode("em-andamento")}
           >
-            Hoje
+            Em Andamento
           </span>
           <span 
-            className={`px-2 py-0.5 rounded-md cursor-pointer transition-colors ${viewMode === "semana" ? "bg-white/20 font-medium" : "hover:bg-white/30"}`}
-            onClick={() => setViewMode("semana")}
+            className={`px-2 py-0.5 rounded-md cursor-pointer transition-colors ${viewMode === "concluido" ? "bg-white/20 font-medium" : "hover:bg-white/30"}`}
+            onClick={() => setViewMode("concluido")}
           >
-            Semana
+            Concluído
           </span>
           <button className="p-1 rounded-full hover:bg-white/30 transition-colors" onClick={() => setIsAddTaskModalOpen(true)}>
             <Plus className="h-4 w-4 text-white" />
@@ -225,7 +230,12 @@ const TarefasPendentes = () => {
         </div>
       </div>
 
-      {tasks.filter((task) => !task.completed).length === 0 ? (
+      {tasks.filter((task) => {
+        if (viewMode === "pendente") return !task.completed;
+        if (viewMode === "em-andamento") return !task.completed && task.priority === "media";
+        if (viewMode === "concluido") return task.completed;
+        return true;
+      }).length === 0 ? (
         <EmptyState />
       ) : (
         <MainContent />
