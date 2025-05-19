@@ -38,8 +38,14 @@ const TarefasPendentes = () => {
       }
     };
 
-    // Adiciona o event listener para tarefas adicionadas externamente
+    // Adiciona o event listener tanto no window quanto no próprio componente
     window.addEventListener('task-added' as any, handleExternalTaskAddition);
+    
+    // Referência ao elemento atual para adicionar listener diretamente
+    const currentElement = document.querySelector('[data-tasks-container="true"]');
+    if (currentElement) {
+      currentElement.addEventListener('task-added' as any, handleExternalTaskAddition);
+    }
 
     // Log para confirmar que o listener está ativo
     console.log("TarefasPendentes: Listener de eventos de tarefas configurado");
@@ -47,6 +53,9 @@ const TarefasPendentes = () => {
     // Limpa o event listener quando o componente é desmontado
     return () => {
       window.removeEventListener('task-added' as any, handleExternalTaskAddition);
+      if (currentElement) {
+        currentElement.removeEventListener('task-added' as any, handleExternalTaskAddition);
+      }
     };
   }, []);
 
@@ -86,11 +95,14 @@ const TarefasPendentes = () => {
       }
     }
 
+    // Criar um ID confiável com base no timestamp ou usar o fornecido
+    const taskId = newTask.id || `task-${Date.now()}`;
+    
     // Verificar se já existe uma tarefa com o mesmo ID
-    const existingTaskIndex = tasks.findIndex(task => task.id === (newTask.id || `task-${Date.now()}`));
+    const existingTaskIndex = tasks.findIndex(task => task.id === taskId);
     
     const task: Task = {
-      id: newTask.id || `task-${Date.now()}`,
+      id: taskId,
       title: newTask.title,
       dueDate: dueDateDisplay || (typeof newTask.dueDate === 'string' 
         ? newTask.dueDate.includes('T') 
@@ -106,14 +118,34 @@ const TarefasPendentes = () => {
     
     // Se já existe uma tarefa com esse ID, atualiza em vez de adicionar
     if (existingTaskIndex >= 0) {
-      const updatedTasks = [...tasks];
-      updatedTasks[existingTaskIndex] = task;
-      setTasks(updatedTasks);
-      console.log("Tarefa atualizada com sucesso");
+      setTasks(prevTasks => {
+        const updatedTasks = [...prevTasks];
+        updatedTasks[existingTaskIndex] = task;
+        console.log("Tarefa atualizada com sucesso, novo estado:", updatedTasks);
+        return updatedTasks;
+      });
     } else {
-      setTasks(prevTasks => [...prevTasks, task]);
-      console.log("Nova tarefa adicionada com sucesso");
+      setTasks(prevTasks => {
+        const newTasks = [...prevTasks, task];
+        console.log("Nova tarefa adicionada com sucesso, novo estado:", newTasks);
+        return newTasks;
+      });
     }
+    
+    // Verificar se a adição funcionou após um curto delay
+    setTimeout(() => {
+      const taskAdded = tasks.some(t => t.id === taskId);
+      if (!taskAdded) {
+        console.log("Adição da tarefa pode não ter funcionado, tentando novamente...");
+        setTasks(prevTasks => {
+          // Só adiciona se ainda não existir
+          if (!prevTasks.some(t => t.id === taskId)) {
+            return [...prevTasks, task];
+          }
+          return prevTasks;
+        });
+      }
+    }, 200);
   };
 
   const toggleTaskCompletion = (taskId: string) => {
@@ -274,7 +306,7 @@ const TarefasPendentes = () => {
   );
 
   return (
-    <Card className="h-full overflow-hidden border border-gray-200 dark:border-gray-800 shadow-md hover:shadow-md transition-shadow flex flex-col bg-white dark:bg-gradient-to-b dark:from-[#001427] dark:to-[#001a2f] rounded-xl">
+    <Card data-tasks-container="true" className="h-full overflow-hidden border border-gray-200 dark:border-gray-800 shadow-md hover:shadow-md transition-shadow flex flex-col bg-white dark:bg-gradient-to-b dark:from-[#001427] dark:to-[#001a2f] rounded-xl">
       {/* Título dentro do card com o mesmo estilo do TempoEstudo */}
       <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-3 flex items-center justify-between shadow-md">
         <div className="flex items-center">

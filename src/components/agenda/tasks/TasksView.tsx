@@ -84,15 +84,22 @@ const TasksView: React.FC<TasksViewProps> = ({
       }
     };
 
+    // Escutar tanto o evento refresh-tasks quanto task-added
     const tasksView = document.querySelector('[data-testid="tasks-view"]');
     if (tasksView) {
       tasksView.addEventListener("refresh-tasks", handleExternalTaskAdd);
+      tasksView.addEventListener("task-added", handleExternalTaskAdd);
     }
+    
+    // Adicionar listener também no window para garantir a recepção
+    window.addEventListener('task-added', handleExternalTaskAdd);
 
     return () => {
       if (tasksView) {
         tasksView.removeEventListener("refresh-tasks", handleExternalTaskAdd);
+        tasksView.removeEventListener("task-added", handleExternalTaskAdd);
       }
+      window.removeEventListener('task-added', handleExternalTaskAdd);
     };
   }, []);
 

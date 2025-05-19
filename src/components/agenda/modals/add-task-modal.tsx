@@ -248,21 +248,53 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
       };
 
       // Emitir um evento personalizado para notificar outros componentes sobre a nova tarefa
-      const taskAddedEvent = new CustomEvent('task-added', {
-        detail: newTask,
-        bubbles: true
-      });
-      window.dispatchEvent(taskAddedEvent);
-      console.log("Evento de tarefa adicionada disparado:", newTask);
+      try {
+        const taskAddedEvent = new CustomEvent('task-added', {
+          detail: newTask,
+          bubbles: true
+        });
+        window.dispatchEvent(taskAddedEvent);
+        console.log("Evento de tarefa adicionada disparado:", newTask);
+        
+        // Garantir que o evento também seja emitido para componentes específicos
+        document.querySelectorAll('[data-tasks-container]').forEach(element => {
+          element.dispatchEvent(new CustomEvent('task-added', {
+            detail: newTask,
+            bubbles: true
+          }));
+        });
+      } catch (error) {
+        console.error("Erro ao disparar evento de tarefa adicionada:", error);
+      }
 
       // Call onAddTask first to ensure the task is added
       if (onAddTask) {
-        onAddTask(newTask);
+        const result = onAddTask(newTask);
+        
+        // Se onAddTask retornar uma Promise, aguardar sua conclusão
+        if (result instanceof Promise) {
+          result
+            .then(() => {
+              console.log("Tarefa adicionada com sucesso via callback onAddTask");
+              // Then reset form and close modal
+              resetForm();
+              onOpenChange(false);
+            })
+            .catch(err => {
+              console.error("Erro ao adicionar tarefa via callback:", err);
+              alert("Ocorreu um erro ao adicionar a tarefa. Por favor, tente novamente.");
+            });
+        } else {
+          // Processamento síncrono concluído
+          console.log("Tarefa processada via callback onAddTask");
+          resetForm();
+          onOpenChange(false);
+        }
+      } else {
+        // Não há callback, apenas resetar e fechar
+        resetForm();
+        onOpenChange(false);
       }
-
-      // Then reset form and close modal
-      resetForm();
-      onOpenChange(false);
     } catch (error) {
       console.error("Error submitting task:", error);
       alert(
