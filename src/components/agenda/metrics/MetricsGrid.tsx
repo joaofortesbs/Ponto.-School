@@ -34,7 +34,7 @@ const MetricsGrid: React.FC<MetricsGridProps> = ({
         <Ranking onViewRanking={onViewRanking} />
       </div>
       <div className="h-[260px] metrics-card-container">
-        <Pontos onViewChallenges={onViewChallenges} />
+        <Pontos onViewChallenges={onViewChallenges} onViewDetails={onViewPerformanceDetails} />
       </div>
     </div>
   );
