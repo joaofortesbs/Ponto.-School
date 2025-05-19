@@ -271,6 +271,3 @@ const TarefasPendentes = () => {
 };
 
 export default TarefasPendentes;
-};
-
-export default TarefasPendentes;
