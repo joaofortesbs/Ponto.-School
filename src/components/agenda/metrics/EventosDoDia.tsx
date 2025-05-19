@@ -165,8 +165,8 @@ const EventosDoDia: React.FC<EventosDoDiaProps> = ({
           </div>
         ) : eventos.length > 0 ? (
           <div className="flex-1 flex flex-col relative">
-            {/* Scrollable area for events - altura fixa com overflow e barra de rolagem */}
-            <div className="overflow-y-auto custom-scrollbar pb-[50px]" style={{ maxHeight: "calc(100% - 0px)" }}>
+            {/* Scrollable area for events - altura fixa com overflow e barra de rolagem visível */}
+            <div className="overflow-y-auto custom-scrollbar pb-[50px]" style={{ maxHeight: "300px", height: "300px" }}>
               {eventos.map((evento) => (
                 <div key={evento.id} className="p-2 hover:bg-[#0D2238]/80 transition-colors border-b border-[#0D2238]">
                   <div className="flex items-center gap-3">
