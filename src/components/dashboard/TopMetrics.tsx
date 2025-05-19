@@ -56,6 +56,7 @@ const TopMetrics = ({
   ranking = 42,
   points = 1250,
 }: TopMetricsProps) => {
+  // Dados de estudo removidos
   return (
     <div className="grid grid-cols-4 gap-4 w-full max-w-[1192px] mx-auto">
       {/* Study Time */}

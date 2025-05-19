@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import MetricsGrid from "./MetricsGrid";
 import TopMetrics from "./TopMetrics";
 import PromotionalBanner from "./PromotionalBanner";
 import { profileService } from "@/services/profileService";
@@ -55,11 +54,6 @@ export default function Dashboard() {
               })()}!
       </h1>
       <TopMetrics />
-      {isMetricsLoading ? (
-          <p>Carregando métricas...</p> //Added loading indicator
-      ) : (
-        <MetricsGrid />
-      )}
     </div>
   );
 }
