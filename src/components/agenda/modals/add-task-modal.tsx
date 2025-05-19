@@ -247,79 +247,14 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
         comments: [],
       };
 
-      // Emitir um evento personalizado para notificar outros componentes sobre a nova tarefa
-      try {
-        // Criar o evento uma única vez
-        const taskAddedEvent = new CustomEvent('task-added', {
-          detail: newTask,
-          bubbles: true,
-          cancelable: false
-        });
-        
-        // Disparar no window para componentes que escutam globalmente
-        window.dispatchEvent(taskAddedEvent);
-        console.log("Evento de tarefa adicionada disparado globalmente:", newTask);
-        
-        // Disparar em elementos específicos que precisam receber o evento diretamente
-        document.querySelectorAll('[data-tasks-container="true"]').forEach(element => {
-          console.log("Disparando evento para container específico:", element);
-          element.dispatchEvent(new CustomEvent('task-added', {
-            detail: newTask,
-            bubbles: true
-          }));
-        });
-        
-        // Disparar também para a visualização de tarefas principal
-        const tasksView = document.querySelector('[data-testid="tasks-view"]');
-        if (tasksView) {
-          console.log("Disparando evento para tasks-view");
-          tasksView.dispatchEvent(new CustomEvent('task-added', {
-            detail: newTask,
-            bubbles: true
-          }));
-        }
-        
-        // Disparar para o card de tarefas pendentes
-        const pendingTasksCard = document.querySelector('[data-pending-tasks="true"]');
-        if (pendingTasksCard) {
-          console.log("Disparando evento para pending-tasks card");
-          pendingTasksCard.dispatchEvent(new CustomEvent('task-added', {
-            detail: newTask,
-            bubbles: true
-          }));
-        }
-      } catch (error) {
-        console.error("Erro ao disparar evento de tarefa adicionada:", error);
-      }
-
       // Call onAddTask first to ensure the task is added
       if (onAddTask) {
-        const result = onAddTask(newTask);
-        
-        // Se onAddTask retornar uma Promise, aguardar sua conclusão
-        if (result instanceof Promise) {
-          result
-            .then(() => {
-              console.log("Tarefa adicionada com sucesso via callback onAddTask");
-              // Then reset form and close modal
-              resetForm();
-              onOpenChange(false);
-            })
-            .catch(err => {
-              console.error("Erro ao adicionar tarefa via callback:", err);
-              alert("Ocorreu um erro ao adicionar a tarefa. Por favor, tente novamente.");
-            });
-        } else {
-          // Processamento síncrono concluído
-          console.log("Tarefa processada via callback onAddTask");
-          resetForm();
-          onOpenChange(false);
-        }
-      } else {
-        // Não há callback, apenas resetar e fechar
-        resetForm();
-        onOpenChange(false);
+        onAddTask(newTask);
       }
+
+      // Then reset form and close modal
+      resetForm();
+      onOpenChange(false);
     } catch (error) {
       console.error("Error submitting task:", error);
       alert(

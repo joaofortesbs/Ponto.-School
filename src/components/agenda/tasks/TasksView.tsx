@@ -76,50 +76,23 @@ const TasksView: React.FC<TasksViewProps> = ({
     dueDate: "all",
   });
 
-  // Referência para o elemento DOM do componente
-  const tasksViewRef = React.useRef<HTMLDivElement>(null);
-  
   // Listen for external task additions
   useEffect(() => {
     const handleExternalTaskAdd = (event: any) => {
       if (event.detail) {
-        console.log("TasksView: Evento de tarefa adicionada recebido:", event.detail);
         handleAddTask(event.detail);
       }
     };
 
-    // Escutar tanto o evento refresh-tasks quanto task-added
-    // Usar a referência direta ao elemento atual
-    if (tasksViewRef.current) {
-      tasksViewRef.current.addEventListener("refresh-tasks", handleExternalTaskAdd);
-      tasksViewRef.current.addEventListener("task-added", handleExternalTaskAdd);
-      console.log("TasksView: Event listeners adicionados ao elemento do componente");
+    const tasksView = document.querySelector('[data-testid="tasks-view"]');
+    if (tasksView) {
+      tasksView.addEventListener("refresh-tasks", handleExternalTaskAdd);
     }
-    
-    // Buscar também pelo atributo data-testid para redundância
-    const tasksViewByQuery = document.querySelector('[data-testid="tasks-view"]');
-    if (tasksViewByQuery && tasksViewByQuery !== tasksViewRef.current) {
-      tasksViewByQuery.addEventListener("refresh-tasks", handleExternalTaskAdd);
-      tasksViewByQuery.addEventListener("task-added", handleExternalTaskAdd);
-      console.log("TasksView: Event listeners adicionados ao elemento com data-testid");
-    }
-    
-    // Adicionar listener também no window para garantir a recepção
-    window.addEventListener('task-added', handleExternalTaskAdd);
-    console.log("TasksView: Event listener adicionado ao window");
 
     return () => {
-      if (tasksViewRef.current) {
-        tasksViewRef.current.removeEventListener("refresh-tasks", handleExternalTaskAdd);
-        tasksViewRef.current.removeEventListener("task-added", handleExternalTaskAdd);
+      if (tasksView) {
+        tasksView.removeEventListener("refresh-tasks", handleExternalTaskAdd);
       }
-      
-      if (tasksViewByQuery && tasksViewByQuery !== tasksViewRef.current) {
-        tasksViewByQuery.removeEventListener("refresh-tasks", handleExternalTaskAdd);
-        tasksViewByQuery.removeEventListener("task-added", handleExternalTaskAdd);
-      }
-      
-      window.removeEventListener('task-added', handleExternalTaskAdd);
     };
   }, []);
 
@@ -511,7 +484,6 @@ const TasksView: React.FC<TasksViewProps> = ({
 
   return (
     <div
-      ref={tasksViewRef}
       className="container mx-auto p-4 animate-fadeIn"
       data-testid="tasks-view"
     >
