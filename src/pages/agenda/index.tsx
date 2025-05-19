@@ -29,6 +29,7 @@ import EventDetailsModal from "@/components/agenda/modals/event-details-modal";
 import TasksView from "@/components/agenda/tasks/TasksView";
 import ChallengesView from "@/components/agenda/challenges/ChallengesView";
 import MetricsGrid from "@/components/agenda/metrics/MetricsGrid";
+import ManagementGrid from "@/components/agenda/management/ManagementGrid";
 
 // Icons
 import {
@@ -904,7 +905,7 @@ export default function AgendaPage() {
           const tasksView = document.querySelector(
             '[data-testid="tasks-view"]'
           );
-          
+
           if (tasksView) {
             const refreshEvent = new CustomEvent("refresh-tasks", {
               detail: newTask,
@@ -1029,6 +1030,11 @@ export default function AgendaPage() {
           </div>
 
           {/* Main Content Grid */}
+           {/* Grade de Gerenciamento de Agenda */}
+           <div className="mt-6">
+            <h2 className="text-xl font-semibold dark:text-white mb-4">Gerenciamento de Agenda</h2>
+            <ManagementGrid />
+          </div>
 
         </TabsContent>
 
