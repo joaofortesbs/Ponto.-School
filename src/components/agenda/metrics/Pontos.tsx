@@ -53,11 +53,8 @@ const Pontos: React.FC<PontosProps> = ({ onViewDetails, onViewChallenges }) => {
 
   return (
     <div className="h-full rounded-xl border border-gray-200 dark:border-[#0D2238]/40 bg-white dark:bg-gradient-to-b dark:from-[#001427]/80 dark:to-[#001427] shadow-sm overflow-hidden flex flex-col">
-      <div className="p-4 border-b border-gray-100 dark:border-[#0D2238]/40 flex justify-between items-center">
-        <div className="flex items-center space-x-2">
-          <TrophyIcon className="h-5 w-5 text-[#FF6B00]" />
-          <h3 className="font-semibold text-gray-800 dark:text-white">Pontos XP</h3>
-        </div>
+      <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-3 flex items-center justify-between">
+        <h3 className="font-semibold text-white">Pontos</h3>
       </div>
 
       <div className="flex-1 p-4 flex flex-col">
