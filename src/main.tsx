@@ -150,9 +150,25 @@ const initializeApp = () => {
         </ErrorBoundary>
       );
 
-      ReactDOM.createRoot(rootElement).render(
-        isDevMode ? <React.StrictMode>{AppRoot}</React.StrictMode> : AppRoot
-      );
+      try {
+        ReactDOM.createRoot(rootElement).render(
+          isDevMode ? <React.StrictMode>{AppRoot}</React.StrictMode> : AppRoot
+        );
+        console.log('Aplicação React renderizada com sucesso');
+      } catch (error) {
+        console.error('Erro ao renderizar a aplicação React:', error);
+
+        // Fallback para mostrar erro visual ao usuário
+        rootElement.innerHTML = `
+          <div style="padding: 20px; background: #001427; color: white; font-family: system-ui, sans-serif;">
+            <h2 style="color: #ff6b00;">Erro de Renderização</h2>
+            <p>Ocorreu um erro ao renderizar a aplicação. Por favor, atualize a página ou entre em contato com o suporte.</p>
+            <button onclick="window.location.reload()" style="margin-top: 15px; padding: 8px 16px; background: #ff6b00; color: white; border: none; border-radius: 4px; cursor: pointer;">
+              Atualizar Página
+            </button>
+          </div>
+        `;
+      }
 
       console.log('Aplicação inicializada com sucesso.');
 
