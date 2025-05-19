@@ -165,8 +165,8 @@ const EventosDoDia: React.FC<EventosDoDiaProps> = ({
           </div>
         ) : eventos.length > 0 ? (
           <div className="flex-1 flex flex-col relative">
-            {/* Scrollable area for events - altura reduzida para mover o botão mais para cima */}
-            <div className="overflow-y-auto custom-scrollbar" style={{ maxHeight: "160px", height: "160px" }}>
+            {/* Scrollable area for events - altura reduzida para alinhar com o botão do card de Desempenho Semanal */}
+            <div className="overflow-y-auto custom-scrollbar" style={{ maxHeight: "130px", height: "130px" }}>
               {eventos.map((evento) => (
                 <div key={evento.id} className="p-2 hover:bg-[#0D2238]/80 transition-colors border-b border-[#0D2238]">
                   <div className="flex items-center gap-3">
@@ -192,13 +192,13 @@ const EventosDoDia: React.FC<EventosDoDiaProps> = ({
               ))}
             </div>
             
-            {/* Fixed button - movido para cima com padding ajustado */}
-            <div className="mt-1 p-2 bg-[#001427] border-t border-[#0D2238] z-10 w-full">
+            {/* Fixed button - alinhado com o botão do card de Desempenho Semanal */}
+            <div className="mt-4 p-4 bg-[#001427] border-t border-[#0D2238] z-10 w-full">
               <Button 
-                className="w-full bg-[#FF6B00] hover:bg-[#FF8C40] text-white rounded-md h-9"
+                className="w-full bg-[#FF6B00] hover:bg-[#FF8C40] text-white rounded-md"
                 onClick={onViewAllEvents}
               >
-                <ExternalLink className="h-3 w-3 mr-2" /> Ver Todos
+                <ExternalLink className="h-4 w-4 mr-2" /> Ver Todos
               </Button>
             </div>
           </div>
