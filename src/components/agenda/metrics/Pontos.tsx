@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { CoinsIcon, TrophyIcon, ClockIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -28,11 +27,11 @@ const Pontos: React.FC<PontosProps> = ({ onViewChallenges }) => {
     const calcularXpTotal = () => {
       let xp = 0;
       const sessionsWithXp: XpBySession[] = [];
-      
+
       sessions.forEach(session => {
         // Calcular XP baseado no tempo da sessão
         let sessionXp = 5; // Valor padrão de XP para cada sessão
-        
+
         // Formatar duração
         let duration = "00:00:00";
         if (session.elapsedTimeSeconds) {
@@ -43,19 +42,19 @@ const Pontos: React.FC<PontosProps> = ({ onViewChallenges }) => {
         } else if (session.duration) {
           duration = session.duration;
         }
-        
+
         // Formatar data
         const timestamp = session.timestamp 
           ? new Date(session.timestamp)
           : session.date 
             ? new Date(session.date.split('/').reverse().join('-'))
             : new Date();
-        
+
         const formattedDate = format(timestamp, 'dd/MM', { locale: ptBR });
-        
+
         // Adicionar ao total
         xp += sessionXp;
-        
+
         // Adicionar ao histórico por sessão
         sessionsWithXp.push({
           duration,
@@ -64,14 +63,14 @@ const Pontos: React.FC<PontosProps> = ({ onViewChallenges }) => {
           formattedDate
         });
       });
-      
+
       // Ordenar por data (mais recente primeiro)
       sessionsWithXp.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      
+
       setXpBySessions(sessionsWithXp);
       return xp === 0 ? 20 : xp; // Valor demonstrativo de 20 se não houver sessões
     };
-    
+
     setTotalXp(calcularXpTotal());
   }, [sessions]);
 
@@ -85,7 +84,7 @@ const Pontos: React.FC<PontosProps> = ({ onViewChallenges }) => {
           <h3 className="text-white font-semibold text-sm">Pontos XP</h3>
         </div>
       </div>
-      
+
       <div className="flex-1 flex flex-col p-4">
         {/* Total XP em destaque */}
         <div className="text-center mb-5">
@@ -93,7 +92,7 @@ const Pontos: React.FC<PontosProps> = ({ onViewChallenges }) => {
             {totalXp}
           </div>
         </div>
-        
+
         {/* Lista de sessões com XP */}
         <ScrollArea className="flex-1">
           <div className="space-y-2">
@@ -158,7 +157,7 @@ const Pontos: React.FC<PontosProps> = ({ onViewChallenges }) => {
             )}
           </div>
         </ScrollArea>
-        
+
         {/* Botão de Conquistas na parte inferior */}
         <div className="mt-4">
           <Button 
