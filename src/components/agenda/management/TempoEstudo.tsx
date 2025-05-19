@@ -1,7 +1,7 @@
+
 import React from "react";
-import { Clock, ExternalLink, Info } from "lucide-react";
+import { Clock, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const TempoEstudo = () => {
   const diasDaSemana = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
@@ -12,16 +12,6 @@ const TempoEstudo = () => {
         <div className="flex items-center gap-2">
           <Clock className="text-white h-5 w-5" />
           <h3 className="text-white font-medium">Tempo de Estudo</h3>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Info className="h-4 w-4 text-gray-400 cursor-help" />
-              </TooltipTrigger>
-              <TooltipContent>
-                <p className="text-xs">Dados de exemplo. Seu progresso real será exibido conforme você utiliza a plataforma.</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
         </div>
         <div className="flex gap-1">
           <Button
