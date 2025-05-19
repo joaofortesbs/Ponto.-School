@@ -17,6 +17,28 @@
 @import "./styles/rotina-calendar.css";
 
 /* Estilos para corrigir problemas de altura em componentes específicos */
+.altura-completa {
+  height: 100%;
+}
+
+/* Estilo para a barra de rolagem customizada */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(13, 34, 56, 0.4);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 107, 0, 0.6);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 107, 0, 0.9);
+}
 .mode-epictus-turbo-advanced {
   min-height: 100vh;
   overflow-y: auto;
