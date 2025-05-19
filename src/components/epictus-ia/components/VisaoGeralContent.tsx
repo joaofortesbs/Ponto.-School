@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useTheme } from "@/components/ThemeProvider";
+import { formatRelativeDate } from "@/lib/date-utils";
 import { 
   Brain, 
   Sparkles, 
@@ -17,6 +18,34 @@ import {
 
 export default function VisaoGeralContent() {
   const { theme } = useTheme();
+
+  // Dados estruturados para recursos recentes
+  const recentResources = [
+    {
+      id: 1,
+      title: 'Conversou sobre "Revolução Industrial"',
+      date: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 horas atrás
+      icon: <MessageSquare className="h-4 w-4 text-blue-500" />,
+      iconBg: "bg-blue-500/10",
+      type: "chat"
+    },
+    {
+      id: 2,
+      title: 'Criou plano de aula "Ecossistemas"',
+      date: new Date(Date.now() - 24 * 60 * 60 * 1000), // ontem
+      icon: <PenTool className="h-4 w-4 text-emerald-500" />,
+      iconBg: "bg-emerald-500/10",
+      type: "content"
+    },
+    {
+      id: 3,
+      title: 'Gerou resumo "Equações Diferenciais"',
+      date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 dias atrás
+      icon: <Zap className="h-4 w-4 text-amber-500" />,
+      iconBg: "bg-amber-500/10",
+      type: "learning"
+    }
+  ];
 
   const quickAccessTools = [
     {
@@ -199,39 +228,26 @@ export default function VisaoGeralContent() {
             Recursos Recentes
           </h4>
           <div className="space-y-2">
-            <div className={`p-2 rounded-md ${theme === "dark" ? "hover:bg-gray-700/50" : "hover:bg-gray-100"} transition-colors cursor-pointer`}>
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center">
-                  <MessageSquare className="h-4 w-4 text-blue-500" />
-                </div>
-                <div>
-                  <p className={`text-xs font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Conversou sobre "Revolução Industrial"</p>
-                  <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>há 2 horas</p>
-                </div>
-              </div>
-            </div>
-            <div className={`p-2 rounded-md ${theme === "dark" ? "hover:bg-gray-700/50" : "hover:bg-gray-100"} transition-colors cursor-pointer`}>
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                  <PenTool className="h-4 w-4 text-emerald-500" />
-                </div>
-                <div>
-                  <p className={`text-xs font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Criou plano de aula "Ecossistemas"</p>
-                  <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>ontem</p>
+            {recentResources.map(resource => (
+              <div 
+                key={resource.id} 
+                className={`p-2 rounded-md ${theme === "dark" ? "hover:bg-gray-700/50" : "hover:bg-gray-100"} transition-colors cursor-pointer`}
+              >
+                <div className="flex items-center gap-2">
+                  <div className={`w-8 h-8 rounded-full ${resource.iconBg} flex items-center justify-center`}>
+                    {resource.icon}
+                  </div>
+                  <div>
+                    <p className={`text-xs font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                      {resource.title}
+                    </p>
+                    <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+                      {formatRelativeDate(resource.date)}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className={`p-2 rounded-md ${theme === "dark" ? "hover:bg-gray-700/50" : "hover:bg-gray-100"} transition-colors cursor-pointer`}>
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center">
-                  <Zap className="h-4 w-4 text-amber-500" />
-                </div>
-                <div>
-                  <p className={`text-xs font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Gerou resumo "Equações Diferenciais"</p>
-                  <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>há 3 dias</p>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
         </Card>
       </div>
