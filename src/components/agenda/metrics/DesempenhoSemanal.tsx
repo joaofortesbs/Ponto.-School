@@ -1,93 +1,84 @@
 
 import React, { useEffect, useState } from "react";
-import { BarChart2Icon, ExternalLinkIcon, Clock, Target, TrendingUp } from "lucide-react";
+import { BarChart2Icon, ExternalLinkIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import useFlowSessions from "@/hooks/useFlowSessions";
+import { useFlowSessions } from "@/hooks/useFlowSessions";
 
 interface DesempenhoSemanalProps {
   onViewDetails?: () => void;
 }
 
+interface SubjectProgress {
+  name: string;
+  progress: number;
+}
+
 const DesempenhoSemanal: React.FC<DesempenhoSemanalProps> = ({ onViewDetails }) => {
   const { sessions, getStats } = useFlowSessions();
-  const [loading, setLoading] = useState(true);
-  
-  // Estado para a meta semanal (em minutos)
-  const [weeklyGoal] = useState(300); // 5 horas por semana como padrão
-  
-  // Dados de desempenho calculados
-  const [weeklyData, setWeeklyData] = useState<{
-    totalMinutes: number;
-    goalProgress: number;
-    avgEfficiency: number;
-    sessionsCount: number;
-    topSubject: string;
-    topSubjectTime: string;
-    hasData: boolean;
-  }>({
-    totalMinutes: 0,
-    goalProgress: 0,
-    avgEfficiency: 0,
-    sessionsCount: 0,
-    topSubject: "",
-    topSubjectTime: "",
-    hasData: false
-  });
+  const [overallProgress, setOverallProgress] = useState<number>(0);
+  const [subjectsProgress, setSubjectsProgress] = useState<SubjectProgress[]>([]);
+  const [hasData, setHasData] = useState<boolean>(false);
+
+  // A meta semanal é de 300 minutos (5 horas)
+  const weeklyGoalInMinutes = 300;
 
   useEffect(() => {
-    // Calcula os dados de desempenho semanais
-    if (sessions.length > 0) {
-      const stats = getStats();
+    if (sessions && sessions.length > 0) {
+      calculateProgress();
+    }
+  }, [sessions]);
+
+  const calculateProgress = () => {
+    // Obter estatísticas das sessões
+    const stats = getStats();
+    
+    // Verificar se há dados
+    if (stats.totalTimeInSeconds > 0) {
+      setHasData(true);
       
-      // Converte segundos para minutos para exibição
+      // Calcular progresso geral (tempo total em minutos / meta semanal)
       const totalMinutes = Math.round(stats.totalTimeInSeconds / 60);
+      const overallPercentage = Math.min(Math.round((totalMinutes / weeklyGoalInMinutes) * 100), 100);
+      setOverallProgress(overallPercentage);
       
-      // Calcula o progresso em relação à meta semanal
-      const goalProgress = Math.min(Math.round((totalMinutes / weeklyGoal) * 100), 100);
+      // Processar progresso por disciplina
+      const subjects: SubjectProgress[] = [];
+      const subjectStats = stats.subjectStats;
       
-      // Determina o tópico com mais tempo
-      let topSubject = "";
-      let topSubjectTime = "";
-      
-      if (Object.keys(stats.subjectStats).length > 0) {
-        const sortedSubjects = Object.entries(stats.subjectStats)
-          .sort(([, a], [, b]) => b - a);
+      for (const subject in subjectStats) {
+        // Converter segundos em minutos por assunto
+        const subjectMinutes = Math.round(subjectStats[subject] / 60);
         
-        if (sortedSubjects.length > 0) {
-          topSubject = sortedSubjects[0][0];
-          const seconds = sortedSubjects[0][1];
-          const hours = Math.floor(seconds / 3600);
-          const minutes = Math.floor((seconds % 3600) / 60);
-          topSubjectTime = `${hours}h${minutes > 0 ? ` ${minutes}m` : ''}`;
-        }
+        // Calcular meta por assunto (proporcional ao tempo total)
+        const subjectGoal = weeklyGoalInMinutes / Object.keys(subjectStats).length;
+        const progress = Math.min(Math.round((subjectMinutes / subjectGoal) * 100), 100);
+        
+        // Traduzir nomes de disciplinas comuns
+        let displayName = subject;
+        if (subject.toLowerCase() === "math") displayName = "Matemática";
+        if (subject.toLowerCase() === "physics") displayName = "Física";
+        if (subject.toLowerCase() === "chemistry") displayName = "Química";
+        if (subject.toLowerCase() === "biology") displayName = "Biologia";
+        if (subject.toLowerCase() === "history") displayName = "História";
+        if (subject.toLowerCase() === "geography") displayName = "Geografia";
+        if (subject.toLowerCase() === "portuguese") displayName = "Português";
+        if (subject.toLowerCase() === "english") displayName = "Inglês";
+        if (subject.toLowerCase() === "programming") displayName = "Programação";
+
+        subjects.push({
+          name: displayName,
+          progress
+        });
       }
       
-      setWeeklyData({
-        totalMinutes,
-        goalProgress,
-        avgEfficiency: stats.avgEfficiency,
-        sessionsCount: stats.sessionsCount,
-        topSubject,
-        topSubjectTime,
-        hasData: true
-      });
-    }
-    
-    setLoading(false);
-  }, [sessions, weeklyGoal, getStats]);
-
-  // Formata minutos para exibição em horas e minutos
-  const formatMinutes = (minutes: number) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    
-    if (hours === 0) {
-      return `${mins}min`;
-    } else if (mins === 0) {
-      return `${hours}h`;
+      // Ordenar por progresso (maior para menor)
+      subjects.sort((a, b) => b.progress - a.progress);
+      
+      // Limitar a no máximo 5 disciplinas
+      setSubjectsProgress(subjects.slice(0, 5));
     } else {
-      return `${hours}h ${mins}min`;
+      setHasData(false);
     }
   };
 
@@ -102,83 +93,57 @@ const DesempenhoSemanal: React.FC<DesempenhoSemanalProps> = ({ onViewDetails }) 
         </div>
       </div>
       
-      {loading ? (
-        <div className="flex-1 flex flex-col items-center justify-center p-4">
-          <div className="h-4 w-32 bg-gray-200 dark:bg-[#0D2238] rounded animate-pulse mb-3"></div>
-          <div className="h-3 w-24 bg-gray-200 dark:bg-[#0D2238] rounded animate-pulse"></div>
-        </div>
-      ) : weeklyData.hasData ? (
-        <div className="flex-1 flex flex-col p-4 gap-3 text-sm">
-          {/* Meta semanal */}
-          <div className="mb-1">
-            <div className="flex justify-between items-center mb-1">
-              <div className="flex items-center gap-1.5">
-                <Target className="h-3.5 w-3.5 text-[#FF6B00]" />
-                <span className="text-gray-800 dark:text-white text-xs font-medium">Meta semanal</span>
+      <div className="flex-1 p-4">
+        {hasData ? (
+          <div className="flex flex-col h-full">
+            <div className="mb-3">
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Progresso Geral</span>
+                <span className="text-sm font-medium text-[#FF6B00]">{overallProgress}%</span>
               </div>
-              <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
-                {formatMinutes(weeklyData.totalMinutes)} / {formatMinutes(weeklyGoal)}
-              </span>
-            </div>
-            <Progress value={weeklyData.goalProgress} className="h-2 bg-gray-200 dark:bg-[#0D2238]/70" indicatorClassName="bg-[#FF6B00]" />
-          </div>
-          
-          {/* Estatísticas adicionais */}
-          <div className="grid grid-cols-2 gap-3 mt-1">
-            <div className="bg-gray-50 dark:bg-[#0D2238]/30 rounded-lg p-2">
-              <div className="flex items-center gap-1.5 mb-1">
-                <Clock className="h-3.5 w-3.5 text-[#FF6B00]" />
-                <span className="text-xs text-gray-600 dark:text-gray-300">Sessões</span>
-              </div>
-              <span className="text-gray-800 dark:text-white font-medium">{weeklyData.sessionsCount}</span>
+              <Progress className="h-2" value={overallProgress} indicatorClassName="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40]" />
             </div>
             
-            <div className="bg-gray-50 dark:bg-[#0D2238]/30 rounded-lg p-2">
-              <div className="flex items-center gap-1.5 mb-1">
-                <TrendingUp className="h-3.5 w-3.5 text-[#FF6B00]" />
-                <span className="text-xs text-gray-600 dark:text-gray-300">Eficiência</span>
-              </div>
-              <span className="text-gray-800 dark:text-white font-medium">{weeklyData.avgEfficiency}%</span>
+            <div className="flex-1 space-y-2 mb-4">
+              {subjectsProgress.map((subject, index) => (
+                <div key={index}>
+                  <div className="flex justify-between items-center mb-1">
+                    <div className="flex items-center">
+                      <span className="w-2 h-2 rounded-full bg-[#FF6B00] mr-2"></span>
+                      <span className="text-xs font-medium text-gray-600 dark:text-gray-300">{subject.name}</span>
+                    </div>
+                    <span className="text-xs font-medium text-gray-600 dark:text-gray-300">{subject.progress}%</span>
+                  </div>
+                  <Progress className="h-1.5" value={subject.progress} indicatorClassName="bg-[#FF6B00]" />
+                </div>
+              ))}
             </div>
-          </div>
-          
-          {/* Assunto mais estudado */}
-          {weeklyData.topSubject && (
-            <div className="bg-gray-50 dark:bg-[#0D2238]/30 rounded-lg p-2 mt-1">
-              <span className="text-xs text-gray-600 dark:text-gray-300 block mb-1">Assunto mais estudado</span>
-              <div className="flex justify-between">
-                <span className="text-gray-800 dark:text-white font-medium">{weeklyData.topSubject}</span>
-                <span className="text-[#FF6B00] font-medium">{weeklyData.topSubjectTime}</span>
-              </div>
-            </div>
-          )}
-          
-          <div className="mt-auto">
+            
             <Button 
               onClick={onViewDetails}
-              className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF7B20] hover:to-[#FF9C50] text-white rounded-md w-full shadow-md transition-all duration-300 mt-2"
+              className="mt-auto bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF7B20] hover:to-[#FF9C50] text-white rounded-md w-full shadow-md transition-all duration-300"
             >
               <ExternalLinkIcon className="h-4 w-4 mr-2" /> Ver Detalhes
             </Button>
           </div>
-        </div>
-      ) : (
-        <div className="flex-1 flex flex-col items-center justify-center p-4 text-center">
-          <div className="bg-gray-100 dark:bg-gradient-to-br dark:from-[#0D2238] dark:to-[#0D2238]/70 p-4 rounded-full mb-3 shadow-inner">
-            <BarChart2Icon className="h-8 w-8 text-gray-400 dark:text-[#8393A0]" />
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full text-center">
+            <div className="bg-gray-100 dark:bg-gradient-to-br dark:from-[#0D2238] dark:to-[#0D2238]/70 p-4 rounded-full mb-3 shadow-inner">
+              <BarChart2Icon className="h-8 w-8 text-gray-400 dark:text-[#8393A0]" />
+            </div>
+            <p className="text-gray-800 dark:text-white text-sm font-medium mb-1">Sem dados de desempenho</p>
+            <p className="text-gray-500 dark:text-[#8393A0] text-xs mb-4">
+              Complete sessões de Flow para visualizar seu progresso
+            </p>
+            <Button 
+              onClick={onViewDetails}
+              className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF7B20] hover:to-[#FF9C50] text-white rounded-md w-full shadow-md transition-all duration-300"
+            >
+              <ExternalLinkIcon className="h-4 w-4 mr-2" /> Ver Detalhes
+            </Button>
           </div>
-          <p className="text-gray-800 dark:text-white text-sm font-medium mb-1">Sem dados de desempenho</p>
-          <p className="text-gray-500 dark:text-[#8393A0] text-xs mb-4">
-            Complete sessões de Flow para visualizar seu progresso
-          </p>
-          <Button 
-            onClick={onViewDetails}
-            className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF7B20] hover:to-[#FF9C50] text-white rounded-md w-full shadow-md transition-all duration-300"
-          >
-            <ExternalLinkIcon className="h-4 w-4 mr-2" /> Ver Detalhes
-          </Button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
