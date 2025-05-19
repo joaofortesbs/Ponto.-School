@@ -167,7 +167,7 @@ const Pontos: React.FC<PontosProps> = ({ onViewChallenges }) => {
         <div className="mt-4 p-4 border-t border-gray-100 dark:border-[#0D2238]/40 z-10 w-full">
           <Button 
             onClick={onViewChallenges}
-            className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF7B20] hover:to-[#FF9C50] text-white rounded-md w-full shadow-md transition-all duration-300 h-8"
+            className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF7B20] hover:to-[#FF9C50] text-white rounded-md w-full shadow-md transition-all duration-300 h-10"
           >
             <TrophyIcon className="h-4 w-4 mr-2" /> Conquistas
           </Button>
