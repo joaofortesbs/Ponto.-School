@@ -209,8 +209,8 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
       try {
         formattedReminderTime =
           reminderTime && reminderSet
-            ? new Date(reminderTime).toISOString()
-            : undefined;
+          ? new Date(reminderTime).toISOString()
+          : undefined;
       } catch (error) {
         console.error("Error formatting reminder time:", error);
         formattedReminderTime = undefined;
