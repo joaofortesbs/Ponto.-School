@@ -16,37 +16,18 @@ interface Task {
   priority?: "alta" | "media" | "baixa";
 }
 
-const defaultTasks: Task[] = [
-  {
-    id: "1",
-    title: "Entrega de Relatório - Física",
-    dueDate: "2024-03-25",
-    subject: "Física",
-    completed: false,
-    priority: "alta",
-  },
-  {
-    id: "2",
-    title: "Questionário - Matemática",
-    dueDate: "2024-03-26",
-    subject: "Matemática",
-    completed: false,
-    priority: "media",
-  },
-  {
-    id: "3",
-    title: "Apresentação - Biologia",
-    dueDate: "2024-03-27",
-    subject: "Biologia",
-    completed: false,
-    priority: "baixa",
-  },
-];
+// Sem tarefas padrão/fictícias - vamos iniciar com uma lista vazia
+const defaultTasks: Task[] = [];
 
 const TarefasPendentes = () => {
   const [tasks, setTasks] = useState<Task[]>(defaultTasks);
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"pendentes" | "hoje" | "semana">("pendentes");
+  
+  // Log para monitorar o estado das tarefas ao iniciar o componente
+  React.useEffect(() => {
+    console.log("TarefasPendentes inicializado com tarefas:", tasks);
+  }, []);
 
   // Escuta por eventos externos de adição de tarefas
   React.useEffect(() => {
@@ -157,8 +138,8 @@ const TarefasPendentes = () => {
       <h3 className="text-lg font-semibold text-[#29335C] dark:text-white mb-2">
         Sem tarefas pendentes
       </h3>
-      <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 max-w-[250px]">
-        Adicione novas tarefas para organizar seu fluxo de trabalho.
+      <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 max-w-[280px]">
+        Adicione novas tarefas utilizando o botão abaixo ou através da mini-seção de Tarefas.
       </p>
       <Button
         onClick={() => setIsAddTaskModalOpen(true)}
@@ -305,11 +286,48 @@ const TarefasPendentes = () => {
         </div>
       </div>
 
-      {tasks.filter((task) => !task.completed).length === 0 ? (
+      {tasks.length === 0 ? (
         <EmptyState />
-      ) : (
-        <MainContent />
-      )}
+      ) : tasks.filter((task) => {
+          // Verificar se existem tarefas para o modo de visualização atual
+          if (!task.completed) {
+            if (viewMode === "pendentes") {
+              return true;
+            }
+            if (viewMode === "hoje") {
+              if (typeof task.dueDate === 'string') {
+                if (task.dueDate.includes('hoje')) return true;
+                if (task.dueDate.includes('-')) return isToday(task.dueDate);
+              }
+              return false;
+            }
+            if (viewMode === "semana") {
+              if (typeof task.dueDate === 'string') {
+                if (task.dueDate.includes('hoje') || task.dueDate.includes('amanhã')) return true;
+                if (task.dueDate.includes('em ') && parseInt(task.dueDate.split(' ')[1]) <= 7) return true;
+                if (task.dueDate.includes('-')) return isDateInCurrentWeek(task.dueDate);
+              }
+              return false;
+            }
+          }
+          return false;
+        }).length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-[200px] p-4 text-center">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+              Nenhuma tarefa para {viewMode === "pendentes" ? "mostrar" : viewMode === "hoje" ? "hoje" : "esta semana"}.
+            </p>
+            <Button
+              onClick={() => setIsAddTaskModalOpen(true)}
+              variant="outline"
+              size="sm"
+              className="border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10"
+            >
+              <Plus className="h-4 w-4 mr-1" /> Adicionar
+            </Button>
+          </div>
+        ) : (
+          <MainContent />
+        )}
 
       <AddTaskModal
         open={isAddTaskModalOpen}
