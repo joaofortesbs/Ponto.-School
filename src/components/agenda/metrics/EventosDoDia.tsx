@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { CalendarIcon, PlusIcon, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -33,7 +34,7 @@ const EventosDoDia: React.FC<EventosDoDiaProps> = ({
     try {
       // Obter todos os eventos
       let todosEventos: Evento[] = [];
-
+      
       // Verificar se existe a variável global de eventos
       if (window.agendaEventData) {
         // Converter os eventos para um formato simples
@@ -50,29 +51,29 @@ const EventosDoDia: React.FC<EventosDoDiaProps> = ({
           todosEventos = localEvents;
         }
       }
-
+      
       // Filtrar apenas eventos de hoje
       const hoje = new Date();
       hoje.setHours(0, 0, 0, 0);
       const amanha = new Date(hoje);
       amanha.setDate(amanha.getDate() + 1);
-
+      
       const eventosDeHoje = todosEventos.filter(evento => {
         if (!evento.startDate) return false;
-
+        
         const dataEvento = new Date(evento.startDate);
         dataEvento.setHours(0, 0, 0, 0);
-
+        
         return dataEvento.getTime() === hoje.getTime();
       });
-
+      
       // Ordenar por horário
       eventosDeHoje.sort((a, b) => {
         const timeA = a.startTime || "00:00";
         const timeB = b.startTime || "00:00";
         return timeA.localeCompare(timeB);
       });
-
+      
       setEventos(eventosDeHoje);
     } catch (error) {
       console.error("Erro ao buscar eventos do dia:", error);
@@ -85,33 +86,33 @@ const EventosDoDia: React.FC<EventosDoDiaProps> = ({
   // Carregar eventos ao montar o componente
   useEffect(() => {
     buscarEventosDeHoje();
-
+    
     // Escutar por atualizações de eventos
     const handleEventUpdate = () => {
       console.log("EventosDoDia: Evento de atualização recebido");
       buscarEventosDeHoje();
     };
-
+    
     window.addEventListener('event-added', handleEventUpdate);
     window.addEventListener('agenda-events-updated', handleEventUpdate);
-
+    
     return () => {
       window.removeEventListener('event-added', handleEventUpdate);
       window.removeEventListener('agenda-events-updated', handleEventUpdate);
     };
   }, []);
-
+  
   // Função para renderizar o status do evento
   const renderStatus = (evento: Evento) => {
     const agora = new Date();
     const [horaInicio, minutoInicio] = (evento.startTime || "").split(":").map(Number);
     const [horaFim, minutoFim] = (evento.endTime || "").split(":").map(Number);
-
+    
     if (isNaN(horaInicio) || isNaN(minutoInicio)) return null;
-
+    
     const inicioHoje = new Date();
     inicioHoje.setHours(horaInicio, minutoInicio, 0);
-
+    
     const fimHoje = new Date();
     if (!isNaN(horaFim) && !isNaN(minutoFim)) {
       fimHoje.setHours(horaFim, minutoFim, 0);
@@ -119,7 +120,7 @@ const EventosDoDia: React.FC<EventosDoDiaProps> = ({
       // Se não tiver horário de fim, assume 1 hora após o início
       fimHoje.setHours(horaInicio + 1, minutoInicio, 0);
     }
-
+    
     if (agora >= inicioHoje && agora <= fimHoje) {
       return <Badge className="bg-gradient-to-r from-green-500 to-green-600 dark:from-green-500 dark:to-green-600 text-white ml-auto font-medium text-[10px] px-2 shadow-sm">Agora</Badge>;
     } else if (agora < inicioHoje) {
@@ -158,7 +159,7 @@ const EventosDoDia: React.FC<EventosDoDiaProps> = ({
           {eventos.length}
         </div>
       </div>
-
+      
       <div className="flex-1 flex flex-col p-0">
         {isLoading ? (
           <div className="flex-1 flex items-center justify-center">
@@ -192,12 +193,11 @@ const EventosDoDia: React.FC<EventosDoDiaProps> = ({
                 </div>
               ))}
             </div>
-
+            
             {/* Fixed button - alinhado com o botão do card de Desempenho Semanal */}
             <div className="mt-4 p-4 bg-white dark:bg-gradient-to-b dark:from-[#001427]/80 dark:to-[#001427] border-t border-gray-100 dark:border-[#0D2238]/40 z-10 w-full backdrop-blur-sm">
               <Button 
-                className="w-full bg-[#FF6B00] hover:bg-[#FF8C40] text-white rounded-md border-none"
-                style={{ background: '#FF6B00' }}
+                className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF7B20] hover:to-[#FF9C50] text-white rounded-md shadow-md transition-all duration-300"
                 onClick={onViewAllEvents}
               >
                 <ExternalLink className="h-4 w-4 mr-2" /> Ver Todos
