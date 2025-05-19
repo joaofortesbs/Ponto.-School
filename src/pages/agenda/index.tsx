@@ -174,13 +174,13 @@ export default function AgendaPage() {
       try {
         setIsLoading(true);
         console.log("Carregando eventos para a página de agenda...");
-        
+
         const { getCurrentUser } = await import('@/services/databaseService');
         const { getEventsByUserId, syncLocalEvents, getAllLocalEvents } = await import('@/services/calendarEventService');
         const { toast } = await import("@/components/ui/use-toast");
 
         let currentUser = null;
-        
+
         try {
           currentUser = await getCurrentUser();
         } catch (userError) {
@@ -189,10 +189,10 @@ export default function AgendaPage() {
         }
 
         let events = [];
-        
+
         if (currentUser?.id) {
           console.log("Usuário autenticado:", currentUser.id);
-          
+
           // Primeiro sincronize eventos locais com o banco de dados
           await syncLocalEvents(currentUser.id);
           console.log("Sincronização de eventos locais concluída");
@@ -202,7 +202,7 @@ export default function AgendaPage() {
           console.log("Eventos carregados do banco de dados:", events.length);
         } else {
           console.log("Usuário não autenticado, carregando eventos locais");
-          
+
           // Se não houver usuário autenticado, use apenas eventos locais
           const { getAllLocalEvents } = await import('@/services/calendarEventService');
           events = getAllLocalEvents();
@@ -215,22 +215,22 @@ export default function AgendaPage() {
           setIsLoading(false);
           return;
         }
-        
+
         // Converter eventos para o formato necessário para o calendário
         const formattedEvents: Record<number, any[]> = {};
 
         events.forEach(event => {
           try {
             const startDate = new Date(event.startDate);
-            
+
             if (isNaN(startDate.getTime())) {
               console.warn("Data inválida para evento:", event);
               return; // Pular este evento
             }
-            
+
             // Usar o dia do mês como chave para agrupar eventos do mesmo dia
             const day = startDate.getDate();
-            
+
             if (!formattedEvents[day]) {
               formattedEvents[day] = [];
             }
@@ -263,18 +263,18 @@ export default function AgendaPage() {
 
         console.log("Eventos formatados para visualização:", Object.keys(formattedEvents).length, "dias com eventos");
         setEventData(formattedEvents);
-        
+
         // Compartilhar os eventos com outros componentes através do objeto window
         // Isso permite que os componentes day-view e week-view acessem os mesmos eventos
         window.agendaEventData = formattedEvents;
-        
+
         // Força atualização dos componentes de visualização
         window.dispatchEvent(new CustomEvent('agenda-events-updated', { 
           detail: { events: formattedEvents }
         }));
-        
+
         console.log("Eventos compartilhados globalmente para componentes de visualização");
-        
+
         if (events.length > 0) {
           toast({
             title: "Agenda carregada",
@@ -284,33 +284,33 @@ export default function AgendaPage() {
         }
       } catch (error) {
         console.error("Erro ao carregar eventos:", error);
-        
+
         const { toast } = await import("@/components/ui/use-toast");
         toast({
           title: "Erro ao carregar eventos",
           description: "Tente recarregar a página.",
           variant: "destructive"
         });
-        
+
         // Tentar carregar do localStorage diretamente como último recurso
         try {
           const eventsJson = localStorage.getItem("calendar_events");
           if (eventsJson) {
             const localEvents = JSON.parse(eventsJson);
             console.log("Tentando carregar eventos diretamente do localStorage:", localEvents.length);
-            
+
             // Converter eventos locais para o formato do calendário
             const formattedLocalEvents: Record<number, any[]> = {};
-            
+
             localEvents.forEach(event => {
               try {
                 const startDate = new Date(event.startDate);
                 const day = startDate.getDate();
-                
+
                 if (!formattedLocalEvents[day]) {
                   formattedLocalEvents[day] = [];
                 }
-                
+
                 formattedLocalEvents[day].push({
                   ...event,
                   start: startDate,
@@ -322,9 +322,9 @@ export default function AgendaPage() {
                 console.error("Erro ao processar evento local:", event, eventError);
               }
             });
-            
+
             setEventData(formattedLocalEvents);
-            
+
             // Compartilhar os eventos através do objeto window mesmo em caso de erro
             window.agendaEventData = formattedLocalEvents;
           }
@@ -1010,382 +1010,10 @@ export default function AgendaPage() {
         {/* Visão Geral Tab */}
         <TabsContent value="visao-geral" className="mt-0">
           {/* Summary Cards Row */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            {/* Card 1: Eventos do Dia */}
-            <div className="bg-[#001427] rounded-xl overflow-hidden shadow-lg border border-[#29335C]/30 transform hover:translate-y-[-2px] transition-all duration-300 backdrop-blur-sm">
-              <div className="p-3 border-b border-[#29335C]/30 bg-gradient-to-r from-[#FF6B00]/90 to-[#FF8C40]/90">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-sm shadow-inner">
-                      <CalendarIcon className="h-4 w-4 text-white" />
-                    </div>
-                    <h3 className="text-sm font-bold text-white">
-                      Eventos do Dia
-                    </h3>
-                  </div>
-                  <Badge className="bg-white/20 text-white hover:bg-white/30 transition-colors px-2 py-0.5 text-xs">
-                    0
-                  </Badge>
-                </div>
-              </div>
-              <div className="p-4 flex flex-col items-center justify-center text-center">
-                <div className="w-16 h-16 rounded-full bg-[#29335C]/40 flex items-center justify-center mb-3">
-                  <CalendarIcon className="h-7 w-7 text-gray-400" />
-                </div>
-                <h4 className="text-sm font-medium text-gray-300 mb-2">
-                  Nenhum evento programado para hoje
-                </h4>
-                <p className="text-xs text-gray-500 mb-3">
-                  Adicione seus eventos para organizar sua rotina acadêmica
-                </p>
-                <Button
-                  className="w-full mt-1 bg-[#FF6B00]/90 hover:bg-[#FF8C40] text-white rounded-lg transition-colors text-xs h-8"
-                  onClick={() => setShowAddEventModal(true)}
-                >
-                  <Plus className="h-3.5 w-3.5 mr-1" /> Adicionar Evento
-                </Button>
-              </div>
-            </div>
-
-            {/* Card 2: Desempenho Semanal */}
-            <div className="bg-[#001427] rounded-xl overflow-hidden shadow-lg border border-[#29335C]/30 transform hover:translate-y-[-2px] transition-all duration-300 backdrop-blur-sm">
-              <div className="p-3 border-b border-[#29335C]/30 bg-gradient-to-r from-[#FF6B00]/90 to-[#FF8C40]/90">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-sm shadow-inner">
-                      <BarChart3 className="h-4 w-4 text-white" />
-                    </div>
-                    <h3 className="text-sm font-bold text-white">
-                      Desempenho Semanal
-                    </h3>
-                  </div>
-                </div>
-              </div>
-              <div className="p-4 flex flex-col items-center justify-center text-center">
-                <div className="w-16 h-16 rounded-full bg-[#29335C]/40 flex items-center justify-center mb-3">
-                  <BarChart3 className="h-7 w-7 text-gray-400" />
-                </div>
-                <h4 className="text-sm font-medium text-gray-300 mb-2">
-                  Sem dados de desempenho
-                </h4>
-                <p className="text-xs text-gray-500 mb-3">
-                  Complete tarefas e atividades para visualizar seu progresso
-                </p>
-                <Button className="w-full mt-1 bg-[#FF6B00]/90 hover:bg-[#FF8C40] text-white rounded-lg transition-colors text-xs h-8">
-                  <LineChart className="h-3.5 w-3.5 mr-1" /> Ver Detalhes
-                </Button>
-              </div>
-            </div>
-
-            {/* Card 3: Ranking */}
-            <div className="bg-[#001427] rounded-xl overflow-hidden shadow-lg border border-[#29335C]/30 transform hover:translate-y-[-2px] transition-all duration-300 backdrop-blur-sm">
-              <div className="p-3 border-b border-[#29335C]/30 bg-gradient-to-r from-[#FF6B00]/90 to-[#FF8C40]/90">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-sm shadow-inner">
-                      <Trophy className="h-4 w-4 text-white" />
-                    </div>
-                    <h3 className="text-sm font-bold text-white">Ranking</h3>
-                  </div>
-                </div>
-              </div>
-              <div className="p-4 flex flex-col items-center justify-center text-center">
-                <div className="w-16 h-16 rounded-full bg-[#29335C]/40 flex items-center justify-center mb-3">
-                  <Trophy className="h-7 w-7 text-gray-400" />
-                </div>
-                <h4 className="text-sm font-medium text-gray-300 mb-2">
-                  Posição no Ranking: 0
-                </h4>
-                <p className="text-xs text-gray-500 mb-3">
-                  0 pontos - Participe das atividades para subir no ranking
-                </p>
-                <Button className="w-full mt-1 bg-[#FF6B00]/90 hover:bg-[#FF8C40] text-white rounded-lg transition-colors text-xs h-8">
-                  <Users className="h-3.5 w-3.5 mr-1" /> Ver Ranking
-                </Button>
-              </div>
-            </div>
-
-            {/* Card 4: Pontos */}
-            <div className="bg-[#001427] rounded-xl overflow-hidden shadow-lg border border-[#29335C]/30 transform hover:translate-y-[-2px] transition-all duration-300 backdrop-blur-sm">
-              <div className="p-3 border-b border-[#29335C]/30 bg-gradient-to-r from-[#FF6B00]/90 to-[#FF8C40]/90">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-sm shadow-inner">
-                      <Coins className="h-4 w-4 text-white" />
-                    </div>
-                    <h3 className="text-sm font-bold text-white">Pontos</h3>
-                  </div>
-                </div>
-              </div>
-              <div className="p-4 flex flex-col items-center justify-center text-center">
-                <div className="w-16 h-16 rounded-full bg-[#29335C]/40 flex items-center justify-center mb-3">
-                  <Coins className="h-7 w-7 text-gray-400" />
-                </div>
-                <h4 className="text-sm font-medium text-gray-300 mb-2">
-                  0 pontos
-                </h4>
-                <p className="text-xs text-gray-500 mb-3">
-                  Complete desafios e tarefas para ganhar pontos e recompensas
-                </p>
-                <Button className="w-full mt-1 bg-[#FF6B00]/90 hover:bg-[#FF8C40] text-white rounded-lg transition-colors text-xs h-8">
-                  <Award className="h-3.5 w-3.5 mr-1" /> Conquistas
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {/* Eventos do Dia Card */}
-          <div className="bg-[#001427] rounded-xl overflow-hidden shadow-lg mb-8 border border-[#29335C]/30 transform hover:translate-y-[-2px] transition-all duration-300">
-            <div className="p-4 border-b border-[#29335C]/30">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <CalendarIcon className="h-5 w-5 text-[#FF6B00]" />
-                  <h3 className="text-base font-bold text-white">
-                    Eventos do Dia
-                  </h3>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-gray-400 hover:text-white hover:bg-[#29335C]/50 rounded-full"
-                >
-                  <Info className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            <div className="p-8 flex flex-col items-center justify-center">
-              <div className="w-20 h-20 rounded-full bg-[#29335C]/30 flex items-center justify-center mb-4">
-                <CalendarIcon className="h-8 w-8 text-gray-500" />
-              </div>
-              <h3 className="text-lg font-semibold text-white mb-2">
-                Nenhum evento para hoje
-              </h3>
-              <p className="text-gray-400 text-sm mb-6 text-center max-w-md">
-                Comece a organizar sua agenda adicionando aulas, trabalhos, provas ou compromissos importantes
-              </p>
-              <Button
-                className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white rounded-lg transition-all duration-300 shadow-md"
-                onClick={() => setShowAddEventModal(true)}
-              >
-                <Plus className="h-4 w-4 mr-2" /> Adicionar Evento
-              </Button>
-            </div>
-          </div>
+          
 
           {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Left Column */}
-            <div className="space-y-8">
-              {/* Study Time Card */}
-              <div className="bg-white dark:bg-[#1E293B] rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border border-[#FF6B00]/10 dark:border-[#FF6B00]/20 transform hover:translate-y-[-3px]">
-                <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="bg-white/20 p-1.5 rounded-lg shadow-inner">
-                        <Clock className="h-5 w-5 text-white" />
-                      </div>
-                      <h3 className="text-base font-bold text-white">
-                        Tempo de Estudo
-                      </h3>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <div className="bg-white/10 rounded-lg p-0.5 flex text-xs">
-                        <button
-                          className={`px-2 py-0.5 ${timeRange === "semana" ? "bg-white/20 text-white" : "text-white/80 hover:bg-white/10"} rounded-l-md`}
-                          onClick={() => handleTimeRangeChange("semana")}
-                        >
-                          Semana
-                        </button>
-                        <button
-                          className={`px-2 py-0.5 ${timeRange === "mes" ? "bg-white/20 text-white" : "text-white/80 hover:bg-white/10"}`}
-                          onClick={() => handleTimeRangeChange("mes")}
-                        >
-                          Mês
-                        </button>
-                        <button
-                          className={`px-2 py-0.5 ${timeRange === "ano" ? "bg-white/20 text-white" : "text-white/80 hover:bg-white/10"} rounded-r-md`}
-                          onClick={() => handleTimeRangeChange("ano")}
-                        >
-                          Ano
-                        </button>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 text-white/80 hover:text-white hover:bg-white/10 rounded-full"
-                        title="Definir Meta"
-                        onClick={() => setShowSetGoalModal(true)}
-                      >
-                        <Target className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-                <div className="p-6">
-                  <div className="space-y-6">
-                    {/* Weekly Progress */}
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-500 dark:text-white/60">
-                          Progresso semanal
-                        </span>
-                        <span className="text-sm font-medium text-gray-900 dark:text-white">
-                          0/30h
-                        </span>
-                      </div>
-                      <Progress
-                        value={0}
-                        className="h-2 bg-gray-100 dark:bg-gray-800"
-                        indicatorClassName="bg-[#FF6B00]"
-                      />
-                    </div>
-
-                    {/* Daily Study Graph */}
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-medium text-gray-800 dark:text-white">
-                        Estudo diário
-                      </h4>
-                      <div className="grid grid-cols-7 gap-1 h-12">
-                        {['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'].map((day, i) => (
-                          <div key={i} className="flex flex-col items-center">
-                            <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-t-sm h-1"></div>
-                            <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                              {day}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Subject Breakdown */}
-                    <div className="space-y-3">
-                      <h4 className="text-sm font-medium text-gray-800 dark:text-white">
-                        Estudo por matéria
-                      </h4>
-                      {['Matemática', 'Física', 'Química', 'Biologia'].map((subject, i) => (
-                        <div key={i} className="space-y-1">
-                          <div className="flex justify-between text-sm">
-                            <span className="text-gray-500 dark:text-white/60">
-                              {subject}
-                            </span>
-                            <span className="font-medium text-gray-900 dark:text-white">
-                              0h
-                            </span>
-                          </div>
-                          <Progress
-                            value={0}
-                            className="h-1.5 bg-gray-100 dark:bg-gray-800"
-                            indicatorClassName="bg-[#FF6B00]"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Subject Progress Card */}
-              <div className="bg-white dark:bg-[#1E293B] rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border border-[#FF6B00]/10 dark:border-[#FF6B00]/20 transform hover:translate-y-[-3px]">
-                <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-white/20 p-1.5 rounded-lg shadow-inner">
-                      <PieChart className="h-5 w-5 text-white" />
-                    </div>
-                    <h3 className="text-base font-bold text-white">
-                      Progresso por Disciplina
-                    </h3>
-                  </div>
-                </div>
-                <div className="p-8 flex flex-col items-center justify-center">
-                  <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
-                    <PieChart className="h-8 w-8 text-gray-400" />
-                  </div>
-                  <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                    Nenhuma disciplina registrada
-                  </h4>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 text-center max-w-md">
-                    Adicione disciplinas e acompanhe seu progresso em cada uma delas
-                  </p>
-                  <Button
-                    variant="link"
-                    size="sm"
-                    className="h-6 p-0 text-[#FF6B00] hover:text-[#FF8C40] transition-colors font-medium"
-                  >
-                    Definir Metas <ExternalLink className="h-3 w-3 ml-1" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Column */}
-            <div className="space-y-8">
-              {/* Pending Tasks */}
-              <div className="bg-white dark:bg-[#1E293B] rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border border-[#FF6B00]/10 dark:border-[#FF6B00]/20 transform hover:translate-y-[-3px]">
-                <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-white/20 p-1.5 rounded-lg shadow-inner">
-                      <CheckSquare className="h-5 w-5 text-white" />
-                    </div>
-                    <h3 className="text-base font-bold text-white">
-                      Tarefas Pendentes
-                    </h3>
-                  </div>
-                  <Badge className="bg-white/20 text-white hover:bg-white/30 transition-colors px-3 py-1 font-medium">
-                    0 tarefas
-                  </Badge>
-                </div>
-                <div className="p-8 flex flex-col items-center justify-center">
-                  <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
-                    <CheckSquare className="h-8 w-8 text-gray-400" />
-                  </div>
-                  <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                    Nenhuma tarefa pendente
-                  </h4>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 text-center max-w-md">
-                    Adicione tarefas para organizar seus estudos e acompanhar seu progresso
-                  </p>
-                  <Button
-                    size="sm"
-                    className="h-9 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300"
-                    onClick={() => setShowAddTaskModal(true)}
-                  >
-                    <Plus className="h-4 w-4 mr-2" /> Nova Tarefa
-                  </Button>
-                </div>
-              </div>
-
-              {/* Recomendações do Epictus IA */}
-              <div className="bg-white dark:bg-[#1E293B] rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border border-[#FF6B00]/10 dark:border-[#FF6B00]/20 transform hover:translate-y-[-3px]">
-                <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-white/20 p-1.5 rounded-lg shadow-inner">
-                      <Sparkles className="h-5 w-5 text-white" />
-                    </div>
-                    <h3 className="text-base font-bold text-white">
-                      Recomendações do Epictus IA
-                    </h3>
-                  </div>
-                </div>
-                <div className="p-8 flex flex-col items-center justify-center">
-                  <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
-                    <Sparkles className="h-8 w-8 text-gray-400" />
-                  </div>
-                  <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                    Nenhuma recomendação disponível
-                  </h4>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 text-center max-w-md">
-                    À medida que você utiliza a plataforma, o Epictus IA irá analisar seu desempenho e fornecer recomendações personalizadas
-                  </p>
-                  <Button
-                    className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300"
-                    onClick={() => setShowEpictusAIModal(true)}
-                  >
-                    <Sparkles className="h-4 w-4 mr-2" /> Explorar Epictus IA
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
+          
         </TabsContent>
 
         {/* Calendário Tab */}
