@@ -1024,6 +1024,15 @@ export default function AgendaPage() {
               onViewPerformanceDetails={() => setActiveTab("flow")}
               onViewRanking={() => setActiveTab("desafios")}
               onViewChallenges={() => setActiveTab("desafios")}
+              onViewAllEvents={() => {
+                setActiveTab("calendario");
+                setTimeout(() => {
+                  const calendarSection = document.querySelector('[data-section="calendar-view"]');
+                  if (calendarSection) {
+                    calendarSection.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }, 100);
+              }}
             />
           </div>
 
