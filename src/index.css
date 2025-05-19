@@ -950,7 +950,7 @@ body.modal-open {
   padding-right: 15px !important; /* Compensar a barra de rolagem */
   top: 0 !important;
   left: 0 !important;
-Removing the metric grid styles.	right: 0 !important;
+  right: 0 !important;
   bottom: 0 !important;
   z-index: 9990 !important;
 }
