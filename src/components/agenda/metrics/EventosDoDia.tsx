@@ -147,7 +147,7 @@ const EventosDoDia: React.FC<EventosDoDiaProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#001427] rounded-lg overflow-hidden">
+    <div className="flex flex-col h-full bg-[#001427] rounded-lg overflow-hidden relative">
       <div className="bg-[#FF6B00] p-3 flex items-center justify-between">
         <div className="flex items-center">
           <CalendarIcon className="h-5 w-5 text-white mr-2" />
@@ -165,7 +165,8 @@ const EventosDoDia: React.FC<EventosDoDiaProps> = ({
           </div>
         ) : eventos.length > 0 ? (
           <div className="flex-1 flex flex-col">
-            <div className="overflow-y-auto flex-1">
+            {/* Scrollable area for events */}
+            <div className="overflow-y-auto flex-1 mb-[50px]">
               {eventos.map((evento) => (
                 <div key={evento.id} className="p-2 hover:bg-[#0D2238]/80 transition-colors border-b border-[#0D2238]">
                   <div className="flex items-center gap-3">
@@ -190,12 +191,16 @@ const EventosDoDia: React.FC<EventosDoDiaProps> = ({
                 </div>
               ))}
             </div>
-            <Button 
-              className="m-2 bg-[#FF6B00] hover:bg-[#FF8C40] text-white rounded-md"
-              onClick={onViewAllEvents}
-            >
-              <ExternalLink className="h-3 w-3 mr-2" /> Ver Todos
-            </Button>
+            
+            {/* Fixed button at the bottom */}
+            <div className="absolute bottom-0 left-0 right-0 p-2 bg-[#001427] border-t border-[#0D2238]">
+              <Button 
+                className="w-full bg-[#FF6B00] hover:bg-[#FF8C40] text-white rounded-md"
+                onClick={onViewAllEvents}
+              >
+                <ExternalLink className="h-3 w-3 mr-2" /> Ver Todos
+              </Button>
+            </div>
           </div>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center p-4 text-center">
