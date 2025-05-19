@@ -388,13 +388,21 @@ export default function AgendaPage() {
 
     // Ordena eventos cronologicamente (por data e hora)
     upcoming.sort((a, b) => {
+      // Verificar se as datas são válidas
+      const dateA = a.originalDate instanceof Date ? a.originalDate : new Date();
+      const dateB = b.originalDate instanceof Date ? b.originalDate : new Date();
+      
       // Primeiro compara por data
-      const dateComparison = a.originalDate.getTime() - b.originalDate.getTime();
+      const dateComparison = dateA.getTime() - dateB.getTime();
 
       // Se for a mesma data, compara pelo horário
       if (dateComparison === 0) {
-        const [hoursA, minutesA] = a.originalTime.split(':').map(Number);
-        const [hoursB, minutesB] = b.originalTime.split(':').map(Number);
+        // Verificar se os horários são válidos
+        const timeA = typeof a.originalTime === 'string' ? a.originalTime : '00:00';
+        const timeB = typeof b.originalTime === 'string' ? b.originalTime : '00:00';
+        
+        const [hoursA, minutesA] = timeA.split(':').map(Number);
+        const [hoursB, minutesB] = timeB.split(':').map(Number);
 
         // Compara horas
         if (hoursA !== hoursB) {
