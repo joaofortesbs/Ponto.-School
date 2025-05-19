@@ -100,17 +100,62 @@ const Pontos: React.FC<PontosProps> = ({ onViewChallenges }) => {
         )}
       </div>
       
-      {!showHistory ? (
-        <div className="flex-1 flex flex-col items-center justify-center p-4 text-center">
-          <div className="bg-gray-100 dark:bg-gradient-to-br dark:from-[#0D2238] dark:to-[#0D2238]/70 p-4 rounded-full mb-3 shadow-inner">
-            <CoinsIcon className="h-8 w-8 text-[#FF6B00] dark:text-[#FF6B00]" />
+      <div className="flex-1 flex flex-col">
+        {!showHistory ? (
+          <div className="flex-1 flex flex-col items-center justify-center p-4 text-center">
+            <div className="bg-gray-100 dark:bg-gradient-to-br dark:from-[#0D2238] dark:to-[#0D2238]/70 p-4 rounded-full mb-3 shadow-inner">
+              <CoinsIcon className="h-8 w-8 text-[#FF6B00] dark:text-[#FF6B00]" />
+            </div>
+            <p className="text-gray-800 dark:text-white text-sm font-medium mb-1">
+              {totalXp} {totalXp === 1 ? 'ponto' : 'pontos'}
+            </p>
+            <p className="text-gray-500 dark:text-[#8393A0] text-xs mb-4">
+              Complete sessões de Flow e ganhe pontos baseados no seu desempenho!
+            </p>
           </div>
-          <p className="text-gray-800 dark:text-white text-sm font-medium mb-1">
-            {totalXp} {totalXp === 1 ? 'ponto' : 'pontos'}
-          </p>
-          <p className="text-gray-500 dark:text-[#8393A0] text-xs mb-4">
-            Complete sessões de Flow e ganhe pontos baseados no seu desempenho!
-          </p>
+        ) : (
+          <div className="flex-1 p-3">
+            <div className="text-center mb-4">
+              <p className="text-gray-800 dark:text-white font-medium">
+                Total: {totalXp} XP
+              </p>
+            </div>
+            
+            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 px-1">
+              Histórico de pontos ganhos:
+            </div>
+            
+            <ScrollArea className="h-[calc(100%-4.5rem)]">
+              <div className="space-y-2">
+                {xpByHour.map((item, idx) => (
+                  <div 
+                    key={idx} 
+                    className="flex items-center justify-between bg-gray-50 dark:bg-[#0D2238]/50 p-2 rounded-md"
+                  >
+                    <div className="flex items-center">
+                      <div className="bg-orange-100 dark:bg-orange-900/30 p-1 rounded-md mr-2">
+                        <CoinsIcon className="h-3 w-3 text-[#FF6B00]" />
+                      </div>
+                      <span className="text-xs text-gray-600 dark:text-gray-300">
+                        {item.hour}
+                      </span>
+                    </div>
+                    <span className="text-xs font-medium text-[#FF6B00]">+{item.xp} XP</span>
+                  </div>
+                ))}
+                
+                {xpByHour.length === 0 && (
+                  <div className="text-center py-4 text-gray-500 dark:text-gray-400 text-xs">
+                    Nenhum ponto ganho recentemente
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+          </div>
+        )}
+        
+        {/* Botão de Conquistas fixo */}
+        <div className="p-3 pt-0">
           <Button 
             onClick={onViewChallenges}
             className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF7B20] hover:to-[#FF9C50] text-white rounded-md w-full shadow-md transition-all duration-300"
@@ -118,46 +163,7 @@ const Pontos: React.FC<PontosProps> = ({ onViewChallenges }) => {
             <TrophyIcon className="h-4 w-4 mr-2" /> Conquistas
           </Button>
         </div>
-      ) : (
-        <div className="flex-1 p-3">
-          <div className="text-center mb-4">
-            <p className="text-gray-800 dark:text-white font-medium">
-              Total: {totalXp} XP
-            </p>
-          </div>
-          
-          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 px-1">
-            Histórico de pontos ganhos:
-          </div>
-          
-          <ScrollArea className="h-[calc(100%-4.5rem)]">
-            <div className="space-y-2">
-              {xpByHour.map((item, idx) => (
-                <div 
-                  key={idx} 
-                  className="flex items-center justify-between bg-gray-50 dark:bg-[#0D2238]/50 p-2 rounded-md"
-                >
-                  <div className="flex items-center">
-                    <div className="bg-orange-100 dark:bg-orange-900/30 p-1 rounded-md mr-2">
-                      <CoinsIcon className="h-3 w-3 text-[#FF6B00]" />
-                    </div>
-                    <span className="text-xs text-gray-600 dark:text-gray-300">
-                      {item.hour}
-                    </span>
-                  </div>
-                  <span className="text-xs font-medium text-[#FF6B00]">+{item.xp} XP</span>
-                </div>
-              ))}
-              
-              {xpByHour.length === 0 && (
-                <div className="text-center py-4 text-gray-500 dark:text-gray-400 text-xs">
-                  Nenhum ponto ganho recentemente
-                </div>
-              )}
-            </div>
-          </ScrollArea>
-        </div>
-      )}
+      </div>
     </div>
   );
 };
