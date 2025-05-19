@@ -163,11 +163,11 @@ const Pontos: React.FC<PontosProps> = ({ onViewChallenges }) => {
           </ScrollArea>
         </div>
         
-        {/* Botão de Conquistas fixo na parte inferior */}
-        <div className="mt-auto p-4 pt-2">
+        {/* Botão de Conquistas fixo na parte inferior, alinhado à esquerda */}
+        <div className="mt-auto p-4 pt-2 flex justify-start">
           <Button 
             onClick={onViewChallenges}
-            className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF7B20] hover:to-[#FF9C50] text-white rounded-md w-full shadow-md transition-all duration-300"
+            className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF7B20] hover:to-[#FF9C50] text-white rounded-md shadow-md transition-all duration-300"
           >
             <TrophyIcon className="h-4 w-4 mr-2" /> Conquistas
           </Button>
