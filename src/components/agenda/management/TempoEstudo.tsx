@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { BarChart3, Clock, ExternalLink, Settings, Target, Zap, Info } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,30 +26,30 @@ const TempoEstudo = () => {
   useEffect(() => {
     if (!loading) {
       setIsLoading(false);
-      
+
       // Obter estatísticas das sessões de Flow
       const stats = getStats();
-      
+
       // Verificar se existem dados
       if (stats.sessionsCount === 0) {
         setIsNoData(true);
         return;
       }
-      
+
       // Calcular total de horas
       const totalSeconds = stats.totalTimeInSeconds || 0;
       const hours = Math.floor(totalSeconds / 3600);
       setTotalHours(hours);
-      
+
       // Calcular progresso em relação à meta
       const calculatedProgress = Math.min(Math.round((hours / goalHours) * 100), 100);
       setProgress(calculatedProgress);
-      
+
       // Processar dados por disciplina
       const subjectData = Object.entries(stats.subjectStats || {}).map(([subject, seconds], index) => {
         const subjectHours = Math.floor(seconds / 3600);
         const percentage = totalSeconds > 0 ? Math.round((seconds / totalSeconds) * 100) : 0;
-        
+
         return {
           subject,
           hours: subjectHours,
@@ -58,34 +57,34 @@ const TempoEstudo = () => {
           color: subjectColors[index % subjectColors.length]
         };
       }).sort((a, b) => b.hours - a.hours).slice(0, 5);
-      
+
       setTopSubjects(subjectData);
-      
+
       // Processar dados por dia da semana
       const daysOfWeek = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
       const weeklyStats: { [key: string]: number } = {};
-      
+
       // Inicializar com zeros
       daysOfWeek.forEach(day => {
         weeklyStats[day] = 0;
       });
-      
+
       // Preencher com dados reais
       sessions.forEach(session => {
         try {
           const sessionDate = session.timestamp ? new Date(session.timestamp) : new Date(session.date);
           const dayOfWeek = daysOfWeek[sessionDate.getDay()];
-          
+
           // Calcular horas da sessão em segundos
           const sessionSeconds = session.elapsedTimeSeconds || 0;
-          
+
           // Adicionar ao dia correspondente
           weeklyStats[dayOfWeek] = (weeklyStats[dayOfWeek] || 0) + sessionSeconds;
         } catch (e) {
           console.error("Erro ao processar data da sessão:", e);
         }
       });
-      
+
       // Converter segundos para horas e calcular percentagens para visualização
       const maxDaySeconds = Math.max(...Object.values(weeklyStats));
       const weekData = daysOfWeek.map(day => ({
@@ -93,7 +92,7 @@ const TempoEstudo = () => {
         hours: Math.floor(weeklyStats[day] / 3600),
         percentage: maxDaySeconds > 0 ? Math.round((weeklyStats[day] / maxDaySeconds) * 100) : 0
       }));
-      
+
       setWeeklyData(weekData);
     }
   }, [loading, sessions]);
@@ -131,29 +130,19 @@ const TempoEstudo = () => {
     <>
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
-          <div>
-            <CardTitle className="text-xl font-bold text-[#29335C] dark:text-white flex items-center">
-              Tempo de Estudo
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Info className="h-4 w-4 text-gray-400 ml-2 cursor-help" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="w-[200px] text-sm">
-                      Dados baseados nas suas sessões de Flow registradas. Inicie novas sessões para atualizar.
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+          <div className="w-full">
+            <CardTitle className="flex items-center gap-2 text-white font-medium bg-[#FF6B00] p-2 rounded-md">
+              <Clock className="h-5 w-5" /> Tempo de Estudo
+              <div className="ml-auto flex items-center gap-1 text-xs">
+                <span className="bg-white/20 px-2 py-0.5 rounded-md cursor-pointer hover:bg-white/30 transition-colors">Semana</span>
+                <span className="px-2 py-0.5 rounded-md cursor-pointer hover:bg-white/30 transition-colors">Mês</span>
+                <span className="px-2 py-0.5 rounded-md cursor-pointer hover:bg-white/30 transition-colors">Ano</span>
+                <button className="p-1 rounded-full hover:bg-white/30 transition-colors">
+                  <Settings className="h-4 w-4" />
+                </button>
+              </div>
             </CardTitle>
-            <CardDescription className="text-gray-500 dark:text-gray-400">
-              Acompanhe seu progresso semanal
-            </CardDescription>
           </div>
-          <Button variant="ghost" size="icon" className="text-gray-500 hover:text-[#FF6B00]">
-            <Settings className="h-5 w-5" />
-          </Button>
         </div>
       </CardHeader>
       <CardContent className="pt-0">
