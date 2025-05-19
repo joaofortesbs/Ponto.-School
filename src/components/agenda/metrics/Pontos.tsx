@@ -164,7 +164,7 @@ const Pontos: React.FC<PontosProps> = ({ onViewChallenges }) => {
         </div>
         
         {/* Botão de Conquistas fixo na parte inferior - alinhado com o botão do card de Eventos do Dia */}
-        <div className="mt-4 p-4 border-t border-gray-100 dark:border-[#0D2238]/40 z-10 w-full">
+        <div className="mt-5 p-4 pt-5 border-t border-gray-100 dark:border-[#0D2238]/40 z-10 w-full">
           <Button 
             onClick={onViewChallenges}
             className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF7B20] hover:to-[#FF9C50] text-white rounded-md shadow-md transition-all duration-300 w-full"
