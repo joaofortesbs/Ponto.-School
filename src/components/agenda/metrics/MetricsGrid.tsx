@@ -1,40 +1,41 @@
-import React, { useState } from "react";
-import DesempenhoSemanal from "./DesempenhoSemanal";
+import React from "react";
 import EventosDoDia from "./EventosDoDia";
+import DesempenhoSemanal from "./DesempenhoSemanal";
 import Ranking from "./Ranking";
 import Pontos from "./Pontos";
-import { useNavigate } from "react-router-dom";
-import FlowPerformanceDetailsModal from "../flow/FlowPerformanceDetailsModal";
 
 interface MetricsGridProps {
+  onAddEvent?: () => void;
+  onViewPerformanceDetails?: () => void;
+  onViewRanking?: () => void;
+  onViewChallenges?: () => void;
   onViewAllEvents?: () => void;
 }
 
-const MetricsGrid: React.FC<MetricsGridProps> = ({ onViewAllEvents }) => {
-  const navigate = useNavigate();
-  const [performanceModalOpen, setPerformanceModalOpen] = useState(false);
-
-  const handleViewAllEvents = () => {
-    if (onViewAllEvents) {
-      onViewAllEvents();
-    }
-  };
-
-  const handleViewPerformanceDetails = () => {
-    setPerformanceModalOpen(true);
-  };
-
+const MetricsGrid: React.FC<MetricsGridProps> = ({
+  onAddEvent,
+  onViewPerformanceDetails,
+  onViewRanking,
+  onViewChallenges,
+  onViewAllEvents
+}) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
-      <EventosDoDia onViewAllEvents={handleViewAllEvents} />
-      <DesempenhoSemanal onViewDetails={handleViewPerformanceDetails} />
-      <Ranking onViewDetails={() => {}} />
-      <Pontos onViewDetails={() => {}} />
-
-      <FlowPerformanceDetailsModal 
-        open={performanceModalOpen}
-        onClose={() => setPerformanceModalOpen(false)}
-      />
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="h-[260px] metrics-card-container">
+        <EventosDoDia 
+          onAddEvent={onAddEvent} 
+          onViewAllEvents={onViewAllEvents} 
+        />
+      </div>
+      <div className="h-[260px] metrics-card-container">
+        <DesempenhoSemanal onViewDetails={onViewPerformanceDetails} />
+      </div>
+      <div className="h-[260px] metrics-card-container">
+        <Ranking onViewRanking={onViewRanking} />
+      </div>
+      <div className="h-[260px] metrics-card-container">
+        <Pontos onViewChallenges={onViewChallenges} />
+      </div>
     </div>
   );
 };
