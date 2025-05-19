@@ -388,32 +388,58 @@ export default function AgendaPage() {
 
     // Ordena eventos cronologicamente (por data e hora)
     upcoming.sort((a, b) => {
-      // Verificar se as datas são válidas
-      const dateA = a.originalDate instanceof Date ? a.originalDate : new Date();
-      const dateB = b.originalDate instanceof Date ? b.originalDate : new Date();
-      
-      // Primeiro compara por data
-      const dateComparison = dateA.getTime() - dateB.getTime();
-
-      // Se for a mesma data, compara pelo horário
-      if (dateComparison === 0) {
-        // Verificar se os horários são válidos
-        const timeA = typeof a.originalTime === 'string' ? a.originalTime : '00:00';
-        const timeB = typeof b.originalTime === 'string' ? b.originalTime : '00:00';
+      try {
+        // Garantir que originalDate seja um objeto Date válido
+        let dateA = null;
+        let dateB = null;
         
-        const [hoursA, minutesA] = timeA.split(':').map(Number);
-        const [hoursB, minutesB] = timeB.split(':').map(Number);
+        if (a.originalDate instanceof Date && !isNaN(a.originalDate.getTime())) {
+          dateA = a.originalDate;
+        } else if (typeof a.originalDate === 'string') {
+          dateA = new Date(a.originalDate);
+        } else {
+          dateA = new Date(); // Fallback para a data atual
+        }
+        
+        if (b.originalDate instanceof Date && !isNaN(b.originalDate.getTime())) {
+          dateB = b.originalDate;
+        } else if (typeof b.originalDate === 'string') {
+          dateB = new Date(b.originalDate);
+        } else {
+          dateB = new Date(); // Fallback para a data atual
+        }
+        
+        // Verificar se as conversões foram bem-sucedidas
+        if (isNaN(dateA.getTime()) || isNaN(dateB.getTime())) {
+          return 0; // Se alguma data for inválida, não alterar a ordem
+        }
+        
+        // Primeiro compara por data
+        const dateComparison = dateA.getTime() - dateB.getTime();
 
-        // Compara horas
-        if (hoursA !== hoursB) {
+        // Se for a mesma data, compara pelo horário
+        if (dateComparison === 0) {
+          // Verificar se os horários são válidos
+          const timeA = typeof a.originalTime === 'string' ? a.originalTime : '00:00';
+          const timeB = typeof b.originalTime === 'string' ? b.originalTime : '00:00';
+          
+          const [hoursA, minutesA] = timeA.split(':').map(Number);
+          const [hoursB, minutesB] = timeB.split(':').map(Number);
+
+          // Compara horas
+          if (hoursA !== hoursB) {
           return hoursA - hoursB;
+          }
+
+          // Se as horas forem iguais, compara minutos
+          return minutesA - minutesB;
         }
 
-        // Se as horas forem iguais, compara minutos
-        return minutesA - minutesB;
+        return dateComparison;
+      } catch (error) {
+        console.error("Erro ao ordenar eventos:", error, a, b);
+        return 0; // Em caso de erro, não alterar a ordem
       }
-
-      return dateComparison;
     });
 
     return upcoming;
