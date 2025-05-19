@@ -17,36 +17,6 @@
 @import "./styles/rotina-calendar.css";
 
 /* Estilos para corrigir problemas de altura em componentes específicos */
-
-/* Estilo para scrollbar personalizada */
-@layer utilities {
-  .scrollbar-thin {
-    scrollbar-width: thin;
-  }
-  
-  .scrollbar-thumb-[#0D2238]::-webkit-scrollbar-thumb {
-    background-color: #0D2238;
-    border-radius: 6px;
-  }
-  
-  .scrollbar-track-[#001427]::-webkit-scrollbar-track {
-    background-color: #001427;
-  }
-  
-  ::-webkit-scrollbar {
-    width: 6px;
-  }
-  
-  ::-webkit-scrollbar-thumb {
-    background-color: #0D2238;
-    border-radius: 6px;
-  }
-  
-  ::-webkit-scrollbar-track {
-    background-color: #001427;
-  }
-}
-
 .mode-epictus-turbo-advanced {
   min-height: 100vh;
   overflow-y: auto;
