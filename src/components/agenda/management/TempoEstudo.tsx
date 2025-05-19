@@ -228,17 +228,20 @@ const TempoEstudo = () => {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Título preenchido acima do card */}
-      <div className="flex items-center justify-between bg-[#FF6B00] text-white p-2 rounded-t-md mb-0 font-medium">
-        <div className="flex items-center gap-2">
-          <Clock className="h-5 w-5" /> Tempo de Estudo
+      {/* Título preenchido acima do card - estilo igual ao EventosDoDia */}
+      <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-3 flex items-center justify-between shadow-md" style={{ height: "52px", width: "100%" }}>
+        <div className="flex items-center">
+          <div className="bg-white/10 p-1.5 rounded-lg mr-2">
+            <Clock className="h-4 w-4 text-white" />
+          </div>
+          <h3 className="text-white font-semibold text-sm">Tempo de Estudo</h3>
         </div>
         <div className="flex items-center gap-1 text-xs">
           <span className="bg-white/20 px-2 py-0.5 rounded-md cursor-pointer hover:bg-white/30 transition-colors">Semana</span>
           <span className="px-2 py-0.5 rounded-md cursor-pointer hover:bg-white/30 transition-colors">Mês</span>
           <span className="px-2 py-0.5 rounded-md cursor-pointer hover:bg-white/30 transition-colors">Ano</span>
           <button className="p-1 rounded-full hover:bg-white/30 transition-colors">
-            <Settings className="h-4 w-4" />
+            <Settings className="h-4 w-4 text-white" />
           </button>
         </div>
       </div>
