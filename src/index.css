@@ -39,57 +39,6 @@
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-
-/* Estilos para cards de métricas */
-.metrics-grid-card {
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.metrics-grid-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
-}
-
-.metrics-card-header {
-  position: relative;
-  overflow: hidden;
-}
-
-.metrics-card-header::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  background: linear-gradient(to right, rgba(255, 107, 0, 0.05), rgba(255, 140, 64, 0.1));
-  pointer-events: none;
-}
-
-/* Gradient overlay for card buttons */
-.card-gradient-button {
-  position: relative;
-  overflow: hidden;
-}
-
-.card-gradient-button::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(45deg, rgba(255, 107, 0, 0.15), rgba(255, 140, 64, 0.15));
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.card-gradient-button:hover::before {
-  opacity: 1;
-}
-
-
   background: rgba(255, 107, 0, 0.9) !important;
 }
 

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { CalendarIcon, PlusIcon, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -33,7 +34,7 @@ const EventosDoDia: React.FC<EventosDoDiaProps> = ({
     try {
       // Obter todos os eventos
       let todosEventos: Evento[] = [];
-
+      
       // Verificar se existe a variável global de eventos
       if (window.agendaEventData) {
         // Converter os eventos para um formato simples
@@ -50,29 +51,29 @@ const EventosDoDia: React.FC<EventosDoDiaProps> = ({
           todosEventos = localEvents;
         }
       }
-
+      
       // Filtrar apenas eventos de hoje
       const hoje = new Date();
       hoje.setHours(0, 0, 0, 0);
       const amanha = new Date(hoje);
       amanha.setDate(amanha.getDate() + 1);
-
+      
       const eventosDeHoje = todosEventos.filter(evento => {
         if (!evento.startDate) return false;
-
+        
         const dataEvento = new Date(evento.startDate);
         dataEvento.setHours(0, 0, 0, 0);
-
+        
         return dataEvento.getTime() === hoje.getTime();
       });
-
+      
       // Ordenar por horário
       eventosDeHoje.sort((a, b) => {
         const timeA = a.startTime || "00:00";
         const timeB = b.startTime || "00:00";
         return timeA.localeCompare(timeB);
       });
-
+      
       setEventos(eventosDeHoje);
     } catch (error) {
       console.error("Erro ao buscar eventos do dia:", error);
@@ -85,33 +86,33 @@ const EventosDoDia: React.FC<EventosDoDiaProps> = ({
   // Carregar eventos ao montar o componente
   useEffect(() => {
     buscarEventosDeHoje();
-
+    
     // Escutar por atualizações de eventos
     const handleEventUpdate = () => {
       console.log("EventosDoDia: Evento de atualização recebido");
       buscarEventosDeHoje();
     };
-
+    
     window.addEventListener('event-added', handleEventUpdate);
     window.addEventListener('agenda-events-updated', handleEventUpdate);
-
+    
     return () => {
       window.removeEventListener('event-added', handleEventUpdate);
       window.removeEventListener('agenda-events-updated', handleEventUpdate);
     };
   }, []);
-
+  
   // Função para renderizar o status do evento
   const renderStatus = (evento: Evento) => {
     const agora = new Date();
     const [horaInicio, minutoInicio] = (evento.startTime || "").split(":").map(Number);
     const [horaFim, minutoFim] = (evento.endTime || "").split(":").map(Number);
-
+    
     if (isNaN(horaInicio) || isNaN(minutoInicio)) return null;
-
+    
     const inicioHoje = new Date();
     inicioHoje.setHours(horaInicio, minutoInicio, 0);
-
+    
     const fimHoje = new Date();
     if (!isNaN(horaFim) && !isNaN(minutoFim)) {
       fimHoje.setHours(horaFim, minutoFim, 0);
@@ -119,7 +120,7 @@ const EventosDoDia: React.FC<EventosDoDiaProps> = ({
       // Se não tiver horário de fim, assume 1 hora após o início
       fimHoje.setHours(horaInicio + 1, minutoInicio, 0);
     }
-
+    
     if (agora >= inicioHoje && agora <= fimHoje) {
       return <Badge className="bg-green-500 text-white ml-auto">Agora</Badge>;
     } else if (agora < inicioHoje) {
@@ -156,7 +157,7 @@ const EventosDoDia: React.FC<EventosDoDiaProps> = ({
           {eventos.length}
         </div>
       </div>
-
+      
       <div className="flex-1 flex flex-col p-0">
         {isLoading ? (
           <div className="flex-1 flex items-center justify-center">
@@ -167,30 +168,30 @@ const EventosDoDia: React.FC<EventosDoDiaProps> = ({
             {/* Scrollable area for events - altura reduzida para alinhar com o botão do card de Desempenho Semanal */}
             <div className="overflow-y-auto custom-scrollbar" style={{ maxHeight: "130px", height: "130px" }}>
               {eventos.map((evento) => (
-                <div key={evento.id} className="p-2.5 hover:bg-[#0D2238] transition-all duration-200 border-b border-[#0D2238]/50 hover:border-[#FF6B00]/20">
-                <div className="flex items-center gap-3">
-                  <div className="flex-shrink-0">
-                    {getEventIcon(evento.type)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-white text-sm font-medium truncate">{evento.title}</h4>
-                      {renderStatus(evento)}
+                <div key={evento.id} className="p-2 hover:bg-[#0D2238]/80 transition-colors border-b border-[#0D2238]">
+                  <div className="flex items-center gap-3">
+                    <div className="flex-shrink-0">
+                      {getEventIcon(evento.type)}
                     </div>
-                    <div className="text-[#8393A0] text-xs flex items-center mt-1">
-                      <span className="inline-flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1 text-[#FF6B00]/70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        {evento.startTime || ""} {evento.endTime ? `- ${evento.endTime}` : ""}
-                      </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-white text-sm font-medium truncate">{evento.title}</h4>
+                        {renderStatus(evento)}
+                      </div>
+                      <div className="text-[#8393A0] text-xs flex items-center mt-1">
+                        <span className="inline-flex items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          {evento.startTime || ""} {evento.endTime ? `- ${evento.endTime}` : ""}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
               ))}
             </div>
-
+            
             {/* Fixed button - alinhado com o botão do card de Desempenho Semanal */}
             <div className="mt-4 p-4 bg-[#001427] border-t border-[#0D2238] z-10 w-full">
               <Button 
