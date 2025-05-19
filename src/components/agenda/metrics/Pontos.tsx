@@ -53,7 +53,11 @@ const Pontos: React.FC<PontosProps> = ({ onViewDetails, onViewChallenges }) => {
 
   return (
     <div className="h-full rounded-xl border border-gray-200 dark:border-[#0D2238]/40 bg-white dark:bg-gradient-to-b dark:from-[#001427]/80 dark:to-[#001427] shadow-sm overflow-hidden flex flex-col">
-      <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-3 flex items-center justify-between">
+      <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-3 flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white mr-2">
+          <path d="m12 8-9.04 9.06a2.82 2.82 0 1 0 3.98 3.98L16 12"></path>
+          <circle cx="17" cy="7" r="5"></circle>
+        </svg>
         <h3 className="font-semibold text-white">Pontos</h3>
       </div>
 
