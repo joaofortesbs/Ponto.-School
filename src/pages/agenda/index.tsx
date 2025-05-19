@@ -1030,9 +1030,8 @@ export default function AgendaPage() {
           </div>
 
           {/* Main Content Grid */}
-           {/* Grade de Gerenciamento de Agenda */}
+           {/* Grade de cards de gerenciamento */}
            <div className="mt-6">
-            <h2 className="text-xl font-semibold dark:text-white mb-4">Gerenciamento de Agenda</h2>
             <ManagementGrid />
           </div>
 
