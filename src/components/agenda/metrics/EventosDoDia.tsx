@@ -122,62 +122,70 @@ const EventosDoDia: React.FC<EventosDoDiaProps> = ({
     }
     
     if (agora >= inicioHoje && agora <= fimHoje) {
-      return <Badge className="bg-gradient-to-r from-green-500 to-green-600 text-white ml-auto font-medium text-[10px] px-2 shadow-sm">Agora</Badge>;
+      return <span className="metrics-status-badge status-agora">Agora</span>;
     } else if (agora < inicioHoje) {
-      return <Badge className="bg-gradient-to-r from-amber-400 to-amber-500 text-white ml-auto font-medium text-[10px] px-2 shadow-sm">Pendente</Badge>;
+      return <span className="metrics-status-badge status-pendente">Pendente</span>;
     } else {
-      return <Badge className="bg-gradient-to-r from-gray-500 to-gray-600 text-white ml-auto font-medium text-[10px] px-2 shadow-sm">Concluído</Badge>;
+      return <span className="metrics-status-badge status-concluido">Concluído</span>;
     }
   };
 
   // Função para obter ícone do tipo de evento
   const getEventIcon = (type: string) => {
+    const iconClasses = "h-4 w-4";
+    
     switch (type) {
       case "aula":
       case "aula_ao_vivo":
       case "aula_gravada":
-        return <div className="bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/40 dark:to-blue-800/30 p-2 rounded-full shadow-sm">
-          <CalendarIcon className="h-4 w-4 text-blue-600 dark:text-blue-300" />
-        </div>;
+        return (
+          <div className="bg-gradient-to-br from-blue-600/20 to-blue-800/40 p-2 rounded-full">
+            <CalendarIcon className={`${iconClasses} text-blue-500`} />
+          </div>
+        );
       default:
-        return <div className="bg-gradient-to-br from-orange-100 to-orange-200 dark:from-orange-900/40 dark:to-orange-800/30 p-2 rounded-full shadow-sm">
-          <CalendarIcon className="h-4 w-4 text-orange-600 dark:text-orange-300" />
-        </div>;
+        return (
+          <div className="bg-gradient-to-br from-orange-600/20 to-orange-800/40 p-2 rounded-full">
+            <CalendarIcon className={`${iconClasses} text-orange-500`} />
+          </div>
+        );
     }
   };
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-b from-[#001427] to-[#001a2f] rounded-xl overflow-hidden relative shadow-md border border-[#0D2238]/50">
-      <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-3 flex items-center justify-between shadow-md">
-        <div className="flex items-center">
-          <div className="bg-white/10 p-1.5 rounded-lg mr-2">
-            <CalendarIcon className="h-4 w-4 text-white" />
-          </div>
-          <h3 className="text-white font-semibold text-sm">Eventos do Dia</h3>
+    <div className="metrics-card h-full flex flex-col">
+      <div className="metrics-card-header flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <CalendarIcon className="h-5 w-5 text-white" />
+          <h3 className="text-white font-medium text-sm">Eventos do Dia</h3>
         </div>
-        <div className="bg-white/20 backdrop-blur-sm rounded-full w-6 h-6 flex items-center justify-center text-xs text-white font-semibold shadow-inner">
+        <div className="flex items-center justify-center w-6 h-6 bg-white/20 backdrop-blur-sm text-white rounded-full text-xs font-medium">
           {eventos.length}
         </div>
       </div>
       
-      <div className="flex-1 flex flex-col p-0">
+      <div className="flex-1 flex flex-col">
         {isLoading ? (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-t-2 border-[#FF6B00]"></div>
+          <div className="flex-1 flex items-center justify-center p-8">
+            <div className="relative w-10 h-10">
+              <div className="absolute inset-0 rounded-full border-t-2 border-r-2 border-[#FF6B00] animate-spin"></div>
+              <div className="absolute inset-2 rounded-full border-t-2 border-r-2 border-[#FF8C40] animate-spin" style={{animationDuration: '1.2s'}}></div>
+            </div>
           </div>
         ) : eventos.length > 0 ? (
-          <div className="flex-1 flex flex-col relative">
-            {/* Scrollable area for events */}
-            <div className="overflow-y-auto custom-scrollbar" style={{ maxHeight: "130px", height: "130px" }}>
+          <div className="flex-1 flex flex-col">
+            <div className="overflow-y-auto custom-scrollbar flex-1" style={{ maxHeight: "130px", height: "130px" }}>
               {eventos.map((evento) => (
-                <div key={evento.id} className="p-2.5 hover:bg-[#0D2238]/90 transition-all duration-300 border-b border-[#0D2238]">
+                <div key={evento.id} className="metrics-event-item group">
                   <div className="flex items-center gap-3">
-                    <div className="flex-shrink-0">
+                    <div className="flex-shrink-0 group-hover:scale-110 transition-transform">
                       {getEventIcon(evento.type)}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <h4 className="text-white text-sm font-medium truncate">{evento.title}</h4>
+                        <h4 className="text-white text-sm font-medium truncate group-hover:text-[#FF8C40] transition-colors">
+                          {evento.title}
+                        </h4>
                         {renderStatus(evento)}
                       </div>
                       <div className="text-[#8393A0] text-xs flex items-center mt-1">
@@ -194,10 +202,9 @@ const EventosDoDia: React.FC<EventosDoDiaProps> = ({
               ))}
             </div>
             
-            {/* Fixed button - alinhado com o botão do card de Desempenho Semanal */}
-            <div className="mt-4 p-4 bg-gradient-to-b from-[#001427]/80 to-[#001427] border-t border-[#0D2238]/40 z-10 w-full backdrop-blur-sm">
+            <div className="p-4 mt-auto">
               <Button 
-                className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF7B20] hover:to-[#FF9C50] text-white rounded-md shadow-md transition-all duration-300"
+                className="metrics-card-button w-full text-white rounded-md font-medium"
                 onClick={onViewAllEvents}
               >
                 <ExternalLink className="h-4 w-4 mr-2" /> Ver Todos
@@ -205,8 +212,8 @@ const EventosDoDia: React.FC<EventosDoDiaProps> = ({
             </div>
           </div>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center p-4 text-center">
-            <div className="bg-gradient-to-br from-[#0D2238] to-[#0D2238]/70 p-4 rounded-full mb-3 shadow-inner">
+          <div className="metrics-empty-state flex-1">
+            <div className="metrics-empty-icon">
               <CalendarIcon className="h-8 w-8 text-[#8393A0]" />
             </div>
             <p className="text-white text-sm font-medium mb-1">Nenhum evento programado para hoje</p>
@@ -215,7 +222,7 @@ const EventosDoDia: React.FC<EventosDoDiaProps> = ({
             </p>
             <Button 
               onClick={onAddEvent}
-              className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF7B20] hover:to-[#FF9C50] text-white rounded-md w-full shadow-md transition-all duration-300"
+              className="metrics-card-button w-full text-white rounded-md"
             >
               <PlusIcon className="h-4 w-4 mr-2" /> Adicionar Evento
             </Button>
