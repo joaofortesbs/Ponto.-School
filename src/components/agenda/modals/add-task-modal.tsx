@@ -251,7 +251,16 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
 
       // Call onAddTask first to ensure the task is added
       if (onAddTask) {
-        onAddTask(newTask);
+        const addedTask = onAddTask(newTask);
+        
+        try {
+          // Emitir evento para outros componentes que precisam saber sobre a nova tarefa
+          import('@/services/taskService').then(({ taskService }) => {
+            taskService.emitTaskAdded(newTask);
+          });
+        } catch (error) {
+          console.error("Erro ao emitir evento de nova tarefa:", error);
+        }
       }
 
       // Then reset form and close modal

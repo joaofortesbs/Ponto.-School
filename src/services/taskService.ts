@@ -17,10 +17,29 @@ export const taskService = {
     taskEvents.dispatchEvent(new CustomEvent('tasks-updated', { detail: { userId } }));
   },
   
+  emitTaskAdded: (task: any) => {
+    // Disparar evento global para sincronizar componentes
+    taskEvents.dispatchEvent(new CustomEvent('task-added', { detail: task }));
+    
+    // Disparar evento no DOM para componentes que estão em árvores de componentes diferentes
+    const event = new CustomEvent('refresh-tasks', { detail: task, bubbles: true });
+    document.dispatchEvent(event);
+    const tasksViewElement = document.querySelector('[data-testid="tasks-view"]');
+    if (tasksViewElement) {
+      tasksViewElement.dispatchEvent(event);
+    }
+  },
+  
   onTasksUpdated: (callback: (userId: string) => void) => {
     const handler = (event: any) => callback(event.detail.userId);
     taskEvents.addEventListener('tasks-updated', handler);
     return () => taskEvents.removeEventListener('tasks-updated', handler);
+  },
+  
+  onTaskAdded: (callback: (task: any) => void) => {
+    const handler = (event: any) => callback(event.detail);
+    taskEvents.addEventListener('task-added', handler);
+    return () => taskEvents.removeEventListener('task-added', handler);
   },
   /**
    * Salvar tarefas para um usuário

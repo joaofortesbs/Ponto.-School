@@ -84,15 +84,28 @@ const TasksView: React.FC<TasksViewProps> = ({
       }
     };
 
+    // Escutar evento no componente
     const tasksView = document.querySelector('[data-testid="tasks-view"]');
     if (tasksView) {
       tasksView.addEventListener("refresh-tasks", handleExternalTaskAdd);
     }
+    
+    // Escutar evento global (para sincronização entre componentes distantes)
+    document.addEventListener("refresh-tasks", handleExternalTaskAdd);
+
+    // Escutar evento do serviço
+    const unsubscribe = taskService.onTaskAdded((task) => {
+      if (task) {
+        handleAddTask(task);
+      }
+    });
 
     return () => {
       if (tasksView) {
         tasksView.removeEventListener("refresh-tasks", handleExternalTaskAdd);
       }
+      document.removeEventListener("refresh-tasks", handleExternalTaskAdd);
+      unsubscribe();
     };
   }, []);
 
@@ -416,9 +429,14 @@ const TasksView: React.FC<TasksViewProps> = ({
               const saved = await taskService.saveTasks(user.id, updatedTasks);
               if (!saved) {
                 console.warn("Não foi possível salvar tarefas no banco de dados nem localmente");
+              } else {
+                // Emitir evento para outros componentes
+                taskService.emitTaskAdded(newTask);
               }
             } else {
               console.warn("Usuário não autenticado, tarefas salvas apenas na sessão atual");
+              // Mesmo sem usuário, emitir evento para componentes da mesma sessão
+              taskService.emitTaskAdded(newTask);
             }
           } catch (err) {
             console.error("Erro ao salvar tarefas:", err);

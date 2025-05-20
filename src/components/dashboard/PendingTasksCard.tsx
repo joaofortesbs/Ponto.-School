@@ -92,6 +92,48 @@ const PendingTasksCard = ({
       };
       
       loadTasks();
+      
+      // Configurar listener para atualizações de tarefas
+      const unsubscribeFromTasksUpdated = taskService.onTasksUpdated((userId) => {
+        if (userId === user.id) {
+          loadTasks();
+        }
+      });
+      
+      // Configurar listener para adição de tarefas
+      const unsubscribeFromTaskAdded = taskService.onTaskAdded((newTask) => {
+        setTasks(currentTasks => {
+          // Verificar se a tarefa já existe para evitar duplicação
+          const taskExists = currentTasks.some(task => task.id === newTask.id);
+          if (taskExists) {
+            return currentTasks;
+          }
+          return [...currentTasks, newTask];
+        });
+      });
+      
+      // Escutar evento DOM para suporte a atualizações entre componentes
+      const handleTaskAddedDOMEvent = (event: any) => {
+        if (event.detail) {
+          setTasks(currentTasks => {
+            const newTask = event.detail;
+            // Verificar se a tarefa já existe para evitar duplicação
+            const taskExists = currentTasks.some(task => task.id === newTask.id);
+            if (taskExists) {
+              return currentTasks;
+            }
+            return [...currentTasks, newTask];
+          });
+        }
+      };
+      
+      document.addEventListener('refresh-tasks', handleTaskAddedDOMEvent);
+      
+      return () => {
+        unsubscribeFromTasksUpdated();
+        unsubscribeFromTaskAdded();
+        document.removeEventListener('refresh-tasks', handleTaskAddedDOMEvent);
+      };
     }
   }, [user, setTasks]);
 
@@ -104,6 +146,12 @@ const PendingTasksCard = ({
   }, [tasks, user]);
 
   const handleAddTask = (newTask: any) => {
+    // Verificar se a tarefa já existe pelo ID
+    if (newTask.id && tasks.some(task => task.id === newTask.id)) {
+      console.log("Tarefa já existe, ignorando duplicação:", newTask.id);
+      return;
+    }
+    
     // Format the due date for display
     let dueDateDisplay = "";
     if (newTask.dueDate) {
@@ -125,22 +173,27 @@ const PendingTasksCard = ({
     }
 
     const task: Task = {
-      id: `task-${Date.now()}`,
+      id: newTask.id || `task-${Date.now()}`,
       title: newTask.title,
-      dueDate: dueDateDisplay || newTask.dueDate.toISOString().split("T")[0],
-      subject: newTask.discipline || "Geral",
-      completed: false,
+      dueDate: dueDateDisplay || (typeof newTask.dueDate === 'string' ? newTask.dueDate : newTask.dueDate.toISOString().split("T")[0]),
+      subject: newTask.discipline || newTask.subject || "Geral",
+      completed: newTask.completed || false,
       priority: newTask.priority || "media",
-      discipline: newTask.discipline,
+      discipline: newTask.discipline || newTask.subject,
     };
 
-    setTasks([...tasks, task]);
-    
-    // Se o usuário estiver autenticado, salva as tarefas
-    if (user) {
-      taskService.saveTasks(user.id, [...tasks, task])
-        .catch(err => console.error("Erro ao salvar nova tarefa:", err));
-    }
+    // Adicionar a nova tarefa sem duplicar
+    setTasks(currentTasks => {
+      const updatedTasks = [...currentTasks, task];
+      
+      // Se o usuário estiver autenticado, salva as tarefas
+      if (user) {
+        taskService.saveTasks(user.id, updatedTasks)
+          .catch(err => console.error("Erro ao salvar nova tarefa:", err));
+      }
+      
+      return updatedTasks;
+    });
   };
 
   const getPriorityColor = (priority?: string) => {
@@ -157,7 +210,7 @@ const PendingTasksCard = ({
   };
 
   return (
-    <Card className="w-full h-[520px] bg-white dark:bg-[#001427]/20 border-brand-border dark:border-white/10">
+    <Card className="w-full h-[520px] bg-white dark:bg-[#001427]/20 border-brand-border dark:border-white/10" data-testid="pending-tasks-card">
       <CardHeader className="flex flex-row items-center justify-between p-4 border-b">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-[#E0E1DD]/20">
