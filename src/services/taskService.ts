@@ -18,15 +18,31 @@ export const taskService = {
   },
   
   emitTaskAdded: (task: any) => {
-    // Disparar evento global para sincronizar componentes
-    taskEvents.dispatchEvent(new CustomEvent('task-added', { detail: task }));
+    console.log("Emitindo evento de tarefa adicionada no taskService:", task);
     
-    // Disparar evento no DOM para componentes que estão em árvores de componentes diferentes
-    const event = new CustomEvent('refresh-tasks', { detail: task, bubbles: true });
-    document.dispatchEvent(event);
-    const tasksViewElement = document.querySelector('[data-testid="tasks-view"]');
-    if (tasksViewElement) {
-      tasksViewElement.dispatchEvent(event);
+    try {
+      // Disparar evento global para sincronizar componentes (EventTarget)
+      taskEvents.dispatchEvent(new CustomEvent('task-added', { detail: task }));
+      
+      // Disparar evento no DOM para componentes que estão em árvores de componentes diferentes
+      const event = new CustomEvent('refresh-tasks', { detail: task, bubbles: true });
+      document.dispatchEvent(event);
+      
+      // Tentar disparar evento diretamente nos componentes que precisam ser atualizados
+      const componentsToNotify = [
+        '[data-testid="tasks-view"]',
+        '[data-testid="pending-tasks-card"]'
+      ];
+      
+      componentsToNotify.forEach(selector => {
+        const element = document.querySelector(selector);
+        if (element) {
+          console.log(`Emitindo evento para ${selector}`);
+          element.dispatchEvent(new CustomEvent('refresh-tasks', { detail: task, bubbles: true }));
+        }
+      });
+    } catch (error) {
+      console.error("Erro ao emitir evento de tarefa adicionada:", error);
     }
   },
   

@@ -80,7 +80,17 @@ const TasksView: React.FC<TasksViewProps> = ({
   useEffect(() => {
     const handleExternalTaskAdd = (event: any) => {
       if (event.detail) {
-        handleAddTask(event.detail);
+        console.log("Evento refresh-tasks recebido no TasksView:", event.detail);
+        
+        // Verificar se a tarefa já existe para evitar duplicação
+        const taskData = event.detail;
+        const taskExists = tasks.some(task => task.id === taskData.id);
+        
+        if (!taskExists) {
+          handleAddTask(taskData);
+        } else {
+          console.log("Tarefa já existe, ignorando:", taskData.id);
+        }
       }
     };
 
@@ -96,7 +106,16 @@ const TasksView: React.FC<TasksViewProps> = ({
     // Escutar evento do serviço
     const unsubscribe = taskService.onTaskAdded((task) => {
       if (task) {
-        handleAddTask(task);
+        console.log("Evento onTaskAdded recebido no TasksView:", task);
+        
+        // Verificar se a tarefa já existe para evitar duplicação
+        const taskExists = tasks.some(existingTask => existingTask.id === task.id);
+        
+        if (!taskExists) {
+          handleAddTask(task);
+        } else {
+          console.log("Tarefa já existe, ignorando:", task.id);
+        }
       }
     });
 
@@ -107,7 +126,7 @@ const TasksView: React.FC<TasksViewProps> = ({
       document.removeEventListener("refresh-tasks", handleExternalTaskAdd);
       unsubscribe();
     };
-  }, []);
+  }, [tasks]); // Adicionado tasks como dependência para verificar duplicações
 
   // Carregar tarefas do usuário
   useEffect(() => {
@@ -380,6 +399,12 @@ const TasksView: React.FC<TasksViewProps> = ({
     try {
       console.log("Adding task:", taskData);
 
+      // Verificar se a tarefa já existe
+      if (taskData.id && tasks.some(task => task.id === taskData.id)) {
+        console.log("Tarefa já existe, ignorando duplicação:", taskData.id);
+        return null;
+      }
+
       // Validate required fields
       if (!taskData.title) {
         toast({
@@ -417,8 +442,16 @@ const TasksView: React.FC<TasksViewProps> = ({
         comments: [],
       };
 
+      console.log("Nova tarefa formatada:", newTask);
+
       // Add the new task to the beginning of the tasks array immediately
       setTasks((prevTasks) => {
+        // Verificar novamente por duplicações antes de adicionar
+        if (prevTasks.some(task => task.id === newTask.id)) {
+          console.log("Tarefa já existe (verificação final), ignorando duplicação:", newTask.id);
+          return prevTasks;
+        }
+
         const updatedTasks = [newTask, ...prevTasks];
 
         // Salvar no banco de dados/localStorage
@@ -430,13 +463,18 @@ const TasksView: React.FC<TasksViewProps> = ({
               if (!saved) {
                 console.warn("Não foi possível salvar tarefas no banco de dados nem localmente");
               } else {
-                // Emitir evento para outros componentes
-                taskService.emitTaskAdded(newTask);
+                console.log("Tarefa salva com sucesso no banco de dados");
+                // Emitir evento para outros componentes só se não for um evento que veio de outro componente
+                if (!taskData._fromEvent) {
+                  taskService.emitTaskAdded({...newTask, _fromEvent: true});
+                }
               }
             } else {
               console.warn("Usuário não autenticado, tarefas salvas apenas na sessão atual");
               // Mesmo sem usuário, emitir evento para componentes da mesma sessão
-              taskService.emitTaskAdded(newTask);
+              if (!taskData._fromEvent) {
+                taskService.emitTaskAdded({...newTask, _fromEvent: true});
+              }
             }
           } catch (err) {
             console.error("Erro ao salvar tarefas:", err);
@@ -449,14 +487,16 @@ const TasksView: React.FC<TasksViewProps> = ({
         return updatedTasks;
       });
 
-      // Close the modal
-      setShowAddTask(false);
+      // Close the modal if this is a direct add (not from an event)
+      if (!taskData._fromEvent) {
+        setShowAddTask(false);
 
-      // Show confirmation toast
-      toast({
-        title: "Tarefa adicionada",
-        description: "A nova tarefa foi adicionada com sucesso.",
-      });
+        // Show confirmation toast
+        toast({
+          title: "Tarefa adicionada",
+          description: "A nova tarefa foi adicionada com sucesso.",
+        });
+      }
 
       // Check if task is overdue and update status accordingly
       const now = new Date();
