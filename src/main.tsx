@@ -7,7 +7,6 @@ import './lib/username-initializer.ts'
 import { preInitializeWebNodes } from './lib/web-persistence.ts'
 
 // PRIORIDADE MÁXIMA: Inicializar teias antes de qualquer outro código
-// Esta função é executada imediatamente, antes mesmo da montagem do React
 function inicializarTeiasComPrioridadeMaxima() {
   console.log("Inicializando sistema de teias com prioridade máxima");
 
