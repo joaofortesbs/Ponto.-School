@@ -1,3 +1,103 @@
+
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+
+type User = {
+  id: string;
+  email?: string;
+  username?: string;
+};
+
+export const useAuth = () => {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        setLoading(true);
+        
+        // Verificar se há uma sessão ativa do Supabase
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          throw sessionError;
+        }
+        
+        if (session?.user) {
+          // Obter perfil do usuário se necessário
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('username')
+            .eq('id', session.user.id)
+            .single();
+            
+          if (profileError && profileError.code !== 'PGRST116') { // Ignorar erro "não encontrado"
+            console.warn("Erro ao buscar perfil:", profileError);
+          }
+          
+          // Definir usuário com dados da sessão e perfil
+          setUser({
+            id: session.user.id,
+            email: session.user.email,
+            username: profileData?.username
+          });
+        } else {
+          // Fallback para ID local persistido (para testes e desenvolvimento)
+          const localUserId = localStorage.getItem('user_id') || sessionStorage.getItem('user_id');
+          
+          if (localUserId) {
+            setUser({
+              id: localUserId,
+              username: localStorage.getItem('username') || sessionStorage.getItem('username') || undefined
+            });
+            console.log("Usando ID de usuário local:", localUserId);
+          } else {
+            setUser(null);
+          }
+        }
+        
+        setError(null);
+      } catch (err: any) {
+        console.error("Erro de autenticação:", err);
+        setError(err.message || "Erro ao verificar autenticação");
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUser();
+
+    // Configurar listener para mudanças na autenticação
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (session?.user) {
+          setUser({
+            id: session.user.id,
+            email: session.user.email,
+            username: undefined // Será atualizado na próxima verificação
+          });
+        } else {
+          setUser(null);
+        }
+      }
+    );
+
+    return () => {
+      // Limpar listener ao desmontar
+      if (authListener && authListener.subscription) {
+        authListener.subscription.unsubscribe();
+      }
+    };
+  }, []);
+
+  return { user, loading, error };
+};
+
+export default useAuth;
+
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useNavigate } from 'react-router-dom';
