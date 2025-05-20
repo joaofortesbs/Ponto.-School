@@ -8,135 +8,54 @@ const TASKS_LOCAL_STORAGE_KEY = "user_tasks";
 /**
  * Serviço para gerenciar tarefas com persistência em banco de dados e fallback local
  */
-// Sistema avançado de eventos para sincronização entre componentes
+// Eventos para sincronização entre componentes
 const taskEvents = new EventTarget();
 
 export const taskService = {
   // Métodos para eventos de atualização
   emitTasksUpdated: (userId: string) => {
     taskEvents.dispatchEvent(new CustomEvent('tasks-updated', { detail: { userId } }));
-    // Também disparar evento global no DOM
-    document.dispatchEvent(new CustomEvent('tasks-updated', { detail: { userId } }));
   },
   
   emitTaskAdded: (task: any) => {
     console.log("Emitindo evento de tarefa adicionada no taskService:", task);
     
     try {
-      // Garantir que a tarefa tenha um ID único
-      const taskWithId = {
-        ...task,
-        id: task.id || `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-      };
+      // Disparar evento global para sincronizar componentes (EventTarget)
+      taskEvents.dispatchEvent(new CustomEvent('task-added', { detail: task }));
       
-      // Garantir que _fromEvent esteja definido para evitar loops infinitos
-      if (!taskWithId._fromEvent) {
-        taskWithId._fromEvent = true;
-      }
+      // Disparar evento no DOM para componentes que estão em árvores de componentes diferentes
+      const event = new CustomEvent('refresh-tasks', { detail: task, bubbles: true });
+      document.dispatchEvent(event);
       
-      // 1. Disparar evento via EventTarget (para hooks e serviços)
-      taskEvents.dispatchEvent(new CustomEvent('task-added', { detail: taskWithId }));
-      
-      // 2. Disparar evento global no DOM (para toda a aplicação)
-      document.dispatchEvent(new CustomEvent('refresh-tasks', { 
-        detail: taskWithId, 
-        bubbles: true 
-      }));
-      
-      // 3. Notificar componentes específicos diretamente
+      // Tentar disparar evento diretamente nos componentes que precisam ser atualizados
       const componentsToNotify = [
         '[data-testid="tasks-view"]',
         '[data-testid="pending-tasks-card"]'
       ];
       
       componentsToNotify.forEach(selector => {
-        const elements = document.querySelectorAll(selector);
-        if (elements && elements.length > 0) {
-          elements.forEach(element => {
-            console.log(`Emitindo evento direto para ${selector}`);
-            element.dispatchEvent(new CustomEvent('refresh-tasks', { 
-              detail: taskWithId, 
-              bubbles: true 
-            }));
-          });
-        } else {
-          console.log(`Componente ${selector} não encontrado para notificação direta`);
+        const element = document.querySelector(selector);
+        if (element) {
+          console.log(`Emitindo evento para ${selector}`);
+          element.dispatchEvent(new CustomEvent('refresh-tasks', { detail: task, bubbles: true }));
         }
       });
-      
-      // 4. Emitir eventos específicos para cada componente
-      document.dispatchEvent(new CustomEvent('pending-tasks-updated', { detail: taskWithId }));
-      document.dispatchEvent(new CustomEvent('tasks-view-updated', { detail: taskWithId }));
-      
-      // 5. Emitir evento delayed (para garantir que componentes que carregam depois recebam)
-      setTimeout(() => {
-        document.dispatchEvent(new CustomEvent('tasks-sync-all', { 
-          detail: { task: taskWithId, timestamp: Date.now() } 
-        }));
-      }, 500);
     } catch (error) {
       console.error("Erro ao emitir evento de tarefa adicionada:", error);
     }
   },
   
-  emitTaskCompleted: (taskId: string, userId: string) => {
-    console.log(`Emitindo evento de tarefa concluída: ${taskId}`);
-    
-    try {
-      // Evento via EventTarget
-      taskEvents.dispatchEvent(new CustomEvent('task-completed', { 
-        detail: { taskId, userId } 
-      }));
-      
-      // Evento global no DOM
-      document.dispatchEvent(new CustomEvent('task-completed', { 
-        detail: { taskId, userId },
-        bubbles: true
-      }));
-    } catch (error) {
-      console.error(`Erro ao emitir evento de conclusão para tarefa ${taskId}:`, error);
-    }
-  },
-  
   onTasksUpdated: (callback: (userId: string) => void) => {
-    const handlerEvent = (event: any) => callback(event.detail.userId);
-    const handlerDOM = (event: any) => callback(event.detail.userId);
-    
-    taskEvents.addEventListener('tasks-updated', handlerEvent);
-    document.addEventListener('tasks-updated', handlerDOM);
-    
-    return () => {
-      taskEvents.removeEventListener('tasks-updated', handlerEvent);
-      document.removeEventListener('tasks-updated', handlerDOM);
-    };
+    const handler = (event: any) => callback(event.detail.userId);
+    taskEvents.addEventListener('tasks-updated', handler);
+    return () => taskEvents.removeEventListener('tasks-updated', handler);
   },
   
   onTaskAdded: (callback: (task: any) => void) => {
-    const handlerEvent = (event: any) => callback(event.detail);
-    const handlerDOM = (event: any) => callback(event.detail);
-    const handlerSync = (event: any) => callback(event.detail.task);
-    
-    taskEvents.addEventListener('task-added', handlerEvent);
-    document.addEventListener('refresh-tasks', handlerDOM);
-    document.addEventListener('tasks-sync-all', handlerSync);
-    
-    return () => {
-      taskEvents.removeEventListener('task-added', handlerEvent);
-      document.removeEventListener('refresh-tasks', handlerDOM);
-      document.removeEventListener('tasks-sync-all', handlerSync);
-    };
-  },
-  
-  onTaskCompleted: (callback: (taskId: string, userId: string) => void) => {
-    const handler = (event: any) => callback(event.detail.taskId, event.detail.userId);
-    
-    taskEvents.addEventListener('task-completed', handler);
-    document.addEventListener('task-completed', handler);
-    
-    return () => {
-      taskEvents.removeEventListener('task-completed', handler);
-      document.removeEventListener('task-completed', handler);
-    };
+    const handler = (event: any) => callback(event.detail);
+    taskEvents.addEventListener('task-added', handler);
+    return () => taskEvents.removeEventListener('task-added', handler);
   },
   /**
    * Salvar tarefas para um usuário
