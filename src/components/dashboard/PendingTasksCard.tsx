@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -6,6 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Clock, Calendar, CheckCircle, Plus } from "lucide-react";
 import { useState } from "react";
 import AddTaskModal from "../agenda/modals/add-task-modal";
+import { useTaskCompletion } from "@/hooks/useTaskCompletion";
+import { taskService } from "@/services/taskService";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Task {
   id: string;
@@ -14,6 +17,7 @@ interface Task {
   subject: string;
   completed: boolean;
   priority?: "alta" | "media" | "baixa";
+  discipline?: string;
 }
 
 interface PendingTasksCardProps {
@@ -58,8 +62,46 @@ const defaultTasks: Task[] = [
 const PendingTasksCard = ({
   tasks: initialTasks = defaultTasks,
 }: PendingTasksCardProps) => {
-  const [tasks, setTasks] = useState<Task[]>(initialTasks);
+  const { user } = useAuth();
+  const { tasks, setTasks, toggleTaskCompletion } = useTaskCompletion<Task>(
+    initialTasks,
+    {
+      onCompleteTask: (taskId) => {
+        console.log(`Tarefa ${taskId} marcada como concluída`);
+      },
+      onUncompleteTask: (taskId) => {
+        console.log(`Tarefa ${taskId} desmarcada como concluída`);
+      },
+    }
+  );
+  
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
+
+  // Carrega as tarefas do serviço quando o componente é montado
+  useEffect(() => {
+    if (user) {
+      const loadTasks = async () => {
+        try {
+          const userTasks = await taskService.loadTasks(user.id);
+          if (userTasks && userTasks.length > 0) {
+            setTasks(userTasks);
+          }
+        } catch (error) {
+          console.error("Erro ao carregar tarefas:", error);
+        }
+      };
+      
+      loadTasks();
+    }
+  }, [user, setTasks]);
+
+  // Salva as tarefas quando são atualizadas
+  useEffect(() => {
+    if (user && tasks !== initialTasks) {
+      taskService.saveTasks(user.id, tasks)
+        .catch(err => console.error("Erro ao salvar tarefas:", err));
+    }
+  }, [tasks, user]);
 
   const handleAddTask = (newTask: any) => {
     // Format the due date for display
@@ -89,17 +131,16 @@ const PendingTasksCard = ({
       subject: newTask.discipline || "Geral",
       completed: false,
       priority: newTask.priority || "media",
+      discipline: newTask.discipline,
     };
 
     setTasks([...tasks, task]);
-  };
-
-  const toggleTaskCompletion = (taskId: string) => {
-    setTasks(
-      tasks.map((task) =>
-        task.id === taskId ? { ...task, completed: !task.completed } : task,
-      ),
-    );
+    
+    // Se o usuário estiver autenticado, salva as tarefas
+    if (user) {
+      taskService.saveTasks(user.id, [...tasks, task])
+        .catch(err => console.error("Erro ao salvar nova tarefa:", err));
+    }
   };
 
   const getPriorityColor = (priority?: string) => {

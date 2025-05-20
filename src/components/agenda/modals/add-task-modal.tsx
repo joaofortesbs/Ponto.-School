@@ -227,6 +227,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
         title,
         description,
         discipline: discipline || "Geral",
+        subject: discipline || "Geral", // Adicionado para compatibilidade com PendingTasksCard
         type: type || "tarefa",
         priority: priority || "média",
         dueDate: formattedDueDate,
@@ -245,6 +246,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
         associatedClass,
         notes,
         comments: [],
+        completed: false, // Adicionado para compatibilidade com PendingTasksCard
       };
 
       // Call onAddTask first to ensure the task is added

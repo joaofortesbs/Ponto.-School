@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useNavigate } from 'react-router-dom';
@@ -41,7 +40,7 @@ export function useAuth() {
   // Função auxiliar para verificar e gerar ID do usuário
   const checkAndGenerateUserId = useCallback(async (user: User) => {
     if (!user) return;
-    
+
     try {
       // Consultar perfil para verificar se já tem ID válido
       const { data: profileData } = await supabase
@@ -49,19 +48,19 @@ export function useAuth() {
         .select('user_id, state')
         .eq('id', user.id)
         .single();
-      
+
       // Se já tiver ID válido, não precisa gerar
       if (profileData?.user_id && /^[A-Z]{2}\d{4}[1-2]\d{6}$/.test(profileData.user_id)) {
         console.log('Usuário já possui ID válido:', profileData.user_id);
         return;
       }
-      
+
       console.log('Gerando ID para usuário existente...');
-      
+
       // Obter dados necessários para gerar o ID
       let uf = profileData?.state || '';
       const userData = user.user_metadata || {};
-      
+
       // Tentar diferentes fontes para obter a UF
       if (!uf || uf.length !== 2 || uf === 'BR') {
         // Tentar do user_metadata
@@ -78,7 +77,7 @@ export function useAuth() {
           }
         }
       }
-      
+
       // Determinar tipo de conta
       let tipoConta = 2; // Padrão: tipo básico (2)
       if (userData.plan_type) {
@@ -87,18 +86,18 @@ export function useAuth() {
           tipoConta = 1; // Tipo Full/Premium
         }
       }
-      
+
       // Gerar ID usando RPC function
       const { data: generatedId, error: idError } = await supabase.rpc(
         'generate_sequential_user_id', 
         { p_uf: uf, p_tipo_conta: tipoConta }
       );
-      
+
       if (idError || !generatedId) {
         console.error('Erro ao gerar ID sequencial:', idError);
         return;
       }
-      
+
       if (generatedId) {
         // Atualizar o perfil com o novo ID
         const { error: updateError } = await supabase
@@ -109,7 +108,7 @@ export function useAuth() {
             updated_at: new Date().toISOString()
           })
           .eq('id', user.id);
-        
+
         if (updateError) {
           console.error('Erro ao atualizar perfil com ID:', updateError);
         } else {
@@ -126,25 +125,25 @@ export function useAuth() {
     const checkAuth = async () => {
       try {
         const { data, error } = await supabase.auth.getSession();
-        
+
         if (error) throw error;
-        
+
         const { session } = data;
         const user = session?.user || null;
-        
+
         setAuth(user, session, false);
-        
+
         // Se tiver usuário, verificar e gerar ID se necessário
         if (user) {
           await checkAndGenerateUserId(user);
         }
-        
+
         // Configurar o listener para mudanças na autenticação
         const { data: authListener } = supabase.auth.onAuthStateChange(
           async (event, newSession) => {
             const user = newSession?.user || null;
             setAuth(user, newSession, false);
-            
+
             // Verificar e gerar ID quando o usuário fizer login
             if (event === 'SIGNED_IN' && user) {
               await checkAndGenerateUserId(user);
@@ -154,7 +153,7 @@ export function useAuth() {
             }
           }
         );
-        
+
         // Limpar o listener quando o componente for desmontado
         return () => {
           authListener.subscription.unsubscribe();
@@ -164,7 +163,7 @@ export function useAuth() {
         setAuth(null, null, false, error as AuthError);
       }
     };
-    
+
     checkAuth();
   }, [navigate, setAuth, checkAndGenerateUserId]);
 
@@ -173,12 +172,12 @@ export function useAuth() {
     try {
       setAuth(null, null, true, null);
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      
+
       if (error) throw error;
-      
+
       const { user, session } = data;
       setAuth(user, session, false);
-      
+
       // Verificar e gerar ID de usuário se necessário
       if (user) {
         try {
@@ -188,15 +187,15 @@ export function useAuth() {
             .select('user_id, state')
             .eq('id', user.id)
             .single();
-          
+
           // Se não existir ID ou o ID não estiver no formato correto
           if (!profileData?.user_id || !/^[A-Z]{2}\d{4}[1-2]\d{6}$/.test(profileData.user_id)) {
             console.log('Gerando ID para novo usuário...');
-            
+
             // Obter dados necessários para gerar o ID
             let uf = profileData?.state || '';
             const userData = user.user_metadata || {};
-            
+
             // Tentar diferentes fontes para obter a UF
             if (!uf || uf.length !== 2 || uf === 'BR') {
               // Tentar do user_metadata
@@ -213,7 +212,7 @@ export function useAuth() {
                 }
               }
             }
-            
+
             // Determinar tipo de conta
             let tipoConta = 2; // Padrão: tipo básico (2)
             if (userData.plan_type) {
@@ -222,13 +221,13 @@ export function useAuth() {
                 tipoConta = 1; // Tipo Full/Premium
               }
             }
-            
+
             // Gerar ID usando RPC function
             const { data: generatedId, error: idError } = await supabase.rpc(
               'generate_sequential_user_id', 
               { p_uf: uf, p_tipo_conta: tipoConta }
             );
-            
+
             if (idError || !generatedId) {
               console.error('Erro ao gerar ID sequencial:', idError);
               // Continuar sem falhar o login
@@ -242,7 +241,7 @@ export function useAuth() {
                   updated_at: new Date().toISOString()
                 })
                 .eq('id', user.id);
-              
+
               if (updateError) {
                 console.error('Erro ao atualizar perfil com ID:', updateError);
               } else {
@@ -255,7 +254,7 @@ export function useAuth() {
           // Continuar sem falhar o login
         }
       }
-      
+
       return { user, error: null };
     } catch (error) {
       console.error('Erro no login:', error);
@@ -276,9 +275,9 @@ export function useAuth() {
           emailRedirectTo: `${window.location.origin}/auth/callback` 
         }
       });
-      
+
       if (error) throw error;
-      
+
       const { user, session } = data;
       setAuth(user, session, false);
       return { user, error: null };
@@ -294,9 +293,9 @@ export function useAuth() {
     try {
       setAuth(null, null, true, null);
       const { error } = await supabase.auth.signOut();
-      
+
       if (error) throw error;
-      
+
       setAuth(null, null, false);
       return { error: null };
     } catch (error) {
@@ -312,9 +311,9 @@ export function useAuth() {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`
       });
-      
+
       if (error) throw error;
-      
+
       return { error: null };
     } catch (error) {
       console.error('Erro no reset de senha:', error);
@@ -326,9 +325,9 @@ export function useAuth() {
   const updatePassword = useCallback(async (newPassword: string) => {
     try {
       const { error } = await supabase.auth.updateUser({ password: newPassword });
-      
+
       if (error) throw error;
-      
+
       return { error: null };
     } catch (error) {
       console.error('Erro na atualização de senha:', error);

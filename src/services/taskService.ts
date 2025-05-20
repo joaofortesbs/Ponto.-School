@@ -8,7 +8,20 @@ const TASKS_LOCAL_STORAGE_KEY = "user_tasks";
 /**
  * Serviço para gerenciar tarefas com persistência em banco de dados e fallback local
  */
+// Eventos para sincronização entre componentes
+const taskEvents = new EventTarget();
+
 export const taskService = {
+  // Métodos para eventos de atualização
+  emitTasksUpdated: (userId: string) => {
+    taskEvents.dispatchEvent(new CustomEvent('tasks-updated', { detail: { userId } }));
+  },
+  
+  onTasksUpdated: (callback: (userId: string) => void) => {
+    const handler = (event: any) => callback(event.detail.userId);
+    taskEvents.addEventListener('tasks-updated', handler);
+    return () => taskEvents.removeEventListener('tasks-updated', handler);
+  },
   /**
    * Salvar tarefas para um usuário
    * @param userId ID do usuário
@@ -29,16 +42,34 @@ export const taskService = {
       if (!error) {
         // Como backup adicional, salvar também localmente
         await this.saveTasksLocally(userId, tasks);
+        
+        // Notifica outros componentes sobre a atualização
+        this.emitTasksUpdated(userId);
+        
         return true;
       }
 
       // Se houve erro no Supabase, tenta salvar apenas localmente
       console.warn("Erro ao salvar tarefas no Supabase, usando armazenamento local:", error);
-      return await this.saveTasksLocally(userId, tasks);
+      const success = await this.saveTasksLocally(userId, tasks);
+      
+      if (success) {
+        // Notifica outros componentes sobre a atualização
+        this.emitTasksUpdated(userId);
+      }
+      
+      return success;
     } catch (err) {
       console.error("Erro ao salvar tarefas:", err);
       // Tenta salvar localmente como fallback
-      return await this.saveTasksLocally(userId, tasks);
+      const success = await this.saveTasksLocally(userId, tasks);
+      
+      if (success) {
+        // Notifica outros componentes sobre a atualização
+        this.emitTasksUpdated(userId);
+      }
+      
+      return success;
     }
   },
 
