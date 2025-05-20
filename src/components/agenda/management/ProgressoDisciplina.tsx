@@ -92,7 +92,6 @@ const ProgressoDisciplina = () => {
             Definir Metas <ExternalLink className="h-3 w-3 ml-1" />
           </a>
         </div>
-      </CardHeader>
         <div className="flex justify-between items-start">
           <div className="w-full">
             {/* Título removido do CardHeader como no modelo do Tempo de Estudo */}
