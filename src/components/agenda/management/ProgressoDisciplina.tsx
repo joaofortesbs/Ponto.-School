@@ -49,17 +49,7 @@ const ProgressoDisciplina = () => {
           </div>
           <h3 className="text-white font-semibold text-sm">Progresso por Disciplina</h3>
         </div>
-        <div className="flex items-center gap-1 text-xs">
-          <span className="px-2 py-0.5 rounded-md cursor-pointer transition-colors bg-white/20 font-medium">
-            Semana
-          </span>
-          <span className="px-2 py-0.5 rounded-md cursor-pointer transition-colors hover:bg-white/30">
-            Mês
-          </span>
-          <span className="px-2 py-0.5 rounded-md cursor-pointer transition-colors hover:bg-white/30">
-            Ano
-          </span>
-        </div>
+        {/* Seletores de período removidos */}
       </div>
 
       <CardHeader className="pb-2">
