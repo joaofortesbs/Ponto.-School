@@ -19,18 +19,62 @@ const ProgressoDisciplina = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { sessions, loading, getStats } = useFlowSessions();
 
+  // Função para obter cor baseada na disciplina
+  const getColorForDisciplina = (nome: string): string => {
+    const colorMap: Record<string, string> = {
+      "Matemática": "#FF6B00", // Laranja
+      "Física": "#FF6B00",  // Laranja
+      "Química": "#FF6B00", // Laranja
+      "Biologia": "#FF3B30", // Vermelho
+      "História": "#FF2D55", // Vermelho escuro
+      "Português": "#34C759", // Verde
+      "Geografia": "#5856D6", // Roxo
+      "Filosofia": "#007AFF", // Azul
+      "Sociologia": "#5AC8FA", // Azul claro
+      "Inglês": "#FFCC00", // Amarelo
+    };
+    
+    return colorMap[nome] || "#FF6B00"; // Laranja padrão se não encontrado
+  };
+
+  // Função para obter meta baseada na disciplina
+  const getMetaForDisciplina = (nome: string): number => {
+    const metaMap: Record<string, number> = {
+      "Matemática": 90,
+      "Física": 80,
+      "Química": 75,
+      "Biologia": 85,
+      "História": 80,
+      "Português": 85,
+      "Geografia": 70,
+      "Filosofia": 75,
+      "Sociologia": 70,
+      "Inglês": 80,
+    };
+    
+    return metaMap[nome] || 75; // Meta padrão se não encontrada
+  };
+
   // Carregar dados das disciplinas baseado nas sessões de Flow
   useEffect(() => {
     if (!loading) {
       setIsLoading(false);
 
-      // Obter estatísticas das sessões de Flow
+      // Para demonstração, vamos usar dados simulados semelhantes à imagem de referência
+      // Em um ambiente real, você usaria os dados do getStats()
       const stats = getStats();
       const { subjectStats } = stats;
 
       if (Object.keys(subjectStats).length === 0) {
-        // Usuário ainda não tem sessões de Flow registradas
-        setDisciplinas([]);
+        // Se não há dados reais, mostrar dados de exemplo para demo
+        const exemplosDisciplinas: DisciplinaProgresso[] = [
+          { nome: "Matemática", progresso: 85, meta: 90, cor: "#FF6B00", tempoTotal: 7650 },
+          { nome: "Física", progresso: 72, meta: 80, cor: "#FF6B00", tempoTotal: 6480 },
+          { nome: "Química", progresso: 65, meta: 75, cor: "#FF6B00", tempoTotal: 5850 },
+          { nome: "Biologia", progresso: 90, meta: 85, cor: "#FF3B30", tempoTotal: 8100 },
+          { nome: "História", progresso: 78, meta: 80, cor: "#FF2D55", tempoTotal: 7020 }
+        ];
+        setDisciplinas(exemplosDisciplinas);
         return;
       }
 
@@ -42,12 +86,13 @@ const ProgressoDisciplina = () => {
         
         // Calcular progresso como percentual do tempo estudado em relação à meta
         const progressoCalculado = Math.min(Math.round((timeInSeconds / metaEmSegundos) * 100), 100);
+        const meta = getMetaForDisciplina(subject);
         
         return {
           nome: subject,
           progresso: progressoCalculado,
-          meta: 100, // Meta em percentual
-          cor: "#FF6B00", // Cor padrão, mantendo o padrão visual do app
+          meta: meta, // Meta em percentual personalizada
+          cor: getColorForDisciplina(subject), // Cor personalizada por disciplina
           tempoTotal: timeInSeconds
         };
       });
@@ -87,8 +132,7 @@ const ProgressoDisciplina = () => {
 
       <CardHeader className="pb-2">
         <div className="flex justify-between items-center text-sm pb-2 border-b border-gray-200 dark:border-gray-700/30">
-          <span className="text-[#29335C] dark:text-white">Média geral: {disciplinas.length > 0 ? Math.round(disciplinas.reduce((sum, disc) => sum + disc.progresso, 0) / disciplinas.length) : 0}%</span>
-          <a href="/agenda?view=flow" className="text-[#FF6B00] hover:underline flex items-center">
+          <a href="/agenda?view=flow" className="text-[#FF6B00] hover:underline flex items-center ml-auto">
             Definir Metas <ExternalLink className="h-3 w-3 ml-1" />
           </a>
         </div>
@@ -114,8 +158,11 @@ const ProgressoDisciplina = () => {
                 <div key={index} className="space-y-1">
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-[#F8F9FA] dark:bg-[#29335C] flex items-center justify-center">
-                        <span className="text-[#FF6B00] font-bold">
+                      <div 
+                        className="w-6 h-6 rounded-full flex items-center justify-center"
+                        style={{ backgroundColor: `${disciplina.cor}20` }}
+                      >
+                        <span style={{ color: disciplina.cor }} className="font-bold">
                           {disciplina.nome.charAt(0)}
                         </span>
                       </div>
@@ -124,19 +171,31 @@ const ProgressoDisciplina = () => {
                       </span>
                     </div>
                     <div className="flex gap-1 items-center">
-                      <span className="text-sm font-medium text-[#FF6B00]">
+                      <span className="text-sm font-medium" style={{ color: disciplina.cor }}>
                         {disciplina.progresso}%
                       </span>
                       <span className="text-xs text-gray-500 dark:text-gray-400">
-                        | {formatarTempoEstudo(disciplina.tempoTotal)}
+                        / Meta: {disciplina.meta}%
                       </span>
                     </div>
                   </div>
-                  <Progress
-                    value={disciplina.progresso}
-                    className="h-2.5 bg-[#FF6B00]/10"
-                    indicatorClassName="bg-[#FF6B00]"
-                  />
+                  <div className="relative w-full h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full"
+                      style={{ 
+                        width: `${disciplina.progresso}%`,
+                        backgroundColor: disciplina.cor 
+                      }}
+                    ></div>
+                    {/* Indicador de meta */}
+                    <div 
+                      className="absolute top-0 bottom-0 w-px bg-white dark:bg-gray-300" 
+                      style={{ 
+                        left: `${disciplina.meta}%`,
+                        zIndex: 10
+                      }}
+                    ></div>
+                  </div>
                 </div>
               ))
             ) : (
@@ -157,11 +216,21 @@ const ProgressoDisciplina = () => {
           </div>
         )}
 
-        {/* Seção de média geral e metas conforme o padrão do card de Tempo de Estudo */}
-        <div className="mt-4 pt-2 border-t border-gray-200 dark:border-gray-700/30">
+        {/* Seção de média geral após os gráficos */}
+        <div className="mt-4 pt-3 pb-2 border-t border-gray-200 dark:border-gray-700/30">
+          <div className="flex justify-between items-center text-sm">
+            <span className="text-[#29335C] dark:text-white font-medium">Média geral: {disciplinas.length > 0 ? Math.round(disciplinas.reduce((sum, disc) => sum + disc.progresso, 0) / disciplinas.length) : 0}%</span>
+            <a href="/agenda?view=flow" className="text-[#FF6B00] hover:underline flex items-center text-xs">
+              Definir Metas <ExternalLink className="h-3 w-3 ml-1" />
+            </a>
+          </div>
+        </div>
+        
+        {/* Botão para registrar tempo de estudo */}
+        <div className="mt-2">
           <Button 
             variant="outline" 
-            className="w-full border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10 mt-2"
+            className="w-full border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10"
             onClick={() => window.location.href = '/agenda?view=flow'}
           >
             <ExternalLink className="h-4 w-4 mr-2" /> Registrar tempo de estudo
