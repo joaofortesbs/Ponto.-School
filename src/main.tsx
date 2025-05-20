@@ -92,7 +92,7 @@ if (import.meta.hot) {
         // Caso seja uma atualização de módulo JavaScript significativa,
         // mostrar uma notificação para o usuário antes de aplicar
         const shouldReload = false; // Por padrão, não recarregar automaticamente
-        
+
         if (!shouldReload) {
           console.log('Atualização detectada mas não aplicada para evitar interrupção');
           // Opcional: isso pode ser modificado para mostrar uma notificação ao usuário
