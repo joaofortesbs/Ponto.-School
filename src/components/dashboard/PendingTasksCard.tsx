@@ -93,6 +93,83 @@ const PendingTasksCard = ({
   );
   
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
+  
+  const handleAddTask = (newTask: any) => {
+    if (!newTask || !newTask.title) return;
+    
+    const task: Task = {
+      id: newTask.id || `pending-task-${Date.now()}`,
+      title: newTask.title,
+      description: newTask.description || "",
+      subject: newTask.discipline || "Geral",
+      dueDate: newTask.dueDate
+        ? `Vence ${new Date(newTask.dueDate).toLocaleDateString("pt-BR")}`
+        : "Sem data definida",
+      completed: false,
+      priority: newTask.priority || "media",
+      progress: newTask.progress || 0,
+      urgent: newTask.priority === "alta",
+    };
+    
+    setTasks(prev => [task, ...prev]);
+  };
+  
+  // Efeito para sincronizar com as tarefas externas
+  useEffect(() => {
+    console.log("PendingTasksCard: Configurando sincronização de tarefas");
+    
+    const handleTasksUpdated = (event: any) => {
+      console.log("PendingTasksCard: Evento de tarefas atualizado recebido", event.type);
+      
+      if (event.detail) {
+        try {
+          // Processar nova tarefa
+          const newTask = event.detail;
+          
+          if (!newTask || !newTask.title) return;
+          
+          console.log("PendingTasksCard: Processando nova tarefa:", newTask.title);
+          
+          // Verificar se a tarefa já existe
+          if (tasks.some(task => task.id === newTask.id)) {
+            console.log("PendingTasksCard: Tarefa já existe, ignorando duplicação");
+            return;
+          }
+          
+          // Adicionar a nova tarefa
+          handleAddTask(newTask);
+        } catch (error) {
+          console.error("PendingTasksCard: Erro ao processar evento de atualização", error);
+        }
+      }
+    };
+    
+    // Registrar no componente atual
+    const pendingTasksCard = document.querySelector('[data-testid="pending-tasks-card"]');
+    if (pendingTasksCard) {
+      pendingTasksCard.addEventListener('refresh-tasks', handleTasksUpdated);
+    }
+    
+    // Registrar eventos globais
+    document.addEventListener('refresh-tasks', handleTasksUpdated);
+    document.addEventListener('pending-tasks-updated', handleTasksUpdated);
+    
+    // Registrar ouvinte de serviço
+    const unsubscribe = taskService.onTaskAdded(task => {
+      console.log("PendingTasksCard: Evento onTaskAdded recebido via serviço");
+      handleTasksUpdated({ detail: task, type: 'service-event' });
+    });
+    
+    return () => {
+      // Limpar ouvintes
+      if (pendingTasksCard) {
+        pendingTasksCard.removeEventListener('refresh-tasks', handleTasksUpdated);
+      }
+      document.removeEventListener('refresh-tasks', handleTasksUpdated);
+      document.removeEventListener('pending-tasks-updated', handleTasksUpdated);
+      unsubscribe();
+    };
+  }, [tasks]);State(false);
 
   // Carrega as tarefas do serviço quando o componente é montado
   useEffect(() => {

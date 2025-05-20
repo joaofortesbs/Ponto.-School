@@ -188,16 +188,14 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-
+    
     try {
-      if (!formState.title) {
+      if (!title) {
         toast({
           title: "Erro ao adicionar tarefa",
           description: "O título da tarefa é obrigatório.",
           variant: "destructive",
         });
-        setIsSubmitting(false);
         return;
       }
 
@@ -206,19 +204,25 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
 
       const taskData = {
         id: taskId,
-        title: formState.title,
-        description: formState.description,
-        discipline: formState.discipline,
-        dueDate: formState.dueDate,
-        status: formState.status as TaskStatus,
-        priority: formState.priority as TaskPriority,
+        title: title,
+        description: description,
+        discipline: discipline,
+        dueDate: dueDate,
+        status: "a-fazer" as TaskStatus,
+        priority: priority as TaskPriority,
         progress: 0, // Nova tarefa começa com 0%
-        type: "tarefa",
-        professor: formState.professor,
+        type: type || "tarefa",
+        professor: professor,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        startTime: formState.startTime,
-        endTime: formState.endTime,
+        startTime: "",
+        endTime: "",
+        subtasks: subtasks,
+        tags: tags,
+        reminderSet: reminderSet,
+        reminderTime: reminderTime,
+        notes: notes,
+        associatedClass: associatedClass,
       };
 
       // Log para debugging
@@ -296,12 +300,10 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
       }
 
       // Resetar o formulário
-      reset();
+      resetForm();
 
-      // Fechar o modal se necessário
-      if (setOpen) {
-        setOpen(false);
-      }
+      // Fechar o modal
+      onOpenChange(false);
 
       // Mostrar toast de sucesso
       toast({
@@ -315,8 +317,6 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
         description: "Ocorreu um erro ao adicionar a tarefa. Tente novamente.",
         variant: "destructive",
       });
-    } finally {
-      setIsSubmitting(false);
     }
   };
 

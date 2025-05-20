@@ -76,6 +76,192 @@ const TasksView: React.FC<TasksViewProps> = ({
     dueDate: "all",
   });
 
+  // Adicionar nova tarefa
+  const handleAddTask = async (taskData: any) => {
+    try {
+      console.log("TasksView: Adding task:", taskData);
+
+      // Verificar se a tarefa já existe
+      if (taskData.id && tasks.some(task => task.id === taskData.id)) {
+        console.log("TasksView: Tarefa já existe, ignorando duplicação:", taskData.id);
+        return null;
+      }
+
+      // Validate required fields
+      if (!taskData.title) {
+        toast({
+          title: "Erro ao adicionar tarefa",
+          description: "O título da tarefa é obrigatório.",
+          variant: "destructive",
+        });
+        return null;
+      }
+
+      // Gerar ID consistente e único
+      const taskId = taskData.id || `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+      // Create a new task with all fields properly handled
+      const newTask: Task = {
+        id: taskId,
+        title: taskData.title,
+        description: taskData.description || "",
+        discipline: taskData.discipline || "Geral",
+        dueDate: taskData.dueDate || new Date().toISOString(),
+        status: taskData.status || "a-fazer",
+        priority: taskData.priority || "média",
+        progress: taskData.progress || 0,
+        type: taskData.type || "tarefa",
+        professor: taskData.professor || "",
+        subtasks: taskData.subtasks || [],
+        createdAt: taskData.createdAt || new Date().toISOString(),
+        updatedAt: taskData.updatedAt || new Date().toISOString(),
+        tags: taskData.tags || [],
+        reminderSet: taskData.reminderSet || false,
+        reminderTime: taskData.reminderTime,
+        attachments: taskData.attachments || [],
+        timeSpent: taskData.timeSpent || 0,
+        notes: taskData.notes || "",
+        isPersonal:
+          taskData.isPersonal !== undefined ? taskData.isPersonal : true,
+        associatedClass: taskData.associatedClass || "",
+        comments: [],
+      };
+
+      console.log("TasksView: Nova tarefa formatada:", newTask);
+
+      // Add the new task to the beginning of the tasks array immediately
+      setTasks((prevTasks) => {
+        // Verificar novamente por duplicações antes de adicionar
+        if (prevTasks.some(task => task.id === newTask.id)) {
+          console.log("TasksView: Tarefa já existe (verificação final), ignorando duplicação:", newTask.id);
+          return prevTasks;
+        }
+
+        const updatedTasks = [newTask, ...prevTasks];
+
+        // Salvar no banco de dados/localStorage
+        const saveTasksAsync = async () => {
+          try {
+            console.log("TasksView: Salvando tarefa no banco de dados");
+            const user = await getCurrentUser();
+            if (user && user.id) {
+              // Salvar tarefa no banco de dados/localStorage
+              const saved = await taskService.saveTasks(user.id, updatedTasks);
+              
+              if (!saved) {
+                console.warn("TasksView: Não foi possível salvar tarefas no banco de dados nem localmente");
+              } else {
+                console.log("TasksView: Tarefa salva com sucesso no banco de dados");
+                
+                // Emitir evento para outros componentes
+                if (!taskData._fromEvent) {
+                  console.log("TasksView: Emitindo evento de tarefa adicionada");
+                  
+                  // Forçar atualização imediata no PendingTasksCard por evento direto
+                  const pendingTasksCard = document.querySelector('[data-testid="pending-tasks-card"]');
+                  if (pendingTasksCard) {
+                    console.log("TasksView: Enviando evento direto para PendingTasksCard");
+                    pendingTasksCard.dispatchEvent(
+                      new CustomEvent('refresh-tasks', { 
+                        detail: {...newTask, _fromEvent: true},
+                        bubbles: true 
+                      })
+                    );
+                  }
+                  
+                  // Emitir evento global para sincronização entre componentes
+                  taskService.emitTaskAdded({...newTask, _fromEvent: true});
+                  
+                  // Emitir evento específico para o PendingTasksCard como backup
+                  document.dispatchEvent(
+                    new CustomEvent('pending-tasks-updated', { 
+                      detail: {...newTask, _fromEvent: true}
+                    })
+                  );
+                  
+                  // Adicionar atraso para garantir que o evento seja processado
+                  setTimeout(() => {
+                    console.log("TasksView: Verificando se evento foi processado");
+                    // Emitir evento de backup após um pequeno atraso
+                    document.dispatchEvent(
+                      new CustomEvent('refresh-tasks', { 
+                        detail: {...newTask, _fromEvent: true, _delayed: true}
+                      })
+                    );
+                  }, 500);
+                }
+              }
+            } else {
+              console.warn("TasksView: Usuário não autenticado, tarefas salvas apenas na sessão atual");
+              // Mesmo sem usuário, emitir evento para componentes da mesma sessão
+              if (!taskData._fromEvent) {
+                taskService.emitTaskAdded({...newTask, _fromEvent: true});
+              }
+            }
+          } catch (err) {
+            console.error("TasksView: Erro ao salvar tarefas:", err);
+          }
+        };
+
+        // Executar salvamento assíncrono para não bloquear a UI
+        saveTasksAsync();
+
+        return updatedTasks;
+      });
+
+      // Close the modal if this is a direct add (not from an event)
+      if (!taskData._fromEvent) {
+        setShowAddTask(false);
+
+        // Show confirmation toast
+        toast({
+          title: "Tarefa adicionada",
+          description: "A nova tarefa foi adicionada com sucesso.",
+        });
+      }
+
+      // Check if task is overdue and update status accordingly
+      const now = new Date();
+      const dueDate = new Date(newTask.dueDate);
+      if (dueDate < now && newTask.status === "a-fazer") {
+        // Update the task to be marked as overdue
+        setTimeout(() => {
+          setTasks((prevTasks) => {
+            const updatedTasks = prevTasks.map((task) =>
+              task.id === newTask.id ? { ...task, status: "atrasado" } : task,
+            );
+
+            // Salvar no banco de dados/localStorage
+            const saveTasksAsync = async () => {
+              try {
+                const user = await getCurrentUser();
+                if (user && user.id) {
+                  await taskService.saveTasks(user.id, updatedTasks);
+                }
+              } catch (err) {
+                console.error("Erro ao salvar tarefas atualizadas:", err);
+              }
+            };
+
+            saveTasksAsync();
+
+            return updatedTasks;
+          });
+        }, 100);
+      }
+
+      return newTask;
+    } catch (error) {
+      console.error("Error adding task:", error);
+      toast({
+        title: "Erro ao adicionar tarefa",
+        description: "Ocorreu um erro ao adicionar a tarefa. Tente novamente.",
+        variant: "destructive",
+      });
+      return null;
+    }
+  };
+
   // Listen for external task additions
   useEffect(() => {
     console.log("TasksView: Configurando sistema de sincronização de tarefas");
@@ -196,7 +382,7 @@ const TasksView: React.FC<TasksViewProps> = ({
       // Limpar listeners de serviço
       serviceHandlers.forEach(unsubscribe => unsubscribe && unsubscribe());
     };
-  }, [tasks, handleAddTask]); // Dependências necessárias para verificar duplicações
+  }, [tasks]); // Removido handleAddTask das dependências
 
   // Carregar tarefas do usuário
   useEffect(() => {
