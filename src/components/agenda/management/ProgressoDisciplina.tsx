@@ -1,6 +1,6 @@
 
 import React from "react";
-import { BarChart2, ExternalLink, Settings } from "lucide-react";
+import { BarChart2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -59,9 +59,6 @@ const ProgressoDisciplina = () => {
           <span className="px-2 py-0.5 rounded-md cursor-pointer transition-colors hover:bg-white/30">
             Ano
           </span>
-          <button className="p-1 rounded-full hover:bg-white/30 transition-colors">
-            <Settings className="h-4 w-4 text-white" />
-          </button>
         </div>
       </div>
 
