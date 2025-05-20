@@ -39,19 +39,11 @@ const ProgressoDisciplina = () => {
   ];
 
   return (
-    <div className="bg-[#F8F9FA] dark:bg-[#29335C]/30 rounded-lg h-full">
-      <div className="bg-[#FF6B00] p-2 px-4 flex justify-between items-center rounded-t-lg">
-        <div className="flex items-center gap-2">
-          <BarChart2 className="h-5 w-5 text-white" />
-          <h3 className="text-white font-medium">Tempo de Estudo</h3>
-        </div>
-        <div className="flex gap-2">
-          <span className="text-white text-xs bg-white/20 px-2 py-0.5 rounded-full">Semana</span>
-          <span className="text-white text-xs">Mês</span>
-          <span className="text-white text-xs">Ano</span>
-        </div>
-      </div>
-      <div className="p-4">
+    <div className="bg-[#F8F9FA] dark:bg-[#29335C]/30 rounded-lg p-4 border border-[#FF6B00]/10 h-full">
+      <h4 className="font-semibold text-[#29335C] dark:text-white flex items-center gap-2 mb-4">
+        <BarChart2 className="h-4 w-4 text-[#FF6B00]" />
+        Progresso por Disciplina
+      </h4>
       
       <div className="space-y-3">
         {disciplinas.map((disciplina, index) => (
