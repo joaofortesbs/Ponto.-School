@@ -24,23 +24,41 @@ export const taskService = {
       // Disparar evento global para sincronizar componentes (EventTarget)
       taskEvents.dispatchEvent(new CustomEvent('task-added', { detail: task }));
       
+      // Garantir que a tarefa tenha um ID único
+      const taskWithId = {
+        ...task,
+        id: task.id || `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+      };
+      
+      // Garantir que _fromEvent esteja definido para evitar loops infinitos
+      if (!taskWithId._fromEvent) {
+        taskWithId._fromEvent = true;
+      }
+      
       // Disparar evento no DOM para componentes que estão em árvores de componentes diferentes
-      const event = new CustomEvent('refresh-tasks', { detail: task, bubbles: true });
+      const event = new CustomEvent('refresh-tasks', { detail: taskWithId, bubbles: true });
       document.dispatchEvent(event);
       
-      // Tentar disparar evento diretamente nos componentes que precisam ser atualizados
+      // Disparar eventos diretamente para componentes específicos
       const componentsToNotify = [
         '[data-testid="tasks-view"]',
         '[data-testid="pending-tasks-card"]'
       ];
       
       componentsToNotify.forEach(selector => {
-        const element = document.querySelector(selector);
-        if (element) {
-          console.log(`Emitindo evento para ${selector}`);
-          element.dispatchEvent(new CustomEvent('refresh-tasks', { detail: task, bubbles: true }));
+        const elements = document.querySelectorAll(selector);
+        if (elements && elements.length > 0) {
+          elements.forEach(element => {
+            console.log(`Emitindo evento para ${selector}`);
+            element.dispatchEvent(new CustomEvent('refresh-tasks', { detail: taskWithId, bubbles: true }));
+          });
+        } else {
+          console.log(`Componente ${selector} não encontrado para notificação direta`);
         }
       });
+      
+      // Emitir um evento personalizado específico para o PendingTasksCard
+      document.dispatchEvent(new CustomEvent('pending-tasks-updated', { detail: taskWithId }));
     } catch (error) {
       console.error("Erro ao emitir evento de tarefa adicionada:", error);
     }

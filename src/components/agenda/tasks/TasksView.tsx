@@ -397,11 +397,11 @@ const TasksView: React.FC<TasksViewProps> = ({
   // Adicionar nova tarefa
   const handleAddTask = async (taskData: any) => {
     try {
-      console.log("Adding task:", taskData);
+      console.log("TasksView: Adding task:", taskData);
 
       // Verificar se a tarefa já existe
       if (taskData.id && tasks.some(task => task.id === taskData.id)) {
-        console.log("Tarefa já existe, ignorando duplicação:", taskData.id);
+        console.log("TasksView: Tarefa já existe, ignorando duplicação:", taskData.id);
         return null;
       }
 
@@ -415,9 +415,12 @@ const TasksView: React.FC<TasksViewProps> = ({
         return null;
       }
 
+      // Gerar ID consistente e único
+      const taskId = taskData.id || `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
       // Create a new task with all fields properly handled
       const newTask: Task = {
-        id: taskData.id || `task-${Date.now()}`,
+        id: taskId,
         title: taskData.title,
         description: taskData.description || "",
         discipline: taskData.discipline || "Geral",
@@ -442,13 +445,13 @@ const TasksView: React.FC<TasksViewProps> = ({
         comments: [],
       };
 
-      console.log("Nova tarefa formatada:", newTask);
+      console.log("TasksView: Nova tarefa formatada:", newTask);
 
       // Add the new task to the beginning of the tasks array immediately
       setTasks((prevTasks) => {
         // Verificar novamente por duplicações antes de adicionar
         if (prevTasks.some(task => task.id === newTask.id)) {
-          console.log("Tarefa já existe (verificação final), ignorando duplicação:", newTask.id);
+          console.log("TasksView: Tarefa já existe (verificação final), ignorando duplicação:", newTask.id);
           return prevTasks;
         }
 
@@ -457,27 +460,64 @@ const TasksView: React.FC<TasksViewProps> = ({
         // Salvar no banco de dados/localStorage
         const saveTasksAsync = async () => {
           try {
+            console.log("TasksView: Salvando tarefa no banco de dados");
             const user = await getCurrentUser();
             if (user && user.id) {
+              // Salvar tarefa no banco de dados/localStorage
               const saved = await taskService.saveTasks(user.id, updatedTasks);
+              
               if (!saved) {
-                console.warn("Não foi possível salvar tarefas no banco de dados nem localmente");
+                console.warn("TasksView: Não foi possível salvar tarefas no banco de dados nem localmente");
               } else {
-                console.log("Tarefa salva com sucesso no banco de dados");
-                // Emitir evento para outros componentes só se não for um evento que veio de outro componente
+                console.log("TasksView: Tarefa salva com sucesso no banco de dados");
+                
+                // Emitir evento para outros componentes
                 if (!taskData._fromEvent) {
+                  console.log("TasksView: Emitindo evento de tarefa adicionada");
+                  
+                  // Forçar atualização imediata no PendingTasksCard por evento direto
+                  const pendingTasksCard = document.querySelector('[data-testid="pending-tasks-card"]');
+                  if (pendingTasksCard) {
+                    console.log("TasksView: Enviando evento direto para PendingTasksCard");
+                    pendingTasksCard.dispatchEvent(
+                      new CustomEvent('refresh-tasks', { 
+                        detail: {...newTask, _fromEvent: true},
+                        bubbles: true 
+                      })
+                    );
+                  }
+                  
+                  // Emitir evento global para sincronização entre componentes
                   taskService.emitTaskAdded({...newTask, _fromEvent: true});
+                  
+                  // Emitir evento específico para o PendingTasksCard como backup
+                  document.dispatchEvent(
+                    new CustomEvent('pending-tasks-updated', { 
+                      detail: {...newTask, _fromEvent: true}
+                    })
+                  );
+                  
+                  // Adicionar atraso para garantir que o evento seja processado
+                  setTimeout(() => {
+                    console.log("TasksView: Verificando se evento foi processado");
+                    // Emitir evento de backup após um pequeno atraso
+                    document.dispatchEvent(
+                      new CustomEvent('refresh-tasks', { 
+                        detail: {...newTask, _fromEvent: true, _delayed: true}
+                      })
+                    );
+                  }, 500);
                 }
               }
             } else {
-              console.warn("Usuário não autenticado, tarefas salvas apenas na sessão atual");
+              console.warn("TasksView: Usuário não autenticado, tarefas salvas apenas na sessão atual");
               // Mesmo sem usuário, emitir evento para componentes da mesma sessão
               if (!taskData._fromEvent) {
                 taskService.emitTaskAdded({...newTask, _fromEvent: true});
               }
             }
           } catch (err) {
-            console.error("Erro ao salvar tarefas:", err);
+            console.error("TasksView: Erro ao salvar tarefas:", err);
           }
         };
 
