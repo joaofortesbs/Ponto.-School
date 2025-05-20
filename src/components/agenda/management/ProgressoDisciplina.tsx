@@ -131,11 +131,6 @@ const ProgressoDisciplina = () => {
       </div>
 
       <CardHeader className="pb-2">
-        <div className="flex justify-between items-center text-sm pb-2 border-b border-gray-200 dark:border-gray-700/30">
-          <a href="/agenda?view=flow" className="text-[#FF6B00] hover:underline flex items-center ml-auto">
-            Definir Metas <ExternalLink className="h-3 w-3 ml-1" />
-          </a>
-        </div>
         <div className="flex justify-between items-start">
           <div className="w-full">
             {/* Título removido do CardHeader como no modelo do Tempo de Estudo */}
