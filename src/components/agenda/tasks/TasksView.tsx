@@ -78,55 +78,125 @@ const TasksView: React.FC<TasksViewProps> = ({
 
   // Listen for external task additions
   useEffect(() => {
-    const handleExternalTaskAdd = (event: any) => {
-      if (event.detail) {
-        console.log("Evento refresh-tasks recebido no TasksView:", event.detail);
-        
-        // Verificar se a tarefa já existe para evitar duplicação
-        const taskData = event.detail;
-        const taskExists = tasks.some(task => task.id === taskData.id);
-        
-        if (!taskExists) {
-          handleAddTask(taskData);
-        } else {
-          console.log("Tarefa já existe, ignorando:", taskData.id);
-        }
+    console.log("TasksView: Configurando sistema de sincronização de tarefas");
+    
+    // Função unificada para processar novas tarefas
+    const processNewTask = (taskData: any) => {
+      if (!taskData) return;
+      
+      console.log("TasksView: Processando nova tarefa", taskData.title || taskData.id);
+      
+      // Verificar se a tarefa já existe para evitar duplicação
+      const taskExists = tasks.some(task => task.id === taskData.id);
+      
+      if (!taskExists) {
+        console.log("TasksView: Adicionando nova tarefa", taskData.title);
+        handleAddTask(taskData);
+      } else {
+        console.log("TasksView: Tarefa já existe, ignorando:", taskData.id);
       }
     };
 
-    // Escutar evento no componente
+    // Handler para eventos DOM
+    const handleTaskEvent = (event: any) => {
+      if (event.detail) {
+        console.log("TasksView: Evento de tarefa recebido via DOM", event.type);
+        processNewTask(event.detail);
+      }
+    };
+    
+    // Handler para sincronização completa
+    const handleSyncEvent = (event: any) => {
+      if (event.detail && event.detail.task) {
+        console.log("TasksView: Evento de sincronização recebido", event.detail.timestamp);
+        processNewTask(event.detail.task);
+      }
+    };
+
+    // Handler para conclusão de tarefa
+    const handleTaskCompletedEvent = (event: any) => {
+      if (event.detail && event.detail.taskId) {
+        console.log("TasksView: Tarefa marcada como concluída:", event.detail.taskId);
+        setTasks(currentTasks => 
+          currentTasks.map(task => 
+            task.id === event.detail.taskId 
+              ? { ...task, status: "concluido", progress: 100 } 
+              : task
+          )
+        );
+      }
+    };
+
+    // Registrar componente para eventos diretos
     const tasksView = document.querySelector('[data-testid="tasks-view"]');
     if (tasksView) {
-      tasksView.addEventListener("refresh-tasks", handleExternalTaskAdd);
+      tasksView.addEventListener("refresh-tasks", handleTaskEvent);
+      tasksView.addEventListener("tasks-view-updated", handleTaskEvent);
     }
     
-    // Escutar evento global (para sincronização entre componentes distantes)
-    document.addEventListener("refresh-tasks", handleExternalTaskAdd);
+    // Registrar listeners para eventos DOM globais
+    document.addEventListener("refresh-tasks", handleTaskEvent);
+    document.addEventListener("tasks-view-updated", handleTaskEvent);
+    document.addEventListener("tasks-sync-all", handleSyncEvent);
+    document.addEventListener("task-completed", handleTaskCompletedEvent);
 
-    // Escutar evento do serviço
-    const unsubscribe = taskService.onTaskAdded((task) => {
-      if (task) {
-        console.log("Evento onTaskAdded recebido no TasksView:", task);
-        
-        // Verificar se a tarefa já existe para evitar duplicação
-        const taskExists = tasks.some(existingTask => existingTask.id === task.id);
-        
-        if (!taskExists) {
-          handleAddTask(task);
-        } else {
-          console.log("Tarefa já existe, ignorando:", task.id);
+    // Registrar listeners para eventos do serviço
+    const serviceHandlers = [
+      // Escutar adição de tarefas via serviço
+      taskService.onTaskAdded((task) => {
+        console.log("TasksView: Evento onTaskAdded recebido via serviço");
+        processNewTask(task);
+      }),
+      
+      // Escutar atualizações gerais
+      taskService.onTasksUpdated(async (userId) => {
+        try {
+          console.log("TasksView: Atualizando tarefas para usuário", userId);
+          const user = await getCurrentUser();
+          if (user && user.id === userId) {
+            const updatedTasks = await taskService.loadTasks(userId);
+            if (updatedTasks && updatedTasks.length > 0) {
+              setTasks(updatedTasks);
+            }
+          }
+        } catch (error) {
+          console.error("TasksView: Erro ao atualizar tarefas", error);
         }
-      }
-    });
+      }),
+      
+      // Escutar conclusão de tarefas
+      taskService.onTaskCompleted((taskId) => {
+        console.log("TasksView: Evento onTaskCompleted recebido", taskId);
+        setTasks(currentTasks => 
+          currentTasks.map(task => 
+            task.id === taskId 
+              ? { ...task, status: "concluido", progress: 100 } 
+              : task
+          )
+        );
+      })
+    ];
 
+    // Função de limpeza
     return () => {
+      console.log("TasksView: Limpando sistema de sincronização");
+      
+      // Limpar listeners do componente
       if (tasksView) {
-        tasksView.removeEventListener("refresh-tasks", handleExternalTaskAdd);
+        tasksView.removeEventListener("refresh-tasks", handleTaskEvent);
+        tasksView.removeEventListener("tasks-view-updated", handleTaskEvent);
       }
-      document.removeEventListener("refresh-tasks", handleExternalTaskAdd);
-      unsubscribe();
+      
+      // Limpar listeners DOM globais
+      document.removeEventListener("refresh-tasks", handleTaskEvent);
+      document.removeEventListener("tasks-view-updated", handleTaskEvent);
+      document.removeEventListener("tasks-sync-all", handleSyncEvent);
+      document.removeEventListener("task-completed", handleTaskCompletedEvent);
+      
+      // Limpar listeners de serviço
+      serviceHandlers.forEach(unsubscribe => unsubscribe && unsubscribe());
     };
-  }, [tasks]); // Adicionado tasks como dependência para verificar duplicações
+  }, [tasks, handleAddTask]); // Dependências necessárias para verificar duplicações
 
   // Carregar tarefas do usuário
   useEffect(() => {

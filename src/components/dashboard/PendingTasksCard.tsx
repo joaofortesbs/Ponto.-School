@@ -117,64 +117,79 @@ const PendingTasksCard = ({
       // Carregar tarefas inicialmente
       loadTasks();
       
-      // Configurar listener para atualizações de tarefas
-      const unsubscribeFromTasksUpdated = taskService.onTasksUpdated((userId) => {
-        console.log("PendingTasksCard: Evento onTasksUpdated recebido para usuário", userId);
-        if (userId === user.id) {
-          loadTasks();
-        }
-      });
+      // Função unificada para adicionar nova tarefa
+      const addNewTask = (newTask: any) => {
+        if (!newTask) return;
+        
+        console.log("PendingTasksCard: Processando nova tarefa", newTask.title || newTask.id);
+        
+        setTasks(currentTasks => {
+          // Verificar se a tarefa já existe para evitar duplicação
+          const taskExists = currentTasks.some(task => task.id === newTask.id);
+          if (taskExists) {
+            console.log("PendingTasksCard: Tarefa já existe, ignorando duplicação", newTask.id);
+            return currentTasks;
+          }
+          
+          console.log("PendingTasksCard: Adicionando nova tarefa", newTask.title);
+          
+          // Atualizar o localStorage para backup imediato
+          if (user) {
+            const updatedTasks = [...currentTasks, newTask];
+            taskService.saveTasksLocally(user.id, updatedTasks)
+              .catch(err => console.error("Erro ao salvar nova tarefa localmente:", err));
+          }
+          
+          return [...currentTasks, newTask];
+        });
+      };
       
-      // Configurar listener para adição de tarefas
-      const unsubscribeFromTaskAdded = taskService.onTaskAdded((newTask) => {
-        console.log("PendingTasksCard: Evento onTaskAdded recebido", newTask);
-        if (newTask) {
-          setTasks(currentTasks => {
-            // Verificar se a tarefa já existe para evitar duplicação
-            const taskExists = currentTasks.some(task => task.id === newTask.id);
-            if (taskExists) {
-              console.log("PendingTasksCard: Tarefa já existe, ignorando duplicação", newTask.id);
-              return currentTasks;
-            }
-            console.log("PendingTasksCard: Adicionando nova tarefa", newTask.title);
-            return [...currentTasks, newTask];
-          });
-        }
-      });
+      // Registrar handlers para todos os tipos de eventos
+      const eventHandlers = [
+        // Via taskService (principal)
+        taskService.onTaskAdded(addNewTask),
+        
+        // Via atualização geral de tarefas
+        taskService.onTasksUpdated((userId) => {
+          console.log("PendingTasksCard: Evento onTasksUpdated recebido para usuário", userId);
+          if (userId === user.id) {
+            loadTasks();
+          }
+        }),
+        
+        // Via evento de conclusão
+        taskService.onTaskCompleted((taskId, userId) => {
+          if (userId === user.id) {
+            console.log("PendingTasksCard: Tarefa marcada como concluída:", taskId);
+            setTasks(currentTasks => 
+              currentTasks.map(task => 
+                task.id === taskId 
+                  ? { ...task, completed: true, status: "concluido" } 
+                  : task
+              )
+            );
+          }
+        })
+      ];
       
-      // Função para manipular evento de tarefa adicionada via DOM
-      const handleTaskAddedDOMEvent = (event: any) => {
+      // Eventos DOM específicos
+      const handleRefreshTasksEvent = (event: any) => {
         if (event.detail) {
-          console.log("PendingTasksCard: Evento refresh-tasks recebido via DOM", event.detail);
-          setTasks(currentTasks => {
-            const newTask = event.detail;
-            // Verificar se a tarefa já existe para evitar duplicação
-            const taskExists = currentTasks.some(task => task.id === newTask.id);
-            if (taskExists) {
-              console.log("PendingTasksCard: Tarefa já existe (evento DOM), ignorando", newTask.id);
-              return currentTasks;
-            }
-            console.log("PendingTasksCard: Adicionando nova tarefa via evento DOM", newTask.title);
-            return [...currentTasks, newTask];
-          });
+          addNewTask(event.detail);
         }
       };
       
-      // Escutar evento DOM específico para o PendingTasksCard
       const handlePendingTasksUpdated = (event: any) => {
         if (event.detail) {
           console.log("PendingTasksCard: Evento pending-tasks-updated recebido", event.detail);
-          setTasks(currentTasks => {
-            const newTask = event.detail;
-            // Verificar se a tarefa já existe para evitar duplicação
-            const taskExists = currentTasks.some(task => task.id === newTask.id);
-            if (taskExists) {
-              console.log("PendingTasksCard: Tarefa já existe (evento específico), ignorando", newTask.id);
-              return currentTasks;
-            }
-            console.log("PendingTasksCard: Adicionando nova tarefa via evento específico", newTask.title);
-            return [...currentTasks, newTask];
-          });
+          addNewTask(event.detail);
+        }
+      };
+      
+      const handleTasksSyncEvent = (event: any) => {
+        if (event.detail && event.detail.task) {
+          console.log("PendingTasksCard: Evento de sincronização recebido", event.detail.timestamp);
+          addNewTask(event.detail.task);
         }
       };
       
@@ -182,32 +197,34 @@ const PendingTasksCard = ({
       const cardElement = document.querySelector('[data-testid="pending-tasks-card"]');
       if (cardElement) {
         console.log("PendingTasksCard: Elemento encontrado para eventos diretos");
-        cardElement.addEventListener('refresh-tasks', handleTaskAddedDOMEvent);
-      } else {
-        console.log("PendingTasksCard: Elemento não encontrado para eventos diretos");
+        cardElement.addEventListener('refresh-tasks', handleRefreshTasksEvent);
       }
       
       // Registrar eventos globais
-      document.addEventListener('refresh-tasks', handleTaskAddedDOMEvent);
+      document.addEventListener('refresh-tasks', handleRefreshTasksEvent);
       document.addEventListener('pending-tasks-updated', handlePendingTasksUpdated);
+      document.addEventListener('tasks-sync-all', handleTasksSyncEvent);
       
-      // Registrar evento para forçar atualização do componente
-      const forceRefreshTasks = () => {
-        console.log("PendingTasksCard: Forçando atualização de tarefas");
+      // Evento para forçar atualização a cada 20 segundos (como backup)
+      const refreshInterval = setInterval(() => {
+        console.log("PendingTasksCard: Sincronização automática de tarefas");
         loadTasks();
-      };
+      }, 20000);
       
-      // Evento para forçar atualização a cada 30 segundos (como backup)
-      const refreshInterval = setInterval(forceRefreshTasks, 30000);
-      
+      // Retornar função de limpeza
       return () => {
-        unsubscribeFromTasksUpdated();
-        unsubscribeFromTaskAdded();
-        document.removeEventListener('refresh-tasks', handleTaskAddedDOMEvent);
+        // Limpar assinaturas do serviço
+        eventHandlers.forEach(unsubscribe => unsubscribe && unsubscribe());
+        
+        // Limpar listeners DOM
+        document.removeEventListener('refresh-tasks', handleRefreshTasksEvent);
         document.removeEventListener('pending-tasks-updated', handlePendingTasksUpdated);
+        document.removeEventListener('tasks-sync-all', handleTasksSyncEvent);
+        
         if (cardElement) {
-          cardElement.removeEventListener('refresh-tasks', handleTaskAddedDOMEvent);
+          cardElement.removeEventListener('refresh-tasks', handleRefreshTasksEvent);
         }
+        
         clearInterval(refreshInterval);
         console.log("PendingTasksCard: Limpeza de listeners concluída");
       };

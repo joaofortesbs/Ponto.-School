@@ -186,112 +186,137 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
     setNotes("");
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
     try {
-      if (!title.trim()) {
-        alert("Por favor, insira um título para a tarefa.");
+      if (!formState.title) {
+        toast({
+          title: "Erro ao adicionar tarefa",
+          description: "O título da tarefa é obrigatório.",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
         return;
       }
 
-      // Ensure dueDate is in ISO format
-      let formattedDueDate;
-      try {
-        formattedDueDate = dueDate
-          ? new Date(dueDate).toISOString()
-          : new Date().toISOString();
-      } catch (error) {
-        console.error("Error formatting due date:", error);
-        formattedDueDate = new Date().toISOString();
-      }
+      // Preparar os dados da tarefa com um ID único e consistente
+      const taskId = `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-      // Ensure reminderTime is in ISO format if set
-      let formattedReminderTime;
-      try {
-        formattedReminderTime =
-          reminderTime && reminderSet
-            ? new Date(reminderTime).toISOString()
-            : undefined;
-      } catch (error) {
-        console.error("Error formatting reminder time:", error);
-        formattedReminderTime = undefined;
-      }
-
-      // Check if due date is in the past
-      const now = new Date();
-      const taskDueDate = new Date(formattedDueDate);
-      const initialStatus = taskDueDate < now ? "atrasado" : "a-fazer";
-
-      // Create the task object with all fields
-      const newTask = {
-        id: `task-${Date.now()}`,
-        title,
-        description,
-        discipline: discipline || "Geral",
-        subject: discipline || "Geral", // Adicionado para compatibilidade com PendingTasksCard
-        type: type || "tarefa",
-        priority: priority || "média",
-        dueDate: formattedDueDate,
-        professor,
-        subtasks,
-        tags,
-        reminderSet,
-        reminderTime: formattedReminderTime,
-        status: initialStatus,
-        progress: 0,
+      const taskData = {
+        id: taskId,
+        title: formState.title,
+        description: formState.description,
+        discipline: formState.discipline,
+        dueDate: formState.dueDate,
+        status: formState.status as TaskStatus,
+        priority: formState.priority as TaskPriority,
+        progress: 0, // Nova tarefa começa com 0%
+        type: "tarefa",
+        professor: formState.professor,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        attachments: attachments.map((file) => file.name),
-        timeSpent: estimatedTime ? parseInt(estimatedTime) : 0,
-        isPersonal: visibility === "private",
-        associatedClass,
-        notes,
-        comments: [],
-        completed: false, // Adicionado para compatibilidade com PendingTasksCard
+        startTime: formState.startTime,
+        endTime: formState.endTime,
       };
 
-      // Primeiro, emitimos o evento para todos os componentes que precisam saber sobre a nova tarefa
-      try {
-        import('@/services/taskService').then(({ taskService }) => {
-          console.log("Emitindo evento de nova tarefa:", newTask);
-          taskService.emitTaskAdded(newTask);
+      // Log para debugging
+      console.log("AddTaskModal: Nova tarefa criada:", taskId);
 
-          // Garantir que o evento DOM seja disparado para componentes em árvores diferentes
-          setTimeout(() => {
-            const refreshEvent = new CustomEvent("refresh-tasks", { 
-              detail: newTask,
-              bubbles: true 
-            });
-            document.dispatchEvent(refreshEvent);
-
-            // Tentar disparar no componente específico também
-            const tasksView = document.querySelector('[data-testid="tasks-view"]');
-            if (tasksView) {
-              tasksView.dispatchEvent(refreshEvent);
-            }
-
-            const pendingTasksCard = document.querySelector('[data-testid="pending-tasks-card"]');
-            if (pendingTasksCard) {
-              pendingTasksCard.dispatchEvent(refreshEvent);
-            }
-          }, 100);
-        });
-      } catch (error) {
-        console.error("Erro ao emitir evento de nova tarefa:", error);
-      }
-
-      // Depois chamamos a função de callback para adicionar a tarefa localmente
+      // 1. Chamar a função de callback local
       if (onAddTask) {
-        onAddTask(newTask);
+        console.log("AddTaskModal: Chamando callback onAddTask");
+        onAddTask(taskData);
       }
 
-      // Then reset form and close modal
-      resetForm();
-      onOpenChange(false);
+      // 2. Salvar no banco de dados através do serviço
+      try {
+        console.log("AddTaskModal: Salvando tarefa no banco de dados");
+        const user = await getCurrentUser();
+
+        if (user && user.id) {
+          // Carregar tarefas atuais para evitar substituição completa
+          const currentTasks = await taskService.loadTasks(user.id);
+
+          // Adicionar nova tarefa à lista atual
+          const updatedTasks = [...currentTasks, taskData];
+
+          // Salvar lista atualizada
+          await taskService.saveTasks(user.id, updatedTasks);
+          console.log("AddTaskModal: Tarefa salva com sucesso no banco de dados");
+        }
+      } catch (error) {
+        console.error("AddTaskModal: Erro ao salvar tarefa no banco:", error);
+        // Continuamos mesmo com erro para garantir que a tarefa seja adicionada localmente
+      }
+
+      // 3. Emitir eventos para todos os sistemas de sincronização
+      try {
+        console.log("AddTaskModal: Emitindo eventos de sincronização");
+
+        // Emitir evento via serviço principal (método centralizado)
+        taskService.emitTaskAdded(taskData);
+
+        // Emitir evento diretamente para componentes específicos (backup)
+        const componentsToNotify = [
+          '[data-testid="tasks-view"]',
+          '[data-testid="pending-tasks-card"]'
+        ];
+
+        componentsToNotify.forEach(selector => {
+          const elements = document.querySelectorAll(selector);
+          if (elements && elements.length > 0) {
+            elements.forEach(element => {
+              console.log(`AddTaskModal: Notificando ${selector} diretamente`);
+              element.dispatchEvent(
+                new CustomEvent('refresh-tasks', { 
+                  detail: {...taskData, _fromDirectEvent: true},
+                  bubbles: true 
+                })
+              );
+            });
+          }
+        });
+
+        // Emitir eventos específicos para cada componente (garantia extra)
+        document.dispatchEvent(
+          new CustomEvent('pending-tasks-updated', { 
+            detail: {...taskData, _fromDirectEvent: true}
+          })
+        );
+
+        document.dispatchEvent(
+          new CustomEvent('tasks-view-updated', { 
+            detail: {...taskData, _fromDirectEvent: true}
+          })
+        );
+      } catch (error) {
+        console.error("AddTaskModal: Erro ao emitir eventos de atualização:", error);
+      }
+
+      // Resetar o formulário
+      reset();
+
+      // Fechar o modal se necessário
+      if (setOpen) {
+        setOpen(false);
+      }
+
+      // Mostrar toast de sucesso
+      toast({
+        title: "Tarefa adicionada",
+        description: "Sua tarefa foi adicionada com sucesso e sincronizada com todos os componentes!",
+      });
     } catch (error) {
-      console.error("Error submitting task:", error);
-      alert(
-        "Ocorreu um erro ao adicionar a tarefa. Por favor, tente novamente.",
-      );
+      console.error("Erro ao adicionar tarefa:", error);
+      toast({
+        title: "Erro ao adicionar tarefa",
+        description: "Ocorreu um erro ao adicionar a tarefa. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
