@@ -1,143 +1,221 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { useTaskStore } from '@/services/sharedTaskService';
-import { ArrowRight, Check, Clock, CalendarClock } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
+import { Clock, Calendar, CheckCircle, Plus } from "lucide-react";
+import { useTaskStore } from "@/services/sharedTaskService";
+import AddTaskModal from "../agenda/modals/add-task-modal";
 
 interface Task {
   id: string;
   title: string;
-  description?: string;
+  dueDate: string;
+  subject: string;
   completed: boolean;
-  dueDate?: string;
-  priority: 'high' | 'medium' | 'low';
-  tags?: string[];
+  priority?: "alta" | "media" | "baixa";
 }
 
-export default function PendingTasksCard() {
-  const tasks = useTaskStore((state) => state.tasks);
-  const navigate = useNavigate();
-  const updateTask = useTaskStore((state) => state.updateTask);
-  const [pendingTasks, setPendingTasks] = useState<Task[]>([]);
+interface PendingTasksCardProps {
+  tasks?: Task[];
+}
 
-  useEffect(() => {
-    const filtered = tasks.filter(task => !task.completed);
+const defaultTasks: Task[] = [
+  {
+    id: "1",
+    title: "Entrega de Relatório - Física",
+    dueDate: "2024-03-25",
+    subject: "Física",
+    completed: false,
+    priority: "alta",
+  },
+  {
+    id: "2",
+    title: "Questionário - Matemática",
+    dueDate: "2024-03-26",
+    subject: "Matemática",
+    completed: false,
+    priority: "media",
+  },
+  {
+    id: "3",
+    title: "Apresentação - Biologia",
+    dueDate: "2024-03-27",
+    subject: "Biologia",
+    completed: false,
+    priority: "baixa",
+  },
+  {
+    id: "4",
+    title: "Prova Final - Química",
+    dueDate: "2024-03-28",
+    subject: "Química",
+    completed: false,
+    priority: "media",
+  },
+];
 
-    // Ordena por prioridade e data
-    const sorted = [...filtered].sort((a, b) => {
-      // Primeiro por prioridade (high > medium > low)
-      const priorityOrder = { high: 0, medium: 1, low: 2 };
-      const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
+const PendingTasksCard = ({
+  tasks: initialTasks = defaultTasks,
+}: PendingTasksCardProps) => {
+  const [tasks, setTasks] = useState<Task[]>(initialTasks);
+  const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
 
-      if (priorityDiff !== 0) return priorityDiff;
+  const handleAddTask = (newTask: any) => {
+    // Format the due date for display
+    let dueDateDisplay = "";
+    if (newTask.dueDate) {
+      const today = new Date();
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
 
-      // Depois por data de vencimento, se disponível
-      if (a.dueDate && b.dueDate) {
-        return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+      const dueDate = new Date(newTask.dueDate);
+
+      if (dueDate.toDateString() === today.toDateString()) {
+        dueDateDisplay = `hoje, ${newTask.startTime || "23:59"}`;
+      } else if (dueDate.toDateString() === tomorrow.toDateString()) {
+        dueDateDisplay = `amanhã, ${newTask.startTime || "23:59"}`;
+      } else {
+        const diffTime = Math.abs(dueDate.getTime() - today.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        dueDateDisplay = `em ${diffDays} dias`;
       }
+    }
 
-      // Coloca tarefas com data antes das sem data
-      if (a.dueDate && !b.dueDate) return -1;
-      if (!a.dueDate && b.dueDate) return 1;
+    const task: Task = {
+      id: `task-${Date.now()}`,
+      title: newTask.title,
+      dueDate: dueDateDisplay || newTask.dueDate.toISOString().split("T")[0],
+      subject: newTask.discipline || "Geral",
+      completed: false,
+      priority: newTask.priority || "media",
+    };
 
-      return 0;
+    // Adiciona ao estado local e ao serviço compartilhado
+    setTasks([...tasks, task]);
+
+    // Também adiciona à store compartilhada
+    const { addTask } = useTaskStore.getState();
+    addTask({
+      id: task.id,
+      title: task.title,
+      dueDate: typeof task.dueDate === 'string' ? task.dueDate : task.dueDate.toISOString(),
+      subject: task.discipline || "Geral",
+      completed: false,
+      priority: task.priority as "alta" | "media" | "baixa" || "media"
     });
-
-    // Limita a 3 tarefas para exibição no card do dashboard
-    setPendingTasks(sorted.slice(0, 3));
-  }, [tasks]);
-
-  const handleCompleteTask = (taskId: string) => {
-    updateTask(taskId, { completed: true });
   };
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('pt-BR', { 
-      day: '2-digit',
-      month: '2-digit'
-    }).format(date);
+  const toggleTaskCompletion = (taskId: string) => {
+    setTasks(
+      tasks.map((task) =>
+        task.id === taskId ? { ...task, completed: !task.completed } : task,
+      ),
+    );
   };
 
-  const getPriorityColor = (priority: string) => {
+  const getPriorityColor = (priority?: string) => {
     switch (priority) {
-      case 'high':
-        return 'text-red-500';
-      case 'medium':
-        return 'text-amber-500';
-      case 'low':
-        return 'text-green-500';
+      case "alta":
+        return "bg-red-500";
+      case "media":
+        return "bg-yellow-500";
+      case "baixa":
+        return "bg-green-500";
       default:
-        return 'text-gray-500';
+        return "bg-gray-500";
     }
   };
 
   return (
-    <Card className="h-full shadow-sm overflow-hidden">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-semibold flex items-center">
-          <Clock className="h-5 w-5 mr-2 text-[#FF6B00]" />
-          Tarefas Pendentes
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="pb-2">
-        {pendingTasks.length === 0 ? (
-          <div className="text-center py-6">
-            <p className="text-gray-500 dark:text-gray-400">Sem tarefas pendentes</p>
-            <Button 
-              variant="link" 
-              className="mt-2 text-[#FF6B00]"
-              onClick={() => navigate('/agenda?view=tarefas')}
-            >
-              Adicionar tarefa
-            </Button>
+    <Card className="w-full h-[520px] bg-white dark:bg-[#001427]/20 border-brand-border dark:border-white/10">
+      <CardHeader className="flex flex-row items-center justify-between p-4 border-b">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-[#E0E1DD]/20">
+            <CheckCircle className="h-5 w-5 text-[#001427] dark:text-white" />
           </div>
-        ) : (
-          <div className="space-y-3">
-            {pendingTasks.map((task) => (
-              <div 
-                key={task.id} 
-                className="flex items-center justify-between p-3 rounded-lg border border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
-              >
-                <div className="flex items-center space-x-3 w-full">
-                  <button 
-                    onClick={() => handleCompleteTask(task.id)}
-                    className="h-5 w-5 rounded-full border border-gray-300 dark:border-gray-700 flex items-center justify-center hover:bg-[#FF6B00]/10 transition-colors"
-                    aria-label="Marcar como concluída"
-                  >
-                    <Check className="h-3 w-3 text-transparent hover:text-[#FF6B00]" />
-                  </button>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-medium text-sm truncate">{task.title}</h4>
-                    <div className="flex items-center mt-1 space-x-2">
-                      <span className={`text-xs ${getPriorityColor(task.priority)}`}>
-                        {task.priority === 'high' ? 'Alta' : task.priority === 'medium' ? 'Média' : 'Baixa'}
-                      </span>
-                      {task.dueDate && (
-                        <span className="flex items-center text-xs text-gray-500 dark:text-gray-400">
-                          <CalendarClock className="h-3 w-3 mr-1" />
-                          {formatDate(task.dueDate)}
-                        </span>
-                      )}
+          <div>
+            <CardTitle className="text-lg font-semibold text-[#001427] dark:text-white">
+              Tarefas Pendentes
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Organize suas atividades
+            </p>
+          </div>
+        </div>
+        <button
+          className="p-2 rounded-full hover:bg-[#E0E1DD]/20 transition-colors"
+          onClick={() => setIsAddTaskModalOpen(true)}
+        >
+          <Plus className="h-5 w-5 text-[#001427] dark:text-white" />
+        </button>
+      </CardHeader>
+      <CardContent className="p-0">
+        <ScrollArea className="h-[420px] w-full pr-4">
+          <div className="space-y-4 p-4">
+            {tasks
+              .filter((task) => !task.completed)
+              .map((task) => (
+                <div
+                  key={task.id}
+                  className="flex items-start space-x-4 p-3 rounded-lg hover:bg-[#E0E1DD]/10 dark:hover:bg-white/5 transition-all duration-300 hover:translate-x-1 cursor-pointer"
+                >
+                  <Checkbox
+                    id={`task-${task.id}`}
+                    checked={task.completed}
+                    onCheckedChange={() => toggleTaskCompletion(task.id)}
+                    className="mt-1"
+                  />
+                  <div className="flex-1">
+                    <label
+                      htmlFor={`task-${task.id}`}
+                      className="text-sm font-medium text-[#001427] dark:text-white leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      {task.title}
+                    </label>
+                    <div className="flex items-center space-x-4 mt-2">
+                      <div className="flex items-center text-sm text-[#64748B] dark:text-white/60">
+                        <Clock className="h-4 w-4 mr-1" />
+                        {typeof task.dueDate === "string" &&
+                        task.dueDate.includes("-")
+                          ? new Date(task.dueDate).toLocaleDateString()
+                          : task.dueDate}
+                      </div>
+                      <Badge
+                        variant="secondary"
+                        className="text-xs dark:bg-white/10 dark:text-white/80"
+                      >
+                        {task.subject}
+                      </Badge>
+                      <div
+                        className={`w-2 h-2 ${getPriorityColor(task.priority)} rounded-full`}
+                      ></div>
                     </div>
                   </div>
                 </div>
+              ))}
+            {tasks.filter((task) => !task.completed).length === 0 && (
+              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                <CheckCircle className="h-12 w-12 mx-auto mb-3 text-gray-400 dark:text-gray-500" />
+                <h4 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Nenhuma tarefa pendente
+                </h4>
+                <p className="text-sm max-w-[250px] mx-auto">
+                  Você não tem tarefas pendentes. Adicione uma nova tarefa.
+                </p>
               </div>
-            ))}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full text-[#FF6B00] hover:bg-[#FF6B00]/10"
-              onClick={() => navigate('/agenda?view=tarefas')}
-            >
-              Ver todas
-              <ArrowRight className="ml-1 h-4 w-4" />
-            </Button>
+            )}
           </div>
-        )}
+        </ScrollArea>
       </CardContent>
+
+      <AddTaskModal
+        open={isAddTaskModalOpen}
+        onOpenChange={setIsAddTaskModalOpen}
+        onAddTask={handleAddTask}
+      />
     </Card>
   );
-}
+};
+
+export default PendingTasksCard;
