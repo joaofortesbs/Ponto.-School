@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Calendar, CheckCircle, Plus } from "lucide-react";
-import { useTaskStore } from "@/services/sharedTaskService";
+import { useState } from "react";
 import AddTaskModal from "../agenda/modals/add-task-modal";
 
 interface Task {
@@ -91,19 +91,7 @@ const PendingTasksCard = ({
       priority: newTask.priority || "media",
     };
 
-    // Adiciona ao estado local e ao serviço compartilhado
     setTasks([...tasks, task]);
-
-    // Também adiciona à store compartilhada
-    const { addTask } = useTaskStore.getState();
-    addTask({
-      id: task.id,
-      title: task.title,
-      dueDate: typeof task.dueDate === 'string' ? task.dueDate : task.dueDate.toISOString(),
-      subject: task.discipline || "Geral",
-      completed: false,
-      priority: task.priority as "alta" | "media" | "baixa" || "media"
-    });
   };
 
   const toggleTaskCompletion = (taskId: string) => {

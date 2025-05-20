@@ -7,6 +7,7 @@ import './lib/username-initializer.ts'
 import { preInitializeWebNodes } from './lib/web-persistence.ts'
 
 // PRIORIDADE MÁXIMA: Inicializar teias antes de qualquer outro código
+// Esta função é executada imediatamente, antes mesmo da montagem do React
 function inicializarTeiasComPrioridadeMaxima() {
   console.log("Inicializando sistema de teias com prioridade máxima");
 
@@ -92,7 +93,7 @@ if (import.meta.hot) {
         // Caso seja uma atualização de módulo JavaScript significativa,
         // mostrar uma notificação para o usuário antes de aplicar
         const shouldReload = false; // Por padrão, não recarregar automaticamente
-
+        
         if (!shouldReload) {
           console.log('Atualização detectada mas não aplicada para evitar interrupção');
           // Opcional: isso pode ser modificado para mostrar uma notificação ao usuário

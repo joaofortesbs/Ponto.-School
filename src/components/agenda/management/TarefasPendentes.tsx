@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -6,10 +6,20 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Clock, Calendar, CheckSquare, Plus, ExternalLink, Settings } from "lucide-react";
 import AddTaskModal from "../modals/add-task-modal";
-import { useTaskStore, Task } from "@/services/sharedTaskService";
+
+interface Task {
+  id: string;
+  title: string;
+  dueDate: string;
+  subject: string;
+  completed: boolean;
+  priority?: "alta" | "media" | "baixa";
+}
+
+const defaultTasks: Task[] = [];
 
 const TarefasPendentes = () => {
-  const { tasks, addTask, toggleTaskCompletion } = useTaskStore();
+  const [tasks, setTasks] = useState<Task[]>(defaultTasks);
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"pendente" | "em-andamento" | "concluido">("pendente");
 
@@ -43,7 +53,15 @@ const TarefasPendentes = () => {
       priority: newTask.priority || "media",
     };
 
-    addTask(task);
+    setTasks([...tasks, task]);
+  };
+
+  const toggleTaskCompletion = (taskId: string) => {
+    setTasks(
+      tasks.map((task) =>
+        task.id === taskId ? { ...task, completed: !task.completed } : task
+      )
+    );
   };
 
   const priorityColors = {

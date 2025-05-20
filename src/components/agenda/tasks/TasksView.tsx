@@ -102,7 +102,7 @@ const TasksView: React.FC<TasksViewProps> = ({
       try {
         // Obter usuário atual
         const user = await getCurrentUser();
-
+        
         if (user && user.id) {
           // Carregar tarefas sincronizadas (do Supabase ou local, o mais recente)
           const userTasks = await taskService.syncTasks(user.id);
@@ -245,7 +245,7 @@ const TasksView: React.FC<TasksViewProps> = ({
         }
         return task;
       });
-
+      
       // Salvar no banco de dados/localStorage
       const saveTasksAsync = async () => {
         try {
@@ -257,9 +257,9 @@ const TasksView: React.FC<TasksViewProps> = ({
           console.error("Erro ao salvar tarefas após mover:", err);
         }
       };
-
+      
       saveTasksAsync();
-
+      
       return updatedTasks;
     });
   };
@@ -281,7 +281,7 @@ const TasksView: React.FC<TasksViewProps> = ({
         }
         return task;
       });
-
+      
       // Salvar no banco de dados/localStorage
       const saveTasksAsync = async () => {
         try {
@@ -293,9 +293,9 @@ const TasksView: React.FC<TasksViewProps> = ({
           console.error("Erro ao salvar tarefas após concluir:", err);
         }
       };
-
+      
       saveTasksAsync();
-
+      
       return updatedTasks;
     });
   };
@@ -306,7 +306,7 @@ const TasksView: React.FC<TasksViewProps> = ({
       const updatedTasks = currentTasks.map((task) =>
         task.id === updatedTask.id ? updatedTask : task,
       );
-
+      
       // Salvar no banco de dados/localStorage
       const saveTasksAsync = async () => {
         try {
@@ -318,9 +318,9 @@ const TasksView: React.FC<TasksViewProps> = ({
           console.error("Erro ao salvar tarefas após atualização:", err);
         }
       };
-
+      
       saveTasksAsync();
-
+      
       return updatedTasks;
     });
 
@@ -335,7 +335,7 @@ const TasksView: React.FC<TasksViewProps> = ({
   const handleDeleteTask = (taskId: string) => {
     setTasks((currentTasks) => {
       const updatedTasks = currentTasks.filter((task) => task.id !== taskId);
-
+      
       // Salvar no banco de dados/localStorage
       const saveTasksAsync = async () => {
         try {
@@ -347,12 +347,12 @@ const TasksView: React.FC<TasksViewProps> = ({
           console.error("Erro ao salvar tarefas após exclusão:", err);
         }
       };
-
+      
       saveTasksAsync();
-
+      
       return updatedTasks;
     });
-
+    
     setShowTaskDetails(false);
 
     // Mostrar toast de confirmação
@@ -362,39 +362,124 @@ const TasksView: React.FC<TasksViewProps> = ({
     });
   };
 
-  // Adicionar tarefa
-  const handleAddTask = (newTask: Task) => {
-    // Adicionar a tarefa tanto no estado local quanto no serviço compartilhado
-    setTasks((currentTasks) => {
-      const updatedTasks = [...currentTasks, newTask];
+  // Adicionar nova tarefa
+  const handleAddTask = async (taskData: any) => {
+    try {
+      console.log("Adding task:", taskData);
 
-      // Salvar no banco de dados/localStorage
-      const saveTasksAsync = async () => {
-        try {
-          const user = await getCurrentUser();
-          if (user && user.id) {
-            await taskService.saveTasks(user.id, updatedTasks);
-          }
-        } catch (err) {
-          console.error("Erro ao salvar tarefas após adicionar:", err);
-        }
+      // Validate required fields
+      if (!taskData.title) {
+        toast({
+          title: "Erro ao adicionar tarefa",
+          description: "O título da tarefa é obrigatório.",
+          variant: "destructive",
+        });
+        return null;
+      }
+
+      // Create a new task with all fields properly handled
+      const newTask: Task = {
+        id: taskData.id || `task-${Date.now()}`,
+        title: taskData.title,
+        description: taskData.description || "",
+        discipline: taskData.discipline || "Geral",
+        dueDate: taskData.dueDate || new Date().toISOString(),
+        status: taskData.status || "a-fazer",
+        priority: taskData.priority || "média",
+        progress: taskData.progress || 0,
+        type: taskData.type || "tarefa",
+        professor: taskData.professor || "",
+        subtasks: taskData.subtasks || [],
+        createdAt: taskData.createdAt || new Date().toISOString(),
+        updatedAt: taskData.updatedAt || new Date().toISOString(),
+        tags: taskData.tags || [],
+        reminderSet: taskData.reminderSet || false,
+        reminderTime: taskData.reminderTime,
+        attachments: taskData.attachments || [],
+        timeSpent: taskData.timeSpent || 0,
+        notes: taskData.notes || "",
+        isPersonal:
+          taskData.isPersonal !== undefined ? taskData.isPersonal : true,
+        associatedClass: taskData.associatedClass || "",
+        comments: [],
       };
 
-      saveTasksAsync();
-
-      // Também adiciona à store compartilhada
-      const { addTask } = useTaskStore.getState();
-      addTask({
-        id: newTask.id,
-        title: newTask.title,
-        dueDate: typeof newTask.dueDate === 'string' ? newTask.dueDate : newTask.dueDate.toISOString(),
-        subject: newTask.discipline || "Geral",
-        completed: false,
-        priority: newTask.priority as "alta" | "media" | "baixa" || "media"
+      // Add the new task to the beginning of the tasks array immediately
+      setTasks((prevTasks) => {
+        const updatedTasks = [newTask, ...prevTasks];
+        
+        // Salvar no banco de dados/localStorage
+        const saveTasksAsync = async () => {
+          try {
+            const user = await getCurrentUser();
+            if (user && user.id) {
+              const saved = await taskService.saveTasks(user.id, updatedTasks);
+              if (!saved) {
+                console.warn("Não foi possível salvar tarefas no banco de dados nem localmente");
+              }
+            } else {
+              console.warn("Usuário não autenticado, tarefas salvas apenas na sessão atual");
+            }
+          } catch (err) {
+            console.error("Erro ao salvar tarefas:", err);
+          }
+        };
+        
+        // Executar salvamento assíncrono para não bloquear a UI
+        saveTasksAsync();
+        
+        return updatedTasks;
       });
 
-      return updatedTasks;
-    });
+      // Close the modal
+      setShowAddTask(false);
+
+      // Show confirmation toast
+      toast({
+        title: "Tarefa adicionada",
+        description: "A nova tarefa foi adicionada com sucesso.",
+      });
+
+      // Check if task is overdue and update status accordingly
+      const now = new Date();
+      const dueDate = new Date(newTask.dueDate);
+      if (dueDate < now && newTask.status === "a-fazer") {
+        // Update the task to be marked as overdue
+        setTimeout(() => {
+          setTasks((prevTasks) => {
+            const updatedTasks = prevTasks.map((task) =>
+              task.id === newTask.id ? { ...task, status: "atrasado" } : task,
+            );
+            
+            // Salvar no banco de dados/localStorage
+            const saveTasksAsync = async () => {
+              try {
+                const user = await getCurrentUser();
+                if (user && user.id) {
+                  await taskService.saveTasks(user.id, updatedTasks);
+                }
+              } catch (err) {
+                console.error("Erro ao salvar tarefas atualizadas:", err);
+              }
+            };
+            
+            saveTasksAsync();
+            
+            return updatedTasks;
+          });
+        }, 100);
+      }
+
+      return newTask;
+    } catch (error) {
+      console.error("Error adding task:", error);
+      toast({
+        title: "Erro ao adicionar tarefa",
+        description: "Ocorreu um erro ao adicionar a tarefa. Tente novamente.",
+        variant: "destructive",
+      });
+      return null;
+    }
   };
 
   return (
