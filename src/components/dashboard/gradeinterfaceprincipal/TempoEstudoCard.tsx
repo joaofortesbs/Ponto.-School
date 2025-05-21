@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect } from "react";
-import { Clock, Zap } from "lucide-react";
+import { Clock, Zap, ArrowUp, ArrowDown } from "lucide-react";
 import useFlowSessions from "@/hooks/useFlowSessions";
+import { Link } from "react-router-dom";
 
 interface TempoEstudoCardProps {
   theme: string;
@@ -12,16 +13,23 @@ const TempoEstudoCard: React.FC<TempoEstudoCardProps> = ({ theme }) => {
   const [totalHours, setTotalHours] = useState<number>(0);
   const [hasData, setHasData] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [percentChange, setPercentChange] = useState<number>(0);
+  const [streak, setStreak] = useState<number>(0);
   
   // Usar hook de sessões de Flow para obter dados reais
-  const { sessions, loading, getStats } = useFlowSessions();
+  const { sessions, loading, getStats, loadSessions } = useFlowSessions();
+
+  useEffect(() => {
+    // Carregar as sessões ao montar o componente
+    loadSessions();
+  }, []);
 
   useEffect(() => {
     if (!loading) {
       setIsLoading(false);
       
       // Obter estatísticas das sessões de Flow
-      const stats = getStats();
+      const stats = getStats('mes'); // Pegar estatísticas do mês
       
       // Verificar se existem dados
       if (stats.sessionsCount > 0) {
@@ -30,6 +38,14 @@ const TempoEstudoCard: React.FC<TempoEstudoCardProps> = ({ theme }) => {
         const hours = Math.floor(totalSeconds / 3600);
         setTotalHours(hours);
         setHasData(true);
+        
+        // Definir mudança percentual
+        setPercentChange(stats.trends.timeChangePct || 0);
+        
+        // Calcular streak de dias de estudo
+        if (stats.consistency && stats.consistency.studyDaysCount) {
+          setStreak(Math.min(stats.consistency.studyDaysCount, 7)); // Limitar a 7 dias para exibição simplificada
+        }
       } else {
         setHasData(false);
       }
@@ -61,9 +77,26 @@ const TempoEstudoCard: React.FC<TempoEstudoCardProps> = ({ theme }) => {
 
   // Estado com dados
   const DataState = () => (
-    <div className="flex items-end mt-2">
-      <h3 className={`text-2xl font-bold ${isLightMode ? 'text-gray-800' : 'text-white'}`}>{totalHours}</h3>
-      <span className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'} ml-1 mb-0.5`}>horas</span>
+    <div className="space-y-2 mt-2">
+      <div className="flex items-end">
+        <h3 className={`text-2xl font-bold ${isLightMode ? 'text-gray-800' : 'text-white'}`}>{totalHours}</h3>
+        <span className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'} ml-1 mb-0.5`}>horas</span>
+        
+        {percentChange !== 0 && (
+          <div className={`ml-2 flex items-center text-xs ${percentChange > 0 ? 'text-green-500' : 'text-red-500'}`}>
+            {percentChange > 0 ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
+            <span className="ml-0.5">{Math.abs(percentChange)}%</span>
+          </div>
+        )}
+      </div>
+      
+      {streak > 0 && (
+        <div className="flex items-center">
+          <div className={`text-xs ${isLightMode ? 'text-gray-600' : 'text-gray-300'}`}>
+            <span className="font-medium">{streak}</span> {streak === 1 ? 'dia' : 'dias'} consecutivos
+          </div>
+        </div>
+      )}
     </div>
   );
 
@@ -79,16 +112,13 @@ const TempoEstudoCard: React.FC<TempoEstudoCardProps> = ({ theme }) => {
           </div>
           <p className={`text-sm ${isLightMode ? 'text-gray-700' : 'text-gray-300'} font-medium`}>Tempo de estudo</p>
         </div>
-        {hasData && (
-          <div className="flex space-x-1">
-            <button 
-              onClick={() => window.location.href = "/agenda?view=flow"}
-              className={`text-xs font-medium ${isLightMode ? 'bg-orange-100' : 'bg-[#FF6B00]/20'} ${isLightMode ? 'text-orange-700' : 'text-[#FF6B00]'} py-0.5 px-2 rounded-full flex items-center`}
-            >
-              <Zap className="h-3 w-3 mr-1" /> Iniciar
-            </button>
-          </div>
-        )}
+        
+        <Link 
+          to="/agenda?view=flow"
+          className={`text-xs font-medium ${isLightMode ? 'bg-orange-100' : 'bg-[#FF6B00]/20'} ${isLightMode ? 'text-orange-700' : 'text-[#FF6B00]'} py-0.5 px-2 rounded-full flex items-center transition-colors hover:bg-[#FF6B00]/30`}
+        >
+          <Zap className="h-3 w-3 mr-1" /> Iniciar
+        </Link>
       </div>
 
       {isLoading ? (

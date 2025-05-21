@@ -38,6 +38,7 @@ import {
   X,
   Zap,
 } from "lucide-react";
+import { useFlowSessions } from "@/components/useFlowSessions";
 
 const FlowSessionCard: React.FC = () => {
   const [sessionState, setSessionState] = useState<
@@ -107,7 +108,7 @@ const FlowSessionCard: React.FC = () => {
       }
     };
   }, [timer]);
-  
+
   // Função para recarregar o histórico de sessões
   const loadSessions = async () => {
     setInitialHistoryLoaded(false);
@@ -119,11 +120,11 @@ const FlowSessionCard: React.FC = () => {
       try {
         // Importar o cliente supabase
         const { supabase } = await import("@/lib/supabase");
-        
+
         // Verificar se o usuário está autenticado
         const { data: { user } } = await supabase.auth.getUser();
         const userId = user?.id || 'anonymous';
-        
+
         // Primeiro, tentar carregar do localStorage
         let localSessions: FlowSession[] = [];
         try {
@@ -135,7 +136,7 @@ const FlowSessionCard: React.FC = () => {
         } catch (localError) {
           console.error("Erro ao carregar sessões do armazenamento local:", localError);
         }
-        
+
         // Se o usuário estiver autenticado, tentar carregar do Supabase
         let remoteSessions: FlowSession[] = [];
         if (user) {
@@ -146,7 +147,7 @@ const FlowSessionCard: React.FC = () => {
               .select('count')
               .limit(1)
               .maybeSingle();
-            
+
             if (!checkError) {
               // Buscar sessões do usuário
               const { data, error } = await supabase
@@ -154,7 +155,7 @@ const FlowSessionCard: React.FC = () => {
                 .select("*")
                 .eq("user_id", user.id)
                 .order("date", { ascending: false });
-                
+
               if (error) {
                 console.error("Erro ao carregar histórico de sessões do Supabase:", error);
               } else if (data) {
@@ -176,7 +177,7 @@ const FlowSessionCard: React.FC = () => {
                   notes: session.notes,
                   timestamp: session.date
                 }));
-                
+
                 console.log(`Carregadas ${remoteSessions.length} sessões de flow do banco de dados`);
               }
             } else {
@@ -186,38 +187,38 @@ const FlowSessionCard: React.FC = () => {
             console.error("Erro ao carregar do Supabase:", remoteError);
           }
         }
-        
+
         // Mesclar sessões remotas e locais, organizando por data mais recente
         // Convertemos as IDs para string para comparação adequada
         const mergedSessions = [...remoteSessions];
-        
+
         // Adicionar sessões locais que não existem no remoto
         localSessions.forEach(localSession => {
           const exists = remoteSessions.some(remoteSession => 
             remoteSession.id.toString() === localSession.id.toString());
-          
+
           if (!exists) {
             mergedSessions.push(localSession);
           }
         });
-        
+
         // Ordenar por data mais recente
         mergedSessions.sort((a, b) => {
           const dateA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
           const dateB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
           return dateB - dateA;
         });
-        
+
         setSessionHistory(mergedSessions);
-        
+
         // Salvar a lista mesclada no localStorage para garantir sincronização
         if (mergedSessions.length > 0) {
           localStorage.setItem(`flow_sessions_${userId}`, JSON.stringify(mergedSessions));
         }
-        
+
       } catch (error) {
         console.error("Erro ao carregar histórico de sessões:", error);
-        
+
         // Tentar carregar apenas do localStorage como último recurso
         try {
           const storedSessions = localStorage.getItem(`flow_sessions_anonymous`);
@@ -233,7 +234,7 @@ const FlowSessionCard: React.FC = () => {
         setInitialHistoryLoaded(true);
       }
     };
-    
+
     if (!initialHistoryLoaded) {
       loadSessionHistory();
     }
@@ -341,10 +342,10 @@ const FlowSessionCard: React.FC = () => {
     try {
       // Importar o cliente supabase
       const { supabase } = await import("@/lib/supabase");
-      
+
       // Verificar se o usuário está autenticado
       const { data: { user } } = await supabase.auth.getUser();
-      
+
       if (user) {
         // Verificar se a tabela existe
         const { error: checkError } = await supabase
@@ -368,7 +369,7 @@ const FlowSessionCard: React.FC = () => {
               session_goal: sessionGoal || null,
               notes: notes || null
             });
-            
+
           if (error) {
             console.error("Erro ao salvar sessão de flow no Supabase:", error);
             console.log("Sessão salva apenas localmente como fallback");
@@ -398,7 +399,7 @@ const FlowSessionCard: React.FC = () => {
           return 'anonymous';
         }
       };
-      
+
       // Salvar de forma assíncrona
       getUserId().then(userId => {
         localStorage.setItem(`flow_sessions_${userId}`, JSON.stringify(sessions));
@@ -528,6 +529,45 @@ const FlowSessionCard: React.FC = () => {
     "Tente explicar o que você aprendeu como se estivesse ensinando alguém.",
     "Alternar entre diferentes assuntos pode melhorar a retenção de informações.",
   ];
+
+  // Importar o serviço e hook de sessões de Flow
+  const { addSession } = useFlowSessions();
+
+  // Finalizar sessão
+  const finishSession = () => {
+    if (sessionState === "active" || sessionState === "paused") {
+      setSessionState("completed");
+      setCurrentTab("summary");
+
+      // Calcular progresso estimado
+      const progress = Math.min(100, Math.round((elapsedTime / (plannedDuration * 60)) * 100));
+
+      // Formatar data atual
+      const now = new Date();
+      const day = now.getDate().toString().padStart(2, '0');
+      const month = (now.getMonth() + 1).toString().padStart(2, '0');
+      const year = now.getFullYear();
+      const formattedDate = `${day}/${month}/${year}`;
+
+      // Criar objeto de sessão
+      const session = {
+        id: `flow-${Date.now()}`,
+        timestamp: Date.now(),
+        date: formattedDate,
+        duration: formatTime(elapsedTime),
+        elapsedTimeSeconds: elapsedTime,
+        subjects: selectedSubjects,
+        progress: progress,
+        notes: notes,
+        xp: Math.floor(elapsedTime / 60) // 1 XP por minuto
+      };
+
+      // Salvar sessão
+      addSession(session);
+
+      console.log("Sessão finalizada e salva:", session);
+    }
+  };
 
   return (
     <div className="bg-white dark:bg-[#1E293B] rounded-xl shadow-md p-6 mb-6 border border-[#FF6B00]/10 dark:border-[#FF6B00]/20">
@@ -1375,7 +1415,7 @@ const FlowSessionCard: React.FC = () => {
                 <Clock className="h-4 w-4 text-[#FF6B00]" />
                 Histórico de sessões
               </h4>
-              
+
               {sessionHistory.length > 0 && (
                 <div className="flex gap-2">
                   <Select 
@@ -1405,12 +1445,12 @@ const FlowSessionCard: React.FC = () => {
                       ))}
                     </SelectContent>
                   </Select>
-                  
+
                   <Select 
                     onValueChange={(value) => {
                       // Filtrar por duração
                       const filteredSessions = [...sessionHistory];
-                      
+
                       switch(value) {
                         case "recentes":
                           filteredSessions.sort((a, b) => {
@@ -1439,7 +1479,7 @@ const FlowSessionCard: React.FC = () => {
                         default:
                           break;
                       }
-                      
+
                       setSessionHistory(filteredSessions);
                     }}
                   >
@@ -1456,7 +1496,7 @@ const FlowSessionCard: React.FC = () => {
                 </div>
               )}
             </div>
-            
+
             <div className="space-y-3">
               {sessionHistory.length > 0 ? (
                 // Show session history when available
@@ -1477,34 +1517,34 @@ const FlowSessionCard: React.FC = () => {
                               // Implementação de renomear sessão
                               const sessionTitle = session.session_title || "Sessão de estudo";
                               const newTitle = window.prompt("Digite o novo nome para esta sessão:", sessionTitle);
-                              
+
                               if (newTitle !== null && newTitle.trim() !== "") {
                                 const updatedSessions = sessionHistory.map(s => 
                                   s.id === session.id ? {...s, session_title: newTitle.trim()} : s
                                 );
                                 setSessionHistory(updatedSessions);
-                                
+
                                 // Salvar alterações localmente
                                 saveToLocalStorage(updatedSessions);
-                                
+
                                 // Tentar atualizar no Supabase se possível
                                 try {
                                   const updateSession = async () => {
                                     const { supabase } = await import("@/lib/supabase");
                                     const { data: { user } } = await supabase.auth.getUser();
-                                    
+
                                     if (user) {
                                       const { error } = await supabase
                                         .from("flow_sessions")
                                         .update({ session_title: newTitle.trim() })
                                         .eq("id", session.id);
-                                        
+
                                       if (error) {
                                         console.error("Erro ao atualizar sessão:", error);
                                       }
                                     }
                                   };
-                                  
+
                                   updateSession();
                                 } catch (error) {
                                   console.error("Erro ao atualizar sessão:", error);
@@ -1533,28 +1573,28 @@ const FlowSessionCard: React.FC = () => {
                             if (window.confirm("Tem certeza que deseja excluir esta sessão?")) {
                               const updatedSessions = sessionHistory.filter(s => s.id !== session.id);
                               setSessionHistory(updatedSessions);
-                              
+
                               // Salvar alterações localmente
                               saveToLocalStorage(updatedSessions);
-                              
+
                               // Tentar excluir do Supabase se possível
                               try {
                                 const deleteSession = async () => {
                                   const { supabase } = await import("@/lib/supabase");
                                   const { data: { user } } = await supabase.auth.getUser();
-                                  
+
                                   if (user) {
                                     const { error } = await supabase
                                       .from("flow_sessions")
                                       .delete()
                                       .eq("id", session.id);
-                                      
+
                                     if (error) {
                                       console.error("Erro ao excluir sessão:", error);
                                     }
                                   }
                                 };
-                                
+
                                 deleteSession();
                               } catch (error) {
                                 console.error("Erro ao excluir sessão:", error);
@@ -1616,28 +1656,28 @@ const FlowSessionCard: React.FC = () => {
             // Get sessions from last 30 days
             const thirtyDaysAgo = new Date();
             thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-            
+
             // Filter recent sessions
             const recentSessions = sessionHistory.filter(session => {
               const sessionDate = new Date(session.date.split(',')[0].split('/').reverse().join('-'));
               return sessionDate >= thirtyDaysAgo;
             });
-            
+
             // Calculate total time in seconds
             const totalTimeInSeconds = recentSessions.reduce((total, session) => {
               const [hours, minutes, seconds] = session.duration.split(':').map(Number);
               return total + (hours * 3600 + minutes * 60 + seconds);
             }, 0);
-            
+
             // Format total time
             const totalHours = Math.floor(totalTimeInSeconds / 3600);
             const totalMinutes = Math.floor((totalTimeInSeconds % 3600) / 60);
-            
+
             // Calculate average efficiency
             const avgEfficiency = recentSessions.length > 0
               ? Math.round(recentSessions.reduce((sum, session) => sum + session.progress, 0) / recentSessions.length)
               : 0;
-            
+
             // Get subject stats if we have sessions
             let subjectStats: {[key: string]: number} = {};
             recentSessions.forEach(session => {
@@ -1646,11 +1686,11 @@ const FlowSessionCard: React.FC = () => {
                 const [hours, minutes, seconds] = session.duration.split(':').map(Number);
                 const sessionSeconds = hours * 3600 + minutes * 60 + seconds;
                 const secondsPerSubject = sessionSeconds / session.subjects.length;
-                
+
                 subjectStats[subject] = (subjectStats[subject] || 0) + secondsPerSubject;
               });
             });
-            
+
             // Convert subject times to hours and minutes
             const formattedSubjectStats = Object.entries(subjectStats).map(([subject, seconds]) => {
               const hours = Math.floor(seconds / 3600);
@@ -1662,7 +1702,7 @@ const FlowSessionCard: React.FC = () => {
                 percentage: totalTimeInSeconds > 0 ? Math.round((seconds / totalTimeInSeconds) * 100) : 0
               };
             }).sort((a, b) => b.seconds - a.seconds);
-            
+
             return (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -1755,7 +1795,7 @@ const FlowSessionCard: React.FC = () => {
                       <Sparkles className="h-4 w-4 text-[#FF6B00]" />
                       {recentSessions.length > 0 ? "Conquistas desbloqueadas" : "Conquistas a desbloquear"}
                     </h4>
-                    
+
                     {recentSessions.length > 0 ? (
                       <div className="grid grid-cols-2 gap-3">
                         {/* Show achievements based on actual stats */}

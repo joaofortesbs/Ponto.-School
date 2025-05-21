@@ -185,8 +185,16 @@ export const useFlowSessions = () => {
     };
   };
 
-  // Sincronizar na primeira vez
+  // Sincronizar na primeira vez e sempre que for solicitado explicitamente
   useEffect(() => {
+    // Verificar se já existem sessões no localStorage
+    const localData = localStorage.getItem('flowSessions');
+    
+    // Se não existir, inicializar com array vazio
+    if (!localData) {
+      localStorage.setItem('flowSessions', JSON.stringify([]));
+    }
+    
     loadSessions();
   }, []);
 
