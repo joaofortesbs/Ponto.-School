@@ -318,54 +318,6 @@ const TempoEstudo = () => {
             )}
           </div>
 
-          {/* Estatísticas detalhadas de tempo */}
-          <div className="mb-3">
-            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center mb-2">
-              <Info className="h-4 w-4 mr-1 text-[#FF6B00]" /> Estatísticas de estudos
-            </h3>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="bg-[#FF6B00]/5 dark:bg-[#FF6B00]/10 p-2 rounded-lg">
-                <div className="text-xs text-gray-500 dark:text-gray-400">Média diária</div>
-                <div className="text-sm font-medium text-[#29335C] dark:text-white">
-                  {Math.round((totalHours / (viewMode === "semana" ? 7 : viewMode === "mes" ? 30 : 365)) * 10) / 10}h
-                </div>
-              </div>
-              <div className="bg-[#FF6B00]/5 dark:bg-[#FF6B00]/10 p-2 rounded-lg">
-                <div className="text-xs text-gray-500 dark:text-gray-400">Melhor dia</div>
-                <div className="text-sm font-medium text-[#29335C] dark:text-white">
-                  {viewMode === "semana" 
-                    ? weeklyData.sort((a, b) => b.hours - a.hours)[0]?.day || "N/A"
-                    : viewMode === "mes"
-                      ? monthlyData.sort((a, b) => b.hours - a.hours)[0]?.day || "N/A"
-                      : yearlyData.sort((a, b) => b.hours - a.hours)[0]?.month || "N/A"
-                  } ({viewMode === "semana" 
-                    ? weeklyData.sort((a, b) => b.hours - a.hours)[0]?.hours || 0
-                    : viewMode === "mes"
-                      ? monthlyData.sort((a, b) => b.hours - a.hours)[0]?.hours || 0
-                      : yearlyData.sort((a, b) => b.hours - a.hours)[0]?.hours || 0
-                  }h)
-                </div>
-              </div>
-              <div className="bg-[#FF6B00]/5 dark:bg-[#FF6B00]/10 p-2 rounded-lg">
-                <div className="text-xs text-gray-500 dark:text-gray-400">Sessões de estudo</div>
-                <div className="text-sm font-medium text-[#29335C] dark:text-white">
-                  {getStats()?.sessionsCount || 0}
-                </div>
-              </div>
-              <div className="bg-[#FF6B00]/5 dark:bg-[#FF6B00]/10 p-2 rounded-lg">
-                <div className="text-xs text-gray-500 dark:text-gray-400">Progresso da meta</div>
-                <div className="text-sm font-medium text-[#29335C] dark:text-white">
-                  {viewMode === "semana" 
-                    ? progress 
-                    : viewMode === "mes" 
-                      ? Math.min(Math.round((totalHours / (goalHours * 4)) * 100), 100)
-                      : Math.min(Math.round((totalHours / (goalHours * 52)) * 100), 100)
-                  }% completo
-                </div>
-              </div>
-            </div>
-          </div>
-
           {/* Top disciplinas */}
           {topSubjects.length > 0 && (
             <div>
