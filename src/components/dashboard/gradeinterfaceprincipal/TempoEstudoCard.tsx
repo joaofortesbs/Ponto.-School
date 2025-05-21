@@ -65,11 +65,8 @@ const TempoEstudoCard: React.FC<TempoEstudoCardProps> = ({ className }) => {
             <span className="text-3xl font-bold text-white">{totalMinutos}</span>
             <span className="text-lg text-[#FF6B00] mb-1">min</span>
           </div>
-          <p className="text-sm text-gray-400 mt-1">
-            {loading ? "Carregando..." : sessions.length > 0 
-              ? `Total acumulado em ${sessions.length} sessões de estudo`
-              : "Nenhuma sessão registrada ainda"}
-          </p>
+          {/* Espaço para tempo de estudo sem texto informativo */}
+          <div className="h-4"></div>
         </div>
 
         <div className="mt-4">
