@@ -5,7 +5,7 @@ export default function DashboardMetricsGrid() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
       {/* Tempo de estudo card */}
-      <div className="group bg-gradient-to-br from-[#0A2540] to-[#0D2B4A] rounded-xl p-5 border border-[#2A4D6E]/30 shadow-lg relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-[#FF6B00]/30 hover:translate-y-[-4px]">
+      <div className="group bg-gradient-to-br from-[#0A2540] to-[#0D2B4A] rounded-xl p-5 border border-[#2A4D6E]/30 shadow-lg relative overflow-y-auto transition-all duration-300 hover:shadow-xl hover:border-[#FF6B00]/30 hover:translate-y-[-4px]" style={{ height: "110px" }}>
         <div className="absolute inset-0 bg-gradient-to-tr from-[#FF6B00]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
         <div className="absolute -right-4 -top-4 w-24 h-24 bg-[#FF6B00]/5 rounded-full blur-xl group-hover:bg-[#FF6B00]/10 transition-all duration-500"></div>
 
@@ -29,7 +29,7 @@ export default function DashboardMetricsGrid() {
       </div>
 
       {/* Aulas concluídas card */}
-      <div className="group bg-gradient-to-br from-[#0A2540] to-[#0D2B4A] rounded-xl p-5 border border-[#2A4D6E]/30 shadow-lg relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-[#FF6B00]/30 hover:translate-y-[-4px]">
+      <div className="group bg-gradient-to-br from-[#0A2540] to-[#0D2B4A] rounded-xl p-5 border border-[#2A4D6E]/30 shadow-lg relative overflow-y-auto transition-all duration-300 hover:shadow-xl hover:border-[#FF6B00]/30 hover:translate-y-[-4px]" style={{ height: "110px" }}>
         <div className="absolute inset-0 bg-gradient-to-tr from-[#FF6B00]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
         <div className="absolute -right-4 -top-4 w-24 h-24 bg-[#FF6B00]/5 rounded-full blur-xl group-hover:bg-[#FF6B00]/10 transition-all duration-500"></div>
 
@@ -53,7 +53,7 @@ export default function DashboardMetricsGrid() {
       </div>
 
       {/* Posição ranking card */}
-      <div className="group bg-gradient-to-br from-[#0A2540] to-[#0D2B4A] rounded-xl p-5 border border-[#2A4D6E]/30 shadow-lg relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-[#FF6B00]/30 hover:translate-y-[-4px]">
+      <div className="group bg-gradient-to-br from-[#0A2540] to-[#0D2B4A] rounded-xl p-5 border border-[#2A4D6E]/30 shadow-lg relative overflow-y-auto transition-all duration-300 hover:shadow-xl hover:border-[#FF6B00]/30 hover:translate-y-[-4px]" style={{ height: "110px" }}>
         <div className="absolute inset-0 bg-gradient-to-tr from-[#FF6B00]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
         <div className="absolute -right-4 -top-4 w-24 h-24 bg-[#FF6B00]/5 rounded-full blur-xl group-hover:bg-[#FF6B00]/10 transition-all duration-500"></div>
 
@@ -82,7 +82,7 @@ export default function DashboardMetricsGrid() {
       </div>
 
       {/* School Points card */}
-      <div className="group bg-gradient-to-br from-[#0A2540] to-[#0D2B4A] rounded-xl p-5 border border-[#2A4D6E]/30 shadow-lg relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-[#FF6B00]/30 hover:translate-y-[-4px]">
+      <div className="group bg-gradient-to-br from-[#0A2540] to-[#0D2B4A] rounded-xl p-5 border border-[#2A4D6E]/30 shadow-lg relative overflow-y-auto transition-all duration-300 hover:shadow-xl hover:border-[#FF6B00]/30 hover:translate-y-[-4px]" style={{ height: "110px" }}>
         <div className="absolute inset-0 bg-gradient-to-tr from-[#FF6B00]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
         <div className="absolute -right-4 -top-4 w-24 h-24 bg-[#FF6B00]/5 rounded-full blur-xl group-hover:bg-[#FF6B00]/10 transition-all duration-500"></div>
 
