@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Clock } from "lucide-react";
 import useFlowSessions from "@/hooks/useFlowSessions";
 import { useTheme } from "@/components/ThemeProvider";
+import { Progress } from "@/components/ui/progress";
 
 interface TempoEstudoCardProps {
   className?: string;
@@ -14,9 +15,13 @@ const TempoEstudoCard: React.FC<TempoEstudoCardProps> = ({ className, theme }) =
   const [totalMinutos, setTotalMinutos] = useState(0);
   const [percentualMudanca, setPercentualMudanca] = useState(0);
   const [tendenciaPositiva, setTendenciaPositiva] = useState(true);
+  const [progressoMeta, setProgressoMeta] = useState(0);
   const { theme: currentTheme } = useTheme();
 
   const isLightMode = (theme || currentTheme) === "light";
+  
+  // Meta em horas por semana (poderia vir de um contexto ou API)
+  const metaHorasSemanal = 20;
 
   useEffect(() => {
     // Obter estatísticas da semana atual
@@ -30,6 +35,11 @@ const TempoEstudoCard: React.FC<TempoEstudoCardProps> = ({ className, theme }) =
     setTotalHoras(horasEstudo);
     setTotalMinutos(minutosEstudo);
 
+    // Calcular progresso em relação à meta (em porcentagem)
+    const totalHorasDecimal = horasEstudo + (minutosEstudo / 60);
+    const progresso = Math.min(Math.round((totalHorasDecimal / metaHorasSemanal) * 100), 100);
+    setProgressoMeta(progresso);
+
     // Determinar tendência com base nos dados de comparação
     setPercentualMudanca(Math.abs(stats.trends.timeChangePct) || 0);
     setTendenciaPositiva(stats.trends.timeChangePct >= 0);
@@ -39,7 +49,8 @@ const TempoEstudoCard: React.FC<TempoEstudoCardProps> = ({ className, theme }) =
       totalMinutos: minutosEstudo,
       totalSegundos: stats.totalTimeInSeconds,
       tendencia: stats.trends.timeChangePct,
-      sessoes: sessions.length
+      sessoes: sessions.length,
+      progressoMeta: progresso
     });
   }, [sessions, getStats]);
 
@@ -58,11 +69,27 @@ const TempoEstudoCard: React.FC<TempoEstudoCardProps> = ({ className, theme }) =
           </div>
         </div>
 
-        <div className="flex items-end mt-2">
+        <div className="flex items-end mt-0.5">
           <h3 className={`text-2xl font-bold ${isLightMode ? 'text-gray-800' : 'text-white'}`}>{totalHoras}</h3>
           <span className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'} ml-1 mb-0.5`}>h</span>
           <h3 className={`text-2xl font-bold ${isLightMode ? 'text-gray-800' : 'text-white'} ml-2`}>{totalMinutos}</h3>
           <span className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'} ml-1 mb-0.5`}>min</span>
+        </div>
+        
+        <div className="mt-2 mb-1">
+          <div className="flex justify-between items-center text-xs mb-1">
+            <span className={`${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
+              Meta: {metaHorasSemanal}h/semana
+            </span>
+            <span className={`${progressoMeta >= 100 ? 'text-green-500' : 'text-[#FF6B00]'}`}>
+              {progressoMeta}%
+            </span>
+          </div>
+          <Progress 
+            value={progressoMeta} 
+            className={`h-1.5 ${isLightMode ? 'bg-gray-200' : 'bg-gray-700'}`}
+            indicatorClassName={`${progressoMeta >= 100 ? 'bg-green-500' : 'bg-[#FF6B00]'}`}
+          />
         </div>
       </div>
     </div>
