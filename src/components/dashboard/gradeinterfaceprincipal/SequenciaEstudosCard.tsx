@@ -38,22 +38,32 @@ export default function SequenciaEstudosCard() {
         </div>
       </div>
 
-      {/* Cabeçalho premium com gradiente e efeito glassmorphism */}
-      <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-4 flex items-center justify-between shadow-md relative z-10 backdrop-blur-sm">
-        <div className="flex items-center space-x-2">
-          <div className="bg-white/20 p-1.5 rounded-lg backdrop-blur-sm">
-            <Calendar className="h-4 w-4 text-white" />
+      {/* Header elegante com gradiente - estilo igual ao FocoDoDiaCard */}
+      <div className={`p-5 ${isLightMode ? 'bg-gradient-to-r from-orange-50 to-orange-100/50' : 'bg-gradient-to-r from-[#0A2540]/80 to-[#001427]'} border-b ${isLightMode ? 'border-orange-100' : 'border-[#FF6B00]/20'}`}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className={`p-2.5 rounded-lg flex items-center justify-center ${isLightMode ? 'bg-white shadow-sm border border-orange-200' : 'bg-[#FF6B00]/10 border border-[#FF6B00]/30'}`}>
+              <Flame className={`h-5 w-5 text-[#FF6B00]`} />
+            </div>
+            <div>
+              <h3 className={`font-semibold text-lg ${isLightMode ? 'text-gray-800' : 'text-white'}`}>
+                Sua Sequência de Estudos
+              </h3>
+              <p className={`text-sm ${isLightMode ? 'text-gray-500' : 'text-gray-300'}`}>
+                <span className="font-medium">{diasConsecutivos} dias consecutivos</span>
+              </p>
+            </div>
           </div>
-          <h3 className="text-white font-semibold text-sm tracking-tight">Sua Sequência de Estudos</h3>
+          
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className={`text-xs font-medium ${isLightMode ? 'text-gray-500 hover:text-gray-700 hover:bg-gray-100' : 'text-gray-300 hover:text-white hover:bg-white/5'}`}
+          >
+            <span>Detalhes</span>
+            <ExternalLink className="h-3 w-3 ml-1" />
+          </Button>
         </div>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="text-white/90 hover:text-white p-0 h-6 opacity-90 hover:opacity-100 hover:bg-white/10"
-        >
-          <span className="text-xs font-medium">Detalhes</span>
-          <ExternalLink className="h-3 w-3 ml-1" />
-        </Button>
       </div>
 
       {/* Conteúdo principal com design premium */}
