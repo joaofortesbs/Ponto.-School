@@ -20,7 +20,7 @@ export default function SequenciaEstudosCard() {
     <motion.div
       whileHover={{ scale: 1.01 }}
       transition={{ duration: 0.2 }}
-      className="h-full w-full rounded-xl overflow-hidden border border-gray-100 dark:border-gray-800 shadow-xl bg-white dark:bg-gradient-to-br dark:from-[#0c1425] dark:to-[#0a1a2e] relative"
+      className="h-full w-full rounded-xl overflow-hidden border border-gray-100 dark:border-gray-800 shadow-xl bg-white dark:bg-gradient-to-br dark:from-[#0c1425] dark:to-[#0a1a2e] relative flex flex-col"
     >
       {/* Elementos decorativos de fundo */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -67,9 +67,9 @@ export default function SequenciaEstudosCard() {
       </div>
 
       {/* Conteúdo principal com design premium */}
-      <div className="p-6 relative z-10 flex flex-col h-[calc(100%-60px)] justify-between">
+      <div className="p-6 relative z-10 flex flex-col h-[calc(100%-76px)] justify-between">
         {/* Contador principal estilizado */}
-        <div className="flex flex-col items-center mb-4 relative">
+        <div className="flex flex-col items-center mb-5 relative">
           {/* Efeito de brilho animado ao redor do ícone */}
           <motion.div 
             initial={{ opacity: 0.6, scale: 0.9 }}
