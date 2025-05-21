@@ -32,4 +32,14 @@ export default defineConfig({
     allowedHosts: true,
     host: true,
   },
+  css: {
+    devSourcemap: true,
+    preprocessorOptions: {
+      postcss: {
+        plugins: [
+          require('postcss-nesting')
+        ]
+      }
+    }
+  },
 });
