@@ -13,13 +13,19 @@ const TempoEstudoCard: React.FC<TempoEstudoCardProps> = ({ className }) => {
   const [percentualMudanca, setPercentualMudanca] = useState(0);
   const [tendenciaPositiva, setTendenciaPositiva] = useState(true);
 
+  const [totalMinutos, setTotalMinutos] = useState(0);
+  
   useEffect(() => {
     // Obter estatísticas da semana atual
     const stats = getStats('semana');
 
-    // Calcular horas de estudo
-    const horasEstudo = Math.floor(stats.totalTimeInSeconds / 3600);
+    // Calcular horas e minutos de estudo
+    const totalSeconds = stats.totalTimeInSeconds;
+    const horasEstudo = Math.floor(totalSeconds / 3600);
+    const minutosEstudo = Math.floor((totalSeconds % 3600) / 60);
+    
     setTotalHoras(horasEstudo);
+    setTotalMinutos(minutosEstudo);
 
     // Determinar tendência com base nos dados de comparação
     setPercentualMudanca(Math.abs(stats.trends.timeChangePct) || 0);
@@ -27,6 +33,7 @@ const TempoEstudoCard: React.FC<TempoEstudoCardProps> = ({ className }) => {
 
     console.log("Dados do card de Tempo de Estudos atualizados:", {
       totalHoras: horasEstudo,
+      totalMinutos: minutosEstudo,
       totalSegundos: stats.totalTimeInSeconds,
       tendencia: stats.trends.timeChangePct,
       sessoes: sessions.length
@@ -54,7 +61,9 @@ const TempoEstudoCard: React.FC<TempoEstudoCardProps> = ({ className }) => {
         <div className="mt-4">
           <div className="flex items-end gap-2">
             <span className="text-3xl font-bold text-white">{totalHoras}</span>
-            <span className="text-lg text-[#FF6B00] mb-1">horas</span>
+            <span className="text-lg text-[#FF6B00] mb-1">h</span>
+            <span className="text-3xl font-bold text-white">{totalMinutos}</span>
+            <span className="text-lg text-[#FF6B00] mb-1">min</span>
           </div>
           <p className="text-sm text-gray-400 mt-1">
             {loading ? "Carregando..." : sessions.length > 0 
