@@ -1,20 +1,23 @@
 import React, { useState, useEffect } from "react";
-import { Clock, Zap, ArrowUp, ArrowDown } from "lucide-react";
+import { Clock } from "lucide-react";
 import useFlowSessions from "@/hooks/useFlowSessions";
-import { Link } from "react-router-dom";
+import { useTheme } from "@/components/ThemeProvider";
 
 interface TempoEstudoCardProps {
   className?: string;
+  theme?: string;
 }
 
-const TempoEstudoCard: React.FC<TempoEstudoCardProps> = ({ className }) => {
+const TempoEstudoCard: React.FC<TempoEstudoCardProps> = ({ className, theme }) => {
   const { sessions, getStats, loading } = useFlowSessions();
   const [totalHoras, setTotalHoras] = useState(0);
+  const [totalMinutos, setTotalMinutos] = useState(0);
   const [percentualMudanca, setPercentualMudanca] = useState(0);
   const [tendenciaPositiva, setTendenciaPositiva] = useState(true);
+  const { theme: currentTheme } = useTheme();
 
-  const [totalMinutos, setTotalMinutos] = useState(0);
-  
+  const isLightMode = (theme || currentTheme) === "light";
+
   useEffect(() => {
     // Obter estatísticas da semana atual
     const stats = getStats('semana');
@@ -23,7 +26,7 @@ const TempoEstudoCard: React.FC<TempoEstudoCardProps> = ({ className }) => {
     const totalSeconds = stats.totalTimeInSeconds;
     const horasEstudo = Math.floor(totalSeconds / 3600);
     const minutosEstudo = Math.floor((totalSeconds % 3600) / 60);
-    
+
     setTotalHoras(horasEstudo);
     setTotalMinutos(minutosEstudo);
 
@@ -41,42 +44,23 @@ const TempoEstudoCard: React.FC<TempoEstudoCardProps> = ({ className }) => {
   }, [sessions, getStats]);
 
   return (
-    <div className={`bg-gradient-to-br from-[#0a1c33] to-[#1e293b] rounded-xl shadow-md overflow-hidden border border-[#FF6B00]/30 ${className || ""}`}>
-      <div className="p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-[#FF6B00]/20 flex items-center justify-center">
-              <Clock className="w-4 h-4 text-[#FF6B00]" />
-            </div>
-            <h3 className="text-lg font-semibold text-white">Tempo de estudo</h3>
-          </div>
-          {percentualMudanca > 0 && (
-            <div className={`flex items-center text-xs font-medium px-2 py-1 rounded-full ${tendenciaPositiva ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
-              {tendenciaPositiva ? <ArrowUp className="w-3 h-3 mr-1" /> : <ArrowDown className="w-3 h-3 mr-1" />}
-              {percentualMudanca}%
-            </div>
-          )}
-        </div>
+    <div className={`group backdrop-blur-md ${isLightMode ? 'bg-white/90' : 'bg-[#001e3a]'} rounded-xl p-3 ${isLightMode ? 'border border-gray-200' : 'border border-white/20'} shadow-lg relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-[#FF6B00]/30 hover:translate-y-[-4px] ${className || ""}`}>
+      <div className="absolute inset-0 bg-gradient-to-tr from-[#FF6B00]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+      <div className={`absolute -right-4 -top-4 w-24 h-24 ${isLightMode ? 'bg-[#FF6B00]/5' : 'bg-[#FF6B00]/5'} rounded-full blur-xl group-hover:bg-[#FF6B00]/10 transition-all duration-500`}></div>
 
-        <div className="mt-4">
-          <div className="flex items-end gap-2">
-            <span className="text-3xl font-bold text-white">{totalHoras}</span>
-            <span className="text-lg text-[#FF6B00] mb-1">h</span>
-            <span className="text-3xl font-bold text-white">{totalMinutos}</span>
-            <span className="text-lg text-[#FF6B00] mb-1">min</span>
+      <div className="flex flex-col h-full justify-between relative z-10">
+        <div className="flex items-center gap-3 mb-2">
+          <div className={`w-9 h-9 flex items-center justify-center rounded-full ${isLightMode ? 'bg-orange-100' : 'bg-[#FF6B00]/20'}`}>
+            <Clock className={`h-5 w-5 ${isLightMode ? 'text-[#FF6B00]' : 'text-[#FF6B00]'}`} />
           </div>
-          {/* Espaço para tempo de estudo sem texto informativo */}
-          <div className="h-4"></div>
-        </div>
-
-        <div className="mt-4">
-          <Link
-            to="/agenda?view=flow"
-            className="inline-flex items-center justify-center w-full py-2 px-3 bg-[#FF6B00]/20 hover:bg-[#FF6B00]/30 text-[#FF6B00] rounded-lg transition-colors text-sm"
-          >
-            <Zap className="w-4 h-4 mr-2" />
-            {sessions.length > 0 ? "Continuar estudando" : "Iniciar primeira sessão"}
-          </Link>
+          <div>
+            <h3 className={`font-medium text-sm ${isLightMode ? 'text-gray-600' : 'text-gray-300'}`}>Tempo de estudo</h3>
+            <p className="flex items-center mt-0.5">
+              <span className={`text-xl font-bold ${isLightMode ? 'text-gray-800' : 'text-white'}`}>
+                {totalHoras}h {totalMinutos}min
+              </span>
+            </p>
+          </div>
         </div>
       </div>
     </div>
