@@ -12,16 +12,23 @@ export default function TempoEstudoCard() {
   const [percentChange, setPercentChange] = useState<number>(0);
 
   useEffect(() => {
-    // Carregar as estatísticas das sessões de flow
-    const stats = getStats('mes'); // Usar período 'mes' para capturar dados do último mês
-    
-    if (stats) {
+    // Calcular o tempo total de todas as sessões
+    if (sessions.length > 0) {
+      // Somar o tempo total em segundos de todas as sessões
+      const totalSeconds = sessions.reduce((total, session) => {
+        return total + (session.elapsedTimeSeconds || 0);
+      }, 0);
+      
       // Converter segundos para horas
-      const hours = Math.floor(stats.totalTimeInSeconds / 3600);
+      const hours = Math.floor(totalSeconds / 3600);
       setTotalHours(hours.toString());
       
-      // Obter a tendência de mudança no tempo de estudo
-      setPercentChange(stats.trends.timeChangePct || 0);
+      // Obter estatísticas do último mês para tendência
+      const statsLastMonth = getStats('mes');
+      setPercentChange(statsLastMonth?.trends?.timeChangePct || 0);
+    } else {
+      setTotalHours("0");
+      setPercentChange(0);
     }
   }, [sessions, getStats]);
 
