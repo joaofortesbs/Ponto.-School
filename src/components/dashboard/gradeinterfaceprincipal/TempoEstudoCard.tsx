@@ -1,11 +1,37 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Clock } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
+import useFlowSessions from "@/hooks/useFlowSessions";
 
 export default function TempoEstudoCard() {
   const { theme } = useTheme();
   const isLightMode = theme === "light";
+  const { sessions, getStats } = useFlowSessions();
+  const [totalHours, setTotalHours] = useState<string>("0");
+  const [percentChange, setPercentChange] = useState<number>(0);
+
+  useEffect(() => {
+    // Carregar as estatísticas das sessões de flow
+    const stats = getStats('mes'); // Usar período 'mes' para capturar dados do último mês
+    
+    if (stats) {
+      // Converter segundos para horas
+      const hours = Math.floor(stats.totalTimeInSeconds / 3600);
+      setTotalHours(hours.toString());
+      
+      // Obter a tendência de mudança no tempo de estudo
+      setPercentChange(stats.trends.timeChangePct || 0);
+    }
+  }, [sessions, getStats]);
+
+  // Formatar a exibição de tendência
+  const formattedTrend = percentChange !== 0 
+    ? `${percentChange > 0 ? '+' : ''}${percentChange}%` 
+    : '';
+
+  // Verificar se o usuário tem dados de estudos
+  const hasStudyData = parseInt(totalHours) > 0;
 
   return (
     <div className={`group backdrop-blur-md ${isLightMode ? 'bg-white/90' : 'bg-[#001e3a]'} rounded-xl p-3 ${isLightMode ? 'border border-gray-200' : 'border border-white/20'} shadow-lg relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-[#FF6B00]/30 hover:translate-y-[-4px]`}>
@@ -19,12 +45,33 @@ export default function TempoEstudoCard() {
           </div>
           <p className={`text-sm ${isLightMode ? 'text-gray-700' : 'text-gray-300'} font-medium`}>Tempo de estudo</p>
         </div>
+        
+        {percentChange !== 0 && (
+          <div className={`text-xs font-medium px-2 py-0.5 rounded-full ${percentChange > 0 ? 'bg-green-900/20 text-green-500' : 'bg-red-900/20 text-red-500'}`}>
+            {formattedTrend}
+          </div>
+        )}
       </div>
 
       <div className="flex items-end mt-2">
-        <h3 className={`text-2xl font-bold ${isLightMode ? 'text-gray-800' : 'text-white'}`}>-</h3>
-        <span className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'} ml-1 mb-0.5`}>horas</span>
+        {hasStudyData ? (
+          <>
+            <h3 className={`text-2xl font-bold ${isLightMode ? 'text-gray-800' : 'text-white'}`}>{totalHours}</h3>
+            <span className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'} ml-1 mb-0.5`}>horas</span>
+          </>
+        ) : (
+          <>
+            <h3 className={`text-2xl font-bold ${isLightMode ? 'text-gray-800' : 'text-white'}`}>-</h3>
+            <span className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'} ml-1 mb-0.5`}>horas</span>
+          </>
+        )}
       </div>
+      
+      {!hasStudyData && (
+        <p className={`text-xs mt-1 ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
+          Use o Flow na Agenda para registrar seu tempo de estudo
+        </p>
+      )}
     </div>
   );
 }
