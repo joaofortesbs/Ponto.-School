@@ -37,6 +37,18 @@ export const useFlowSessions = () => {
     }
   };
 
+  // Excluir sessão
+  const deleteSession = async (sessionId: string | number) => {
+    try {
+      await SessionStorageService.deleteSession(sessionId);
+      setSessions(prev => prev.filter(s => s.id !== sessionId));
+      return true;
+    } catch (err) {
+      console.error('Erro ao excluir sessão:', err);
+      return false;
+    }
+  };
+
   // Estatísticas relevantes
   const getStats = (periodFilter?: 'semana' | 'mes' | 'ano') => {
     // Definir data de início com base no filtro
@@ -54,8 +66,7 @@ export const useFlowSessions = () => {
     // Filtrar sessões pelo período
     const filteredSessions = sessions.filter(session => {
       if (session.timestamp) {
-        const sessionDate = new Date(session.timestamp);
-        return sessionDate >= startDate;
+        return new Date(session.timestamp) >= startDate;
       }
       
       // Fallback para formato BR
@@ -96,76 +107,41 @@ export const useFlowSessions = () => {
       }
     });
     
-    // Tendências de estudo (comparação com período anterior)
-    let previousPeriodSessions: any[] = [];
+    // Definir período anterior para comparações
+    const previousPeriodStart = new Date(startDate);
+    const previousPeriodEnd = new Date(startDate);
     
-    // Definir período anterior
-    if (periodFilter === 'semana' || !periodFilter) {
-      // Sessões da semana anterior
-      const twoWeeksAgo = new Date();
-      twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
-      const oneWeekAgo = new Date();
-      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-      
-      previousPeriodSessions = sessions.filter(session => {
-        const sessionDate = new Date(session.timestamp || session.date);
-        return sessionDate >= twoWeeksAgo && sessionDate < oneWeekAgo;
-      });
+    if (periodFilter === 'semana') {
+      previousPeriodStart.setDate(previousPeriodStart.getDate() - 7);
     } else if (periodFilter === 'mes') {
-      // Sessões do mês anterior
-      const twoMonthsAgo = new Date();
-      twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
-      const oneMonthAgo = new Date();
-      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-      
-      previousPeriodSessions = sessions.filter(session => {
-        const sessionDate = new Date(session.timestamp || session.date);
-        return sessionDate >= twoMonthsAgo && sessionDate < oneMonthAgo;
-      });
+      previousPeriodStart.setMonth(previousPeriodStart.getMonth() - 1);
     } else if (periodFilter === 'ano') {
-      // Sessões do ano anterior
-      const twoYearsAgo = new Date();
-      twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
-      const oneYearAgo = new Date();
-      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-      
-      previousPeriodSessions = sessions.filter(session => {
-        const sessionDate = new Date(session.timestamp || session.date);
-        return sessionDate >= twoYearsAgo && sessionDate < oneYearAgo;
-      });
+      previousPeriodStart.setFullYear(previousPeriodStart.getFullYear() - 1);
+    } else {
+      previousPeriodStart.setDate(previousPeriodStart.getDate() - 30);
     }
+    
+    // Filtrar sessões do período anterior
+    const previousPeriodSessions = sessions.filter(session => {
+      if (session.timestamp) {
+        const date = new Date(session.timestamp);
+        return date >= previousPeriodStart && date < startDate;
+      }
+      return false;
+    });
     
     // Estatísticas do período anterior
     const previousTotalTimeInSeconds = previousPeriodSessions.reduce((total, session) => {
       return total + (session.elapsedTimeSeconds || 0);
     }, 0);
     
-    const previousAvgEfficiency = previousPeriodSessions.length > 0
-      ? Math.round(previousPeriodSessions.reduce((sum, session) => sum + (session.progress || 0), 0) / previousPeriodSessions.length)
-      : 0;
-    
     // Calcular tendências (% de mudança)
-    const timeChangePct = previousTotalTimeInSeconds > 0 
-      ? ((totalTimeInSeconds - previousTotalTimeInSeconds) / previousTotalTimeInSeconds) * 100 
-      : 0;
-    
-    const efficiencyChangePct = previousAvgEfficiency > 0 
-      ? ((avgEfficiency - previousAvgEfficiency) / previousAvgEfficiency) * 100 
-      : 0;
-    
-    const sessionsCountChangePct = previousPeriodSessions.length > 0
-      ? ((filteredSessions.length - previousPeriodSessions.length) / previousPeriodSessions.length) * 100
-      : 0;
-      
-    // Adicionar dados sobre frequência de estudo
-    const studyDays = new Set();
-    filteredSessions.forEach(session => {
-      const date = new Date(session.timestamp || session.date);
-      studyDays.add(`${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`);
-    });
-    
-    // Estatísticas adicionais sobre consistência
-    const consistencyScore = Math.min(100, Math.round((studyDays.size / (periodFilter === 'semana' ? 7 : periodFilter === 'mes' ? 30 : 90)) * 100));
+    let timeChangePct = 0;
+    if (previousTotalTimeInSeconds > 0) {
+      timeChangePct = ((totalTimeInSeconds - previousTotalTimeInSeconds) / previousTotalTimeInSeconds) * 100;
+    } else if (totalTimeInSeconds > 0) {
+      timeChangePct = 100; // Aumento de 100% se não havia tempo anterior
+    }
     
     return {
       totalTimeInSeconds,
@@ -174,28 +150,30 @@ export const useFlowSessions = () => {
       subjectStats,
       trends: {
         timeChangePct: Math.round(timeChangePct),
-        efficiencyChangePct: Math.round(efficiencyChangePct),
-        sessionsCountChangePct: Math.round(sessionsCountChangePct)
-      },
-      consistency: {
-        studyDaysCount: studyDays.size,
-        consistencyScore
+        sessionsCountChangePct: previousPeriodSessions.length > 0
+          ? Math.round(((filteredSessions.length - previousPeriodSessions.length) / previousPeriodSessions.length) * 100)
+          : (filteredSessions.length > 0 ? 100 : 0)
       },
       recentSessions: filteredSessions.slice(0, 5) // 5 sessões mais recentes
     };
   };
 
-  // Sincronizar na primeira vez e sempre que for solicitado explicitamente
+  // Carregar sessões inicialmente
   useEffect(() => {
-    // Verificar se já existem sessões no localStorage
-    const localData = localStorage.getItem('flowSessions');
-    
-    // Se não existir, inicializar com array vazio
-    if (!localData) {
-      localStorage.setItem('flowSessions', JSON.stringify([]));
-    }
-    
     loadSessions();
+  }, []);
+
+  // Escutar eventos de atualização de sessões
+  useEffect(() => {
+    const handleSessionUpdate = () => {
+      loadSessions();
+    };
+
+    document.addEventListener('flow-session-updated', handleSessionUpdate);
+    
+    return () => {
+      document.removeEventListener('flow-session-updated', handleSessionUpdate);
+    };
   }, []);
 
   return {
@@ -204,6 +182,7 @@ export const useFlowSessions = () => {
     error,
     loadSessions,
     addSession,
+    deleteSession,
     getStats
   };
 };

@@ -367,7 +367,8 @@ const FlowSessionCard: React.FC = () => {
               subjects: subjectNames,
               progress: Math.min(100, Math.round(calculateProgress())),
               session_goal: sessionGoal || null,
-              notes: notes || null
+              notes: notes || null,
+              session_title: newSession.session_title
             });
 
           if (error) {
@@ -383,6 +384,31 @@ const FlowSessionCard: React.FC = () => {
     } catch (error) {
       console.error("Erro ao salvar sessão de flow no Supabase:", error);
       console.log("Sessão salva apenas localmente como fallback");
+    }
+    
+    // Disparar evento para atualizar o card de tempo de estudos
+    document.dispatchEvent(new CustomEvent('flow-session-updated', { 
+      detail: { session: newSession } 
+    }));
+    
+    // Também usar addSession do hook useFlowSessions para garantir integração
+    try {
+      const flowSession = {
+        id: `flow-${Date.now()}`, // Formato específico para identificação
+        timestamp: new Date().getTime(),
+        date: new Date().toLocaleDateString('pt-BR'),
+        duration: formatTime(elapsedTime),
+        elapsedTimeSeconds: elapsedTime,
+        subjects: subjectNames,
+        progress: Math.min(100, Math.round(calculateProgress())),
+        notes: notes || "",
+        xp: Math.floor(elapsedTime / 60),
+        session_title: newSession.session_title
+      };
+      
+      addSession(flowSession);
+    } catch (error) {
+      console.error("Erro ao adicionar sessão via hook useFlowSessions:", error);
     }
   };
 
@@ -539,6 +565,12 @@ const FlowSessionCard: React.FC = () => {
       setSessionState("completed");
       setCurrentTab("summary");
 
+      // Stop the timer if it's running
+      if (timer) {
+        clearInterval(timer);
+        setTimer(null);
+      }
+
       // Calcular progresso estimado
       const progress = Math.min(100, Math.round((elapsedTime / (plannedDuration * 60)) * 100));
 
@@ -549,6 +581,12 @@ const FlowSessionCard: React.FC = () => {
       const year = now.getFullYear();
       const formattedDate = `${day}/${month}/${year}`;
 
+      // Obter nomes das disciplinas selecionadas
+      const subjectNames = selectedSubjects.map((subjectId) => {
+        const subject = subjects.find((s) => s.id === subjectId);
+        return subject ? subject.name : "Disciplina";
+      });
+
       // Criar objeto de sessão
       const session = {
         id: `flow-${Date.now()}`,
@@ -556,14 +594,22 @@ const FlowSessionCard: React.FC = () => {
         date: formattedDate,
         duration: formatTime(elapsedTime),
         elapsedTimeSeconds: elapsedTime,
-        subjects: selectedSubjects,
+        subjects: subjectNames, // Usar nomes em vez de IDs para compatibilidade
         progress: progress,
         notes: notes,
+        session_title: sessionGoal ? `Estudo: ${sessionGoal.substring(0, 30)}${sessionGoal.length > 30 ? '...' : ''}` : "Sessão de estudo",
         xp: Math.floor(elapsedTime / 60) // 1 XP por minuto
       };
 
       // Salvar sessão
-      addSession(session);
+      const success = addSession(session);
+      
+      // Disparar evento para atualizar o card de tempo de estudos
+      if (success) {
+        document.dispatchEvent(new CustomEvent('flow-session-updated', { 
+          detail: { session } 
+        }));
+      }
 
       console.log("Sessão finalizada e salva:", session);
     }

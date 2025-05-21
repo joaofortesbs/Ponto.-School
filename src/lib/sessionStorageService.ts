@@ -1,265 +1,132 @@
-import { supabase } from "@/lib/supabase";
+import { supabase } from './supabase';
 
-// Interface para as sessões de flow
 export interface FlowSession {
-  id: string;
+  id: string | number;
   timestamp: number;
-  date: string; // Formato DD/MM/YYYY
-  duration: string; // Formato HH:MM:SS
+  date: string;
+  duration: string;
   elapsedTimeSeconds: number;
   subjects: string[];
-  progress: number; // 0-100
+  progress: number;
   notes?: string;
-  formattedDate?: string;
   xp?: number;
+  session_title?: string;
 }
 
-/**
- * Serviço para gerenciar o armazenamento das sessões de flow
- * usando uma estratégia híbrida (Supabase + localStorage)
- */
+const STORAGE_KEY = 'flowSessions';
+
 const SessionStorageService = {
-  /**
-   * Salva uma sessão de flow usando método híbrido
-   */
-  async saveSession(session: FlowSession): Promise<boolean> {
-    // Primeiro, salvar localmente para garantir a persistência
-    const savedLocally = await this.saveSessionLocally(session);
-
-    // Tentar salvar remotamente no Supabase, se possível
+  // Obter sessões do localStorage com fallback para supabase
+  getSessions: async (): Promise<FlowSession[]> => {
     try {
+      // Verificar autenticação
       const { data: { user } } = await supabase.auth.getUser();
+      const userId = user?.id || 'anonymous';
 
+      // Primeiro tentar carregar do localStorage
+      const localSessions = localStorage.getItem(`${STORAGE_KEY}_${userId}`);
+      let sessions: FlowSession[] = localSessions ? JSON.parse(localSessions) : [];
+
+      // Se o usuário estiver autenticado, tentar sincronizar com Supabase
       if (user) {
-        // Verificar se a tabela existe primeiro
-        const { error: checkError } = await supabase
-          .from('flow_sessions')
-          .select('count')
-          .limit(1)
-          .maybeSingle();
+        try {
+          const { data, error } = await supabase
+            .from('flow_sessions')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('date', { ascending: false });
 
-        if (!checkError) {
-          // Tabela existe, vamos inserir
+          if (data && !error) {
+            // Converter dados do Supabase para formato de FlowSession
+            const remoteSessions: FlowSession[] = data.map(session => ({
+              id: session.id,
+              timestamp: new Date(session.date).getTime(),
+              date: new Date(session.date).toLocaleDateString('pt-BR'),
+              duration: session.duration_formatted,
+              elapsedTimeSeconds: session.duration_seconds,
+              subjects: session.subjects || [],
+              progress: session.progress,
+              notes: session.notes,
+              xp: Math.floor(session.duration_seconds / 60),
+              session_title: session.session_title || 'Sessão de estudo'
+            }));
+
+            // Mesclar sessões remotas com locais, mantendo as mais recentes
+            const mergedSessions = [...remoteSessions];
+
+            // Adicionar sessões locais que ainda não estão no Supabase
+            sessions.forEach(localSession => {
+              if (!remoteSessions.some(rs => rs.id === localSession.id)) {
+                mergedSessions.push(localSession);
+              }
+            });
+
+            // Ordenar por data (mais recente primeiro)
+            mergedSessions.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+            // Atualizar localStorage com dados mesclados
+            localStorage.setItem(`${STORAGE_KEY}_${userId}`, JSON.stringify(mergedSessions));
+
+            return mergedSessions;
+          }
+        } catch (error) {
+          console.error('Erro ao sincronizar sessões com Supabase:', error);
+        }
+      }
+
+      return sessions;
+    } catch (error) {
+      console.error('Erro ao obter sessões:', error);
+      return [];
+    }
+  },
+
+  // Salvar uma nova sessão
+  saveSession: async (session: FlowSession): Promise<boolean> => {
+    try {
+      // Verificar autenticação
+      const { data: { user } } = await supabase.auth.getUser();
+      const userId = user?.id || 'anonymous';
+
+      // Obter sessões existentes
+      const localSessions = localStorage.getItem(`${STORAGE_KEY}_${userId}`);
+      const sessions: FlowSession[] = localSessions ? JSON.parse(localSessions) : [];
+
+      // Adicionar nova sessão
+      const updatedSessions = [session, ...sessions];
+
+      // Salvar localmente
+      localStorage.setItem(`${STORAGE_KEY}_${userId}`, JSON.stringify(updatedSessions));
+
+      // Disparar evento para atualizar componentes
+      document.dispatchEvent(new CustomEvent('flow-session-updated', { 
+        detail: { userId, session } 
+      }));
+
+      // Se o usuário estiver autenticado, salvar no Supabase
+      if (user) {
+        try {
           const { error } = await supabase
-            .from("flow_sessions")
+            .from('flow_sessions')
             .insert({
               user_id: user.id,
-              date: session.timestamp || new Date().toISOString(),
+              date: new Date(session.timestamp).toISOString(),
               duration_seconds: session.elapsedTimeSeconds,
               duration_formatted: session.duration,
               subjects: session.subjects,
               progress: session.progress,
-              session_goal: session.session_goal,
-              notes: session.notes
+              notes: session.notes || null,
+              session_title: session.session_title || 'Sessão de estudo',
+              created_at: new Date().toISOString()
             });
 
           if (error) {
-            console.error("Erro ao salvar sessão no Supabase:", error);
-            return savedLocally;
-          }
-
-          return true;
-        }
-      }
-
-      return savedLocally;
-    } catch (error) {
-      console.error("Erro ao salvar sessão remotamente:", error);
-      return savedLocally;
-    }
-  },
-
-  /**
-   * Salva uma sessão apenas no armazenamento local
-   */
-  async saveSessionLocally(session: FlowSession): Promise<boolean> {
-    try {
-      const userId = await this.getUserId();
-      const sessions = await this.getLocalSessions(userId);
-
-      // Adicionar a nova sessão e salvar
-      sessions.unshift(session);
-      localStorage.setItem(`flow_sessions_${userId}`, JSON.stringify(sessions));
-
-      return true;
-    } catch (error) {
-      console.error("Erro ao salvar sessão localmente:", error);
-      return false;
-    }
-  },
-
-  /**
-   * Obtém todas as sessões para o usuário atual
-   */
-  async getSessions(): Promise<FlowSession[]> {
-    try {
-      const userId = await this.getUserId();
-      let sessions: FlowSession[] = [];
-
-      // 1. Carregar do localStorage
-      const localSessions = await this.getLocalSessions(userId);
-
-      // 2. Tentar carregar do Supabase se o usuário estiver logado
-      let remoteSessions: FlowSession[] = [];
-
-      if (userId !== 'anonymous') {
-        try {
-          // Verificar se a tabela existe primeiro
-          const { error: checkError } = await supabase
-            .from('flow_sessions')
-            .select('count')
-            .limit(1)
-            .maybeSingle();
-
-          if (!checkError) {
-            // Buscar sessões do usuário
-            const { data, error } = await supabase
-              .from("flow_sessions")
-              .select("*")
-              .eq("user_id", userId)
-              .order("date", { ascending: false });
-
-            if (!error && data) {
-              remoteSessions = data.map(session => ({
-                id: session.id,
-                date: new Date(session.date).toLocaleString("pt-BR", {
-                  day: "2-digit",
-                  month: "2-digit",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit"
-                }),
-                duration: session.duration_formatted,
-                subjects: session.subjects,
-                progress: session.progress,
-                elapsedTimeSeconds: session.duration_seconds,
-                session_goal: session.session_goal,
-                notes: session.notes,
-                timestamp: session.date
-              }));
-            }
+            console.error('Erro ao salvar sessão no Supabase:', error);
           }
         } catch (error) {
-          console.error("Erro ao carregar sessões remotas:", error);
+          console.error('Erro ao salvar sessão no Supabase:', error);
         }
       }
-
-      // 3. Mesclar as sessões, evitando duplicações
-      const mergedSessions = [...remoteSessions];
-
-      localSessions.forEach(localSession => {
-        // Evitar adicionar sessões que já existem remotamente
-        const exists = remoteSessions.some(remoteSession => 
-          remoteSession.id.toString() === localSession.id.toString());
-
-        if (!exists) {
-          mergedSessions.push(localSession);
-        }
-      });
-
-      // 4. Ordenar por data (mais recentes primeiro)
-      mergedSessions.sort((a, b) => {
-        const dateA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
-        const dateB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
-        return dateB - dateA;
-      });
-
-      // 5. Atualizar o armazenamento local com a lista mesclada
-      localStorage.setItem(`flow_sessions_${userId}`, JSON.stringify(mergedSessions));
-
-      return mergedSessions;
-    } catch (error) {
-      console.error("Erro ao obter sessões:", error);
-      return [];
-    }
-  },
-
-  /**
-   * Obtém as sessões salvas localmente
-   */
-  async getLocalSessions(userId: string): Promise<FlowSession[]> {
-    try {
-      const stored = localStorage.getItem(`flow_sessions_${userId}`);
-      return stored ? JSON.parse(stored) : [];
-    } catch (error) {
-      console.error("Erro ao carregar sessões localmente:", error);
-      return [];
-    }
-  },
-
-  /**
-   * Obtém o ID do usuário atual ou retorna 'anonymous' se não logado
-   */
-  async getUserId(): Promise<string> {
-    try {
-      const { data } = await supabase.auth.getUser();
-      return data.user?.id || 'anonymous';
-    } catch (error) {
-      return 'anonymous';
-    }
-  },
-
-  /**
-   * Sincroniza as sessões locais com o Supabase quando o usuário faz login
-   */
-  async syncSessionsOnLogin(): Promise<boolean> {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (!user) return false;
-
-      // Carregar sessões salvas localmente
-      const localSessions = await this.getLocalSessions('anonymous');
-      if (localSessions.length === 0) return true;
-
-      // Verificar se a tabela existe
-      const { error: checkError } = await supabase
-        .from('flow_sessions')
-        .select('count')
-        .limit(1)
-        .maybeSingle();
-
-      if (checkError) return false;
-
-      // Para cada sessão local, tentar sincronizar com o Supabase
-      for (const session of localSessions) {
-        await supabase
-          .from("flow_sessions")
-          .insert({
-            user_id: user.id,
-            date: session.timestamp || new Date().toISOString(),
-            duration_seconds: session.elapsedTimeSeconds,
-            duration_formatted: session.duration,
-            subjects: session.subjects,
-            progress: session.progress,
-            session_goal: session.session_goal,
-            notes: session.notes
-          });
-      }
-
-      // Limpar sessões anônimas após sincronização
-      localStorage.removeItem('flow_sessions_anonymous');
-
-      return true;
-    } catch (error) {
-      console.error("Erro ao sincronizar sessões:", error);
-      return false;
-    }
-  },
-
-  /**
-   * Salvar uma nova sessão de Flow
-   */
-  saveSession: async (session: FlowSession): Promise<boolean> => {
-    try {
-      // Recuperar as sessões existentes
-      const existingSessions = await SessionStorageService.getSessions();
-
-      // Adicionar a nova sessão
-      const updatedSessions = [session, ...existingSessions];
-
-      // Salvar as sessões atualizadas
-      localStorage.setItem('flowSessions', JSON.stringify(updatedSessions));
 
       return true;
     } catch (error) {
@@ -268,46 +135,48 @@ const SessionStorageService = {
     }
   },
 
-  /**
-   * Obter todas as sessões de Flow
-   */
-  getSessions: async (): Promise<FlowSession[]> => {
+  // Excluir uma sessão
+  deleteSession: async (sessionId: string | number): Promise<boolean> => {
     try {
-      const sessionsData = localStorage.getItem('flowSessions');
-      if (!sessionsData) return [];
+      // Verificar autenticação
+      const { data: { user } } = await supabase.auth.getUser();
+      const userId = user?.id || 'anonymous';
 
-      return JSON.parse(sessionsData);
-    } catch (error) {
-      console.error('Erro ao obter sessões:', error);
-      return [];
-    }
-  },
+      // Obter sessões existentes
+      const localSessions = localStorage.getItem(`${STORAGE_KEY}_${userId}`);
+      const sessions: FlowSession[] = localSessions ? JSON.parse(localSessions) : [];
 
-  /**
-   * Remover uma sessão específica
-   */
-  removeSession: async (sessionId: string): Promise<boolean> => {
-    try {
-      const sessions = await SessionStorageService.getSessions();
-      const updatedSessions = sessions.filter(session => session.id !== sessionId);
+      // Remover a sessão
+      const updatedSessions = sessions.filter(s => s.id !== sessionId);
 
-      localStorage.setItem('flowSessions', JSON.stringify(updatedSessions));
+      // Salvar localmente
+      localStorage.setItem(`${STORAGE_KEY}_${userId}`, JSON.stringify(updatedSessions));
+
+      // Se o usuário estiver autenticado, excluir do Supabase
+      if (user) {
+        try {
+          const { error } = await supabase
+            .from('flow_sessions')
+            .delete()
+            .eq('id', sessionId)
+            .eq('user_id', user.id);
+
+          if (error) {
+            console.error('Erro ao excluir sessão do Supabase:', error);
+          }
+        } catch (error) {
+          console.error('Erro ao excluir sessão do Supabase:', error);
+        }
+      }
+
+      // Disparar evento para atualizar componentes
+      document.dispatchEvent(new CustomEvent('flow-session-updated', { 
+        detail: { userId } 
+      }));
+
       return true;
     } catch (error) {
-      console.error('Erro ao remover sessão:', error);
-      return false;
-    }
-  },
-
-  /**
-   * Limpar todas as sessões
-   */
-  clearSessions: async (): Promise<boolean> => {
-    try {
-      localStorage.setItem('flowSessions', JSON.stringify([]));
-      return true;
-    } catch (error) {
-      console.error('Erro ao limpar sessões:', error);
+      console.error('Erro ao excluir sessão:', error);
       return false;
     }
   }
