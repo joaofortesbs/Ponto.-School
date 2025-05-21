@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Flame, Award, TrendingUp, ExternalLink, Calendar, Star, Zap, Trophy } from "lucide-react";
 import { motion } from "framer-motion";
@@ -8,7 +7,7 @@ import { Button } from "@/components/ui/button";
 export default function SequenciaEstudosCard() {
   const { theme } = useTheme();
   const isLightMode = theme === "light";
-  
+
   // Dados de exemplo - Em produção viriam da API ou context
   const diasConsecutivos = 5;
   const recordeDias = 15;
@@ -22,20 +21,12 @@ export default function SequenciaEstudosCard() {
       transition={{ duration: 0.2 }}
       className="h-full w-full rounded-xl overflow-hidden border border-gray-100 dark:border-gray-800 shadow-xl bg-white dark:bg-gradient-to-br dark:from-[#0c1425] dark:to-[#0a1a2e] relative flex flex-col"
     >
-      {/* Elementos decorativos de fundo */}
+      {/* Elementos decorativos de fundo - removidos efeitos de blur e grade */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-24 -right-24 w-48 h-48 rounded-full bg-gradient-to-br from-[#FF6B00]/5 via-[#FF8C40]/5 to-transparent dark:from-[#FF6B00]/10 dark:via-[#FF8C40]/10"></div>
-        <div className="absolute -bottom-8 -left-8 w-28 h-28 rounded-full bg-gradient-to-tr from-[#FF6B00]/5 via-[#FF8C40]/5 to-transparent dark:from-[#FF6B00]/10 dark:via-[#FF8C40]/10"></div>
-        
-        {/* Padrão sutil diagonal */}
-        <div className="absolute inset-0 opacity-5 dark:opacity-10">
-          <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-            <pattern id="diagonalLines" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-              <line x1="0" y1="0" x2="0" y2="10" stroke={isLightMode ? "#FF6B00" : "#FF8C40"} strokeWidth="1" />
-            </pattern>
-            <rect width="100%" height="100%" fill="url(#diagonalLines)" />
-          </svg>
-        </div>
+        {/* Partículas decorativas */}
+        <div className="absolute top-1/4 right-10 w-2 h-2 bg-[#FF6B00]/40 rounded-full"></div>
+        <div className="absolute top-1/3 left-10 w-3 h-3 bg-blue-400/30 dark:bg-blue-400/20 rounded-full"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-2 h-2 bg-purple-400/30 dark:bg-purple-400/20 rounded-full"></div>
       </div>
 
       {/* Header elegante com gradiente - estilo igual ao FocoDoDiaCard */}
@@ -54,7 +45,7 @@ export default function SequenciaEstudosCard() {
               </p>
             </div>
           </div>
-          
+
           <Button 
             variant="ghost" 
             size="sm" 
@@ -84,7 +75,7 @@ export default function SequenciaEstudosCard() {
             }}
             className="absolute -inset-2 rounded-full bg-gradient-to-r from-[#FF6B00]/20 to-[#FF8C40]/20 blur-xl"
           />
-          
+
           {/* Ícone principal com design premium */}
           <div className="relative mb-4">
             <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-[#FF6B00]/20 to-[#FF8C40]/20 blur-md"></div>
@@ -92,7 +83,7 @@ export default function SequenciaEstudosCard() {
               <div className="absolute inset-0.5 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] opacity-50"></div>
               <Flame className="h-10 w-10 text-white drop-shadow-md relative z-10" />
             </div>
-            
+
             {/* Indicador de streak com borda animada */}
             <motion.div 
               initial={{ rotate: 0 }}
@@ -103,7 +94,7 @@ export default function SequenciaEstudosCard() {
               <Zap className="h-4 w-4 text-[#FF6B00]" />
             </motion.div>
           </div>
-          
+
           {/* Contador de dias em design premium */}
           <div className="text-center">
             <p className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-1">Sua sequência atual</p>
@@ -116,7 +107,7 @@ export default function SequenciaEstudosCard() {
             </p>
           </div>
         </div>
-        
+
         {/* Seção de informações adicionais com design premium */}
         <div className="space-y-5 mt-2">
           {/* Progresso para o próximo nível com gradiente premium */}
@@ -147,7 +138,7 @@ export default function SequenciaEstudosCard() {
               </div>
             </div>
           </div>
-          
+
           {/* Estatísticas em design de cartões grid */}
           <div className="grid grid-cols-2 gap-2">
             {/* Card de Recorde */}
@@ -159,7 +150,7 @@ export default function SequenciaEstudosCard() {
               <p className="text-xl font-bold text-gray-700 dark:text-gray-200">{recordeDias}</p>
               <p className="text-xs text-gray-400 dark:text-gray-500">dias</p>
             </div>
-            
+
             {/* Card de Meta Diária */}
             <div className="bg-gray-50 dark:bg-[#14253d]/80 rounded-lg py-2.5 px-3 backdrop-blur-sm border border-gray-100 dark:border-gray-800/80 flex flex-col items-center justify-center">
               <div className="flex items-center space-x-1 mb-1">
@@ -170,7 +161,7 @@ export default function SequenciaEstudosCard() {
               <p className="text-xs text-gray-400 dark:text-gray-500">dias</p>
             </div>
           </div>
-          
+
           {/* Próxima recompensa com design premium */}
           <div className="bg-gray-50 dark:bg-[#14253d]/80 rounded-lg p-3 backdrop-blur-sm border border-gray-100 dark:border-gray-800/80">
             <div className="flex items-center justify-center space-x-1.5 mb-2">
