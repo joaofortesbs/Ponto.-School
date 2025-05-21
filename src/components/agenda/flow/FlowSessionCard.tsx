@@ -38,7 +38,7 @@ import {
   X,
   Zap,
 } from "lucide-react";
-import { useFlowSessions } from "@/components/useFlowSessions";
+import { useFlowSessions } from "@/hooks/useFlowSessions";
 
 const FlowSessionCard: React.FC = () => {
   const [sessionState, setSessionState] = useState<
