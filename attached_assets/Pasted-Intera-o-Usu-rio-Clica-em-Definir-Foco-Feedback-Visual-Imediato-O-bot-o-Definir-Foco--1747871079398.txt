@@ -1,0 +1,147 @@
+Interação: Usuário Clica em "Definir Foco >"
+
+Feedback Visual Imediato:
+
+O botão "Definir Foco >" tem um efeito de clique (ex: afundamento, mudança de cor rápida).
+
+Ação: Um modal (pop-up) é aberto para o usuário definir seu foco.
+
+Modal "Definir Seu Foco de Estudos" (Interface do Epictus IA):
+
+Objetivo: Coletar informações do aluno para que o Mentor IA possa definir o foco e as atividades do dia/semana.
+
+Design do Modal:
+
+Título: "Defina Seu Foco de Estudos com o Epictus IA".
+
+Fundo: Branco ou cinza claríssimo.
+
+Layout: Organizado, com perguntas claras e opções de resposta intuitivas.
+
+Conteúdo (Perguntas do Mentor IA – Pode ser um fluxo passo a passo ou um formulário único):
+
+"Qual seu principal objetivo de estudo para hoje/esta semana?"
+
+Opções:
+
+Campo de Texto Livre: (O aluno digita – ex: "Revisar para a prova de História", "Começar o capítulo de Trigonometria"). Requer processamento de linguagem natural (NLP) pelo IA.
+
+Dropdown com Metas Pré-definidas: (Ex: "Preparação para Prova", "Avançar em Nova Matéria", "Revisão de Tópicos", "Concluir Tarefas Pendentes").
+
+Sugestões Inteligentes: Com base nas turmas do aluno, Agenda, progresso anterior, o Mentor IA já sugere alguns focos (ex: "Prova de História (Próxima Semana)", "Capítulo Pendente: Funções"). O aluno pode selecionar uma sugestão ou digitar.
+
+"Quais disciplinas ou tópicos são prioridade?" (Se não foi especificado no objetivo).
+
+Opções:
+
+Checkboxes com as disciplinas das turmas atuais do aluno.
+
+Campo de texto para digitar tópicos específicos.
+
+O Mentor IA pode destacar disciplinas onde o aluno teve baixo desempenho recentemente.
+
+"Quanto tempo você pretende dedicar aos estudos hoje/nos próximos dias?"
+
+Opções:
+
+Slider (ex: 30min a 4h).
+
+Dropdown com durações pré-definidas (ex: "1 hora", "2 horas", "Sessão curta", "Sessão longa").
+
+O Mentor IA pode acessar a Agenda do aluno e sugerir blocos de tempo disponíveis.
+
+"Há alguma tarefa ou prazo específico que precisa de atenção imediata?"
+
+O Mentor IA pode listar automaticamente tarefas da Agenda com prazos próximos.
+
+O aluno pode selecionar quais dessas tarefas quer incluir no "Foco do Dia".
+
+"Como você está se sentindo em relação aos seus estudos?" (Opcional – Toque de Suporte Emocional)
+
+Opções: "Motivado(a)", "Um pouco perdido(a)", "Cansado(a)", "Ansioso(a)".
+
+A resposta pode ajudar o IA a ajustar a carga de trabalho ou sugerir pausas/técnicas de relaxamento.
+
+Botões do Modal:
+
+"Cancelar" (fecha o modal, o card continua vazio).
+
+"Gerar Foco" (ou "Definir Atividades"). Fundo laranja, destaque.
+
+Processamento pelo Mentor IA (Após Clicar em "Gerar Foco"):
+
+Ação do Mentor IA (Backend):
+
+Analisa as respostas do aluno.
+
+Cruza com os dados da plataforma:
+
+Agenda: Próximas aulas, tarefas, provas, eventos.
+
+Minhas Turmas: Progresso nas disciplinas, materiais não vistos, tópicos com dificuldade.
+
+Desempenho: Notas recentes, áreas com baixo acerto.
+
+Biblioteca: Materiais relevantes para o foco definido.
+
+Conexão Expert: Dúvidas recentes do aluno.
+
+Define o "Foco Principal": Um tópico ou disciplina chave para o dia (ou semana).
+
+Cria a Lista de Atividades Prioritárias:
+
+Seleciona 2-4 atividades relevantes e realizáveis para o tempo disponível.
+
+Prioriza atividades da Agenda com prazos próximos.
+
+Inclui atividades de revisão para tópicos com dificuldade.
+
+Sugere novos materiais para o foco definido.
+
+Define uma "Dica do Dia" Contextual.
+
+Feedback Visual (Frontend):
+
+O botão "Gerar Foco" pode exibir um spinner e o texto "Organizando seu dia..."
+
+Animação no card "Seu Foco do Dia" (no Painel) enquanto o conteúdo é carregado (ex: um efeito de "loading" ou a caverna se "construindo").
+
+Card "Seu Foco do Dia" Preenchido (No Painel):
+
+Atualização Dinâmica: O card no Painel é atualizado em tempo real (sem recarregar a página).
+
+Nova Aparência (Conforme Descrito na Resposta Anterior):
+
+Título Dinâmico: Exibe o "Foco Principal" definido pelo IA (ex: "Seu Foco Hoje: Equações Diferenciais").
+
+Lista de Atividades: Apresenta as 2-4 atividades prioritárias com checkboxes, descrições, tempos estimados/prazos.
+
+Sugestão do Mentor IA: Uma dica relevante no rodapé.
+
+O botão "Definir Foco >" desaparece ou é substituído por um botão "Ver/Editar Foco" (que reabriria o modal com as opções atuais e permitiria ajustes).
+
+Fluxo de Interação Diário (Após a Primeira Configuração):
+
+Aluno Acessa o Painel:
+
+O Mentor IA já analisou a Agenda, progresso e metas (se houver).
+
+O card "Seu Foco do Dia" é automaticamente preenchido com as atividades mais relevantes para aquele dia.
+
+Aluno Realiza as Atividades:
+
+Clica nos itens da lista para acessar os materiais/ferramentas.
+
+Marca os checkboxes ao concluir.
+
+Atualização (Final do Dia / Nova Sessão):
+
+Ao final do dia, o Mentor IA pode analisar as atividades concluídas/não concluídas e usar essa informação para planejar o foco do próximo dia.
+
+Na próxima vez que o aluno acessar o Painel, o card estará com novas atividades e, possivelmente, um novo foco principal.
+
+Opção de "Redefinir Foco":
+
+Adicionar um ícone de engrenagem (pequeno) no canto do card "Seu Foco do Dia" OU um botão "Redefinir Foco" no rodapé.
+
+Ao clicar, reabre o modal "Defina Seu Foco de Estudos", permitindo que o aluno ajuste suas prioridades ou informe o IA sobre mudanças em seus objetivos.
