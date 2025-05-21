@@ -76,45 +76,37 @@ export default function ConquistasCard() {
         </Badge>
       </div>
 
-      {/* Simplified medal badges for achievements - now with improved styling */}
-      <div className="flex flex-wrap gap-3 justify-center">
+      {/* Simplified medal badges for achievements - with smaller icons, max 4 per row */}
+      <div className="grid grid-cols-4 gap-2 justify-items-center">
         {sortedAchievements.map((achievement) => (
           <div 
             key={achievement.id}
             className="relative group/medal"
             title={`${achievement.name}: ${achievement.description}`}
           >
-            <div className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 ${
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
               achievement.unlocked 
-                ? `${isLightMode ? 'bg-gradient-to-br from-orange-50 to-orange-100 shadow-md' : 'bg-gradient-to-br from-[#FF6B00]/20 to-[#FF6B00]/30'} border-2 border-[#FF6B00]` 
-                : `${isLightMode ? 'bg-gray-100 opacity-60' : 'bg-gray-800/40 opacity-60'} border-2 ${isLightMode ? 'border-gray-300' : 'border-gray-700'}`
+                ? `${isLightMode ? 'bg-white' : 'bg-[#0A2540]'} border-2 border-[#FF6B00]` 
+                : `${isLightMode ? 'bg-gray-100' : 'bg-gray-800/40'} border ${isLightMode ? 'border-gray-300' : 'border-gray-700'}`
             }`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+              <div className={`${
                 achievement.unlocked 
-                  ? `${isLightMode ? 'bg-[#FF6B00]/20' : 'bg-[#FF6B00]/30'}`
-                  : `${isLightMode ? 'bg-gray-200' : 'bg-gray-700'}`
+                  ? `text-[#FF6B00]` 
+                  : `${isLightMode ? 'text-gray-400' : 'text-gray-500'}`
               }`}>
-                <div className={`${
-                  achievement.unlocked 
-                    ? `text-[#FF6B00]` 
-                    : `${isLightMode ? 'text-gray-400' : 'text-gray-500'}`
-                }`}>
-                  {achievement.icon}
-                </div>
+                {achievement.icon}
               </div>
             </div>
 
-            {/* Category badge */}
-            <Badge className={`absolute -bottom-1 left-1/2 transform -translate-x-1/2 text-[9px] px-1.5 py-0 ${
+            {/* Simplified category indicator */}
+            <div className={`absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1.5 h-1.5 rounded-full ${
               achievement.unlocked 
-                ? `bg-[#FF6B00] text-white` 
-                : `${isLightMode ? 'bg-gray-200 text-gray-500' : 'bg-gray-700 text-gray-400'}`
-            }`}>
-              {achievement.category}
-            </Badge>
+                ? 'bg-[#FF6B00]' 
+                : `${isLightMode ? 'bg-gray-300' : 'bg-gray-600'}`
+            }`}></div>
 
             {/* Name tooltip */}
-            <div className="absolute opacity-0 group-hover/medal:opacity-100 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs rounded bg-black/80 text-white whitespace-nowrap pointer-events-none transition-opacity duration-200">
+            <div className="absolute opacity-0 group-hover/medal:opacity-100 bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-1.5 py-0.5 text-[10px] rounded bg-black/80 text-white whitespace-nowrap pointer-events-none transition-opacity duration-200">
               {achievement.name}
             </div>
           </div>
