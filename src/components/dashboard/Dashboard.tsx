@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import PromotionalBanner from "./PromotionalBanner";
+import DashboardInterface from "./gradeinterfaceprincipal/DashboardInterface";
 import { profileService } from "@/services/profileService";
 import { UserProfile } from "@/types/user-profile";
 
@@ -52,6 +53,11 @@ export default function Dashboard() {
                 return firstName;
               })()}!
       </h1>
+      
+      {/* Dashboard Interface */}
+      <div className="dashboard-content">
+        <DashboardInterface />
+      </div>
     </div>
   );
 }
