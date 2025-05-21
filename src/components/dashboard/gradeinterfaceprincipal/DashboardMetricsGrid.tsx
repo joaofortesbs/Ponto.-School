@@ -1,5 +1,5 @@
 import React from "react";
-import { Clock, BookOpen, Trophy, Award } from "lucide-react";
+import { Clock, BookOpen, Trophy, Award, TrendingUp } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import FocoDoDiaCard from "./FocoDoDiaCard";
 import AtalhoSchoolCard from "./AtalhoSchoolCard";
@@ -15,9 +15,23 @@ export default function DashboardMetricsGrid() {
       {/* Cards de métricas rápidas - 4 cards em linha */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Tempo de estudo card */}
-        <div className={`group backdrop-blur-md ${isLightMode ? 'bg-white/90' : 'bg-[#001e3a]'} rounded-xl p-3 ${isLightMode ? 'border border-gray-200' : 'border border-white/20'} shadow-lg relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-[#FF6B00]/30 hover:translate-y-[-4px]`}>
-          <div className="absolute inset-0 bg-gradient-to-tr from-[#FF6B00]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-          <div className={`absolute -right-4 -top-4 w-24 h-24 ${isLightMode ? 'bg-[#FF6B00]/5' : 'bg-[#FF6B00]/5'} rounded-full blur-xl group-hover:bg-[#FF6B00]/10 transition-all duration-500`}></div>
+        <div className={`group backdrop-blur-md ${isLightMode ? 'bg-[#001e3a]' : 'bg-[#001e3a]'} rounded-xl p-4 shadow-lg relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-[#FF6B00]/30 hover:translate-y-[-4px]`}>
+          <div className="flex justify-between items-center mb-2">
+            <div className="flex items-center">
+              <Clock className="h-5 w-5 text-white mr-2" />
+              <span className="text-white text-sm font-medium">Tempo de estudo</span>
+            </div>
+            <div className="bg-[#FF6B00]/30 px-2 py-0.5 rounded text-xs text-white font-medium flex items-center">
+              <TrendingUp className="h-3 w-3 mr-1" /> +1.2%
+            </div>
+          </div>
+          <div className="mt-3">
+            <div className="flex items-baseline">
+              <span className="text-white text-3xl font-bold">32</span>
+              <span className="text-white/80 text-sm ml-1">horas</span>
+            </div>
+          </div>
+          <div className="absolute -right-4 -top-4 w-24 h-24 bg-[#FF6B00]/5 rounded-full blur-xl group-hover:bg-[#FF6B00]/10 transition-all duration-500"></div>
 
           <div className="flex justify-between items-start mb-1 relative z-10">
             <div className="flex items-center">
