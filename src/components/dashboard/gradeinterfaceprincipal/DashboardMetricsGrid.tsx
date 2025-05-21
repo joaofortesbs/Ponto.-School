@@ -16,14 +16,32 @@ export default function DashboardMetricsGrid() {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 mt-6">
-      {/* Grid de métricas (3x2) */}
-      <div className="col-span-1 lg:col-span-8 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+      {/* Primeira coluna (4/12) */}
+      <div className="col-span-1 lg:col-span-4 grid grid-cols-1 gap-5">
         <div className="shadow-xl">
           <TempoEstudoCard />
         </div>
+      </div>
+
+      {/* Segunda coluna (central, 4/12) */}
+      <div className="col-span-1 lg:col-span-4 grid grid-cols-1 gap-5">
+        <div className="h-full">
+          <FocoDoDiaCard />
+        </div>
+      </div>
+
+      {/* Terceira coluna (4/12) */}
+      <div className="col-span-1 lg:col-span-4 grid grid-cols-1 md:grid-cols-2 gap-5">
         <div className="shadow-xl">
           <ConquistasCard />
         </div>
+        <div className="shadow-xl">
+          <PosicaoRankingCard />
+        </div>
+      </div>
+
+      {/* Cards adicionais */}
+      <div className="col-span-1 lg:col-span-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
         <div className="shadow-xl">
           <SchoolPointsCard />
         </div>
@@ -31,19 +49,9 @@ export default function DashboardMetricsGrid() {
           <SequenciaEstudosCard />
         </div>
         <div className="shadow-xl">
-          <PosicaoRankingCard />
-        </div>
-        <div className="shadow-xl">
           <AtalhoSchoolCard />
         </div>
-      </div>
-
-      {/* Coluna direita */}
-      <div className="col-span-1 lg:col-span-4 grid grid-cols-1 gap-5">
-        <div className="h-full">
-          <FocoDoDiaCard />
-        </div>
-        <div className="h-full">
+        <div className="shadow-xl">
           <EpictusIACopilotoCard />
         </div>
       </div>
