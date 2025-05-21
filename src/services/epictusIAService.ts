@@ -77,38 +77,29 @@ export const generateAIResponse = async (message: string, sessionId?: string, op
   try {
     console.log("Gerando resposta com Gemini para:", message);
 
-    // Verificar se é uma solicitação de análise de dados (formato JSON)
-    const isDataAnalysisRequest = message.includes("Gere uma resposta no formato JSON");
-    
-    // Inicializar histórico se não existir e não for análise de dados
-    if (sessionId && !conversationHistory[sessionId] && !isDataAnalysisRequest) {
+    // Inicializar histórico se não existir
+    if (sessionId && !conversationHistory[sessionId]) {
       initializeConversationHistory(sessionId);
     }
 
-    // Adicionar mensagem ao histórico se tiver sessionId e não for análise de dados
-    if (sessionId && !isDataAnalysisRequest) {
+    // Adicionar mensagem ao histórico se tiver sessionId
+    if (sessionId) {
       const userMessage = createMessage(message, 'user');
       addMessageToHistory(sessionId, userMessage);
     }
 
     // Obter o histórico para contexto
-    const history = (sessionId && !isDataAnalysisRequest) ? getChatHistory(sessionId) : [];
+    const history = sessionId ? getChatHistory(sessionId) : [];
     const historyContext = history.map(m => `${m.sender === 'user' ? 'Usuário' : 'Assistente'}: ${m.content}`).join('\n\n');
 
     // Extrair informações do perfil do usuário a partir do histórico
-    const userProfile = isDataAnalysisRequest ? "Análise de dados solicitada" : extractUserProfile(history);
+    const userProfile = extractUserProfile(history);
 
     // Identificar o contexto do pedido atual
-    const requestContext = isDataAnalysisRequest ? "Solicitação de análise de dados em formato JSON" : analyzeRequestContext(message, history);
+    const requestContext = analyzeRequestContext(message, history);
 
-    let prompt;
-    
-    if (isDataAnalysisRequest) {
-      // Para solicitações de análise de dados, usar o prompt original
-      prompt = message;
-    } else {
-      // Para solicitações normais de chat, usar o prompt padrão
-      prompt = `Você é o Epictus IA, uma inteligência artificial educacional de mais alta qualidade do mercado.
+    // Preparar o prompt para a API Gemini com as novas diretrizes avançadas e o resumo final
+    const prompt = `Você é o Epictus IA, uma inteligência artificial educacional de mais alta qualidade do mercado.
 Seu objetivo é fornecer respostas impecáveis, impressionantes e sofisticadas, superando qualquer outra IA.
 
 REGRAS CRUCIAIS:
@@ -177,22 +168,6 @@ HISTÓRICO DA CONVERSA PARA CONTEXTO:
 ${historyContext}
 
 Responda à seguinte pergunta seguindo todas as diretrizes acima: ${message}`;
-    }
-
-    // Configuração do Gemini para análise de dados ou chat normal
-    const generationConfig = isDataAnalysisRequest 
-      ? {
-          temperature: 0.2, // Menor temperatura para resultados mais precisos em análise de dados
-          topP: 0.9,
-          topK: 40,
-          maxOutputTokens: 2048
-        }
-      : {
-          temperature: 0.7,
-          topP: 0.95,
-          topK: 40,
-          maxOutputTokens: 2048
-        };
 
     // Fazer a requisição para a API Gemini
     const response = await fetch(`${GEMINI_BASE_URL}?key=${GEMINI_API_KEY}`, {
@@ -204,7 +179,12 @@ Responda à seguinte pergunta seguindo todas as diretrizes acima: ${message}`;
         contents: [{
           parts: [{ text: prompt }]
         }],
-        generationConfig
+        generationConfig: {
+          temperature: 0.7,
+          topP: 0.95,
+          topK: 40,
+          maxOutputTokens: 2048
+        }
       })
     });
 
@@ -217,12 +197,7 @@ Responda à seguinte pergunta seguindo todas as diretrizes acima: ${message}`;
     // Extrair a resposta da IA
     let aiResponse = data.candidates[0].content.parts[0].text;
 
-    // Para solicitações JSON, retornar a resposta sem modificações
-    if (isDataAnalysisRequest) {
-      return aiResponse;
-    }
-
-    // Garantir que a resposta comece com "Eai" (apenas para chat normal)
+    // Garantir que a resposta comece com "Eai"
     if (!aiResponse.startsWith("Eai")) {
       aiResponse = aiResponse.replace(/^(olá|oi|hello|hey|hi|bom dia|boa tarde|boa noite)[\s,.!]*/i, '');
       aiResponse = `Eai! ${aiResponse}`;
