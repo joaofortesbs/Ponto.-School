@@ -239,27 +239,30 @@ const RecomendacoesEpictusIA = () => {
   };
 
   return (
-    <div className="bg-[#F8F9FA] dark:bg-[#29335C]/30 rounded-lg h-full border border-[#FF6B00]/10 overflow-hidden">
-      <div className="bg-[#FF6B00] p-2 px-4 flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-white" />
-          <h3 className="text-white font-medium">Recomendações do Epictus IA</h3>
+    <div className="h-full overflow-hidden border border-gray-200 dark:border-gray-800 shadow-md hover:shadow-md transition-shadow flex flex-col bg-white dark:bg-gradient-to-b dark:from-[#001427] dark:to-[#001a2f] rounded-xl">
+      {/* Cabeçalho estilizado como o do card Tempo de Estudo */}
+      <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-3 flex items-center justify-between shadow-md">
+        <div className="flex items-center">
+          <div className="bg-white/10 p-1.5 rounded-lg mr-2">
+            <Sparkles className="h-4 w-4 text-white" />
+          </div>
+          <h3 className="text-white font-semibold text-sm">Recomendações do Epictus IA</h3>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-1 text-xs">
           <span 
-            className={`text-white text-xs ${activeFilter === 'semana' ? 'bg-white/20' : ''} px-2 py-0.5 rounded-full cursor-pointer`}
+            className={`px-2 py-0.5 rounded-md cursor-pointer transition-colors ${activeFilter === 'semana' ? 'bg-white/20 font-medium' : 'hover:bg-white/30'}`}
             onClick={() => setActiveFilter('semana')}
           >
             Semana
           </span>
           <span 
-            className={`text-white text-xs ${activeFilter === 'mes' ? 'bg-white/20' : ''} px-2 py-0.5 rounded-full cursor-pointer`}
+            className={`px-2 py-0.5 rounded-md cursor-pointer transition-colors ${activeFilter === 'mes' ? 'bg-white/20 font-medium' : 'hover:bg-white/30'}`}
             onClick={() => setActiveFilter('mes')}
           >
             Mês
           </span>
           <span 
-            className={`text-white text-xs ${activeFilter === 'ano' ? 'bg-white/20' : ''} px-2 py-0.5 rounded-full cursor-pointer`}
+            className={`px-2 py-0.5 rounded-md cursor-pointer transition-colors ${activeFilter === 'ano' ? 'bg-white/20 font-medium' : 'hover:bg-white/30'}`}
             onClick={() => setActiveFilter('ano')}
           >
             Ano
