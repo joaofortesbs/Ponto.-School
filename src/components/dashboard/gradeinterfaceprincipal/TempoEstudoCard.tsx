@@ -1,0 +1,106 @@
+
+import React, { useState, useEffect } from "react";
+import { Clock, Zap } from "lucide-react";
+import useFlowSessions from "@/hooks/useFlowSessions";
+
+interface TempoEstudoCardProps {
+  theme: string;
+}
+
+const TempoEstudoCard: React.FC<TempoEstudoCardProps> = ({ theme }) => {
+  const isLightMode = theme === "light";
+  const [totalHours, setTotalHours] = useState<number>(0);
+  const [hasData, setHasData] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  
+  // Usar hook de sessões de Flow para obter dados reais
+  const { sessions, loading, getStats } = useFlowSessions();
+
+  useEffect(() => {
+    if (!loading) {
+      setIsLoading(false);
+      
+      // Obter estatísticas das sessões de Flow
+      const stats = getStats();
+      
+      // Verificar se existem dados
+      if (stats.sessionsCount > 0) {
+        // Calcular total de horas
+        const totalSeconds = stats.totalTimeInSeconds || 0;
+        const hours = Math.floor(totalSeconds / 3600);
+        setTotalHours(hours);
+        setHasData(true);
+      } else {
+        setHasData(false);
+      }
+    }
+  }, [loading, sessions]);
+
+  // Estado vazio para novos usuários
+  const EmptyState = () => (
+    <div className="mt-2">
+      <div className="flex items-start">
+        <div className={`text-sm ${isLightMode ? 'text-gray-600' : 'text-gray-400'}`}>
+          Ainda não há dados de estudo registrados.
+        </div>
+      </div>
+      <div className="flex items-center mt-2">
+        <div className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-500'}`}>
+          Use o Flow para registrar seu tempo de estudo
+        </div>
+      </div>
+    </div>
+  );
+
+  // Estado de carregamento
+  const LoadingState = () => (
+    <div className="flex items-center justify-center h-12">
+      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#FF6B00]"></div>
+    </div>
+  );
+
+  // Estado com dados
+  const DataState = () => (
+    <div className="flex items-end mt-2">
+      <h3 className={`text-2xl font-bold ${isLightMode ? 'text-gray-800' : 'text-white'}`}>{totalHours}</h3>
+      <span className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'} ml-1 mb-0.5`}>horas</span>
+    </div>
+  );
+
+  return (
+    <div className={`group backdrop-blur-md ${isLightMode ? 'bg-white/90' : 'bg-[#001e3a]'} rounded-xl p-3 ${isLightMode ? 'border border-gray-200' : 'border border-white/20'} shadow-lg relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-[#FF6B00]/30 hover:translate-y-[-4px]`}>
+      <div className="absolute inset-0 bg-gradient-to-tr from-[#FF6B00]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+      <div className={`absolute -right-4 -top-4 w-24 h-24 ${isLightMode ? 'bg-[#FF6B00]/5' : 'bg-[#FF6B00]/5'} rounded-full blur-xl group-hover:bg-[#FF6B00]/10 transition-all duration-500`}></div>
+
+      <div className="flex justify-between items-start mb-1 relative z-10">
+        <div className="flex items-center">
+          <div className={`${isLightMode ? 'bg-orange-50' : 'bg-[#0A2540]/60'} p-1.5 rounded-lg ${isLightMode ? 'shadow' : 'shadow-inner'} ${isLightMode ? 'border border-orange-100' : 'border border-[#2A4D6E]/50'} mr-2`}>
+            <Clock className={`h-4 w-4 ${isLightMode ? 'text-[#FF6B00]' : 'text-[#FF6B00]'}`} />
+          </div>
+          <p className={`text-sm ${isLightMode ? 'text-gray-700' : 'text-gray-300'} font-medium`}>Tempo de estudo</p>
+        </div>
+        {hasData && (
+          <div className="flex space-x-1">
+            <button 
+              onClick={() => window.location.href = "/agenda?view=flow"}
+              className={`text-xs font-medium ${isLightMode ? 'bg-orange-100' : 'bg-[#FF6B00]/20'} ${isLightMode ? 'text-orange-700' : 'text-[#FF6B00]'} py-0.5 px-2 rounded-full flex items-center`}
+            >
+              <Zap className="h-3 w-3 mr-1" /> Iniciar
+            </button>
+          </div>
+        )}
+      </div>
+
+      {isLoading ? (
+        <LoadingState />
+      ) : hasData ? (
+        <DataState />
+      ) : (
+        <EmptyState />
+      )}
+      
+    </div>
+  );
+};
+
+export default TempoEstudoCard;
