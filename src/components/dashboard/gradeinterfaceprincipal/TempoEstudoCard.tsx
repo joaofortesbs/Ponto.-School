@@ -49,18 +49,20 @@ const TempoEstudoCard: React.FC<TempoEstudoCardProps> = ({ className, theme }) =
       <div className={`absolute -right-4 -top-4 w-24 h-24 ${isLightMode ? 'bg-[#FF6B00]/5' : 'bg-[#FF6B00]/5'} rounded-full blur-xl group-hover:bg-[#FF6B00]/10 transition-all duration-500`}></div>
 
       <div className="flex flex-col h-full justify-between relative z-10">
-        <div className="flex items-center gap-3 mb-2">
-          <div className={`w-9 h-9 flex items-center justify-center rounded-full ${isLightMode ? 'bg-orange-100' : 'bg-[#FF6B00]/20'}`}>
-            <Clock className={`h-5 w-5 ${isLightMode ? 'text-[#FF6B00]' : 'text-[#FF6B00]'}`} />
+        <div className="flex justify-between items-start mb-1 relative z-10">
+          <div className="flex items-center">
+            <div className={`${isLightMode ? 'bg-orange-50' : 'bg-[#0A2540]/60'} p-1.5 rounded-lg ${isLightMode ? 'shadow' : 'shadow-inner'} ${isLightMode ? 'border border-orange-100' : 'border border-[#2A4D6E]/50'} mr-2`}>
+              <Clock className={`h-4 w-4 ${isLightMode ? 'text-[#FF6B00]' : 'text-[#FF6B00]'}`} />
+            </div>
+            <p className={`text-sm ${isLightMode ? 'text-gray-700' : 'text-gray-300'} font-medium`}>Tempo de estudo</p>
           </div>
-          <div>
-            <h3 className={`font-medium text-sm ${isLightMode ? 'text-gray-600' : 'text-gray-300'}`}>Tempo de estudo</h3>
-            <p className="flex items-center mt-0.5">
-              <span className={`text-xl font-bold ${isLightMode ? 'text-gray-800' : 'text-white'}`}>
-                {totalHoras}h {totalMinutos}min
-              </span>
-            </p>
-          </div>
+        </div>
+
+        <div className="flex items-end mt-2">
+          <h3 className={`text-2xl font-bold ${isLightMode ? 'text-gray-800' : 'text-white'}`}>{totalHoras}</h3>
+          <span className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'} ml-1 mb-0.5`}>h</span>
+          <h3 className={`text-2xl font-bold ${isLightMode ? 'text-gray-800' : 'text-white'} ml-2`}>{totalMinutos}</h3>
+          <span className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'} ml-1 mb-0.5`}>min</span>
         </div>
       </div>
     </div>
