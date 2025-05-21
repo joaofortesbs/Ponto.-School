@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Clock, BookOpen, Trophy, Award } from "lucide-react";
 
@@ -6,7 +5,7 @@ export default function DashboardMetricsGrid() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
       {/* Tempo de estudo card */}
-      <div className="group backdrop-blur-md bg-white/5 rounded-xl p-3 border border-white/20 shadow-lg relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-[#FF6B00]/30 hover:translate-y-[-4px]">
+      <div className="group backdrop-blur-md bg-[#001427] rounded-xl p-3 border border-white/20 shadow-lg relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-[#FF6B00]/30 hover:translate-y-[-4px]">
         <div className="absolute inset-0 bg-gradient-to-tr from-[#FF6B00]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
         <div className="absolute -right-4 -top-4 w-24 h-24 bg-[#FF6B00]/5 rounded-full blur-xl group-hover:bg-[#FF6B00]/10 transition-all duration-500"></div>
 
@@ -27,7 +26,7 @@ export default function DashboardMetricsGrid() {
       </div>
 
       {/* Aulas concluídas card */}
-      <div className="group backdrop-blur-md bg-white/5 rounded-xl p-3 border border-white/20 shadow-lg relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-[#FF6B00]/30 hover:translate-y-[-4px]">
+      <div className="group backdrop-blur-md bg-[#001427] rounded-xl p-3 border border-white/20 shadow-lg relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-[#FF6B00]/30 hover:translate-y-[-4px]">
         <div className="absolute inset-0 bg-gradient-to-tr from-[#FF6B00]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
         <div className="absolute -right-4 -top-4 w-24 h-24 bg-[#FF6B00]/5 rounded-full blur-xl group-hover:bg-[#FF6B00]/10 transition-all duration-500"></div>
 
@@ -48,7 +47,7 @@ export default function DashboardMetricsGrid() {
       </div>
 
       {/* Posição ranking card */}
-      <div className="group backdrop-blur-md bg-white/5 rounded-xl p-3 border border-white/20 shadow-lg relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-[#FF6B00]/30 hover:translate-y-[-4px]">
+      <div className="group backdrop-blur-md bg-[#001427] rounded-xl p-3 border border-white/20 shadow-lg relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-[#FF6B00]/30 hover:translate-y-[-4px]">
         <div className="absolute inset-0 bg-gradient-to-tr from-[#FF6B00]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
         <div className="absolute -right-4 -top-4 w-24 h-24 bg-[#FF6B00]/5 rounded-full blur-xl group-hover:bg-[#FF6B00]/10 transition-all duration-500"></div>
 
@@ -66,12 +65,12 @@ export default function DashboardMetricsGrid() {
           <h3 className="text-2xl font-bold text-white">#42</h3>
           <span className="text-xs text-gray-400 ml-1 mb-0.5">/ ranking</span>
         </div>
-        
+
         <p className="text-[10px] text-gray-500 mt-0.5">Top 25%</p>
       </div>
 
       {/* School Points card */}
-      <div className="group backdrop-blur-md bg-white/5 rounded-xl p-3 border border-white/20 shadow-lg relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-[#FF6B00]/30 hover:translate-y-[-4px]">
+      <div className="group backdrop-blur-md bg-[#001427] rounded-xl p-3 border border-white/20 shadow-lg relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-[#FF6B00]/30 hover:translate-y-[-4px]">
         <div className="absolute inset-0 bg-gradient-to-tr from-[#FF6B00]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
         <div className="absolute -right-4 -top-4 w-24 h-24 bg-[#FF6B00]/5 rounded-full blur-xl group-hover:bg-[#FF6B00]/10 transition-all duration-500"></div>
 
