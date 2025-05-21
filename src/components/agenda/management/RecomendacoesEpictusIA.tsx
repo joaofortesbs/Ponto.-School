@@ -248,26 +248,6 @@ const RecomendacoesEpictusIA = () => {
           </div>
           <h3 className="text-white font-semibold text-sm">Recomendações do Epictus IA</h3>
         </div>
-        <div className="flex items-center gap-1 text-xs">
-          <span 
-            className={`px-2 py-0.5 rounded-md cursor-pointer transition-colors ${activeFilter === 'semana' ? 'bg-white/20 font-medium' : 'hover:bg-white/30'}`}
-            onClick={() => setActiveFilter('semana')}
-          >
-            Semana
-          </span>
-          <span 
-            className={`px-2 py-0.5 rounded-md cursor-pointer transition-colors ${activeFilter === 'mes' ? 'bg-white/20 font-medium' : 'hover:bg-white/30'}`}
-            onClick={() => setActiveFilter('mes')}
-          >
-            Mês
-          </span>
-          <span 
-            className={`px-2 py-0.5 rounded-md cursor-pointer transition-colors ${activeFilter === 'ano' ? 'bg-white/20 font-medium' : 'hover:bg-white/30'}`}
-            onClick={() => setActiveFilter('ano')}
-          >
-            Ano
-          </span>
-        </div>
       </div>
       
       <div className="p-4 space-y-4">
