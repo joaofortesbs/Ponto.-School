@@ -1,7 +1,6 @@
 
 import React from "react";
 import DashboardMetricsGrid from "./DashboardMetricsGrid";
-import PlanCard from "../PlanCard";
 
 export default function DashboardInterface() {
   return (
@@ -11,10 +10,7 @@ export default function DashboardInterface() {
       {/* Metrics Grid */}
       <DashboardMetricsGrid />
       
-      {/* Plan Card Component */}
-      <div className="mt-10 flex justify-center">
-        <PlanCard />
-      </div>
+      {/* You can add more dashboard sections below */}
     </div>
   );
 }
