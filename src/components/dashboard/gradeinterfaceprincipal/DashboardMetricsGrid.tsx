@@ -1,52 +1,50 @@
 import React from "react";
-import { Trophy } from "lucide-react";
-import { useTheme } from "@/components/ThemeProvider";
-import FocoDoDiaCard from "./FocoDoDiaCard";
-import AtalhoSchoolCard from "./AtalhoSchoolCard";
-import SequenciaEstudosCard from "./SequenciaEstudosCard";
-import EpictusIACopilotoCard from "./EpictusIACopilotoCard";
 import TempoEstudoCard from "./TempoEstudoCard";
-import PosicaoRankingCard from './PosicaoRankingCard';
-import SchoolPointsCard from './SchoolPointsCard';
-import ConquistasCard from './ConquistasCard';
+import ConquistasCard from "./ConquistasCard";
+import SchoolPointsCard from "./SchoolPointsCard";
+import PosicaoRankingCard from "./PosicaoRankingCard";
+import EpictusIACopilotoCard from "./EpictusIACopilotoCard";
+import SequenciaEstudosCard from "./SequenciaEstudosCard";
+import AtalhoSchoolCard from "./AtalhoSchoolCard";
+import FocoDoDiaCard from "./FocoDoDiaCard";
+import { useTheme } from "@/components/ThemeProvider";
 
 export default function DashboardMetricsGrid() {
   const { theme } = useTheme();
   const isLightMode = theme === "light";
 
   return (
-    <div className="space-y-6 mt-8">
-      {/* Cards de métricas rápidas - 4 cards em linha */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Tempo de estudo card */}
-        <TempoEstudoCard theme={theme} />
-
-        {/* Conquistas card */}
-        <ConquistasCard />
-
-        {/* Posição ranking card */}
-        <PosicaoRankingCard theme={theme} />
-
-        {/* School Points card */}
-        <SchoolPointsCard />
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 mt-6">
+      {/* Grid de métricas (3x2) */}
+      <div className="col-span-1 lg:col-span-8 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+        <div className="shadow-xl">
+          <TempoEstudoCard />
+        </div>
+        <div className="shadow-xl">
+          <ConquistasCard />
+        </div>
+        <div className="shadow-xl">
+          <SchoolPointsCard />
+        </div>
+        <div className="shadow-xl">
+          <PosicaoRankingCard />
+        </div>
+        <div className="shadow-xl">
+          <SequenciaEstudosCard />
+        </div>
+        <div className="shadow-xl">
+          <AtalhoSchoolCard />
+        </div>
       </div>
 
-      {/* Cards maiores - Foco do Dia e Atalhos School */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Card de Foco do Dia */}
-        <FocoDoDiaCard />
-
-        {/* Card de Atalhos School */}
-        <AtalhoSchoolCard />
-      </div>
-
-      {/* Cards maiores adicionais - Sequência de Estudos e Epictus IA Copiloto */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Card de Sequência de Estudos */}
-        <SequenciaEstudosCard />
-
-        {/* Card de Epictus IA Copiloto */}
-        <EpictusIACopilotoCard />
+      {/* Coluna direita */}
+      <div className="col-span-1 lg:col-span-4 grid grid-cols-1 gap-5">
+        <div className="h-full">
+          <FocoDoDiaCard />
+        </div>
+        <div className="h-full">
+          <EpictusIACopilotoCard />
+        </div>
       </div>
     </div>
   );
