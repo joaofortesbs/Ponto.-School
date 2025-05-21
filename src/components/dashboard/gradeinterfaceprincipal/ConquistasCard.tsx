@@ -1,7 +1,7 @@
+
 import React from "react";
 import { Trophy, Star, Clock, Zap, BookOpen, Award } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
-import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 
 export default function ConquistasCard() {
@@ -51,14 +51,20 @@ export default function ConquistasCard() {
   // Calculate total achievements and unlocked achievements
   const totalAchievements = achievements.length;
   const unlockedAchievements = achievements.filter(a => a.unlocked).length;
-  const progressPercentage = (unlockedAchievements / totalAchievements) * 100;
+  
+  // Sort achievements - unlocked first
+  const sortedAchievements = [...achievements].sort((a, b) => {
+    if (a.unlocked && !b.unlocked) return -1;
+    if (!a.unlocked && b.unlocked) return 1;
+    return 0;
+  });
 
   return (
     <div className={`group backdrop-blur-md ${isLightMode ? 'bg-white/90' : 'bg-[#001e3a]'} rounded-xl p-3 ${isLightMode ? 'border border-gray-200' : 'border border-white/20'} shadow-lg relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-[#FF6B00]/30 hover:translate-y-[-4px]`}>
       <div className="absolute inset-0 bg-gradient-to-tr from-[#FF6B00]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
       <div className={`absolute -right-4 -top-4 w-24 h-24 ${isLightMode ? 'bg-[#FF6B00]/5' : 'bg-[#FF6B00]/5'} rounded-full blur-xl group-hover:bg-[#FF6B00]/10 transition-all duration-500`}></div>
 
-      <div className="flex justify-between items-start mb-1 relative z-10">
+      <div className="flex justify-between items-start mb-3 relative z-10">
         <div className="flex items-center">
           <div className={`${isLightMode ? 'bg-orange-50' : 'bg-[#0A2540]/60'} p-1.5 rounded-lg ${isLightMode ? 'shadow' : 'shadow-inner'} ${isLightMode ? 'border border-orange-100' : 'border border-[#2A4D6E]/50'} mr-2`}>
             <Trophy className={`h-4 w-4 ${isLightMode ? 'text-[#FF6B00]' : 'text-[#FF6B00]'}`} />
@@ -70,39 +76,31 @@ export default function ConquistasCard() {
         </Badge>
       </div>
 
-      <div className="mt-2">
-        <div className="flex items-center justify-between mb-1">
-          <span className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>Progresso</span>
-          <span className={`text-xs font-medium ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
-            {progressPercentage.toFixed(0)}%
-          </span>
-        </div>
-        <Progress 
-          value={progressPercentage} 
-          className={`h-1.5 ${isLightMode ? 'bg-orange-100' : 'bg-[#0A2540]'}`}
-          indicatorClassName={`bg-[#FF6B00]`}
-        />
-      </div>
-
-      {/* Simplified medal badges for achievements */}
-      <div className="flex flex-wrap gap-2 mt-4 justify-center">
-        {achievements.map((achievement) => (
+      {/* Simplified medal badges for achievements - now with improved styling */}
+      <div className="flex flex-wrap gap-3 justify-center">
+        {sortedAchievements.map((achievement) => (
           <div 
             key={achievement.id}
             className="relative group/medal"
             title={`${achievement.name}: ${achievement.description}`}
           >
-            <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 ${
+            <div className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 ${
               achievement.unlocked 
-                ? `${isLightMode ? 'bg-gradient-to-br from-orange-50 to-orange-100 shadow-md' : 'bg-gradient-to-br from-[#FF6B00]/20 to-[#FF6B00]/30'} border-2 border-[#FF6B00]/50` 
+                ? `${isLightMode ? 'bg-gradient-to-br from-orange-50 to-orange-100 shadow-md' : 'bg-gradient-to-br from-[#FF6B00]/20 to-[#FF6B00]/30'} border-2 border-[#FF6B00]` 
                 : `${isLightMode ? 'bg-gray-100 opacity-60' : 'bg-gray-800/40 opacity-60'} border-2 ${isLightMode ? 'border-gray-300' : 'border-gray-700'}`
             }`}>
-              <div className={`${
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
                 achievement.unlocked 
-                  ? `text-[#FF6B00]` 
-                  : `${isLightMode ? 'text-gray-400' : 'text-gray-500'}`
+                  ? `${isLightMode ? 'bg-[#FF6B00]/20' : 'bg-[#FF6B00]/30'}`
+                  : `${isLightMode ? 'bg-gray-200' : 'bg-gray-700'}`
               }`}>
-                {achievement.icon}
+                <div className={`${
+                  achievement.unlocked 
+                    ? `text-[#FF6B00]` 
+                    : `${isLightMode ? 'text-gray-400' : 'text-gray-500'}`
+                }`}>
+                  {achievement.icon}
+                </div>
               </div>
             </div>
 
