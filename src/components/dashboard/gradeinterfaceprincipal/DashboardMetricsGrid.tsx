@@ -11,15 +11,16 @@ export default function DashboardMetricsGrid() {
         <div className="absolute -right-4 -top-4 w-24 h-24 bg-[#FF6B00]/5 rounded-full blur-xl group-hover:bg-[#FF6B00]/10 transition-all duration-500"></div>
 
         <div className="flex justify-between items-start mb-1 relative z-10">
-          <div className="bg-[#0A2540]/90 p-1.5 rounded-lg shadow-inner border border-[#2A4D6E]/50">
-            <Clock className="h-4 w-4 text-[#FF6B00]" />
+          <div className="flex items-center">
+            <div className="bg-[#0A2540]/90 p-1.5 rounded-lg shadow-inner border border-[#2A4D6E]/50 mr-2">
+              <Clock className="h-4 w-4 text-[#FF6B00]" />
+            </div>
+            <p className="text-xs text-gray-400 font-medium">Tempo de estudo</p>
           </div>
           <span className="text-xs font-medium bg-[#FF6B00]/20 text-[#FF6B00] py-0.5 px-2 rounded-full">+1.2%</span>
         </div>
 
-        <p className="text-xs text-gray-400 mb-1 font-medium">Tempo de estudo</p>
-
-        <div className="flex items-end">
+        <div className="flex items-end mt-2">
           <h3 className="text-2xl font-bold text-white bg-clip-text text-transparent bg-gradient-to-r from-white to-white/80">32</h3>
           <span className="text-xs text-gray-400 ml-1 mb-0.5">horas</span>
         </div>
@@ -31,14 +32,16 @@ export default function DashboardMetricsGrid() {
         <div className="absolute -right-4 -top-4 w-24 h-24 bg-[#FF6B00]/5 rounded-full blur-xl group-hover:bg-[#FF6B00]/10 transition-all duration-500"></div>
 
         <div className="flex justify-between items-start mb-1 relative z-10">
-          <div className="bg-[#0A2540]/90 p-1.5 rounded-lg shadow-inner border border-[#2A4D6E]/50">
-            <BookOpen className="h-4 w-4 text-[#FF6B00]" />
+          <div className="flex items-center">
+            <div className="bg-[#0A2540]/90 p-1.5 rounded-lg shadow-inner border border-[#2A4D6E]/50 mr-2">
+              <BookOpen className="h-4 w-4 text-[#FF6B00]" />
+            </div>
+            <p className="text-xs text-gray-400 font-medium">Aulas concluídas</p>
           </div>
           <span className="text-xs font-medium bg-[#FF6B00]/20 text-[#FF6B00] py-0.5 px-2 rounded-full">+4 aulas</span>
         </div>
 
-        <p className="text-xs text-gray-400 mb-1 font-medium">Aulas concluídas</p>
-        <div className="flex items-end">
+        <div className="flex items-end mt-2">
           <h3 className="text-2xl font-bold text-white">24</h3>
           <span className="text-xs text-gray-400 ml-1 mb-0.5">aulas</span>
         </div>
@@ -50,14 +53,16 @@ export default function DashboardMetricsGrid() {
         <div className="absolute -right-4 -top-4 w-24 h-24 bg-[#FF6B00]/5 rounded-full blur-xl group-hover:bg-[#FF6B00]/10 transition-all duration-500"></div>
 
         <div className="flex justify-between items-start mb-1 relative z-10">
-          <div className="bg-[#0A2540]/90 p-1.5 rounded-lg shadow-inner border border-[#2A4D6E]/50">
-            <Trophy className="h-4 w-4 text-[#FF6B00]" />
+          <div className="flex items-center">
+            <div className="bg-[#0A2540]/90 p-1.5 rounded-lg shadow-inner border border-[#2A4D6E]/50 mr-2">
+              <Trophy className="h-4 w-4 text-[#FF6B00]" />
+            </div>
+            <p className="text-xs text-gray-400 font-medium">Posição ranking</p>
           </div>
           <span className="text-xs font-medium bg-green-500/20 text-green-400 py-0.5 px-2 rounded-full">↑ 3 posições</span>
         </div>
 
-        <p className="text-xs text-gray-400 mb-1 font-medium">Posição ranking</p>
-        <div className="flex items-end">
+        <div className="flex items-end mt-2">
           <h3 className="text-2xl font-bold text-white">#42</h3>
           <span className="text-xs text-gray-400 ml-1 mb-0.5">/ ranking</span>
         </div>
@@ -71,14 +76,16 @@ export default function DashboardMetricsGrid() {
         <div className="absolute -right-4 -top-4 w-24 h-24 bg-[#FF6B00]/5 rounded-full blur-xl group-hover:bg-[#FF6B00]/10 transition-all duration-500"></div>
 
         <div className="flex justify-between items-start mb-1 relative z-10">
-          <div className="bg-[#0A2540]/90 p-1.5 rounded-lg shadow-inner border border-[#2A4D6E]/50">
-            <Award className="h-4 w-4 text-[#FF6B00]" />
+          <div className="flex items-center">
+            <div className="bg-[#0A2540]/90 p-1.5 rounded-lg shadow-inner border border-[#2A4D6E]/50 mr-2">
+              <Award className="h-4 w-4 text-[#FF6B00]" />
+            </div>
+            <p className="text-xs text-gray-400 font-medium">School Points</p>
           </div>
           <span className="text-xs font-medium bg-[#FF6B00]/20 text-[#FF6B00] py-0.5 px-2 rounded-full">+250 pontos</span>
         </div>
 
-        <p className="text-xs text-gray-400 mb-1 font-medium">School Points</p>
-        <div className="flex items-end">
+        <div className="flex items-end mt-2">
           <h3 className="text-2xl font-bold text-white">1250</h3>
           <span className="text-xs text-gray-400 ml-1 mb-0.5">sp</span>
         </div>
