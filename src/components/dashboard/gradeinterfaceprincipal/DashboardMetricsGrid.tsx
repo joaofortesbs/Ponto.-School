@@ -3,6 +3,8 @@ import { Clock, BookOpen, Trophy, Award } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import FocoDoDiaCard from "./FocoDoDiaCard";
 import AtalhoSchoolCard from "./AtalhoSchoolCard";
+import SequenciaEstudosCard from "./SequenciaEstudosCard";
+import EpictusIACopilotoCard from "./EpictusIACopilotoCard";
 
 export default function DashboardMetricsGrid() {
   const { theme } = useTheme();
@@ -108,6 +110,15 @@ export default function DashboardMetricsGrid() {
         
         {/* Card de Atalhos School */}
         <AtalhoSchoolCard />
+      </div>
+      
+      {/* Cards maiores adicionais - Sequência de Estudos e Epictus IA Copiloto */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Card de Sequência de Estudos */}
+        <SequenciaEstudosCard />
+        
+        {/* Card de Epictus IA Copiloto */}
+        <EpictusIACopilotoCard />
       </div>
     </div>
   );
