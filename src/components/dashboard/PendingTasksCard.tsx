@@ -14,10 +14,27 @@ interface Task {
   id: string;
   title: string;
   dueDate: string;
-  subject: string;
-  completed: boolean;
-  priority?: "alta" | "media" | "baixa";
+  subject?: string;
   discipline?: string;
+  completed?: boolean;
+  status?: "a-fazer" | "em-andamento" | "concluido" | "atrasado";
+  priority?: "alta" | "média" | "baixa";
+  description?: string;
+  progress?: number;
+  type?: string;
+  professor?: string;
+  attachments?: string[];
+  subtasks?: { id: string; title: string; completed: boolean }[];
+  comments?: { id: string; user: string; text: string; timestamp: string }[];
+  createdAt?: string;
+  updatedAt?: string;
+  timeSpent?: number;
+  notes?: string;
+  isPersonal?: boolean;
+  tags?: string[];
+  reminderSet?: boolean;
+  reminderTime?: string;
+  associatedClass?: string;
 }
 
 interface PendingTasksCardProps {
@@ -146,54 +163,86 @@ const PendingTasksCard = ({
   }, [tasks, user]);
 
   const handleAddTask = (newTask: any) => {
-    // Verificar se a tarefa já existe pelo ID
-    if (newTask.id && tasks.some(task => task.id === newTask.id)) {
-      console.log("Tarefa já existe, ignorando duplicação:", newTask.id);
-      return;
-    }
-    
-    // Format the due date for display
-    let dueDateDisplay = "";
-    if (newTask.dueDate) {
-      const today = new Date();
-      const tomorrow = new Date(today);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-
-      const dueDate = new Date(newTask.dueDate);
-
-      if (dueDate.toDateString() === today.toDateString()) {
-        dueDateDisplay = `hoje, ${newTask.startTime || "23:59"}`;
-      } else if (dueDate.toDateString() === tomorrow.toDateString()) {
-        dueDateDisplay = `amanhã, ${newTask.startTime || "23:59"}`;
-      } else {
-        const diffTime = Math.abs(dueDate.getTime() - today.getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        dueDateDisplay = `em ${diffDays} dias`;
-      }
-    }
-
-    const task: Task = {
-      id: newTask.id || `task-${Date.now()}`,
-      title: newTask.title,
-      dueDate: dueDateDisplay || (typeof newTask.dueDate === 'string' ? newTask.dueDate : newTask.dueDate.toISOString().split("T")[0]),
-      subject: newTask.discipline || newTask.subject || "Geral",
-      completed: newTask.completed || false,
-      priority: newTask.priority || "media",
-      discipline: newTask.discipline || newTask.subject,
-    };
-
-    // Adicionar a nova tarefa sem duplicar
-    setTasks(currentTasks => {
-      const updatedTasks = [...currentTasks, task];
-      
-      // Se o usuário estiver autenticado, salva as tarefas
-      if (user) {
-        taskService.saveTasks(user.id, updatedTasks)
-          .catch(err => console.error("Erro ao salvar nova tarefa:", err));
+    try {
+      // Verificar se a tarefa já existe pelo ID
+      if (newTask.id && tasks.some(task => task.id === newTask.id)) {
+        console.log("Tarefa já existe, ignorando duplicação:", newTask.id);
+        return;
       }
       
-      return updatedTasks;
-    });
+      console.log("Adicionando tarefa no PendingTasksCard:", newTask);
+      
+      // Format the due date for display
+      let dueDateDisplay = "";
+      let originalDueDate = newTask.dueDate;
+      
+      if (newTask.dueDate) {
+        try {
+          const today = new Date();
+          const tomorrow = new Date(today);
+          tomorrow.setDate(tomorrow.getDate() + 1);
+
+          const dueDate = new Date(newTask.dueDate);
+
+          if (dueDate.toDateString() === today.toDateString()) {
+            dueDateDisplay = `hoje, ${newTask.startTime || "23:59"}`;
+          } else if (dueDate.toDateString() === tomorrow.toDateString()) {
+            dueDateDisplay = `amanhã, ${newTask.startTime || "23:59"}`;
+          } else {
+            const diffTime = Math.abs(dueDate.getTime() - today.getTime());
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            dueDateDisplay = `em ${diffDays} dias`;
+          }
+        } catch (error) {
+          console.error("Erro ao formatar data de vencimento:", error);
+          dueDateDisplay = String(newTask.dueDate);
+        }
+      }
+
+      // Criando uma tarefa compatível com ambos os componentes
+      const task: Task = {
+        id: newTask.id || `task-${Date.now()}`,
+        title: newTask.title,
+        description: newTask.description || "",
+        dueDate: originalDueDate, // Manter a data original para compatibilidade
+        subject: newTask.discipline || newTask.subject || "Geral",
+        discipline: newTask.discipline || newTask.subject || "Geral",
+        completed: newTask.completed || false,
+        status: newTask.status || "a-fazer",
+        priority: newTask.priority || "média",
+        progress: newTask.progress || 0,
+        type: newTask.type || "tarefa",
+        professor: newTask.professor || "",
+        attachments: newTask.attachments || [],
+        subtasks: newTask.subtasks || [],
+        createdAt: newTask.createdAt || new Date().toISOString(),
+        updatedAt: newTask.updatedAt || new Date().toISOString(),
+        timeSpent: newTask.timeSpent || 0,
+        notes: newTask.notes || "",
+        isPersonal: newTask.isPersonal !== undefined ? newTask.isPersonal : true,
+        tags: newTask.tags || [],
+        reminderSet: newTask.reminderSet || false,
+        reminderTime: newTask.reminderTime,
+        associatedClass: newTask.associatedClass || "",
+      };
+
+      // Adicionar a nova tarefa sem duplicar
+      setTasks(currentTasks => {
+        const updatedTasks = [...currentTasks, task];
+        
+        // Se o usuário estiver autenticado, salva as tarefas
+        if (user) {
+          taskService.saveTasks(user.id, updatedTasks)
+            .catch(err => console.error("Erro ao salvar nova tarefa:", err));
+        }
+        
+        return updatedTasks;
+      });
+      
+      console.log("Tarefa adicionada com sucesso no PendingTasksCard");
+    } catch (error) {
+      console.error("Erro ao adicionar tarefa no PendingTasksCard:", error);
+    }
   };
 
   const getPriorityColor = (priority?: string) => {
@@ -236,7 +285,7 @@ const PendingTasksCard = ({
         <ScrollArea className="h-[420px] w-full pr-4">
           <div className="space-y-4 p-4">
             {tasks
-              .filter((task) => !task.completed)
+              .filter((task) => !task.completed && (!task.status || task.status !== "concluido"))
               .map((task) => (
                 <div
                   key={task.id}
@@ -244,7 +293,7 @@ const PendingTasksCard = ({
                 >
                   <Checkbox
                     id={`task-${task.id}`}
-                    checked={task.completed}
+                    checked={task.completed || task.status === "concluido"}
                     onCheckedChange={() => toggleTaskCompletion(task.id)}
                     className="mt-1"
                   />
@@ -267,7 +316,7 @@ const PendingTasksCard = ({
                         variant="secondary"
                         className="text-xs dark:bg-white/10 dark:text-white/80"
                       >
-                        {task.subject}
+                        {task.discipline || task.subject || "Geral"}
                       </Badge>
                       <div
                         className={`w-2 h-2 ${getPriorityColor(task.priority)} rounded-full`}
@@ -276,7 +325,7 @@ const PendingTasksCard = ({
                   </div>
                 </div>
               ))}
-            {tasks.filter((task) => !task.completed).length === 0 && (
+            {tasks.filter((task) => !task.completed && (!task.status || task.status !== "concluido")).length === 0 && (
               <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                 <CheckCircle className="h-12 w-12 mx-auto mb-3 text-gray-400 dark:text-gray-500" />
                 <h4 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-1">

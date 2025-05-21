@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import PromotionalBanner from "./PromotionalBanner";
+import DashboardInterface from "./gradeinterfaceprincipal/DashboardInterface";
 import { profileService } from "@/services/profileService";
 import { UserProfile } from "@/types/user-profile";
 
@@ -40,18 +41,25 @@ export default function Dashboard() {
   return (
     <div className="w-full h-full bg-[#f7f9fa] dark:bg-[#001427] p-6 space-y-6 transition-colors duration-300">
       {/* Banner com prioridade de renderização */}
-      <div className="priority-render">
+      <div className="priority-render max-w-[1192px] mx-auto">
         <PromotionalBanner />
       </div>
-      <h1 className="text-3xl font-bold text-brand-black dark:text-white flex items-center gap-2">
-        <span className="text-2xl">👋</span> Olá, {(() => {
-                // Obter o primeiro nome do usuário com prioridade consistente
-                const firstName = userProfile?.full_name?.split(' ')[0] || userProfile?.display_name || localStorage.getItem('userFirstName') || "Usuário";
-                // Salvar no localStorage para uso no sidebar e outros componentes
-                localStorage.setItem('userFirstName', firstName);
-                return firstName;
-              })()}!
-      </h1>
+      <div className="max-w-[1192px] mx-auto">
+        <h1 className="text-3xl font-bold text-brand-black dark:text-white flex items-center gap-2">
+          <span className="text-2xl">👋</span> Olá, {(() => {
+                  // Obter o primeiro nome do usuário com prioridade consistente
+                  const firstName = userProfile?.full_name?.split(' ')[0] || userProfile?.display_name || localStorage.getItem('userFirstName') || "Usuário";
+                  // Salvar no localStorage para uso no sidebar e outros componentes
+                  localStorage.setItem('userFirstName', firstName);
+                  return firstName;
+                })()}!
+        </h1>
+        
+        {/* Dashboard Interface */}
+        <div className="dashboard-content mt-6">
+          <DashboardInterface />
+        </div>
+      </div>
     </div>
   );
 }

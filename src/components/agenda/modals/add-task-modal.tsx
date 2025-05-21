@@ -249,18 +249,39 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
         completed: false, // Adicionado para compatibilidade com PendingTasksCard
       };
 
-      // Call onAddTask first to ensure the task is added
+      // Primeiro, emitimos o evento para todos os componentes que precisam saber sobre a nova tarefa
+      try {
+        import('@/services/taskService').then(({ taskService }) => {
+          console.log("Emitindo evento de nova tarefa:", newTask);
+          taskService.emitTaskAdded(newTask);
+
+          // Garantir que o evento DOM seja disparado para componentes em árvores diferentes
+          setTimeout(() => {
+            const refreshEvent = new CustomEvent("refresh-tasks", { 
+              detail: newTask,
+              bubbles: true 
+            });
+            document.dispatchEvent(refreshEvent);
+
+            // Tentar disparar no componente específico também
+            const tasksView = document.querySelector('[data-testid="tasks-view"]');
+            if (tasksView) {
+              tasksView.dispatchEvent(refreshEvent);
+            }
+
+            const pendingTasksCard = document.querySelector('[data-testid="pending-tasks-card"]');
+            if (pendingTasksCard) {
+              pendingTasksCard.dispatchEvent(refreshEvent);
+            }
+          }, 100);
+        });
+      } catch (error) {
+        console.error("Erro ao emitir evento de nova tarefa:", error);
+      }
+
+      // Depois chamamos a função de callback para adicionar a tarefa localmente
       if (onAddTask) {
-        const addedTask = onAddTask(newTask);
-        
-        try {
-          // Emitir evento para outros componentes que precisam saber sobre a nova tarefa
-          import('@/services/taskService').then(({ taskService }) => {
-            taskService.emitTaskAdded(newTask);
-          });
-        } catch (error) {
-          console.error("Erro ao emitir evento de nova tarefa:", error);
-        }
+        onAddTask(newTask);
       }
 
       // Then reset form and close modal

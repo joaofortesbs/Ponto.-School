@@ -1,35 +1,18 @@
-
 import React from "react";
 import TempoEstudo from "./TempoEstudo";
 import TarefasPendentes from "./TarefasPendentes";
 import ProgressoDisciplina from "./ProgressoDisciplina";
 import RecomendacoesEpictusIA from "./RecomendacoesEpictusIA";
 
-interface ManagementGridProps {
-  onViewAllTasks?: () => void;
-  onAddTask?: () => void;
-  onViewStudyTime?: () => void;
-  onSetGoals?: () => void;
-}
-
-const ManagementGrid: React.FC<ManagementGridProps> = ({
-  onViewAllTasks,
-  onAddTask,
-  onViewStudyTime,
-  onSetGoals
-}) => {
+const ManagementGrid: React.FC = () => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-      <div className="h-[480px] management-card-container">
+    <div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <TempoEstudo />
-      </div>
-      <div className="h-[480px] management-card-container">
         <TarefasPendentes />
       </div>
-      <div className="h-[480px] management-card-container">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <ProgressoDisciplina />
-      </div>
-      <div className="h-[480px] management-card-container">
         <RecomendacoesEpictusIA />
       </div>
     </div>
