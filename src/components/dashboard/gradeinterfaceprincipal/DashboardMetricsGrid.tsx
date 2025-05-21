@@ -9,13 +9,10 @@ const DashboardMetricsGrid = () => {
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
         {/* Tempo de estudo card */}
-        <div className="group backdrop-blur-md bg-[#001e3a] rounded-xl p-3 border border-white/20 shadow-lg relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-[#FF6B00]/30 hover:translate-y-[-4px]">
-          <div className="absolute inset-0 bg-gradient-to-tr from-[#FF6B00]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-          <div className="absolute -right-4 -top-4 w-24 h-24 bg-[#FF6B00]/5 rounded-full blur-xl group-hover:bg-[#FF6B00]/10 transition-all duration-500"></div>
-
-          <div className="flex items-start mb-2">
-            <div className="p-2 rounded-full bg-blue-400/10 mr-3">
-              <Clock className="h-5 w-5 text-blue-400" />
+        <div className="bg-white/5 rounded-xl p-4 border border-white/10 shadow-md">
+          <div className="flex items-start">
+            <div className="p-2 rounded-full bg-blue-500/10 mr-3">
+              <Clock className="h-5 w-5 text-blue-500" />
             </div>
             <div>
               <h3 className="text-xl font-bold text-white">18h 42m</h3>
@@ -23,7 +20,7 @@ const DashboardMetricsGrid = () => {
             </div>
           </div>
 
-          <Progress value={68} className="h-1.5 bg-white/20" indicatorColor="bg-blue-400" />
+          <Progress value={68} className="h-1.5 mt-3 bg-gray-700" />
           <div className="flex justify-between text-xs text-gray-400 mt-1.5">
             <span>Meta semanal</span>
             <span>68%</span>
@@ -31,13 +28,10 @@ const DashboardMetricsGrid = () => {
         </div>
 
         {/* Aulas concluídas card */}
-        <div className="group backdrop-blur-md bg-[#001e3a] rounded-xl p-3 border border-white/20 shadow-lg relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-[#FF6B00]/30 hover:translate-y-[-4px]">
-          <div className="absolute inset-0 bg-gradient-to-tr from-[#FF6B00]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-          <div className="absolute -right-4 -top-4 w-24 h-24 bg-[#FF6B00]/5 rounded-full blur-xl group-hover:bg-[#FF6B00]/10 transition-all duration-500"></div>
-
-          <div className="flex items-start mb-2">
-            <div className="p-2 rounded-full bg-green-400/10 mr-3">
-              <Zap className="h-5 w-5 text-green-400" />
+        <div className="bg-white/5 rounded-xl p-4 border border-white/10 shadow-md">
+          <div className="flex items-start">
+            <div className="p-2 rounded-full bg-green-500/10 mr-3">
+              <Zap className="h-5 w-5 text-green-500" />
             </div>
             <div>
               <h3 className="text-xl font-bold text-white">23</h3>
@@ -45,7 +39,7 @@ const DashboardMetricsGrid = () => {
             </div>
           </div>
 
-          <Progress value={44} className="h-1.5 bg-white/20" indicatorColor="bg-green-400" />
+          <Progress value={44} className="h-1.5 mt-3 bg-gray-700" />
           <div className="flex justify-between text-xs text-gray-400 mt-1.5">
             <span>Esta semana</span>
             <span>+12</span>
@@ -53,13 +47,10 @@ const DashboardMetricsGrid = () => {
         </div>
 
         {/* Posição ranking card */}
-        <div className="group backdrop-blur-md bg-[#001e3a] rounded-xl p-3 border border-white/20 shadow-lg relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-[#FF6B00]/30 hover:translate-y-[-4px]">
-          <div className="absolute inset-0 bg-gradient-to-tr from-[#FF6B00]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-          <div className="absolute -right-4 -top-4 w-24 h-24 bg-[#FF6B00]/5 rounded-full blur-xl group-hover:bg-[#FF6B00]/10 transition-all duration-500"></div>
-
-          <div className="flex items-start mb-2">
-            <div className="p-2 rounded-full bg-purple-400/10 mr-3">
-              <Award className="h-5 w-5 text-purple-400" />
+        <div className="bg-white/5 rounded-xl p-4 border border-white/10 shadow-md">
+          <div className="flex items-start">
+            <div className="p-2 rounded-full bg-purple-500/10 mr-3">
+              <Award className="h-5 w-5 text-purple-500" />
             </div>
             <div>
               <h3 className="text-xl font-bold text-white">#42</h3>
@@ -67,7 +58,7 @@ const DashboardMetricsGrid = () => {
             </div>
           </div>
 
-          <Progress value={90} className="h-1.5 bg-white/20" indicatorColor="bg-purple-400" />
+          <Progress value={90} className="h-1.5 mt-3 bg-gray-700" />
           <div className="flex justify-between text-xs text-gray-400 mt-1.5">
             <span>Top 10%</span>
             <span>+3 posições</span>
@@ -75,13 +66,10 @@ const DashboardMetricsGrid = () => {
         </div>
 
         {/* School Points card */}
-        <div className="group backdrop-blur-md bg-[#001e3a] rounded-xl p-3 border border-white/20 shadow-lg relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-[#FF6B00]/30 hover:translate-y-[-4px]">
-          <div className="absolute inset-0 bg-gradient-to-tr from-[#FF6B00]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-          <div className="absolute -right-4 -top-4 w-24 h-24 bg-[#FF6B00]/5 rounded-full blur-xl group-hover:bg-[#FF6B00]/10 transition-all duration-500"></div>
-
-          <div className="flex items-start mb-2">
-            <div className="p-2 rounded-full bg-amber-400/10 mr-3">
-              <Coins className="h-5 w-5 text-amber-400" />
+        <div className="bg-white/5 rounded-xl p-4 border border-white/10 shadow-md">
+          <div className="flex items-start">
+            <div className="p-2 rounded-full bg-amber-500/10 mr-3">
+              <Coins className="h-5 w-5 text-amber-500" />
             </div>
             <div>
               <h3 className="text-xl font-bold text-white">1.280</h3>
@@ -89,7 +77,7 @@ const DashboardMetricsGrid = () => {
             </div>
           </div>
 
-          <Progress value={73} className="h-1.5 bg-white/20" indicatorColor="bg-amber-400" />
+          <Progress value={73} className="h-1.5 mt-3 bg-gray-700" />
           <div className="flex justify-between text-xs text-gray-400 mt-1.5">
             <span>Meta mensal</span>
             <span>+320 esta semana</span>
