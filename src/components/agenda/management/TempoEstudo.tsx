@@ -1,15 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { BarChart3, Clock, ExternalLink, Settings, Target, Zap, Info } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import useFlowSessions from "@/hooks/useFlowSessions";
-import { useNavigate } from "react-router-dom";
 
 const TempoEstudo = () => {
-  const navigate = useNavigate();
-
   // Estados para armazenar dados de tempo de estudo
   const [totalHours, setTotalHours] = useState<number>(0);
   const [goalHours, setGoalHours] = useState<number>(40);
@@ -21,9 +18,11 @@ const TempoEstudo = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isNoData, setIsNoData] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<"semana" | "mes" | "ano">("semana");
-  const [changePercentage, setChangePercentage] = useState<number>(1.2); // Valor padrão para exibição
 
-  // Usar hook de sessões de Flow para integração com agenda
+  // Cores para os principais assuntos
+  const subjectColors = ["#FF6B00", "#FF8C40", "#E85D04", "#DC2F02", "#9D0208"];
+
+  // Usar hook de sessões de Flow
   const { sessions, loading, getStats } = useFlowSessions();
 
   // Efeito para carregar e processar dados das sessões de Flow
@@ -32,7 +31,7 @@ const TempoEstudo = () => {
       setIsLoading(false);
 
       // Obter estatísticas das sessões de Flow
-      const stats = getStats(viewMode);
+      const stats = getStats();
 
       // Verificar se existem dados
       if (stats.sessionsCount === 0) {
@@ -40,46 +39,124 @@ const TempoEstudo = () => {
         return;
       }
 
-      setIsNoData(false);
+      // Calcular total de horas
+      const totalSeconds = stats.totalTimeInSeconds || 0;
+      const hours = Math.floor(totalSeconds / 3600);
+      setTotalHours(hours);
 
-      // Calcular horas totais (converter segundos para horas)
-      const hoursTotal = Math.round(stats.totalTimeInSeconds / 3600);
-      setTotalHours(hoursTotal);
-
-      // Calcular porcentagem de progresso em relação à meta
-      const calculatedProgress = Math.min(100, Math.round((hoursTotal / goalHours) * 100));
+      // Calcular progresso em relação à meta
+      const calculatedProgress = Math.min(Math.round((hours / goalHours) * 100), 100);
       setProgress(calculatedProgress);
 
-      // Definir dados semanais
-      if (stats.trends && stats.trends.timeChangePct) {
-        setChangePercentage(stats.trends.timeChangePct);
+      // Processar dados por disciplina
+      const subjectData = Object.entries(stats.subjectStats || {}).map(([subject, seconds], index) => {
+        const subjectHours = Math.floor(seconds / 3600);
+        const percentage = totalSeconds > 0 ? Math.round((seconds / totalSeconds) * 100) : 0;
+
+        return {
+          subject,
+          hours: subjectHours,
+          percentage,
+          color: subjectColors[index % subjectColors.length]
+        };
+      }).sort((a, b) => b.hours - a.hours).slice(0, 5);
+
+      setTopSubjects(subjectData);
+
+      // Processar dados por dia da semana
+      const daysOfWeek = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+      const weeklyStats: { [key: string]: number } = {};
+
+      // Inicializar com zeros
+      daysOfWeek.forEach(day => {
+        weeklyStats[day] = 0;
+      });
+
+      // Processar dados por dia do mês (últimos 30 dias)
+      const today = new Date();
+      const monthlyStats: { [key: string]: number } = {};
+      
+      // Inicializar últimos 30 dias com zeros
+      for (let i = 0; i < 30; i++) {
+        const date = new Date();
+        date.setDate(today.getDate() - i);
+        const dayKey = `${date.getDate()}/${date.getMonth() + 1}`;
+        monthlyStats[dayKey] = 0;
       }
+      
+      // Processar dados por mês do ano
+      const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+      const yearlyStats: { [key: string]: number } = {};
+      
+      // Inicializar meses com zeros
+      monthNames.forEach(month => {
+        yearlyStats[month] = 0;
+      });
 
-      // Processar dados de disciplinas
-      if (stats.subjectStats) {
-        const colors = ["#FF6B00", "#FF8C40", "#E85D04", "#DC2F02", "#9D0208"];
+      // Preencher dados para todas as visualizações
+      sessions.forEach(session => {
+        try {
+          const sessionDate = session.timestamp ? new Date(session.timestamp) : new Date(session.date);
+          const dayOfWeek = daysOfWeek[sessionDate.getDay()];
+          const dayOfMonth = `${sessionDate.getDate()}/${sessionDate.getMonth() + 1}`;
+          const month = monthNames[sessionDate.getMonth()];
 
-        const totalSubjectTime = Object.values(stats.subjectStats).reduce((sum: number, time: number) => sum + time, 0);
+          // Calcular horas da sessão em segundos
+          const sessionSeconds = session.elapsedTimeSeconds || 0;
 
-        const formattedSubjects = Object.entries(stats.subjectStats)
-          .map(([subject, seconds], index) => {
-            const hours = seconds / 3600;
-            const percentage = totalSubjectTime > 0 ? Math.round((seconds / totalSubjectTime) * 100) : 0;
+          // Adicionar ao dia da semana correspondente
+          weeklyStats[dayOfWeek] = (weeklyStats[dayOfWeek] || 0) + sessionSeconds;
+          
+          // Adicionar ao dia do mês correspondente se estiver dentro do intervalo de 30 dias
+          const dayDiff = Math.floor((today.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24));
+          if (dayDiff < 30) {
+            monthlyStats[dayOfMonth] = (monthlyStats[dayOfMonth] || 0) + sessionSeconds;
+          }
+          
+          // Adicionar ao mês correspondente
+          yearlyStats[month] = (yearlyStats[month] || 0) + sessionSeconds;
+        } catch (e) {
+          console.error("Erro ao processar data da sessão:", e);
+        }
+      });
 
-            return {
-              subject,
-              hours,
-              percentage,
-              color: colors[index % colors.length]
-            };
-          })
-          .sort((a, b) => b.hours - a.hours)
-          .slice(0, 5);
+      // Converter segundos para horas e calcular percentagens para visualização semanal
+      const maxDaySeconds = Math.max(...Object.values(weeklyStats));
+      const weekData = daysOfWeek.map(day => ({
+        day,
+        hours: Math.floor(weeklyStats[day] / 3600),
+        percentage: maxDaySeconds > 0 ? Math.round((weeklyStats[day] / maxDaySeconds) * 100) : 0
+      }));
+      setWeeklyData(weekData);
 
-        setTopSubjects(formattedSubjects);
-      }
+      // Converter segundos para horas e calcular percentagens para visualização mensal
+      const sortedMonthDays = Object.entries(monthlyStats)
+        .sort((a, b) => {
+          const [dayA, monthA] = a[0].split('/').map(Number);
+          const [dayB, monthB] = b[0].split('/').map(Number);
+          if (monthA !== monthB) return monthA - monthB;
+          return dayA - dayB;
+        })
+        .slice(0, 15); // Mostrar apenas 15 dias para não sobrecarregar o gráfico
+      
+      const maxMonthSeconds = Math.max(...sortedMonthDays.map(([_, seconds]) => seconds));
+      const monthData = sortedMonthDays.map(([day, seconds]) => ({
+        day,
+        hours: Math.floor(seconds / 3600),
+        percentage: maxMonthSeconds > 0 ? Math.round((seconds / maxMonthSeconds) * 100) : 0
+      }));
+      setMonthlyData(monthData);
+
+      // Converter segundos para horas e calcular percentagens para visualização anual
+      const maxYearSeconds = Math.max(...Object.values(yearlyStats));
+      const yearData = monthNames.map(month => ({
+        month,
+        hours: Math.floor(yearlyStats[month] / 3600),
+        percentage: maxYearSeconds > 0 ? Math.round((yearlyStats[month] / maxYearSeconds) * 100) : 0
+      }));
+      setYearlyData(yearData);
     }
-  }, [loading, sessions, viewMode, goalHours]);
+  }, [loading, sessions]);
 
   // Componente de estado vazio para novos usuários
   const EmptyState = () => (
@@ -94,7 +171,7 @@ const TempoEstudo = () => {
         Registre seu tempo de estudo utilizando o Flow para visualizar suas estatísticas aqui.
       </p>
       <Button
-        onClick={() => navigate("/agenda?view=flow")}
+        onClick={() => window.location.href = "/agenda?view=flow"}
         className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white"
       >
         <Zap className="h-4 w-4 mr-2" /> Iniciar Flow
@@ -111,83 +188,177 @@ const TempoEstudo = () => {
 
   // Conteúdo principal quando há dados
   const MainContent = () => (
-    <div className="p-3">
-      {/* Cabeçalho com tempo total e meta */}
-      <div className="flex justify-between items-center mb-2">
-        <div>
-          <div className="flex items-end">
-            <h3 className="text-2xl font-bold text-[#29335C] dark:text-white">{totalHours}</h3>
-            <span className="text-xs text-gray-500 dark:text-gray-400 ml-1 mb-1">horas</span>
-          </div>
-          <div className="flex items-center">
-            <span className={`text-xs font-medium py-0.5 px-1.5 rounded ${changePercentage >= 0 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'}`}>
-              {changePercentage >= 0 ? '+' : ''}{changePercentage}%
-            </span>
+    <>
+      <CardHeader className="pb-2">
+        <div className="flex justify-between items-start">
+          <div className="w-full">
+            {/* Título removido do CardHeader */}
           </div>
         </div>
-        <div className="flex items-center">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-7 w-7 rounded-full hover:bg-[#FF6B00]/10"
-                  onClick={() => navigate("/agenda?view=flow")}
-                >
-                  <ExternalLink className="h-4 w-4 text-[#FF6B00]" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Ver detalhes no Flow</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-      </div>
+      </CardHeader>
+      <CardContent className="pt-0">
+        <div className="space-y-4">
+          {/* Progresso em relação à meta */}
+          <div>
+            <div className="flex justify-between items-baseline mb-1">
+              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center">
+                <Target className="h-4 w-4 mr-1 text-[#FF6B00]" /> 
+                {viewMode === "semana" && "Meta semanal"}
+                {viewMode === "mes" && "Meta mensal"}
+                {viewMode === "ano" && "Meta anual"}
+              </h3>
+              <span className="text-sm font-semibold text-[#29335C] dark:text-white">
+                {totalHours}/
+                {viewMode === "semana" && goalHours}
+                {viewMode === "mes" && (goalHours * 4)}
+                {viewMode === "ano" && (goalHours * 52)}h
+              </span>
+            </div>
+            <div className="relative">
+              <Progress 
+                value={
+                  viewMode === "semana" 
+                    ? progress 
+                    : viewMode === "mes" 
+                      ? Math.min(Math.round((totalHours / (goalHours * 4)) * 100), 100)
+                      : Math.min(Math.round((totalHours / (goalHours * 52)) * 100), 100)
+                } 
+                className="h-2.5 bg-[#FF6B00]/10" 
+              />
+              <span className="absolute text-[10px] text-[#FF6B00] font-medium right-0 bottom-4">
+                {viewMode === "semana" 
+                  ? progress 
+                  : viewMode === "mes" 
+                    ? Math.min(Math.round((totalHours / (goalHours * 4)) * 100), 100)
+                    : Math.min(Math.round((totalHours / (goalHours * 52)) * 100), 100)
+                }%
+              </span>
+            </div>
+          </div>
 
-      {/* Meta de estudos */}
-      <div className="mb-3">
-        <div className="flex justify-between items-center mb-1">
-          <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
-            <Target className="h-3 w-3 mr-1 text-[#FF6B00]" /> 
-            Meta: {goalHours} horas
-          </span>
-          <span className="text-xs text-gray-500 dark:text-gray-400">{progress}%</span>
-        </div>
-        <Progress value={progress} className="h-1.5 bg-gray-200 dark:bg-gray-700" />
-      </div>
-
-      {/* Disciplinas mais estudadas - para usuários com dados */}
-      {topSubjects.length > 0 && (
-        <div className="mt-3">
-          <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 flex items-center">
-            <BarChart3 className="h-3 w-3 mr-1 text-[#FF6B00]" /> 
-            Disciplinas mais estudadas
-          </h4>
-          <div className="space-y-2">
-            {topSubjects.map((subject, index) => (
-              <div key={index} className="flex items-center text-xs">
-                <div className="w-2 h-2 rounded-full mr-2" style={{ backgroundColor: subject.color }}></div>
-                <span className="text-gray-700 dark:text-gray-300 truncate max-w-[120px]">{subject.subject}</span>
-                <div className="flex-1 mx-2">
-                  <div className="h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full rounded-full" 
-                      style={{ 
-                        width: `${subject.percentage}%`,
-                        backgroundColor: subject.color 
-                      }}
-                    ></div>
+          {/* Gráfico dinâmico baseado no modo de visualização */}
+          <div>
+            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center mb-3">
+              <BarChart3 className="h-4 w-4 mr-1 text-[#FF6B00]" /> 
+              {viewMode === "semana" && "Horas por dia"}
+              {viewMode === "mes" && "Horas nos últimos 15 dias"}
+              {viewMode === "ano" && "Horas por mês"}
+            </h3>
+            
+            {/* Visualização Semanal */}
+            {viewMode === "semana" && (
+              <div className="flex items-end justify-between h-[120px] mt-2 gap-1">
+                {weeklyData.map((item, index) => (
+                  <div key={index} className="flex flex-col items-center flex-1">
+                    <div className="relative w-full flex justify-center mb-1">
+                      <div 
+                        className="w-full bg-[#FF6B00]/80 hover:bg-[#FF6B00] rounded-sm transition-all"
+                        style={{ height: `${Math.max(item.percentage, 5)}px` }}
+                      ></div>
+                      {item.hours > 0 && (
+                        <span className="absolute -top-5 text-xs font-medium">
+                          {item.hours}h
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      {item.day}
+                    </span>
                   </div>
-                </div>
-                <span className="text-gray-500 dark:text-gray-400 w-8 text-right">{Math.round(subject.hours)}h</span>
+                ))}
               </div>
-            ))}
+            )}
+            
+            {/* Visualização Mensal */}
+            {viewMode === "mes" && (
+              <div className="flex items-end justify-between h-[120px] mt-2 overflow-x-auto pb-2">
+                {monthlyData.map((item, index) => (
+                  <div key={index} className="flex flex-col items-center min-w-[25px]">
+                    <div className="relative w-full flex justify-center mb-1">
+                      <div 
+                        className="w-5 bg-[#FF6B00]/80 hover:bg-[#FF6B00] rounded-sm transition-all"
+                        style={{ height: `${Math.max(item.percentage, 5)}px` }}
+                      ></div>
+                      {item.hours > 0 && (
+                        <span className="absolute -top-5 text-xs font-medium whitespace-nowrap">
+                          {item.hours}h
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                      {item.day}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {/* Visualização Anual */}
+            {viewMode === "ano" && (
+              <div className="flex items-end justify-between h-[120px] mt-2 gap-1">
+                {yearlyData.map((item, index) => (
+                  <div key={index} className="flex flex-col items-center flex-1">
+                    <div className="relative w-full flex justify-center mb-1">
+                      <div 
+                        className="w-full bg-[#FF6B00]/80 hover:bg-[#FF6B00] rounded-sm transition-all"
+                        style={{ height: `${Math.max(item.percentage, 5)}px` }}
+                      ></div>
+                      {item.hours > 0 && (
+                        <span className="absolute -top-5 text-xs font-medium">
+                          {item.hours}h
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      {item.month}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Top disciplinas */}
+          {topSubjects.length > 0 && (
+            <div>
+              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center mb-3">
+                <Zap className="h-4 w-4 mr-1 text-[#FF6B00]" /> Top disciplinas
+              </h3>
+              <div className="space-y-2">
+                {topSubjects.map((subject, index) => (
+                  <div key={index} className="flex items-center">
+                    <div 
+                      className="w-3 h-3 rounded-full mr-2" 
+                      style={{ backgroundColor: subject.color }}
+                    ></div>
+                    <span className="text-xs flex-1 text-gray-700 dark:text-gray-300">
+                      {subject.subject}
+                    </span>
+                    <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                      {subject.hours}h
+                    </span>
+                    <span className="text-xs ml-2 text-gray-400 dark:text-gray-500 w-8 text-right">
+                      {subject.percentage}%
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Ver detalhes */}
+          <div className="pt-2">
+            <Button 
+              variant="outline" 
+              className="w-full border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10"
+              onClick={() => window.location.href = "/agenda?view=flow"}
+            >
+              <ExternalLink className="h-4 w-4 mr-2" /> Ver detalhes completos
+            </Button>
           </div>
         </div>
-      )}
-    </div>
+      </CardContent>
+    </>
   );
 
   return (
@@ -219,10 +390,11 @@ const TempoEstudo = () => {
           >
             Ano
           </span>
+          <button className="p-1 rounded-full hover:bg-white/30 transition-colors">
+            <Settings className="h-4 w-4 text-white" />
+          </button>
         </div>
       </div>
-
-      <CardContent className="p-0 flex-1 flex flex-col">
         {isLoading ? (
           <LoadingState />
         ) : isNoData ? (
@@ -230,8 +402,7 @@ const TempoEstudo = () => {
         ) : (
           <MainContent />
         )}
-      </CardContent>
-    </Card>
+      </Card>
   );
 };
 
