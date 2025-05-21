@@ -1,125 +1,85 @@
 import React from "react";
-import { Clock, BookOpen, Trophy, Award } from "lucide-react";
-import { useTheme } from "@/components/ThemeProvider";
-import FocoDoDiaCard from "./FocoDoDiaCard";
-import AtalhoSchoolCard from "./AtalhoSchoolCard";
-import SequenciaEstudosCard from "./SequenciaEstudosCard";
-import EpictusIACopilotoCard from "./EpictusIACopilotoCard";
+import { Card, CardContent } from "@/components/ui/card";
+import { ArrowRight, Clock, Target, Users, BookOpen, Zap } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import TempoEstudoSimplificado from "./TempoEstudoSimplificado";
 
-export default function DashboardMetricsGrid() {
-  const { theme } = useTheme();
-  const isLightMode = theme === "light";
+const DashboardMetricsGrid = () => {
+  const navigate = useNavigate();
+
+  const handleNavigate = (route: string) => {
+    navigate(route);
+  };
 
   return (
-    <div className="space-y-6 mt-8">
-      {/* Cards de métricas rápidas - 4 cards em linha */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Tempo de estudo card */}
-        <div className={`group backdrop-blur-md ${isLightMode ? 'bg-white/90' : 'bg-[#001e3a]'} rounded-xl p-3 ${isLightMode ? 'border border-gray-200' : 'border border-white/20'} shadow-lg relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-[#FF6B00]/30 hover:translate-y-[-4px]`}>
-          <div className="absolute inset-0 bg-gradient-to-tr from-[#FF6B00]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-          <div className={`absolute -right-4 -top-4 w-24 h-24 ${isLightMode ? 'bg-[#FF6B00]/5' : 'bg-[#FF6B00]/5'} rounded-full blur-xl group-hover:bg-[#FF6B00]/10 transition-all duration-500`}></div>
+    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 xl:gap-6 mt-6">
+      {/* Tempo de Estudo Card */}
+      <TempoEstudoSimplificado />
 
-          <div className="flex justify-between items-start mb-1 relative z-10">
-            <div className="flex items-center">
-              <div className={`${isLightMode ? 'bg-orange-50' : 'bg-[#0A2540]/60'} p-1.5 rounded-lg ${isLightMode ? 'shadow' : 'shadow-inner'} ${isLightMode ? 'border border-orange-100' : 'border border-[#2A4D6E]/50'} mr-2`}>
-                <Clock className={`h-4 w-4 ${isLightMode ? 'text-[#FF6B00]' : 'text-[#FF6B00]'}`} />
-              </div>
-              <p className={`text-sm ${isLightMode ? 'text-gray-700' : 'text-gray-300'} font-medium`}>Tempo de estudo</p>
+      {/* Epictus AI Copiloto Card */}
+      <Card 
+        onClick={() => handleNavigate("/epictus-ia")}
+        className="cursor-pointer rounded-xl overflow-hidden hover:shadow-lg transition-all duration-200 border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#001427]"
+      >
+        <CardContent className="p-4 flex flex-col h-full">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-9 h-9 rounded-full bg-[#7C3AED]/10 flex items-center justify-center">
+              <Zap className="w-5 h-5 text-[#7C3AED]" />
             </div>
-            <span className={`text-xs font-medium ${isLightMode ? 'bg-orange-100' : 'bg-[#FF6B00]/20'} ${isLightMode ? 'text-orange-700' : 'text-[#FF6B00]'} py-0.5 px-2 rounded-full`}>+1.2%</span>
+            <ArrowRight className="w-5 h-5 text-gray-400" />
           </div>
-
-          <div className="flex items-end mt-2">
-            <h3 className={`text-2xl font-bold ${isLightMode ? 'text-gray-800' : 'text-white'}`}>32</h3>
-            <span className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'} ml-1 mb-0.5`}>horas</span>
+          <div className="mt-auto">
+            <p className="text-sm text-gray-500 dark:text-gray-400">Epictus IA</p>
+            <h3 className="text-lg font-semibold mt-1 text-gray-900 dark:text-white">
+              Seu Copiloto
+            </h3>
           </div>
-        </div>
+        </CardContent>
+      </Card>
 
-        {/* Aulas concluídas card */}
-        <div className={`group backdrop-blur-md ${isLightMode ? 'bg-white/90' : 'bg-[#001e3a]'} rounded-xl p-3 ${isLightMode ? 'border border-gray-200' : 'border border-white/20'} shadow-lg relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-[#FF6B00]/30 hover:translate-y-[-4px]`}>
-          <div className="absolute inset-0 bg-gradient-to-tr from-[#FF6B00]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-          <div className={`absolute -right-4 -top-4 w-24 h-24 ${isLightMode ? 'bg-[#FF6B00]/5' : 'bg-[#FF6B00]/5'} rounded-full blur-xl group-hover:bg-[#FF6B00]/10 transition-all duration-500`}></div>
-
-          <div className="flex justify-between items-start mb-1 relative z-10">
-            <div className="flex items-center">
-              <div className={`${isLightMode ? 'bg-orange-50' : 'bg-[#0A2540]/60'} p-1.5 rounded-lg ${isLightMode ? 'shadow' : 'shadow-inner'} ${isLightMode ? 'border border-orange-100' : 'border border-[#2A4D6E]/50'} mr-2`}>
-                <BookOpen className={`h-4 w-4 ${isLightMode ? 'text-[#FF6B00]' : 'text-[#FF6B00]'}`} />
-              </div>
-              <p className={`text-sm ${isLightMode ? 'text-gray-700' : 'text-gray-300'} font-medium`}>Aulas concluídas</p>
+      {/* Turmas Card */}
+      <Card 
+        onClick={() => handleNavigate("/turmas")}
+        className="cursor-pointer rounded-xl overflow-hidden hover:shadow-lg transition-all duration-200 border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#001427]"
+      >
+        <CardContent className="p-4 flex flex-col h-full">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-9 h-9 rounded-full bg-[#0EA5E9]/10 flex items-center justify-center">
+              <Users className="w-5 h-5 text-[#0EA5E9]" />
             </div>
-            <span className={`text-xs font-medium ${isLightMode ? 'bg-orange-100' : 'bg-[#FF6B00]/20'} ${isLightMode ? 'text-orange-700' : 'text-[#FF6B00]'} py-0.5 px-2 rounded-full`}>+4 aulas</span>
+            <ArrowRight className="w-5 h-5 text-gray-400" />
           </div>
-
-          <div className="flex items-end mt-2">
-            <h3 className={`text-2xl font-bold ${isLightMode ? 'text-gray-800' : 'text-white'}`}>24</h3>
-            <span className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'} ml-1 mb-0.5`}>aulas</span>
+          <div className="mt-auto">
+            <p className="text-sm text-gray-500 dark:text-gray-400">Turmas</p>
+            <h3 className="text-lg font-semibold mt-1 text-gray-900 dark:text-white">
+              Estudos em Grupo
+            </h3>
           </div>
-        </div>
+        </CardContent>
+      </Card>
 
-        {/* Posição ranking card */}
-        <div className={`group backdrop-blur-md ${isLightMode ? 'bg-white/90' : 'bg-[#001e3a]'} rounded-xl p-3 ${isLightMode ? 'border border-gray-200' : 'border border-white/20'} shadow-lg relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-[#FF6B00]/30 hover:translate-y-[-4px]`}>
-          <div className="absolute inset-0 bg-gradient-to-tr from-[#FF6B00]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-          <div className={`absolute -right-4 -top-4 w-24 h-24 ${isLightMode ? 'bg-[#FF6B00]/5' : 'bg-[#FF6B00]/5'} rounded-full blur-xl group-hover:bg-[#FF6B00]/10 transition-all duration-500`}></div>
-
-          <div className="flex justify-between items-start mb-1 relative z-10">
-            <div className="flex items-center">
-              <div className={`${isLightMode ? 'bg-orange-50' : 'bg-[#0A2540]/60'} p-1.5 rounded-lg ${isLightMode ? 'shadow' : 'shadow-inner'} ${isLightMode ? 'border border-orange-100' : 'border border-[#2A4D6E]/50'} mr-2`}>
-                <Trophy className={`h-4 w-4 ${isLightMode ? 'text-[#FF6B00]' : 'text-[#FF6B00]'}`} />
-              </div>
-              <p className={`text-sm ${isLightMode ? 'text-gray-700' : 'text-gray-300'} font-medium`}>Posição ranking</p>
+      {/* Portal Card */}
+      <Card 
+        onClick={() => handleNavigate("/portal")}
+        className="cursor-pointer rounded-xl overflow-hidden hover:shadow-lg transition-all duration-200 border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#001427]"
+      >
+        <CardContent className="p-4 flex flex-col h-full">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-9 h-9 rounded-full bg-[#F59E0B]/10 flex items-center justify-center">
+              <BookOpen className="w-5 h-5 text-[#F59E0B]" />
             </div>
-            <span className={`text-xs font-medium ${isLightMode ? 'bg-green-100' : 'bg-green-500/20'} ${isLightMode ? 'text-green-700' : 'text-green-400'} py-0.5 px-2 rounded-full`}>↑ 3 posições</span>
+            <ArrowRight className="w-5 h-5 text-gray-400" />
           </div>
-
-          <div className="flex items-end mt-2">
-            <h3 className={`text-2xl font-bold ${isLightMode ? 'text-gray-800' : 'text-white'}`}>#42</h3>
-            <span className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'} ml-1 mb-0.5`}>/ ranking</span>
+          <div className="mt-auto">
+            <p className="text-sm text-gray-500 dark:text-gray-400">Portal</p>
+            <h3 className="text-lg font-semibold mt-1 text-gray-900 dark:text-white">
+              Materiais de Estudo
+            </h3>
           </div>
-
-          <p className={`text-[10px] ${isLightMode ? 'text-gray-500' : 'text-gray-500'} mt-0.5`}>Top 25%</p>
-        </div>
-
-        {/* School Points card */}
-        <div className={`group backdrop-blur-md ${isLightMode ? 'bg-white/90' : 'bg-[#001e3a]'} rounded-xl p-3 ${isLightMode ? 'border border-gray-200' : 'border border-white/20'} shadow-lg relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-[#FF6B00]/30 hover:translate-y-[-4px]`}>
-          <div className="absolute inset-0 bg-gradient-to-tr from-[#FF6B00]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-          <div className={`absolute -right-4 -top-4 w-24 h-24 ${isLightMode ? 'bg-[#FF6B00]/5' : 'bg-[#FF6B00]/5'} rounded-full blur-xl group-hover:bg-[#FF6B00]/10 transition-all duration-500`}></div>
-
-          <div className="flex justify-between items-start mb-1 relative z-10">
-            <div className="flex items-center">
-              <div className={`${isLightMode ? 'bg-orange-50' : 'bg-[#0A2540]/60'} p-1.5 rounded-lg ${isLightMode ? 'shadow' : 'shadow-inner'} ${isLightMode ? 'border border-orange-100' : 'border border-[#2A4D6E]/50'} mr-2`}>
-                <Award className={`h-4 w-4 ${isLightMode ? 'text-[#FF6B00]' : 'text-[#FF6B00]'}`} />
-              </div>
-              <p className={`text-sm ${isLightMode ? 'text-gray-700' : 'text-gray-300'} font-medium`}>School Points</p>
-            </div>
-            <span className={`text-xs font-medium ${isLightMode ? 'bg-orange-100' : 'bg-[#FF6B00]/20'} ${isLightMode ? 'text-orange-700' : 'text-[#FF6B00]'} py-0.5 px-2 rounded-full`}>+250 pontos</span>
-          </div>
-
-          <div className="flex items-end mt-2">
-            <h3 className={`text-2xl font-bold ${isLightMode ? 'text-gray-800' : 'text-white'}`}>1250</h3>
-            <span className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'} ml-1 mb-0.5`}>sp</span>
-          </div>
-
-          <p className={`text-[10px] ${isLightMode ? 'text-gray-500' : 'text-gray-500'} mt-0.5`}>Próximo nível: 1500</p>
-        </div>
-      </div>
-
-      {/* Cards maiores - Foco do Dia e Atalhos School */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Card de Foco do Dia */}
-        <FocoDoDiaCard />
-        
-        {/* Card de Atalhos School */}
-        <AtalhoSchoolCard />
-      </div>
-      
-      {/* Cards maiores adicionais - Sequência de Estudos e Epictus IA Copiloto */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Card de Sequência de Estudos */}
-        <SequenciaEstudosCard />
-        
-        {/* Card de Epictus IA Copiloto */}
-        <EpictusIACopilotoCard />
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
-}
+};
+
+export default DashboardMetricsGrid;
