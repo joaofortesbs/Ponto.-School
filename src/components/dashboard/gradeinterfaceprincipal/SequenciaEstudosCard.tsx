@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Flame, Award, TrendingUp, ExternalLink } from "lucide-react";
+import { Flame, Award, TrendingUp, ExternalLink, Calendar, Star, Zap, Trophy } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTheme } from "@/components/ThemeProvider";
 import { Button } from "@/components/ui/button";
@@ -14,82 +14,167 @@ export default function SequenciaEstudosCard() {
   const recordeDias = 15;
   const proximaRecompensa = "Badge Explorador Dedicado";
   const diasParaProximoNivel = 2;
+  const metaDiaria = 7; // Meta diária de estudo em dias
 
   return (
     <motion.div
       whileHover={{ scale: 1.01 }}
       transition={{ duration: 0.2 }}
-      className="h-full w-full rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800 shadow-md hover:shadow-xl transition-all duration-300 bg-white dark:bg-gradient-to-b dark:from-[#0c1425] dark:to-[#0a1a2e]"
+      className="h-full w-full rounded-xl overflow-hidden border border-gray-100 dark:border-gray-800 shadow-xl bg-white dark:bg-gradient-to-br dark:from-[#0c1425] dark:to-[#0a1a2e] relative"
     >
-      {/* Cabeçalho estilizado */}
-      <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-4 flex items-center justify-between shadow-md">
-        <div className="flex items-center">
-          <div className="bg-white/10 p-1.5 rounded-lg mr-2">
-            <Flame className="h-4 w-4 text-white" />
+      {/* Elementos decorativos de fundo */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-24 -right-24 w-48 h-48 rounded-full bg-gradient-to-br from-[#FF6B00]/5 via-[#FF8C40]/5 to-transparent dark:from-[#FF6B00]/10 dark:via-[#FF8C40]/10"></div>
+        <div className="absolute -bottom-8 -left-8 w-28 h-28 rounded-full bg-gradient-to-tr from-[#FF6B00]/5 via-[#FF8C40]/5 to-transparent dark:from-[#FF6B00]/10 dark:via-[#FF8C40]/10"></div>
+        
+        {/* Padrão sutil diagonal */}
+        <div className="absolute inset-0 opacity-5 dark:opacity-10">
+          <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+            <pattern id="diagonalLines" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+              <line x1="0" y1="0" x2="0" y2="10" stroke={isLightMode ? "#FF6B00" : "#FF8C40"} strokeWidth="1" />
+            </pattern>
+            <rect width="100%" height="100%" fill="url(#diagonalLines)" />
+          </svg>
+        </div>
+      </div>
+
+      {/* Cabeçalho premium com gradiente e efeito glassmorphism */}
+      <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-4 flex items-center justify-between shadow-md relative z-10 backdrop-blur-sm">
+        <div className="flex items-center space-x-2">
+          <div className="bg-white/20 p-1.5 rounded-lg backdrop-blur-sm">
+            <Calendar className="h-4 w-4 text-white" />
           </div>
-          <h3 className="text-white font-semibold text-sm">Sua Sequência de Estudos!</h3>
+          <h3 className="text-white font-semibold text-sm tracking-tight">Sua Sequência de Estudos</h3>
         </div>
         <Button 
-          variant="link" 
+          variant="ghost" 
           size="sm" 
-          className="text-white/80 hover:text-white p-0 h-6"
+          className="text-white/90 hover:text-white p-0 h-6 opacity-90 hover:opacity-100 hover:bg-white/10"
         >
-          <span className="text-xs">Detalhes</span>
+          <span className="text-xs font-medium">Detalhes</span>
           <ExternalLink className="h-3 w-3 ml-1" />
         </Button>
       </div>
 
-      {/* Conteúdo do card */}
-      <div className="p-5 relative z-10 flex flex-col h-[calc(100%-60px)] justify-between">
-        {/* Ilustração de fundo */}
-        <div className="absolute bottom-5 left-1/2 -translate-x-1/2 w-20 h-20 opacity-10 pointer-events-none">
-          <div className="w-full h-full rounded-full bg-gradient-radial from-orange-500 via-red-500 to-transparent animate-pulse" style={{ animationDuration: '3s' }}></div>
-        </div>
-        
-        {/* Estatísticas principais */}
-        <div className="flex flex-col items-center mb-4 mt-2 relative">
-          <div className="relative">
+      {/* Conteúdo principal com design premium */}
+      <div className="p-6 relative z-10 flex flex-col h-[calc(100%-60px)] justify-between">
+        {/* Contador principal estilizado */}
+        <div className="flex flex-col items-center mb-4 relative">
+          {/* Efeito de brilho animado ao redor do ícone */}
+          <motion.div 
+            initial={{ opacity: 0.6, scale: 0.9 }}
+            animate={{ 
+              opacity: [0.6, 0.8, 0.6], 
+              scale: [0.9, 1.1, 0.9],
+            }}
+            transition={{ 
+              duration: 3,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+            className="absolute -inset-2 rounded-full bg-gradient-to-r from-[#FF6B00]/20 to-[#FF8C40]/20 blur-xl"
+          />
+          
+          {/* Ícone principal com design premium */}
+          <div className="relative mb-4">
             <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-[#FF6B00]/20 to-[#FF8C40]/20 blur-md"></div>
-            <div className="flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] mb-2 relative">
-              <Flame className="h-8 w-8 text-white animate-pulse" style={{ animationDuration: '2s' }} />
-            </div>
-          </div>
-          
-          <div className="text-center mt-3">
-            <p className="text-gray-500 dark:text-gray-400 text-sm mb-1">Você está há</p>
-            <p className="text-4xl font-bold text-[#FF6B00] mb-1">{diasConsecutivos}</p>
-            <p className="text-gray-500 dark:text-gray-400 text-sm">dias consecutivos estudando!</p>
-          </div>
-        </div>
-        
-        {/* Informações adicionais */}
-        <div className="space-y-4 mt-1">
-          {/* Progresso para o próximo nível */}
-          <div className="bg-gray-100 dark:bg-[#14253d] rounded-lg p-3">
-            <div className="flex justify-between items-center mb-1.5">
-              <span className="text-xs text-gray-500 dark:text-gray-400">Próximo nível</span>
-              <span className="text-xs font-medium text-[#FF6B00]">+{diasParaProximoNivel} dias</span>
-            </div>
-            <div className="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40]" 
-                style={{ width: `${(diasConsecutivos / (diasConsecutivos + diasParaProximoNivel)) * 100}%` }}
-              />
-            </div>
-          </div>
-          
-          {/* Recorde e recompensa */}
-          <div className="flex flex-col gap-2 text-center">
-            <div className="flex items-center justify-center text-xs text-gray-500 dark:text-gray-400">
-              <Award className="h-3.5 w-3.5 mr-1 text-yellow-400" />
-              <span>Seu recorde: <span className="font-medium text-gray-600 dark:text-gray-300">{recordeDias} dias</span></span>
+            <div className="w-20 h-20 rounded-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] flex items-center justify-center relative">
+              <div className="absolute inset-0.5 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] opacity-50"></div>
+              <Flame className="h-10 w-10 text-white drop-shadow-md relative z-10" />
             </div>
             
-            <div className="flex items-center justify-center gap-1 text-xs text-gray-500 dark:text-gray-400">
-              <TrendingUp className="h-3 w-3 text-emerald-500" />
-              <span>Próxima recompensa:</span>
+            {/* Indicador de streak com borda animada */}
+            <motion.div 
+              initial={{ rotate: 0 }}
+              animate={{ rotate: 360 }}
+              transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+              className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-white dark:bg-[#14253d] flex items-center justify-center shadow-lg border border-[#FF6B00]/20"
+            >
+              <Zap className="h-4 w-4 text-[#FF6B00]" />
+            </motion.div>
+          </div>
+          
+          {/* Contador de dias em design premium */}
+          <div className="text-center">
+            <p className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-1">Sua sequência atual</p>
+            <div className="flex items-center justify-center">
+              <p className="text-5xl font-bold bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-transparent bg-clip-text">{diasConsecutivos}</p>
+              <p className="text-lg font-medium text-gray-400 dark:text-gray-500 ml-1 mt-2">dias</p>
             </div>
-            <span className="text-xs font-medium text-[#FF6B00]">{proximaRecompensa}</span>
+            <p className="text-gray-500 dark:text-gray-400 text-xs mt-1 font-medium">
+              estudando consecutivamente
+            </p>
+          </div>
+        </div>
+        
+        {/* Seção de informações adicionais com design premium */}
+        <div className="space-y-5 mt-2">
+          {/* Progresso para o próximo nível com gradiente premium */}
+          <div className="bg-gray-50 dark:bg-[#14253d]/80 rounded-lg p-3.5 backdrop-blur-sm border border-gray-100 dark:border-gray-800/80">
+            <div className="flex justify-between items-center mb-1.5">
+              <div className="flex items-center space-x-1.5">
+                <Trophy className="h-3.5 w-3.5 text-[#FF6B00]" />
+                <span className="text-xs font-medium text-gray-600 dark:text-gray-300">Próximo nível</span>
+              </div>
+              <span className="text-xs font-semibold text-[#FF6B00] bg-[#FF6B00]/10 px-2 py-0.5 rounded-full">+{diasParaProximoNivel} dias</span>
+            </div>
+            <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div 
+                className="h-full rounded-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] relative"
+                style={{ width: `${(diasConsecutivos / (diasConsecutivos + diasParaProximoNivel)) * 100}%` }}
+              >
+                <motion.div 
+                  className="absolute top-0 right-0 h-full w-2 bg-white/50"
+                  initial={{ x: -20 }}
+                  animate={{ x: 20 }}
+                  transition={{ 
+                    duration: 1.5, 
+                    repeat: Infinity,
+                    repeatType: "reverse",
+                    ease: "easeInOut"
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+          
+          {/* Estatísticas em design de cartões grid */}
+          <div className="grid grid-cols-2 gap-2">
+            {/* Card de Recorde */}
+            <div className="bg-gray-50 dark:bg-[#14253d]/80 rounded-lg py-2.5 px-3 backdrop-blur-sm border border-gray-100 dark:border-gray-800/80 flex flex-col items-center justify-center">
+              <div className="flex items-center space-x-1 mb-1">
+                <Award className="h-3.5 w-3.5 text-yellow-500" />
+                <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Seu recorde</span>
+              </div>
+              <p className="text-xl font-bold text-gray-700 dark:text-gray-200">{recordeDias}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500">dias</p>
+            </div>
+            
+            {/* Card de Meta Diária */}
+            <div className="bg-gray-50 dark:bg-[#14253d]/80 rounded-lg py-2.5 px-3 backdrop-blur-sm border border-gray-100 dark:border-gray-800/80 flex flex-col items-center justify-center">
+              <div className="flex items-center space-x-1 mb-1">
+                <Star className="h-3.5 w-3.5 text-[#FF8C40]" />
+                <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Meta diária</span>
+              </div>
+              <p className="text-xl font-bold text-gray-700 dark:text-gray-200">{metaDiaria}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500">dias</p>
+            </div>
+          </div>
+          
+          {/* Próxima recompensa com design premium */}
+          <div className="bg-gray-50 dark:bg-[#14253d]/80 rounded-lg p-3 backdrop-blur-sm border border-gray-100 dark:border-gray-800/80">
+            <div className="flex items-center justify-center space-x-1.5 mb-2">
+              <TrendingUp className="h-3.5 w-3.5 text-emerald-500" />
+              <span className="text-xs font-medium text-gray-600 dark:text-gray-300">Próxima recompensa</span>
+            </div>
+            <div className="flex items-center justify-center space-x-2">
+              <div className="bg-gradient-to-r from-[#FF6B00]/10 to-[#FF8C40]/10 rounded-full p-1">
+                <Trophy className="h-4 w-4 text-[#FF6B00]" />
+              </div>
+              <span className="text-sm font-semibold bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-transparent bg-clip-text">
+                {proximaRecompensa}
+              </span>
+            </div>
           </div>
         </div>
       </div>
