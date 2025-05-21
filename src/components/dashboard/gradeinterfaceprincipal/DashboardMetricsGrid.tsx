@@ -1,100 +1,109 @@
 import React from "react";
-import { Clock, BookOpen, Trophy, Award } from "lucide-react";
-import { useTheme } from "@/components/ThemeProvider";
+import { Clock, Zap, Award, Coins } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import FocoDoDiaCard from "./FocoDoDiaCard";
+import AtalhoSchoolCard from "./AtalhoSchoolCard";
 
-export default function DashboardMetricsGrid() {
-  const { theme } = useTheme();
-  const isLightMode = theme === "light";
-
+const DashboardMetricsGrid = () => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
-      {/* Tempo de estudo card */}
-      <div className={`group backdrop-blur-md ${isLightMode ? 'bg-white/90' : 'bg-[#001e3a]'} rounded-xl p-3 ${isLightMode ? 'border border-gray-200' : 'border border-white/20'} shadow-lg relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-[#FF6B00]/30 hover:translate-y-[-4px]`}>
-        <div className="absolute inset-0 bg-gradient-to-tr from-[#FF6B00]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-        <div className={`absolute -right-4 -top-4 w-24 h-24 ${isLightMode ? 'bg-[#FF6B00]/5' : 'bg-[#FF6B00]/5'} rounded-full blur-xl group-hover:bg-[#FF6B00]/10 transition-all duration-500`}></div>
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
+        {/* Tempo de estudo card */}
+        <div className="group backdrop-blur-md bg-[#001e3a] rounded-xl p-3 border border-white/20 shadow-lg relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-[#FF6B00]/30 hover:translate-y-[-4px]">
+          <div className="absolute inset-0 bg-gradient-to-tr from-[#FF6B00]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          <div className="absolute -right-4 -top-4 w-24 h-24 bg-[#FF6B00]/5 rounded-full blur-xl group-hover:bg-[#FF6B00]/10 transition-all duration-500"></div>
 
-        <div className="flex justify-between items-start mb-1 relative z-10">
-          <div className="flex items-center">
-            <div className={`${isLightMode ? 'bg-orange-50' : 'bg-[#0A2540]/60'} p-1.5 rounded-lg ${isLightMode ? 'shadow' : 'shadow-inner'} ${isLightMode ? 'border border-orange-100' : 'border border-[#2A4D6E]/50'} mr-2`}>
-              <Clock className={`h-4 w-4 ${isLightMode ? 'text-[#FF6B00]' : 'text-[#FF6B00]'}`} />
+          <div className="flex items-start mb-2">
+            <div className="p-2 rounded-full bg-blue-400/10 mr-3">
+              <Clock className="h-5 w-5 text-blue-400" />
             </div>
-            <p className={`text-sm ${isLightMode ? 'text-gray-700' : 'text-gray-300'} font-medium`}>Tempo de estudo</p>
+            <div>
+              <h3 className="text-xl font-bold text-white">18h 42m</h3>
+              <p className="text-xs text-gray-400">Tempo de estudo</p>
+            </div>
           </div>
-          <span className={`text-xs font-medium ${isLightMode ? 'bg-orange-100' : 'bg-[#FF6B00]/20'} ${isLightMode ? 'text-orange-700' : 'text-[#FF6B00]'} py-0.5 px-2 rounded-full`}>+1.2%</span>
+
+          <Progress value={68} className="h-1.5 bg-white/20" indicatorColor="bg-blue-400" />
+          <div className="flex justify-between text-xs text-gray-400 mt-1.5">
+            <span>Meta semanal</span>
+            <span>68%</span>
+          </div>
         </div>
 
-        <div className="flex items-end mt-2">
-          <h3 className={`text-2xl font-bold ${isLightMode ? 'text-gray-800' : 'text-white'}`}>32</h3>
-          <span className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'} ml-1 mb-0.5`}>horas</span>
+        {/* Aulas concluídas card */}
+        <div className="group backdrop-blur-md bg-[#001e3a] rounded-xl p-3 border border-white/20 shadow-lg relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-[#FF6B00]/30 hover:translate-y-[-4px]">
+          <div className="absolute inset-0 bg-gradient-to-tr from-[#FF6B00]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          <div className="absolute -right-4 -top-4 w-24 h-24 bg-[#FF6B00]/5 rounded-full blur-xl group-hover:bg-[#FF6B00]/10 transition-all duration-500"></div>
+
+          <div className="flex items-start mb-2">
+            <div className="p-2 rounded-full bg-green-400/10 mr-3">
+              <Zap className="h-5 w-5 text-green-400" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-white">23</h3>
+              <p className="text-xs text-gray-400">Aulas concluídas</p>
+            </div>
+          </div>
+
+          <Progress value={44} className="h-1.5 bg-white/20" indicatorColor="bg-green-400" />
+          <div className="flex justify-between text-xs text-gray-400 mt-1.5">
+            <span>Esta semana</span>
+            <span>+12</span>
+          </div>
+        </div>
+
+        {/* Posição ranking card */}
+        <div className="group backdrop-blur-md bg-[#001e3a] rounded-xl p-3 border border-white/20 shadow-lg relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-[#FF6B00]/30 hover:translate-y-[-4px]">
+          <div className="absolute inset-0 bg-gradient-to-tr from-[#FF6B00]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          <div className="absolute -right-4 -top-4 w-24 h-24 bg-[#FF6B00]/5 rounded-full blur-xl group-hover:bg-[#FF6B00]/10 transition-all duration-500"></div>
+
+          <div className="flex items-start mb-2">
+            <div className="p-2 rounded-full bg-purple-400/10 mr-3">
+              <Award className="h-5 w-5 text-purple-400" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-white">#42</h3>
+              <p className="text-xs text-gray-400">Posição ranking</p>
+            </div>
+          </div>
+
+          <Progress value={90} className="h-1.5 bg-white/20" indicatorColor="bg-purple-400" />
+          <div className="flex justify-between text-xs text-gray-400 mt-1.5">
+            <span>Top 10%</span>
+            <span>+3 posições</span>
+          </div>
+        </div>
+
+        {/* School Points card */}
+        <div className="group backdrop-blur-md bg-[#001e3a] rounded-xl p-3 border border-white/20 shadow-lg relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-[#FF6B00]/30 hover:translate-y-[-4px]">
+          <div className="absolute inset-0 bg-gradient-to-tr from-[#FF6B00]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          <div className="absolute -right-4 -top-4 w-24 h-24 bg-[#FF6B00]/5 rounded-full blur-xl group-hover:bg-[#FF6B00]/10 transition-all duration-500"></div>
+
+          <div className="flex items-start mb-2">
+            <div className="p-2 rounded-full bg-amber-400/10 mr-3">
+              <Coins className="h-5 w-5 text-amber-400" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-white">1.280</h3>
+              <p className="text-xs text-gray-400">School Points</p>
+            </div>
+          </div>
+
+          <Progress value={73} className="h-1.5 bg-white/20" indicatorColor="bg-amber-400" />
+          <div className="flex justify-between text-xs text-gray-400 mt-1.5">
+            <span>Meta mensal</span>
+            <span>+320 esta semana</span>
+          </div>
         </div>
       </div>
 
-      {/* Aulas concluídas card */}
-      <div className={`group backdrop-blur-md ${isLightMode ? 'bg-white/90' : 'bg-[#001e3a]'} rounded-xl p-3 ${isLightMode ? 'border border-gray-200' : 'border border-white/20'} shadow-lg relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-[#FF6B00]/30 hover:translate-y-[-4px]`}>
-        <div className="absolute inset-0 bg-gradient-to-tr from-[#FF6B00]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-        <div className={`absolute -right-4 -top-4 w-24 h-24 ${isLightMode ? 'bg-[#FF6B00]/5' : 'bg-[#FF6B00]/5'} rounded-full blur-xl group-hover:bg-[#FF6B00]/10 transition-all duration-500`}></div>
-
-        <div className="flex justify-between items-start mb-1 relative z-10">
-          <div className="flex items-center">
-            <div className={`${isLightMode ? 'bg-orange-50' : 'bg-[#0A2540]/60'} p-1.5 rounded-lg ${isLightMode ? 'shadow' : 'shadow-inner'} ${isLightMode ? 'border border-orange-100' : 'border border-[#2A4D6E]/50'} mr-2`}>
-              <BookOpen className={`h-4 w-4 ${isLightMode ? 'text-[#FF6B00]' : 'text-[#FF6B00]'}`} />
-            </div>
-            <p className={`text-sm ${isLightMode ? 'text-gray-700' : 'text-gray-300'} font-medium`}>Aulas concluídas</p>
-          </div>
-          <span className={`text-xs font-medium ${isLightMode ? 'bg-orange-100' : 'bg-[#FF6B00]/20'} ${isLightMode ? 'text-orange-700' : 'text-[#FF6B00]'} py-0.5 px-2 rounded-full`}>+4 aulas</span>
-        </div>
-
-        <div className="flex items-end mt-2">
-          <h3 className={`text-2xl font-bold ${isLightMode ? 'text-gray-800' : 'text-white'}`}>24</h3>
-          <span className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'} ml-1 mb-0.5`}>aulas</span>
-        </div>
+      {/* Novos cards de Foco do Dia e Atalhos School */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+        <FocoDoDiaCard />
+        <AtalhoSchoolCard />
       </div>
-
-      {/* Posição ranking card */}
-      <div className={`group backdrop-blur-md ${isLightMode ? 'bg-white/90' : 'bg-[#001e3a]'} rounded-xl p-3 ${isLightMode ? 'border border-gray-200' : 'border border-white/20'} shadow-lg relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-[#FF6B00]/30 hover:translate-y-[-4px]`}>
-        <div className="absolute inset-0 bg-gradient-to-tr from-[#FF6B00]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-        <div className={`absolute -right-4 -top-4 w-24 h-24 ${isLightMode ? 'bg-[#FF6B00]/5' : 'bg-[#FF6B00]/5'} rounded-full blur-xl group-hover:bg-[#FF6B00]/10 transition-all duration-500`}></div>
-
-        <div className="flex justify-between items-start mb-1 relative z-10">
-          <div className="flex items-center">
-            <div className={`${isLightMode ? 'bg-orange-50' : 'bg-[#0A2540]/60'} p-1.5 rounded-lg ${isLightMode ? 'shadow' : 'shadow-inner'} ${isLightMode ? 'border border-orange-100' : 'border border-[#2A4D6E]/50'} mr-2`}>
-              <Trophy className={`h-4 w-4 ${isLightMode ? 'text-[#FF6B00]' : 'text-[#FF6B00]'}`} />
-            </div>
-            <p className={`text-sm ${isLightMode ? 'text-gray-700' : 'text-gray-300'} font-medium`}>Posição ranking</p>
-          </div>
-          <span className={`text-xs font-medium ${isLightMode ? 'bg-green-100' : 'bg-green-500/20'} ${isLightMode ? 'text-green-700' : 'text-green-400'} py-0.5 px-2 rounded-full`}>↑ 3 posições</span>
-        </div>
-
-        <div className="flex items-end mt-2">
-          <h3 className={`text-2xl font-bold ${isLightMode ? 'text-gray-800' : 'text-white'}`}>#42</h3>
-          <span className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'} ml-1 mb-0.5`}>/ ranking</span>
-        </div>
-
-        <p className={`text-[10px] ${isLightMode ? 'text-gray-500' : 'text-gray-500'} mt-0.5`}>Top 25%</p>
-      </div>
-
-      {/* School Points card */}
-      <div className={`group backdrop-blur-md ${isLightMode ? 'bg-white/90' : 'bg-[#001e3a]'} rounded-xl p-3 ${isLightMode ? 'border border-gray-200' : 'border border-white/20'} shadow-lg relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-[#FF6B00]/30 hover:translate-y-[-4px]`}>
-        <div className="absolute inset-0 bg-gradient-to-tr from-[#FF6B00]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-        <div className={`absolute -right-4 -top-4 w-24 h-24 ${isLightMode ? 'bg-[#FF6B00]/5' : 'bg-[#FF6B00]/5'} rounded-full blur-xl group-hover:bg-[#FF6B00]/10 transition-all duration-500`}></div>
-
-        <div className="flex justify-between items-start mb-1 relative z-10">
-          <div className="flex items-center">
-            <div className={`${isLightMode ? 'bg-orange-50' : 'bg-[#0A2540]/60'} p-1.5 rounded-lg ${isLightMode ? 'shadow' : 'shadow-inner'} ${isLightMode ? 'border border-orange-100' : 'border border-[#2A4D6E]/50'} mr-2`}>
-              <Award className={`h-4 w-4 ${isLightMode ? 'text-[#FF6B00]' : 'text-[#FF6B00]'}`} />
-            </div>
-            <p className={`text-sm ${isLightMode ? 'text-gray-700' : 'text-gray-300'} font-medium`}>School Points</p>
-          </div>
-          <span className={`text-xs font-medium ${isLightMode ? 'bg-orange-100' : 'bg-[#FF6B00]/20'} ${isLightMode ? 'text-orange-700' : 'text-[#FF6B00]'} py-0.5 px-2 rounded-full`}>+250 pontos</span>
-        </div>
-
-        <div className="flex items-end mt-2">
-          <h3 className={`text-2xl font-bold ${isLightMode ? 'text-gray-800' : 'text-white'}`}>1250</h3>
-          <span className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'} ml-1 mb-0.5`}>sp</span>
-        </div>
-
-        <p className={`text-[10px] ${isLightMode ? 'text-gray-500' : 'text-gray-500'} mt-0.5`}>Próximo nível: 1500</p>
-      </div>
-    </div>
+    </>
   );
-}
+};
+
+export default DashboardMetricsGrid;
