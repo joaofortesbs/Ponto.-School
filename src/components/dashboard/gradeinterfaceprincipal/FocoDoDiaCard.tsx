@@ -5,6 +5,7 @@ import { useTheme } from "@/components/ThemeProvider";
 import { motion, AnimatePresence } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
 import DefinirFocoModal, { FocoData } from "./DefinirFocoModal";
+import confetti from 'canvas-confetti';
 
 // Tipo para atividades
 interface Atividade {
@@ -53,6 +54,10 @@ export default function FocoDoDiaCard() {
           setFocoPrincipal(dados.focoPrincipal);
           setAtividades(dados.atividades);
           setTemFoco(true);
+          
+          // Verificar se todas as atividades estão concluídas
+          const todasConcluidas = dados.atividades.length > 0 && dados.atividades.every((ativ: Atividade) => ativ.concluido);
+          setTodasAtividadesConcluidas(todasConcluidas || dados.todasConcluidas);
         } catch (error) {
           console.error("Erro ao carregar dados do foco:", error);
         }
@@ -62,6 +67,11 @@ export default function FocoDoDiaCard() {
     return () => clearTimeout(timeout);
   }, []);
 
+  // Estado para controlar a exibição do estado de conclusão
+  const [todasAtividadesConcluidas, setTodasAtividadesConcluidas] = useState<boolean>(false);
+  const [mostrarAnimacaoConclusao, setMostrarAnimacaoConclusao] = useState<boolean>(false);
+  const [pontosGanhos, setPontosGanhos] = useState<number>(50);
+  
   // Função para lidar com a conclusão de atividades
   const toggleAtividade = (id: number) => {
     // Atualizar o estado local - em uma aplicação real, isto também atualizaria o backend
@@ -71,11 +81,26 @@ export default function FocoDoDiaCard() {
 
     setAtividades(atualizadas);
 
+    // Verificar se todas as atividades foram concluídas
+    const todasConcluidas = atualizadas.length > 0 && atualizadas.every(ativ => ativ.concluido);
+    
+    // Se a última atividade foi concluída agora, mostrar animação e atualizar estado
+    if (todasConcluidas && !todasAtividadesConcluidas) {
+      setMostrarAnimacaoConclusao(true);
+      setTimeout(() => {
+        setTodasAtividadesConcluidas(true);
+        setMostrarAnimacaoConclusao(false);
+      }, 1500);
+    } else if (!todasConcluidas && todasAtividadesConcluidas) {
+      setTodasAtividadesConcluidas(false);
+    }
+
     // Atualizar no localStorage
     if (focoPrincipal) {
       localStorage.setItem('focoDia', JSON.stringify({
         focoPrincipal,
-        atividades: atualizadas
+        atividades: atualizadas,
+        todasConcluidas
       }));
     }
   };
@@ -168,10 +193,55 @@ export default function FocoDoDiaCard() {
     return [...atividadesTarefas, ...atividadesExtra].slice(0, 4);
   };
 
+  // Função para lançar confete quando todas as tarefas forem concluídas
+  const lancarConfete = () => {
+    const duration = 1500;
+    const end = Date.now() + duration;
+
+    (function frame() {
+      confetti({
+        particleCount: 3,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0 },
+        colors: ['#FF6B00', '#FFA500', '#FFD700']
+      });
+      confetti({
+        particleCount: 3,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1 },
+        colors: ['#FF6B00', '#FFA500', '#FFD700']
+      });
+
+      if (Date.now() < end) {
+        requestAnimationFrame(frame);
+      }
+    }());
+  };
+  
   // Função para reiniciar o foco
   const redefinirFoco = () => {
     setModalAberto(true);
   };
+  
+  // Função para planejar foco do próximo dia
+  const planejamentoFuturo = () => {
+    setModalAberto(true);
+  };
+  
+  // Função para explorar biblioteca (simulação)
+  const explorarBiblioteca = () => {
+    // Em uma implementação real, redirecionaria para a biblioteca
+    console.log("Redirecionando para a Biblioteca...");
+  };
+  
+  // Efeito para lançar confete quando o estado de conclusão mudar para true
+  useEffect(() => {
+    if (mostrarAnimacaoConclusao) {
+      lancarConfete();
+    }
+  }, [mostrarAnimacaoConclusao]);
 
   // Calcular progresso total das atividades
   const totalAtividades = atividades.length;
@@ -298,16 +368,27 @@ export default function FocoDoDiaCard() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className={`p-2.5 rounded-lg flex items-center justify-center ${isLightMode ? 'bg-white shadow-sm border border-orange-200' : 'bg-[#FF6B00]/10 border border-[#FF6B00]/30'}`}>
-              <Flame className={`h-5 w-5 text-[#FF6B00]`} />
+              {todasAtividadesConcluidas ? (
+                <Trophy className={`h-5 w-5 text-[#FF6B00]`} />
+              ) : (
+                <Flame className={`h-5 w-5 text-[#FF6B00]`} />
+              )}
             </div>
             <div>
               <h3 className={`font-semibold text-lg ${isLightMode ? 'text-gray-800' : 'text-white'}`}>
-                Seu Foco Hoje
+                {todasAtividadesConcluidas ? "Seu Foco Hoje: Concluído!" : "Seu Foco Hoje"}
               </h3>
-              {temFoco && focoPrincipal && (
+              {temFoco && focoPrincipal && !todasAtividadesConcluidas && (
                 <p className={`text-sm ${isLightMode ? 'text-gray-500' : 'text-gray-300'}`}>
                   <span className="font-bold text-[#FF6B00]">
                     {focoPrincipal.titulo}
+                  </span>
+                </p>
+              )}
+              {todasAtividadesConcluidas && (
+                <p className={`text-xs ${isLightMode ? 'text-green-600' : 'text-green-400'}`}>
+                  <span className="font-medium flex items-center">
+                    <Check className="h-3 w-3 mr-1" /> Todas as atividades concluídas
                   </span>
                 </p>
               )}
@@ -328,7 +409,7 @@ export default function FocoDoDiaCard() {
                   <circle 
                     cx="22" cy="22" r="20" 
                     fill="none" 
-                    stroke="#FF6B00" 
+                    stroke={todasAtividadesConcluidas ? "#10B981" : "#FF6B00"} 
                     strokeWidth="4"
                     strokeDasharray={126}
                     strokeDashoffset={126 - (progressoTotal / 100) * 126}
@@ -386,69 +467,156 @@ export default function FocoDoDiaCard() {
               </button>
             </div>
 
-            {/* Lista de atividades */}
-            <div className="space-y-2.5">
-              {atividades.map((atividade, index) => (
-                <motion.div 
-                  key={atividade.id} 
-                  className={`relative group flex items-start p-3 rounded-lg border ${isLightMode ? 'border-gray-100 hover:border-orange-200' : 'border-gray-700/30 hover:border-[#FF6B00]/30'} ${isLightMode ? 'hover:bg-orange-50/50' : 'hover:bg-[#FF6B00]/5'} transition-all cursor-pointer`}
-                  whileHover={{ y: -2 }}
-                  onMouseEnter={() => setHoverIndex(index)}
-                  onMouseLeave={() => setHoverIndex(null)}
+            {/* Estado de conclusão e animações */}
+            <AnimatePresence>
+              {mostrarAnimacaoConclusao && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="absolute inset-0 z-10 flex items-center justify-center bg-black/30 backdrop-blur-sm rounded-xl"
                 >
-                  {/* Indicador de prioridade para tarefas urgentes */}
-                  {atividade.urgente && (
-                    <div className="absolute top-0 right-0">
-                      <div className={`w-2 h-2 rounded-full ${isLightMode ? 'bg-red-500' : 'bg-red-400'} animate-pulse mr-1 mt-1`}></div>
-                    </div>
-                  )}
-
-                  <div 
-                    className={`h-5 w-5 rounded-full flex items-center justify-center mr-3 border ${
-                      atividade.concluido 
-                        ? (isLightMode ? 'bg-[#FF6B00] border-[#FF6B00]' : 'bg-[#FF6B00] border-[#FF6B00]') 
-                        : (isLightMode ? 'border-gray-300 bg-white' : 'border-gray-600 bg-transparent')
-                    }`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleAtividade(atividade.id);
-                    }}
+                  <motion.div 
+                    className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-lg flex flex-col items-center"
+                    initial={{ scale: 0.8 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", bounce: 0.5 }}
                   >
-                    {atividade.concluido && <Check className="h-3 w-3 text-white" />}
-                  </div>
+                    <Trophy className="h-12 w-12 text-[#FF6B00] mb-2" />
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white">Parabéns!</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 text-center">
+                      Você concluiu todas as tarefas do seu foco de hoje!
+                    </p>
+                    <div className="mt-2 bg-orange-100 dark:bg-orange-900/30 px-3 py-1 rounded-full flex items-center gap-1">
+                      <Flame className="h-4 w-4 text-[#FF6B00]" />
+                      <span className="text-sm font-medium text-[#FF6B00]">+{pontosGanhos} Ponto Coins!</span>
+                    </div>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-                  <div className="flex-1">
-                    <div className="flex items-start gap-1.5">
-                      <div className={`p-1 rounded mt-0.5 ${isLightMode ? 'bg-gray-100' : 'bg-gray-700/30'}`}>
-                        {atividade.tipo === 'video' && <Play className="h-3 w-3 text-blue-500" />}
-                        {atividade.tipo === 'exercicio' && <BookOpen className="h-3 w-3 text-green-500" />}
-                        {atividade.tipo === 'revisao' && <Clock className="h-3 w-3 text-[#FF6B00]" />}
-                        {atividade.tipo === 'tarefa' && <Check className="h-3 w-3 text-purple-500" />}
+            {/* Lista de atividades ou mensagem de conclusão */}
+            {!todasAtividadesConcluidas ? (
+              <div className="space-y-2.5">
+                {atividades.map((atividade, index) => (
+                  <motion.div 
+                    key={atividade.id} 
+                    className={`relative group flex items-start p-3 rounded-lg border ${isLightMode ? 'border-gray-100 hover:border-orange-200' : 'border-gray-700/30 hover:border-[#FF6B00]/30'} ${isLightMode ? 'hover:bg-orange-50/50' : 'hover:bg-[#FF6B00]/5'} transition-all cursor-pointer`}
+                    whileHover={{ y: -2 }}
+                    onMouseEnter={() => setHoverIndex(index)}
+                    onMouseLeave={() => setHoverIndex(null)}
+                  >
+                    {/* Indicador de prioridade para tarefas urgentes */}
+                    {atividade.urgente && (
+                      <div className="absolute top-0 right-0">
+                        <div className={`w-2 h-2 rounded-full ${isLightMode ? 'bg-red-500' : 'bg-red-400'} animate-pulse mr-1 mt-1`}></div>
                       </div>
-                      <div>
-                        <p className={`text-sm font-medium ${isLightMode ? 'text-gray-700' : 'text-gray-200'}`}>
-                          {atividade.titulo}
-                        </p>
-                        <div className="flex items-center mt-1.5 gap-3">
-                          <span className={`text-xs flex items-center gap-1 ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                            <Clock className="h-3 w-3" /> {atividade.tempo}
-                          </span>
-                          <span className={`text-xs ${atividade.urgente ? (isLightMode ? 'text-red-600 font-medium' : 'text-red-400 font-medium') : (isLightMode ? 'text-gray-500' : 'text-gray-400')}`}>
-                            {atividade.prazo}
-                          </span>
+                    )}
+
+                    <div 
+                      className={`h-5 w-5 rounded-full flex items-center justify-center mr-3 border ${
+                        atividade.concluido 
+                          ? (isLightMode ? 'bg-[#FF6B00] border-[#FF6B00]' : 'bg-[#FF6B00] border-[#FF6B00]') 
+                          : (isLightMode ? 'border-gray-300 bg-white' : 'border-gray-600 bg-transparent')
+                      }`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleAtividade(atividade.id);
+                      }}
+                    >
+                      {atividade.concluido && <Check className="h-3 w-3 text-white" />}
+                    </div>
+
+                    <div className="flex-1">
+                      <div className="flex items-start gap-1.5">
+                        <div className={`p-1 rounded mt-0.5 ${isLightMode ? 'bg-gray-100' : 'bg-gray-700/30'}`}>
+                          {atividade.tipo === 'video' && <Play className="h-3 w-3 text-blue-500" />}
+                          {atividade.tipo === 'exercicio' && <BookOpen className="h-3 w-3 text-green-500" />}
+                          {atividade.tipo === 'revisao' && <Clock className="h-3 w-3 text-[#FF6B00]" />}
+                          {atividade.tipo === 'tarefa' && <Check className="h-3 w-3 text-purple-500" />}
+                        </div>
+                        <div>
+                          <p className={`text-sm font-medium ${atividade.concluido ? 'line-through opacity-70' : ''} ${isLightMode ? 'text-gray-700' : 'text-gray-200'}`}>
+                            {atividade.titulo}
+                          </p>
+                          <div className="flex items-center mt-1.5 gap-3">
+                            <span className={`text-xs flex items-center gap-1 ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                              <Clock className="h-3 w-3" /> {atividade.tempo}
+                            </span>
+                            <span className={`text-xs ${atividade.urgente ? (isLightMode ? 'text-red-600 font-medium' : 'text-red-400 font-medium') : (isLightMode ? 'text-gray-500' : 'text-gray-400')}`}>
+                              {atividade.prazo}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Progress bar for individual activities */}
-                    <div className="mt-2">
-                      <Progress value={atividade.progresso} 
-                        className={`h-1 ${atividade.progresso > 0 ? "opacity-100" : "opacity-0"} ${hoverIndex === index ? "opacity-100" : ""} transition-opacity`} />
+                      {/* Progress bar for individual activities */}
+                      <div className="mt-2">
+                        <Progress value={atividade.progresso} 
+                          className={`h-1 ${atividade.progresso > 0 ? "opacity-100" : "opacity-0"} ${hoverIndex === index ? "opacity-100" : ""} transition-opacity`} />
+                      </div>
                     </div>
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <motion.div 
+                className={`p-4 rounded-lg border ${isLightMode ? 'bg-green-50 border-green-100' : 'bg-green-900/10 border-green-700/30'}`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+              >
+                <div className="flex flex-col items-center text-center">
+                  <div className="bg-green-100 dark:bg-green-800/30 p-2.5 rounded-full mb-3">
+                    <Trophy className="h-6 w-6 text-green-600 dark:text-green-400" />
                   </div>
-                </motion.div>
-              ))}
-            </div>
+                  <h3 className={`text-lg font-bold ${isLightMode ? 'text-gray-800' : 'text-white'}`}>
+                    Foco do Dia: <span className="text-green-600 dark:text-green-400">CONCLUÍDO! 🎉</span>
+                  </h3>
+                  <p className={`text-sm ${isLightMode ? 'text-gray-600' : 'text-gray-300'} mt-2`}>
+                    Parabéns! Você completou todas as atividades do seu foco de hoje com sucesso!
+                  </p>
+                  <div className="mt-3 text-sm">
+                    <span className="font-medium">{atividades.length} atividades concluídas.</span>
+                    {focoPrincipal && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Próximo foco sugerido: Revisão de {focoPrincipal.disciplinas[0] || "seu material"} (Amanhã).
+                      </p>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  <motion.button 
+                    onClick={planejamentoFuturo}
+                    className={`rounded-lg px-3 py-2 text-xs font-medium border text-[#FF6B00] ${isLightMode ? 'bg-white border-orange-200 hover:bg-orange-50' : 'bg-[#FF6B00]/10 border-[#FF6B00]/30 hover:bg-[#FF6B00]/20'} flex items-center justify-center gap-1.5 transition-colors`}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Clock className="h-3.5 w-3.5" />
+                    Planejar Foco de Amanhã
+                  </motion.button>
+                  
+                  <motion.button 
+                    onClick={explorarBiblioteca}
+                    className={`rounded-lg px-3 py-2 text-xs font-medium border text-blue-600 ${isLightMode ? 'bg-white border-blue-200 hover:bg-blue-50' : 'bg-blue-500/10 border-blue-500/30 hover:bg-blue-500/20'} flex items-center justify-center gap-1.5 transition-colors`}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <BookOpen className="h-3.5 w-3.5" />
+                    Explorar Biblioteca
+                  </motion.button>
+                </div>
+                
+                <div className="mt-4 text-center">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    <Smile className="h-3.5 w-3.5 inline mr-1" />
+                    Você merece uma pausa! Que tal ouvir um podcast relaxante na Biblioteca?
+                  </p>
+                </div>
+              </motion.div>
+            )}
 
             {/* Dica do Mentor IA no final do card */}
             {focoPrincipal.dicaMentor && (
@@ -499,31 +667,51 @@ export default function FocoDoDiaCard() {
         <div className="mt-5 pt-4 border-t border-gray-100 dark:border-gray-700/30 flex justify-between items-center relative">
           {atividades.length > 0 ? (
             <div className="flex items-center gap-2">
-              <div className={`w-5 h-5 rounded-full border ${isLightMode ? 'border-gray-300 bg-white' : 'border-gray-600 bg-transparent'} flex items-center justify-center`}>
-                <span className={`text-xs font-medium ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
-                  {atividadesConcluidas}
-                </span>
+              <div className={`w-5 h-5 rounded-full border ${
+                todasAtividadesConcluidas
+                  ? (isLightMode ? 'border-green-500 bg-green-500' : 'border-green-500 bg-green-500')
+                  : (isLightMode ? 'border-gray-300 bg-white' : 'border-gray-600 bg-transparent')
+              } flex items-center justify-center`}>
+                {todasAtividadesConcluidas ? (
+                  <Check className="h-3 w-3 text-white" />
+                ) : (
+                  <span className={`text-xs font-medium ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
+                    {atividadesConcluidas}
+                  </span>
+                )}
               </div>
-              <span className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                {atividadesConcluidas} de {totalAtividades} atividades
+              <span className={`text-xs ${todasAtividadesConcluidas ? (isLightMode ? 'text-green-600 font-medium' : 'text-green-400 font-medium') : (isLightMode ? 'text-gray-500' : 'text-gray-400')}`}>
+                {todasAtividadesConcluidas ? "Todas as atividades concluídas!" : `${atividadesConcluidas} de ${totalAtividades} atividades`}
               </span>
             </div>
           ) : (
             <div></div> // Espaçador para manter o layout com justify-between
           )}
 
-          <motion.button 
-            onClick={() => setModalAberto(true)}
-            className={`rounded-lg px-4 py-2 text-xs font-medium bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white shadow-sm hover:shadow-md transition-all flex items-center gap-1.5 ${isLightMode ? '' : 'border border-[#FF6B00]/40'}`}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            {atividades.length > 0 ? "Iniciar Foco" : "Definir Foco"}
-            <ChevronRight className="h-3 w-3" />
-          </motion.button>
+          {!todasAtividadesConcluidas ? (
+            <motion.button 
+              onClick={() => setModalAberto(true)}
+              className={`rounded-lg px-4 py-2 text-xs font-medium bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white shadow-sm hover:shadow-md transition-all flex items-center gap-1.5 ${isLightMode ? '' : 'border border-[#FF6B00]/40'}`}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              {atividades.length > 0 ? "Iniciar Foco" : "Definir Foco"}
+              <ChevronRight className="h-3 w-3" />
+            </motion.button>
+          ) : (
+            <motion.button 
+              onClick={redefinirFoco}
+              className={`rounded-lg px-4 py-2 text-xs font-medium bg-white border border-gray-200 dark:bg-gray-800 dark:border-gray-700 text-gray-700 dark:text-gray-200 shadow-sm hover:shadow-md transition-all flex items-center gap-1.5`}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              Definir Novo Foco
+              <PlusCircle className="h-3 w-3" />
+            </motion.button>
+          )}
 
           {/* Exibir sentimento quando disponível */}
-            {temFoco && focoPrincipal?.sentimento && (
+            {temFoco && focoPrincipal?.sentimento && !todasAtividadesConcluidas && (
               <div className="absolute top-2 right-2">
                 <div className="text-xs bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 px-2 py-1 rounded-full flex items-center gap-1">
                   {focoPrincipal.sentimento === "Motivado(a)" && <Smile className="h-3 w-3" />}
