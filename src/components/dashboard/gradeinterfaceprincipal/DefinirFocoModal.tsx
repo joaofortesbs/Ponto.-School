@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { X, ChevronRight, ChevronLeft, Clock, CheckCircle, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
@@ -71,7 +70,7 @@ export default function DefinirFocoModal({ open, onClose, onSave }: DefinirFocoM
   const { theme } = useTheme();
   const isLightMode = theme === "light";
   const [passo, setPasso] = useState(1);
-  
+
   // Estados para cada passo do formulário
   const [objetivo, setObjetivo] = useState("");
   const [objetivoPersonalizado, setObjetivoPersonalizado] = useState("");
@@ -80,7 +79,7 @@ export default function DefinirFocoModal({ open, onClose, onSave }: DefinirFocoM
   const [tempoEstudo, setTempoEstudo] = useState(60); // em minutos
   const [tarefasSelecionadas, setTarefasSelecionadas] = useState<string[]>([]);
   const [estadoEstudo, setEstadoEstudo] = useState("");
-  
+
   // Resetar estado ao abrir ou fechar modal
   useEffect(() => {
     if (open) {
@@ -94,7 +93,7 @@ export default function DefinirFocoModal({ open, onClose, onSave }: DefinirFocoM
       setEstadoEstudo("");
     }
   }, [open]);
-  
+
   const proximoPasso = () => {
     if (passo < 5) {
       setPasso(passo + 1);
@@ -112,13 +111,13 @@ export default function DefinirFocoModal({ open, onClose, onSave }: DefinirFocoM
       onClose();
     }
   };
-  
+
   const passoAnterior = () => {
     if (passo > 1) {
       setPasso(passo - 1);
     }
   };
-  
+
   const toggleDisciplina = (disciplina: string) => {
     if (disciplinasSelecionadas.includes(disciplina)) {
       setDisciplinasSelecionadas(disciplinasSelecionadas.filter(d => d !== disciplina));
@@ -126,7 +125,7 @@ export default function DefinirFocoModal({ open, onClose, onSave }: DefinirFocoM
       setDisciplinasSelecionadas([...disciplinasSelecionadas, disciplina]);
     }
   };
-  
+
   const toggleTarefa = (tarefa: string) => {
     if (tarefasSelecionadas.includes(tarefa)) {
       setTarefasSelecionadas(tarefasSelecionadas.filter(t => t !== tarefa));
@@ -134,7 +133,7 @@ export default function DefinirFocoModal({ open, onClose, onSave }: DefinirFocoM
       setTarefasSelecionadas([...tarefasSelecionadas, tarefa]);
     }
   };
-  
+
   // Função auxiliar para formatar o tempo
   const formatarTempo = (minutos: number) => {
     if (minutos < 60) {
@@ -144,13 +143,13 @@ export default function DefinirFocoModal({ open, onClose, onSave }: DefinirFocoM
       return `${horas}h`;
     }
   };
-  
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[550px] p-0 overflow-hidden">
         {/* Barra de progresso no topo */}
         <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] h-2"></div>
-        
+
         {/* Cabeçalho do modal */}
         <div className="p-6 pb-3 flex items-center justify-between border-b border-gray-100 dark:border-gray-800">
           <div className="flex items-center gap-3">
@@ -180,7 +179,7 @@ export default function DefinirFocoModal({ open, onClose, onSave }: DefinirFocoM
             <X className="h-4 w-4" />
           </button>
         </div>
-        
+
         {/* Conteúdo principal do modal */}
         <div className="p-6 max-h-[70vh] overflow-y-auto">
           {/* Passo 1: Objetivo de estudo */}
@@ -198,7 +197,7 @@ export default function DefinirFocoModal({ open, onClose, onSave }: DefinirFocoM
                 </div>
                 <h3 className="font-medium">Qual seu principal objetivo de estudo para hoje?</h3>
               </div>
-              
+
               <div className="space-y-2">
                 {objetivosEstudo.map((obj) => (
                   <div 
@@ -222,7 +221,7 @@ export default function DefinirFocoModal({ open, onClose, onSave }: DefinirFocoM
                         {obj}
                       </span>
                     </div>
-                    
+
                     {/* Campo personalizado caso "Outro" seja selecionado */}
                     {objetivo === "Outro Objetivo (Personalizado)" && obj === "Outro Objetivo (Personalizado)" && (
                       <div className="mt-3 pl-8">
@@ -238,13 +237,13 @@ export default function DefinirFocoModal({ open, onClose, onSave }: DefinirFocoM
                   </div>
                 ))}
               </div>
-              
+
               {/* Sugestões baseadas no perfil */}
               <div className="mt-6">
                 <div className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                   <span className="text-[#FF6B00]">▸</span> Sugestões com base no seu perfil:
                 </div>
-                
+
                 <div className="space-y-2">
                   {sugestoesFoco.map((sugestao, index) => (
                     <div 
@@ -276,7 +275,7 @@ export default function DefinirFocoModal({ open, onClose, onSave }: DefinirFocoM
               </div>
             </motion.div>
           )}
-          
+
           {/* Passo 2: Disciplinas ou tópicos prioritários */}
           {passo === 2 && (
             <motion.div
@@ -295,7 +294,7 @@ export default function DefinirFocoModal({ open, onClose, onSave }: DefinirFocoM
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
                 Selecione as disciplinas que deseja priorizar nos seus estudos
               </p>
-              
+
               <div className="grid grid-cols-2 gap-3">
                 {disciplinas.map((disciplina) => (
                   <div 
@@ -321,7 +320,7 @@ export default function DefinirFocoModal({ open, onClose, onSave }: DefinirFocoM
                         {disciplina.nome}
                       </span>
                     </div>
-                    
+
                     {disciplina.tag && (
                       <div className="mt-1 ml-8">
                         <span className={`text-xs font-medium px-2 py-1 rounded ${
@@ -336,7 +335,7 @@ export default function DefinirFocoModal({ open, onClose, onSave }: DefinirFocoM
                   </div>
                 ))}
               </div>
-              
+
               {/* Campo para tópico específico */}
               <div className="mt-4">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -352,7 +351,7 @@ export default function DefinirFocoModal({ open, onClose, onSave }: DefinirFocoM
               </div>
             </motion.div>
           )}
-          
+
           {/* Passo 3: Tempo de estudo */}
           {passo === 3 && (
             <motion.div
@@ -371,7 +370,7 @@ export default function DefinirFocoModal({ open, onClose, onSave }: DefinirFocoM
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                 Isso nos ajudará a planejar a quantidade adequada de atividades
               </p>
-              
+
               <div className="relative pb-12 pt-2 px-4">
                 <Slider 
                   value={[tempoEstudo]} 
@@ -381,7 +380,7 @@ export default function DefinirFocoModal({ open, onClose, onSave }: DefinirFocoM
                   step={15}
                   className="z-10"
                 />
-                
+
                 <div className="absolute bottom-0 left-0 right-0 flex justify-between text-xs text-gray-500 dark:text-gray-400">
                   <span>15min</span>
                   <span>1h</span>
@@ -389,14 +388,14 @@ export default function DefinirFocoModal({ open, onClose, onSave }: DefinirFocoM
                   <span>4h</span>
                 </div>
               </div>
-              
+
               {/* Tempo selecionado destacado */}
               <div className="flex justify-center mt-2">
                 <div className="bg-orange-100 dark:bg-[#FF6B00]/20 text-[#FF6B00] font-medium rounded-full px-5 py-2 flex items-center gap-2">
                   <Clock className="h-4 w-4" /> {formatarTempo(tempoEstudo)}
                 </div>
               </div>
-              
+
               {/* Blocos de tempo sugeridos */}
               <div className="mt-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
@@ -405,7 +404,7 @@ export default function DefinirFocoModal({ open, onClose, onSave }: DefinirFocoM
                     Blocos de tempo sugeridos na sua agenda
                   </h4>
                 </div>
-                
+
                 <div className="space-y-3 mt-2">
                   {blocosTempoSugeridos.map((bloco, index) => (
                     <div key={index} className="bg-white dark:bg-gray-800 rounded-md p-3 shadow-sm">
@@ -417,7 +416,7 @@ export default function DefinirFocoModal({ open, onClose, onSave }: DefinirFocoM
               </div>
             </motion.div>
           )}
-          
+
           {/* Passo 4: Tarefas com atenção imediata */}
           {passo === 4 && (
             <motion.div
@@ -436,7 +435,7 @@ export default function DefinirFocoModal({ open, onClose, onSave }: DefinirFocoM
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
                 Selecione as tarefas que deseja incluir no seu foco de hoje
               </p>
-              
+
               <div className="space-y-2">
                 {tarefasRecentes.map((tarefa, index) => (
                   <div 
@@ -453,7 +452,7 @@ export default function DefinirFocoModal({ open, onClose, onSave }: DefinirFocoM
                         Urgente
                       </span>
                     )}
-                    
+
                     <div className="flex items-center gap-3 pr-16">
                       <div className={`w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 ${
                         tarefasSelecionadas.includes(tarefa.titulo) 
@@ -476,7 +475,7 @@ export default function DefinirFocoModal({ open, onClose, onSave }: DefinirFocoM
                   </div>
                 ))}
               </div>
-              
+
               {/* Dica do Mentor IA */}
               <div className="mt-4 bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
@@ -493,7 +492,7 @@ export default function DefinirFocoModal({ open, onClose, onSave }: DefinirFocoM
               </div>
             </motion.div>
           )}
-          
+
           {/* Passo 5: Estado emocional */}
           {passo === 5 && (
             <motion.div
@@ -512,7 +511,7 @@ export default function DefinirFocoModal({ open, onClose, onSave }: DefinirFocoM
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
                 Isso nos ajudará a adaptar melhor as sugestões para você
               </p>
-              
+
               <div className="grid grid-cols-2 gap-3">
                 {estadosEstudo.map((estado) => (
                   <div 
@@ -542,7 +541,7 @@ export default function DefinirFocoModal({ open, onClose, onSave }: DefinirFocoM
                   </div>
                 ))}
               </div>
-              
+
               {/* Resumo das escolhas */}
               <div className="mt-6 bg-orange-50 dark:bg-[#FF6B00]/10 rounded-lg p-4 border border-orange-100 dark:border-[#FF6B00]/20">
                 <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1">
@@ -566,7 +565,7 @@ export default function DefinirFocoModal({ open, onClose, onSave }: DefinirFocoM
             </motion.div>
           )}
         </div>
-        
+
         {/* Rodapé com botões de navegação */}
         <div className="p-4 border-t border-gray-100 dark:border-gray-800 flex justify-between">
           {passo > 1 ? (
@@ -585,7 +584,7 @@ export default function DefinirFocoModal({ open, onClose, onSave }: DefinirFocoM
               Cancelar
             </Button>
           )}
-          
+
           <Button 
             onClick={proximoPasso}
             className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF5B00] hover:to-[#FF7C30] text-white border-none flex items-center gap-1"

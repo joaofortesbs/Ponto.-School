@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from "react";
-import { Target, Clock, BookOpen, Play, Check, ChevronRight, Flame, Trophy, PlusCircle, Settings } from "lucide-react";
+import { Target, Clock, BookOpen, Play, Check, ChevronRight, Flame, Trophy, PlusCircle, Settings, Smile, HelpCircle, BarChart2 } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import { motion, AnimatePresence } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
@@ -24,6 +23,7 @@ interface FocoPrincipal {
   disciplinas: string[];
   tempoTotal: string;
   dicaMentor?: string;
+  sentimento?: string;
 }
 
 export default function FocoDoDiaCard() {
@@ -43,7 +43,7 @@ export default function FocoDoDiaCard() {
     // No futuro, isso seria substituído por chamadas reais à API
     const timeout = setTimeout(() => {
       setCarregando(false);
-      
+
       // Verificar se temos dados do foco salvos no localStorage
       const focoDadosSalvos = localStorage.getItem('focoDia');
       if (focoDadosSalvos) {
@@ -67,9 +67,9 @@ export default function FocoDoDiaCard() {
     const atualizadas = atividades.map(ativ => 
       ativ.id === id ? { ...ativ, concluido: !ativ.concluido } : ativ
     );
-    
+
     setAtividades(atualizadas);
-    
+
     // Atualizar no localStorage
     if (focoPrincipal) {
       localStorage.setItem('focoDia', JSON.stringify({
@@ -83,7 +83,7 @@ export default function FocoDoDiaCard() {
   const processarDefinicaoFoco = (dados: FocoData) => {
     setModalAberto(false);
     setGerando(true);
-    
+
     // Simulando processamento pelo backend/IA
     setTimeout(() => {
       // Criar foco principal baseado nos dados recebidos
@@ -92,18 +92,19 @@ export default function FocoDoDiaCard() {
         descricao: dados.objetivoPersonalizado || dados.objetivo,
         disciplinas: dados.disciplinas,
         tempoTotal: `${Math.round(dados.tempoEstudo / 60)} hora${dados.tempoEstudo >= 120 ? 's' : ''}`,
-        dicaMentor: gerarDicaMentor(dados.estado)
+        dicaMentor: gerarDicaMentor(dados.estado),
+        sentimento: dados.estado
       };
-      
+
       // Gerar atividades baseadas nas informações
       const novasAtividades = gerarAtividades(dados);
-      
+
       // Atualizar estados
       setFocoPrincipal(novoFocoPrincipal);
       setAtividades(novasAtividades);
       setTemFoco(true);
       setGerando(false);
-      
+
       // Salvar no localStorage
       localStorage.setItem('focoDia', JSON.stringify({
         focoPrincipal: novoFocoPrincipal,
@@ -111,7 +112,7 @@ export default function FocoDoDiaCard() {
       }));
     }, 2000);
   };
-  
+
   // Função para gerar dica baseada no estado emocional
   const gerarDicaMentor = (estado: string): string => {
     const dicas = {
@@ -120,14 +121,14 @@ export default function FocoDoDiaCard() {
       "Cansado(a)": "Alterne entre tópicos diferentes a cada 30 minutos para manter o foco.",
       "Ansioso(a)": "Pratique 2 minutos de respiração profunda antes de cada sessão de estudo."
     };
-    
+
     return dicas[estado as keyof typeof dicas] || "Estabeleça pequenas metas e celebre cada conquista no seu estudo.";
   };
-  
+
   // Função para gerar atividades com base nos dados do formulário
   const gerarAtividades = (dados: FocoData): Atividade[] => {
     const tiposAtividade: ("video" | "exercicio" | "revisao" | "tarefa")[] = ["video", "exercicio", "revisao", "tarefa"];
-    
+
     // Se o usuário selecionou tarefas específicas, incluí-las
     const atividadesTarefas = dados.tarefasSelecionadas.map((tarefa, index) => ({
       id: Date.now() + index,
@@ -139,7 +140,7 @@ export default function FocoDoDiaCard() {
       concluido: false,
       progresso: 0
     }));
-    
+
     // Gerar atividades extras com base nas disciplinas
     const atividadesExtra = dados.disciplinas.slice(0, 3).map((disciplina, index) => {
       const tipo = tiposAtividade[Math.floor(Math.random() * tiposAtividade.length)];
@@ -149,7 +150,7 @@ export default function FocoDoDiaCard() {
         revisao: [`Revisar anotações de ${disciplina}`, `Resumo do capítulo de ${disciplina}`],
         tarefa: [`Trabalho de ${disciplina}`, `Projeto de ${disciplina}`]
       };
-      
+
       return {
         id: Date.now() + atividadesTarefas.length + index,
         titulo: titulos[tipo][Math.floor(Math.random() * 2)],
@@ -161,11 +162,11 @@ export default function FocoDoDiaCard() {
         progresso: 0
       };
     });
-    
+
     // Combinar todas as atividades e limitar a 4 no máximo
     return [...atividadesTarefas, ...atividadesExtra].slice(0, 4);
   };
-  
+
   // Função para reiniciar o foco
   const redefinirFoco = () => {
     setModalAberto(true);
@@ -175,6 +176,9 @@ export default function FocoDoDiaCard() {
   const totalAtividades = atividades.length;
   const atividadesConcluidas = atividades.filter(a => a.concluido).length;
   const progressoTotal = totalAtividades > 0 ? (atividadesConcluidas / totalAtividades) * 100 : 0;
+  const progressoAtividades = totalAtividades > 0 
+    ? Math.round((atividadesConcluidas / totalAtividades) * 100) 
+    : 0;
 
   // Renderizar estado de carregamento
   if (carregando) {
@@ -201,7 +205,7 @@ export default function FocoDoDiaCard() {
       </motion.div>
     );
   }
-  
+
   // Renderizar estado de geração de foco
   if (gerando) {
     return (
@@ -225,7 +229,7 @@ export default function FocoDoDiaCard() {
             </div>
           </div>
         </div>
-        
+
         <div className="h-full p-8 flex flex-col items-center justify-center">
           <div className="flex flex-col items-center space-y-4">
             <div className={`p-3 rounded-full ${isLightMode ? 'bg-orange-100' : 'bg-[#FF6B00]/20'}`}>
@@ -250,7 +254,7 @@ export default function FocoDoDiaCard() {
                 O Mentor IA está analisando suas preferências e criando seu plano de estudos personalizado.
               </p>
             </div>
-            
+
             <div className="w-full max-w-xs mt-4">
               <div className="h-1.5 w-full bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                 <motion.div 
@@ -360,7 +364,7 @@ export default function FocoDoDiaCard() {
                 </div>
               </div>
             </div>
-            
+
             {/* Botão de configurações para redefinir foco */}
             <div className="absolute top-5 right-5">
               <button 
@@ -370,7 +374,7 @@ export default function FocoDoDiaCard() {
                 <Settings className={`h-3.5 w-3.5 ${isLightMode ? 'text-gray-600' : 'text-gray-400'}`} />
               </button>
             </div>
-            
+
             {/* Lista de atividades */}
             <div className="space-y-2.5">
               {atividades.map((atividade, index) => (
@@ -387,7 +391,7 @@ export default function FocoDoDiaCard() {
                       <div className={`w-2 h-2 rounded-full ${isLightMode ? 'bg-red-500' : 'bg-red-400'} animate-pulse mr-1 mt-1`}></div>
                     </div>
                   )}
-                  
+
                   <div 
                     className={`h-5 w-5 rounded-full flex items-center justify-center mr-3 border ${
                       atividade.concluido 
@@ -434,7 +438,7 @@ export default function FocoDoDiaCard() {
                 </motion.div>
               ))}
             </div>
-            
+
             {/* Dica do Mentor IA no final do card */}
             {focoPrincipal.dicaMentor && (
               <div className={`mt-4 p-3 rounded-lg ${isLightMode ? 'bg-green-50' : 'bg-green-900/10'} border ${isLightMode ? 'border-green-100' : 'border-green-800/30'}`}>
@@ -481,22 +485,34 @@ export default function FocoDoDiaCard() {
         )}
 
         {/* Footer com botão de ação e métricas */}
-        <div className="mt-5 pt-4 border-t border-gray-100 dark:border-gray-700/30 flex justify-between items-center">
+        <div className="mt-5 pt-4 border-t border-gray-100 dark:border-gray-700/30 flex justify-between items-center relative">
           {atividades.length > 0 ? (
-            <div className="flex items-center gap-3">
-              <div className={`p-1.5 rounded-md ${isLightMode ? 'bg-orange-100' : 'bg-[#FF6B00]/20'}`}>
-                <Trophy className="h-3.5 w-3.5 text-[#FF6B00]" />
-              </div>
-              <div>
-                <p className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                  {atividadesConcluidas} de {totalAtividades} atividades
-                </p>
-              </div>
-            </div>
+            
+            
+              
+                
+                  
+                    
+                  
+                  
+                    {atividadesConcluidas} de {totalAtividades} atividades
+                  
+                
+              
+              
+                
+                  
+                    
+                      
+                    
+                  
+                
+              
+            
           ) : (
             <div></div> // Espaçador para manter o layout com justify-between
           )}
-          
+
           <motion.button 
             onClick={() => setModalAberto(true)}
             className={`rounded-lg px-4 py-2 text-xs font-medium bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white shadow-sm hover:shadow-md transition-all flex items-center gap-1.5 ${isLightMode ? '' : 'border border-[#FF6B00]/40'}`}
@@ -506,9 +522,22 @@ export default function FocoDoDiaCard() {
             {atividades.length > 0 ? "Iniciar Foco" : "Definir Foco"}
             <ChevronRight className="h-3 w-3" />
           </motion.button>
+
+          {/* Exibir sentimento quando disponível */}
+            {temFoco && focoPrincipal?.sentimento && (
+              <div className="absolute top-2 right-2">
+                <div className="text-xs bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 px-2 py-1 rounded-full flex items-center gap-1">
+                  {focoPrincipal.sentimento === "Motivado(a)" && <Smile className="h-3 w-3" />}
+                  {focoPrincipal.sentimento === "Um pouco perdido(a)" && <HelpCircle className="h-3 w-3" />}
+                  {focoPrincipal.sentimento === "Cansado(a)" && <Clock className="h-3 w-3" />}
+                  {focoPrincipal.sentimento === "Ansioso(a)" && <BarChart2 className="h-3 w-3" />}
+                  <span>{focoPrincipal.sentimento}</span>
+                </div>
+              </div>
+            )}
         </div>
       </div>
-      
+
       {/* Modal para definir o foco */}
       <AnimatePresence>
         {modalAberto && (
