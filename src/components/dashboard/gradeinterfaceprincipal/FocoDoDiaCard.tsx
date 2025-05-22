@@ -713,22 +713,17 @@ export default function FocoDoDiaCard() {
           </>
         ) : (
           <>
-            {/* Mensagem de boas-vindas para novos usuários - Design aprimorado */}
-            <div className={`mb-5 p-4 rounded-xl ${isLightMode ? 'bg-gradient-to-r from-orange-50 to-orange-50/50' : 'bg-gradient-to-r from-[#FF6B00]/10 to-[#001427]'} border ${isLightMode ? 'border-orange-100' : 'border-[#FF6B00]/20'} relative overflow-hidden`}>
-              {/* Elemento decorativo */}
-              <div className="absolute -right-4 -top-4 w-16 h-16 rounded-full bg-orange-400/5 blur-xl"></div>
-              
-              <div className="flex gap-3 items-start relative z-10">
-                <div className={`p-2 rounded-lg ${isLightMode 
-                  ? 'bg-white shadow-sm border border-orange-100' 
-                  : 'bg-[#FF6B00]/15 border border-[#FF6B00]/30'} flex-shrink-0`}>
-                  <Flame className="h-4 w-4 text-[#FF6B00]" />
+            {/* Mensagem de boas-vindas para novos usuários - Design conforme imagem */}
+            <div className={`mb-5 p-4 rounded-xl ${isLightMode ? 'bg-orange-50/80' : 'bg-[#FF6B00]/5'} border ${isLightMode ? 'border-orange-100/70' : 'border-[#FF6B00]/10'}`}>
+              <div className="flex gap-3 items-center">
+                <div className={`flex-shrink-0`}>
+                  <Flame className="h-5 w-5 text-[#FF6B00]" />
                 </div>
                 <div>
-                  <h5 className={`text-xs font-semibold mb-1 ${isLightMode ? 'text-gray-800' : 'text-white'}`}>
+                  <h5 className={`text-sm font-medium ${isLightMode ? 'text-gray-800' : 'text-white'}`}>
                     Bem-vindo ao Seu Foco de Hoje
                   </h5>
-                  <p className={`text-xs leading-relaxed ${isLightMode ? 'text-gray-600' : 'text-gray-300'}`}>
+                  <p className={`text-xs ${isLightMode ? 'text-gray-600' : 'text-gray-300'}`}>
                     Defina prioridades, acompanhe seu progresso e mantenha o foco nos seus objetivos de estudo mais importantes.
                   </p>
                 </div>
