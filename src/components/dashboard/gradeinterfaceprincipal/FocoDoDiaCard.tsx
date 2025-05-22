@@ -3,8 +3,9 @@ import { Target, Clock, BookOpen, Play, Check, ChevronRight, Flame, Trophy, Plus
 import { useTheme } from "@/components/ThemeProvider";
 import { Progress } from "@/components/ui/progress";
 import DefinirFocoModal, { FocoData } from "./DefinirFocoModal";
-// Importação do framer-motion
-import { motion, AnimatePresence } from "framer-motion";
+import { motion as Motion, AnimatePresence } from "framer-motion";
+// Definir o tipo motion para compatibilidade
+const motion = Motion;
 
 // Tipo para atividades
 interface Atividade {
