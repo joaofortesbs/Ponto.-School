@@ -367,11 +367,7 @@ export default function FocoDoDiaCard() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className={`p-2.5 rounded-lg flex items-center justify-center ${isLightMode ? 'bg-white shadow-sm border border-orange-200' : 'bg-[#FF6B00]/10 border border-[#FF6B00]/30'}`}>
-              {todasAtividadesConcluidas ? (
-                <Trophy className={`h-5 w-5 text-[#FF6B00]`} />
-              ) : (
-                <Flame className={`h-5 w-5 text-[#FF6B00]`} />
-              )}
+              <Trophy className={`h-5 w-5 text-[#FF6B00]`} />
             </div>
             <div>
               <h3 className={`font-semibold text-lg ${isLightMode ? 'text-gray-800' : 'text-white'}`}>
