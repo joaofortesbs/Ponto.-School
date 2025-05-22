@@ -32,7 +32,7 @@ export default function DashboardMetricsGrid() {
       </div>
 
       {/* Cards maiores - Foco do Dia e Atalhos School */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 grid-proportional">
         {/* Card de Foco do Dia */}
         <FocoDoDiaCard />
 
