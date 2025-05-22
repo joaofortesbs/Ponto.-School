@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Target, Clock, BookOpen, Play, Check, ChevronRight, Flame, Trophy, PlusCircle, Settings, Smile, HelpCircle, BarChart2 } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
@@ -487,28 +488,16 @@ export default function FocoDoDiaCard() {
         {/* Footer com botão de ação e métricas */}
         <div className="mt-5 pt-4 border-t border-gray-100 dark:border-gray-700/30 flex justify-between items-center relative">
           {atividades.length > 0 ? (
-            
-            
-              
-                
-                  
-                    
-                  
-                  
-                    {atividadesConcluidas} de {totalAtividades} atividades
-                  
-                
-              
-              
-                
-                  
-                    
-                      
-                    
-                  
-                
-              
-            
+            <div className="flex items-center gap-2">
+              <div className={`w-5 h-5 rounded-full border ${isLightMode ? 'border-gray-300 bg-white' : 'border-gray-600 bg-transparent'} flex items-center justify-center`}>
+                <span className={`text-xs font-medium ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
+                  {atividadesConcluidas}
+                </span>
+              </div>
+              <span className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                {atividadesConcluidas} de {totalAtividades} atividades
+              </span>
+            </div>
           ) : (
             <div></div> // Espaçador para manter o layout com justify-between
           )}
