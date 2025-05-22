@@ -1,0 +1,93 @@
+**Fluxo de Interação (Após Concluir Todas as Tarefas do "" após o aluno concluir todas as tarefas propostas. Isso reforça a sensação de realização e orienta os próximos passos.
+Foco do Dia"):**
+1. Feedback Imediato de Conclusão:
+Ação: OFluxo Após a Conclusão de Todas as Tarefas do "Foco do Dia":
+*Ú aluno marca o último checkbox da lista de atividades no card "Seu Foco do Dia".
+ltima Tarefa Marcada como Concluída:
+O aluno clica no checkbox da última tarefa pendente na lista do card.
+Feedback Visual Imediato:
+Animação * Reação Visual (Satisfatória e Motivadora):
+*Animação no Checksatisfatória de preenchimento do checkbox.
+O texto da tarefa fica riscado/com cor maisbox:** O checkbox é preenchido com uma animação especial (ex: um brilho, um conf clara.
+Processamento (Backend):
+O status da tarefa é atualizado.
+ete sutil, um "check" mais elaborado).
+Atualização do Card (Transição Suave): O card "Seu Foco do Dia" muda seu estado para refletir a conclusão.* O Mentor IA registra que todas as atividades do foco definido para aquele dia foram concluídas.
+Transformação do Card "Seu Foco do Dia":
+**Animação de Conclusão (Impact Essa transição deve ser suave e perceptível.
+2. Aparência do Card "ante e Motivadora):
+* O card inteiro pode ter uma animação especial para celebrarFoco do Dia Concluído":**
+Título: Pode mudar para algo como:
+"Foco do Dia: CONCLUÍDO! 🎉"
+"Parabéns! Você complet a conclusão. Sugestões:
+* Confetes Virtuais: Pequenas partículas coloridas (laranja, azul, branco da Ponto. School) "caem" brevemente sobre o card.
+*ou seu Foco de Hoje!"
+"Missão Cumprida: Foco do Dia Finalizado!"
+Brilho Dourado/Laranja: Uma borda brilhante aparece ao redor do card por alguns segundos.
+Ícone Principal: Pode mudar para um ícone de conquista ou celebração:
+Troféu.
+Medalha.
+Estrela brilhante.
+* Ícone de Troféu/Estrela: Um ícone de conquista aparece brevemente no centro do card com* Foguete decolando (simbolizando avanço).
+Mensagem de Parabéns: uma animação de "pop-up".
+* Som de Conquista (Opcional e Sutil): Um som curto e positivo (configurável pelo usuário).
+* Importante: A animação
+Texto: Uma mensagem positiva e encorajadora. Ex:
+"Excelente trabalho! Você arrasou no foco de hoje. Continue assim!"
+"Que produtividade! Todas as atividades deve ser rápida e não intrusiva, apenas um reconhecimento visual.
+Mudança no Conteúdo do Card:
+Título: Muda para algo como:
+"Foco do do foco de hoje foram concluídas. Descanse um pouco ou explore novos desafios!"
+"Mais Dia Concluído! 🎉"
+"Parabéns, [Nome do Aluno]! Você deton um dia de estudos focado e concluído com sucesso! Epictus IA está orgulhoso!"
+ou hoje!"
+* "Missão Cumprida: Foco do Dia Completo!"
+ÍOpcional: Usar o nome do aluno na mensagem (ex: "Parabéns, [Nome do Alunocone Principal: Pode mudar para um ícone de troféu, estrela ou um *checkmark grande]!").
+Sumário do Dia (Opcional, mas Recomendado):
+e estilizado*.
+Mensagem de Parabéns/Incentivo (Centralizada):
+Mostrar um *breve resumo* do que foi realizado:
+Use code with caution.
+"Você completou [Número] atividadesTexto: "Você completou todas as suas atividades prioritárias de hoje! Ótimo trabalho mantendo o foco e hoje."
+"Tempo total dedicado ao foco: [X horas/minutos]." (Se a plataforma rast a disciplina."
+*Opcional (Sugestão do Mentor IA para o Próximo Passo –rear isso).
+"Próximo foco sugerido: [Tópico/Disciplina] (para amanhã)."
+Barra de Progresso (Opcional):
+Pode mais sutil):* "Que tal aproveitar para explorar os [Desafios da Semana] ou revisar os [Tópicos Favoritos na Biblioteca]?"
+Visualização do Progresso (Opcional): mostrar "100% Concluído" ou ser substituída por um elemento gráfico de celebração.
+*   Uma pequena barra de progresso mostrando "100% Concluído" para as atividades do dia.
+Use code with caution.
+Sugestão do Mentor IA (Contextualizada):
+O Mentor IA pode oferecer sugestões para * Remoção da Lista de Tarefas: A lista de tarefas concluídas pode ser ocultada ou o restante do dia ou para o próximo dia:
+"Que tal explorar a Biblioteca substituída pela mensagem de parabéns para não poluir o card.
+**Nov em busca de materiais sobre [Tópico Relacionado]?"
+"Você ganhou [X] Ponto Coinsos Botões de Ação (Sugerindo Próximos Passos):**
+Botão 1: "Definir Novo Foco" (ou "Planejar Amanhã"):
+por completar seu foco! Veja suas Conquistas."
+"Aproveite para relaxar! Amanhã temos Função: Leva o aluno de volta ao modal "Defina Seu Foco de Estudos" (onde um novo foco te esperando."
+"Já definiu seu foco para amanhã? Clique aqui para ele interagiu com o Mentor IA para definir o foco inicial).
+Objetivo: Permitir que o aluno planejar!"
+Botões de Ação (Relevantes para o Estado de Conclusão): já comece a planejar o foco do próximo dia ou de uma nova sessão de estudos,
+Opção 1: Foco no Próximo Dia/Exploração:
+se ele quiser continuar produtivo.
+* Design: Botão laranja (principal).
+Bot "Planejar Foco de Amanhã" (Abre o modal de definição de foco, mas para oão 2: "Explorar Recomendações" (ou "O Que Fazer Agora?"):*
+dia seguinte).
+"Explorar a Biblioteca" (Leva para a Biblioteca).
+"Ver Minhas Conquistas" (Leva para a seção de Gamificação).
+Opção 2: Função: Leva o aluno para uma seção onde o Mentor IA oferece sugestões de Foco no Relaxamento/Feedback:
+"Me Dê uma Dica de Relaxamento" (O atividades adicionais* que não eram prioritárias, mas que podem ser interessantes ou úteis. Exemplos:
+* Materiais relacionados na Biblioteca que ele ainda não viu.
+* Desafios relevantes.
+* Mentor IA oferece uma técnica de relaxamento ou sugere uma pausa).
+"Como Posso Melhorar Aman Tópicos populares nos fóruns das suas turmas.
+* Novidades da plataforma.
+hã?" (Abre um chat com o Mentor IA para feedback sobre o dia).
+*Design dos Design: Botão secundário (fundo transparente, texto/borda laranja).
+Botões:** Manter o padrão (laranja para principal, transparente/borda para secundário).
+AnBotão 3 (Opcional): "Ver Meu Desempenho Hoje":**
+* Funimação de Celebração (Sutil e Rápida):*
+Ao concluir a última tarefa, alémção:* Leva para a seção de "Desempenho" com um filtro para as atividades do dia, mostrando o da animação do checkbox, o card pode ter uma breve animação de celebração (ex: confetes virtu que foi concluído, tempo gasto (se rastreado), etc.
+* Design: Botão secundário.ais caindo, estrelas aparecendo e sumindo). *Cuidado para não ser exagerado ou infantil demais
+Atualização da Sequência de Estudos (Card "Sua Sequência de Estudos!"):
+**.
