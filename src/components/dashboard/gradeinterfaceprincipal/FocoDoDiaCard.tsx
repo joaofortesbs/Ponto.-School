@@ -346,6 +346,7 @@ export default function FocoDoDiaCard() {
   }
 
   return (
+    <>
     <motion.div 
       className={`rounded-xl overflow-hidden ${isLightMode ? 'bg-white' : 'bg-gradient-to-br from-[#001e3a] to-[#00162b]'} shadow-lg ${isLightMode ? 'border border-gray-200' : 'border border-white/10'} h-full self-start flex flex-col overflow-y-auto grid-cell`}
       style={{ minHeight: '600px' }}
@@ -870,6 +871,3 @@ export default function FocoDoDiaCard() {
           </>
         )}
       </AnimatePresence>
-    </motion.div>
-  );
-}
