@@ -713,30 +713,74 @@ export default function FocoDoDiaCard() {
           </>
         ) : (
           <>
-            {/* Mensagem de boas-vindas para novos usuários */}
-            <div className={`mb-4 p-3 rounded-lg ${isLightMode ? 'bg-orange-50' : 'bg-[#FF6B00]/5'} border ${isLightMode ? 'border-orange-100' : 'border-[#FF6B00]/20'}`}>
-              <div className="flex gap-2 items-start">
-                <div className={`mt-0.5 p-1.5 rounded-md ${isLightMode ? 'bg-orange-100' : 'bg-[#FF6B00]/20'}`}>
-                  <Target className="h-3.5 w-3.5 text-[#FF6B00]" />
+            {/* Mensagem de boas-vindas para novos usuários - Design aprimorado */}
+            <div className={`mb-5 p-4 rounded-xl ${isLightMode ? 'bg-gradient-to-r from-orange-50 to-orange-50/50' : 'bg-gradient-to-r from-[#FF6B00]/10 to-[#001427]'} border ${isLightMode ? 'border-orange-100' : 'border-[#FF6B00]/20'} relative overflow-hidden`}>
+              {/* Elemento decorativo */}
+              <div className="absolute -right-4 -top-4 w-16 h-16 rounded-full bg-orange-400/5 blur-xl"></div>
+              
+              <div className="flex gap-3 items-start relative z-10">
+                <div className={`p-2 rounded-lg ${isLightMode 
+                  ? 'bg-white shadow-sm border border-orange-100' 
+                  : 'bg-[#FF6B00]/15 border border-[#FF6B00]/30'} flex-shrink-0`}>
+                  <Flame className="h-4 w-4 text-[#FF6B00]" />
                 </div>
-                <p className={`text-xs ${isLightMode ? 'text-gray-600' : 'text-gray-300'}`}>
-                  <span className="font-medium">Mentor IA:</span> Bem-vindo! Aqui você poderá definir e acompanhar suas atividades diárias prioritárias. Comece definindo seu foco de estudos.
-                </p>
+                <div>
+                  <h5 className={`text-xs font-semibold mb-1 ${isLightMode ? 'text-gray-800' : 'text-white'}`}>
+                    Bem-vindo ao Seu Foco de Hoje
+                  </h5>
+                  <p className={`text-xs leading-relaxed ${isLightMode ? 'text-gray-600' : 'text-gray-300'}`}>
+                    Defina prioridades, acompanhe seu progresso e mantenha o foco nos seus objetivos de estudo mais importantes.
+                  </p>
+                </div>
               </div>
             </div>
 
-            {/* Estado vazio - Sem atividades */}
-            <div className="py-12 flex flex-col items-center justify-center space-y-4">
-              <div className={`p-3 rounded-full ${isLightMode ? 'bg-orange-50' : 'bg-[#FF6B00]/10'}`}>
-                <Clock className={`h-6 w-6 text-[#FF6B00]`} />
+            {/* Estado vazio - Design moderno e sofisticado */}
+            <div className="py-6 flex flex-col items-center justify-center space-y-6">
+              {/* Elemento gráfico circular com gradiente e glow */}
+              <div className="relative">
+                <div className={`absolute inset-0 rounded-full ${isLightMode ? 'bg-orange-300/20' : 'bg-[#FF6B00]/20'} blur-xl -z-10 scale-125`}></div>
+                <div className={`p-5 rounded-full ${isLightMode 
+                  ? 'bg-gradient-to-br from-orange-50 to-orange-100 shadow-sm' 
+                  : 'bg-gradient-to-br from-[#FF6B00]/20 to-[#FF8C40]/10 border border-[#FF6B00]/30'}`}>
+                  <Target className={`h-7 w-7 text-[#FF6B00]`} strokeWidth={1.5} />
+                </div>
               </div>
-              <div className="text-center space-y-2">
-                <h4 className={`text-sm font-medium ${isLightMode ? 'text-gray-700' : 'text-gray-200'}`}>
-                  Nenhuma atividade definida
-                </h4>
-                <p className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'} max-w-xs`}>
-                  Defina um foco de estudo e adicione atividades para organizar seu dia.
+              
+              {/* Texto principal com design mais elegante */}
+              <div className="text-center space-y-4 max-w-[80%]">
+                <h3 className={`text-lg font-semibold ${isLightMode ? 'text-gray-800' : 'text-white'}`}>
+                  Defina seu foco de estudos
+                </h3>
+                <p className={`text-sm leading-relaxed ${isLightMode ? 'text-gray-600' : 'text-gray-300'}`}>
+                  Organize seu dia priorizando o que realmente importa para seus estudos
                 </p>
+              </div>
+              
+              {/* Etapas - visual elegante */}
+              <div className={`w-4/5 mt-2 ${isLightMode ? 'bg-orange-50/70' : 'bg-[#FF6B00]/5'} rounded-xl p-4 border ${isLightMode ? 'border-orange-100' : 'border-[#FF6B00]/20'}`}>
+                <div className="flex flex-col space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center ${isLightMode ? 'bg-white text-orange-500 border border-orange-200' : 'bg-[#FF6B00]/20 text-[#FF6B00] border border-[#FF6B00]/30'}`}>
+                      <span className="text-xs font-medium">1</span>
+                    </div>
+                    <p className={`text-xs ${isLightMode ? 'text-gray-700' : 'text-gray-200'}`}>Defina objetivos e disciplinas prioritárias</p>
+                  </div>
+                  
+                  <div className="flex items-center gap-3">
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center ${isLightMode ? 'bg-white text-orange-500 border border-orange-200' : 'bg-[#FF6B00]/20 text-[#FF6B00] border border-[#FF6B00]/30'}`}>
+                      <span className="text-xs font-medium">2</span>
+                    </div>
+                    <p className={`text-xs ${isLightMode ? 'text-gray-700' : 'text-gray-200'}`}>Organize tarefas em ordem de prioridade</p>
+                  </div>
+                  
+                  <div className="flex items-center gap-3">
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center ${isLightMode ? 'bg-white text-orange-500 border border-orange-200' : 'bg-[#FF6B00]/20 text-[#FF6B00] border border-[#FF6B00]/30'}`}>
+                      <span className="text-xs font-medium">3</span>
+                    </div>
+                    <p className={`text-xs ${isLightMode ? 'text-gray-700' : 'text-gray-200'}`}>Acompanhe seu progresso durante o dia</p>
+                  </div>
+                </div>
               </div>
             </div>
           </>
@@ -837,12 +881,19 @@ export default function FocoDoDiaCard() {
           {!todasAtividadesConcluidas ? (
             <motion.button 
               onClick={() => setModalAberto(true)}
-              className={`rounded-lg px-4 py-2 text-xs font-medium bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white shadow-sm hover:shadow-md transition-all flex items-center gap-1.5 ${isLightMode ? '' : 'border border-[#FF6B00]/40'}`}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.98 }}
+              className={`rounded-lg px-5 py-2.5 text-sm font-medium bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white shadow-sm hover:shadow-md transition-all flex items-center gap-2 ${isLightMode ? '' : 'border border-[#FF6B00]/40'}`}
+              whileHover={{ scale: 1.03, y: -1 }}
+              whileTap={{ scale: 0.97 }}
+              initial={{ boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)" }}
+              animate={{ boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)" }}
+              whileHover={{ 
+                boxShadow: "0 4px 12px rgba(255, 107, 0, 0.25)",
+                scale: 1.03, 
+                y: -1 
+              }}
             >
               {atividades.length > 0 ? "Iniciar Foco" : "Definir Foco"}
-              <ChevronRight className="h-3 w-3" />
+              <Target className="h-4 w-4 opacity-80" />
             </motion.button>
           ) : (
             <motion.button 
