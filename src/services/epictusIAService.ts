@@ -118,6 +118,13 @@ ${JSON.stringify(userTasks || [], null, 2)}
 PREFERÊNCIAS DE FOCO:
 ${JSON.stringify(focusData || {}, null, 2)}
 
+REQUISITOS OBRIGATÓRIOS:
+- SEMPRE gere NO MÍNIMO 3 tarefas personalizadas para o usuário, independentemente das informações disponíveis
+- Considere disciplinas e objetivos selecionados pelo usuário
+- Tarefas devem ser específicas, acionáveis e relevantes para o contexto do usuário
+- Diversifique os tipos de tarefas (video, exercicio, revisao, tarefa)
+- Inclua uma mistura de tarefas urgentes e não urgentes
+
 Retorne um objeto JSON com a seguinte estrutura:
 {
   "focoPrincipal": {

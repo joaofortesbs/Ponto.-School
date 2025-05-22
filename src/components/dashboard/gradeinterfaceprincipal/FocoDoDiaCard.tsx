@@ -355,6 +355,13 @@ export default function FocoDoDiaCard() {
         novasAtividades = gerarAtividades(dados);
       }
       
+      // Garantir que temos pelo menos 3 tarefas
+      if (novasAtividades.length < 3) {
+        console.log("Número insuficiente de tarefas geradas. Adicionando tarefas complementares.");
+        const tarefasComplementares = gerarTarefasComplementares(dados, novasAtividades.length);
+        novasAtividades = [...novasAtividades, ...tarefasComplementares];
+      }
+      
       // Garantir que as tarefas selecionadas pelo usuário estejam incluídas
       if (dados.tarefasSelecionadas && dados.tarefasSelecionadas.length > 0) {
         // Verificar se as tarefas selecionadas já estão nas atividades
@@ -467,7 +474,14 @@ export default function FocoDoDiaCard() {
     };
 
     // Gerar atividades baseadas nas informações sem IA
-    const novasAtividades = gerarAtividades(dados);
+    let novasAtividades = gerarAtividades(dados);
+    
+    // Garantir que temos pelo menos 3 tarefas
+    if (novasAtividades.length < 3) {
+      console.log("Gerando tarefas complementares no fallback para garantir mínimo de 3 tarefas");
+      const tarefasComplementares = gerarTarefasComplementares(dados, novasAtividades.length);
+      novasAtividades = [...novasAtividades, ...tarefasComplementares];
+    }
 
     // Atualizar estados
     setFocoPrincipal(novoFocoPrincipal);
@@ -534,8 +548,85 @@ export default function FocoDoDiaCard() {
       };
     });
 
+    // Garantir que tenhamos pelo menos 3 tarefas no total
+    const atividades = [...atividadesTarefas, ...atividadesExtra];
+    if (atividades.length < 3) {
+      const tarefasComplementares = gerarTarefasComplementares(dados, atividades.length);
+      return [...atividades, ...tarefasComplementares].slice(0, 4);
+    }
+
     // Combinar todas as atividades e limitar a 4 no máximo
-    return [...atividadesTarefas, ...atividadesExtra].slice(0, 4);
+    return atividades.slice(0, 4);
+  };
+  
+  // Função para gerar tarefas complementares quando não há tarefas suficientes
+  const gerarTarefasComplementares = (dados: FocoData, quantidadeExistente: number): Atividade[] => {
+    const tiposAtividade: ("video" | "exercicio" | "revisao" | "tarefa")[] = ["video", "exercicio", "revisao", "tarefa"];
+    const quantidadeNecessaria = Math.max(3 - quantidadeExistente, 0);
+    const tarefasComplementares: Atividade[] = [];
+    
+    // Lista de tarefas genéricas por tipo
+    const tarefasGenericas = {
+      video: [
+        "Assistir vídeo explicativo sobre o tema principal",
+        "Ver aula gravada sobre conceitos fundamentais",
+        "Assistir tutorial prático relacionado ao assunto",
+        "Visualizar explicação detalhada em vídeo",
+        "Explorar videoaula complementar"
+      ],
+      exercicio: [
+        "Resolver exercícios práticos do tema atual",
+        "Completar lista de problemas relacionados",
+        "Fazer exercícios de fixação do conteúdo",
+        "Praticar com questionário sobre o tema",
+        "Resolver desafios para testar conhecimentos"
+      ],
+      revisao: [
+        "Revisar conceitos fundamentais do assunto",
+        "Criar resumo dos principais tópicos",
+        "Organizar anotações sobre o conteúdo",
+        "Fazer revisão espaçada de temas anteriores",
+        "Condensar informações em mapa mental"
+      ],
+      tarefa: [
+        "Completar atividade pendente de alta prioridade",
+        "Avançar no projeto atual",
+        "Organizar materiais de estudo",
+        "Preparar perguntas para próxima aula",
+        "Pesquisar informações complementares"
+      ]
+    };
+    
+    // Gerar tarefas genéricas com base no objetivo e estado emocional
+    for (let i = 0; i < quantidadeNecessaria; i++) {
+      const tipo = tiposAtividade[Math.floor(Math.random() * tiposAtividade.length)];
+      const opcoesTitulos = tarefasGenericas[tipo];
+      const tituloIndex = Math.floor(Math.random() * opcoesTitulos.length);
+      
+      // Adicionar contexto do objetivo ou disciplinas se disponíveis
+      let titulo = opcoesTitulos[tituloIndex];
+      if (dados.disciplinas.length > 0) {
+        const disciplina = dados.disciplinas[Math.floor(Math.random() * dados.disciplinas.length)];
+        if (Math.random() > 0.3) { // 70% de chance de personalizar com a disciplina
+          titulo += ` de ${disciplina}`;
+        }
+      }
+      
+      // Criar tarefa complementar
+      tarefasComplementares.push({
+        id: Date.now() + 1000 + i,
+        titulo: titulo,
+        tipo: tipo,
+        tempo: `${Math.floor(Math.random() * 30) + 15}min`,
+        prazo: dados.estado === "Ansioso(a)" ? "hoje" : ["hoje", "amanhã", "esta semana"][Math.floor(Math.random() * 3)],
+        urgente: dados.estado === "Ansioso(a)" ? true : Math.random() > 0.6,
+        concluido: false,
+        progresso: 0
+      });
+    }
+    
+    console.log(`Geradas ${tarefasComplementares.length} tarefas complementares para atingir o mínimo de 3`);
+    return tarefasComplementares;
   };
 
   // Função para lançar confete quando todas as tarefas forem concluídas
