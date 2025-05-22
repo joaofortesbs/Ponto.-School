@@ -692,6 +692,17 @@ export default function FocoDoDiaCard() {
               <span className={`text-xs ${todasAtividadesConcluidas ? (isLightMode ? 'text-green-600 font-medium' : 'text-green-400 font-medium') : (isLightMode ? 'text-gray-500' : 'text-gray-400')}`}>
                 {todasAtividadesConcluidas ? "Todas as atividades concluídas!" : `${atividadesConcluidas} de ${totalAtividades} atividades`}
               </span>
+              
+              {/* Indicador de sentimento posicionado ao lado da contagem de atividades */}
+              {temFoco && focoPrincipal?.sentimento && !todasAtividadesConcluidas && (
+                <div className="text-xs bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 px-2 py-1 rounded-full flex items-center gap-1 ml-2">
+                  {focoPrincipal.sentimento === "Motivado(a)" && <Smile className="h-3 w-3" />}
+                  {focoPrincipal.sentimento === "Um pouco perdido(a)" && <HelpCircle className="h-3 w-3" />}
+                  {focoPrincipal.sentimento === "Cansado(a)" && <Clock className="h-3 w-3" />}
+                  {focoPrincipal.sentimento === "Ansioso(a)" && <BarChart2 className="h-3 w-3" />}
+                  <span>{focoPrincipal.sentimento}</span>
+                </div>
+              )}
             </div>
           ) : (
             <div></div> // Espaçador para manter o layout com justify-between
@@ -718,19 +729,6 @@ export default function FocoDoDiaCard() {
               <PlusCircle className="h-3 w-3" />
             </motion.button>
           )}
-
-          {/* Exibir sentimento quando disponível */}
-            {temFoco && focoPrincipal?.sentimento && !todasAtividadesConcluidas && (
-              <div className="absolute top-2 right-2">
-                <div className="text-xs bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 px-2 py-1 rounded-full flex items-center gap-1">
-                  {focoPrincipal.sentimento === "Motivado(a)" && <Smile className="h-3 w-3" />}
-                  {focoPrincipal.sentimento === "Um pouco perdido(a)" && <HelpCircle className="h-3 w-3" />}
-                  {focoPrincipal.sentimento === "Cansado(a)" && <Clock className="h-3 w-3" />}
-                  {focoPrincipal.sentimento === "Ansioso(a)" && <BarChart2 className="h-3 w-3" />}
-                  <span>{focoPrincipal.sentimento}</span>
-                </div>
-              </div>
-            )}
         </div>
       </div>
 
