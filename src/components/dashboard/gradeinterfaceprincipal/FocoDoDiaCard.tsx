@@ -619,16 +619,77 @@ export default function FocoDoDiaCard() {
               </motion.div>
             )}
 
-            {/* Dica do Mentor IA no final do card */}
-            {focoPrincipal.dicaMentor && (
-              <div className={`mt-4 p-3 rounded-lg ${isLightMode ? 'bg-green-50' : 'bg-green-900/10'} border ${isLightMode ? 'border-green-100' : 'border-green-800/30'}`}>
-                <div className="flex gap-2 items-start">
-                  <div className={`mt-0.5 p-1.5 rounded-md ${isLightMode ? 'bg-green-100' : 'bg-green-800/30'}`}>
-                    <Check className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
+            {/* Histórico de Sessões de Foco */}
+            {todasAtividadesConcluidas && (
+              <div className={`mt-4 p-3 rounded-lg ${isLightMode ? 'bg-blue-50' : 'bg-blue-900/10'} border ${isLightMode ? 'border-blue-100' : 'border-blue-800/30'}`}>
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className={`p-1.5 rounded-md ${isLightMode ? 'bg-blue-100' : 'bg-blue-800/30'}`}>
+                        <Flame className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <p className={`text-xs font-semibold ${isLightMode ? 'text-gray-700' : 'text-gray-200'}`}>
+                        Suas sessões de foco
+                      </p>
+                    </div>
+                    <span className={`text-[10px] ${isLightMode ? 'text-blue-600' : 'text-blue-400'}`}>
+                      Hoje
+                    </span>
                   </div>
-                  <p className={`text-xs ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
-                    <span className="font-medium">Dica do Mentor:</span> {focoPrincipal.dicaMentor}
-                  </p>
+                  
+                  <div className="space-y-1.5 mt-1">
+                    {/* Sessão atual completada */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <div className={`w-1.5 h-1.5 rounded-full ${isLightMode ? 'bg-green-500' : 'bg-green-400'}`}></div>
+                        <span className={`text-xs ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
+                          Sessão de {progressoAtividades}% concluída
+                        </span>
+                      </div>
+                      <span className={`text-[10px] ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                        Agora
+                      </span>
+                    </div>
+                    
+                    {/* Sessões anteriores simuladas */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <div className={`w-1.5 h-1.5 rounded-full ${isLightMode ? 'bg-blue-500' : 'bg-blue-400'}`}></div>
+                        <span className={`text-xs ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
+                          Revisão de Matemática
+                        </span>
+                      </div>
+                      <span className={`text-[10px] ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                        10:30
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <div className={`w-1.5 h-1.5 rounded-full ${isLightMode ? 'bg-blue-500' : 'bg-blue-400'}`}></div>
+                        <span className={`text-xs ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
+                          Leitura de Literatura
+                        </span>
+                      </div>
+                      <span className={`text-[10px] ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                        08:15
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-1 pt-1 border-t border-blue-200 dark:border-blue-800/30">
+                    <div className="flex items-center justify-between">
+                      <span className={`text-[10px] ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                        Sequência de foco
+                      </span>
+                      <div className="flex items-center gap-1">
+                        <span className={`text-xs font-medium ${isLightMode ? 'text-blue-600' : 'text-blue-400'}`}>
+                          3 sessões
+                        </span>
+                        <Target className="h-3 w-3 text-blue-500" />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
