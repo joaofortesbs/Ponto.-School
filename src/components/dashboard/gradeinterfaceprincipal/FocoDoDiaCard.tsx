@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Target, Clock, BookOpen, Play, Check, ChevronRight, Flame, Trophy, PlusCircle, Settings, Smile, HelpCircle, BarChart2 } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
+import { motion, AnimatePresence } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
 import DefinirFocoModal, { FocoData } from "./DefinirFocoModal";
-// Importação do framer-motion
-import { motion, AnimatePresence } from "framer-motion";
 
 // Tipo para atividades
 interface Atividade {
