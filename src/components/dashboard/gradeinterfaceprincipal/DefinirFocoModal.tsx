@@ -476,15 +476,8 @@ return (
             </div>
             
             <div className="relative">
-              <h2 className={`relative text-xl font-bold tracking-tight ${isLightMode ? 'text-gray-900' : 'text-white'} flex flex-col`}>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs uppercase font-semibold tracking-wider bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] bg-clip-text text-transparent">EPICTUS IA</span>
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[0.65rem] font-medium bg-gradient-to-r from-blue-500/20 to-indigo-500/20 text-blue-600 dark:text-blue-400">
-                    PRO
-                  </span>
-                </div>
-                
-                <span className="flex items-center gap-2 mt-0.5">
+              <h2 className={`relative text-xl font-bold tracking-tight ${isLightMode ? 'text-gray-900' : 'text-white'} flex flex-col`}>                
+                <span className="flex items-center gap-2">
                   <span className="bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-200">Defina Seu Foco de Estudos</span>
                   <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-gradient-to-r from-[#FF6B00]/20 to-[#FF8C40]/20 text-[#FF6B00] shadow-sm">
                     Personalizado
