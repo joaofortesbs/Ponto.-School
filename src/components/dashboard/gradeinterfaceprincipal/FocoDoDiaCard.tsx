@@ -456,15 +456,7 @@ export default function FocoDoDiaCard() {
               </div>
             </div>
 
-            {/* Botão de configurações para redefinir foco */}
-            <div className="absolute top-5 right-5">
-              <button 
-                onClick={redefinirFoco}
-                className={`p-1.5 rounded-full ${isLightMode ? 'bg-gray-100 hover:bg-gray-200' : 'bg-gray-800 hover:bg-gray-700'} transition-colors`}
-              >
-                <Settings className={`h-3.5 w-3.5 ${isLightMode ? 'text-gray-600' : 'text-gray-400'}`} />
-              </button>
-            </div>
+            {/* Botão de configurações removido conforme solicitado */}
 
             {/* Estado de conclusão e animações */}
             <AnimatePresence>
