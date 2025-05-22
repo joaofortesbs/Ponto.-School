@@ -16,6 +16,31 @@
 @import "./styles/modern-scanner.css";
 @import "./styles/rotina-calendar.css";
 
+
+/* Estilos para manter proporções consistentes em grid layouts */
+.dashboard-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.dashboard-card-content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Prevenir que o conteúdo expandido afete outros elementos no grid */
+.grid-proportional {
+  grid-auto-rows: auto;
+  align-items: flex-start;
+}
+
+.grid-cell {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
 /* Estilos para corrigir problemas de altura em componentes específicos */
 .altura-completa {
   height: 100%;
