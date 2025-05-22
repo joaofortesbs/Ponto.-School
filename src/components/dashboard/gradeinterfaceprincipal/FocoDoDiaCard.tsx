@@ -713,22 +713,7 @@ export default function FocoDoDiaCard() {
           </>
         ) : (
           <>
-            {/* Mensagem de boas-vindas para novos usuários - Design conforme imagem */}
-            <div className={`mb-5 p-4 rounded-xl ${isLightMode ? 'bg-orange-50/80' : 'bg-[#FF6B00]/5'} border ${isLightMode ? 'border-orange-100/70' : 'border-[#FF6B00]/10'}`}>
-              <div className="flex gap-3 items-center">
-                <div className={`flex-shrink-0`}>
-                  <Flame className="h-5 w-5 text-[#FF6B00]" />
-                </div>
-                <div>
-                  <h5 className={`text-sm font-medium ${isLightMode ? 'text-gray-800' : 'text-white'}`}>
-                    Bem-vindo ao Seu Foco de Hoje
-                  </h5>
-                  <p className={`text-xs ${isLightMode ? 'text-gray-600' : 'text-gray-300'}`}>
-                    Defina prioridades, acompanhe seu progresso e mantenha o foco nos seus objetivos de estudo mais importantes.
-                  </p>
-                </div>
-              </div>
-            </div>
+            {/* Mensagem de boas-vindas removida conforme solicitado */}
 
             {/* Estado vazio - Design moderno e sofisticado */}
             <div className="py-6 flex flex-col items-center justify-center space-y-6">
