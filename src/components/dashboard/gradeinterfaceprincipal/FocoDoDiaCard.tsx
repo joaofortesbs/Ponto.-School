@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Target, Clock, BookOpen, Play, Check, ChevronRight, Flame, Trophy, PlusCircle, Settings, Smile, HelpCircle, BarChart2 } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
@@ -294,7 +293,7 @@ export default function FocoDoDiaCard() {
             transition={{ duration: 0.5, ease: "easeOut" }}
           />
         </div>
-        
+
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className={`p-2.5 rounded-lg flex items-center justify-center ${isLightMode ? 'bg-white shadow-sm border border-orange-200' : 'bg-[#FF6B00]/10 border border-[#FF6B00]/30'}`}>
@@ -550,3 +549,272 @@ export default function FocoDoDiaCard() {
     </motion.div>
   );
 }
+import React, { useState } from "react";
+import { X } from "lucide-react";
+import { useTheme } from "@/components/ThemeProvider";
+import { motion, AnimatePresence } from "framer-motion";
+import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Progress } from "@/components/ui/progress";
+import { ScrollArea } from "@/components/ui/scroll-area"
+
+// Define a interface para os dados do foco
+export interface FocoData {
+  objetivo: string;
+  objetivoPersonalizado?: string;
+  disciplinas: string[];
+  tempoEstudo: number;
+  estado: string;
+  tarefasSelecionadas: string[];
+}
+
+interface DefinirFocoModalProps {
+  open: boolean;
+  onClose: () => void;
+  onSave: (data: FocoData) => void;
+  onProgressChange?: (progress: number) => void;
+}
+
+const DefinirFocoModal: React.FC<DefinirFocoModalProps> = ({ open, onClose, onSave, onProgressChange }) => {
+  const { theme } = useTheme();
+  const isLightMode = theme === "light";
+
+  // Estados para os campos do formulário
+  const [objetivo, setObjetivo] = useState("");
+  const [objetivoPersonalizado, setObjetivoPersonalizado] = useState("");
+  const [disciplinas, setDisciplinas] = useState<string[]>([]);
+  const [tempoEstudo, setTempoEstudo] = useState(60); // Tempo em minutos
+  const [estado, setEstado] = useState("Motivado(a)");
+  const [tarefas, setTarefas] = useState(["Revisar capítulo 1", "Fazer exercícios da lista 2", "Assistir vídeo sobre o tema X"]);
+  const [tarefasSelecionadas, setTarefasSelecionadas] = useState<string[]>([]);
+
+  // Estados para modal
+  const [modalOpen, setModalOpen] = useState(false);
+  const [gerando, setGerando] = useState(false);
+  const [focoSalvo, setFocoSalvo] = useState<FocoData | null>(null);
+  const [definirFocoProgresso, setDefinirFocoProgresso] = useState(0);
+
+  // Variantes para animações do modal
+  const modalVariants = {
+    hidden: { opacity: 0, y: 50 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
+    exit: { opacity: 0, y: 50, transition: { duration: 0.3 } }
+  };
+
+  // Array de estados emocionais
+  const estadosEmocionais = ["Motivado(a)", "Um pouco perdido(a)", "Cansado(a)", "Ansioso(a)"];
+
+  // Array de disciplinas
+  const disciplinasOptions = ["Matemática", "Física", "Química", "Biologia", "História", "Geografia", "Português", "Inglês"];
+
+  // Função para lidar com a seleção de disciplinas
+  const handleDisciplinaChange = (disciplina: string) => {
+    setDisciplinas((prevDisciplinas) =>
+      prevDisciplinas.includes(disciplina)
+        ? prevDisciplinas.filter((d) => d !== disciplina)
+        : [...prevDisciplinas, disciplina]
+    );
+  };
+
+  // Função para lidar com a seleção de tarefas
+  const handleTarefaChange = (tarefa: string) => {
+    setTarefasSelecionadas((prevTarefas) =>
+      prevTarefas.includes(tarefa)
+        ? prevTarefas.filter((t) => t !== tarefa)
+        : [...prevTarefas, tarefa]
+    );
+  };
+
+  // Função para salvar os dados do foco
+  const handleSaveFoco = () => {
+    const data: FocoData = {
+      objetivo,
+      objetivoPersonalizado,
+      disciplinas,
+      tempoEstudo,
+      estado,
+      tarefasSelecionadas,
+    };
+
+    setFocoSalvo(data);
+    onSave(data);
+    onClose();
+  };
+
+  // Função para abrir o modal
+  const abrirModal = () => {
+    setModalOpen(true);
+    setDefinirFocoProgresso(0); // Reinicia o progresso
+  };
+
+  // Função para fechar o modal
+  const fecharModal = () => {
+    setModalOpen(false);
+  };
+
+  // Função para atualizar o progresso
+  const atualizarProgresso = (progresso: number) => {
+    setDefinirFocoProgresso(progresso);
+  };
+
+  return (
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black/50 z-50"
+          variants={modalVariants}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+        >
+          <motion.div
+            className={`bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-md mx-4`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header do modal */}
+            <div className="flex items-center justify-between p-4 border-b dark:border-gray-800">
+              <h2 className="text-lg font-semibold text-gray-800 dark:text-white">Defina seu Foco de Hoje</h2>
+              <button onClick={onClose} className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
+                <X className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+              </button>
+            </div>
+
+            {/* Progress bar no topo do modal */}
+            <Progress value={definirFocoProgresso} className="mt-1 mx-4" />
+
+            {/* Conteúdo do modal */}
+            <div className="p-4 space-y-4">
+              <div>
+                <Label htmlFor="objetivo" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Qual o seu objetivo de estudo hoje?
+                </Label>
+                <Input
+                  type="text"
+                  id="objetivo"
+                  className="mt-1 block w-full sm:text-sm rounded-md dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+                  value={objetivo}
+                  onChange={(e) => {
+                    setObjetivo(e.target.value);
+                    onProgressChange?.(20); // Altere o valor conforme necessário
+                  }}
+                />
+              </div>
+              <div>
+                <Label htmlFor="objetivoPersonalizado" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Seu objetivo é diferente das opções acima?
+                </Label>
+                <Textarea
+                  id="objetivoPersonalizado"
+                  rows={3}
+                  className="mt-1 block w-full sm:text-sm rounded-md dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+                  value={objetivoPersonalizado}
+                  onChange={(e) => setObjetivoPersonalizado(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Quais disciplinas você vai estudar hoje?
+                </Label>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {disciplinasOptions.map((disciplina) => (
+                    <div key={disciplina} className="flex items-center">
+                      <Checkbox
+                        id={`disciplina-${disciplina}`}
+                        checked={disciplinas.includes(disciplina)}
+                        onCheckedChange={() => {
+                          handleDisciplinaChange(disciplina);
+                          onProgressChange?.(40); // Altere o valor conforme necessário
+                        }}
+                        className="rounded dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+                      />
+                      <Label htmlFor={`disciplina-${disciplina}`} className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                        {disciplina}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="tempoEstudo" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Quanto tempo você vai estudar hoje (em minutos)?
+                </Label>
+                <Input
+                  type="number"
+                  id="tempoEstudo"
+                  className="mt-1 block w-full sm:text-sm rounded-md dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+                  value={tempoEstudo}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value);
+                    setTempoEstudo(value);
+                    onProgressChange?.(60); // Altere o valor conforme necessário
+                  }}
+                />
+              </div>
+              <div>
+                <Label htmlFor="estado" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Como você está se sentindo hoje?
+                </Label>
+                <select
+                  id="estado"
+                  className="mt-1 block w-full sm:text-sm rounded-md dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+                  value={estado}
+                  onChange={(e) => {
+                    setEstado(e.target.value);
+                    onProgressChange?.(80); // Altere o valor conforme necessário
+                  }}
+                >
+                  {estadosEmocionais.map((estado) => (
+                    <option key={estado} value={estado}>
+                      {estado}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <Label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Selecione algumas tarefas para hoje:
+                </Label>
+                <ScrollArea className="h-40 rounded-md border dark:bg-gray-800 dark:border-gray-700">
+                  <div className="relative">
+                    {tarefas.map((tarefa) => (
+                      <div key={tarefa} className="flex items-center p-2 hover:bg-gray-100 dark:hover:bg-gray-700">
+                        <Checkbox
+                          id={`tarefa-${tarefa}`}
+                          checked={tarefasSelecionadas.includes(tarefa)}
+                          onCheckedChange={() => {
+                            handleTarefaChange(tarefa);
+                            onProgressChange?.(100); // Altere o valor conforme necessário
+                          }}
+                          className="rounded dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+                        />
+                        <Label htmlFor={`tarefa-${tarefa}`} className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                          {tarefa}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </div>
+            </div>
+
+            {/* Footer do modal */}
+            <div className="flex justify-end p-4 border-t dark:border-gray-800">
+              <Button type="button" variant="ghost" className="mr-2" onClick={onClose}>
+                Cancelar
+              </Button>
+              <Button type="button" onClick={handleSaveFoco}>
+                Salvar Foco
+              </Button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
+
+export default DefinirFocoModal;

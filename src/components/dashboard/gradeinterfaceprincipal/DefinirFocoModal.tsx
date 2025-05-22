@@ -10,6 +10,7 @@ interface DefinirFocoModalProps {
   open: boolean;
   onClose: () => void;
   onSave: (focoData: FocoData) => void;
+  onProgressChange?: (progresso: number) => void;
 }
 
 export interface FocoData {
@@ -159,6 +160,13 @@ export default function DefinirFocoModal({ open, onClose, onSave }: DefinirFocoM
   };
 
   const progressoFormulario = calcularProgressoFormulario();
+  
+  // Enviar progresso para o componente pai
+  useEffect(() => {
+    if (onProgressChange) {
+      onProgressChange(progressoFormulario);
+    }
+  }, [progressoFormulario, onProgressChange]);
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
