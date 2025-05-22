@@ -490,28 +490,81 @@ export default function SequenciaEstudosCard() {
         </AnimatePresence>
 
         {diasConsecutivos === 0 && !checkInHoje ? (
-          // Estado inicial para novos usuários
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="relative mb-6">
-              <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-[#FF6B00]/20 to-[#FF8C40]/20 blur-md"></div>
-              <div className="w-20 h-20 rounded-full bg-gradient-to-r from-[#FF6B00]/50 to-[#FF8C40]/50 flex items-center justify-center relative">
-                <div className="absolute inset-0.5 rounded-full bg-gradient-to-br from-[#FF6B00]/30 to-[#FF8C40]/30 opacity-50"></div>
-                <Flame className="h-10 w-10 text-white/70 drop-shadow-md relative z-10" />
+          // Estado inicial para novos usuários - design premium
+          <div className="flex flex-col items-center justify-center h-full text-center px-4">
+            {/* Efeito de partículas decorativas */}
+            <div className="absolute top-1/3 left-1/4 w-1.5 h-1.5 rounded-full bg-[#FF6B00]/30 animate-pulse"></div>
+            <div className="absolute bottom-1/3 right-1/4 w-2 h-2 rounded-full bg-[#FF6B00]/20 animate-pulse" style={{animationDelay: '1s'}}></div>
+            
+            {/* Ícone principal com efeitos */}
+            <div className="relative mb-6 group">
+              {/* Aura externa animada */}
+              <motion.div 
+                initial={{ opacity: 0.4, scale: 0.8 }}
+                animate={{ 
+                  opacity: [0.4, 0.7, 0.4], 
+                  scale: [0.8, 1.1, 0.8],
+                }}
+                transition={{ 
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+                className="absolute -inset-3 rounded-full bg-gradient-to-r from-[#FF6B00]/10 to-[#FF8C40]/10 blur-xl"
+              />
+              
+              {/* Círculo principal */}
+              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#FF6B00]/10 to-[#FF8C40]/10 backdrop-blur-sm flex items-center justify-center border border-[#FF6B00]/30 relative">
+                <div className="absolute inset-1 rounded-full bg-gradient-to-r from-[#FF6B00]/20 to-[#FF8C40]/20 opacity-70"></div>
+                <div className="w-16 h-16 rounded-full bg-gradient-to-r from-[#FF6B00]/40 to-[#FF8C40]/40 flex items-center justify-center z-10">
+                  <Flame className="h-10 w-10 text-[#FF6B00] drop-shadow-lg relative z-10" />
+                </div>
+              </div>
+              
+              {/* Pequenos elementos decorativos ao redor */}
+              <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-white/10 dark:bg-[#0A2540]/70 border border-[#FF6B00]/30 flex items-center justify-center">
+                <Star className="h-2.5 w-2.5 text-[#FF8C40]" />
+              </div>
+              <div className="absolute -top-1 -left-1 w-5 h-5 rounded-full bg-white/10 dark:bg-[#0A2540]/70 border border-[#FF6B00]/30 flex items-center justify-center">
+                <Trophy className="h-2.5 w-2.5 text-[#FF8C40]" />
               </div>
             </div>
-            <h4 className={`font-semibold text-lg mb-2 ${isLightMode ? 'text-gray-700' : 'text-gray-100'}`}>
-              Comece sua jornada!
+            
+            {/* Texto principal com tipografia melhorada */}
+            <h4 className={`font-semibold text-xl mb-2 ${isLightMode ? 'text-gray-800' : 'text-gray-100'} tracking-tight`}>
+              Inicie sua jornada de estudos
             </h4>
-            <p className={`text-sm max-w-[230px] mb-4 ${isLightMode ? 'text-gray-500' : 'text-gray-300'}`}>
-              Marque sua presença diária para construir sua sequência de estudos
+            
+            {/* Descrição com informações mais detalhadas */}
+            <p className={`text-sm max-w-[280px] mb-5 ${isLightMode ? 'text-gray-600' : 'text-gray-300'} leading-relaxed`}>
+              Registre sua presença diária para construir uma sequência de estudos consistente e desbloquear recompensas
             </p>
+            
+            {/* Informações de benefícios em formato de badges */}
+            <div className="flex items-center justify-center gap-3 mb-5">
+              <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${isLightMode ? 'bg-[#FF6B00]/5 text-[#FF6B00]' : 'bg-[#FF6B00]/10 text-[#FF6B00]'}`}>
+                <TrendingUp className="h-3 w-3" />
+                <span>Maior produtividade</span>
+              </div>
+              <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${isLightMode ? 'bg-[#FF6B00]/5 text-[#FF6B00]' : 'bg-[#FF6B00]/10 text-[#FF6B00]'}`}>
+                <Award className="h-3 w-3" />
+                <span>Ganhe badges</span>
+              </div>
+            </div>
+            
+            {/* Botão de ação principal redesenhado */}
             <Button 
               onClick={realizarCheckIn}
-              className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white border-none shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105"
+              className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white border-none shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 px-5 py-6 h-10 rounded-xl"
             >
               <CheckCircle className="h-4 w-4 mr-2" />
-              Marcar presença hoje
+              <span className="font-medium">Marcar presença agora</span>
             </Button>
+            
+            {/* Informação adicional discreta */}
+            <p className={`text-xs mt-3 ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
+              Crie um hábito de estudo com check-ins diários
+            </p>
           </div>
         ) : (
           // Interface com dados do usuário quando existirem
