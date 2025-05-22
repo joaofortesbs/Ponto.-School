@@ -622,7 +622,7 @@ export default function FocoDoDiaCard() {
             {/* Histórico de Sessões de Foco */}
             {todasAtividadesConcluidas && (
               <motion.div 
-                className={`mt-4 p-3 rounded-lg ${isLightMode ? 'bg-blue-50' : 'bg-blue-900/10'} border ${isLightMode ? 'border-blue-100' : 'border-blue-800/30'} cursor-pointer overflow-hidden`}
+                className={`mt-4 p-3 rounded-lg ${isLightMode ? 'bg-blue-50' : 'bg-blue-900/10'} border ${isLightMode ? 'border-blue-100' : 'border-blue-800/30'} cursor-pointer overflow-hidden group hover:pb-4`}
                 initial={{ height: "auto" }}
                 whileHover={{ 
                   boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
@@ -656,8 +656,9 @@ export default function FocoDoDiaCard() {
                     <motion.div 
                       className="space-y-1.5 mt-1 overflow-hidden"
                       initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 0, opacity: 0 }}
                       whileHover={{ height: "auto", opacity: 1 }}
-                      transition={{ duration: 0.2 }}
+                      transition={{ duration: 0.3 }}
                     >
                       {/* Sessão atual completada */}
                       <div className="flex items-center justify-between">
@@ -702,9 +703,13 @@ export default function FocoDoDiaCard() {
                           <span className={`text-[10px] ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
                             Sequência de foco
                           </span>
-                          <span className={`text-xs italic ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                          <motion.span 
+                            className={`text-xs italic ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}
+                            animate={{ opacity: 0.7 }}
+                            transition={{ duration: 1.5, repeat: Infinity, repeatType: "reverse" }}
+                          >
                             Passe o mouse para detalhes
-                          </span>
+                          </motion.span>
                         </div>
                       </div>
                     </motion.div>
