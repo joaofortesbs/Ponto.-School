@@ -382,7 +382,7 @@ const DefinirFocoModal: React.FC<DefinirFocoModalProps> = ({ open, onClose, onSa
 
   // Função para avançar para a próxima etapa
   const avancarEtapa = () => {
-    if (etapaAtual < 5) {
+    if (etapaAtual < 3) {
       setEtapaAtual(etapaAtual + 1);
     } else {
       finalizarDefinicao();
@@ -493,7 +493,7 @@ return (
                 <span className="text-xs font-semibold text-[#FF6B00]">{etapaAtual}</span>
               </div>
               <p className={`text-sm font-medium ${isLightMode ? 'text-gray-800' : 'text-gray-200'}`}>
-                Etapa {etapaAtual} de 5
+                Etapa {etapaAtual} de 3
               </p>
             </div>
             <div className={`px-2.5 py-1 rounded-full text-xs font-medium ${
@@ -505,8 +505,6 @@ return (
                 etapaAtual === 1 ? "Definindo Objetivo" :
                 etapaAtual === 2 ? "Selecionando Disciplinas" :
                 etapaAtual === 3 ? "Definindo Tempo" :
-                etapaAtual === 4 ? "Estado Emocional" :
-                etapaAtual === 5 ? "Tarefas Prioritárias" :
                 "Finalização"
               }
             </div>
@@ -515,7 +513,7 @@ return (
           <div className="relative w-full h-1.5 bg-gray-200 dark:bg-gray-700/50 rounded-full overflow-hidden">
             <div 
               className="absolute top-0 left-0 h-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-full"
-              style={{ width: `${(etapaAtual / 5) * 100}%` }}
+              style={{ width: `${(etapaAtual / 3) * 100}%` }}
             ></div>
           </div>
         </div>
@@ -930,43 +928,7 @@ return (
             </div>
           )}
 
-           {/* Etapa 4: Estado emocional (moved to step 5) */}
-           {etapaAtual === 4 && (
-            <div className="space-y-5">
-              <div className="space-y-3">
-                <h3 className={`text-lg font-medium ${isLightMode ? 'text-gray-800' : 'text-white'}`}>
-                  Como você está se sentindo hoje?
-                </h3>
-                <p className={`text-sm ${isLightMode ? 'text-gray-600' : 'text-gray-400'}`}>
-                  Isso nos ajudará a criar dicas personalizadas para suas sessões de estudo
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {["Motivado(a)", "Um pouco perdido(a)", "Cansado(a)", "Ansioso(a)"].map((estado) => (
-                    <button
-                      key={estado}
-                      onClick={() => setEstadoAtual(estado)}
-                      className={`flex items-center p-3 rounded-lg border ${
-                        estadoAtual === estado
-                          ? `${isLightMode ? 'border-[#FF6B00] bg-orange-50' : 'border-[#FF6B00] bg-[#FF6B00]/10'}`
-                          : `${isLightMode ? 'border-gray-200 hover:border-gray-300' : 'border-gray-700 hover:border-gray-600'}`
-                      } transition-all`}
-                    >
-                      <div className={`w-5 h-5 rounded-full flex items-center justify-center border ${
-                        estadoAtual === estado
-                          ? 'border-[#FF6B00] bg-[#FF6B00]'
-                          : `${isLightMode ? 'border-gray-300' : 'border-gray-600'}`
-                      }`}>
-                        {estadoAtual === estado && <Check className="h-3 w-3 text-white" />}
-                      </div>
-                      <span className={`ml-3 ${isLightMode ? 'text-gray-800' : 'text-gray-200'}`}>
-                        {estado}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
+           {/* Etapas 4 e 5 removidas */}
         </div>
 
         {/* Botões de navegação - Redesenhados com estilo premium */}
