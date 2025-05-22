@@ -10,7 +10,6 @@ interface DefinirFocoModalProps {
   open: boolean;
   onClose: () => void;
   onSave: (focoData: FocoData) => void;
-  onProgressChange?: (progresso: number) => void;
 }
 
 export interface FocoData {
@@ -149,36 +148,31 @@ export default function DefinirFocoModal({ open, onClose, onSave }: DefinirFocoM
   const calcularProgressoFormulario = () => {
     let progresso = 0;
     const total = 5; // Total de campos principais a serem preenchidos
-
+    
     if (objetivo) progresso += 1;
     if (objetivoPersonalizado) progresso += 1;
     if (disciplinasSelecionadas.length > 0) progresso += 1;
     if (tempoEstudo > 0) progresso += 1;
     if (estadoEstudo) progresso += 1;
-
+    
     return Math.min(Math.round((progresso / total) * 100), 100);
   };
 
   const progressoFormulario = calcularProgressoFormulario();
 
-  // Enviar progresso para o componente pai
-  useEffect(() => {
-    if (onProgressChange) {
-      onProgressChange(progressoFormulario);
-    }
-  }, [progressoFormulario, onProgressChange]);
-
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[550px] p-0 overflow-hidden">
         {/* Barra de progresso no topo */}
-        <div className="relative h-2 w-full bg-[#FF6B00]/10 overflow-hidden">
-          <motion.div 
-            className="h-full bg-[#FF6B00]" 
-            initial={{ width: '0%' }}
-            animate={{ width: `${progressoFormulario}%` }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
-          />
+        <div className="relative bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] h-2">
+          <div className="absolute top-0 left-0 h-1 bg-[#FF6B00]/10 w-full overflow-hidden">
+            <motion.div 
+              className="h-full bg-[#FF6B00]" 
+              initial={{ width: '0%' }}
+              animate={{ width: `${progressoFormulario}%` }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+            />
+          </div>
         </div>
 
         {/* Cabeçalho do modal */}
