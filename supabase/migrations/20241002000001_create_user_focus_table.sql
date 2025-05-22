@@ -1,24 +1,21 @@
-
--- Criação da tabela para armazenar os dados de foco do usuário
+-- Create user_focus table to store user's daily focus data
 CREATE TABLE IF NOT EXISTS user_focus (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
   description TEXT,
   disciplines TEXT[] DEFAULT '{}',
-  topic TEXT,
-  study_time INTEGER NOT NULL,
+  study_time INTEGER DEFAULT 120, -- in minutes
   tasks JSONB DEFAULT '[]',
   emotional_state TEXT,
+  mentor_tip TEXT, -- Dica personalizada do mentor
   completed BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  points_awarded BOOLEAN DEFAULT FALSE, -- Indica se pontos foram concedidos ao concluir
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Índice para consulta por usuário
-CREATE INDEX IF NOT EXISTS idx_user_focus_user_id ON user_focus(user_id);
-
--- Função para atualizar o timestamp de updated_at automaticamente
+-- Function to automatically update updated_at on any update
 CREATE OR REPLACE FUNCTION update_user_focus_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -27,27 +24,32 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Trigger para atualizar automaticamente o campo updated_at
-CREATE TRIGGER update_user_focus_updated_at_trigger
+-- Trigger to call the function
+CREATE TRIGGER user_focus_updated_at
 BEFORE UPDATE ON user_focus
 FOR EACH ROW
 EXECUTE FUNCTION update_user_focus_updated_at();
 
--- Permissões para a tabela
+-- Index to improve query performance
+CREATE INDEX IF NOT EXISTS user_focus_user_id_idx ON user_focus(user_id);
+CREATE INDEX IF NOT EXISTS user_focus_created_at_idx ON user_focus(created_at);
+CREATE INDEX IF NOT EXISTS user_focus_completed_idx ON user_focus(completed);
+
+-- Add RLS policies
 ALTER TABLE user_focus ENABLE ROW LEVEL SECURITY;
 
--- Política para que usuários só possam ver seus próprios dados
-CREATE POLICY user_focus_select_policy ON user_focus
+-- Only allow users to view their own focus data
+CREATE POLICY user_focus_select_policy ON user_focus 
   FOR SELECT USING (auth.uid() = user_id);
 
--- Política para que usuários só possam inserir seus próprios dados
-CREATE POLICY user_focus_insert_policy ON user_focus
+-- Only allow users to insert their own focus data
+CREATE POLICY user_focus_insert_policy ON user_focus 
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
--- Política para que usuários só possam atualizar seus próprios dados
-CREATE POLICY user_focus_update_policy ON user_focus
+-- Only allow users to update their own focus data
+CREATE POLICY user_focus_update_policy ON user_focus 
   FOR UPDATE USING (auth.uid() = user_id);
 
--- Política para que usuários só possam excluir seus próprios dados
-CREATE POLICY user_focus_delete_policy ON user_focus
+-- Only allow users to delete their own focus data
+CREATE POLICY user_focus_delete_policy ON user_focus 
   FOR DELETE USING (auth.uid() = user_id);

@@ -66,8 +66,15 @@ export default function FocoDoDiaCard() {
           setTemFoco(true);
           setTodasAtividadesConcluidas(focoDia.todasConcluidas || false);
           console.log("Foco do dia carregado do servidor:", focoDia);
+          
+          // Atualizar localStorage com dados do servidor para manter sincronizado
+          localStorage.setItem('focoDia', JSON.stringify({
+            focoPrincipal: focoDia.focoPrincipal,
+            atividades: focoDia.atividades,
+            todasConcluidas: focoDia.todasConcluidas
+          }));
         } else {
-          console.log("Nenhum foco do dia encontrado, verificando dados locais");
+          console.log("Nenhum foco do dia encontrado no servidor, verificando dados locais");
           carregarDadosLocais();
         }
       } catch (error) {
@@ -84,14 +91,39 @@ export default function FocoDoDiaCard() {
         const focoDadosSalvos = localStorage.getItem('focoDia');
         if (focoDadosSalvos) {
           const dados = JSON.parse(focoDadosSalvos);
+          
+          // Validar dados carregados do localStorage
+          if (!dados.focoPrincipal || !dados.atividades) {
+            console.error("Dados inválidos no localStorage");
+            setTemFoco(false);
+            return;
+          }
+          
+          // Verificar se o foco do dia é de hoje
+          const dataAtual = new Date().toDateString();
+          const dataFoco = dados.criadoEm ? new Date(dados.criadoEm).toDateString() : null;
+          
+          // Se tiver data e não for de hoje, considerar como não tendo foco
+          if (dataFoco && dataFoco !== dataAtual) {
+            console.log("Foco salvo é de outro dia, desconsiderando");
+            setTemFoco(false);
+            return;
+          }
+          
+          // Processar os dados carregados
           setFocoPrincipal(dados.focoPrincipal);
-          setAtividades(dados.atividades);
+          setAtividades(Array.isArray(dados.atividades) ? dados.atividades : []);
           setTemFoco(true);
 
           // Verificar se todas as atividades estão concluídas
-          const todasConcluidas = dados.atividades.length > 0 && dados.atividades.every((ativ: Atividade) => ativ.concluido);
+          const todasConcluidas = dados.atividades.length > 0 && 
+            dados.atividades.every((ativ: Atividade) => ativ.concluido);
+            
           setTodasAtividadesConcluidas(todasConcluidas || dados.todasConcluidas);
           console.log("Foco do dia carregado do localStorage");
+          
+          // Tentar salvar no servidor se o usuário estiver autenticado
+          sincronizarComServidor(dados);
         } else {
           setTemFoco(false);
           console.log("Nenhum foco do dia encontrado");
@@ -104,7 +136,59 @@ export default function FocoDoDiaCard() {
       }
     };
     
+    // Função para tentar sincronizar dados locais com o servidor
+    const sincronizarComServidor = async (dadosLocais: any) => {
+      try {
+        // Obter ID do usuário atual
+        const { data: { session } } = await supabase.auth.getSession();
+        const userId = session?.user?.id;
+        
+        if (!userId) {
+          console.log("Usuário não autenticado, não é possível sincronizar");
+          return;
+        }
+        
+        // Importar o serviço de foco do dia
+        const { salvarFocoDia } = await import('@/services/focoDiaService');
+        
+        // Criar objeto de foco do dia
+        const focoDia = {
+          userId,
+          focoPrincipal: dadosLocais.focoPrincipal,
+          atividades: dadosLocais.atividades,
+          todasConcluidas: dadosLocais.todasConcluidas || false,
+          criadoEm: new Date().toISOString()
+        };
+        
+        // Salvar no servidor
+        await salvarFocoDia(focoDia);
+        console.log("Dados sincronizados com o servidor");
+      } catch (error) {
+        console.error("Erro ao sincronizar com servidor:", error);
+      }
+    };
+    
+    // Adicionar listener para atualizações de outros componentes
+    const handleFocoDiaAtualizado = (event: any) => {
+      const novoFoco = event.detail?.focoDia;
+      if (novoFoco) {
+        setFocoPrincipal(novoFoco.focoPrincipal);
+        setAtividades(novoFoco.atividades);
+        setTemFoco(true);
+        setTodasAtividadesConcluidas(novoFoco.todasConcluidas || false);
+        console.log("Foco do dia atualizado via evento");
+      }
+    };
+    
+    window.addEventListener('foco-dia-atualizado', handleFocoDiaAtualizado);
+    
+    // Iniciar carregamento de dados
     carregarFocoDia();
+    
+    // Limpar listener ao desmontar
+    return () => {
+      window.removeEventListener('foco-dia-atualizado', handleFocoDiaAtualizado);
+    };
   }, []);
 
   // Estado para controlar a exibição do estado de conclusão
@@ -113,8 +197,8 @@ export default function FocoDoDiaCard() {
   const [pontosGanhos, setPontosGanhos] = useState<number>(50);
 
   // Função para lidar com a conclusão de atividades
-  const toggleAtividade = (id: number) => {
-    // Atualizar o estado local - em uma aplicação real, isto também atualizaria o backend
+  const toggleAtividade = async (id: number) => {
+    // Atualizar o estado local
     const atualizadas = atividades.map(ativ => 
       ativ.id === id ? { ...ativ, concluido: !ativ.concluido } : ativ
     );
@@ -131,17 +215,68 @@ export default function FocoDoDiaCard() {
         setTodasAtividadesConcluidas(true);
         setMostrarAnimacaoConclusao(false);
       }, 1500);
+
+      // Código para adicionar pontos ao usuário quando todas as atividades são concluídas
+      try {
+        // Este bloco pode ser expandido para integrar com o sistema de pontos
+        console.log(`Adicionando ${pontosGanhos} pontos ao usuário por concluir todas as atividades.`);
+        // Aqui você adicionaria uma chamada ao serviço de pontos/recompensas
+      } catch (error) {
+        console.error("Erro ao adicionar pontos:", error);
+      }
     } else if (!todasConcluidas && todasAtividadesConcluidas) {
       setTodasAtividadesConcluidas(false);
     }
 
-    // Atualizar no localStorage
+    // Atualizar no backend e localStorage
     if (focoPrincipal) {
-      localStorage.setItem('focoDia', JSON.stringify({
-        focoPrincipal,
-        atividades: atualizadas,
-        todasConcluidas
-      }));
+      try {
+        // Atualizar primeiro no localStorage para garantir persistência
+        localStorage.setItem('focoDia', JSON.stringify({
+          focoPrincipal,
+          atividades: atualizadas,
+          todasConcluidas
+        }));
+        
+        // Obter ID do usuário atual
+        const { data: { session } } = await supabase.auth.getSession();
+        const userId = session?.user?.id;
+        
+        if (userId) {
+          // Importar o serviço de foco do dia
+          const { atualizarStatusAtividade, salvarFocoDia } = await import('@/services/focoDiaService');
+          
+          // Tentar atualizar apenas a atividade específica
+          const atividadeAtualizada = atualizadas.find(ativ => ativ.id === id);
+          if (atividadeAtualizada) {
+            const sucesso = await atualizarStatusAtividade(
+              userId, 
+              id, 
+              atividadeAtualizada.concluido
+            );
+            
+            if (!sucesso) {
+              console.warn("Não foi possível atualizar apenas a atividade, tentando salvar todo o foco");
+              
+              // Fallback: salvar o foco completo
+              await salvarFocoDia({
+                userId,
+                focoPrincipal,
+                atividades: atualizadas,
+                todasConcluidas,
+                atualizadoEm: new Date().toISOString()
+              });
+            }
+          }
+          
+          console.log("Status da atividade atualizado com sucesso");
+        } else {
+          console.log("Usuário não autenticado, dados salvos apenas localmente");
+        }
+      } catch (error) {
+        console.error("Erro ao atualizar status da atividade:", error);
+        // Pelo menos o estado local e localStorage já foram atualizados acima
+      }
     }
   };
 
@@ -163,6 +298,17 @@ export default function FocoDoDiaCard() {
 
       // Importar o serviço de IA para gerar sugestões
       const { generateFocusSuggestions } = await import('@/services/epictusIAService');
+      
+      // Exibir debug das informações do formulário
+      console.log("Dados recebidos do formulário:", {
+        objetivo: dados.objetivo,
+        objetivoPersonalizado: dados.objetivoPersonalizado,
+        disciplinas: dados.disciplinas,
+        topicoEspecifico: dados.topicoEspecifico,
+        tempoEstudo: dados.tempoEstudo,
+        tarefasSelecionadas: dados.tarefasSelecionadas,
+        estado: dados.estado
+      });
 
       // Obter sugestões personalizadas com base no perfil do usuário e dados da agenda
       const aiSuggestions = await generateFocusSuggestions(userId, dados);
@@ -173,6 +319,8 @@ export default function FocoDoDiaCard() {
         gerarFocoSemIA(dados);
         return;
       }
+      
+      console.log("Sugestões da IA recebidas:", aiSuggestions);
 
       // Estruturar dados de foco principal
       const novoFocoPrincipal: FocoPrincipal = {
@@ -206,18 +354,80 @@ export default function FocoDoDiaCard() {
         // Fallback: gerar atividades manualmente com base nas entradas do usuário
         novasAtividades = gerarAtividades(dados);
       }
+      
+      // Garantir que as tarefas selecionadas pelo usuário estejam incluídas
+      if (dados.tarefasSelecionadas && dados.tarefasSelecionadas.length > 0) {
+        // Verificar se as tarefas selecionadas já estão nas atividades
+        const tarefasExistentes = new Set(novasAtividades.map(ativ => ativ.titulo.toLowerCase()));
+        
+        // Adicionar tarefas selecionadas que não estão nas atividades
+        const tarefasParaAdicionar = dados.tarefasSelecionadas.filter(
+          tarefa => !tarefasExistentes.has(tarefa.toLowerCase())
+        );
+        
+        if (tarefasParaAdicionar.length > 0) {
+          const tarefasAdicionais = tarefasParaAdicionar.map((tarefa, index) => ({
+            id: Date.now() + 1000 + index,
+            titulo: tarefa,
+            tipo: "tarefa" as "tarefa" | "revisao" | "exercicio" | "video",
+            tempo: `${Math.floor(Math.random() * 30) + 15}min`,
+            prazo: "hoje",
+            urgente: false,
+            concluido: false,
+            progresso: 0
+          }));
+          
+          // Adicionar as novas tarefas ao início da lista
+          novasAtividades = [...tarefasAdicionais, ...novasAtividades];
+        }
+      }
+      
+      // Limitar a 4 atividades no total para não sobrecarregar o usuário
+      if (novasAtividades.length > 4) {
+        novasAtividades = novasAtividades.slice(0, 4);
+      }
 
       // Atualizar estados
       setFocoPrincipal(novoFocoPrincipal);
       setAtividades(novasAtividades);
       setTemFoco(true);
       setGerando(false);
+      setTodasAtividadesConcluidas(false);
 
-      // Salvar no localStorage para persistência
-      localStorage.setItem('focoDia', JSON.stringify({
-        focoPrincipal: novoFocoPrincipal,
-        atividades: novasAtividades
-      }));
+      // Salvar no Supabase e localStorage para persistência
+      try {
+        const { salvarFocoDia } = await import('@/services/focoDiaService');
+        
+        // Criar objeto de foco do dia
+        const focoDia = {
+          userId,
+          focoPrincipal: novoFocoPrincipal,
+          atividades: novasAtividades,
+          todasConcluidas: false,
+          criadoEm: new Date().toISOString()
+        };
+        
+        // Salvar no backend
+        await salvarFocoDia(focoDia);
+        
+        // Também salvar localmente como backup
+        localStorage.setItem('focoDia', JSON.stringify({
+          focoPrincipal: novoFocoPrincipal,
+          atividades: novasAtividades,
+          todasConcluidas: false
+        }));
+        
+        console.log("Foco do dia salvo com sucesso.");
+      } catch (saveError) {
+        console.error("Erro ao salvar foco do dia:", saveError);
+        
+        // Garantir que pelo menos o localStorage esteja atualizado
+        localStorage.setItem('focoDia', JSON.stringify({
+          focoPrincipal: novoFocoPrincipal,
+          atividades: novasAtividades,
+          todasConcluidas: false
+        }));
+      }
 
       console.log("Foco do dia gerado com sucesso utilizando IA:", { novoFocoPrincipal, novasAtividades });
     } catch (error) {

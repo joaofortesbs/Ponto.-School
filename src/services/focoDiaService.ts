@@ -58,6 +58,31 @@ export const salvarFocoDia = async (focoDia: FocoDia): Promise<FocoDia | null> =
       // Prosseguir e tentar criar um novo
     }
     
+    // Limpar e validar os dados antes de salvar
+    const dadosValidados = {
+      title: focoDia.focoPrincipal.titulo || "Foco de Estudo",
+      description: focoDia.focoPrincipal.descricao || "Organizar suas atividades de estudo",
+      disciplines: Array.isArray(focoDia.focoPrincipal.disciplinas) ? 
+        focoDia.focoPrincipal.disciplinas : [],
+      study_time: typeof focoDia.focoPrincipal.tempoTotal === 'string' ?
+        parseInt(focoDia.focoPrincipal.tempoTotal.replace(/\D/g, '')) || 120 : 120,
+      tasks: Array.isArray(focoDia.atividades) ? 
+        focoDia.atividades.map(atividade => ({
+          ...atividade,
+          id: atividade.id || Date.now() + Math.floor(Math.random() * 1000),
+          titulo: atividade.titulo || "Atividade sem título",
+          tipo: atividade.tipo || "tarefa",
+          tempo: atividade.tempo || "30min",
+          prazo: atividade.prazo || "hoje",
+          urgente: typeof atividade.urgente === 'boolean' ? atividade.urgente : false,
+          concluido: typeof atividade.concluido === 'boolean' ? atividade.concluido : false,
+          progresso: typeof atividade.progresso === 'number' ? atividade.progresso : 0
+        })) : [],
+      emotional_state: focoDia.focoPrincipal.sentimento || "Motivado(a)",
+      completed: focoDia.todasConcluidas || false,
+      mentor_tip: focoDia.focoPrincipal.dicaMentor || ""
+    };
+    
     // Se já existe um foco hoje, atualizar ao invés de criar novo
     if (focosExistentes && focosExistentes.length > 0) {
       const focoExistente = focosExistentes[0];
@@ -65,13 +90,7 @@ export const salvarFocoDia = async (focoDia: FocoDia): Promise<FocoDia | null> =
       const { data, error } = await supabase
         .from("user_focus")
         .update({
-          title: focoDia.focoPrincipal.titulo,
-          description: focoDia.focoPrincipal.descricao,
-          disciplines: focoDia.focoPrincipal.disciplinas,
-          study_time: parseInt(focoDia.focoPrincipal.tempoTotal.replace(/\D/g, '')),
-          tasks: focoDia.atividades,
-          emotional_state: focoDia.focoPrincipal.sentimento,
-          completed: focoDia.todasConcluidas || false,
+          ...dadosValidados,
           updated_at: new Date().toISOString()
         })
         .eq("id", focoExistente.id)
@@ -93,13 +112,7 @@ export const salvarFocoDia = async (focoDia: FocoDia): Promise<FocoDia | null> =
       .from("user_focus")
       .insert({
         user_id: focoDia.userId,
-        title: focoDia.focoPrincipal.titulo,
-        description: focoDia.focoPrincipal.descricao,
-        disciplines: focoDia.focoPrincipal.disciplinas,
-        study_time: parseInt(focoDia.focoPrincipal.tempoTotal.replace(/\D/g, '')) || 120,
-        tasks: focoDia.atividades,
-        emotional_state: focoDia.focoPrincipal.sentimento,
-        completed: focoDia.todasConcluidas || false
+        ...dadosValidados
       })
       .select()
       .single();
@@ -111,6 +124,16 @@ export const salvarFocoDia = async (focoDia: FocoDia): Promise<FocoDia | null> =
     }
     
     console.log("Foco do dia salvo com sucesso:", data);
+    
+    // Notificar outros componentes sobre a atualização do foco
+    try {
+      window.dispatchEvent(new CustomEvent('foco-dia-atualizado', { 
+        detail: { focoDia: converterDBParaFocoDia(data) }
+      }));
+    } catch (e) {
+      console.warn("Não foi possível emitir evento de atualização:", e);
+    }
+    
     return converterDBParaFocoDia(data);
     
   } catch (error) {
@@ -259,22 +282,83 @@ const obterUserIdAtual = (): string => {
 
 // Converter dados do banco para o formato da aplicação
 const converterDBParaFocoDia = (dbData: any): FocoDia => {
+  // Calcular formato legível do tempo de estudo
+  let tempoTotal = '2 horas';
+  
+  if (typeof dbData.study_time === 'number') {
+    const horas = Math.floor(dbData.study_time / 60);
+    const minutos = dbData.study_time % 60;
+    
+    if (horas > 0 && minutos > 0) {
+      tempoTotal = `${horas}h ${minutos}min`;
+    } else if (horas > 0) {
+      tempoTotal = `${horas} hora${horas > 1 ? 's' : ''}`;
+    } else if (minutos > 0) {
+      tempoTotal = `${minutos} minutos`;
+    }
+  }
+  
+  // Validar atividades para garantir que todos os campos necessários existam
+  const atividades = Array.isArray(dbData.tasks) ? 
+    dbData.tasks.map((atividade: any) => ({
+      id: atividade.id || Date.now() + Math.floor(Math.random() * 1000),
+      titulo: atividade.titulo || "Atividade sem título",
+      tipo: atividade.tipo || "tarefa",
+      tempo: atividade.tempo || "30min",
+      prazo: atividade.prazo || "hoje",
+      urgente: typeof atividade.urgente === 'boolean' ? atividade.urgente : false,
+      concluido: typeof atividade.concluido === 'boolean' ? atividade.concluido : false,
+      progresso: typeof atividade.progresso === 'number' ? atividade.progresso : 0
+    })) : [];
+  
+  // Construir o objeto de foco do dia
   return {
     id: dbData.id,
     userId: dbData.user_id,
     focoPrincipal: {
-      titulo: dbData.title,
-      descricao: dbData.description,
-      disciplinas: dbData.disciplines || [],
-      tempoTotal: typeof dbData.study_time === 'number' 
-        ? `${Math.floor(dbData.study_time / 60)}h ${dbData.study_time % 60}min` 
-        : '2 horas',
-      dicaMentor: '', // Será gerado dinamicamente
-      sentimento: dbData.emotional_state
+      titulo: dbData.title || "Foco de Estudo",
+      descricao: dbData.description || "Organizar suas atividades de estudo",
+      disciplinas: Array.isArray(dbData.disciplines) ? dbData.disciplines : [],
+      tempoTotal,
+      dicaMentor: dbData.mentor_tip || gerarDicaMentor(dbData.emotional_state),
+      sentimento: dbData.emotional_state || "Motivado(a)"
     },
-    atividades: dbData.tasks || [],
+    atividades: atividades,
     todasConcluidas: dbData.completed || false,
     criadoEm: dbData.created_at,
     atualizadoEm: dbData.updated_at
   };
 };
+
+// Função para gerar dica do mentor baseada no estado emocional
+function gerarDicaMentor(estado?: string): string {
+  const dicas: Record<string, string[]> = {
+    "Motivado(a)": [
+      "Aproveite seu ânimo atual para focar nos tópicos mais desafiadores primeiro!",
+      "Sua motivação é um excelente combustível! Defina metas um pouco mais ambiciosas hoje.",
+      "Que bom que está motivado(a)! Aproveite para avançar nas matérias que você normalmente acha mais difíceis."
+    ],
+    "Um pouco perdido(a)": [
+      "Divida seu estudo em etapas menores e comemore cada progresso.",
+      "Comece com algo simples para ganhar confiança, depois avance para tarefas mais complexas.",
+      "Sentir-se perdido(a) é normal. Organize suas prioridades e foque em uma tarefa de cada vez."
+    ],
+    "Cansado(a)": [
+      "Alterne entre tópicos diferentes a cada 30 minutos para manter o foco.",
+      "Faça pausas curtas e frequentes. A técnica Pomodoro pode ajudar bastante!",
+      "Priorize tarefas que exigem menos energia mental e deixe as mais complexas para quando estiver descansado(a)."
+    ],
+    "Ansioso(a)": [
+      "Pratique 2 minutos de respiração profunda antes de cada sessão de estudo.",
+      "Comece com pequenas tarefas para criar uma sensação de realização e reduzir a ansiedade.",
+      "Divida grandes tarefas em partes menores e gerencie uma de cada vez."
+    ]
+  };
+
+  if (!estado || !dicas[estado]) {
+    return "Estabeleça pequenas metas e celebre cada conquista no seu estudo.";
+  }
+
+  const estadoDicas = dicas[estado];
+  return estadoDicas[Math.floor(Math.random() * estadoDicas.length)];
+}

@@ -76,15 +76,15 @@ const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models
 export const generateFocusSuggestions = async (userId: string, focusData?: any): Promise<any> => {
   try {
     console.log("Gerando sugestões de foco para usuário:", userId);
-    
+
     // Obter eventos do calendário do usuário
     const { getEventsByUserId } = await import('./calendarEventService');
     const userEvents = await getEventsByUserId(userId);
-    
+
     // Obter tarefas pendentes do usuário
     const { getTasksByUserId } = await import('./taskService');
     const userTasks = await getTasksByUserId ? await getTasksByUserId(userId) : [];
-    
+
     // Obter perfil do usuário
     const { getUserFullProfile } = await import('./userProfileService');
     const userProfile = await getUserFullProfile();
@@ -97,7 +97,7 @@ export const generateFocusSuggestions = async (userId: string, focusData?: any):
       profile: userProfile,
       currentDate: new Date().toISOString()
     };
-    
+
     // Criar o prompt estruturado para a IA
     const prompt = `Gere uma resposta no formato JSON para ajudar a criar um foco de estudo personalizado.
 Analise os seguintes dados do usuário e retorne sugestões relevantes:
@@ -163,14 +163,14 @@ Retorne um objeto JSON com a seguinte estrutura:
 
     const data = await response.json();
     const aiResponse = data.candidates[0].content.parts[0].text;
-    
+
     // Tentar converter a resposta em JSON
     try {
       // Extrair apenas o objeto JSON da resposta (caso a IA inclua texto adicional)
       const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
       const jsonString = jsonMatch ? jsonMatch[0] : aiResponse;
       const parsedResponse = JSON.parse(jsonString);
-      
+
       return parsedResponse;
     } catch (parseError) {
       console.error("Erro ao analisar resposta JSON da IA:", parseError);
@@ -211,7 +211,7 @@ export const generateAIResponse = async (message: string, sessionId?: string, op
 
     // Verificar se é uma solicitação de análise de dados (formato JSON)
     const isDataAnalysisRequest = message.includes("Gere uma resposta no formato JSON");
-    
+
     // Inicializar histórico se não existir e não for análise de dados
     if (sessionId && !conversationHistory[sessionId] && !isDataAnalysisRequest) {
       initializeConversationHistory(sessionId);
@@ -234,7 +234,7 @@ export const generateAIResponse = async (message: string, sessionId?: string, op
     const requestContext = isDataAnalysisRequest ? "Solicitação de análise de dados em formato JSON" : analyzeRequestContext(message, history);
 
     let prompt;
-    
+
     if (isDataAnalysisRequest) {
       // Para solicitações de análise de dados, usar o prompt original
       prompt = message;
@@ -758,4 +758,119 @@ function useFallbackResponse(message: string): string {
   // Selecionar uma resposta aleatória do fallback
   const randomIndex = Math.floor(Math.random() * fallbackResponses.length);
   return fallbackResponses[randomIndex];
+}
+
+// Função auxiliar para extrair disciplinas frequentes dos eventos e tarefas
+function extrairDisciplinasFrequentes(eventos: any[], tarefas: any[]): { nome: string, frequencia: number }[] {
+  const contadorDisciplinas: Record<string, number> = {};
+
+  // Extrair disciplinas dos eventos
+  eventos.forEach(evento => {
+    if (evento.discipline) {
+      const disciplina = evento.discipline.toString().trim();
+      if (disciplina) {
+        contadorDisciplinas[disciplina] = (contadorDisciplinas[disciplina] || 0) + 1;
+      }
+    }
+
+    // Extrair possíveis disciplinas do título do evento
+    const disciplinasComuns = [
+      'Matemática', 'Português', 'História', 'Geografia', 'Física',
+      'Química', 'Biologia', 'Inglês', 'Literatura', 'Filosofia',
+      'Sociologia', 'Artes', 'Educação Física', 'Programação', 'Ciências'
+    ];
+
+    disciplinasComuns.forEach(disc => {
+      if (evento.title && evento.title.includes(disc)) {
+        contadorDisciplinas[disc] = (contadorDisciplinas[disc] || 0) + 1;
+      }
+    });
+  });
+
+  // Extrair disciplinas das tarefas
+  tarefas.forEach(tarefa => {
+    if (tarefa.category) {
+      const disciplina = tarefa.category.toString().trim();
+      if (disciplina) {
+        contadorDisciplinas[disciplina] = (contadorDisciplinas[disciplina] || 0) + 1;
+      }
+    }
+
+    // Tentar extrair disciplinas do título da tarefa
+    const disciplinasComuns = [
+      'Matemática', 'Português', 'História', 'Geografia', 'Física',
+      'Química', 'Biologia', 'Inglês', 'Literatura', 'Filosofia',
+      'Sociologia', 'Artes', 'Educação Física', 'Programação', 'Ciências'
+    ];
+
+    disciplinasComuns.forEach(disc => {
+      if (tarefa.title && tarefa.title.includes(disc)) {
+        contadorDisciplinas[disc] = (contadorDisciplinas[disc] || 0) + 1;
+      }
+    });
+  });
+
+  // Converter para array e ordenar por frequência
+  return Object.entries(contadorDisciplinas)
+    .map(([nome, frequencia]) => ({ nome, frequencia }))
+    .sort((a, b) => b.frequencia - a.frequencia);
+}
+
+// Função auxiliar para extrair tarefas urgentes
+function extrairTarefasUrgentes(tarefas: any[]): any[] {
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+
+  const amanha = new Date(hoje);
+  amanha.setDate(hoje.getDate() + 1);
+
+  const umaSemana = new Date(hoje);
+  umaSemana.setDate(hoje.getDate() + 7);
+
+  return tarefas
+    .filter(tarefa => {
+      // Tarefas com prioridade alta
+      if (tarefa.priority === 'high') return true;
+
+      // Tarefas com prazo para hoje ou amanhã
+      if (tarefa.dueDate) {
+        const dataTarefa = new Date(tarefa.dueDate);
+        dataTarefa.setHours(0, 0, 0, 0);
+        return dataTarefa <= amanha;
+      }
+
+      return false;
+    })
+    .map(tarefa => ({
+      id: tarefa.id,
+      titulo: tarefa.title,
+      descricao: tarefa.description || "",
+      prioridade: tarefa.priority,
+      prazo: tarefa.dueDate ? new Date(tarefa.dueDate).toISOString() : null,
+      categoria: tarefa.category || null
+    }));
+}
+
+// Função auxiliar para extrair próximos eventos importantes
+function extrairProximosEventos(eventos: any[]): any[] {
+  const hoje = new Date();
+  const doisDias = new Date(hoje);
+  doisDias.setDate(hoje.getDate() + 2);
+
+  return eventos
+    .filter(evento => {
+      if (!evento.startDate) return false;
+
+      const dataEvento = new Date(evento.startDate);
+      return dataEvento <= doisDias;
+    })
+    .map(evento => ({
+      id: evento.id,
+      titulo: evento.title,
+      descricao: evento.description || "",
+      data: evento.startDate,
+      disciplina: evento.discipline || null,
+      tipo: evento.type || "evento"
+    }))
+    .slice(0, 5); // Limitar aos 5 próximos eventos
 }

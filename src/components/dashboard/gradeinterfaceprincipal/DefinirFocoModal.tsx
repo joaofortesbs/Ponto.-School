@@ -103,7 +103,7 @@ const DefinirFocoModal: React.FC<DefinirFocoModalProps> = ({ open, onClose, onSa
         return;
       }
 
-      // Carregar disciplinas do perfil do usuário
+      // Carregar perfil do usuário
       const { getUserFullProfile } = await import('@/services/userProfileService');
       const perfil = await getUserFullProfile();
 
@@ -111,86 +111,201 @@ const DefinirFocoModal: React.FC<DefinirFocoModalProps> = ({ open, onClose, onSa
       const { getEventsByUserId } = await import('@/services/calendarEventService');
       const { getTasksByUserId } = await import('@/services/taskService');
 
-      const eventos = await getEventsByUserId(currentUserId);
-      const tarefas = await getTasksByUserId(currentUserId);
+      // Obter a data de hoje e da próxima semana para filtrar eventos relevantes
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+      
+      const proximaSemana = new Date(hoje);
+      proximaSemana.setDate(hoje.getDate() + 7);
+      
+      // Buscar todos os eventos
+      const todosEventos = await getEventsByUserId(currentUserId);
+      
+      // Filtrar apenas eventos futuros (hoje e próximos dias)
+      const eventos = todosEventos.filter(evento => {
+        if (!evento.startDate) return false;
+        const dataEvento = new Date(evento.startDate);
+        return dataEvento >= hoje;
+      });
+      
+      // Ordenar eventos por data
+      eventos.sort((a, b) => {
+        return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
+      });
+      
+      // Buscar tarefas
+      const todasTarefas = await getTasksByUserId(currentUserId);
+      
+      // Filtrar apenas tarefas não concluídas
+      const tarefas = todasTarefas.filter(tarefa => 
+        tarefa.status === 'todo' || tarefa.status === 'in-progress'
+      );
+      
+      // Ordenar tarefas por prioridade e prazo
+      tarefas.sort((a, b) => {
+        // Primeiro por prioridade (high > medium > low)
+        const priorityOrder = { high: 3, medium: 2, low: 1 };
+        const priorityDiff = (priorityOrder[b.priority as keyof typeof priorityOrder] || 0) - 
+                            (priorityOrder[a.priority as keyof typeof priorityOrder] || 0);
+        
+        if (priorityDiff !== 0) return priorityDiff;
+        
+        // Depois por prazo, se ambos tiverem
+        if (a.dueDate && b.dueDate) {
+          return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+        }
+        
+        // Colocar tarefas com prazo antes das sem prazo
+        if (a.dueDate) return -1;
+        if (b.dueDate) return 1;
+        
+        return 0;
+      });
 
-      // Gerar disciplinas personalizadas com base nos eventos e perfil
-      let disciplinasPersonalizadas = [...disciplinasPadrao];
+      // Gerar disciplinas personalizadas com base nos eventos, tarefas e perfil
+      let disciplinasPersonalizadas: { nome: string, tag: string }[] = [];
+      const disciplinasMap = new Map<string, { nome: string, tag: string, contagem: number }>();
+      
+      // Adicionar disciplinas padrão com contagem zero inicialmente
+      disciplinasPadrao.forEach(d => {
+        disciplinasMap.set(d.nome, { ...d, contagem: 0 });
+      });
 
-      // Extrair disciplinas dos eventos de calendário
+      // Extrair e contar disciplinas dos eventos
       if (eventos && eventos.length > 0) {
-        const disciplinasDeEventos = eventos
+        eventos
           .filter(evento => evento.discipline)
-          .map(evento => evento.discipline as string)
-          .filter((disciplina, index, array) => array.indexOf(disciplina) === index);
-
-        if (disciplinasDeEventos.length > 0) {
-          disciplinasPersonalizadas = disciplinasDeEventos.map(nome => ({ 
-            nome, 
-            tag: "Da sua agenda" 
-          })).concat(
-            disciplinasPadrao.filter(d => !disciplinasDeEventos.includes(d.nome))
-          );
-        }
+          .forEach(evento => {
+            const disciplina = evento.discipline as string;
+            if (disciplina) {
+              const existente = disciplinasMap.get(disciplina);
+              if (existente) {
+                disciplinasMap.set(disciplina, { ...existente, contagem: existente.contagem + 1, tag: "Da sua agenda" });
+              } else {
+                disciplinasMap.set(disciplina, { nome: disciplina, tag: "Da sua agenda", contagem: 1 });
+              }
+            }
+          });
       }
 
-      // Gerar sugestões de tarefas com base nas tarefas existentes e eventos
-      let sugestoesPersonalizadas = [...sugestoesFocoPadrao];
-
+      // Extrair e contar categorias das tarefas como disciplinas
       if (tarefas && tarefas.length > 0) {
-        // Usar tarefas pendentes como sugestões
-        const tarefasPendentes = tarefas
-          .filter(tarefa => tarefa.status === 'todo' || tarefa.status === 'in-progress')
-          .map(tarefa => ({
-            titulo: tarefa.title,
-            descricao: tarefa.description || "Completar esta tarefa pendente",
-            prioridade: tarefa.priority === 'high' ? "alta" : (tarefa.priority === 'medium' ? "média" : "baixa"),
-            prazo: tarefa.dueDate ? "até " + new Date(tarefa.dueDate).toLocaleDateString() : "em breve"
-          }));
+        tarefas
+          .filter(tarefa => tarefa.category)
+          .forEach(tarefa => {
+            const categoria = tarefa.category as string;
+            if (categoria) {
+              const existente = disciplinasMap.get(categoria);
+              if (existente) {
+                disciplinasMap.set(categoria, { 
+                  ...existente, 
+                  contagem: existente.contagem + 1, 
+                  tag: existente.tag === "Da sua agenda" ? "Da sua agenda" : "Das suas tarefas" 
+                });
+              } else {
+                disciplinasMap.set(categoria, { nome: categoria, tag: "Das suas tarefas", contagem: 1 });
+              }
+            }
+          });
+      }
+      
+      // Adicionar disciplinas do perfil do usuário, se disponíveis
+      if (perfil && perfil.interests && Array.isArray(perfil.interests)) {
+        perfil.interests.forEach(interesse => {
+          if (typeof interesse === 'string') {
+            const existente = disciplinasMap.get(interesse);
+            if (existente) {
+              disciplinasMap.set(interesse, { 
+                ...existente, 
+                contagem: existente.contagem + 1, 
+                tag: existente.tag || "Do seu perfil" 
+              });
+            } else {
+              disciplinasMap.set(interesse, { nome: interesse, tag: "Do seu perfil", contagem: 1 });
+            }
+          }
+        });
+      }
+      
+      // Converter mapa para array e ordenar por contagem e depois tag (para dar prioridade a itens da agenda)
+      disciplinasPersonalizadas = Array.from(disciplinasMap.values())
+        .sort((a, b) => {
+          // Primeiro por contagem (descendente)
+          if (b.contagem !== a.contagem) {
+            return b.contagem - a.contagem;
+          }
+          
+          // Depois por fonte (agenda > tarefas > perfil > padrão)
+          const tagPrioridade = {
+            "Da sua agenda": 4,
+            "Das suas tarefas": 3,
+            "Do seu perfil": 2,
+            "Recomendado": 1,
+            "Popular": 0
+          };
+          
+          const aValor = tagPrioridade[a.tag as keyof typeof tagPrioridade] || 0;
+          const bValor = tagPrioridade[b.tag as keyof typeof tagPrioridade] || 0;
+          
+          return bValor - aValor;
+        })
+        .map(({ nome, tag }) => ({ nome, tag }));
 
-        if (tarefasPendentes.length > 0) {
-          // Combinar tarefas pendentes com algumas sugestões padrão
-          sugestoesPersonalizadas = [
-            ...tarefasPendentes.slice(0, 3),
-            ...sugestoesFocoPadrao.slice(0, 2)
-          ];
-        }
+      // Gerar sugestões de tarefas a partir das tarefas pendentes
+      let sugestoesPersonalizadas: any[] = [];
+
+      // Adicionar tarefas pendentes como sugestões
+      if (tarefas && tarefas.length > 0) {
+        const tarefasPendentes = tarefas.map(tarefa => ({
+          titulo: tarefa.title,
+          descricao: tarefa.description || "Completar esta tarefa pendente",
+          prioridade: tarefa.priority === 'high' ? "alta" : (tarefa.priority === 'medium' ? "média" : "baixa"),
+          prazo: tarefa.dueDate ? "até " + new Date(tarefa.dueDate).toLocaleDateString() : "em breve"
+        }));
+
+        sugestoesPersonalizadas = [...tarefasPendentes];
       }
 
+      // Adicionar sugestões baseadas em eventos próximos
       if (eventos && eventos.length > 0) {
-        // Adicionar sugestões baseadas em eventos próximos
-        const hoje = new Date();
-        hoje.setHours(0, 0, 0, 0);
-
-        const proximaSemana = new Date(hoje);
-        proximaSemana.setDate(hoje.getDate() + 7);
-
         const eventosProximos = eventos.filter(evento => {
           const dataEvento = new Date(evento.startDate);
           return dataEvento >= hoje && dataEvento <= proximaSemana;
         });
 
-        const sugestoesDeEventos = eventosProximos.slice(0, 2).map(evento => ({
+        const sugestoesDeEventos = eventosProximos.map(evento => ({
           titulo: `Preparar para: ${evento.title}`,
           descricao: evento.description || `Evento agendado para ${new Date(evento.startDate).toLocaleDateString()}`,
           prioridade: new Date(evento.startDate).getTime() - hoje.getTime() < 3 * 24 * 60 * 60 * 1000 ? "alta" : "média",
           prazo: `até ${new Date(evento.startDate).toLocaleDateString()}`
         }));
 
-        if (sugestoesDeEventos.length > 0) {
-          // Adicionar sugestões de eventos ao início da lista
-          sugestoesPersonalizadas = [
-            ...sugestoesDeEventos,
-            ...sugestoesPersonalizadas.slice(0, 4 - sugestoesDeEventos.length)
-          ];
-        }
+        // Adicionar sugestões de eventos
+        sugestoesPersonalizadas = [...sugestoesPersonalizadas, ...sugestoesDeEventos];
       }
+      
+      // Se não houver sugestões personalizadas suficientes, usar as padrão
+      if (sugestoesPersonalizadas.length < 3) {
+        sugestoesPersonalizadas = [...sugestoesPersonalizadas, ...sugestoesFocoPadrao.slice(0, 4 - sugestoesPersonalizadas.length)];
+      }
+      
+      // Ordenar sugestões por prioridade
+      sugestoesPersonalizadas.sort((a, b) => {
+        const prioridadeOrdem = { alta: 3, média: 2, baixa: 1 };
+        return (prioridadeOrdem[b.prioridade as keyof typeof prioridadeOrdem] || 0) - 
+               (prioridadeOrdem[a.prioridade as keyof typeof prioridadeOrdem] || 0);
+      });
 
       // Atualizar os estados com dados personalizados
       setDisciplinas(disciplinasPersonalizadas);
       setSugestoesTarefas(sugestoesPersonalizadas);
 
-      console.log("Dados personalizados carregados para o modal de Foco");
+      console.log("Dados personalizados carregados para o modal de Foco:", {
+        disciplinas: disciplinasPersonalizadas.length,
+        sugestoes: sugestoesPersonalizadas.length,
+        eventos: eventos.length,
+        tarefas: tarefas.length
+      });
     } catch (error) {
       console.error("Erro ao carregar dados personalizados:", error);
       resetarParaDadosPadrao();
