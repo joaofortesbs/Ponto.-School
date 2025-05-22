@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
+import { X, Target, BookOpen, Clock, Smile, HelpCircle, BarChart2, Check, PlusCircle, Search, Zap } from "lucide-react";
+import { useTheme } from "@/components/ThemeProvider";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useTheme } from "@/components/ThemeProvider";
-import { Check, X, Clock, Bookmark, Target, Zap, Book, PenSquare, Calendar, RefreshCw } from "lucide-react";
-import { Slider } from "@/components/ui/slider";
 import { supabase } from "@/lib/supabase";
 
 interface DefinirFocoModalProps {
@@ -366,6 +365,14 @@ const DefinirFocoModal: React.FC<DefinirFocoModalProps> = ({ open, onClose, onSa
     }
   };
 
+  const toggleTarefaSugerida = (titulo: string) => {
+    if (tarefasSelecionadas.includes(titulo)) {
+      setTarefasSelecionadas(tarefasSelecionadas.filter(tarefa => tarefa !== titulo));
+    } else {
+      setTarefasSelecionadas([...tarefasSelecionadas, titulo]);
+    }
+  };
+
   // Função para formatar o tempo de estudo para exibição
   const formatarTempoEstudo = (minutos: number): string => {
     const horas = Math.floor(minutos / 60);
@@ -495,394 +502,398 @@ return (
 
         {/* Conteúdo dinâmico baseado na etapa atual */}
         <div className="space-y-6 mb-8">
-          {/* Etapa 1: Objetivo principal */}
           {etapaAtual === 1 && (
-            <div className="space-y-5">
-              <div className="space-y-3">
-                <h3 className={`text-lg font-medium ${isLightMode ? 'text-gray-800' : 'text-white'}`}>
-                  Qual é seu objetivo de estudo hoje?
+            <div className="space-y-6">
+              <div>
+                <h3 className={`text-lg font-medium mb-3 ${isLightMode ? 'text-gray-800' : 'text-white'} flex items-center gap-2`}>
+                  <span className={`p-1.5 rounded ${isLightMode ? 'bg-orange-50' : 'bg-[#FF6B00]/10'}`}>
+                    <Target className="h-4 w-4 text-[#FF6B00]" />
+                  </span>
+                  Selecione seu objetivo principal de estudo
                 </h3>
-                <div className="grid grid-cols-1 gap-3">
-                  {objetivosEstudo.map((obj) => (
+
+                <div className="grid grid-cols-1 gap-2.5">
+                  {objetivosEstudo.map((opcao, index) => (
                     <button
-                      key={obj}
-                      onClick={() => setObjetivo(obj)}
-                      className={`flex items-center p-3 rounded-lg border ${
-                        objetivo === obj 
-                          ? `${isLightMode ? 'border-[#FF6B00] bg-orange-50' : 'border-[#FF6B00] bg-[#FF6B00]/10'}`
-                          : `${isLightMode ? 'border-gray-200 hover:border-gray-300' : 'border-gray-700 hover:border-gray-600'}`
-                      } transition-all`}
+                      key={opcao}
+                      type="button"
+                      onClick={() => setObjetivo(opcao)}
+                      className={`group flex items-center p-3.5 rounded-lg border transition-all ${
+                        objetivo === opcao
+                          ? isLightMode
+                            ? 'border-[#FF6B00] bg-gradient-to-r from-orange-50 to-orange-100/70 text-[#FF6B00] shadow-sm'
+                            : 'border-[#FF6B00]/70 bg-gradient-to-r from-[#FF6B00]/10 to-[#FF6B00]/5 text-white shadow-sm'
+                          : isLightMode
+                          ? 'border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300'
+                          : 'border-gray-700/50 text-gray-300 hover:bg-gray-800/30 hover:border-gray-600'
+                      }`}
                     >
-                      <div className={`w-5 h-5 rounded-full flex items-center justify-center border ${
-                        objetivo === obj
-                          ? 'border-[#FF6B00] bg-[#FF6B00]'
-                          : `${isLightMode ? 'border-gray-300' : 'border-gray-600'}`
+                      <div className={`mr-3 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                        objetivo === opcao
+                          ? 'bg-[#FF6B00] text-white'
+                          : isLightMode 
+                            ? 'bg-gray-100 text-gray-500 group-hover:bg-gray-200' 
+                            : 'bg-gray-800 text-gray-400 group-hover:bg-gray-700'
                       }`}>
-                        {objetivo === obj && <Check className="h-3 w-3 text-white" />}
+                        {index + 1}
                       </div>
-                      <span className={`ml-3 ${isLightMode ? 'text-gray-800' : 'text-gray-200'}`}>
-                        {obj}
-                      </span>
+                      <span className="text-left">{opcao}</span>
                     </button>
                   ))}
                 </div>
               </div>
 
               {objetivo === "Outro Objetivo (Personalizado)" && (
-                <div className="space-y-2">
-                  <label htmlFor="objetivo-personalizado" className={`block text-sm font-medium ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
-                    Especifique seu objetivo:
+                <div className={`p-4 rounded-lg ${isLightMode ? 'bg-gray-50' : 'bg-gray-800/20'} border ${isLightMode ? 'border-gray-200' : 'border-gray-700/50'}`}>
+                  <label
+                    htmlFor="objetivo-personalizado"
+                    className={`block text-sm font-medium mb-2 ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}
+                  >
+                    Descreva seu objetivo personalizado
                   </label>
-                  <input
-                    type="text"
+                  <textarea
                     id="objetivo-personalizado"
                     value={objetivoPersonalizado}
                     onChange={(e) => setObjetivoPersonalizado(e.target.value)}
-                    className={`w-full p-3 rounded-lg border ${
-                      isLightMode 
-                        ? 'border-gray-300 focus:border-[#FF6B00] bg-white' 
-                        : 'border-gray-700 focus:border-[#FF6B00] bg-gray-800'
-                    } focus:ring-1 focus:ring-[#FF6B00] outline-none transition-colors`}
-                    placeholder="Ex: Preparar para apresentação de seminário"
+                    placeholder="Ex: Revisar conteúdo para a prova final"
+                    className={`w-full rounded-lg p-3 ${
+                      isLightMode
+                        ? 'border-gray-300 bg-white text-gray-800 placeholder-gray-400 focus:border-[#FF6B00] focus:ring-[#FF6B00]/20'
+                        : 'border-gray-700 bg-gray-800/30 text-white placeholder-gray-500 focus:border-[#FF6B00] focus:ring-[#FF6B00]/10'
+                    }`}
+                    rows={3}
                   />
                 </div>
               )}
             </div>
           )}
 
-          {/* Etapa 2: Disciplinas e tópicos */}
           {etapaAtual === 2 && (
-            <div className="space-y-5">
-              <div className="space-y-3">
-                <h3 className={`text-lg font-medium ${isLightMode ? 'text-gray-800' : 'text-white'}`}>
-                  Selecione as disciplinas prioritárias
+            <div className="space-y-6">
+              <div>
+                <h3 className={`text-lg font-medium mb-3 ${isLightMode ? 'text-gray-800' : 'text-white'} flex items-center gap-2`}>
+                  <span className={`p-1.5 rounded ${isLightMode ? 'bg-orange-50' : 'bg-[#FF6B00]/10'}`}>
+                    <BookOpen className="h-4 w-4 text-[#FF6B00]" />
+                  </span>
+                  Selecione as disciplinas para focar hoje
                 </h3>
-                <p className={`text-sm ${isLightMode ? 'text-gray-600' : 'text-gray-400'}`}>
-                  Escolha até 3 disciplinas para focar hoje
-                </p>
 
-                {/* Botão para atualizar sugestões */}
-                {carregandoSugestoes ? (
-                  <div className={`w-full flex justify-center py-2 mb-2 ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                    <RefreshCw className="h-5 w-5 animate-spin" />
-                    <span className="ml-2 text-sm">Carregando disciplinas...</span>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <div className={`p-4 rounded-lg ${isLightMode ? 'bg-gray-50/70' : 'bg-gray-800/10'} border ${isLightMode ? 'border-gray-100' : 'border-gray-800/50'}`}>
+                  <div className="flex flex-wrap gap-2">
                     {disciplinas.map((disciplina) => (
                       <button
                         key={disciplina.nome}
+                        type="button"
                         onClick={() => toggleDisciplina(disciplina.nome)}
-                        className={`flex flex-col items-start p-3 rounded-lg border ${
+                        className={`px-3 py-1.5 rounded-full transition-all ${
                           disciplinasSelecionadas.includes(disciplina.nome)
-                            ? `${isLightMode ? 'border-[#FF6B00] bg-orange-50' : 'border-[#FF6B00] bg-[#FF6B00]/10'}`
-                            : `${isLightMode ? 'border-gray-200 hover:border-gray-300' : 'border-gray-700 hover:border-gray-600'}`
-                        } transition-all`}
-                        disabled={disciplinasSelecionadas.length >= 3 && !disciplinasSelecionadas.includes(disciplina.nome)}
+                            ? isLightMode
+                              ? 'bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white shadow-sm'
+                              : 'bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white shadow-sm'
+                            : isLightMode
+                            ? 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300'
+                            : 'bg-gray-800/50 border border-gray-700/50 text-gray-300 hover:bg-gray-700/70 hover:border-gray-600'
+                        }`}
                       >
-                        <div className="flex items-center justify-between w-full">
-                          <span className={`${isLightMode ? 'text-gray-800' : 'text-gray-200'} font-medium`}>
-                            {disciplina.nome}
-                          </span>
-                          <div className={`w-5 h-5 rounded-full flex items-center justify-center border ${
-                            disciplinasSelecionadas.includes(disciplina.nome)
-                              ? 'border-[#FF6B00] bg-[#FF6B00]'
-                              : `${isLightMode ? 'border-gray-300' : 'border-gray-600'}`
-                          }`}>
-                            {disciplinasSelecionadas.includes(disciplina.nome) && <Check className="h-3 w-3 text-white" />}
-                          </div>
-                        </div>
-                        {disciplina.tag && (
-                          <span className={`mt-1.5 text-xs px-2 py-0.5 rounded-full ${
-                            isLightMode 
-                              ? disciplina.tag === "Da sua agenda" ? 'bg-green-100 text-green-700' 
-                                : disciplina.tag === "Recente" ? 'bg-blue-100 text-blue-700' 
-                                : disciplina.tag === "Recomendado" ? 'bg-purple-100 text-purple-700'
-                                : 'bg-orange-100 text-orange-700'
-                              : disciplina.tag === "Da sua agenda" ? 'bg-green-900/30 text-green-400' 
-                                : disciplina.tag === "Recente" ? 'bg-blue-900/30 text-blue-400' 
-                                : disciplina.tag === "Recomendado" ? 'bg-purple-900/30 text-purple-400'
-                                : 'bg-orange-900/30 text-orange-400'
-                          }`}>
-                            {disciplina.tag}
-                          </span>
-                        )}
+                        {disciplina.nome}
                       </button>
                     ))}
                   </div>
-                )}
+
+                  {disciplinasSelecionadas.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-dashed border-gray-200 dark:border-gray-700">
+                      <p className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                        {disciplinasSelecionadas.length} disciplina(s) selecionada(s)
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <label htmlFor="topico-especifico" className={`block text-sm font-medium ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
+              <div className={`rounded-lg ${isLightMode ? 'bg-white' : 'bg-gray-800/10'} border ${isLightMode ? 'border-gray-200' : 'border-gray-700/50'} p-4`}>
+                <label
+                  htmlFor="topico-especifico"
+                  className={`block text-sm font-medium mb-2 ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}
+                >
                   Tópico específico (opcional)
                 </label>
-                <input
-                  type="text"
-                  id="topico-especifico"
-                  value={topicoEspecifico}
-                  onChange={(e) => setTopicoEspecifico(e.target.value)}
-                  className={`w-full p-3 rounded-lg border ${
-                    isLightMode 
-                      ? 'border-gray-300 focus:border-[#FF6B00] bg-white' 
-                      : 'border-gray-700 focus:border-[#FF6B00] bg-gray-800'
-                  } focus:ring-1 focus:ring-[#FF6B00] outline-none transition-colors`}
-                  placeholder="Ex: Equações diferenciais, Segunda guerra mundial"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Etapa 3: Tarefas e tempo */}
-          {etapaAtual === 3 && (
-            <div className="space-y-5">
-              <div className="space-y-3">
-                <h3 className={`text-lg font-medium ${isLightMode ? 'text-gray-800' : 'text-white'}`}>
-                  Quanto tempo você pretende dedicar hoje?
-                </h3>
-                <div className="px-2">
-                  <div className="mb-2 flex justify-between items-center">
-                    <span className={`text-sm ${isLightMode ? 'text-gray-600' : 'text-gray-400'}`}>30min</span>
-                    <span className={`text-sm font-medium ${isLightMode ? 'text-gray-800' : 'text-white'}`}>
-                      {formatarTempoEstudo(tempoEstudo)}
-                    </span>
-                    <span className={`text-sm ${isLightMode ? 'text-gray-600' : 'text-gray-400'}`}>4h</span>
-                  </div>
-                  <Slider
-                    value={[tempoEstudo]}
-                    min={30}
-                    max={240}
-                    step={15}
-                    onValueChange={(value) => setTempoEstudo(value[0])}
-                    className="cursor-pointer"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Etapa 4: Tarefas e compromissos */}
-          {etapaAtual === 4 && (
-            <div className="space-y-5">
-              <div className="space-y-3">
-                <h3 className={`text-lg font-medium ${isLightMode ? 'text-gray-800' : 'text-white'}`}>
-                  Há alguma tarefa ou prazo específico que precisa de atenção imediata?
-                </h3>
-
-                <div className="flex items-center">
+                <div className="relative">
                   <input
+                    id="topico-especifico"
                     type="text"
-                    value={novaTarefa}
-                    onChange={(e) => setNovaTarefa(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && adicionarTarefa()}
-                    className={`flex-1 p-3 rounded-l-lg border ${
-                      isLightMode 
-                        ? 'border-gray-300 focus:border-[#FF6B00] bg-white' 
-                        : 'border-gray-700 focus:border-[#FF6B00] bg-gray-800'
-                    } focus:ring-1 focus:ring-[#FF6B00] outline-none transition-colors`}
-                    placeholder="Adicionar tarefa"
+                    value={topicoEspecifico}
+                    onChange={(e) => setTopicoEspecifico(e.target.value)}
+                    placeholder="Ex: Funções do 2º grau"
+                    className={`w-full rounded-lg pl-10 pr-3 py-2.5 ${
+                      isLightMode
+                        ? 'border-gray-300 bg-white text-gray-800 placeholder-gray-400 focus:border-[#FF6B00] focus:ring-[#FF6B00]/20'
+                        : 'border-gray-700 bg-gray-800/30 text-white placeholder-gray-500 focus:border-[#FF6B00] focus:ring-[#FF6B00]/10'
+                    }`}
                   />
-                  <button
-                    onClick={adicionarTarefa}
-                    className="p-3 rounded-r-lg bg-[#FF6B00] text-white hover:bg-[#FF8C40] transition-colors"
-                  >
-                    <PenSquare className="h-5 w-5" />
-                  </button>
-                </div>
-
-                <div className="space-y-2 mt-4">
-                  <p className={`text-sm font-medium ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
-                    Suas tarefas:
-                  </p>
-                  {tarefasSelecionadas.length === 0 ? (
-                    <p className={`text-sm italic ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                      Nenhuma tarefa adicionada
-                    </p>
-                  ) : (
-                    <ul className="space-y-2">
-                      {tarefasSelecionadas.map((tarefa, index) => (
-                        <li 
-                          key={index}
-                          className={`flex items-center justify-between p-3 rounded-lg border ${
-                            isLightMode ? 'border-gray-200 bg-gray-50' : 'border-gray-700 bg-gray-800/40'
-                          }`}
-                        >
-                          <span className={`${isLightMode ? 'text-gray-800' : 'text-gray-200'}`}>{tarefa}</span>
-                          <button
-                            onClick={() => removerTarefa(index)}
-                            className={`p-1 rounded-full ${isLightMode ? 'hover:bg-gray-200' : 'hover:bg-gray-700'} transition-colors`}
-                          >
-                            <X className={`h-4 w-4 ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`} />
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-
-                <div className="mt-6">
-                  <div className="flex justify-between items-center mb-3">
-                    <p className={`text-sm font-medium ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
-                      Sugestões com base no seu perfil:
-                    </p>
-                    <button 
-                      onClick={atualizarSugestoes}
-                      disabled={carregandoSugestoes}
-                      className={`p-1.5 rounded-full text-xs flex items-center gap-1.5 ${
-                        isLightMode 
-                          ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' 
-                          : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                      } transition-colors`}
-                    >
-                      <RefreshCw className={`h-3 w-3 ${carregandoSugestoes ? 'animate-spin' : ''}`} />
-                      {carregandoSugestoes ? 'Atualizando...' : 'Atualizar'}
-                    </button>
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Search className={`h-4 w-4 ${isLightMode ? 'text-gray-400' : 'text-gray-500'}`} />
                   </div>
-
-                  {carregandoSugestoes ? (
-                    <div className={`flex justify-center items-center py-8 ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                      <RefreshCw className="h-6 w-6 animate-spin" />
-                      <span className="ml-3">Carregando sugestões personalizadas...</span>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 gap-2">
-                      {sugestoesTarefas.map((sugestao, index) => (
-                        <button
-                          key={index}
-                          onClick={() => adicionarSugestao(sugestao.titulo)}
-                          className={`flex items-start p-3 rounded-lg border ${
-                            tarefasSelecionadas.includes(sugestao.titulo)
-                              ? `${isLightMode ? 'border-green-300 bg-green-50' : 'border-green-700 bg-green-900/20'}`
-                              : `${isLightMode ? 'border-gray-200 hover:border-gray-300' : 'border-gray-700 hover:border-gray-600'}`
-                          } transition-all w-full text-left`}
-                        >
-                          <div className={`w-5 h-5 mt-0.5 rounded-full flex-shrink-0 flex items-center justify-center border ${
-                            tarefasSelecionadas.includes(sugestao.titulo)
-                              ? 'border-green-500 bg-green-500'
-                              : `${isLightMode ? 'border-gray-300' : 'border-gray-600'}`
-                          }`}>
-                            {tarefasSelecionadas.includes(sugestao.titulo) && <Check className="h-3 w-3 text-white" />}
-                          </div>
-                          <div className="ml-3">
-                            <p className={`font-medium ${isLightMode ? 'text-gray-800' : 'text-gray-200'}`}>
-                              {sugestao.titulo}
-                            </p>
-                            <p className={`text-sm ${isLightMode ? 'text-gray-600' : 'text-gray-400'}`}>
-                              {sugestao.descricao}
-                            </p>
-                            <div className="flex items-center mt-1.5 gap-2">
-                              {sugestao.prioridade && (
-                                <span className={`text-xs px-2 py-0.5 rounded-full ${
-                                  sugestao.prioridade === "alta" 
-                                    ? `${isLightMode ? 'bg-red-100 text-red-700' : 'bg-red-900/20 text-red-400'}`
-                                    : sugestao.prioridade === "média"
-                                      ? `${isLightMode ? 'bg-amber-100 text-amber-700' : 'bg-amber-900/20 text-amber-400'}`
-                                      : `${isLightMode ? 'bg-blue-100 text-blue-700' : 'bg-blue-900/20 text-blue-400'}`
-                                }`}>
-                                  Prioridade {sugestao.prioridade}
-                                </span>
-                              )}
-                              {sugestao.prazo && (
-                                <span className={`text-xs flex items-center ${isLightMode ? 'text-gray-600' : 'text-gray-400'}`}>
-                                  <Calendar className="h-3 w-3 mr-1" /> {sugestao.prazo}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  )}
                 </div>
+                <p className={`mt-1.5 text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                  Especifique um tópico dentro das disciplinas selecionadas para um foco mais direcionado
+                </p>
               </div>
             </div>
           )}
 
-          {/* Etapa 5: Finalização e estado emocional */}
-          {etapaAtual === 5 && (
-            <div className="space-y-5">
-              <div className="space-y-3">
-                <h3 className={`text-lg font-medium ${isLightMode ? 'text-gray-800' : 'text-white'}`}>
+          {etapaAtual === 3 && (
+            <div className="space-y-6">
+              {/* Tempo de estudo planejado */}
+              <div className={`p-4 rounded-lg ${isLightMode ? 'bg-gray-50/70' : 'bg-gray-800/10'} border ${isLightMode ? 'border-gray-100' : 'border-gray-800/50'}`}>
+                <h3 className={`text-md font-medium mb-3 ${isLightMode ? 'text-gray-800' : 'text-white'} flex items-center gap-2`}>
+                  <span className={`p-1.5 rounded ${isLightMode ? 'bg-orange-50' : 'bg-[#FF6B00]/10'}`}>
+                    <Clock className="h-4 w-4 text-[#FF6B00]" />
+                  </span>
+                  Tempo de estudo planejado
+                </h3>
+
+                <div className="px-2">
+                  <input
+                    type="range"
+                    min="30"
+                    max="240"
+                    step="30"
+                    value={tempoEstudo}
+                    onChange={(e) => setTempoEstudo(parseInt(e.target.value))}
+                    className="w-full accent-[#FF6B00]"
+                  />
+
+                  <div className="flex justify-between items-center mt-2">
+                    <span className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>30 min</span>
+                    <span className={`text-sm font-medium px-3 py-1 rounded-full ${isLightMode ? 'bg-orange-100 text-orange-700' : 'bg-[#FF6B00]/20 text-[#FF6B00]'}`}>
+                      {tempoEstudo} min ({Math.floor(tempoEstudo / 60)} hora{tempoEstudo >= 120 ? 's' : ''} e {tempoEstudo % 60} min)
+                    </span>
+                    <span className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>4 horas</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Como você está se sentindo hoje? */}
+              <div className={`p-4 rounded-lg ${isLightMode ? 'bg-white' : 'bg-gray-800/10'} border ${isLightMode ? 'border-gray-200' : 'border-gray-700/50'}`}>
+                <h3 className={`text-md font-medium mb-3 ${isLightMode ? 'text-gray-800' : 'text-white'} flex items-center gap-2`}>
+                  <span className={`p-1.5 rounded ${isLightMode ? 'bg-orange-50' : 'bg-[#FF6B00]/10'}`}>
+                    <Smile className="h-4 w-4 text-[#FF6B00]" />
+                  </span>
                   Como você está se sentindo hoje?
                 </h3>
-                <p className={`text-sm ${isLightMode ? 'text-gray-600' : 'text-gray-400'}`}>
-                  Isso nos ajudará a criar dicas personalizadas para suas sessões de estudo
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {["Motivado(a)", "Um pouco perdido(a)", "Cansado(a)", "Ansioso(a)"].map((estado) => (
+
+                <div className="grid grid-cols-2 gap-2.5">
+                  {[
+                                        { estado: "Motivado(a)", icon: <Smile className="h-4 w-4" /> },
+                    { estado: "Um pouco perdido(a)", icon: <HelpCircle className="h-4 w-4" /> },
+                    { estado: "Cansado(a)", icon: <Clock className="h-4 w-4" /> },
+                    { estado: "Ansioso(a)", icon: <BarChart2 className="h-4 w-4" /> }
+                  ].map(({ estado, icon }) => (
                     <button
                       key={estado}
+                      type="button"
                       onClick={() => setEstadoAtual(estado)}
-                      className={`flex items-center p-3 rounded-lg border ${
-                        estadoAtual === estado 
-                          ? `${isLightMode ? 'border-[#FF6B00] bg-orange-50' : 'border-[#FF6B00] bg-[#FF6B00]/10'}`
-                          : `${isLightMode ? 'border-gray-200 hover:border-gray-300' : 'border-gray-700 hover:border-gray-600'}`
-                      } transition-all`}
-                    >
-                      <div className={`w-5 h-5 rounded-full flex items-center justify-center border ${
+                      className={`flex items-center p-3 rounded-lg border transition-all ${
                         estadoAtual === estado
-                          ? 'border-[#FF6B00] bg-[#FF6B00]'
-                          : `${isLightMode ? 'border-gray-300' : 'border-gray-600'}`
-                      }`}>
-                        {estadoAtual === estado && <Check className="h-3 w-3 text-white" />}
+                          ? isLightMode
+                            ? 'border-[#FF6B00] bg-gradient-to-r from-orange-50 to-orange-100/70 text-[#FF6B00] shadow-sm'
+                            : 'border-[#FF6B00]/70 bg-gradient-to-r from-[#FF6B00]/10 to-[#FF6B00]/5 text-white shadow-sm'
+                          : isLightMode
+                          ? 'border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300'
+                          : 'border-gray-700/50 text-gray-300 hover:bg-gray-800/30 hover:border-gray-600'
+                      }`}
+                    >
+                      <div className={`mr-2 ${estadoAtual === estado ? 'text-[#FF6B00]' : isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                        {icon}
                       </div>
-                      <span className={`ml-3 ${isLightMode ? 'text-gray-800' : 'text-gray-200'}`}>
-                        {estado}
-                      </span>
+                      <span>{estado}</span>
                     </button>
                   ))}
                 </div>
               </div>
 
-              <div className={`p-4 rounded-lg ${isLightMode ? 'bg-blue-50 border border-blue-100' : 'bg-blue-900/10 border border-blue-800/20'}`}>
-                <h4 className={`text-sm font-medium mb-2 flex items-center ${isLightMode ? 'text-blue-800' : 'text-blue-300'}`}>
-                  <Zap className="h-4 w-4 mr-1.5" /> Resumo do seu foco
-                </h4>
-                <ul className={`space-y-2 text-sm ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
-                  <li className="flex items-start">
-                    <Target className="h-4 w-4 mr-2 mt-0.5 text-[#FF6B00]" />
-                    <div>
-                      <span className="font-medium">Objetivo:</span>{" "}
-                      {objetivo === "Outro Objetivo (Personalizado)" ? objetivoPersonalizado : objetivo}
+              {/* Tarefas para incluir no seu foco */}
+              <div className={`p-4 rounded-lg ${isLightMode ? 'bg-white' : 'bg-gray-800/10'} border ${isLightMode ? 'border-gray-200' : 'border-gray-700/50'}`}>
+                <h3 className={`text-md font-medium mb-3 ${isLightMode ? 'text-gray-800' : 'text-white'} flex items-center gap-2`}>
+                  <span className={`p-1.5 rounded ${isLightMode ? 'bg-orange-50' : 'bg-[#FF6B00]/10'}`}>
+                    <Check className="h-4 w-4 text-[#FF6B00]" />
+                  </span>
+                  Tarefas para incluir no seu foco
+                </h3>
+
+                <div className="flex flex-col space-y-3">
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <input
+                        type="text"
+                        value={novaTarefa}
+                        onChange={(e) => setNovaTarefa(e.target.value)}
+                        placeholder="Adicionar tarefa específica"
+                        className={`w-full rounded-lg pl-9 pr-3 py-2 ${
+                          isLightMode
+                            ? 'border-gray-300 bg-white text-gray-800 placeholder-gray-400 focus:border-[#FF6B00] focus:ring-[#FF6B00]/20'
+                            : 'border-gray-700 bg-gray-800/30 text-white placeholder-gray-500 focus:border-[#FF6B00] focus:ring-[#FF6B00]/10'
+                        }`}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && novaTarefa.trim()) {
+                            adicionarTarefa();
+                          }
+                        }}
+                      />
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <PlusCircle className={`h-4 w-4 ${isLightMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                      </div>
                     </div>
-                  </li>
-                  <li className="flex items-start">
-                    <Book className="h-4 w-4 mr-2 mt-0.5 text-[#FF6B00]" />
-                    <div>
-                      <span className="font-medium">Disciplinas:</span>{" "}
-                      {disciplinasSelecionadas.length > 0 
-                        ? disciplinasSelecionadas.join(", ") 
-                        : "Nenhuma disciplina selecionada"}
+                    <Button
+                      onClick={adicionarTarefa}
+                      disabled={!novaTarefa.trim()}
+                      className={`px-3 transition-all ${
+                        novaTarefa.trim()
+                          ? 'bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF7B00] hover:to-[#FF9C50] text-white shadow-sm'
+                          : isLightMode
+                          ? 'bg-gray-100 text-gray-400'
+                          : 'bg-gray-800 text-gray-500'
+                      }`}
+                    >
+                      Adicionar
+                    </Button>
+                  </div>
+
+                  {tarefasSelecionadas.length > 0 && (
+                    <div className={`mt-2 p-3 rounded-lg ${isLightMode ? 'bg-gray-50/80' : 'bg-gray-800/20'} border ${isLightMode ? 'border-gray-100' : 'border-gray-700/30'}`}>
+                      <div className="flex items-center justify-between mb-2">
+                        <p className={`text-sm font-medium ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
+                          Suas tarefas
+                        </p>
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${isLightMode ? 'bg-blue-100 text-blue-700' : 'bg-blue-900/20 text-blue-400'}`}>
+                          {tarefasSelecionadas.length} tarefa(s)
+                        </span>
+                      </div>
+                      <div className="space-y-2">
+                        {tarefasSelecionadas.map((tarefa, index) => (
+                          <div key={index} className={`flex justify-between items-center p-2 rounded-lg ${isLightMode ? 'bg-white border border-gray-100' : 'bg-gray-800/30 border border-gray-700/50'}`}>
+                            <div className="flex items-center gap-2">
+                              <div className={`p-1 rounded-full ${isLightMode ? 'bg-gray-100' : 'bg-gray-700'}`}>
+                                <Check className={`h-3 w-3 ${isLightMode ? 'text-gray-500' : 'text-gray-300'}`} />
+                              </div>
+                              <span className={`text-sm ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
+                                {tarefa}
+                              </span>
+                            </div>
+                            <button
+                              onClick={() => removerTarefa(index)}
+                              className={`p-1.5 rounded-full transition-colors ${
+                                isLightMode ? 'hover:bg-gray-100 text-gray-500' : 'hover:bg-gray-700 text-gray-400'
+                              }`}
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </li>
-                  <li className="flex items-start">
-                    <Clock className="h-4 w-4 mr-2 mt-0.5 text-[#FF6B00]" />
-                    <div>
-                      <span className="font-medium">Tempo:</span>{" "}
-                      {formatarTempoEstudo(tempoEstudo)}
-                    </div>
-                  </li>
-                  <li className="flex items-start">
-                    <PenSquare className="h-4 w-4 mr-2 mt-0.5 text-[#FF6B00]" />
-                    <div>
-                      <span className="font-medium">Tarefas:</span>{" "}
-                      {tarefasSelecionadas.length > 0 
-                        ? `${tarefasSelecionadas.length} tarefa(s) definida(s)` 
-                        : "Nenhuma tarefa definida"}
-                    </div>
-                  </li>
-                </ul>
+                  )}
+                </div>
               </div>
 
-              <div className={`p-4 rounded-lg ${isLightMode ? 'bg-green-50 border border-green-100' : 'bg-green-900/10 border border-green-800/20'}`}>
-                <h4 className={`text-sm font-medium mb-2 flex items-center ${isLightMode ? 'text-green-800' : 'text-green-300'}`}>
-                  <Zap className="h-4 w-4 mr-1.5" /> O que acontece agora?
-                </h4>
-                <p className={`text-sm ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
-                  O Epictus IA irá analisar seu perfil, suas atividades na plataforma e as informações que você forneceu 
-                  para criar um plano de foco personalizado. Você receberá sugestões de tarefas, dicas adaptadas ao seu 
-                  estado emocional e um acompanhamento do seu progresso.
-                </p>
+              {/* Sugestões da IA com base no seu perfil */}
+              <div className={`p-4 rounded-lg ${isLightMode ? 'bg-gradient-to-br from-blue-50 to-indigo-50/70' : 'bg-gradient-to-br from-blue-900/10 to-indigo-900/5'} border ${isLightMode ? 'border-blue-100' : 'border-blue-800/20'}`}>
+                <h3 className={`text-md font-medium mb-3 ${isLightMode ? 'text-gray-800' : 'text-white'} flex items-center gap-2`}>
+                  <span className={`p-1.5 rounded-full ${isLightMode ? 'bg-blue-100' : 'bg-blue-900/20'}`}>
+                    <Zap className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  </span>
+                  Sugestões personalizadas
+                </h3>
+
+                {carregandoSugestoes ? (
+                  <div className="flex flex-col items-center justify-center py-6 space-y-3">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF6B00]"></div>
+                    <span className={`text-sm ${isLightMode ? 'text-gray-600' : 'text-gray-400'}`}>
+                      Analisando seu perfil e gerando recomendações...
+                    </span>
+                  </div>
+                ) : (
+                  <div className="space-y-2.5">
+                    {sugestoesTarefas.slice(0, 3).map((sugestao, index) => (
+                      <div
+                        key={index}
+                        className={`p-3 rounded-lg cursor-pointer transition-all ${
+                          tarefasSelecionadas.includes(sugestao.titulo)
+                            ? isLightMode
+                              ? 'bg-gradient-to-r from-blue-100/90 to-blue-50 border border-blue-200 shadow-sm'
+                              : 'bg-gradient-to-r from-blue-900/20 to-blue-800/10 border border-blue-700/40 shadow-sm'
+                            : isLightMode
+                            ? 'bg-white border border-gray-200 hover:border-blue-200 hover:bg-blue-50/50'
+                            : 'bg-gray-800/30 border border-gray-700 hover:border-blue-800/40 hover:bg-blue-900/10'
+                        }`}
+                        onClick={() => toggleTarefaSugerida(sugestao.titulo)}
+                      >
+                        <div className="flex items-start">
+                          <div
+                            className={`mt-0.5 flex-shrink-0 w-5 h-5 rounded-full border flex items-center justify-center transition-all ${
+                              tarefasSelecionadas.includes(sugestao.titulo)
+                                ? 'border-blue-500 bg-blue-500'
+                                : isLightMode
+                                ? 'border-gray-300 group-hover:border-blue-400'
+                                : 'border-gray-600 group-hover:border-blue-600'
+                            }`}
+                          >
+                            {tarefasSelecionadas.includes(sugestao.titulo) && (
+                              <Check className="h-3 w-3 text-white" />
+                            )}
+                          </div>
+
+                          <div className="ml-3 flex-1">
+                            <div className="flex justify-between items-start">
+                              <p
+                                className={`text-sm font-medium ${
+                                  isLightMode ? 'text-gray-800' : 'text-gray-200'
+                                }`}
+                              >
+                                {sugestao.titulo}
+                              </p>
+
+                              <span
+                                className={`text-xs px-2 py-0.5 rounded-full ml-2 ${
+                                  sugestao.prioridade === "Alta"
+                                    ? isLightMode
+                                      ? 'bg-red-100 text-red-700'
+                                      : 'bg-red-900/20 text-red-400'
+                                    : sugestao.prioridade === "Média"
+                                    ? isLightMode
+                                      ? 'bg-yellow-100 text-yellow-700'
+                                      : 'bg-yellow-900/20 text-yellow-400'
+                                    : isLightMode
+                                    ? 'bg-green-100 text-green-700'
+                                    : 'bg-green-900/20 text-green-400'
+                                }`}
+                              >
+                                {sugestao.prioridade}
+                              </span>
+                            </div>
+
+                            <p
+                              className={`text-xs mt-1 ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}
+                            >
+                              {sugestao.descricao}
+                            </p>
+
+                            <div className="flex items-center mt-2">
+                              <Clock className={`h-3 w-3 mr-1 ${isLightMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                              <span
+                                className={`text-xs ${
+                                  isLightMode ? 'text-gray-500' : 'text-gray-400'
+                                }`}
+                              >
+                                {sugestao.prazo}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -948,7 +959,7 @@ return (
               (etapaAtual === 2 && disciplinasSelecionadas.length === 0)
             }
           >
-            {etapaAtual < 5 ? "Continuar" : "Definir Foco"}
+            {etapaAtual === 3 ? "Gerar Foco" : "Próximo"}
           </Button>
         </div>
       </DialogContent>
