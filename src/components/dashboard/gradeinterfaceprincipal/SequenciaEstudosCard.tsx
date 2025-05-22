@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Flame, Award, TrendingUp, ExternalLink, Star, Zap, Trophy, Clock, CheckCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { createPortal } from "react-dom";
 import { useTheme } from "@/components/ThemeProvider";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
@@ -470,34 +469,25 @@ export default function SequenciaEstudosCard() {
 
       {/* Conteúdo principal com design premium */}
       <div className="p-6 relative z-10 flex flex-col h-[calc(100%-76px)] justify-between">
-        {/* O popup de presença registrada foi movido para fora do card, para o portal */}
-        {showCheckInAnimation && createPortal(
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.8, y: -20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.8, y: -20 }}
-            transition={{ duration: 0.5 }}
-            className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-[#FF6B00]/10 dark:bg-[#FF6B00]/20 p-6 rounded-xl backdrop-blur-md border border-[#FF6B00]/30 z-[9999] flex flex-col items-center shadow-2xl"
-            style={{ maxWidth: "90vw", width: "400px" }}
-          >
-            <div className="relative w-full h-full">
-              <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-[#FF6B00]/20 to-[#FF8C40]/20 blur-md"></div>
-              <div className="bg-[#FF6B00]/10 dark:bg-[#FF6B00]/20 p-3 rounded-full mb-4 flex items-center justify-center">
-                <CheckCircle className="h-16 w-16 text-[#FF6B00]" />
-              </div>
-            </div>
-            <h4 className="text-2xl font-semibold text-[#FF6B00] mb-2">Presença registrada!</h4>
-            <p className="text-base text-gray-600 dark:text-gray-300 text-center mb-1">
-              {diasConsecutivos === 1 
-                ? "Primeiro dia da sua jornada!" 
-                : `${diasConsecutivos} dias consecutivos!`}
-            </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400 text-center mt-1">
-              Continue acessando diariamente para construir sua sequência
-            </p>
-          </motion.div>,
-          document.body
-        )}
+        <AnimatePresence>
+          {showCheckInAnimation && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.8, y: -20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8, y: -20 }}
+              transition={{ duration: 0.5 }}
+              className="absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-[#FF6B00]/10 dark:bg-[#FF6B00]/20 p-4 rounded-xl backdrop-blur-sm border border-[#FF6B00]/30 z-50 flex flex-col items-center"
+            >
+              <CheckCircle className="h-16 w-16 text-[#FF6B00] mb-2" />
+              <h4 className="text-lg font-semibold text-[#FF6B00]">Presença registrada!</h4>
+              <p className="text-sm text-gray-600 dark:text-gray-300">
+                {diasConsecutivos === 1 
+                  ? "Primeiro dia da sua jornada!" 
+                  : `${diasConsecutivos} dias consecutivos!`}
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {diasConsecutivos === 0 && !checkInHoje ? (
           // Estado inicial para novos usuários - design premium
