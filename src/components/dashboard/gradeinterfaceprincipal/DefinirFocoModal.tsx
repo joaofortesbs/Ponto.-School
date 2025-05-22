@@ -463,38 +463,58 @@ const DefinirFocoModal: React.FC<DefinirFocoModalProps> = ({ open, onClose, onSa
 return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className={`sm:max-w-[600px] max-h-[90vh] overflow-y-auto ${isLightMode ? 'bg-white' : 'bg-[#0A2540]'}`}>
-        {/* Cabeçalho do Modal */}
-        <div className="flex justify-between items-center mb-6">
-          <h2 className={`text-xl font-semibold ${isLightMode ? 'text-gray-900' : 'text-white'}`}>
-            Defina Seu Foco de Estudos com o Epictus IA
+        {/* Cabeçalho do Modal - Redesenhado com estilo premium */}
+        <div className="flex justify-between items-center mb-7 relative">
+          <div className="absolute -top-10 -left-10 w-32 h-32 bg-gradient-to-br from-orange-500/10 to-orange-300/5 rounded-full blur-2xl pointer-events-none"></div>
+          
+          <h2 className={`relative text-xl font-bold tracking-tight ${isLightMode ? 'text-gray-900' : 'text-white'} flex flex-col`}>
+            <span className="text-xs uppercase font-medium tracking-wider mb-1 text-[#FF6B00]/80">Epictus IA</span>
+            <span className="flex items-center gap-2">
+              Defina Seu Foco de Estudos
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-gradient-to-r from-[#FF6B00]/20 to-[#FF8C40]/20 text-[#FF6B00]">
+                Personalizado
+              </span>
+            </span>
           </h2>
+          
           <button 
             onClick={onClose}
-            className={`p-1 rounded-full ${isLightMode ? 'hover:bg-gray-200' : 'hover:bg-gray-700'} transition-colors`}
+            className={`p-1.5 rounded-full ${isLightMode ? 'bg-gray-100 hover:bg-gray-200' : 'bg-gray-800 hover:bg-gray-700'} transition-all shadow-sm`}
           >
-            <X className={`h-5 w-5 ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`} />
+            <X className={`h-4 w-4 ${isLightMode ? 'text-gray-600' : 'text-gray-300'}`} />
           </button>
         </div>
 
-        {/* Progresso */}
-        <div className="mb-6">
-          <div className="flex justify-between mb-2">
-            <p className={`text-sm font-medium ${isLightMode ? 'text-gray-600' : 'text-gray-300'}`}>
-              Etapa {etapaAtual} de 4
-            </p>
-            <p className={`text-sm ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                {
-                  etapaAtual === 1 ? "Definindo Objetivo" :
-                  etapaAtual === 2 ? "Selecionando Disciplinas" :
-                  etapaAtual === 3 ? "Definindo Tempo" :
-                  etapaAtual === 4 ? "Tarefas e Compromissos" :
-                  "Finalização"
-                }
+        {/* Progresso - Redesenhado com estilo premium */}
+        <div className="mb-8 relative">
+          <div className="flex justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <div className={`h-6 w-6 rounded-full flex items-center justify-center ${isLightMode ? 'bg-[#FF6B00]/10' : 'bg-[#FF6B00]/20'}`}>
+                <span className="text-xs font-semibold text-[#FF6B00]">{etapaAtual}</span>
+              </div>
+              <p className={`text-sm font-medium ${isLightMode ? 'text-gray-800' : 'text-gray-200'}`}>
+                Etapa {etapaAtual} de 5
               </p>
             </div>
-          <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full">
+            <div className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+              isLightMode 
+                ? 'bg-gradient-to-r from-gray-100 to-gray-50 text-gray-700 border border-gray-200/80' 
+                : 'bg-gradient-to-r from-gray-800 to-gray-900 text-gray-300 border border-gray-700/80'
+            } shadow-sm`}>
+              {
+                etapaAtual === 1 ? "Definindo Objetivo" :
+                etapaAtual === 2 ? "Selecionando Disciplinas" :
+                etapaAtual === 3 ? "Definindo Tempo" :
+                etapaAtual === 4 ? "Estado Emocional" :
+                etapaAtual === 5 ? "Tarefas Prioritárias" :
+                "Finalização"
+              }
+            </div>
+          </div>
+          
+          <div className="relative w-full h-1.5 bg-gray-200 dark:bg-gray-700/50 rounded-full overflow-hidden">
             <div 
-              className="h-full bg-[#FF6B00] rounded-full"
+              className="absolute top-0 left-0 h-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-full"
               style={{ width: `${(etapaAtual / 5) * 100}%` }}
             ></div>
           </div>
@@ -505,11 +525,13 @@ return (
           {etapaAtual === 1 && (
             <div className="space-y-6">
               <div>
-                <h3 className={`text-lg font-medium mb-3 ${isLightMode ? 'text-gray-800' : 'text-white'} flex items-center gap-2`}>
-                  <span className={`p-1.5 rounded ${isLightMode ? 'bg-orange-50' : 'bg-[#FF6B00]/10'}`}>
+                <h3 className={`text-lg font-semibold mb-4 ${isLightMode ? 'text-gray-800' : 'text-white'} flex items-center gap-2.5`}>
+                  <span className={`p-2 rounded-lg shadow-sm ${isLightMode ? 'bg-gradient-to-br from-orange-50 to-orange-100/80' : 'bg-gradient-to-br from-[#FF6B00]/15 to-[#FF6B00]/5'} border ${isLightMode ? 'border-orange-100' : 'border-[#FF6B00]/10'}`}>
                     <Target className="h-4 w-4 text-[#FF6B00]" />
                   </span>
-                  Selecione seu objetivo principal de estudo
+                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300">
+                    Selecione seu objetivo principal de estudo
+                  </span>
                 </h3>
 
                 <div className="grid grid-cols-1 gap-2.5">
@@ -571,11 +593,13 @@ return (
           {etapaAtual === 2 && (
             <div className="space-y-6">
               <div>
-                <h3 className={`text-lg font-medium mb-3 ${isLightMode ? 'text-gray-800' : 'text-white'} flex items-center gap-2`}>
-                  <span className={`p-1.5 rounded ${isLightMode ? 'bg-orange-50' : 'bg-[#FF6B00]/10'}`}>
+                <h3 className={`text-lg font-semibold mb-4 ${isLightMode ? 'text-gray-800' : 'text-white'} flex items-center gap-2.5`}>
+                  <span className={`p-2 rounded-lg shadow-sm ${isLightMode ? 'bg-gradient-to-br from-orange-50 to-orange-100/80' : 'bg-gradient-to-br from-[#FF6B00]/15 to-[#FF6B00]/5'} border ${isLightMode ? 'border-orange-100' : 'border-[#FF6B00]/10'}`}>
                     <BookOpen className="h-4 w-4 text-[#FF6B00]" />
                   </span>
-                  Selecione as disciplinas para focar hoje
+                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300">
+                    Selecione as disciplinas para focar hoje
+                  </span>
                 </h3>
 
                 <div className={`p-4 rounded-lg ${isLightMode ? 'bg-gray-50/70' : 'bg-gray-800/10'} border ${isLightMode ? 'border-gray-100' : 'border-gray-800/50'}`}>
@@ -644,12 +668,14 @@ return (
           {etapaAtual === 3 && (
             <div className="space-y-6">
               {/* Tempo de estudo planejado */}
-              <div className={`p-4 rounded-lg ${isLightMode ? 'bg-gray-50/70' : 'bg-gray-800/10'} border ${isLightMode ? 'border-gray-100' : 'border-gray-800/50'}`}>
-                <h3 className={`text-md font-medium mb-3 ${isLightMode ? 'text-gray-800' : 'text-white'} flex items-center gap-2`}>
-                  <span className={`p-1.5 rounded ${isLightMode ? 'bg-orange-50' : 'bg-[#FF6B00]/10'}`}>
+              <div className={`p-5 rounded-xl ${isLightMode ? 'bg-gradient-to-br from-gray-50 to-white' : 'bg-gradient-to-br from-gray-800/20 to-gray-900/10'} border ${isLightMode ? 'border-gray-100' : 'border-gray-800/50'} shadow-sm`}>
+                <h3 className={`text-md font-semibold mb-4 ${isLightMode ? 'text-gray-800' : 'text-white'} flex items-center gap-2.5`}>
+                  <span className={`p-2 rounded-lg ${isLightMode ? 'bg-gradient-to-br from-orange-50 to-orange-100/80' : 'bg-gradient-to-br from-[#FF6B00]/15 to-[#FF6B00]/5'} border ${isLightMode ? 'border-orange-100' : 'border-[#FF6B00]/10'} shadow-sm`}>
                     <Clock className="h-4 w-4 text-[#FF6B00]" />
                   </span>
-                  Tempo de estudo planejado
+                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300">
+                    Tempo de estudo planejado
+                  </span>
                 </h3>
 
                 <div className="px-2">
@@ -674,12 +700,14 @@ return (
               </div>
 
               {/* Como você está se sentindo hoje? */}
-              <div className={`p-4 rounded-lg ${isLightMode ? 'bg-white' : 'bg-gray-800/10'} border ${isLightMode ? 'border-gray-200' : 'border-gray-700/50'}`}>
-                <h3 className={`text-md font-medium mb-3 ${isLightMode ? 'text-gray-800' : 'text-white'} flex items-center gap-2`}>
-                  <span className={`p-1.5 rounded ${isLightMode ? 'bg-orange-50' : 'bg-[#FF6B00]/10'}`}>
+              <div className={`p-5 rounded-xl ${isLightMode ? 'bg-gradient-to-br from-gray-50 to-white' : 'bg-gradient-to-br from-gray-800/20 to-gray-900/10'} border ${isLightMode ? 'border-gray-100' : 'border-gray-800/50'} shadow-sm`}>
+                <h3 className={`text-md font-semibold mb-4 ${isLightMode ? 'text-gray-800' : 'text-white'} flex items-center gap-2.5`}>
+                  <span className={`p-2 rounded-lg ${isLightMode ? 'bg-gradient-to-br from-orange-50 to-orange-100/80' : 'bg-gradient-to-br from-[#FF6B00]/15 to-[#FF6B00]/5'} border ${isLightMode ? 'border-orange-100' : 'border-[#FF6B00]/10'} shadow-sm`}>
                     <Smile className="h-4 w-4 text-[#FF6B00]" />
                   </span>
-                  Como você está se sentindo hoje?
+                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300">
+                    Como você está se sentindo hoje?
+                  </span>
                 </h3>
 
                 <div className="grid grid-cols-2 gap-2.5">
@@ -713,12 +741,14 @@ return (
               </div>
 
               {/* Tarefas para incluir no seu foco */}
-              <div className={`p-4 rounded-lg ${isLightMode ? 'bg-white' : 'bg-gray-800/10'} border ${isLightMode ? 'border-gray-200' : 'border-gray-700/50'}`}>
-                <h3 className={`text-md font-medium mb-3 ${isLightMode ? 'text-gray-800' : 'text-white'} flex items-center gap-2`}>
-                  <span className={`p-1.5 rounded ${isLightMode ? 'bg-orange-50' : 'bg-[#FF6B00]/10'}`}>
+              <div className={`p-5 rounded-xl ${isLightMode ? 'bg-gradient-to-br from-gray-50 to-white' : 'bg-gradient-to-br from-gray-800/20 to-gray-900/10'} border ${isLightMode ? 'border-gray-100' : 'border-gray-800/50'} shadow-sm`}>
+                <h3 className={`text-md font-semibold mb-4 ${isLightMode ? 'text-gray-800' : 'text-white'} flex items-center gap-2.5`}>
+                  <span className={`p-2 rounded-lg ${isLightMode ? 'bg-gradient-to-br from-orange-50 to-orange-100/80' : 'bg-gradient-to-br from-[#FF6B00]/15 to-[#FF6B00]/5'} border ${isLightMode ? 'border-orange-100' : 'border-[#FF6B00]/10'} shadow-sm`}>
                     <Check className="h-4 w-4 text-[#FF6B00]" />
                   </span>
-                  Tarefas para incluir no seu foco
+                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300">
+                    Tarefas para incluir no seu foco
+                  </span>
                 </h3>
 
                 <div className="flex flex-col space-y-3">
@@ -797,12 +827,14 @@ return (
               </div>
 
               {/* Sugestões da IA com base no seu perfil */}
-              <div className={`p-4 rounded-lg ${isLightMode ? 'bg-gradient-to-br from-blue-50 to-indigo-50/70' : 'bg-gradient-to-br from-blue-900/10 to-indigo-900/5'} border ${isLightMode ? 'border-blue-100' : 'border-blue-800/20'}`}>
-                <h3 className={`text-md font-medium mb-3 ${isLightMode ? 'text-gray-800' : 'text-white'} flex items-center gap-2`}>
-                  <span className={`p-1.5 rounded-full ${isLightMode ? 'bg-blue-100' : 'bg-blue-900/20'}`}>
+              <div className={`p-5 rounded-xl ${isLightMode ? 'bg-gradient-to-br from-blue-50 to-indigo-50/70' : 'bg-gradient-to-br from-blue-900/10 to-indigo-900/5'} border ${isLightMode ? 'border-blue-100/80' : 'border-blue-800/20'} shadow-sm`}>
+                <h3 className={`text-md font-semibold mb-4 ${isLightMode ? 'text-gray-800' : 'text-white'} flex items-center gap-2.5`}>
+                  <span className={`p-2 rounded-lg ${isLightMode ? 'bg-gradient-to-br from-blue-100 to-blue-50' : 'bg-gradient-to-br from-blue-900/20 to-blue-800/10'} border ${isLightMode ? 'border-blue-200/60' : 'border-blue-700/30'} shadow-sm`}>
                     <Zap className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                   </span>
-                  Sugestões personalizadas
+                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-800 to-indigo-700 dark:from-blue-400 dark:to-indigo-300">
+                    Sugestões personalizadas
+                  </span>
                 </h3>
 
                 {carregandoSugestoes ? (
@@ -937,15 +969,15 @@ return (
           )}
         </div>
 
-        {/* Botões de navegação */}
-        <div className="flex justify-between">
+        {/* Botões de navegação - Redesenhados com estilo premium */}
+        <div className="flex justify-between pt-2">
           <Button
             onClick={voltarEtapa}
             variant="outline"
-            className={`${
+            className={`px-5 py-2.5 rounded-lg transition-all transform hover:scale-[1.02] ${
               isLightMode 
-                ? 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100' 
-                : 'bg-[#0A2540] text-gray-300 border-gray-700 hover:bg-gray-800'
+                ? 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50 hover:border-gray-300 shadow-sm' 
+                : 'bg-gray-900 text-gray-300 border-gray-800 hover:bg-gray-800 hover:border-gray-700 shadow-sm'
             }`}
           >
             {etapaAtual === 1 ? "Cancelar" : "Voltar"}
@@ -953,13 +985,25 @@ return (
           <Button
             onClick={avancarEtapa}
             variant="default"
-            className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white"
+            className={`px-5 py-2.5 rounded-lg font-medium transition-all transform hover:scale-[1.02] ${
+              ((etapaAtual === 1 && objetivo === "Outro Objetivo (Personalizado)" && !objetivoPersonalizado) ||
+              (etapaAtual === 2 && disciplinasSelecionadas.length === 0))
+              ? isLightMode 
+                ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                : 'bg-gray-800 text-gray-500 cursor-not-allowed'
+              : 'bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF7B00] hover:to-[#FF9C50] text-white shadow-md'
+            }`}
             disabled={
               (etapaAtual === 1 && objetivo === "Outro Objetivo (Personalizado)" && !objetivoPersonalizado) ||
               (etapaAtual === 2 && disciplinasSelecionadas.length === 0)
             }
           >
-            {etapaAtual === 3 ? "Gerar Foco" : "Próximo"}
+            {etapaAtual === 3 ? (
+              <span className="flex items-center gap-1.5">
+                <Zap className="h-4 w-4" />
+                Gerar Foco
+              </span>
+            ) : "Próximo"}
           </Button>
         </div>
       </DialogContent>
