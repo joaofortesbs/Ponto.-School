@@ -796,12 +796,37 @@ export default function FocoDoDiaCard() {
 
               {/* Indicador de sentimento posicionado ao lado da contagem de atividades */}
               {temFoco && focoPrincipal?.sentimento && !todasAtividadesConcluidas && (
-                <div className="text-xs bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 px-2 py-1 rounded-full flex items-center gap-1 ml-2">
-                  {focoPrincipal.sentimento === "Motivado(a)" && <Smile className="h-3 w-3" />}
-                  {focoPrincipal.sentimento === "Um pouco perdido(a)" && <HelpCircle className="h-3 w-3" />}
-                  {focoPrincipal.sentimento === "Cansado(a)" && <Clock className="h-3 w-3" />}
-                  {focoPrincipal.sentimento === "Ansioso(a)" && <BarChart2 className="h-3 w-3" />}
-                  <span>{focoPrincipal.sentimento}</span>
+                <div className="flex items-center">
+                  <div className="text-xs bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 px-2 py-1 rounded-full flex items-center gap-1 ml-2">
+                    {focoPrincipal.sentimento === "Motivado(a)" && <Smile className="h-3 w-3" />}
+                    {focoPrincipal.sentimento === "Um pouco perdido(a)" && <HelpCircle className="h-3 w-3" />}
+                    {focoPrincipal.sentimento === "Cansado(a)" && <Clock className="h-3 w-3" />}
+                    {focoPrincipal.sentimento === "Ansioso(a)" && <BarChart2 className="h-3 w-3" />}
+                    <span>{focoPrincipal.sentimento}</span>
+                  </div>
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // Limpar o estado local
+                      setAtividades([]);
+                      setFocoPrincipal(null);
+                      setTemFoco(false);
+                      setTodasAtividadesConcluidas(false);
+                      // Limpar o localStorage
+                      localStorage.removeItem('focoDia');
+                    }}
+                    className={`ml-1 flex items-center justify-center rounded-full p-1 transition-colors ${
+                      isLightMode 
+                        ? 'hover:bg-orange-100 text-orange-500' 
+                        : 'hover:bg-[#FF6B00]/20 text-[#FF6B00]'
+                    }`}
+                    title="Reiniciar card"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                      <path d="M3 3v5h5"></path>
+                    </svg>
+                  </button>
                 </div>
               )}
             </div>
