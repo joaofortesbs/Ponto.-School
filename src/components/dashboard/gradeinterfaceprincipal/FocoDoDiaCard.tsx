@@ -643,14 +643,14 @@ export default function FocoDoDiaCard() {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Indicador de expansão - visível apenas quando não está em hover */}
                 <div className="flex justify-center mt-2 opacity-60 group-hover:opacity-0 transition-opacity">
                   <div 
                     className="w-5 h-0.5 bg-blue-300 dark:bg-blue-700 rounded-full animate-pulse"
                   />
                 </div>
-                
+
                 {/* Conteúdo expandido no hover */}
                 <div 
                   className="space-y-1.5 overflow-hidden max-h-0 opacity-0 group-hover:max-h-96 group-hover:opacity-100 group-hover:mt-2 transition-all duration-300 ease-in-out"
@@ -667,7 +667,7 @@ export default function FocoDoDiaCard() {
                       Agora
                     </span>
                   </div>
-                  
+
                   {/* Sessões anteriores simuladas */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5">
@@ -680,7 +680,7 @@ export default function FocoDoDiaCard() {
                       10:30
                     </span>
                   </div>
-                  
+
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5">
                       <div className={`w-1.5 h-1.5 rounded-full ${isLightMode ? 'bg-blue-500' : 'bg-blue-400'}`}></div>
@@ -692,7 +692,7 @@ export default function FocoDoDiaCard() {
                       08:15
                     </span>
                   </div>
-                  
+
                   <div className="mt-1 pt-1 border-t border-blue-200 dark:border-blue-800/30">
                     <div className="flex items-center justify-between">
                       <span className={`text-[10px] ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
@@ -759,10 +759,41 @@ export default function FocoDoDiaCard() {
                   </span>
                 )}
               </div>
+              {todasAtividadesConcluidas ? (
+              <div className="flex items-center gap-2">
+                <span className={`text-xs ${isLightMode ? 'text-green-600 font-medium' : 'text-green-400 font-medium'}`}>
+                  Todas as atividades concluídas!
+                </span>
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // Limpar o estado local
+                    setAtividades([]);
+                    setFocoPrincipal(null);
+                    setTemFoco(false);
+                    setTodasAtividadesConcluidas(false);
+                    // Limpar o localStorage
+                    localStorage.removeItem('focoDia');
+                  }}
+                  className={`ml-1 flex items-center justify-center rounded-full p-1 transition-colors ${
+                    isLightMode 
+                      ? 'hover:bg-orange-100 text-orange-500' 
+                      : 'hover:bg-[#FF6B00]/20 text-[#FF6B00]'
+                  }`}
+                  title="Reiniciar card"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                    <path d="M3 3v5h5"></path>
+                  </svg>
+                </button>
+              </div>
+              ) : (
               <span className={`text-xs ${todasAtividadesConcluidas ? (isLightMode ? 'text-green-600 font-medium' : 'text-green-400 font-medium') : (isLightMode ? 'text-gray-500' : 'text-gray-400')}`}>
-                {todasAtividadesConcluidas ? "Todas as atividades concluídas!" : `${atividadesConcluidas} de ${totalAtividades} atividades`}
+                {`${atividadesConcluidas} de ${totalAtividades} atividades`}
               </span>
-              
+              )}
+
               {/* Indicador de sentimento posicionado ao lado da contagem de atividades */}
               {temFoco && focoPrincipal?.sentimento && !todasAtividadesConcluidas && (
                 <div className="text-xs bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 px-2 py-1 rounded-full flex items-center gap-1 ml-2">
