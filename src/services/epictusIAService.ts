@@ -72,6 +72,138 @@ export const clearChatHistory = (sessionId: string): void => {
 const GEMINI_API_KEY = 'AIzaSyD-Sso0SdyYKoA4M3tQhcWjQ1AoddB7Wo4';
 const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
+// Função para gerar sugestões de foco com base no perfil do usuário e dados da agenda
+export const generateFocusSuggestions = async (userId: string, focusData?: any): Promise<any> => {
+  try {
+    console.log("Gerando sugestões de foco para usuário:", userId);
+    
+    // Obter eventos do calendário do usuário
+    const { getEventsByUserId } = await import('./calendarEventService');
+    const userEvents = await getEventsByUserId(userId);
+    
+    // Obter tarefas pendentes do usuário
+    const { getTasksByUserId } = await import('./taskService');
+    const userTasks = await getTasksByUserId ? await getTasksByUserId(userId) : [];
+    
+    // Obter perfil do usuário
+    const { getUserFullProfile } = await import('./userProfileService');
+    const userProfile = await getUserFullProfile();
+
+    // Formatar dados para a solicitação à IA
+    const promptData = {
+      focusData,
+      events: userEvents,
+      tasks: userTasks,
+      profile: userProfile,
+      currentDate: new Date().toISOString()
+    };
+    
+    // Criar o prompt estruturado para a IA
+    const prompt = `Gere uma resposta no formato JSON para ajudar a criar um foco de estudo personalizado.
+Analise os seguintes dados do usuário e retorne sugestões relevantes:
+
+PERFIL DO USUÁRIO:
+${JSON.stringify(userProfile || {}, null, 2)}
+
+EVENTOS DA AGENDA:
+${JSON.stringify(userEvents || [], null, 2)}
+
+TAREFAS PENDENTES:
+${JSON.stringify(userTasks || [], null, 2)}
+
+PREFERÊNCIAS DE FOCO:
+${JSON.stringify(focusData || {}, null, 2)}
+
+Retorne um objeto JSON com a seguinte estrutura:
+{
+  "focoPrincipal": {
+    "titulo": "Título principal do foco baseado nos dados",
+    "descricao": "Descrição detalhada do objetivo",
+    "disciplinas": ["Lista", "de", "disciplinas", "prioritárias"],
+    "tempoTotal": "Tempo estimado em formato legível",
+    "dicaMentor": "Dica personalizada baseada no estado emocional e contexto",
+    "sentimento": "Estado emocional identificado"
+  },
+  "atividades": [
+    {
+      "id": 123,
+      "titulo": "Título da atividade específica",
+      "tipo": "video/exercicio/revisao/tarefa",
+      "tempo": "30min",
+      "prazo": "hoje/amanhã/esta semana",
+      "urgente": true/false,
+      "concluido": false,
+      "progresso": 0
+    }
+  ]
+}`;
+
+    // Fazer requisição para a API Gemini
+    const response = await fetch(`${GEMINI_BASE_URL}?key=${GEMINI_API_KEY}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{ text: prompt }]
+        }],
+        generationConfig: {
+          temperature: 0.2,
+          topP: 0.8,
+          topK: 40,
+          maxOutputTokens: 2048
+        }
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Erro na resposta da API: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    const aiResponse = data.candidates[0].content.parts[0].text;
+    
+    // Tentar converter a resposta em JSON
+    try {
+      // Extrair apenas o objeto JSON da resposta (caso a IA inclua texto adicional)
+      const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
+      const jsonString = jsonMatch ? jsonMatch[0] : aiResponse;
+      const parsedResponse = JSON.parse(jsonString);
+      
+      return parsedResponse;
+    } catch (parseError) {
+      console.error("Erro ao analisar resposta JSON da IA:", parseError);
+      // Retornar um objeto vazio em caso de erro
+      return {
+        focoPrincipal: {
+          titulo: "Foco de Estudo",
+          descricao: "Organizar suas atividades de estudo",
+          disciplinas: [],
+          tempoTotal: "2 horas",
+          dicaMentor: "Divida seu tempo em sessões de estudo focadas para melhor aproveitamento.",
+          sentimento: "Motivado(a)"
+        },
+        atividades: []
+      };
+    }
+  } catch (error) {
+    console.error("Erro ao gerar sugestões de foco:", error);
+    // Retornar dados de fallback em caso de erro
+    return {
+      focoPrincipal: {
+        titulo: "Foco de Estudo",
+        descricao: "Organizar suas atividades de estudo",
+        disciplinas: [],
+        tempoTotal: "2 horas",
+        dicaMentor: "Divida seu tempo em sessões de estudo focadas para melhor aproveitamento.",
+        sentimento: "Motivado(a)"
+      },
+      atividades: []
+    };
+  }
+};
+
 // Função para gerar resposta da IA usando a API Gemini
 export const generateAIResponse = async (message: string, sessionId?: string, options?: any): Promise<string> => {
   try {

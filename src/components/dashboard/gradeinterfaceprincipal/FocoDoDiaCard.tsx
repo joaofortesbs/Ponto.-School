@@ -38,17 +38,51 @@ export default function FocoDoDiaCard() {
   const [modalAberto, setModalAberto] = useState<boolean>(false);
   const [gerando, setGerando] = useState<boolean>(false);
 
-  // Simular carregamento de dados
+  // Carregar dados do foco do usuário atual
   useEffect(() => {
-    // Aqui faremos uma simulação de carregamento de dados
-    // No futuro, isso seria substituído por chamadas reais à API
-    const timeout = setTimeout(() => {
-      setCarregando(false);
-
-      // Verificar se temos dados do foco salvos no localStorage
-      const focoDadosSalvos = localStorage.getItem('focoDia');
-      if (focoDadosSalvos) {
-        try {
+    const carregarFocoDia = async () => {
+      try {
+        setCarregando(true);
+        
+        // Obter ID do usuário atual
+        const { data: { session } } = await supabase.auth.getSession();
+        const userId = session?.user?.id;
+        
+        if (!userId) {
+          console.log("Usuário não autenticado, carregando dados locais");
+          carregarDadosLocais();
+          return;
+        }
+        
+        // Importar o serviço de foco do dia
+        const { obterFocoDia } = await import('@/services/focoDiaService');
+        
+        // Obter dados do foco do dia
+        const focoDia = await obterFocoDia(userId);
+        
+        if (focoDia) {
+          setFocoPrincipal(focoDia.focoPrincipal);
+          setAtividades(focoDia.atividades);
+          setTemFoco(true);
+          setTodasAtividadesConcluidas(focoDia.todasConcluidas || false);
+          console.log("Foco do dia carregado do servidor:", focoDia);
+        } else {
+          console.log("Nenhum foco do dia encontrado, verificando dados locais");
+          carregarDadosLocais();
+        }
+      } catch (error) {
+        console.error("Erro ao carregar foco do dia:", error);
+        carregarDadosLocais();
+      } finally {
+        setCarregando(false);
+      }
+    };
+    
+    // Função para carregar dados do localStorage como fallback
+    const carregarDadosLocais = () => {
+      try {
+        const focoDadosSalvos = localStorage.getItem('focoDia');
+        if (focoDadosSalvos) {
           const dados = JSON.parse(focoDadosSalvos);
           setFocoPrincipal(dados.focoPrincipal);
           setAtividades(dados.atividades);
@@ -57,13 +91,20 @@ export default function FocoDoDiaCard() {
           // Verificar se todas as atividades estão concluídas
           const todasConcluidas = dados.atividades.length > 0 && dados.atividades.every((ativ: Atividade) => ativ.concluido);
           setTodasAtividadesConcluidas(todasConcluidas || dados.todasConcluidas);
-        } catch (error) {
-          console.error("Erro ao carregar dados do foco:", error);
+          console.log("Foco do dia carregado do localStorage");
+        } else {
+          setTemFoco(false);
+          console.log("Nenhum foco do dia encontrado");
         }
+      } catch (error) {
+        console.error("Erro ao carregar dados locais do foco:", error);
+        setTemFoco(false);
+      } finally {
+        setCarregando(false);
       }
-    }, 1000);
-
-    return () => clearTimeout(timeout);
+    };
+    
+    carregarFocoDia();
   }, []);
 
   // Estado para controlar a exibição do estado de conclusão
@@ -105,24 +146,66 @@ export default function FocoDoDiaCard() {
   };
 
   // Função para processar dados do modal e gerar o foco
-  const processarDefinicaoFoco = (dados: FocoData) => {
+  const processarDefinicaoFoco = async (dados: FocoData) => {
     setModalAberto(false);
     setGerando(true);
 
-    // Simulando processamento pelo backend/IA
-    setTimeout(() => {
-      // Criar foco principal baseado nos dados recebidos
+    try {
+      // Obter ID do usuário atual
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+
+      if (!userId) {
+        console.error("Usuário não autenticado");
+        setGerando(false);
+        return;
+      }
+
+      // Importar o serviço de IA para gerar sugestões
+      const { generateFocusSuggestions } = await import('@/services/epictusIAService');
+
+      // Obter sugestões personalizadas com base no perfil do usuário e dados da agenda
+      const aiSuggestions = await generateFocusSuggestions(userId, dados);
+
+      if (!aiSuggestions) {
+        console.error("Não foi possível obter sugestões da IA");
+        // Criar foco principal baseado apenas nos dados recebidos (fallback)
+        gerarFocoSemIA(dados);
+        return;
+      }
+
+      // Estruturar dados de foco principal
       const novoFocoPrincipal: FocoPrincipal = {
-        titulo: dados.objetivo,
-        descricao: dados.objetivoPersonalizado || dados.objetivo,
-        disciplinas: dados.disciplinas,
-        tempoTotal: `${Math.round(dados.tempoEstudo / 60)} hora${dados.tempoEstudo >= 120 ? 's' : ''}`,
-        dicaMentor: gerarDicaMentor(dados.estado),
-        sentimento: dados.estado
+        titulo: aiSuggestions.focoPrincipal.titulo || dados.objetivo,
+        descricao: aiSuggestions.focoPrincipal.descricao || dados.objetivoPersonalizado || dados.objetivo,
+        disciplinas: aiSuggestions.focoPrincipal.disciplinas?.length > 0 
+          ? aiSuggestions.focoPrincipal.disciplinas 
+          : dados.disciplinas,
+        tempoTotal: aiSuggestions.focoPrincipal.tempoTotal || 
+          `${Math.round(dados.tempoEstudo / 60)} hora${dados.tempoEstudo >= 120 ? 's' : ''}`,
+        dicaMentor: aiSuggestions.focoPrincipal.dicaMentor || gerarDicaMentor(dados.estado),
+        sentimento: aiSuggestions.focoPrincipal.sentimento || dados.estado
       };
 
-      // Gerar atividades baseadas nas informações
-      const novasAtividades = gerarAtividades(dados);
+      // Estruturar as atividades sugeridas pela IA
+      let novasAtividades: Atividade[] = [];
+      
+      if (aiSuggestions.atividades && aiSuggestions.atividades.length > 0) {
+        // Usar atividades da IA
+        novasAtividades = aiSuggestions.atividades.map((ativ: any) => ({
+          id: ativ.id || Date.now() + Math.floor(Math.random() * 1000),
+          titulo: ativ.titulo,
+          tipo: ativ.tipo || "tarefa",
+          tempo: ativ.tempo || "30min",
+          prazo: ativ.prazo || "hoje",
+          urgente: ativ.urgente || false,
+          concluido: false,
+          progresso: 0
+        }));
+      } else {
+        // Fallback: gerar atividades manualmente com base nas entradas do usuário
+        novasAtividades = gerarAtividades(dados);
+      }
 
       // Atualizar estados
       setFocoPrincipal(novoFocoPrincipal);
@@ -130,12 +213,48 @@ export default function FocoDoDiaCard() {
       setTemFoco(true);
       setGerando(false);
 
-      // Salvar no localStorage
+      // Salvar no localStorage para persistência
       localStorage.setItem('focoDia', JSON.stringify({
         focoPrincipal: novoFocoPrincipal,
         atividades: novasAtividades
       }));
-    }, 2000);
+
+      console.log("Foco do dia gerado com sucesso utilizando IA:", { novoFocoPrincipal, novasAtividades });
+    } catch (error) {
+      console.error("Erro ao processar definição de foco:", error);
+      // Fallback em caso de erro
+      gerarFocoSemIA(dados);
+    }
+  };
+
+  // Fallback para gerar foco sem IA quando ocorrer erros
+  const gerarFocoSemIA = (dados: FocoData) => {
+    // Criar foco principal baseado apenas nos dados recebidos
+    const novoFocoPrincipal: FocoPrincipal = {
+      titulo: dados.objetivo,
+      descricao: dados.objetivoPersonalizado || dados.objetivo,
+      disciplinas: dados.disciplinas,
+      tempoTotal: `${Math.round(dados.tempoEstudo / 60)} hora${dados.tempoEstudo >= 120 ? 's' : ''}`,
+      dicaMentor: gerarDicaMentor(dados.estado),
+      sentimento: dados.estado
+    };
+
+    // Gerar atividades baseadas nas informações sem IA
+    const novasAtividades = gerarAtividades(dados);
+
+    // Atualizar estados
+    setFocoPrincipal(novoFocoPrincipal);
+    setAtividades(novasAtividades);
+    setTemFoco(true);
+    setGerando(false);
+
+    // Salvar no localStorage para persistência
+    localStorage.setItem('focoDia', JSON.stringify({
+      focoPrincipal: novoFocoPrincipal,
+      atividades: novasAtividades
+    }));
+
+    console.log("Foco do dia gerado com fallback (sem IA):", { novoFocoPrincipal, novasAtividades });
   };
 
   // Função para gerar dica baseada no estado emocional
@@ -150,7 +269,7 @@ export default function FocoDoDiaCard() {
     return dicas[estado as keyof typeof dicas] || "Estabeleça pequenas metas e celebre cada conquista no seu estudo.";
   };
 
-  // Função para gerar atividades com base nos dados do formulário
+  // Função para gerar atividades com base nos dados do formulário (fallback quando a IA falhar)
   const gerarAtividades = (dados: FocoData): Atividade[] => {
     const tiposAtividade: ("video" | "exercicio" | "revisao" | "tarefa")[] = ["video", "exercicio", "revisao", "tarefa"];
 

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { X, ChevronRight, ChevronLeft, Clock, CheckCircle, AlertCircle } from "lucide-react";
-import { motion } from "framer-motion";
-import { useTheme } from "@/components/ThemeProvider";
-import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { useTheme } from "@/components/ThemeProvider";
+import { Check, X, Clock, Bookmark, Target, Zap, Book, PenSquare, Calendar, RefreshCw } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
+import { supabase } from "@/lib/supabase";
 
 interface DefinirFocoModalProps {
   open: boolean;
@@ -30,94 +30,197 @@ const objetivosEstudo = [
   "Outro Objetivo (Personalizado)"
 ];
 
-const disciplinas = [
-  { nome: "Matemática", tag: "Recente" },
-  { nome: "Física", tag: "Dificuldade" },
-  { nome: "Química", tag: "Recente" },
-  { nome: "Biologia", tag: "Dificuldade" },
-  { nome: "História", tag: "Recente" },
+// Lista de disciplinas padrão para novos usuários
+const disciplinasPadrao = [
+  { nome: "Matemática", tag: "Recomendado" },
+  { nome: "Física", tag: "Popular" },
+  { nome: "Química", tag: "Popular" },
+  { nome: "Biologia", tag: "Recomendado" },
+  { nome: "História", tag: "Popular" },
   { nome: "Geografia", tag: "" },
-  { nome: "Português", tag: "Recente" },
-  { nome: "Literatura", tag: "Dificuldade" }
+  { nome: "Português", tag: "Recomendado" },
+  { nome: "Literatura", tag: "Popular" },
+  { nome: "Inglês", tag: "" },
+  { nome: "Filosofia", tag: "" },
+  { nome: "Sociologia", tag: "" },
+  { nome: "Educação Física", tag: "" },
+  { nome: "Artes", tag: "" },
+  { nome: "Informática", tag: "" }
 ];
 
-const sugestoesFoco = [
-  { titulo: "Prova de História", descricao: "Preparação para a prova da próxima semana", prioridade: "alta", prazo: "em 5 dias" },
-  { titulo: "Revisão de Funções", descricao: "Revisar conceitos importantes para a prova de matemática", prioridade: "", prazo: "" },
-  { titulo: "Exercícios de Física", descricao: "Completar lista de problemas do capítulo 3", prioridade: "alta", prazo: "" }
+// Sugestões de tarefas genéricas para novos usuários
+const sugestoesFocoPadrao = [
+  { titulo: "Revisar anotações da última aula", descricao: "Revisão dos principais conceitos discutidos", prioridade: "média", prazo: "hoje" },
+  { titulo: "Resolver exercícios pendentes", descricao: "Completar lista de problemas designados", prioridade: "alta", prazo: "hoje" },
+  { titulo: "Leitura do próximo capítulo", descricao: "Preparar-se para a próxima aula", prioridade: "baixa", prazo: "em 2 dias" },
+  { titulo: "Fazer resumo do conteúdo da semana", descricao: "Consolidar conhecimentos", prioridade: "média", prazo: "esta semana" }
 ];
 
-const tarefasRecentes = [
-  { titulo: "Lista de exercícios de física", prazo: "16:00 hoje", urgente: true },
-  { titulo: "Resumo do capítulo 8 de biologia", prazo: "amanhã", urgente: false },
-  { titulo: "Pesquisa sobre Revolução Industrial", prazo: "quinta-feira", urgente: false },
-  { titulo: "Resolver problemas de matemática", prazo: "sexta-feira", urgente: true }
-];
-
-const blocosTempoSugeridos = [
-  { horario: "Hoje, 14:00 - 16:00", descricao: "Entre suas aulas de Matemática e Português" },
-  { horario: "Hoje, 19:00 - 21:00", descricao: "Período livre após o jantar" }
-];
-
-const estadosEstudo = [
-  { valor: "Motivado(a)", descricao: "Pronto para me dedicar ao máximo" },
-  { valor: "Um pouco perdido(a)", descricao: "Preciso de orientação" },
-  { valor: "Cansado(a)", descricao: "Gostaria de atividades mais leves" },
-  { valor: "Ansioso(a)", descricao: "Tenho muitas preocupações" }
-];
-
-export default function DefinirFocoModal({ open, onClose, onSave }: DefinirFocoModalProps) {
+const DefinirFocoModal: React.FC<DefinirFocoModalProps> = ({ open, onClose, onSave }) => {
   const { theme } = useTheme();
   const isLightMode = theme === "light";
-  const [passo, setPasso] = useState(1);
 
-  // Estados para cada passo do formulário
-  const [objetivo, setObjetivo] = useState("");
-  const [objetivoPersonalizado, setObjetivoPersonalizado] = useState("");
+  // Estados para controlar a navegação entre etapas
+  const [etapaAtual, setEtapaAtual] = useState<number>(1);
+
+  // Estados para armazenar as informações do foco
+  const [objetivo, setObjetivo] = useState<string>(objetivosEstudo[0]);
+  const [objetivoPersonalizado, setObjetivoPersonalizado] = useState<string>("");
   const [disciplinasSelecionadas, setDisciplinasSelecionadas] = useState<string[]>([]);
-  const [topicoEspecifico, setTopicoEspecifico] = useState("");
-  const [tempoEstudo, setTempoEstudo] = useState(60); // em minutos
+  const [topicoEspecifico, setTopicoEspecifico] = useState<string>("");
+  const [tempoEstudo, setTempoEstudo] = useState<number>(120); // em minutos
   const [tarefasSelecionadas, setTarefasSelecionadas] = useState<string[]>([]);
-  const [estadoEstudo, setEstadoEstudo] = useState("");
+  const [estadoAtual, setEstadoAtual] = useState<string>("Motivado(a)");
 
-  // Resetar estado ao abrir ou fechar modal
+  // Estados auxiliares
+  const [novaTarefa, setNovaTarefa] = useState<string>("");
+  const [disciplinas, setDisciplinas] = useState<{ nome: string; tag: string; }[]>(disciplinasPadrao);
+  const [sugestoesTarefas, setSugestoesTarefas] = useState<{ titulo: string; descricao: string; prioridade: string; prazo: string; }[]>(sugestoesFocoPadrao);
+  const [carregandoSugestoes, setCarregandoSugestoes] = useState<boolean>(false);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  // Carregar dados do usuário ao abrir o modal
   useEffect(() => {
     if (open) {
-      setPasso(1);
-      setObjetivo("");
-      setObjetivoPersonalizado("");
-      setDisciplinasSelecionadas([]);
-      setTopicoEspecifico("");
-      setTempoEstudo(60);
-      setTarefasSelecionadas([]);
-      setEstadoEstudo("");
+      carregarDadosUsuario();
     }
   }, [open]);
 
-  const proximoPasso = () => {
-    if (passo < 5) {
-      setPasso(passo + 1);
-    } else {
-      // Enviar dados para o componente pai
-      onSave({
-        objetivo: objetivo === "Outro Objetivo (Personalizado)" ? objetivoPersonalizado : objetivo,
-        objetivoPersonalizado,
-        disciplinas: disciplinasSelecionadas,
-        topicoEspecifico,
-        tempoEstudo,
-        tarefasSelecionadas,
-        estado: estadoEstudo
-      });
-      onClose();
+  // Função para carregar dados personalizados do usuário
+  const carregarDadosUsuario = async () => {
+    try {
+      setCarregandoSugestoes(true);
+
+      // Obter ID do usuário atual
+      const { data: { session } } = await supabase.auth.getSession();
+      const currentUserId = session?.user?.id;
+      setUserId(currentUserId);
+
+      if (!currentUserId) {
+        console.log("Usuário não autenticado, usando dados padrão");
+        resetarParaDadosPadrao();
+        setCarregandoSugestoes(false);
+        return;
+      }
+
+      // Carregar disciplinas do perfil do usuário
+      const { getUserFullProfile } = await import('@/services/userProfileService');
+      const perfil = await getUserFullProfile();
+
+      // Carregar eventos e tarefas do usuário para gerar sugestões relevantes
+      const { getEventsByUserId } = await import('@/services/calendarEventService');
+      const { getTasksByUserId } = await import('@/services/taskService');
+
+      const eventos = await getEventsByUserId(currentUserId);
+      const tarefas = await getTasksByUserId(currentUserId);
+
+      // Gerar disciplinas personalizadas com base nos eventos e perfil
+      let disciplinasPersonalizadas = [...disciplinasPadrao];
+
+      // Extrair disciplinas dos eventos de calendário
+      if (eventos && eventos.length > 0) {
+        const disciplinasDeEventos = eventos
+          .filter(evento => evento.discipline)
+          .map(evento => evento.discipline as string)
+          .filter((disciplina, index, array) => array.indexOf(disciplina) === index);
+
+        if (disciplinasDeEventos.length > 0) {
+          disciplinasPersonalizadas = disciplinasDeEventos.map(nome => ({ 
+            nome, 
+            tag: "Da sua agenda" 
+          })).concat(
+            disciplinasPadrao.filter(d => !disciplinasDeEventos.includes(d.nome))
+          );
+        }
+      }
+
+      // Gerar sugestões de tarefas com base nas tarefas existentes e eventos
+      let sugestoesPersonalizadas = [...sugestoesFocoPadrao];
+
+      if (tarefas && tarefas.length > 0) {
+        // Usar tarefas pendentes como sugestões
+        const tarefasPendentes = tarefas
+          .filter(tarefa => tarefa.status === 'todo' || tarefa.status === 'in-progress')
+          .map(tarefa => ({
+            titulo: tarefa.title,
+            descricao: tarefa.description || "Completar esta tarefa pendente",
+            prioridade: tarefa.priority === 'high' ? "alta" : (tarefa.priority === 'medium' ? "média" : "baixa"),
+            prazo: tarefa.dueDate ? "até " + new Date(tarefa.dueDate).toLocaleDateString() : "em breve"
+          }));
+
+        if (tarefasPendentes.length > 0) {
+          // Combinar tarefas pendentes com algumas sugestões padrão
+          sugestoesPersonalizadas = [
+            ...tarefasPendentes.slice(0, 3),
+            ...sugestoesFocoPadrao.slice(0, 2)
+          ];
+        }
+      }
+
+      if (eventos && eventos.length > 0) {
+        // Adicionar sugestões baseadas em eventos próximos
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
+
+        const proximaSemana = new Date(hoje);
+        proximaSemana.setDate(hoje.getDate() + 7);
+
+        const eventosProximos = eventos.filter(evento => {
+          const dataEvento = new Date(evento.startDate);
+          return dataEvento >= hoje && dataEvento <= proximaSemana;
+        });
+
+        const sugestoesDeEventos = eventosProximos.slice(0, 2).map(evento => ({
+          titulo: `Preparar para: ${evento.title}`,
+          descricao: evento.description || `Evento agendado para ${new Date(evento.startDate).toLocaleDateString()}`,
+          prioridade: new Date(evento.startDate).getTime() - hoje.getTime() < 3 * 24 * 60 * 60 * 1000 ? "alta" : "média",
+          prazo: `até ${new Date(evento.startDate).toLocaleDateString()}`
+        }));
+
+        if (sugestoesDeEventos.length > 0) {
+          // Adicionar sugestões de eventos ao início da lista
+          sugestoesPersonalizadas = [
+            ...sugestoesDeEventos,
+            ...sugestoesPersonalizadas.slice(0, 4 - sugestoesDeEventos.length)
+          ];
+        }
+      }
+
+      // Atualizar os estados com dados personalizados
+      setDisciplinas(disciplinasPersonalizadas);
+      setSugestoesTarefas(sugestoesPersonalizadas);
+
+      console.log("Dados personalizados carregados para o modal de Foco");
+    } catch (error) {
+      console.error("Erro ao carregar dados personalizados:", error);
+      resetarParaDadosPadrao();
+    } finally {
+      setCarregandoSugestoes(false);
     }
   };
 
-  const passoAnterior = () => {
-    if (passo > 1) {
-      setPasso(passo - 1);
-    }
+  // Resetar para dados padrão em caso de erro ou usuário não autenticado
+  const resetarParaDadosPadrao = () => {
+    setDisciplinas(disciplinasPadrao);
+    setSugestoesTarefas(sugestoesFocoPadrao);
   };
 
+  // Reset do modal quando é aberto
+  useEffect(() => {
+    if (open) {
+      setEtapaAtual(1);
+      setObjetivo(objetivosEstudo[0]);
+      setObjetivoPersonalizado("");
+      setDisciplinasSelecionadas([]);
+      setTopicoEspecifico("");
+      setTempoEstudo(120);
+      setTarefasSelecionadas([]);
+      setEstadoAtual("Motivado(a)");
+      setNovaTarefa("");
+    }
+  }, [open]);
+
+  // Função para alternar a seleção de disciplinas
   const toggleDisciplina = (disciplina: string) => {
     if (disciplinasSelecionadas.includes(disciplina)) {
       setDisciplinasSelecionadas(disciplinasSelecionadas.filter(d => d !== disciplina));
@@ -126,496 +229,572 @@ export default function DefinirFocoModal({ open, onClose, onSave }: DefinirFocoM
     }
   };
 
-  const toggleTarefa = (tarefa: string) => {
-    if (tarefasSelecionadas.includes(tarefa)) {
-      setTarefasSelecionadas(tarefasSelecionadas.filter(t => t !== tarefa));
-    } else {
-      setTarefasSelecionadas([...tarefasSelecionadas, tarefa]);
+  // Função para adicionar uma nova tarefa à lista
+  const adicionarTarefa = () => {
+    if (novaTarefa.trim() !== "") {
+      setTarefasSelecionadas([...tarefasSelecionadas, novaTarefa.trim()]);
+      setNovaTarefa("");
     }
   };
 
-  // Função auxiliar para formatar o tempo
-  const formatarTempo = (minutos: number) => {
-    if (minutos < 60) {
-      return `${minutos}min`;
-    } else {
-      const horas = Math.floor(minutos / 60);
-      return `${horas}h`;
+  // Função para remover uma tarefa da lista
+  const removerTarefa = (index: number) => {
+    const novasTarefas = [...tarefasSelecionadas];
+    novasTarefas.splice(index, 1);
+    setTarefasSelecionadas(novasTarefas);
+  };
+
+  // Função para adicionar uma sugestão de tarefa à lista
+  const adicionarSugestao = (titulo: string) => {
+    if (!tarefasSelecionadas.includes(titulo)) {
+      setTarefasSelecionadas([...tarefasSelecionadas, titulo]);
     }
   };
 
-  // Calcular progresso do preenchimento do formulário
-  const calcularProgressoFormulario = () => {
-    let progresso = 0;
-    const total = 5; // Total de campos principais a serem preenchidos
-    
-    if (objetivo) progresso += 1;
-    if (objetivoPersonalizado) progresso += 1;
-    if (disciplinasSelecionadas.length > 0) progresso += 1;
-    if (tempoEstudo > 0) progresso += 1;
-    if (estadoEstudo) progresso += 1;
-    
-    return Math.min(Math.round((progresso / total) * 100), 100);
+  // Função para formatar o tempo de estudo para exibição
+  const formatarTempoEstudo = (minutos: number): string => {
+    const horas = Math.floor(minutos / 60);
+    const mins = minutos % 60;
+    return `${horas > 0 ? `${horas}h` : ""} ${mins > 0 ? `${mins}min` : ""}`.trim();
   };
 
-  const progressoFormulario = calcularProgressoFormulario();
+  // Função para avançar para a próxima etapa
+  const avancarEtapa = () => {
+    if (etapaAtual < 4) {
+      setEtapaAtual(etapaAtual + 1);
+    } else {
+      finalizarDefinicao();
+    }
+  };
 
-  return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[550px] p-0 overflow-hidden">
-        {/* Barra de progresso no topo */}
-        <div className="relative bg-gradient-to-r from-[#FF6B00]/10 to-[#FF8C40]/10 h-2 overflow-hidden">
-          <motion.div 
-            className="absolute top-0 left-0 h-full bg-[#FF6B00]" 
-            initial={{ width: '0%' }}
-            animate={{ width: `${progressoFormulario}%` }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
-          />
-        </div>
+  // Função para retornar à etapa anterior
+  const voltarEtapa = () => {
+    if (etapaAtual > 1) {
+      setEtapaAtual(etapaAtual - 1);
+    } else {
+      onClose();
+    }
+  };
 
-        {/* Cabeçalho do modal */}
-        <div className="p-6 pb-3 flex items-center justify-between border-b border-gray-100 dark:border-gray-800">
-          <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-full ${isLightMode ? 'bg-orange-100' : 'bg-[#FF6B00]/20'}`}>
-              <motion.div 
-                initial={{ rotate: 0 }}
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, ease: "easeInOut" }}
-                className={`text-[#FF6B00] rounded-full flex items-center justify-center`}
-              >
-                <Clock className="h-5 w-5" />
-              </motion.div>
-            </div>
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Defina Seu Foco de Estudos com o Epictus IA
-              </h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Vamos ajudar você a organizar seu dia de estudos de forma personalizada
-              </p>
-            </div>
-          </div>
+  // Função para atualizar as sugestões com base nas seleções atuais
+  const atualizarSugestoes = async () => {
+    if (!userId) return;
+
+    setCarregandoSugestoes(true);
+
+    try {
+      // Podemos fazer uma chamada para a API Gemini com os dados atuais para gerar sugestões mais relevantes
+      // Simplificando, apenas vamos filtrar as sugestões com base nas disciplinas selecionadas
+
+      if (disciplinasSelecionadas.length > 0) {
+        // Se o usuário já selecionou disciplinas, gerar sugestões mais específicas
+        const novasSugestoes = disciplinasSelecionadas.flatMap(disciplina => [
+          {
+            titulo: `Revisar conceitos de ${disciplina}`,
+            descricao: `Consolidar conhecimentos fundamentais`,
+            prioridade: "média",
+            prazo: "esta semana"
+          },
+          {
+            titulo: `Exercícios práticos de ${disciplina}`,
+            descricao: `Aplicar os conceitos estudados`,
+            prioridade: "alta",
+            prazo: "em 3 dias"
+          }
+        ]);
+
+        // Mesclar com algumas sugestões padrão
+        setSugestoesTarefas([
+          ...novasSugestoes.slice(0, 3),
+          ...sugestoesFocoPadrao.slice(0, 1)
+        ]);
+      }
+    } catch (error) {
+      console.error("Erro ao atualizar sugestões:", error);
+    } finally {
+      setCarregandoSugestoes(false);
+    }
+  };
+
+  // Atualizar sugestões quando as disciplinas selecionadas mudarem
+  useEffect(() => {
+    if (disciplinasSelecionadas.length > 0) {
+      atualizarSugestoes();
+    }
+  }, [disciplinasSelecionadas]);
+
+  // Função para finalizar a definição e salvar os dados
+  const finalizarDefinicao = () => {
+    const focoData: FocoData = {
+      objetivo,
+      objetivoPersonalizado: objetivo === "Outro Objetivo (Personalizado)" ? objetivoPersonalizado : undefined,
+      disciplinas: disciplinasSelecionadas,
+      topicoEspecifico: topicoEspecifico || undefined,
+      tempoEstudo,
+      tarefasSelecionadas,
+      estado: estadoAtual
+    };
+
+    onSave(focoData);
+  };
+
+return (
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <DialogContent className={`sm:max-w-[600px] max-h-[90vh] overflow-y-auto ${isLightMode ? 'bg-white' : 'bg-[#0A2540]'}`}>
+        {/* Cabeçalho do Modal */}
+        <div className="flex justify-between items-center mb-6">
+          <h2 className={`text-xl font-semibold ${isLightMode ? 'text-gray-900' : 'text-white'}`}>
+            Defina Seu Foco de Estudos com o Epictus IA
+          </h2>
           <button 
             onClick={onClose}
-            className="h-8 w-8 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+            className={`p-1 rounded-full ${isLightMode ? 'hover:bg-gray-200' : 'hover:bg-gray-700'} transition-colors`}
           >
-            <X className="h-4 w-4" />
+            <X className={`h-5 w-5 ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`} />
           </button>
         </div>
 
-        {/* Conteúdo principal do modal */}
-        <div className="p-6 max-h-[70vh] overflow-y-auto">
-          {/* Passo 1: Objetivo de estudo */}
-          {passo === 1 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-              className="space-y-4"
-            >
-              <div className="flex items-center gap-2 mb-4">
-                <div className="bg-orange-100 dark:bg-orange-900/50 text-[#FF6B00] w-6 h-6 rounded-full flex items-center justify-center text-sm font-medium">
-                  1
-                </div>
-                <h3 className="font-medium">Qual seu principal objetivo de estudo para hoje?</h3>
-              </div>
+        {/* Progresso */}
+        <div className="mb-6">
+          <div className="flex justify-between mb-2">
+            <p className={`text-sm font-medium ${isLightMode ? 'text-gray-600' : 'text-gray-300'}`}>
+              Etapa {etapaAtual} de 4
+            </p>
+            <p className={`text-sm ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
+              {
+                etapaAtual === 1 ? "Definindo Objetivo" :
+                etapaAtual === 2 ? "Selecionando Disciplinas" :
+                etapaAtual === 3 ? "Organizando Tarefas" :
+                "Finalização"
+              }
+            </p>
+          </div>
+          <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full">
+            <div 
+              className="h-full bg-[#FF6B00] rounded-full"
+              style={{ width: `${(etapaAtual / 4) * 100}%` }}
+            ></div>
+          </div>
+        </div>
 
-              <div className="space-y-2">
-                {objetivosEstudo.map((obj) => (
-                  <div 
-                    key={obj}
-                    onClick={() => setObjetivo(obj)}
-                    className={`p-4 rounded-lg border cursor-pointer transition-all ${
-                      objetivo === obj 
-                        ? 'border-[#FF6B00] bg-orange-50 dark:bg-[#FF6B00]/10' 
-                        : 'border-gray-200 dark:border-gray-700 hover:border-orange-200 dark:hover:border-orange-800'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${
+        {/* Conteúdo dinâmico baseado na etapa atual */}
+        <div className="space-y-6 mb-8">
+          {/* Etapa 1: Objetivo principal */}
+          {etapaAtual === 1 && (
+            <div className="space-y-5">
+              <div className="space-y-3">
+                <h3 className={`text-lg font-medium ${isLightMode ? 'text-gray-800' : 'text-white'}`}>
+                  Qual é seu objetivo de estudo hoje?
+                </h3>
+                <div className="grid grid-cols-1 gap-3">
+                  {objetivosEstudo.map((obj) => (
+                    <button
+                      key={obj}
+                      onClick={() => setObjetivo(obj)}
+                      className={`flex items-center p-3 rounded-lg border ${
                         objetivo === obj 
-                          ? 'border-[#FF6B00] bg-[#FF6B00]' 
-                          : 'border-gray-300 dark:border-gray-600'
+                          ? `${isLightMode ? 'border-[#FF6B00] bg-orange-50' : 'border-[#FF6B00] bg-[#FF6B00]/10'}`
+                          : `${isLightMode ? 'border-gray-200 hover:border-gray-300' : 'border-gray-700 hover:border-gray-600'}`
+                      } transition-all`}
+                    >
+                      <div className={`w-5 h-5 rounded-full flex items-center justify-center border ${
+                        objetivo === obj
+                          ? 'border-[#FF6B00] bg-[#FF6B00]'
+                          : `${isLightMode ? 'border-gray-300' : 'border-gray-600'}`
                       }`}>
-                        {objetivo === obj && <div className="w-2 h-2 bg-white rounded-full"></div>}
+                        {objetivo === obj && <Check className="h-3 w-3 text-white" />}
                       </div>
-                      <span className={`${objetivo === obj ? 'text-gray-900 dark:text-white font-medium' : 'text-gray-700 dark:text-gray-300'}`}>
+                      <span className={`ml-3 ${isLightMode ? 'text-gray-800' : 'text-gray-200'}`}>
                         {obj}
                       </span>
-                    </div>
-
-                    {/* Campo personalizado caso "Outro" seja selecionado */}
-                    {objetivo === "Outro Objetivo (Personalizado)" && obj === "Outro Objetivo (Personalizado)" && (
-                      <div className="mt-3 pl-8">
-                        <input
-                          type="text"
-                          value={objetivoPersonalizado}
-                          onChange={(e) => setObjetivoPersonalizado(e.target.value)}
-                          placeholder="Descreva seu objetivo..."
-                          className="w-full p-2 border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FF6B00] dark:text-white"
-                        />
-                      </div>
-                    )}
-                  </div>
-                ))}
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              {/* Sugestões baseadas no perfil */}
-              <div className="mt-6">
-                <div className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                  <span className="text-[#FF6B00]">▸</span> Sugestões com base no seu perfil:
-                </div>
-
+              {objetivo === "Outro Objetivo (Personalizado)" && (
                 <div className="space-y-2">
-                  {sugestoesFoco.map((sugestao, index) => (
-                    <div 
-                      key={index}
-                      onClick={() => setObjetivo(sugestao.titulo)}
-                      className={`p-3 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer hover:border-orange-200 dark:hover:border-orange-800 transition-all ${
-                        objetivo === sugestao.titulo ? 'border-[#FF6B00] bg-orange-50 dark:bg-[#FF6B00]/10' : ''
-                      }`}
-                    >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h4 className="font-medium text-gray-900 dark:text-white">{sugestao.titulo}</h4>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">{sugestao.descricao}</p>
+                  <label htmlFor="objetivo-personalizado" className={`block text-sm font-medium ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
+                    Especifique seu objetivo:
+                  </label>
+                  <input
+                    type="text"
+                    id="objetivo-personalizado"
+                    value={objetivoPersonalizado}
+                    onChange={(e) => setObjetivoPersonalizado(e.target.value)}
+                    className={`w-full p-3 rounded-lg border ${
+                      isLightMode 
+                        ? 'border-gray-300 focus:border-[#FF6B00] bg-white' 
+                        : 'border-gray-700 focus:border-[#FF6B00] bg-gray-800'
+                    } focus:ring-1 focus:ring-[#FF6B00] outline-none transition-colors`}
+                    placeholder="Ex: Preparar para apresentação de seminário"
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Etapa 2: Disciplinas e tópicos */}
+          {etapaAtual === 2 && (
+            <div className="space-y-5">
+              <div className="space-y-3">
+                <h3 className={`text-lg font-medium ${isLightMode ? 'text-gray-800' : 'text-white'}`}>
+                  Selecione as disciplinas prioritárias
+                </h3>
+                <p className={`text-sm ${isLightMode ? 'text-gray-600' : 'text-gray-400'}`}>
+                  Escolha até 3 disciplinas para focar hoje
+                </p>
+
+                {/* Botão para atualizar sugestões */}
+                {carregandoSugestoes ? (
+                  <div className={`w-full flex justify-center py-2 mb-2 ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                    <RefreshCw className="h-5 w-5 animate-spin" />
+                    <span className="ml-2 text-sm">Carregando disciplinas...</span>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {disciplinas.map((disciplina) => (
+                      <button
+                        key={disciplina.nome}
+                        onClick={() => toggleDisciplina(disciplina.nome)}
+                        className={`flex flex-col items-start p-3 rounded-lg border ${
+                          disciplinasSelecionadas.includes(disciplina.nome)
+                            ? `${isLightMode ? 'border-[#FF6B00] bg-orange-50' : 'border-[#FF6B00] bg-[#FF6B00]/10'}`
+                            : `${isLightMode ? 'border-gray-200 hover:border-gray-300' : 'border-gray-700 hover:border-gray-600'}`
+                        } transition-all`}
+                        disabled={disciplinasSelecionadas.length >= 3 && !disciplinasSelecionadas.includes(disciplina.nome)}
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <span className={`${isLightMode ? 'text-gray-800' : 'text-gray-200'} font-medium`}>
+                            {disciplina.nome}
+                          </span>
+                          <div className={`w-5 h-5 rounded-full flex items-center justify-center border ${
+                            disciplinasSelecionadas.includes(disciplina.nome)
+                              ? 'border-[#FF6B00] bg-[#FF6B00]'
+                              : `${isLightMode ? 'border-gray-300' : 'border-gray-600'}`
+                          }`}>
+                            {disciplinasSelecionadas.includes(disciplina.nome) && <Check className="h-3 w-3 text-white" />}
+                          </div>
                         </div>
-                        {sugestao.prioridade && (
-                          <span className="text-xs font-medium text-red-600 dark:text-red-400">
-                            Prioridade {sugestao.prioridade}
+                        {disciplina.tag && (
+                          <span className={`mt-1.5 text-xs px-2 py-0.5 rounded-full ${
+                            isLightMode 
+                              ? disciplina.tag === "Da sua agenda" ? 'bg-green-100 text-green-700' 
+                                : disciplina.tag === "Recente" ? 'bg-blue-100 text-blue-700' 
+                                : disciplina.tag === "Recomendado" ? 'bg-purple-100 text-purple-700'
+                                : 'bg-orange-100 text-orange-700'
+                              : disciplina.tag === "Da sua agenda" ? 'bg-green-900/30 text-green-400' 
+                                : disciplina.tag === "Recente" ? 'bg-blue-900/30 text-blue-400' 
+                                : disciplina.tag === "Recomendado" ? 'bg-purple-900/30 text-purple-400'
+                                : 'bg-orange-900/30 text-orange-400'
+                          }`}>
+                            {disciplina.tag}
                           </span>
                         )}
-                      </div>
-                      {sugestao.prazo && (
-                        <div className="mt-2 flex items-center gap-1 text-xs text-red-600 dark:text-red-400">
-                          <Clock className="h-3 w-3" /> Prazo: {sugestao.prazo}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {/* Passo 2: Disciplinas ou tópicos prioritários */}
-          {passo === 2 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-              className="space-y-4"
-            >
-              <div className="flex items-center gap-2 mb-4">
-                <div className="bg-orange-100 dark:bg-orange-900/50 text-[#FF6B00] w-6 h-6 rounded-full flex items-center justify-center text-sm font-medium">
-                  2
-                </div>
-                <h3 className="font-medium">Quais disciplinas ou tópicos são prioridade?</h3>
-              </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                Selecione as disciplinas que deseja priorizar nos seus estudos
-              </p>
-
-              <div className="grid grid-cols-2 gap-3">
-                {disciplinas.map((disciplina) => (
-                  <div 
-                    key={disciplina.nome}
-                    onClick={() => toggleDisciplina(disciplina.nome)}
-                    className={`p-3 rounded-lg border cursor-pointer transition-all ${
-                      disciplinasSelecionadas.includes(disciplina.nome) 
-                        ? 'border-[#FF6B00] bg-orange-50 dark:bg-[#FF6B00]/10' 
-                        : 'border-gray-200 dark:border-gray-700 hover:border-orange-200 dark:hover:border-orange-800'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`w-5 h-5 rounded border flex items-center justify-center ${
-                        disciplinasSelecionadas.includes(disciplina.nome) 
-                          ? 'border-[#FF6B00] bg-[#FF6B00]' 
-                          : 'border-gray-300 dark:border-gray-600'
-                      }`}>
-                        {disciplinasSelecionadas.includes(disciplina.nome) && (
-                          <CheckCircle className="h-3 w-3 text-white" />
-                        )}
-                      </div>
-                      <span className={disciplinasSelecionadas.includes(disciplina.nome) ? 'text-gray-900 dark:text-white font-medium' : 'text-gray-700 dark:text-gray-300'}>
-                        {disciplina.nome}
-                      </span>
-                    </div>
-
-                    {disciplina.tag && (
-                      <div className="mt-1 ml-8">
-                        <span className={`text-xs font-medium px-2 py-1 rounded ${
-                          disciplina.tag === 'Recente' 
-                            ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' 
-                            : 'bg-yellow-100 text-amber-600 dark:bg-yellow-900/30 dark:text-yellow-400'
-                        }`}>
-                          {disciplina.tag}
-                        </span>
-                      </div>
-                    )}
+                      </button>
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
-
-              {/* Campo para tópico específico */}
-              <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Tópico específico (opcional)
-                </label>
-                <textarea
-                  value={topicoEspecifico}
-                  onChange={(e) => setTopicoEspecifico(e.target.value)}
-                  placeholder="Ex: Equações do segundo grau, Revolução Francesa, etc."
-                  className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#FF6B00] resize-none"
-                  rows={3}
-                />
-              </div>
-            </motion.div>
-          )}
-
-          {/* Passo 3: Tempo de estudo */}
-          {passo === 3 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-              className="space-y-4"
-            >
-              <div className="flex items-center gap-2 mb-4">
-                <div className="bg-orange-100 dark:bg-orange-900/50 text-[#FF6B00] w-6 h-6 rounded-full flex items-center justify-center text-sm font-medium">
-                  3
-                </div>
-                <h3 className="font-medium">Quanto tempo você pretende dedicar aos estudos hoje?</h3>
-              </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                Isso nos ajudará a planejar a quantidade adequada de atividades
-              </p>
-
-              <div className="relative pb-12 pt-2 px-4">
-                <Slider 
-                  value={[tempoEstudo]} 
-                  onValueChange={(value) => setTempoEstudo(value[0])}
-                  max={240}
-                  min={15}
-                  step={15}
-                  className="z-10"
-                />
-
-                <div className="absolute bottom-0 left-0 right-0 flex justify-between text-xs text-gray-500 dark:text-gray-400">
-                  <span>15min</span>
-                  <span>1h</span>
-                  <span>2h</span>
-                  <span>4h</span>
-                </div>
-              </div>
-
-              {/* Tempo selecionado destacado */}
-              <div className="flex justify-center mt-2">
-                <div className="bg-orange-100 dark:bg-[#FF6B00]/20 text-[#FF6B00] font-medium rounded-full px-5 py-2 flex items-center gap-2">
-                  <Clock className="h-4 w-4" /> {formatarTempo(tempoEstudo)}
-                </div>
-              </div>
-
-              {/* Blocos de tempo sugeridos */}
-              <div className="mt-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                  <h4 className="text-sm font-medium text-blue-700 dark:text-blue-400">
-                    Blocos de tempo sugeridos na sua agenda
-                  </h4>
-                </div>
-
-                <div className="space-y-3 mt-2">
-                  {blocosTempoSugeridos.map((bloco, index) => (
-                    <div key={index} className="bg-white dark:bg-gray-800 rounded-md p-3 shadow-sm">
-                      <p className="font-medium text-gray-800 dark:text-gray-200">{bloco.horario}</p>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">{bloco.descricao}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {/* Passo 4: Tarefas com atenção imediata */}
-          {passo === 4 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-              className="space-y-4"
-            >
-              <div className="flex items-center gap-2 mb-4">
-                <div className="bg-orange-100 dark:bg-orange-900/50 text-[#FF6B00] w-6 h-6 rounded-full flex items-center justify-center text-sm font-medium">
-                  4
-                </div>
-                <h3 className="font-medium">Há alguma tarefa ou prazo específico que precisa de atenção imediata?</h3>
-              </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                Selecione as tarefas que deseja incluir no seu foco de hoje
-              </p>
 
               <div className="space-y-2">
-                {tarefasRecentes.map((tarefa, index) => (
-                  <div 
-                    key={index}
-                    onClick={() => toggleTarefa(tarefa.titulo)}
-                    className={`p-3 rounded-lg border cursor-pointer transition-all relative ${
-                      tarefasSelecionadas.includes(tarefa.titulo) 
-                        ? 'border-[#FF6B00] bg-orange-50 dark:bg-[#FF6B00]/10' 
-                        : 'border-gray-200 dark:border-gray-700 hover:border-orange-200 dark:hover:border-orange-800'
-                    }`}
-                  >
-                    {tarefa.urgente && (
-                      <span className="absolute top-2 right-3 px-2 py-0.5 text-xs font-medium rounded bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400">
-                        Urgente
-                      </span>
-                    )}
-
-                    <div className="flex items-center gap-3 pr-16">
-                      <div className={`w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 ${
-                        tarefasSelecionadas.includes(tarefa.titulo) 
-                          ? 'border-[#FF6B00] bg-[#FF6B00]' 
-                          : 'border-gray-300 dark:border-gray-600'
-                      }`}>
-                        {tarefasSelecionadas.includes(tarefa.titulo) && (
-                          <CheckCircle className="h-3 w-3 text-white" />
-                        )}
-                      </div>
-                      <div>
-                        <p className={`${tarefasSelecionadas.includes(tarefa.titulo) ? 'text-gray-900 dark:text-white font-medium' : 'text-gray-700 dark:text-gray-300'}`}>
-                          {tarefa.titulo}
-                        </p>
-                        <div className="flex items-center mt-1 text-xs text-red-500 dark:text-red-400">
-                          <Clock className="h-3 w-3 mr-1" /> Prazo: {tarefa.prazo}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                <label htmlFor="topico-especifico" className={`block text-sm font-medium ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
+                  Tópico específico (opcional)
+                </label>
+                <input
+                  type="text"
+                  id="topico-especifico"
+                  value={topicoEspecifico}
+                  onChange={(e) => setTopicoEspecifico(e.target.value)}
+                  className={`w-full p-3 rounded-lg border ${
+                    isLightMode 
+                      ? 'border-gray-300 focus:border-[#FF6B00] bg-white' 
+                      : 'border-gray-700 focus:border-[#FF6B00] bg-gray-800'
+                  } focus:ring-1 focus:ring-[#FF6B00] outline-none transition-colors`}
+                  placeholder="Ex: Equações diferenciais, Segunda guerra mundial"
+                />
               </div>
-
-              {/* Dica do Mentor IA */}
-              <div className="mt-4 bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="bg-green-200 dark:bg-green-700 rounded-full p-1">
-                    <CheckCircle className="h-3 w-3 text-green-600 dark:text-green-300" />
-                  </div>
-                  <h4 className="text-sm font-medium text-green-700 dark:text-green-400">
-                    Dica do Mentor IA
-                  </h4>
-                </div>
-                <p className="text-sm text-gray-700 dark:text-gray-300">
-                  Organizar suas tarefas por prazo e importância ajuda a reduzir a procrastinação. Sempre comece pelas tarefas mais urgentes ou mais difíceis quando estiver com mais energia.
-                </p>
-              </div>
-            </motion.div>
+            </div>
           )}
 
-          {/* Passo 5: Estado emocional */}
-          {passo === 5 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-              className="space-y-4"
-            >
-              <div className="flex items-center gap-2 mb-4">
-                <div className="bg-orange-100 dark:bg-orange-900/50 text-[#FF6B00] w-6 h-6 rounded-full flex items-center justify-center text-sm font-medium">
-                  5
+          {/* Etapa 3: Tarefas e tempo */}
+          {etapaAtual === 3 && (
+            <div className="space-y-5">
+              <div className="space-y-3">
+                <h3 className={`text-lg font-medium ${isLightMode ? 'text-gray-800' : 'text-white'}`}>
+                  Quanto tempo você pretende dedicar hoje?
+                </h3>
+                <div className="px-2">
+                  <div className="mb-2 flex justify-between items-center">
+                    <span className={`text-sm ${isLightMode ? 'text-gray-600' : 'text-gray-400'}`}>30min</span>
+                    <span className={`text-sm font-medium ${isLightMode ? 'text-gray-800' : 'text-white'}`}>
+                      {formatarTempoEstudo(tempoEstudo)}
+                    </span>
+                    <span className={`text-sm ${isLightMode ? 'text-gray-600' : 'text-gray-400'}`}>4h</span>
+                  </div>
+                  <Slider
+                    value={[tempoEstudo]}
+                    min={30}
+                    max={240}
+                    step={15}
+                    onValueChange={(value) => setTempoEstudo(value[0])}
+                    className="cursor-pointer"
+                  />
                 </div>
-                <h3 className="font-medium">Como você está se sentindo em relação aos seus estudos?</h3>
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                Isso nos ajudará a adaptar melhor as sugestões para você
-              </p>
 
-              <div className="grid grid-cols-2 gap-3">
-                {estadosEstudo.map((estado) => (
-                  <div 
-                    key={estado.valor}
-                    onClick={() => setEstadoEstudo(estado.valor)}
-                    className={`p-3 rounded-lg border cursor-pointer transition-all ${
-                      estadoEstudo === estado.valor 
-                        ? 'border-[#FF6B00] bg-orange-50 dark:bg-[#FF6B00]/10' 
-                        : 'border-gray-200 dark:border-gray-700 hover:border-orange-200 dark:hover:border-orange-800'
-                    }`}
+              <div className="space-y-3">
+                <h3 className={`text-lg font-medium ${isLightMode ? 'text-gray-800' : 'text-white'}`}>
+                  Há alguma tarefa ou prazo específico que precisa de atenção imediata?
+                </h3>
+
+                <div className="flex items-center">
+                  <input
+                    type="text"
+                    value={novaTarefa}
+                    onChange={(e) => setNovaTarefa(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && adicionarTarefa()}
+                    className={`flex-1 p-3 rounded-l-lg border ${
+                      isLightMode 
+                        ? 'border-gray-300 focus:border-[#FF6B00] bg-white' 
+                        : 'border-gray-700 focus:border-[#FF6B00] bg-gray-800'
+                    } focus:ring-1 focus:ring-[#FF6B00] outline-none transition-colors`}
+                    placeholder="Adicionar tarefa"
+                  />
+                  <button
+                    onClick={adicionarTarefa}
+                    className="p-3 rounded-r-lg bg-[#FF6B00] text-white hover:bg-[#FF8C40] transition-colors"
                   >
-                    <div className="flex items-center gap-3 mb-1">
-                      <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${
-                        estadoEstudo === estado.valor 
-                          ? 'border-[#FF6B00] bg-[#FF6B00]' 
-                          : 'border-gray-300 dark:border-gray-600'
-                      }`}>
-                        {estadoEstudo === estado.valor && <div className="w-2 h-2 bg-white rounded-full"></div>}
-                      </div>
-                      <span className={estadoEstudo === estado.valor ? 'text-gray-900 dark:text-white font-medium' : 'text-gray-700 dark:text-gray-300'}>
-                        {estado.valor}
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 ml-8">
-                      {estado.descricao}
-                    </p>
-                  </div>
-                ))}
-              </div>
+                    <PenSquare className="h-5 w-5" />
+                  </button>
+                </div>
 
-              {/* Resumo das escolhas */}
-              <div className="mt-6 bg-orange-50 dark:bg-[#FF6B00]/10 rounded-lg p-4 border border-orange-100 dark:border-[#FF6B00]/20">
-                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1">
-                  <span className="text-[#FF6B00]">◆</span> Resumo das suas escolhas
-                </h4>
-                <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-sm">
-                  <div>
-                    <span className="text-gray-500 dark:text-gray-400">Objetivo:</span>
-                    <span className="ml-2 font-medium text-gray-800 dark:text-gray-200">
-                      {objetivo === "Outro Objetivo (Personalizado)" ? objetivoPersonalizado : objetivo}
-                    </span>
+                <div className="space-y-2 mt-4">
+                  <p className={`text-sm font-medium ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
+                    Suas tarefas:
+                  </p>
+                  {tarefasSelecionadas.length === 0 ? (
+                    <p className={`text-sm italic ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                      Nenhuma tarefa adicionada
+                    </p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {tarefasSelecionadas.map((tarefa, index) => (
+                        <li 
+                          key={index}
+                          className={`flex items-center justify-between p-3 rounded-lg border ${
+                            isLightMode ? 'border-gray-200 bg-gray-50' : 'border-gray-700 bg-gray-800/40'
+                          }`}
+                        >
+                          <span className={`${isLightMode ? 'text-gray-800' : 'text-gray-200'}`}>{tarefa}</span>
+                          <button
+                            onClick={() => removerTarefa(index)}
+                            className={`p-1 rounded-full ${isLightMode ? 'hover:bg-gray-200' : 'hover:bg-gray-700'} transition-colors`}
+                          >
+                            <X className={`h-4 w-4 ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`} />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                <div className="mt-6">
+                  <div className="flex justify-between items-center mb-3">
+                    <p className={`text-sm font-medium ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
+                      Sugestões com base no seu perfil:
+                    </p>
+                    <button 
+                      onClick={atualizarSugestoes}
+                      disabled={carregandoSugestoes}
+                      className={`p-1.5 rounded-full text-xs flex items-center gap-1.5 ${
+                        isLightMode 
+                          ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' 
+                          : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                      } transition-colors`}
+                    >
+                      <RefreshCw className={`h-3 w-3 ${carregandoSugestoes ? 'animate-spin' : ''}`} />
+                      {carregandoSugestoes ? 'Atualizando...' : 'Atualizar'}
+                    </button>
                   </div>
-                  <div>
-                    <span className="text-gray-500 dark:text-gray-400">Tempo:</span>
-                    <span className="ml-2 font-medium text-gray-800 dark:text-gray-200">
-                      {formatarTempo(tempoEstudo)}
-                    </span>
-                  </div>
+
+                  {carregandoSugestoes ? (
+                    <div className={`flex justify-center items-center py-8 ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                      <RefreshCw className="h-6 w-6 animate-spin" />
+                      <span className="ml-3">Carregando sugestões personalizadas...</span>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 gap-2">
+                      {sugestoesTarefas.map((sugestao, index) => (
+                        <button
+                          key={index}
+                          onClick={() => adicionarSugestao(sugestao.titulo)}
+                          className={`flex items-start p-3 rounded-lg border ${
+                            tarefasSelecionadas.includes(sugestao.titulo)
+                              ? `${isLightMode ? 'border-green-300 bg-green-50' : 'border-green-700 bg-green-900/20'}`
+                              : `${isLightMode ? 'border-gray-200 hover:border-gray-300' : 'border-gray-700 hover:border-gray-600'}`
+                          } transition-all w-full text-left`}
+                        >
+                          <div className={`w-5 h-5 mt-0.5 rounded-full flex-shrink-0 flex items-center justify-center border ${
+                            tarefasSelecionadas.includes(sugestao.titulo)
+                              ? 'border-green-500 bg-green-500'
+                              : `${isLightMode ? 'border-gray-300' : 'border-gray-600'}`
+                          }`}>
+                            {tarefasSelecionadas.includes(sugestao.titulo) && <Check className="h-3 w-3 text-white" />}
+                          </div>
+                          <div className="ml-3">
+                            <p className={`font-medium ${isLightMode ? 'text-gray-800' : 'text-gray-200'}`}>
+                              {sugestao.titulo}
+                            </p>
+                            <p className={`text-sm ${isLightMode ? 'text-gray-600' : 'text-gray-400'}`}>
+                              {sugestao.descricao}
+                            </p>
+                            <div className="flex items-center mt-1.5 gap-2">
+                              {sugestao.prioridade && (
+                                <span className={`text-xs px-2 py-0.5 rounded-full ${
+                                  sugestao.prioridade === "alta" 
+                                    ? `${isLightMode ? 'bg-red-100 text-red-700' : 'bg-red-900/20 text-red-400'}`
+                                    : sugestao.prioridade === "média"
+                                      ? `${isLightMode ? 'bg-amber-100 text-amber-700' : 'bg-amber-900/20 text-amber-400'}`
+                                      : `${isLightMode ? 'bg-blue-100 text-blue-700' : 'bg-blue-900/20 text-blue-400'}`
+                                }`}>
+                                  Prioridade {sugestao.prioridade}
+                                </span>
+                              )}
+                              {sugestao.prazo && (
+                                <span className={`text-xs flex items-center ${isLightMode ? 'text-gray-600' : 'text-gray-400'}`}>
+                                  <Calendar className="h-3 w-3 mr-1" /> {sugestao.prazo}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
-            </motion.div>
+            </div>
+          )}
+
+          {/* Etapa 4: Finalização e estado emocional */}
+          {etapaAtual === 4 && (
+            <div className="space-y-5">
+              <div className="space-y-3">
+                <h3 className={`text-lg font-medium ${isLightMode ? 'text-gray-800' : 'text-white'}`}>
+                  Como você está se sentindo hoje?
+                </h3>
+                <p className={`text-sm ${isLightMode ? 'text-gray-600' : 'text-gray-400'}`}>
+                  Isso nos ajudará a criar dicas personalizadas para suas sessões de estudo
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {["Motivado(a)", "Um pouco perdido(a)", "Cansado(a)", "Ansioso(a)"].map((estado) => (
+                    <button
+                      key={estado}
+                      onClick={() => setEstadoAtual(estado)}
+                      className={`flex items-center p-3 rounded-lg border ${
+                        estadoAtual === estado 
+                          ? `${isLightMode ? 'border-[#FF6B00] bg-orange-50' : 'border-[#FF6B00] bg-[#FF6B00]/10'}`
+                          : `${isLightMode ? 'border-gray-200 hover:border-gray-300' : 'border-gray-700 hover:border-gray-600'}`
+                      } transition-all`}
+                    >
+                      <div className={`w-5 h-5 rounded-full flex items-center justify-center border ${
+                        estadoAtual === estado
+                          ? 'border-[#FF6B00] bg-[#FF6B00]'
+                          : `${isLightMode ? 'border-gray-300' : 'border-gray-600'}`
+                      }`}>
+                        {estadoAtual === estado && <Check className="h-3 w-3 text-white" />}
+                      </div>
+                      <span className={`ml-3 ${isLightMode ? 'text-gray-800' : 'text-gray-200'}`}>
+                        {estado}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className={`p-4 rounded-lg ${isLightMode ? 'bg-blue-50 border border-blue-100' : 'bg-blue-900/10 border border-blue-800/20'}`}>
+                <h4 className={`text-sm font-medium mb-2 flex items-center ${isLightMode ? 'text-blue-800' : 'text-blue-300'}`}>
+                  <Zap className="h-4 w-4 mr-1.5" /> Resumo do seu foco
+                </h4>
+                <ul className={`space-y-2 text-sm ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
+                  <li className="flex items-start">
+                    <Target className="h-4 w-4 mr-2 mt-0.5 text-[#FF6B00]" />
+                    <div>
+                      <span className="font-medium">Objetivo:</span>{" "}
+                      {objetivo === "Outro Objetivo (Personalizado)" ? objetivoPersonalizado : objetivo}
+                    </div>
+                  </li>
+                  <li className="flex items-start">
+                    <Book className="h-4 w-4 mr-2 mt-0.5 text-[#FF6B00]" />
+                    <div>
+                      <span className="font-medium">Disciplinas:</span>{" "}
+                      {disciplinasSelecionadas.length > 0 
+                        ? disciplinasSelecionadas.join(", ") 
+                        : "Nenhuma disciplina selecionada"}
+                    </div>
+                  </li>
+                  <li className="flex items-start">
+                    <Clock className="h-4 w-4 mr-2 mt-0.5 text-[#FF6B00]" />
+                    <div>
+                      <span className="font-medium">Tempo:</span>{" "}
+                      {formatarTempoEstudo(tempoEstudo)}
+                    </div>
+                  </li>
+                  <li className="flex items-start">
+                    <PenSquare className="h-4 w-4 mr-2 mt-0.5 text-[#FF6B00]" />
+                    <div>
+                      <span className="font-medium">Tarefas:</span>{" "}
+                      {tarefasSelecionadas.length > 0 
+                        ? `${tarefasSelecionadas.length} tarefa(s) definida(s)` 
+                        : "Nenhuma tarefa definida"}
+                    </div>
+                  </li>
+                </ul>
+              </div>
+
+              <div className={`p-4 rounded-lg ${isLightMode ? 'bg-green-50 border border-green-100' : 'bg-green-900/10 border border-green-800/20'}`}>
+                <h4 className={`text-sm font-medium mb-2 flex items-center ${isLightMode ? 'text-green-800' : 'text-green-300'}`}>
+                  <Zap className="h-4 w-4 mr-1.5" /> O que acontece agora?
+                </h4>
+                <p className={`text-sm ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
+                  O Epictus IA irá analisar seu perfil, suas atividades na plataforma e as informações que você forneceu 
+                  para criar um plano de foco personalizado. Você receberá sugestões de tarefas, dicas adaptadas ao seu 
+                  estado emocional e um acompanhamento do seu progresso.
+                </p>
+              </div>
+            </div>
           )}
         </div>
 
-        {/* Rodapé com botões de navegação */}
-        <div className="p-4 border-t border-gray-100 dark:border-gray-800 flex justify-between">
-          {passo > 1 ? (
-            <Button
-              variant="outline"
-              onClick={passoAnterior}
-              className="flex items-center gap-1"
-            >
-              <ChevronLeft className="h-4 w-4" /> Voltar
-            </Button>
-          ) : (
-            <Button
-              variant="outline"
-              onClick={onClose}
-            >
-              Cancelar
-            </Button>
-          )}
-
-          <Button 
-            onClick={proximoPasso}
-            className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF5B00] hover:to-[#FF7C30] text-white border-none flex items-center gap-1"
+        {/* Botões de navegação */}
+        <div className="flex justify-between">
+          <Button
+            onClick={voltarEtapa}
+            variant="outline"
+            className={`${
+              isLightMode 
+                ? 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100' 
+                : 'bg-[#0A2540] text-gray-300 border-gray-700 hover:bg-gray-800'
+            }`}
           >
-            {passo === 5 ? "Gerar Foco" : "Continuar"} {passo < 5 && <ChevronRight className="h-4 w-4" />}
+            {etapaAtual === 1 ? "Cancelar" : "Voltar"}
+          </Button>
+          <Button
+            onClick={avancarEtapa}
+            variant="default"
+            className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white"
+            disabled={
+              (etapaAtual === 1 && objetivo === "Outro Objetivo (Personalizado)" && !objetivoPersonalizado) ||
+              (etapaAtual === 2 && disciplinasSelecionadas.length === 0)
+            }
+          >
+            {etapaAtual < 4 ? "Continuar" : "Definir Foco"}
           </Button>
         </div>
       </DialogContent>
     </Dialog>
   );
 }
+
+export default DefinirFocoModal;
