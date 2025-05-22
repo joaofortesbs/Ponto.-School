@@ -622,16 +622,7 @@ export default function FocoDoDiaCard() {
                     </motion.button>
                   </div>
 
-                  <div className="mt-4">
-                    <div className={`rounded-lg p-2.5 ${isLightMode ? 'bg-blue-50 border border-blue-100' : 'bg-blue-900/10 border border-blue-800/20'} flex items-start gap-2`}>
-                      <div className="mt-0.5">
-                        <Smile className="h-4 w-4 text-blue-500" />
-                      </div>
-                      <p className="text-xs text-gray-600 dark:text-gray-300 flex-1">
-                        <span className="font-medium">Dica do Mentor:</span> Divida seu estudo em etapas menores e comemore cada progresso.
-                      </p>
-                    </div>
-                  </div>
+                  {/* Dica do mentor removida conforme solicitado */}
                 </div>
               </motion.div>
             )}
