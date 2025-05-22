@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Target, Clock, BookOpen, Play, Check, ChevronRight, Flame, Trophy, PlusCircle, Settings, Smile, HelpCircle, BarChart2 } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
@@ -54,7 +53,7 @@ export default function FocoDoDiaCard() {
           setFocoPrincipal(dados.focoPrincipal);
           setAtividades(dados.atividades);
           setTemFoco(true);
-          
+
           // Verificar se todas as atividades estão concluídas
           const todasConcluidas = dados.atividades.length > 0 && dados.atividades.every((ativ: Atividade) => ativ.concluido);
           setTodasAtividadesConcluidas(todasConcluidas || dados.todasConcluidas);
@@ -71,7 +70,7 @@ export default function FocoDoDiaCard() {
   const [todasAtividadesConcluidas, setTodasAtividadesConcluidas] = useState<boolean>(false);
   const [mostrarAnimacaoConclusao, setMostrarAnimacaoConclusao] = useState<boolean>(false);
   const [pontosGanhos, setPontosGanhos] = useState<number>(50);
-  
+
   // Função para lidar com a conclusão de atividades
   const toggleAtividade = (id: number) => {
     // Atualizar o estado local - em uma aplicação real, isto também atualizaria o backend
@@ -83,7 +82,7 @@ export default function FocoDoDiaCard() {
 
     // Verificar se todas as atividades foram concluídas
     const todasConcluidas = atualizadas.length > 0 && atualizadas.every(ativ => ativ.concluido);
-    
+
     // Se a última atividade foi concluída agora, mostrar animação e atualizar estado
     if (todasConcluidas && !todasAtividadesConcluidas) {
       setMostrarAnimacaoConclusao(true);
@@ -219,23 +218,23 @@ export default function FocoDoDiaCard() {
       }
     }());
   };
-  
+
   // Função para reiniciar o foco
   const redefinirFoco = () => {
     setModalAberto(true);
   };
-  
+
   // Função para planejar foco do próximo dia
   const planejamentoFuturo = () => {
     setModalAberto(true);
   };
-  
+
   // Função para explorar biblioteca (simulação)
   const explorarBiblioteca = () => {
     // Em uma implementação real, redirecionaria para a biblioteca
     console.log("Redirecionando para a Biblioteca...");
   };
-  
+
   // Efeito para lançar confete quando o estado de conclusão mudar para true
   useEffect(() => {
     if (mostrarAnimacaoConclusao) {
@@ -364,7 +363,7 @@ export default function FocoDoDiaCard() {
             transition={{ duration: 0.5, ease: "easeOut" }}
           />
         </div>
-        
+
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className={`p-2.5 rounded-lg flex items-center justify-center ${isLightMode ? 'bg-white shadow-sm border border-orange-200' : 'bg-[#FF6B00]/10 border border-[#FF6B00]/30'}`}>
@@ -562,58 +561,77 @@ export default function FocoDoDiaCard() {
               </div>
             ) : (
               <motion.div 
-                className={`p-4 rounded-lg border ${isLightMode ? 'bg-green-50 border-green-100' : 'bg-green-900/10 border-green-700/30'}`}
+                className={`overflow-hidden rounded-lg ${isLightMode ? 'bg-gradient-to-b from-green-50 to-white border border-green-100' : 'bg-gradient-to-b from-green-900/15 to-[#001e3a]/60 border border-green-700/20'}`}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5 }}
               >
-                <div className="flex flex-col items-center text-center">
-                  <div className="bg-green-100 dark:bg-green-800/30 p-2.5 rounded-full mb-3">
-                    <Trophy className="h-6 w-6 text-green-600 dark:text-green-400" />
-                  </div>
-                  <h3 className={`text-lg font-bold ${isLightMode ? 'text-gray-800' : 'text-white'}`}>
-                    Foco do Dia: <span className="text-green-600 dark:text-green-400">CONCLUÍDO! 🎉</span>
-                  </h3>
-                  <p className={`text-sm ${isLightMode ? 'text-gray-600' : 'text-gray-300'} mt-2`}>
-                    Parabéns! Você completou todas as atividades do seu foco de hoje com sucesso!
-                  </p>
-                  <div className="mt-3 text-sm">
-                    <span className="font-medium">{atividades.length} atividades concluídas.</span>
+                {/* Cabeçalho estilizado com gradiente */}
+                <div className={`h-2 w-full ${isLightMode ? 'bg-gradient-to-r from-green-400 to-emerald-300' : 'bg-gradient-to-r from-green-500 to-emerald-400'}`}></div>
+
+                <div className="p-5">
+                  <div className="flex flex-col items-center text-center">
+                    <div className={`p-3 rounded-full ${isLightMode ? 'bg-gradient-to-br from-green-100 to-green-200' : 'bg-gradient-to-br from-green-800/30 to-green-700/20'} mb-3 shadow-sm`}>
+                      <Trophy className="h-7 w-7 text-green-500 dark:text-green-400" />
+                    </div>
+
+                    <h3 className={`text-xl font-bold ${isLightMode ? 'text-gray-800' : 'text-white'}`}>
+                      Foco do Dia: <span className="text-green-500 dark:text-green-400">CONCLUÍDO!</span> 🎉
+                    </h3>
+
+                    <p className={`text-sm ${isLightMode ? 'text-gray-600' : 'text-gray-300'} mt-2 max-w-xs`}>
+                      Parabéns! Você completou todas as atividades do seu foco de hoje com sucesso!
+                    </p>
+
+                    <div className={`mt-3 px-3 py-1 rounded-full ${isLightMode ? 'bg-green-100' : 'bg-green-900/20'} flex items-center gap-1`}>
+                      <Check className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
+                      <span className="text-xs font-medium text-green-700 dark:text-green-300">
+                        {atividades.length} atividades concluídas
+                      </span>
+                    </div>
+
                     {focoPrincipal && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        Próximo foco sugerido: Revisão de {focoPrincipal.disciplinas[0] || "seu material"} (Amanhã).
-                      </p>
+                      <div className="mt-3 flex items-center gap-1.5">
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#FF6B00] animate-pulse"></div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Próximo foco: Revisão de <span className="font-medium">{focoPrincipal.disciplinas[0] || "seu material"}</span>
+                        </p>
+                      </div>
                     )}
                   </div>
-                </div>
-                
-                <div className="mt-4 grid grid-cols-2 gap-2">
-                  <motion.button 
-                    onClick={planejamentoFuturo}
-                    className={`rounded-lg px-3 py-2 text-xs font-medium border text-[#FF6B00] ${isLightMode ? 'bg-white border-orange-200 hover:bg-orange-50' : 'bg-[#FF6B00]/10 border-[#FF6B00]/30 hover:bg-[#FF6B00]/20'} flex items-center justify-center gap-1.5 transition-colors`}
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <Clock className="h-3.5 w-3.5" />
-                    Planejar Foco de Amanhã
-                  </motion.button>
-                  
-                  <motion.button 
-                    onClick={explorarBiblioteca}
-                    className={`rounded-lg px-3 py-2 text-xs font-medium border text-blue-600 ${isLightMode ? 'bg-white border-blue-200 hover:bg-blue-50' : 'bg-blue-500/10 border-blue-500/30 hover:bg-blue-500/20'} flex items-center justify-center gap-1.5 transition-colors`}
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <BookOpen className="h-3.5 w-3.5" />
-                    Explorar Biblioteca
-                  </motion.button>
-                </div>
-                
-                <div className="mt-4 text-center">
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    <Smile className="h-3.5 w-3.5 inline mr-1" />
-                    Você merece uma pausa! Que tal ouvir um podcast relaxante na Biblioteca?
-                  </p>
+
+                  <div className="mt-5 grid grid-cols-2 gap-3">
+                    <motion.button 
+                      onClick={planejamentoFuturo}
+                      className={`rounded-lg p-3 text-xs font-medium ${isLightMode ? 'bg-[#FF6B00] text-white hover:bg-[#FF7B10]' : 'bg-[#FF6B00] text-white hover:bg-[#FF7B10]'} flex items-center justify-center gap-1.5 transition-colors shadow-sm`}
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Clock className="h-4 w-4" />
+                      Planejar Amanhã
+                    </motion.button>
+
+                    <motion.button 
+                      onClick={explorarBiblioteca}
+                      className={`rounded-lg p-3 text-xs font-medium ${isLightMode ? 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50' : 'bg-gray-800 border border-gray-700 text-gray-200 hover:bg-gray-700'} flex items-center justify-center gap-1.5 transition-colors shadow-sm`}
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <BookOpen className="h-4 w-4" />
+                      Explorar Biblioteca
+                    </motion.button>
+                  </div>
+
+                  <div className="mt-4">
+                    <div className={`rounded-lg p-2.5 ${isLightMode ? 'bg-blue-50 border border-blue-100' : 'bg-blue-900/10 border border-blue-800/20'} flex items-start gap-2`}>
+                      <div className="mt-0.5">
+                        <Smile className="h-4 w-4 text-blue-500" />
+                      </div>
+                      <p className="text-xs text-gray-600 dark:text-gray-300 flex-1">
+                        <span className="font-medium">Dica do Mentor:</span> Divida seu estudo em etapas menores e comemore cada progresso.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </motion.div>
             )}
