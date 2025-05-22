@@ -472,19 +472,21 @@ export default function SequenciaEstudosCard() {
         <AnimatePresence>
           {showCheckInAnimation && (
             <motion.div 
-              initial={{ opacity: 0, scale: 0.8, y: -20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.8, y: -20 }}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
               transition={{ duration: 0.5 }}
-              className="absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-[#FF6B00]/10 dark:bg-[#FF6B00]/20 p-4 rounded-xl backdrop-blur-sm border border-[#FF6B00]/30 z-50 flex flex-col items-center"
+              className="absolute inset-0 flex items-center justify-center z-50"
             >
-              <CheckCircle className="h-16 w-16 text-[#FF6B00] mb-2" />
-              <h4 className="text-lg font-semibold text-[#FF6B00]">Presença registrada!</h4>
-              <p className="text-sm text-gray-600 dark:text-gray-300">
-                {diasConsecutivos === 1 
-                  ? "Primeiro dia da sua jornada!" 
-                  : `${diasConsecutivos} dias consecutivos!`}
-              </p>
+              <div className="bg-[#FF6B00]/10 dark:bg-[#FF6B00]/20 p-4 rounded-xl backdrop-blur-sm border border-[#FF6B00]/30 flex flex-col items-center max-w-[80%]">
+                <CheckCircle className="h-16 w-16 text-[#FF6B00] mb-2" />
+                <h4 className="text-lg font-semibold text-[#FF6B00]">Presença registrada!</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-300">
+                  {diasConsecutivos === 1 
+                    ? "Primeiro dia da sua jornada!" 
+                    : `${diasConsecutivos} dias consecutivos!`}
+                </p>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
