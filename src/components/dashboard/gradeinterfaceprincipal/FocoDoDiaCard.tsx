@@ -549,13 +549,6 @@ export default function FocoDoDiaCard() {
     </motion.div>
   );
 }
-import React, { useState } from "react";
-import { X } from "lucide-react";
-import { useTheme } from "@/components/ThemeProvider";
-import { motion, AnimatePresence } from "framer-motion";
-import { Separator } from "@/components/ui/separator";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
