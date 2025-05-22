@@ -621,14 +621,7 @@ export default function FocoDoDiaCard() {
 
             {/* Histórico de Sessões de Foco */}
             {todasAtividadesConcluidas && (
-              <motion.div 
-                className={`mt-4 p-3 rounded-lg ${isLightMode ? 'bg-blue-50' : 'bg-blue-900/10'} border ${isLightMode ? 'border-blue-100' : 'border-blue-800/30'} cursor-pointer overflow-hidden group hover:pb-4`}
-                initial={{ height: "auto" }}
-                whileHover={{ 
-                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-                  borderColor: isLightMode ? "rgba(59, 130, 246, 0.5)" : "rgba(37, 99, 235, 0.5)"
-                }}
-              >
+              <div className={`mt-4 p-3 rounded-lg ${isLightMode ? 'bg-blue-50' : 'bg-blue-900/10'} border ${isLightMode ? 'border-blue-100' : 'border-blue-800/30'}`}>
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -639,11 +632,57 @@ export default function FocoDoDiaCard() {
                         Suas sessões de foco
                       </p>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <span className={`text-[10px] ${isLightMode ? 'text-blue-600' : 'text-blue-400'}`}>
-                        Hoje
+                    <span className={`text-[10px] ${isLightMode ? 'text-blue-600' : 'text-blue-400'}`}>
+                      Hoje
+                    </span>
+                  </div>
+                  
+                  <div className="space-y-1.5 mt-1">
+                    {/* Sessão atual completada */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <div className={`w-1.5 h-1.5 rounded-full ${isLightMode ? 'bg-green-500' : 'bg-green-400'}`}></div>
+                        <span className={`text-xs ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
+                          Sessão de {progressoAtividades}% concluída
+                        </span>
+                      </div>
+                      <span className={`text-[10px] ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                        Agora
                       </span>
-                      <div className="flex items-center gap-1 bg-blue-100 dark:bg-blue-900/30 px-1.5 py-0.5 rounded-full">
+                    </div>
+                    
+                    {/* Sessões anteriores simuladas */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <div className={`w-1.5 h-1.5 rounded-full ${isLightMode ? 'bg-blue-500' : 'bg-blue-400'}`}></div>
+                        <span className={`text-xs ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
+                          Revisão de Matemática
+                        </span>
+                      </div>
+                      <span className={`text-[10px] ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                        10:30
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <div className={`w-1.5 h-1.5 rounded-full ${isLightMode ? 'bg-blue-500' : 'bg-blue-400'}`}></div>
+                        <span className={`text-xs ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
+                          Leitura de Literatura
+                        </span>
+                      </div>
+                      <span className={`text-[10px] ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                        08:15
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-1 pt-1 border-t border-blue-200 dark:border-blue-800/30">
+                    <div className="flex items-center justify-between">
+                      <span className={`text-[10px] ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                        Sequência de foco
+                      </span>
+                      <div className="flex items-center gap-1">
                         <span className={`text-xs font-medium ${isLightMode ? 'text-blue-600' : 'text-blue-400'}`}>
                           3 sessões
                         </span>
@@ -651,71 +690,8 @@ export default function FocoDoDiaCard() {
                       </div>
                     </div>
                   </div>
-                  
-                  <AnimatePresence>
-                    <motion.div 
-                      className="space-y-1.5 mt-1 overflow-hidden"
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 0, opacity: 0 }}
-                      whileHover={{ height: "auto", opacity: 1 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      {/* Sessão atual completada */}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5">
-                          <div className={`w-1.5 h-1.5 rounded-full ${isLightMode ? 'bg-green-500' : 'bg-green-400'}`}></div>
-                          <span className={`text-xs ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
-                            Sessão de {progressoAtividades}% concluída
-                          </span>
-                        </div>
-                        <span className={`text-[10px] ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                          Agora
-                        </span>
-                      </div>
-                      
-                      {/* Sessões anteriores simuladas */}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5">
-                          <div className={`w-1.5 h-1.5 rounded-full ${isLightMode ? 'bg-blue-500' : 'bg-blue-400'}`}></div>
-                          <span className={`text-xs ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
-                            Revisão de Matemática
-                          </span>
-                        </div>
-                        <span className={`text-[10px] ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                          10:30
-                        </span>
-                      </div>
-                      
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5">
-                          <div className={`w-1.5 h-1.5 rounded-full ${isLightMode ? 'bg-blue-500' : 'bg-blue-400'}`}></div>
-                          <span className={`text-xs ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
-                            Leitura de Literatura
-                          </span>
-                        </div>
-                        <span className={`text-[10px] ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                          08:15
-                        </span>
-                      </div>
-                      
-                      <div className="mt-1 pt-1 border-t border-blue-200 dark:border-blue-800/30">
-                        <div className="flex items-center justify-between">
-                          <span className={`text-[10px] ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                            Sequência de foco
-                          </span>
-                          <motion.span 
-                            className={`text-xs italic ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}
-                            animate={{ opacity: 0.7 }}
-                            transition={{ duration: 1.5, repeat: Infinity, repeatType: "reverse" }}
-                          >
-                            Passe o mouse para detalhes
-                          </motion.span>
-                        </div>
-                      </div>
-                    </motion.div>
-                  </AnimatePresence>
                 </div>
-              </motion.div>
+              </div>
             )}
           </>
         ) : (
