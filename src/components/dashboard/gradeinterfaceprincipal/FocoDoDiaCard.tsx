@@ -540,11 +540,13 @@ export default function FocoDoDiaCard() {
       {/* Modal para definir o foco */}
       <AnimatePresence>
         {modalAberto && (
-          <DefinirFocoModal 
-            open={modalAberto}
-            onClose={() => setModalAberto(false)}
-            onSave={processarDefinicaoFoco}
-          />
+          <>
+            <DefinirFocoModal 
+              open={modalAberto}
+              onClose={() => setModalAberto(false)}
+              onSave={processarDefinicaoFoco}
+            />
+          </>
         )}
       </AnimatePresence>
     </motion.div>

@@ -164,15 +164,13 @@ export default function DefinirFocoModal({ open, onClose, onSave }: DefinirFocoM
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[550px] p-0 overflow-hidden">
         {/* Barra de progresso no topo */}
-        <div className="relative bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] h-2">
-          <div className="absolute top-0 left-0 h-1 bg-[#FF6B00]/10 w-full overflow-hidden">
-            <motion.div 
-              className="h-full bg-[#FF6B00]" 
-              initial={{ width: '0%' }}
-              animate={{ width: `${progressoFormulario}%` }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
-            />
-          </div>
+        <div className="relative bg-gradient-to-r from-[#FF6B00]/10 to-[#FF8C40]/10 h-2 overflow-hidden">
+          <motion.div 
+            className="absolute top-0 left-0 h-full bg-[#FF6B00]" 
+            initial={{ width: '0%' }}
+            animate={{ width: `${progressoFormulario}%` }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+          />
         </div>
 
         {/* Cabeçalho do modal */}
