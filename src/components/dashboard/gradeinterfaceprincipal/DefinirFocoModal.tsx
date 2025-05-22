@@ -465,17 +465,35 @@ return (
       <DialogContent className={`sm:max-w-[600px] max-h-[90vh] overflow-y-auto ${isLightMode ? 'bg-white' : 'bg-[#0A2540]'}`}>
         {/* Cabeçalho do Modal - Redesenhado com estilo premium */}
         <div className="flex justify-between items-center mb-7 relative">
+          {/* Efeitos de fundo */}
           <div className="absolute -top-10 -left-10 w-32 h-32 bg-gradient-to-br from-orange-500/10 to-orange-300/5 rounded-full blur-2xl pointer-events-none"></div>
+          <div className="absolute top-0 right-0 w-28 h-28 bg-gradient-to-bl from-blue-500/5 to-purple-300/10 rounded-full blur-xl pointer-events-none"></div>
           
-          <h2 className={`relative text-xl font-bold tracking-tight ${isLightMode ? 'text-gray-900' : 'text-white'} flex flex-col`}>
-            <span className="text-xs uppercase font-medium tracking-wider mb-1 text-[#FF6B00]/80">Epictus IA</span>
-            <span className="flex items-center gap-2">
-              Defina Seu Foco de Estudos
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-gradient-to-r from-[#FF6B00]/20 to-[#FF8C40]/20 text-[#FF6B00]">
-                Personalizado
-              </span>
-            </span>
-          </h2>
+          {/* Título Premium com ícone */}
+          <div className="flex items-center gap-3">
+            <div className={`flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br ${isLightMode ? 'from-amber-50 to-orange-100' : 'from-[#FF6B00]/20 to-[#FF8C40]/10'} border ${isLightMode ? 'border-orange-200/60' : 'border-[#FF6B00]/20'} shadow-sm`}>
+              <Target className="h-6 w-6 text-[#FF6B00]" />
+            </div>
+            
+            <div className="relative">
+              <h2 className={`relative text-xl font-bold tracking-tight ${isLightMode ? 'text-gray-900' : 'text-white'} flex flex-col`}>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs uppercase font-semibold tracking-wider bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] bg-clip-text text-transparent">EPICTUS IA</span>
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[0.65rem] font-medium bg-gradient-to-r from-blue-500/20 to-indigo-500/20 text-blue-600 dark:text-blue-400">
+                    PRO
+                  </span>
+                </div>
+                
+                <span className="flex items-center gap-2 mt-0.5">
+                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-200">Defina Seu Foco de Estudos</span>
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-gradient-to-r from-[#FF6B00]/20 to-[#FF8C40]/20 text-[#FF6B00] shadow-sm">
+                    Personalizado
+                  </span>
+                </span>
+              </h2>
+              <div className="absolute -bottom-2 left-0 right-0 h-0.5 bg-gradient-to-r from-[#FF6B00]/50 via-[#FF8C40]/30 to-transparent rounded-full"></div>
+            </div>
+          </div>
           
           <button 
             onClick={onClose}
