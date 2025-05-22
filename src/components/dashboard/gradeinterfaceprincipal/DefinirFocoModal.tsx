@@ -272,6 +272,8 @@ export default function DefinirFocoModal({ open, onClose, onSave }: DefinirFocoM
                     </div>
                   ))}
                 </div>
+
+import { motion, AnimatePresence } from "framer-motion";
               </div>
             </motion.div>
           )}
