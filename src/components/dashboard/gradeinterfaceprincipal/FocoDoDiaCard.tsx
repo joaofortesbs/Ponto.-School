@@ -621,9 +621,8 @@ export default function FocoDoDiaCard() {
 
             {/* Histórico de Sessões de Foco */}
             {todasAtividadesConcluidas && (
-              <motion.div 
-                className={`mt-4 p-3 rounded-lg ${isLightMode ? 'bg-blue-50' : 'bg-blue-900/10'} border ${isLightMode ? 'border-blue-100' : 'border-blue-800/30'} transition-all duration-300 ease-in-out relative overflow-hidden cursor-pointer group`}
-                whileHover={{ boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)" }}
+              <div 
+                className={`mt-4 p-3 rounded-lg ${isLightMode ? 'bg-blue-50' : 'bg-blue-900/10'} border ${isLightMode ? 'border-blue-100' : 'border-blue-800/30'} transition-all duration-300 ease-in-out relative overflow-hidden cursor-pointer group hover:shadow-md`}
               >
                 {/* Cabeçalho sempre visível */}
                 <div className="flex items-center justify-between">
@@ -648,21 +647,16 @@ export default function FocoDoDiaCard() {
                   </div>
                 </div>
                 
-                {/* Indicador de expansão */}
+                {/* Indicador de expansão - visível apenas quando não está em hover */}
                 <div className="flex justify-center mt-2 opacity-60 group-hover:opacity-0 transition-opacity">
-                  <motion.div 
-                    className="w-5 h-0.5 bg-blue-300 dark:bg-blue-700 rounded-full"
-                    animate={{ opacity: [0.6, 1, 0.6] }}
-                    transition={{ duration: 1.5, repeat: Infinity }}
+                  <div 
+                    className="w-5 h-0.5 bg-blue-300 dark:bg-blue-700 rounded-full animate-pulse"
                   />
                 </div>
                 
                 {/* Conteúdo expandido no hover */}
-                <motion.div 
-                  className="space-y-1.5 overflow-hidden"
-                  initial={{ height: 0, opacity: 0, marginTop: 0 }}
-                  whileHover={{ height: "auto", opacity: 1, marginTop: 10 }}
-                  transition={{ duration: 0.3 }}
+                <div 
+                  className="space-y-1.5 overflow-hidden max-h-0 opacity-0 group-hover:max-h-96 group-hover:opacity-100 group-hover:mt-2 transition-all duration-300 ease-in-out"
                 >
                   {/* Sessão atual completada */}
                   <div className="flex items-center justify-between">
@@ -716,8 +710,8 @@ export default function FocoDoDiaCard() {
                       </motion.span>
                     </div>
                   </div>
-                </motion.div>
-              </motion.div>
+                </div>
+              </div>
             )}
           </>
         ) : (
