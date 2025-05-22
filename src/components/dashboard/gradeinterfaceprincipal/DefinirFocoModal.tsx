@@ -114,58 +114,58 @@ const DefinirFocoModal: React.FC<DefinirFocoModalProps> = ({ open, onClose, onSa
       // Obter a data de hoje e da próxima semana para filtrar eventos relevantes
       const hoje = new Date();
       hoje.setHours(0, 0, 0, 0);
-      
+
       const proximaSemana = new Date(hoje);
       proximaSemana.setDate(hoje.getDate() + 7);
-      
+
       // Buscar todos os eventos
       const todosEventos = await getEventsByUserId(currentUserId);
-      
+
       // Filtrar apenas eventos futuros (hoje e próximos dias)
       const eventos = todosEventos.filter(evento => {
         if (!evento.startDate) return false;
         const dataEvento = new Date(evento.startDate);
         return dataEvento >= hoje;
       });
-      
+
       // Ordenar eventos por data
       eventos.sort((a, b) => {
         return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
       });
-      
+
       // Buscar tarefas
       const todasTarefas = await getTasksByUserId(currentUserId);
-      
+
       // Filtrar apenas tarefas não concluídas
       const tarefas = todasTarefas.filter(tarefa => 
         tarefa.status === 'todo' || tarefa.status === 'in-progress'
       );
-      
+
       // Ordenar tarefas por prioridade e prazo
       tarefas.sort((a, b) => {
         // Primeiro por prioridade (high > medium > low)
         const priorityOrder = { high: 3, medium: 2, low: 1 };
         const priorityDiff = (priorityOrder[b.priority as keyof typeof priorityOrder] || 0) - 
                             (priorityOrder[a.priority as keyof typeof priorityOrder] || 0);
-        
+
         if (priorityDiff !== 0) return priorityDiff;
-        
+
         // Depois por prazo, se ambos tiverem
         if (a.dueDate && b.dueDate) {
           return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
         }
-        
+
         // Colocar tarefas com prazo antes das sem prazo
         if (a.dueDate) return -1;
         if (b.dueDate) return 1;
-        
+
         return 0;
       });
 
       // Gerar disciplinas personalizadas com base nos eventos, tarefas e perfil
       let disciplinasPersonalizadas: { nome: string, tag: string }[] = [];
       const disciplinasMap = new Map<string, { nome: string, tag: string, contagem: number }>();
-      
+
       // Adicionar disciplinas padrão com contagem zero inicialmente
       disciplinasPadrao.forEach(d => {
         disciplinasMap.set(d.nome, { ...d, contagem: 0 });
@@ -208,7 +208,7 @@ const DefinirFocoModal: React.FC<DefinirFocoModalProps> = ({ open, onClose, onSa
             }
           });
       }
-      
+
       // Adicionar disciplinas do perfil do usuário, se disponíveis
       if (perfil && perfil.interests && Array.isArray(perfil.interests)) {
         perfil.interests.forEach(interesse => {
@@ -226,7 +226,7 @@ const DefinirFocoModal: React.FC<DefinirFocoModalProps> = ({ open, onClose, onSa
           }
         });
       }
-      
+
       // Converter mapa para array e ordenar por contagem e depois tag (para dar prioridade a itens da agenda)
       disciplinasPersonalizadas = Array.from(disciplinasMap.values())
         .sort((a, b) => {
@@ -234,7 +234,7 @@ const DefinirFocoModal: React.FC<DefinirFocoModalProps> = ({ open, onClose, onSa
           if (b.contagem !== a.contagem) {
             return b.contagem - a.contagem;
           }
-          
+
           // Depois por fonte (agenda > tarefas > perfil > padrão)
           const tagPrioridade = {
             "Da sua agenda": 4,
@@ -243,10 +243,10 @@ const DefinirFocoModal: React.FC<DefinirFocoModalProps> = ({ open, onClose, onSa
             "Recomendado": 1,
             "Popular": 0
           };
-          
+
           const aValor = tagPrioridade[a.tag as keyof typeof tagPrioridade] || 0;
           const bValor = tagPrioridade[b.tag as keyof typeof tagPrioridade] || 0;
-          
+
           return bValor - aValor;
         })
         .map(({ nome, tag }) => ({ nome, tag }));
@@ -283,12 +283,12 @@ const DefinirFocoModal: React.FC<DefinirFocoModalProps> = ({ open, onClose, onSa
         // Adicionar sugestões de eventos
         sugestoesPersonalizadas = [...sugestoesPersonalizadas, ...sugestoesDeEventos];
       }
-      
+
       // Se não houver sugestões personalizadas suficientes, usar as padrão
       if (sugestoesPersonalizadas.length < 3) {
         sugestoesPersonalizadas = [...sugestoesPersonalizadas, ...sugestoesFocoPadrao.slice(0, 4 - sugestoesPersonalizadas.length)];
       }
-      
+
       // Ordenar sugestões por prioridade
       sugestoesPersonalizadas.sort((a, b) => {
         const prioridadeOrdem = { alta: 3, média: 2, baixa: 1 };
@@ -375,7 +375,7 @@ const DefinirFocoModal: React.FC<DefinirFocoModalProps> = ({ open, onClose, onSa
 
   // Função para avançar para a próxima etapa
   const avancarEtapa = () => {
-    if (etapaAtual < 4) {
+    if (etapaAtual < 5) {
       setEtapaAtual(etapaAtual + 1);
     } else {
       finalizarDefinicao();
@@ -476,18 +476,19 @@ return (
               Etapa {etapaAtual} de 4
             </p>
             <p className={`text-sm ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
-              {
-                etapaAtual === 1 ? "Definindo Objetivo" :
-                etapaAtual === 2 ? "Selecionando Disciplinas" :
-                etapaAtual === 3 ? "Organizando Tarefas" :
-                "Finalização"
-              }
-            </p>
-          </div>
+                {
+                  etapaAtual === 1 ? "Definindo Objetivo" :
+                  etapaAtual === 2 ? "Selecionando Disciplinas" :
+                  etapaAtual === 3 ? "Definindo Tempo" :
+                  etapaAtual === 4 ? "Tarefas e Compromissos" :
+                  "Finalização"
+                }
+              </p>
+            </div>
           <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full">
             <div 
               className="h-full bg-[#FF6B00] rounded-full"
-              style={{ width: `${(etapaAtual / 4) * 100}%` }}
+              style={{ width: `${(etapaAtual / 5) * 100}%` }}
             ></div>
           </div>
         </div>
@@ -657,7 +658,12 @@ return (
                   />
                 </div>
               </div>
+            </div>
+          )}
 
+          {/* Etapa 4: Tarefas e compromissos */}
+          {etapaAtual === 4 && (
+            <div className="space-y-5">
               <div className="space-y-3">
                 <h3 className={`text-lg font-medium ${isLightMode ? 'text-gray-800' : 'text-white'}`}>
                   Há alguma tarefa ou prazo específico que precisa de atenção imediata?
@@ -792,8 +798,8 @@ return (
             </div>
           )}
 
-          {/* Etapa 4: Finalização e estado emocional */}
-          {etapaAtual === 4 && (
+          {/* Etapa 5: Finalização e estado emocional */}
+          {etapaAtual === 5 && (
             <div className="space-y-5">
               <div className="space-y-3">
                 <h3 className={`text-lg font-medium ${isLightMode ? 'text-gray-800' : 'text-white'}`}>
@@ -880,6 +886,44 @@ return (
               </div>
             </div>
           )}
+
+           {/* Etapa 4: Estado emocional (moved to step 5) */}
+           {etapaAtual === 4 && (
+            <div className="space-y-5">
+              <div className="space-y-3">
+                <h3 className={`text-lg font-medium ${isLightMode ? 'text-gray-800' : 'text-white'}`}>
+                  Como você está se sentindo hoje?
+                </h3>
+                <p className={`text-sm ${isLightMode ? 'text-gray-600' : 'text-gray-400'}`}>
+                  Isso nos ajudará a criar dicas personalizadas para suas sessões de estudo
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {["Motivado(a)", "Um pouco perdido(a)", "Cansado(a)", "Ansioso(a)"].map((estado) => (
+                    <button
+                      key={estado}
+                      onClick={() => setEstadoAtual(estado)}
+                      className={`flex items-center p-3 rounded-lg border ${
+                        estadoAtual === estado
+                          ? `${isLightMode ? 'border-[#FF6B00] bg-orange-50' : 'border-[#FF6B00] bg-[#FF6B00]/10'}`
+                          : `${isLightMode ? 'border-gray-200 hover:border-gray-300' : 'border-gray-700 hover:border-gray-600'}`
+                      } transition-all`}
+                    >
+                      <div className={`w-5 h-5 rounded-full flex items-center justify-center border ${
+                        estadoAtual === estado
+                          ? 'border-[#FF6B00] bg-[#FF6B00]'
+                          : `${isLightMode ? 'border-gray-300' : 'border-gray-600'}`
+                      }`}>
+                        {estadoAtual === estado && <Check className="h-3 w-3 text-white" />}
+                      </div>
+                      <span className={`ml-3 ${isLightMode ? 'text-gray-800' : 'text-gray-200'}`}>
+                        {estado}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Botões de navegação */}
@@ -904,7 +948,7 @@ return (
               (etapaAtual === 2 && disciplinasSelecionadas.length === 0)
             }
           >
-            {etapaAtual < 4 ? "Continuar" : "Definir Foco"}
+            {etapaAtual < 5 ? "Continuar" : "Definir Foco"}
           </Button>
         </div>
       </DialogContent>

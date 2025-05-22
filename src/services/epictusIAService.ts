@@ -89,11 +89,15 @@ export const generateFocusSuggestions = async (userId: string, focusData?: any):
     const { getUserFullProfile } = await import('./userProfileService');
     const userProfile = await getUserFullProfile();
 
+    // Incluir tarefas selecionadas pelo usuário
+    const tarefasSelecionadasPeloUsuario = focusData?.tarefasSelecionadas || [];
+
     // Formatar dados para a solicitação à IA
     const promptData = {
       focusData,
       events: userEvents,
       tasks: userTasks,
+      selectedTasks: tarefasSelecionadasPeloUsuario,
       profile: userProfile,
       currentDate: new Date().toISOString()
     };
@@ -817,7 +821,7 @@ function extrairDisciplinasFrequentes(eventos: any[], tarefas: any[]): { nome: s
 }
 
 // Função auxiliar para extrair tarefas urgentes
-function extrairTarefasUrgentes(tarefas: any[]): any[] {
+function extrairTarefasUrgentes(tarefas: any[], tarefasSelecionadas?: string[]): any[] {
   const hoje = new Date();
   hoje.setHours(0, 0, 0, 0);
 
@@ -827,7 +831,8 @@ function extrairTarefasUrgentes(tarefas: any[]): any[] {
   const umaSemana = new Date(hoje);
   umaSemana.setDate(hoje.getDate() + 7);
 
-  return tarefas
+  // Primeiro, extrair tarefas com base na urgência e prazos
+  let tarefasUrgentes = tarefas
     .filter(tarefa => {
       // Tarefas com prioridade alta
       if (tarefa.priority === 'high') return true;
@@ -849,15 +854,38 @@ function extrairTarefasUrgentes(tarefas: any[]): any[] {
       prazo: tarefa.dueDate ? new Date(tarefa.dueDate).toISOString() : null,
       categoria: tarefa.category || null
     }));
+    
+  // Se temos tarefas selecionadas pelo usuário, verificar quais já estão incluídas
+  if (tarefasSelecionadas && tarefasSelecionadas.length > 0) {
+    // Adicionar tarefas selecionadas que não estão nos resultados automáticos
+    const titulosExistentes = new Set(tarefasUrgentes.map(t => t.titulo.toLowerCase()));
+    
+    const tarefasAdicionais = tarefasSelecionadas
+      .filter(titulo => !titulosExistentes.has(titulo.toLowerCase()))
+      .map((titulo, index) => ({
+        id: `manual-${index}`,
+        titulo: titulo,
+        descricao: "Tarefa selecionada manualmente",
+        prioridade: "high",
+        prazo: hoje.toISOString(),
+        categoria: null
+      }));
+      
+    // Combinar todas as tarefas
+    tarefasUrgentes = [...tarefasUrgentes, ...tarefasAdicionais];
+  }
+  
+  return tarefasUrgentes;
 }
 
 // Função auxiliar para extrair próximos eventos importantes
-function extrairProximosEventos(eventos: any[]): any[] {
+function extrairProximosEventos(eventos: any[], tarefasSelecionadas?: string[]): any[] {
   const hoje = new Date();
   const doisDias = new Date(hoje);
   doisDias.setDate(hoje.getDate() + 2);
 
-  return eventos
+  // Extrair eventos próximos
+  let eventosProximos = eventos
     .filter(evento => {
       if (!evento.startDate) return false;
 
@@ -871,6 +899,28 @@ function extrairProximosEventos(eventos: any[]): any[] {
       data: evento.startDate,
       disciplina: evento.discipline || null,
       tipo: evento.type || "evento"
-    }))
-    .slice(0, 5); // Limitar aos 5 próximos eventos
+    }));
+    
+  // Se temos tarefas selecionadas pelo usuário, verificar quais eventos já estão incluídos
+  if (tarefasSelecionadas && tarefasSelecionadas.length > 0) {
+    // Adicionar eventos selecionados que não estão nos resultados automáticos
+    const titulosExistentes = new Set(eventosProximos.map(e => e.titulo.toLowerCase()));
+    
+    const eventosAdicionais = tarefasSelecionadas
+      .filter(titulo => titulo.toLowerCase().includes("event") || titulo.toLowerCase().includes("aula") || titulo.toLowerCase().includes("palestra"))
+      .filter(titulo => !titulosExistentes.has(titulo.toLowerCase()))
+      .map((titulo, index) => ({
+        id: `manual-event-${index}`,
+        titulo: titulo,
+        descricao: "Evento selecionado manualmente",
+        data: hoje.toISOString(),
+        disciplina: null,
+        tipo: "evento"
+      }));
+      
+    // Combinar todos os eventos
+    eventosProximos = [...eventosProximos, ...eventosAdicionais];
+  }
+    
+  return eventosProximos.slice(0, 5); // Limitar aos 5 próximos eventos
 }

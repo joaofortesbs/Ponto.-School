@@ -366,18 +366,35 @@ export default function FocoDoDiaCard() {
         );
         
         if (tarefasParaAdicionar.length > 0) {
-          const tarefasAdicionais = tarefasParaAdicionar.map((tarefa, index) => ({
-            id: Date.now() + 1000 + index,
-            titulo: tarefa,
-            tipo: "tarefa" as "tarefa" | "revisao" | "exercicio" | "video",
-            tempo: `${Math.floor(Math.random() * 30) + 15}min`,
-            prazo: "hoje",
-            urgente: false,
-            concluido: false,
-            progresso: 0
-          }));
+          const tarefasAdicionais = tarefasParaAdicionar.map((tarefa, index) => {
+            // Determinar se parece ser um evento (aula, prova, etc) para definir tipo
+            const ehEvento = 
+              tarefa.toLowerCase().includes("aula") || 
+              tarefa.toLowerCase().includes("prova") || 
+              tarefa.toLowerCase().includes("evento") || 
+              tarefa.toLowerCase().includes("palestra");
+              
+            // Definir urgência com base em palavras-chave
+            const ehUrgente = 
+              tarefa.toLowerCase().includes("urgent") || 
+              tarefa.toLowerCase().includes("importante") ||
+              tarefa.toLowerCase().includes("prazo") ||
+              tarefa.toLowerCase().includes("hoje") ||
+              tarefa.toLowerCase().includes("amanhã");
+              
+            return {
+              id: Date.now() + 1000 + index,
+              titulo: tarefa,
+              tipo: ehEvento ? "video" : "tarefa" as "tarefa" | "revisao" | "exercicio" | "video",
+              tempo: `${Math.floor(Math.random() * 30) + 15}min`,
+              prazo: ehUrgente ? "hoje" : "esta semana",
+              urgente: ehUrgente,
+              concluido: false,
+              progresso: 0
+            };
+          });
           
-          // Adicionar as novas tarefas ao início da lista
+          // Adicionar as novas tarefas ao início da lista (prioridade)
           novasAtividades = [...tarefasAdicionais, ...novasAtividades];
         }
       }
