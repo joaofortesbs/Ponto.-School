@@ -151,9 +151,9 @@ export default function DefinirFocoModal({ open, onClose, onSave }: DefinirFocoM
     
     if (objetivo) progresso += 1;
     if (objetivoPersonalizado) progresso += 1;
-    if (disciplinas.length > 0) progresso += 1;
+    if (disciplinasSelecionadas.length > 0) progresso += 1;
     if (tempoEstudo > 0) progresso += 1;
-    if (estado) progresso += 1;
+    if (estadoEstudo) progresso += 1;
     
     return Math.min(Math.round((progresso / total) * 100), 100);
   };
