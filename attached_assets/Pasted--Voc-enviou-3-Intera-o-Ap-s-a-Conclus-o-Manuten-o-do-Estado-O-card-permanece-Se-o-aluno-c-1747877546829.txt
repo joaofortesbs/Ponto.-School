@@ -1,0 +1,56 @@
+
+Você enviou
+3. Interação (Após a Conclusão):
+Manutenção do Estado: O card permanece Se o aluno completou o "Foco do Dia", isso conta para a sua sequência de estudos consecutivos no estado "Concluído" pelo restante daquele dia. No dia seguinte (ou na próxima sessão de login), ele (se a lógica da sequência estiver vinculada à conclusão das atividades diárias e não apenas ao login).
+O card volta ao estado de "Definir Foco" ou já vem com o novo foco sugerido pelo IA.
+"Sua Sequência de Estudos!" é atualizado (se a sequência aumentou).
+GamCliques nos Novos Botões:** Levam o usuário para as seções/funcionalidades correspondentes.
+ificação (Pontos e Badges):**
+Recompensa Imediata:
+AoSem Mais Checkboxes: As atividades concluídas não são mais interativas (já foram marcadas).
+Ex marcar a última tarefa ou ao ver o card de "Foco do Dia Concluído!", o aluno pode receber:emplo de Fluxo de Interação (Concluindo a Última Tarefa):
+Context
+* Ponto Coins: Um número específico de Ponto Coins por completar o foco diário. (o: Alice está no card "Seu Foco Hoje: Simulado Final de Biologia". Ela já marcou "ReEx: "+50 Ponto Coins!"). A notificação pode aparecer brevemente sobre o card.
+* Badgevisar resumo..." e "Fazer Simulado..." como concluídos. Falta apenas "Discutir dúvidas do simulado no (Ocasional): Se o aluno atingir marcos específicos (ex: "Completou o Foco do Dia Grupo de Estudos de Biologia".
+Ação: Alice acessa o grupo, discute as por 7 dias seguidos", "Primeiro Foco do Dia Concluído"), ele recebe uma badge.
+dúvidas e, ao retornar ao Painel, clica no último checkbox vazio.
+Reação Imediata:
+O checkbox é preenchido com uma animação de "check" mais elaborada e um bril* Um modal ou notificação maior pode aparecer para exibir a nova badge conquistada.
+5ho sutil.
+* Opcional: Um som curto e positivo (ex: "ding!").
+. Comportamento do Card no Dia Seguinte:
+*   Ao acessar o Painel no dia*   O card "Seu Foco do Dia" *transiciona suavemente* para o estado "Concluído seguinte (ou após um período definido), o card "Seu Foco do Dia" volta ao estado de "Def":
+    *   O título muda para "Foco do Dia: **CONCLUÍDO!** 🎉inir Foco" ou já aparece *preenchido automaticamente* pelo Mentor IA com as prioridades do novo dia, depend".
+    *   A lista de atividades pode ser substituída por:
+        *   Uma mensagem: "Parabénsendo da inteligência e autonomia que você quer dar ao sistema.
+*   A *melhor abordagem* é, Alice! Você completou todas as atividades do seu foco de hoje com sucesso!"
+        *   Um resumo: que o Mentor IA *já sugira* um novo foco, mas o aluno *sempre* tenha a opção de " "3 atividades concluídas. Próximo foco sugerido: Revisão de Química Orgânica (Amanhã)."Redefinir Foco".
+Use code with caution.
+Fluxo de Interação (Resumido – Após Concluir Todas
+* A sugestão do Mentor IA muda para: "Você merece uma pausa! Que tal ouvir um podcast as Tarefas):
+Aluno marca a última tarefa como concluída.
+Card "Seu F relaxante na Biblioteca?"
+* Novos botões aparecem: "Planejar Foco de Amanhoco do Dia" se transforma:
+Animação de parabéns.
+Título eã" e "Explorar Biblioteca".
+Opcional: Uma breve animação de confetes virtu mensagem de conclusão.
+Novos botões ("Definir Novo Foco", "Explorar Recomendações").
+Recebe Ponto Coins/Badges (se aplicável).
+Card "ais aparece e some rapidamente sobre o card.
+Próximas Ações de Alice:
+Sua Sequência de Estudos!" é atualizado.
+No dia seguinte, o card "Seu Foco do* Ela pode clicar em "Planejar Foco de Amanhã" e já deixar suas prioridades definidas. Dia" apresenta um novo conjunto de atividades (automaticamente ou após o aluno interagir para definir o foco).
+D
+* Ou pode clicar em "Explorar Biblioteca" para encontrar o podcast sugerido.
+* Ou simplesmenteores Solucionadas com este Fluxo de Conclusão:
+**Falta de Reconhecimento/ fechar a plataforma, sentindo-se realizada.
+No Dia Seguinte:
+Motivação:** A animação, mensagem de parabéns e recompensas (pontos/badges) fornecem um Ao acessar o Painel, o card "Seu Foco do Dia" estará com o novo foco e atividades (oufeedback positivo imediato, reforçando o comportamento desejado.
+"E agora? O que eu faço?": no estado vazio, se ela não planejou e o IA ainda não sugeriu).
+Dores Solucionadas por Os novos botões de ação ("Definir Novo Foco", "Explorar Recomendações") oferecem * este Fluxo de Conclusão:
+Falta de Reconhecimento/Motivação: Odirecionamento claro* para os próximos passos, evitando que o aluno se sinta perdido após concluir as tarefas.
+feedback positivo e a sensação de "missão cumprida" motivam o aluno.
+"E agora? Sensação de Estagnação: Ver o card se transformar e as sequências aumentarem dá uma clara"😘 O card oferece sugestões claras do que fazer em seguida (planejar o próximo dia, explorar outros conteúdos, sensação de progresso e evolução.
+Este fluxo de conclusão torna o card "Seu Foco do Dia relaxar).
+Desorganização (Curto Prazo): Ajuda o aluno a encerrar o ciclo de estudos do dia de forma organizada.
+Este fluxo de conclusão transforma o card "Seu Foco do Dia" em uma" uma ferramenta completa, que não apenas ajuda o aluno a começar seus estudos, mas também o motiva e o guia após a conclusão das suas prioridades diárias. ferramenta completa, que não apenas direciona o início dos estudos, mas também celebra o progresso e *
