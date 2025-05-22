@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Target, Clock, BookOpen, Play, Check, ChevronRight, Flame, Trophy, PlusCircle, Settings, Smile, HelpCircle, BarChart2 } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
@@ -871,3 +872,37 @@ export default function FocoDoDiaCard() {
           </>
         )}
       </AnimatePresence>
+    </motion.div>
+    
+    {/* Modal de parabéns centralizado na tela quando todas as atividades são concluídas */}
+    <AnimatePresence>
+      {todasAtividadesConcluidas && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+        >
+          <motion.div 
+            className="bg-slate-800/90 p-6 rounded-xl shadow-lg border border-orange-500/20 max-w-xs"
+            initial={{ scale: 0.8, y: 20 }}
+            animate={{ scale: 1, y: 0 }}
+            exit={{ scale: 0.8, y: 20 }}
+            transition={{ type: "spring", bounce: 0.4 }}
+          >
+            <div className="flex flex-col items-center text-center">
+              <Trophy className="h-16 w-16 text-orange-500 mb-3" />
+              <h2 className="text-xl font-bold text-white mb-2">Parabéns!</h2>
+              <p className="text-gray-300 mb-4">Você concluiu todas as tarefas do seu foco de hoje!</p>
+              
+              <div className="bg-orange-500/20 px-4 py-2 rounded-full">
+                <span className="text-orange-400 font-medium">+50 Ponto Coins!</span>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+    </>
+  );
+}
