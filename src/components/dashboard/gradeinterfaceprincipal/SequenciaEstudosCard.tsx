@@ -1,14 +1,27 @@
-import React, { useState, useEffect } from "react";
-import { Flame, Award, TrendingUp, ExternalLink, Star, Zap, Trophy, Clock } from "lucide-react";
-import { motion } from "framer-motion";
+
+import React, { useState, useEffect, useRef } from "react";
+import { Flame, Award, TrendingUp, ExternalLink, Star, Zap, Trophy, Clock, CheckCircle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/components/ThemeProvider";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/lib/supabase";
+import { Progress } from "@/components/ui/progress";
 
-// Interface para o tipo de evento de streak futuramente
+// Interface para o tipo de evento de streak
 interface StreakEvent {
   type: 'login' | 'study' | 'task' | 'challenge';
-  date: Date;
+  date: string;
   duration?: number;
+}
+
+interface StreakData {
+  diasConsecutivos: number;
+  recordeDias: number;
+  diasParaProximoNivel: number;
+  metaDiaria: number;
+  proximaRecompensa: string;
+  ultimoCheckIn: string | null;
+  eventos: StreakEvent[];
 }
 
 export default function SequenciaEstudosCard() {
@@ -22,33 +35,370 @@ export default function SequenciaEstudosCard() {
   const [metaDiaria, setMetaDiaria] = useState<number>(5);
   const [proximaRecompensa, setProximaRecompensa] = useState<string>("Badge Iniciante");
   const [streakEvents, setStreakEvents] = useState<StreakEvent[]>([]);
+  const [ultimoCheckIn, setUltimoCheckIn] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   
-  // Função para carregar dados do usuário
-  const carregarDadosUsuario = () => {
-    // Aqui você poderá buscar dados reais do backend no futuro
-    // Por enquanto, vamos verificar se existem dados salvos localmente
-    const dadosSalvos = localStorage.getItem('streakData');
-    
-    if (dadosSalvos) {
-      try {
-        const dados = JSON.parse(dadosSalvos);
-        setDiasConsecutivos(dados.diasConsecutivos || 0);
-        setRecordeDias(dados.recordeDias || 0);
-        setDiasParaProximoNivel(dados.diasParaProximoNivel || 3);
-        setMetaDiaria(dados.metaDiaria || 5);
-        setProximaRecompensa(dados.proximaRecompensa || "Badge Iniciante");
-        setStreakEvents(dados.eventos || []);
-      } catch (error) {
-        console.error("Erro ao carregar dados da sequência:", error);
+  // Estado para o cronômetro
+  const [tempoRestante, setTempoRestante] = useState<{
+    horas: number;
+    minutos: number;
+    segundos: number;
+  }>({ horas: 0, minutos: 0, segundos: 0 });
+  
+  // Estado para controlar se o usuário já fez check-in hoje
+  const [checkInHoje, setCheckInHoje] = useState<boolean>(false);
+  
+  // Estado para animação do check-in
+  const [showCheckInAnimation, setShowCheckInAnimation] = useState<boolean>(false);
+  
+  // Referência para o timer do cronômetro
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Função para carregar o userId
+  const carregarUserId = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.id) {
+        setUserId(session.user.id);
+        return session.user.id;
       }
+      return null;
+    } catch (error) {
+      console.error("Erro ao obter ID do usuário:", error);
+      return null;
     }
   };
-
+  
+  // Função para carregar dados da sequência de estudos do usuário
+  const carregarDadosStreakUsuario = async (id: string) => {
+    try {
+      // Primeiro tenta buscar do Supabase
+      const { data, error } = await supabase
+        .from('user_streak')
+        .select('*')
+        .eq('user_id', id)
+        .single();
+      
+      if (error) {
+        console.log("Dados não encontrados na API, carregando do localStorage:", error);
+        // Se não conseguir, tenta carregar do localStorage
+        carregarDadosLocais();
+        return;
+      }
+      
+      if (data) {
+        const streakData: StreakData = {
+          diasConsecutivos: data.dias_consecutivos || 0,
+          recordeDias: data.recorde_dias || 0,
+          diasParaProximoNivel: data.dias_para_proximo_nivel || 3,
+          metaDiaria: data.meta_diaria || 5,
+          proximaRecompensa: data.proxima_recompensa || "Badge Iniciante",
+          ultimoCheckIn: data.ultimo_check_in,
+          eventos: data.eventos || []
+        };
+        
+        atualizarEstadosComDados(streakData);
+        
+        // Verifica se já fez check-in hoje
+        verificarCheckInDeHoje(data.ultimo_check_in);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar dados da sequência:", error);
+      // Fallback para dados locais
+      carregarDadosLocais();
+    }
+  };
+  
+  // Função para carregar dados locais
+  const carregarDadosLocais = () => {
+    try {
+      const dadosSalvos = localStorage.getItem('streakData');
+      
+      if (dadosSalvos) {
+        const dados = JSON.parse(dadosSalvos);
+        atualizarEstadosComDados(dados);
+        
+        // Verifica se já fez check-in hoje
+        verificarCheckInDeHoje(dados.ultimoCheckIn);
+      } else {
+        // Inicializa os dados se não existirem
+        const dadosIniciais: StreakData = {
+          diasConsecutivos: 0,
+          recordeDias: 0,
+          diasParaProximoNivel: 3,
+          metaDiaria: 5,
+          proximaRecompensa: "Badge Iniciante",
+          ultimoCheckIn: null,
+          eventos: []
+        };
+        
+        // Salva os dados iniciais
+        localStorage.setItem('streakData', JSON.stringify(dadosIniciais));
+      }
+    } catch (error) {
+      console.error("Erro ao carregar dados da sequência do localStorage:", error);
+    }
+  };
+  
+  // Função para atualizar os estados com os dados carregados
+  const atualizarEstadosComDados = (dados: StreakData) => {
+    setDiasConsecutivos(dados.diasConsecutivos);
+    setRecordeDias(dados.recordeDias);
+    setDiasParaProximoNivel(dados.diasParaProximoNivel);
+    setMetaDiaria(dados.metaDiaria);
+    setProximaRecompensa(dados.proximaRecompensa);
+    setUltimoCheckIn(dados.ultimoCheckIn);
+    setStreakEvents(dados.eventos || []);
+  };
+  
+  // Verifica se o usuário já fez check-in hoje
+  const verificarCheckInDeHoje = (ultimoCheckIn: string | null) => {
+    if (!ultimoCheckIn) {
+      setCheckInHoje(false);
+      return;
+    }
+    
+    const hoje = new Date().toISOString().split('T')[0];
+    const ultimoCheck = new Date(ultimoCheckIn).toISOString().split('T')[0];
+    
+    setCheckInHoje(hoje === ultimoCheck);
+    
+    // Se já fez check-in hoje, inicia o cronômetro
+    if (hoje === ultimoCheck) {
+      iniciarCronometro();
+    }
+  };
+  
+  // Função para salvar os dados da sequência
+  const salvarDadosSequencia = async (dados: StreakData) => {
+    try {
+      // Salva no localStorage como fallback
+      localStorage.setItem('streakData', JSON.stringify(dados));
+      
+      if (userId) {
+        // Salva no Supabase
+        const { error } = await supabase
+          .from('user_streak')
+          .upsert({
+            user_id: userId,
+            dias_consecutivos: dados.diasConsecutivos,
+            recorde_dias: dados.recordeDias,
+            dias_para_proximo_nivel: dados.diasParaProximoNivel,
+            meta_diaria: dados.metaDiaria,
+            proxima_recompensa: dados.proximaRecompensa,
+            ultimo_check_in: dados.ultimoCheckIn,
+            eventos: dados.eventos
+          });
+        
+        if (error) {
+          console.error("Erro ao salvar dados no Supabase:", error);
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao salvar dados da sequência:", error);
+    }
+  };
+  
+  // Função para fazer check-in
+  const realizarCheckIn = async () => {
+    try {
+      const agora = new Date();
+      const dataCheckIn = agora.toISOString();
+      
+      // Verifica se já fez check-in hoje
+      const hoje = agora.toISOString().split('T')[0];
+      const ultimoCheck = ultimoCheckIn ? new Date(ultimoCheckIn).toISOString().split('T')[0] : null;
+      
+      if (hoje === ultimoCheck) {
+        console.log("Já fez check-in hoje!");
+        return;
+      }
+      
+      // Cria novo evento
+      const novoEvento: StreakEvent = {
+        type: 'login',
+        date: dataCheckIn,
+      };
+      
+      let novosDiasConsecutivos = diasConsecutivos;
+      
+      // Verifica se o último check-in foi no dia anterior
+      if (ultimoCheckIn) {
+        const ultimaData = new Date(ultimoCheckIn);
+        const ontem = new Date(agora);
+        ontem.setDate(ontem.getDate() - 1);
+        
+        const ultimaDataStr = ultimaData.toISOString().split('T')[0];
+        const ontemStr = ontem.toISOString().split('T')[0];
+        
+        if (ultimaDataStr === ontemStr || hoje === ultimaDataStr) {
+          // Check-in consecutivo
+          novosDiasConsecutivos += 1;
+        } else {
+          // Quebrou a sequência
+          novosDiasConsecutivos = 1;
+        }
+      } else {
+        // Primeiro check-in
+        novosDiasConsecutivos = 1;
+      }
+      
+      // Atualiza o recorde se necessário
+      const novoRecorde = Math.max(recordeDias, novosDiasConsecutivos);
+      
+      // Calcula dias para próximo nível (simplificado)
+      let novosDiasParaProximoNivel = 3;
+      let novaRecompensa = "Badge Iniciante";
+      
+      if (novosDiasConsecutivos >= 3 && novosDiasConsecutivos < 7) {
+        novosDiasParaProximoNivel = 7 - novosDiasConsecutivos;
+        novaRecompensa = "Badge Constante";
+      } else if (novosDiasConsecutivos >= 7 && novosDiasConsecutivos < 15) {
+        novosDiasParaProximoNivel = 15 - novosDiasConsecutivos;
+        novaRecompensa = "Badge Dedicado";
+      } else if (novosDiasConsecutivos >= 15 && novosDiasConsecutivos < 30) {
+        novosDiasParaProximoNivel = 30 - novosDiasConsecutivos;
+        novaRecompensa = "Badge Mestre";
+      } else if (novosDiasConsecutivos >= 30) {
+        novosDiasParaProximoNivel = 0;
+        novaRecompensa = "Badge Lendário";
+      }
+      
+      // Atualiza os estados
+      setDiasConsecutivos(novosDiasConsecutivos);
+      setRecordeDias(novoRecorde);
+      setDiasParaProximoNivel(novosDiasParaProximoNivel);
+      setProximaRecompensa(novaRecompensa);
+      setUltimoCheckIn(dataCheckIn);
+      setStreakEvents([...streakEvents, novoEvento]);
+      setCheckInHoje(true);
+      
+      // Mostra animação de check-in
+      setShowCheckInAnimation(true);
+      setTimeout(() => setShowCheckInAnimation(false), 3000);
+      
+      // Salva os dados
+      const novosDados: StreakData = {
+        diasConsecutivos: novosDiasConsecutivos,
+        recordeDias: novoRecorde,
+        diasParaProximoNivel: novosDiasParaProximoNivel,
+        metaDiaria: metaDiaria,
+        proximaRecompensa: novaRecompensa,
+        ultimoCheckIn: dataCheckIn,
+        eventos: [...streakEvents, novoEvento]
+      };
+      
+      await salvarDadosSequencia(novosDados);
+      
+      // Inicia o cronômetro
+      iniciarCronometro();
+      
+    } catch (error) {
+      console.error("Erro ao fazer check-in:", error);
+    }
+  };
+  
+  // Função para calcular o tempo restante até meia-noite
+  const calcularTempoRestante = () => {
+    const agora = new Date();
+    const meianoite = new Date();
+    meianoite.setHours(24, 0, 0, 0);
+    
+    const diferencaMs = meianoite.getTime() - agora.getTime();
+    
+    // Convertendo para horas, minutos e segundos
+    const horas = Math.floor(diferencaMs / (1000 * 60 * 60));
+    const minutos = Math.floor((diferencaMs % (1000 * 60 * 60)) / (1000 * 60));
+    const segundos = Math.floor((diferencaMs % (1000 * 60)) / 1000);
+    
+    return { horas, minutos, segundos, totalMs: diferencaMs };
+  };
+  
+  // Função para iniciar o cronômetro
+  const iniciarCronometro = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+    
+    // Calcula tempo inicial
+    const tempoInicial = calcularTempoRestante();
+    setTempoRestante({
+      horas: tempoInicial.horas,
+      minutos: tempoInicial.minutos,
+      segundos: tempoInicial.segundos
+    });
+    
+    // Inicia o timer
+    timerRef.current = setInterval(() => {
+      const tempo = calcularTempoRestante();
+      
+      setTempoRestante({
+        horas: tempo.horas,
+        minutos: tempo.minutos,
+        segundos: tempo.segundos
+      });
+      
+      // Se chegou à meia-noite, reseta o check-in
+      if (tempo.totalMs <= 0) {
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
+        setCheckInHoje(false);
+      }
+    }, 1000);
+  };
+  
   // Carregar dados ao montar o componente
   useEffect(() => {
-    carregarDadosUsuario();
+    const inicializar = async () => {
+      const id = await carregarUserId();
+      if (id) {
+        await carregarDadosStreakUsuario(id);
+      } else {
+        carregarDadosLocais();
+      }
+    };
+    
+    inicializar();
+    
+    // Limpa o timer ao desmontar
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
   }, []);
-
+  
+  // Verifica se a tabela existe, se não, tenta criar
+  useEffect(() => {
+    const verificarECriarTabela = async () => {
+      if (userId) {
+        try {
+          // Verifica se a tabela user_streak existe
+          const { error } = await supabase
+            .from('user_streak')
+            .select('*')
+            .limit(1);
+          
+          if (error && error.code === '42P01') { // código de erro para tabela não existente
+            console.log("Tabela user_streak não existe, criando...");
+            // A tabela será criada via migração
+          }
+        } catch (error) {
+          console.error("Erro ao verificar tabela:", error);
+        }
+      }
+    };
+    
+    verificarECriarTabela();
+  }, [userId]);
+  
+  // Função para formatar o tempo
+  const formatarTempo = (valor: number): string => {
+    return valor < 10 ? `0${valor}` : `${valor}`;
+  };
+  
   // Cálculo da porcentagem de progresso para o próximo nível
   const calcularProgresso = () => {
     if (diasConsecutivos === 0 && diasParaProximoNivel === 0) return 0;
@@ -62,7 +412,7 @@ export default function SequenciaEstudosCard() {
       transition={{ duration: 0.2 }}
       className="h-full w-full rounded-xl overflow-hidden border border-gray-100 dark:border-gray-800 shadow-xl bg-white dark:bg-gradient-to-br dark:from-[#0c1425] dark:to-[#0a1a2e] relative flex flex-col"
     >
-      {/* Elementos decorativos de fundo - removidos efeitos de blur e grade */}
+      {/* Elementos decorativos de fundo */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {/* Partículas decorativas */}
         <div className="absolute top-1/4 right-10 w-2 h-2 bg-[#FF6B00]/40 rounded-full"></div>
@@ -70,7 +420,7 @@ export default function SequenciaEstudosCard() {
         <div className="absolute bottom-1/4 right-1/4 w-2 h-2 bg-purple-400/30 dark:bg-purple-400/20 rounded-full"></div>
       </div>
 
-      {/* Header elegante com gradiente - estilo igual ao FocoDoDiaCard */}
+      {/* Header elegante com gradiente e botão de check-in */}
       <div className={`p-5 ${isLightMode ? 'bg-gradient-to-r from-orange-50 to-orange-100/50' : 'bg-gradient-to-r from-[#0A2540]/80 to-[#001427]'} border-b ${isLightMode ? 'border-orange-100' : 'border-[#FF6B00]/20'}`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -87,20 +437,59 @@ export default function SequenciaEstudosCard() {
             </div>
           </div>
 
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className={`text-xs font-medium ${isLightMode ? 'text-gray-500 hover:text-gray-700 hover:bg-gray-100' : 'text-gray-300 hover:text-white hover:bg-white/5'}`}
-          >
-            <span>Detalhes</span>
-            <ExternalLink className="h-3 w-3 ml-1" />
-          </Button>
+          {/* Botão de check-in diário ou cronômetro */}
+          {!checkInHoje ? (
+            <Button 
+              onClick={realizarCheckIn}
+              variant="ghost" 
+              size="sm" 
+              className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 
+                ${isLightMode 
+                  ? 'bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20' 
+                  : 'bg-[#FF6B00]/20 text-[#FF6B00] hover:bg-[#FF6B00]/30'}`}
+            >
+              <CheckCircle className="h-3.5 w-3.5" />
+              <span>Marcar presença</span>
+            </Button>
+          ) : (
+            <div className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold 
+              ${isLightMode 
+                ? 'bg-gray-100 text-gray-700' 
+                : 'bg-[#14253d] text-gray-300'}`}>
+              <Clock className="h-3.5 w-3.5 text-[#FF6B00]" />
+              <span>
+                {formatarTempo(tempoRestante.horas)}:
+                {formatarTempo(tempoRestante.minutos)}:
+                {formatarTempo(tempoRestante.segundos)}
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Conteúdo principal com design premium */}
       <div className="p-6 relative z-10 flex flex-col h-[calc(100%-76px)] justify-between">
-        {diasConsecutivos === 0 ? (
+        <AnimatePresence>
+          {showCheckInAnimation && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.8, y: -20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8, y: -20 }}
+              transition={{ duration: 0.5 }}
+              className="absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-[#FF6B00]/10 dark:bg-[#FF6B00]/20 p-4 rounded-xl backdrop-blur-sm border border-[#FF6B00]/30 z-50 flex flex-col items-center"
+            >
+              <CheckCircle className="h-16 w-16 text-[#FF6B00] mb-2" />
+              <h4 className="text-lg font-semibold text-[#FF6B00]">Presença registrada!</h4>
+              <p className="text-sm text-gray-600 dark:text-gray-300">
+                {diasConsecutivos === 1 
+                  ? "Primeiro dia da sua jornada!" 
+                  : `${diasConsecutivos} dias consecutivos!`}
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {diasConsecutivos === 0 && !checkInHoje ? (
           // Estado inicial para novos usuários
           <div className="flex flex-col items-center justify-center h-full text-center">
             <div className="relative mb-6">
@@ -114,12 +503,15 @@ export default function SequenciaEstudosCard() {
               Comece sua jornada!
             </h4>
             <p className={`text-sm max-w-[230px] mb-4 ${isLightMode ? 'text-gray-500' : 'text-gray-300'}`}>
-              Acesse a plataforma regularmente para construir sua sequência de estudos
+              Marque sua presença diária para construir sua sequência de estudos
             </p>
-            <div className="flex items-center space-x-1.5 text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-[#14253d]/50 px-3 py-1.5 rounded-full">
-              <Clock className="h-3.5 w-3.5 text-[#FF6B00]" />
-              <span className="text-xs">Próximo registro em 24h</span>
-            </div>
+            <Button 
+              onClick={realizarCheckIn}
+              className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white border-none shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105"
+            >
+              <CheckCircle className="h-4 w-4 mr-2" />
+              Marcar presença hoje
+            </Button>
           </div>
         ) : (
           // Interface com dados do usuário quando existirem
@@ -172,6 +564,41 @@ export default function SequenciaEstudosCard() {
                 </p>
               </div>
             </div>
+
+            {/* Cronômetro elegante quando já tiver feito check-in */}
+            {checkInHoje && (
+              <div className="mb-5">
+                <div className="bg-gray-50 dark:bg-[#14253d]/80 rounded-lg p-3 backdrop-blur-sm border border-gray-100 dark:border-gray-800/80 flex flex-col items-center">
+                  <div className="flex items-center space-x-1.5 mb-1.5">
+                    <Clock className="h-3.5 w-3.5 text-[#FF6B00]" />
+                    <span className="text-xs font-medium text-gray-600 dark:text-gray-300">Próximo check-in em</span>
+                  </div>
+                  
+                  <div className="flex items-center justify-center space-x-2 text-xl font-mono font-semibold text-[#FF6B00]">
+                    <div className="flex flex-col items-center">
+                      <span className="bg-gray-100 dark:bg-[#0A2540] rounded px-2 py-1 min-w-[45px] text-center">
+                        {formatarTempo(tempoRestante.horas)}
+                      </span>
+                      <span className="text-[10px] mt-0.5 text-gray-500">Horas</span>
+                    </div>
+                    <span className="text-gray-400">:</span>
+                    <div className="flex flex-col items-center">
+                      <span className="bg-gray-100 dark:bg-[#0A2540] rounded px-2 py-1 min-w-[45px] text-center">
+                        {formatarTempo(tempoRestante.minutos)}
+                      </span>
+                      <span className="text-[10px] mt-0.5 text-gray-500">Min</span>
+                    </div>
+                    <span className="text-gray-400">:</span>
+                    <div className="flex flex-col items-center">
+                      <span className="bg-gray-100 dark:bg-[#0A2540] rounded px-2 py-1 min-w-[45px] text-center">
+                        {formatarTempo(tempoRestante.segundos)}
+                      </span>
+                      <span className="text-[10px] mt-0.5 text-gray-500">Seg</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Seção de informações adicionais com design premium */}
             <div className="space-y-5 mt-2">
