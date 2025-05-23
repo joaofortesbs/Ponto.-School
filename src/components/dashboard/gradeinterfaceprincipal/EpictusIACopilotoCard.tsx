@@ -3,6 +3,7 @@ import { Brain, Lightbulb, Send, ArrowRight, BarChart2, Sparkles, Zap, Check, St
 import { useTheme } from "@/components/ThemeProvider";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function EpictusIACopilotoCard() {
   const { theme } = useTheme();
@@ -892,30 +893,118 @@ export default function EpictusIACopilotoCard() {
               >
                 <div className="flex gap-3">
                   {[
-                    { title: "Resumos", description: "Gere resumos inteligentes", icon: <BookOpen className="h-4 w-4" />, color: "from-blue-500 to-indigo-600" },
-                    { title: "Questões", description: "Pratique com questões", icon: <Brain className="h-4 w-4" />, color: "from-emerald-500 to-teal-600" },
-                    { title: "Apresentações", description: "Crie slides profissionais", icon: <BarChart2 className="h-4 w-4" />, color: "from-amber-500 to-orange-600" },
-                    { title: "Planos", description: "Organize seus estudos", icon: <Wand2 className="h-4 w-4" />, color: "from-purple-500 to-pink-600" }
+                    { 
+                      title: "Resumos", 
+                      description: "Gere resumos inteligentes", 
+                      icon: <BookOpen className="h-5 w-5" />, 
+                      color: "from-blue-500 to-indigo-600",
+                      lightBg: "bg-blue-50",
+                      darkBg: "bg-blue-900/10",
+                      lightBorder: "border-blue-200",
+                      darkBorder: "border-blue-800/30",
+                      shadowColor: "rgba(59, 130, 246, 0.3)"
+                    },
+                    { 
+                      title: "Questões", 
+                      description: "Pratique com questões", 
+                      icon: <Brain className="h-5 w-5" />, 
+                      color: "from-emerald-500 to-teal-600",
+                      lightBg: "bg-emerald-50",
+                      darkBg: "bg-emerald-900/10",
+                      lightBorder: "border-emerald-200",
+                      darkBorder: "border-emerald-800/30",
+                      shadowColor: "rgba(16, 185, 129, 0.3)"
+                    },
+                    { 
+                      title: "Apresentações", 
+                      description: "Crie slides profissionais", 
+                      icon: <BarChart2 className="h-5 w-5" />, 
+                      color: "from-amber-500 to-orange-600",
+                      lightBg: "bg-amber-50",
+                      darkBg: "bg-amber-900/10",
+                      lightBorder: "border-amber-200",
+                      darkBorder: "border-amber-800/30",
+                      shadowColor: "rgba(245, 158, 11, 0.3)"
+                    },
+                    { 
+                      title: "Planos", 
+                      description: "Organize seus estudos", 
+                      icon: <Wand2 className="h-5 w-5" />, 
+                      color: "from-purple-500 to-pink-600",
+                      lightBg: "bg-purple-50",
+                      darkBg: "bg-purple-900/10",
+                      lightBorder: "border-purple-200",
+                      darkBorder: "border-purple-800/30",
+                      shadowColor: "rgba(168, 85, 247, 0.3)"
+                    }
                   ].map((feature, index) => (
                     <motion.div
                       key={feature.title}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.7 + (index * 0.1) }}
-                      whileHover={{ y: -4, scale: 1.03 }}
+                      whileHover={{ 
+                        y: -4, 
+                        scale: 1.05,
+                        boxShadow: `0 15px 30px -10px ${feature.shadowColor}`
+                      }}
+                      whileTap={{ scale: 0.98 }}
                       onClick={() => setPergunta(`Ajude-me com ${feature.title.toLowerCase()}`)}
-                      className={`p-3 rounded-lg bg-gradient-to-br ${feature.color} transition-all cursor-pointer flex-1 min-w-[90px]`}
+                      className={`relative p-4 rounded-xl backdrop-blur-sm border transition-all duration-300 cursor-pointer flex-1 min-w-[90px] flex flex-col items-center text-center overflow-hidden ${
+                        isLightMode 
+                          ? `${feature.lightBg} border-${feature.lightBorder}` 
+                          : `${feature.darkBg} border-${feature.darkBorder}`
+                      }`}
                     >
+                      {/* Fundo decorativo com gradiente */}
+                      <div className="absolute inset-0 opacity-10 bg-gradient-to-br from-transparent via-transparent to-white dark:to-white/20"></div>
                       
-                      <div className={`h-9 w-9 rounded-full mb-2 flex items-center justify-center bg-gradient-to-br ${feature.color} text-white shadow-md`}>
-                        {feature.icon}
+                      {/* Círculo gradiente animado */}
+                      <motion.div 
+                        className={`relative h-12 w-12 rounded-full mb-3 flex items-center justify-center bg-gradient-to-br ${feature.color} shadow-lg`}
+                        whileHover={{ rotate: 5, scale: 1.1 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        {/* Glow interno */}
+                        <div className="absolute inset-0 rounded-full blur-md opacity-40 bg-white"></div>
+                        
+                        {/* Ícone */}
+                        <div className="relative z-10 text-white">
+                          {feature.icon}
+                        </div>
+                        
+                        {/* Efeito de pulso */}
+                        <motion.div
+                          animate={{ 
+                            scale: [1, 1.2, 1],
+                            opacity: [0.7, 0.2, 0.7]
+                          }}
+                          transition={{ 
+                            duration: 3,
+                            repeat: Infinity,
+                            ease: "easeInOut"
+                          }}
+                          className="absolute inset-0 rounded-full bg-white opacity-0"
+                        />
+                      </motion.div>
+                      
+                      {/* Título com linha decorativa */}
+                      <div className="relative mb-1">
+                        <h4 className={`text-sm font-semibold ${isLightMode ? 'text-gray-800' : 'text-white'}`}>
+                          {feature.title}
+                        </h4>
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          whileHover={{ width: "100%" }}
+                          className={`h-0.5 mt-1 mx-auto rounded-full bg-gradient-to-r ${feature.color}`}
+                          style={{ width: "40%" }}
+                        />
                       </div>
-                      <span className={`text-xs font-semibold mb-0.5 ${isLightMode ? 'text-gray-800' : 'text-gray-200'}`}>
-                        {feature.title}
-                      </span>
-                      <span className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                      
+                      {/* Descrição */}
+                      <p className={`text-xs mt-1 ${isLightMode ? 'text-gray-600' : 'text-gray-300'} opacity-90`}>
                         {feature.description}
-                      </span>
+                      </p>
                     </motion.div>
                   ))}
                 </div>
