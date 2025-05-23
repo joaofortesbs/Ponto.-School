@@ -80,9 +80,40 @@ export default function SequenciaEstudosCard() {
         .single();
       
       if (error) {
-        console.log("Dados não encontrados na API, carregando do localStorage:", error);
+        console.log("Dados não encontrados na API:", error);
+        
+        if (error.code === '42P01') {
+          console.log("Tabela user_streak não existe, criando...");
+          // Caso a tabela não exista, carrega dados locais e salva no Supabase quando a tabela for criada
+          const dadosLocais = carregarDadosLocaisSync();
+          if (dadosLocais) {
+            // Tenta novamente após um pequeno delay para permitir que a migração seja aplicada
+            setTimeout(async () => {
+              try {
+                await salvarDadosSequencia(dadosLocais);
+                console.log("Dados locais migrados para o Supabase com sucesso");
+              } catch (migrationError) {
+                console.error("Erro ao migrar dados locais para Supabase:", migrationError);
+              }
+            }, 5000);
+          }
+          return;
+        }
+        
         // Se não conseguir, tenta carregar do localStorage
-        carregarDadosLocais();
+        const dadosLocais = carregarDadosLocaisSync();
+        if (dadosLocais) {
+          atualizarEstadosComDados(dadosLocais);
+          verificarCheckInDeHoje(dadosLocais.ultimoCheckIn);
+          
+          // Tenta salvar dados locais no Supabase para sincronizar
+          try {
+            await salvarDadosSequencia(dadosLocais);
+            console.log("Dados locais sincronizados com o Supabase");
+          } catch (syncError) {
+            console.error("Erro ao sincronizar dados locais com Supabase:", syncError);
+          }
+        }
         return;
       }
       
@@ -97,6 +128,9 @@ export default function SequenciaEstudosCard() {
           eventos: data.eventos || []
         };
         
+        // Salvar dados no localStorage para acesso offline
+        localStorage.setItem('streakData', JSON.stringify(streakData));
+        
         atualizarEstadosComDados(streakData);
         
         // Verifica se já fez check-in hoje
@@ -105,21 +139,22 @@ export default function SequenciaEstudosCard() {
     } catch (error) {
       console.error("Erro ao carregar dados da sequência:", error);
       // Fallback para dados locais
-      carregarDadosLocais();
+      const dadosLocais = carregarDadosLocaisSync();
+      if (dadosLocais) {
+        atualizarEstadosComDados(dadosLocais);
+        verificarCheckInDeHoje(dadosLocais.ultimoCheckIn);
+      }
     }
   };
   
-  // Função para carregar dados locais
-  const carregarDadosLocais = () => {
+  // Função para carregar dados locais (versão síncrona que retorna os dados)
+  const carregarDadosLocaisSync = (): StreakData | null => {
     try {
       const dadosSalvos = localStorage.getItem('streakData');
       
       if (dadosSalvos) {
         const dados = JSON.parse(dadosSalvos);
-        atualizarEstadosComDados(dados);
-        
-        // Verifica se já fez check-in hoje
-        verificarCheckInDeHoje(dados.ultimoCheckIn);
+        return dados;
       } else {
         // Inicializa os dados se não existirem
         const dadosIniciais: StreakData = {
@@ -134,9 +169,20 @@ export default function SequenciaEstudosCard() {
         
         // Salva os dados iniciais
         localStorage.setItem('streakData', JSON.stringify(dadosIniciais));
+        return dadosIniciais;
       }
     } catch (error) {
       console.error("Erro ao carregar dados da sequência do localStorage:", error);
+      return null;
+    }
+  };
+  
+  // Função para carregar dados locais e aplicar ao estado
+  const carregarDadosLocais = () => {
+    const dados = carregarDadosLocaisSync();
+    if (dados) {
+      atualizarEstadosComDados(dados);
+      verificarCheckInDeHoje(dados.ultimoCheckIn);
     }
   };
   
@@ -169,8 +215,8 @@ export default function SequenciaEstudosCard() {
     }
   };
   
-  // Função para salvar os dados da sequência
-  const salvarDadosSequencia = async (dados: StreakData) => {
+  // Função para salvar os dados da sequência com tentativas de reconexão
+  const salvarDadosSequencia = async (dados: StreakData, tentativas = 3) => {
     try {
       // Salva no localStorage como fallback
       localStorage.setItem('streakData', JSON.stringify(dados));
@@ -192,10 +238,61 @@ export default function SequenciaEstudosCard() {
         
         if (error) {
           console.error("Erro ao salvar dados no Supabase:", error);
+          
+          // Verifica se é erro de tabela inexistente
+          if (error.code === '42P01' && tentativas > 0) {
+            console.log("Tabela user_streak não existe. Tentando migração...");
+            
+            // Executa migração para criar a tabela se aplicável (via workflow existente)
+            try {
+              await fetch('/api/aplicar-migracao', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ migracao: '20241015000001_create_user_streak_table.sql' })
+              });
+              
+              // Tenta salvar novamente após um breve delay
+              setTimeout(() => {
+                salvarDadosSequencia(dados, tentativas - 1);
+              }, 3000);
+            } catch (migracaoError) {
+              console.error("Erro ao executar migração:", migracaoError);
+            }
+          }
+          
+          // Se não for erro de tabela inexistente ou tentativas esgotadas
+          // Agendar nova tentativa em caso de erro de rede
+          if (tentativas > 1 && (error.code === 'NETWORK_ERROR' || error.code?.toString().startsWith('5'))) {
+            console.log(`Falha ao salvar. Tentando novamente em 5 segundos... (${tentativas-1} tentativas restantes)`);
+            setTimeout(() => {
+              salvarDadosSequencia(dados, tentativas - 1);
+            }, 5000);
+          }
+        } else {
+          console.log("Dados salvos com sucesso no Supabase");
+        }
+      } else {
+        console.error("Usuário não autenticado. Dados salvos apenas localmente.");
+        
+        // Agendar uma tentativa posterior quando o userId estiver disponível
+        if (tentativas > 0) {
+          setTimeout(async () => {
+            const novoUserId = await carregarUserId();
+            if (novoUserId) {
+              salvarDadosSequencia(dados, tentativas - 1);
+            }
+          }, 5000);
         }
       }
     } catch (error) {
       console.error("Erro ao salvar dados da sequência:", error);
+      
+      // Tenta novamente em caso de erro inesperado
+      if (tentativas > 1) {
+        setTimeout(() => {
+          salvarDadosSequencia(dados, tentativas - 1);
+        }, 5000);
+      }
     }
   };
   
@@ -349,28 +446,73 @@ export default function SequenciaEstudosCard() {
     }, 1000);
   };
   
-  // Carregar dados ao montar o componente
+  // Carregar dados ao montar o componente e configurar sincronização periódica
   useEffect(() => {
+    let isMounted = true;
+    
     const inicializar = async () => {
+      // Primeiro carrega dados locais para exibição imediata
+      carregarDadosLocais();
+      
+      // Depois tenta obter dados do Supabase (que são mais atualizados)
       const id = await carregarUserId();
-      if (id) {
+      if (id && isMounted) {
         await carregarDadosStreakUsuario(id);
-      } else {
-        carregarDadosLocais();
       }
     };
     
     inicializar();
     
-    // Limpa o timer ao desmontar
+    // Configura sincronização periódica a cada 15 minutos
+    const syncInterval = setInterval(async () => {
+      const id = await carregarUserId();
+      if (id && isMounted) {
+        // Busca dados atualizados do servidor
+        const { data, error } = await supabase
+          .from('user_streak')
+          .select('*')
+          .eq('user_id', id)
+          .single();
+          
+        if (!error && data) {
+          // Se encontrar dados no servidor e forem mais recentes que os locais,
+          // atualiza os dados locais
+          const localData = carregarDadosLocaisSync();
+          const serverLastUpdate = new Date(data.updated_at || data.ultimo_check_in || 0);
+          const localLastUpdate = localData?.ultimoCheckIn ? new Date(localData.ultimoCheckIn) : new Date(0);
+          
+          if (serverLastUpdate > localLastUpdate) {
+            console.log("Sincronizando dados do servidor para o dispositivo local");
+            
+            const streakData: StreakData = {
+              diasConsecutivos: data.dias_consecutivos || 0,
+              recordeDias: data.recorde_dias || 0,
+              diasParaProximoNivel: data.dias_para_proximo_nivel || 3,
+              metaDiaria: data.meta_diaria || 5,
+              proximaRecompensa: data.proxima_recompensa || "Badge Iniciante",
+              ultimoCheckIn: data.ultimo_check_in,
+              eventos: data.eventos || []
+            };
+            
+            atualizarEstadosComDados(streakData);
+            verificarCheckInDeHoje(data.ultimo_check_in);
+            localStorage.setItem('streakData', JSON.stringify(streakData));
+          }
+        }
+      }
+    }, 15 * 60 * 1000); // 15 minutos
+    
+    // Limpa timers ao desmontar
     return () => {
+      isMounted = false;
       if (timerRef.current) {
         clearInterval(timerRef.current);
       }
+      clearInterval(syncInterval);
     };
   }, []);
   
-  // Verifica se a tabela existe, se não, tenta criar
+  // Verifica se a tabela existe, se não, tenta criar e migra dados locais
   useEffect(() => {
     const verificarECriarTabela = async () => {
       if (userId) {
@@ -382,8 +524,46 @@ export default function SequenciaEstudosCard() {
             .limit(1);
           
           if (error && error.code === '42P01') { // código de erro para tabela não existente
-            console.log("Tabela user_streak não existe, criando...");
-            // A tabela será criada via migração
+            console.log("Tabela user_streak não existe, tentando aplicar migração...");
+            
+            // Tenta aplicar migração via API para criar a tabela
+            try {
+              await fetch('/api/aplicar-migracao', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ migracao: '20241015000001_create_user_streak_table.sql' })
+              });
+              
+              console.log("Solicitação de migração enviada");
+              
+              // Aguarda um momento e verifica se há dados locais para migrar
+              setTimeout(async () => {
+                const dadosLocais = carregarDadosLocaisSync();
+                if (dadosLocais) {
+                  // Tenta migrar dados locais para o Supabase
+                  await salvarDadosSequencia(dadosLocais);
+                  console.log("Dados locais migrados para o Supabase após criação da tabela");
+                }
+              }, 5000);
+            } catch (migrationError) {
+              console.error("Erro ao solicitar migração:", migrationError);
+            }
+          } else {
+            // Se a tabela existir, verifica se há dados para o usuário
+            const { data, error: dataError } = await supabase
+              .from('user_streak')
+              .select('*')
+              .eq('user_id', userId)
+              .single();
+            
+            if (dataError || !data) {
+              // Se não houver dados para o usuário, verifica se há dados locais para migrar
+              const dadosLocais = carregarDadosLocaisSync();
+              if (dadosLocais && dadosLocais.diasConsecutivos > 0) {
+                await salvarDadosSequencia(dadosLocais);
+                console.log("Dados locais migrados para o Supabase");
+              }
+            }
           }
         } catch (error) {
           console.error("Erro ao verificar tabela:", error);
