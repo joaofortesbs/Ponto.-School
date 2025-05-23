@@ -1,13 +1,10 @@
 
-import React, { useState, useEffect, useRef } from "react";
-import { 
-  Brain, Lightbulb, Send, ArrowRight, BarChart2, Sparkles, Zap, Check, Star, 
-  Wand2, Rocket, BookOpen, MessageSquare, Trophy, Flame, BookMarked, Target, 
-  BarChart, Clock, Compass, FileText, PieChart, Gauge, Workflow
-} from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Brain, Lightbulb, Send, ArrowRight, BarChart2, Sparkles, Zap, Check, Star, Wand2, Rocket, BookOpen, LucideIcon } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
+import { Calendar } from "@/components/ui/calendar";
 
 export default function EpictusIACopilotoCard() {
   const { theme } = useTheme();
@@ -19,25 +16,6 @@ export default function EpictusIACopilotoCard() {
   const [necessidadeOriginal, setNecessidadeOriginal] = useState("");
   const [animateInput, setAnimateInput] = useState(false);
   const [showPopularTags, setShowPopularTags] = useState(true);
-  const [showFerramentasPopulares, setShowFerramentasPopulares] = useState(true);
-  const [statusBar, setStatusBar] = useState({
-    eficiencia: 85,
-    personalizacao: 92,
-    versatilidade: 78
-  });
-  const [estatisticas, setEstatisticas] = useState({
-    planificacoes: 8243,
-    recursos: 12,
-    ferramentas: 24
-  });
-  const chatEndRef = useRef(null);
-  
-  // Ferramentas mais usadas pela comunidade
-  const ferramentasPopulares = [
-    { nome: "Resumidor", icone: "BookMarked", usos: 327, eficiencia: 92 },
-    { nome: "Slides", icone: "FileText", usos: 284, eficiencia: 88 },
-    { nome: "Revisão", icone: "Gauge", usos: 252, eficiencia: 94 }
-  ];
 
   // Tratar envio de pergunta rápida para a IA
   const handleEnviarPergunta = (e) => {
@@ -77,9 +55,7 @@ export default function EpictusIACopilotoCard() {
           ferramenta: "resumo-inteligente",
           icone: "BookOpen",
           tempo: "15 min",
-          dificuldade: "Fácil",
-          eficacia: 92,
-          usuariosUtilizando: 215
+          dificuldade: "Fácil"
         },
         {
           numero: 2,
@@ -88,20 +64,16 @@ export default function EpictusIACopilotoCard() {
           ferramenta: "mapa-mental",
           icone: "Brain",
           tempo: "20 min",
-          dificuldade: "Médio",
-          eficacia: 87,
-          usuariosUtilizando: 178
+          dificuldade: "Médio"
         },
         {
           numero: 3,
           titulo: "Criar Slides",
           descricao: "Crie slides profissionais com nossa ferramenta de Slides Didáticos",
           ferramenta: "slides-didaticos",
-          icone: "FileText",
+          icone: "LayoutTemplate",
           tempo: "30 min",
-          dificuldade: "Médio",
-          eficacia: 94,
-          usuariosUtilizando: 312
+          dificuldade: "Médio"
         }
       ];
     } else if (necessidadeLower.includes("quiz") || necessidadeLower.includes("teste")) {
@@ -114,20 +86,16 @@ export default function EpictusIACopilotoCard() {
           ferramenta: "objetivos-aprendizagem",
           icone: "Target",
           tempo: "10 min",
-          dificuldade: "Fácil",
-          eficacia: 89,
-          usuariosUtilizando: 145
+          dificuldade: "Fácil"
         },
         {
           numero: 2,
           titulo: "Elaborar Questões",
           descricao: "Crie questões eficazes com o Gerador de Questões",
           ferramenta: "gerador-questoes",
-          icone: "MessageSquare",
+          icone: "FileQuestion",
           tempo: "25 min",
-          dificuldade: "Médio",
-          eficacia: 91,
-          usuariosUtilizando: 203
+          dificuldade: "Médio"
         }
       ];
     } else if (necessidadeLower.includes("resumo")) {
@@ -138,22 +106,18 @@ export default function EpictusIACopilotoCard() {
           titulo: "Extrair Pontos-Chave",
           descricao: "Use o Resumidor Inteligente para destacar os conceitos principais",
           ferramenta: "resumo-inteligente",
-          icone: "BookOpen",
+          icone: "FileText",
           tempo: "15 min",
-          dificuldade: "Fácil",
-          eficacia: 95,
-          usuariosUtilizando: 327
+          dificuldade: "Fácil"
         },
         {
           numero: 2,
           titulo: "Organizar Conteúdo",
           descricao: "Organize o conteúdo com ferramentas de estruturação",
           ferramenta: "organizador-conteudo",
-          icone: "Workflow",
+          icone: "ListChecks",
           tempo: "20 min",
-          dificuldade: "Médio",
-          eficacia: 86,
-          usuariosUtilizando: 189
+          dificuldade: "Médio"
         }
       ];
     } else if (necessidadeLower.includes("redação") || necessidadeLower.includes("texto") || necessidadeLower.includes("escrever")) {
@@ -164,22 +128,18 @@ export default function EpictusIACopilotoCard() {
           titulo: "Elaborar Estrutura",
           descricao: "Planeje sua redação com o Organizador de Ideias",
           ferramenta: "organizador-ideias",
-          icone: "Brain",
+          icone: "PenTool",
           tempo: "15 min",
-          dificuldade: "Médio",
-          eficacia: 88,
-          usuariosUtilizando: 174
+          dificuldade: "Médio"
         },
         {
           numero: 2,
           titulo: "Revisar Conteúdo",
           descricao: "Use o Revisor de Textos para aprimorar a qualidade",
           ferramenta: "revisor-textos",
-          icone: "FileText",
+          icone: "Edit",
           tempo: "20 min",
-          dificuldade: "Médio",
-          eficacia: 92,
-          usuariosUtilizando: 238
+          dificuldade: "Médio"
         }
       ];
     } else {
@@ -193,20 +153,16 @@ export default function EpictusIACopilotoCard() {
           ferramenta: "tutor-inteligente",
           icone: "Lightbulb",
           tempo: "20 min",
-          dificuldade: "Fácil",
-          eficacia: 87,
-          usuariosUtilizando: 211
+          dificuldade: "Fácil"
         },
         {
           numero: 2,
           titulo: "Organizar Estudo",
           descricao: "Crie um plano de estudos organizado com o Cronograma Inteligente",
           ferramenta: "cronograma-estudos",
-          icone: "Clock",
+          icone: "Calendar",
           tempo: "25 min",
-          dificuldade: "Médio",
-          eficacia: 83,
-          usuariosUtilizando: 167
+          dificuldade: "Médio"
         }
       ];
     }
@@ -237,11 +193,9 @@ export default function EpictusIACopilotoCard() {
     setPergunta(e.target.value);
     setIsTyping(true);
     setShowPopularTags(false);
-    setShowFerramentasPopulares(false);
 
     if (!e.target.value.trim()) {
       setShowPopularTags(true);
-      setShowFerramentasPopulares(true);
     }
 
     // Desativar o estado de digitação após um tempo
@@ -257,32 +211,22 @@ export default function EpictusIACopilotoCard() {
     }, 500);
   }, []);
 
-  // Scroll para o final do chat quando plano é gerado
-  useEffect(() => {
-    if (planoGerado && chatEndRef.current) {
-      chatEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [planoGerado]);
-
   // Função para renderizar o ícone correto com base no nome
-  const renderIcon = (iconName, className = "") => {
-    const iconMap = {
-      "Brain": Brain,
-      "Lightbulb": Lightbulb,
-      "BookOpen": BookOpen,
-      "Rocket": Rocket,
-      "Wand2": Wand2,
-      "Target": Target,
-      "Clock": Clock,
-      "MessageSquare": MessageSquare,
-      "FileText": FileText,
-      "BookMarked": BookMarked,
-      "Workflow": Workflow,
-      "Gauge": Gauge
-    };
-    
-    const IconComponent = iconMap[iconName] || Sparkles;
-    return <IconComponent className={className} />;
+  const renderIcon = (iconName, className) => {
+    switch (iconName) {
+      case "Brain":
+        return <Brain className={className} />;
+      case "Lightbulb":
+        return <Lightbulb className={className} />;
+      case "BookOpen":
+        return <BookOpen className={className} />;
+      case "Rocket":
+        return <Rocket className={className} />;
+      case "Wand2":
+        return <Wand2 className={className} />;
+      default:
+        return <Sparkles className={className} />;
+    }
   };
 
   // Análise de popularidade das categorias (simulado)
@@ -292,11 +236,6 @@ export default function EpictusIACopilotoCard() {
     { name: "Presentations", icon: "Rocket", count: 612, color: "from-orange-500 to-amber-500" },
     { name: "Redações", icon: "Wand2", count: 589, color: "from-pink-500 to-rose-500" }
   ];
-  
-  // Formatar números para exibição
-  const formatNumber = (num) => {
-    return num > 999 ? `${(num/1000).toFixed(1)}k` : num;
-  };
 
   return (
     <motion.div
@@ -304,26 +243,10 @@ export default function EpictusIACopilotoCard() {
       transition={{ duration: 0.2 }}
       className="rounded-xl overflow-hidden border border-gray-100 dark:border-gray-800 shadow-xl bg-white dark:bg-gradient-to-br dark:from-[#0c1425] dark:to-[#0a1a2e] h-full w-full relative flex flex-col"
     >
-      {/* Elementos decorativos de fundo com efeito 3D */}
+      {/* Elementos decorativos de fundo */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -right-10 -top-10 w-40 h-40 bg-[#FF6B00]/5 dark:bg-[#FF6B00]/10 rounded-full blur-2xl"></div>
         <div className="absolute -left-20 -bottom-20 w-72 h-72 bg-blue-500/5 dark:bg-blue-500/5 rounded-full blur-3xl"></div>
-        
-        {/* Grid de fundo tipo blueprint */}
-        <div className="absolute inset-0 opacity-5 dark:opacity-10">
-          <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <pattern id="smallGrid" width="10" height="10" patternUnits="userSpaceOnUse">
-                <path d="M 10 0 L 0 0 0 10" fill="none" stroke="currentColor" strokeWidth="0.5" />
-              </pattern>
-              <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
-                <rect width="50" height="50" fill="url(#smallGrid)" />
-                <path d="M 50 0 L 0 0 0 50" fill="none" stroke="currentColor" strokeWidth="1" />
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#grid)" />
-          </svg>
-        </div>
         
         {/* Partículas decorativas animadas */}
         <motion.div 
@@ -336,7 +259,7 @@ export default function EpictusIACopilotoCard() {
             repeat: Infinity,
             ease: "easeInOut" 
           }}
-          className="absolute top-1/4 right-10 w-3 h-3 bg-[#FF6B00]/40 rounded-full blur-sm"
+          className="absolute top-1/4 right-10 w-2 h-2 bg-[#FF6B00]/40 rounded-full"
         ></motion.div>
         
         <motion.div 
@@ -350,7 +273,7 @@ export default function EpictusIACopilotoCard() {
             ease: "easeInOut",
             delay: 0.5
           }}
-          className="absolute top-1/3 left-10 w-4 h-4 bg-blue-400/30 dark:bg-blue-400/20 rounded-full blur-sm"
+          className="absolute top-1/3 left-10 w-3 h-3 bg-blue-400/30 dark:bg-blue-400/20 rounded-full"
         ></motion.div>
         
         <motion.div 
@@ -364,177 +287,79 @@ export default function EpictusIACopilotoCard() {
             ease: "easeInOut",
             delay: 1
           }}
-          className="absolute bottom-1/4 right-1/4 w-2 h-2 bg-purple-400/30 dark:bg-purple-400/20 rounded-full blur-sm"
+          className="absolute bottom-1/4 right-1/4 w-2 h-2 bg-purple-400/30 dark:bg-purple-400/20 rounded-full"
         ></motion.div>
         
-        {/* Linhas hexagonais de conexão decorativas */}
+        {/* Linhas de conexão decorativas */}
         <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-10 dark:opacity-5" xmlns="http://www.w3.org/2000/svg">
           <path 
-            d="M20,100 Q150,50 280,120 T520,100" 
+            d="M0,100 Q150,50 300,100 T600,100" 
             fill="none" 
             stroke={isLightMode ? "#FF6B00" : "#FF6B00"} 
             strokeWidth="1"
           />
           <path 
-            d="M0,200 Q200,250 400,150 T600,180" 
+            d="M0,150 Q150,200 300,150 T600,150" 
             fill="none" 
             stroke={isLightMode ? "#3B82F6" : "#3B82F6"} 
-            strokeWidth="1"
-          />
-          <path 
-            d="M50,300 Q200,320 350,250 T600,280" 
-            fill="none" 
-            stroke={isLightMode ? "#8B5CF6" : "#8B5CF6"} 
             strokeWidth="1"
           />
         </svg>
       </div>
 
-      {/* Header elegante com gradiente melhorado */}
-      <div className={`p-4 ${isLightMode ? 'bg-gradient-to-r from-orange-50 via-orange-100/70 to-orange-50' : 'bg-gradient-to-r from-[#0A2540]/90 via-[#0A2540]/70 to-[#001427]'} border-b ${isLightMode ? 'border-orange-100' : 'border-[#FF6B00]/20'}`}>
+      {/* Header elegante com gradiente */}
+      <div className={`p-5 ${isLightMode ? 'bg-gradient-to-r from-orange-50 to-orange-100/50' : 'bg-gradient-to-r from-[#0A2540]/80 to-[#001427]'} border-b ${isLightMode ? 'border-orange-100' : 'border-[#FF6B00]/20'}`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <motion.div 
               whileHover={{ scale: 1.05, rotate: 5 }}
               whileTap={{ scale: 0.95 }}
-              className={`p-2.5 rounded-lg flex items-center justify-center ${
-                isLightMode 
-                  ? 'bg-gradient-to-br from-white to-orange-50 shadow-md border border-orange-200' 
-                  : 'bg-gradient-to-br from-[#FF6B00]/30 to-[#FF6B00]/10 shadow-lg border border-[#FF6B00]/30'
-              }`}
+              className={`p-2.5 rounded-lg flex items-center justify-center ${isLightMode ? 'bg-gradient-to-br from-white to-orange-50 shadow-sm border border-orange-200' : 'bg-gradient-to-br from-[#FF6B00]/20 to-[#FF6B00]/5 border border-[#FF6B00]/30'}`}
             >
               <motion.div
-                animate={{ 
-                  rotate: [0, 5, 0, -5, 0],
-                  scale: [1, 1.05, 1, 1.05, 1]
-                }}
+                animate={{ rotate: [0, 10, 0, -10, 0] }}
                 transition={{ 
-                  duration: 8, 
+                  duration: 10, 
                   repeat: Infinity,
                   ease: "easeInOut"
                 }}
               >
-                <Brain className={`h-5 w-5 text-[#FF6B00] drop-shadow-md`} />
+                <Brain className={`h-5 w-5 text-[#FF6B00]`} />
               </motion.div>
             </motion.div>
             <div>
-              <h3 className={`font-semibold text-lg ${isLightMode ? 'text-gray-800' : 'text-white'} tracking-tight`}>
+              <h3 className={`font-semibold text-lg ${isLightMode ? 'text-gray-800' : 'text-white'}`}>
                 Epictus IA: Seu Copiloto
               </h3>
-              <div className="flex items-center gap-2">
+              <p className={`text-sm ${isLightMode ? 'text-gray-500' : 'text-gray-300'}`}>
                 <motion.span 
                   initial={{ opacity: 0.7 }}
                   animate={{ opacity: [0.7, 1, 0.7] }}
                   transition={{ duration: 2, repeat: Infinity }}
-                  className={`text-xs font-medium flex items-center gap-1 ${
-                    isLightMode ? 'text-gray-500' : 'text-gray-300'
-                  }`}
+                  className="font-medium flex items-center gap-1"
                 >
                   <Sparkles className="h-3 w-3" /> Assistente inteligente
                 </motion.span>
-                <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
-                  isLightMode 
-                    ? 'bg-green-100 text-green-700' 
-                    : 'bg-green-900/30 text-green-400 border border-green-800/30'
-                }`}>
-                  <span className="mr-1 flex h-1.5 w-1.5">
-                    <span className="animate-ping absolute h-1.5 w-1.5 rounded-full bg-green-400 opacity-75"></span>
-                    <span className="relative rounded-full h-1.5 w-1.5 bg-green-500"></span>
-                  </span>
-                  Ativo
-                </span>
-              </div>
+              </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <motion.div 
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className={`hidden sm:flex items-center px-2 py-1 rounded-md ${
-                isLightMode 
-                  ? 'bg-orange-50 text-orange-600 border border-orange-100' 
-                  : 'bg-[#0c1d36] text-orange-400 border border-orange-900/30'
-              }`}
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className={`text-xs font-medium ${isLightMode ? 'text-gray-500 hover:text-gray-700 hover:bg-gray-100' : 'text-gray-300 hover:text-white hover:bg-white/5'} group transition-all duration-300`}
+            onClick={() => window.location.href = "/epictus-ia"}
+          >
+            <span>Modo completo</span>
+            <motion.div
+              initial={{ x: 0 }}
+              whileHover={{ x: 4 }}
+              className="inline-block ml-1"
             >
-              <Flame className="h-3 w-3 mr-1" />
-              <span className="text-[10px] font-medium">Premium</span>
+              <ArrowRight className="h-3 w-3 group-hover:text-[#FF6B00] transition-colors duration-300" />
             </motion.div>
-            
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className={`text-xs font-medium ${
-                isLightMode 
-                  ? 'text-gray-500 hover:text-gray-700 hover:bg-gray-100' 
-                  : 'text-gray-300 hover:text-white hover:bg-white/5'
-              } group transition-all duration-300`}
-              onClick={() => window.location.href = "/epictus-ia"}
-            >
-              <span>Modo completo</span>
-              <motion.div
-                initial={{ x: 0 }}
-                whileHover={{ x: 4 }}
-                className="inline-block ml-1"
-              >
-                <ArrowRight className="h-3 w-3 group-hover:text-[#FF6B00] transition-colors duration-300" />
-              </motion.div>
-            </Button>
-          </div>
+          </Button>
         </div>
-        
-        {/* Barra de status - NOVO */}
-        <motion.div 
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-          className="mt-3 flex items-center justify-between gap-2 pr-1 pl-1"
-        >
-          <div className="grid grid-cols-3 gap-2 w-full">
-            <div className={`flex flex-col ${isLightMode ? 'text-gray-500' : 'text-gray-400'} text-[10px]`}>
-              <div className="flex justify-between items-center">
-                <span>Eficiência</span>
-                <span className="font-medium">{statusBar.eficiencia}%</span>
-              </div>
-              <div className="w-full h-1.5 bg-gray-200 dark:bg-gray-700/30 rounded-full mt-1 overflow-hidden">
-                <motion.div 
-                  initial={{ width: 0 }}
-                  animate={{ width: `${statusBar.eficiencia}%` }}
-                  transition={{ duration: 1, delay: 0.5 }}
-                  className="h-full bg-gradient-to-r from-green-400 to-green-500 rounded-full"
-                />
-              </div>
-            </div>
-            <div className={`flex flex-col ${isLightMode ? 'text-gray-500' : 'text-gray-400'} text-[10px]`}>
-              <div className="flex justify-between items-center">
-                <span>Personalização</span>
-                <span className="font-medium">{statusBar.personalizacao}%</span>
-              </div>
-              <div className="w-full h-1.5 bg-gray-200 dark:bg-gray-700/30 rounded-full mt-1 overflow-hidden">
-                <motion.div 
-                  initial={{ width: 0 }}
-                  animate={{ width: `${statusBar.personalizacao}%` }}
-                  transition={{ duration: 1, delay: 0.7 }}
-                  className="h-full bg-gradient-to-r from-purple-400 to-purple-500 rounded-full"
-                />
-              </div>
-            </div>
-            <div className={`flex flex-col ${isLightMode ? 'text-gray-500' : 'text-gray-400'} text-[10px]`}>
-              <div className="flex justify-between items-center">
-                <span>Versatilidade</span>
-                <span className="font-medium">{statusBar.versatilidade}%</span>
-              </div>
-              <div className="w-full h-1.5 bg-gray-200 dark:bg-gray-700/30 rounded-full mt-1 overflow-hidden">
-                <motion.div 
-                  initial={{ width: 0 }}
-                  animate={{ width: `${statusBar.versatilidade}%` }}
-                  transition={{ duration: 1, delay: 0.9 }}
-                  className="h-full bg-gradient-to-r from-blue-400 to-blue-500 rounded-full"
-                />
-              </div>
-            </div>
-          </div>
-        </motion.div>
       </div>
 
       {/* Conteúdo principal com design premium */}
@@ -547,19 +372,14 @@ export default function EpictusIACopilotoCard() {
             exit={{ opacity: 0 }}
             className="p-6 flex-grow flex flex-col justify-center items-center relative z-10"
           >
-            <div className="flex flex-col items-center space-y-5 max-w-md w-full">
-              {/* Círculo animado com cérebro rotacionando */}
+            <div className="flex flex-col items-center space-y-4">
               <motion.div 
-                className={`p-4 rounded-full ${
-                  isLightMode 
-                    ? 'bg-gradient-to-r from-orange-100 to-orange-200' 
-                    : 'bg-gradient-to-r from-[#FF6B00]/30 to-[#FF6B00]/10'
-                }`}
+                className={`p-3 rounded-full ${isLightMode ? 'bg-gradient-to-r from-orange-100 to-orange-200' : 'bg-gradient-to-r from-[#FF6B00]/20 to-[#FF6B00]/10'}`}
                 animate={{ 
                   scale: [1, 1.1, 1],
                   boxShadow: [
                     isLightMode ? "0 0 0 rgba(255, 107, 0, 0)" : "0 0 0 rgba(255, 107, 0, 0)",
-                    isLightMode ? "0 0 30px rgba(255, 107, 0, 0.4)" : "0 0 30px rgba(255, 107, 0, 0.3)",
+                    isLightMode ? "0 0 20px rgba(255, 107, 0, 0.3)" : "0 0 20px rgba(255, 107, 0, 0.2)",
                     isLightMode ? "0 0 0 rgba(255, 107, 0, 0)" : "0 0 0 rgba(255, 107, 0, 0)"
                   ]
                 }}
@@ -577,134 +397,76 @@ export default function EpictusIACopilotoCard() {
                     ease: "linear"
                   }}
                 >
-                  <Brain className={`h-10 w-10 text-[#FF6B00]`} />
+                  <Brain className={`h-8 w-8 text-[#FF6B00]`} />
                 </motion.div>
               </motion.div>
               
-              {/* Texto de status animado */}
-              <div className="text-center space-y-1.5">
-                <motion.p
-                  animate={{
-                    scale: [1, 1.03, 1],
-                    opacity: [1, 0.8, 1]
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
-                  className={`font-medium text-lg ${isLightMode ? 'text-gray-700' : 'text-gray-200'}`}
-                >
-                  Epictus está planejando para você...
-                </motion.p>
-                
-                <p className={`text-sm ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                  Analisando <span className="font-medium text-[#FF6B00]">"{necessidadeOriginal}"</span>
-                </p>
-              </div>
+              <motion.p
+                animate={{
+                  opacity: [1, 0.7, 1]
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+                className={`text-center font-medium ${isLightMode ? 'text-gray-700' : 'text-gray-200'}`}
+              >
+                Epictus está planejando para você...
+              </motion.p>
               
-              {/* Barra de progresso estilizada */}
-              <div className="w-full h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div className="w-full max-w-md h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                 <motion.div 
-                  className="h-full bg-gradient-to-r from-[#FF6B00] via-[#FF8736] to-[#FF9D5C] rounded-full"
+                  className="h-full bg-gradient-to-r from-[#FF6B00] to-[#FF9D5C] rounded-full"
                   initial={{ width: "0%" }}
                   animate={{ width: "100%" }}
                   transition={{ duration: 1.5, ease: "easeInOut" }}
                 />
               </div>
               
-              {/* Etapas de processamento */}
-              <div className="w-full">
-                <div className="flex justify-between text-xs mb-4">
-                  <div className={`flex flex-col items-center ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                    <motion.div
-                      animate={{ opacity: [1, 0.5, 1] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                      className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                        isLightMode ? 'bg-green-100 text-green-600' : 'bg-green-900/30 text-green-400'
-                      } mb-1`}
-                    >
-                      <Check className="h-3 w-3" />
-                    </motion.div>
-                    <span>Análise</span>
-                  </div>
-                  
-                  <div className={`flex flex-col items-center ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                    <motion.div
-                      animate={{ 
-                        opacity: [0.7, 1, 0.7],
-                        scale: [0.9, 1.1, 0.9]
-                      }}
-                      transition={{ duration: 1.5, repeat: Infinity }}
-                      className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                        isLightMode ? 'bg-blue-100 text-blue-600' : 'bg-blue-900/30 text-blue-400'
-                      } mb-1`}
-                    >
-                      <PieChart className="h-3 w-3" />
-                    </motion.div>
-                    <span>Planejamento</span>
-                  </div>
-                  
-                  <div className={`flex flex-col items-center ${isLightMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                      isLightMode ? 'bg-gray-100 text-gray-400' : 'bg-gray-800/50 text-gray-500'
-                    } mb-1`}>
-                      <Rocket className="h-3 w-3" />
-                    </div>
-                    <span>Pronto</span>
-                  </div>
+              <div className="flex flex-col items-center space-y-1">
+                <p className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                  Analisando sua necessidade...
+                </p>
+                <div className="flex space-x-2 items-center mt-2">
+                  <motion.div
+                    animate={{ 
+                      opacity: [0.3, 1, 0.3],
+                      scale: [0.9, 1.1, 0.9]
+                    }}
+                    transition={{ 
+                      duration: 1,
+                      repeat: Infinity,
+                      delay: 0
+                    }}
+                    className={`w-1.5 h-1.5 rounded-full ${isLightMode ? 'bg-orange-500' : 'bg-orange-400'}`}
+                  />
+                  <motion.div
+                    animate={{ 
+                      opacity: [0.3, 1, 0.3],
+                      scale: [0.9, 1.1, 0.9]
+                    }}
+                    transition={{ 
+                      duration: 1,
+                      repeat: Infinity,
+                      delay: 0.2
+                    }}
+                    className={`w-1.5 h-1.5 rounded-full ${isLightMode ? 'bg-blue-500' : 'bg-blue-400'}`}
+                  />
+                  <motion.div
+                    animate={{ 
+                      opacity: [0.3, 1, 0.3],
+                      scale: [0.9, 1.1, 0.9]
+                    }}
+                    transition={{ 
+                      duration: 1,
+                      repeat: Infinity,
+                      delay: 0.4
+                    }}
+                    className={`w-1.5 h-1.5 rounded-full ${isLightMode ? 'bg-purple-500' : 'bg-purple-400'}`}
+                  />
                 </div>
               </div>
-              
-              {/* Indicadores de processamento */}
-              <div className="flex space-x-3 items-center mt-2">
-                <motion.div
-                  animate={{ 
-                    opacity: [0.3, 1, 0.3],
-                    scale: [0.9, 1.1, 0.9]
-                  }}
-                  transition={{ 
-                    duration: 1,
-                    repeat: Infinity,
-                    delay: 0
-                  }}
-                  className={`w-2 h-2 rounded-full ${isLightMode ? 'bg-orange-500' : 'bg-orange-400'}`}
-                />
-                <motion.div
-                  animate={{ 
-                    opacity: [0.3, 1, 0.3],
-                    scale: [0.9, 1.1, 0.9]
-                  }}
-                  transition={{ 
-                    duration: 1,
-                    repeat: Infinity,
-                    delay: 0.3
-                  }}
-                  className={`w-2 h-2 rounded-full ${isLightMode ? 'bg-blue-500' : 'bg-blue-400'}`}
-                />
-                <motion.div
-                  animate={{ 
-                    opacity: [0.3, 1, 0.3],
-                    scale: [0.9, 1.1, 0.9]
-                  }}
-                  transition={{ 
-                    duration: 1,
-                    repeat: Infinity,
-                    delay: 0.6
-                  }}
-                  className={`w-2 h-2 rounded-full ${isLightMode ? 'bg-purple-500' : 'bg-purple-400'}`}
-                />
-              </div>
-              
-              {/* Estatística interessante */}
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 1, duration: 0.5 }}
-                className={`text-xs text-center mt-2 ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}
-              >
-                Mais de <span className="font-medium">{formatNumber(estatisticas.planificacoes)}</span> planos personalizados gerados hoje
-              </motion.div>
             </div>
           </motion.div>
         ) : planoGerado ? (
@@ -713,11 +475,11 @@ export default function EpictusIACopilotoCard() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="p-4 flex-grow flex flex-col justify-between relative z-10 overflow-hidden"
+            className="p-6 flex-grow flex flex-col justify-between relative z-10"
           >
             <div className="space-y-4">
               {/* Título do plano e necessidade original */}
-              <div className="text-center mb-2">
+              <div className="text-center mb-3">
                 <motion.h4 
                   initial={{ y: -10, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
@@ -730,25 +492,10 @@ export default function EpictusIACopilotoCard() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.2, duration: 0.5 }}
-                  className="flex justify-center gap-1.5 mt-1"
+                  className={`inline-flex items-center gap-1.5 mt-1 px-3 py-1 rounded-full text-xs ${isLightMode ? 'bg-blue-50 text-blue-600' : 'bg-blue-900/30 text-blue-300 border border-blue-800/30'}`}
                 >
-                  <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs ${
-                    isLightMode 
-                      ? 'bg-blue-50 text-blue-600 border border-blue-100' 
-                      : 'bg-blue-900/30 text-blue-300 border border-blue-800/30'
-                  }`}>
-                    <Star className="h-3 w-3" />
-                    <span>Personalizado para você</span>
-                  </span>
-                  
-                  <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs ${
-                    isLightMode 
-                      ? 'bg-green-50 text-green-600 border border-green-100' 
-                      : 'bg-green-900/30 text-green-300 border border-green-800/30'
-                  }`}>
-                    <Flame className="h-3 w-3" />
-                    <span>Premium</span>
-                  </span>
+                  <Star className="h-3 w-3" />
+                  <span>Personalizado para você</span>
                 </motion.div>
                 <motion.p 
                   initial={{ opacity: 0 }}
@@ -765,52 +512,23 @@ export default function EpictusIACopilotoCard() {
                 initial={{ y: 10, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.4, duration: 0.5 }}
-                className="grid grid-cols-4 gap-2 mb-3"
+                className={`grid grid-cols-3 gap-2 mb-3 ${isLightMode ? 'text-gray-600' : 'text-gray-300'}`}
               >
-                <div className={`flex flex-col items-center justify-center p-2 rounded-lg ${
-                  isLightMode 
-                    ? 'bg-gradient-to-br from-gray-50 to-gray-100 shadow-sm border border-gray-200' 
-                    : 'bg-gradient-to-br from-gray-800/30 to-gray-800/10 shadow-md border border-gray-700/30'
-                }`}>
-                  <Workflow className={`h-4 w-4 mb-1 ${isLightMode ? 'text-blue-500' : 'text-blue-400'}`} />
-                  <div className="text-xs uppercase font-medium opacity-70">Passos</div>
-                  <div className="font-semibold text-sm">{planoGerado.passos.length}</div>
+                <div className={`flex flex-col items-center justify-center p-2 rounded-lg ${isLightMode ? 'bg-gray-50' : 'bg-gray-800/30'}`}>
+                  <div className="text-xs uppercase font-medium mb-1 opacity-70">Passos</div>
+                  <div className="font-semibold">{planoGerado.passos.length}</div>
                 </div>
-                
-                <div className={`flex flex-col items-center justify-center p-2 rounded-lg ${
-                  isLightMode 
-                    ? 'bg-gradient-to-br from-gray-50 to-gray-100 shadow-sm border border-gray-200' 
-                    : 'bg-gradient-to-br from-gray-800/30 to-gray-800/10 shadow-md border border-gray-700/30'
-                }`}>
-                  <Clock className={`h-4 w-4 mb-1 ${isLightMode ? 'text-purple-500' : 'text-purple-400'}`} />
-                  <div className="text-xs uppercase font-medium opacity-70">Tempo</div>
-                  <div className="font-semibold text-sm">{planoGerado.passos.reduce((acc, passo) => acc + parseInt(passo.tempo.split(" ")[0]), 0)} min</div>
+                <div className={`flex flex-col items-center justify-center p-2 rounded-lg ${isLightMode ? 'bg-gray-50' : 'bg-gray-800/30'}`}>
+                  <div className="text-xs uppercase font-medium mb-1 opacity-70">Tempo Est.</div>
+                  <div className="font-semibold">{planoGerado.passos.reduce((acc, passo) => acc + parseInt(passo.tempo.split(" ")[0]), 0)} min</div>
                 </div>
-                
-                <div className={`flex flex-col items-center justify-center p-2 rounded-lg ${
-                  isLightMode 
-                    ? 'bg-gradient-to-br from-gray-50 to-gray-100 shadow-sm border border-gray-200' 
-                    : 'bg-gradient-to-br from-gray-800/30 to-gray-800/10 shadow-md border border-gray-700/30'
-                }`}>
-                  <BarChart className={`h-4 w-4 mb-1 ${isLightMode ? 'text-green-500' : 'text-green-400'}`} />
-                  <div className="text-xs uppercase font-medium opacity-70">Eficácia</div>
-                  <div className="font-semibold text-sm">{
-                    Math.round(planoGerado.passos.reduce((acc, passo) => acc + passo.eficacia, 0) / planoGerado.passos.length)
-                  }%</div>
-                </div>
-                
-                <div className={`flex flex-col items-center justify-center p-2 rounded-lg ${
-                  isLightMode 
-                    ? 'bg-gradient-to-br from-gray-50 to-gray-100 shadow-sm border border-gray-200' 
-                    : 'bg-gradient-to-br from-gray-800/30 to-gray-800/10 shadow-md border border-gray-700/30'
-                }`}>
-                  <Gauge className={`h-4 w-4 mb-1 ${isLightMode ? 'text-orange-500' : 'text-orange-400'}`} />
-                  <div className="text-xs uppercase font-medium opacity-70">Nível</div>
-                  <div className="font-semibold text-sm">{planoGerado.passos.some(p => p.dificuldade === "Difícil") ? "Alto" : planoGerado.passos.some(p => p.dificuldade === "Médio") ? "Médio" : "Básico"}</div>
+                <div className={`flex flex-col items-center justify-center p-2 rounded-lg ${isLightMode ? 'bg-gray-50' : 'bg-gray-800/30'}`}>
+                  <div className="text-xs uppercase font-medium mb-1 opacity-70">Dificuldade</div>
+                  <div className="font-semibold">{planoGerado.passos.some(p => p.dificuldade === "Difícil") ? "Alta" : planoGerado.passos.some(p => p.dificuldade === "Médio") ? "Média" : "Baixa"}</div>
                 </div>
               </motion.div>
 
-              {/* Lista de passos do plano com design aprimorado */}
+              {/* Lista de passos do plano */}
               <div className="space-y-3 max-h-[250px] overflow-y-auto pr-1 custom-scrollbar">
                 {planoGerado.passos.map((passo) => (
                   <motion.div
@@ -820,13 +538,13 @@ export default function EpictusIACopilotoCard() {
                     transition={{ delay: passo.numero * 0.2, duration: 0.5 }}
                     className={`p-3.5 rounded-lg border flex items-start gap-3 ${
                       isLightMode 
-                        ? 'border-gray-200 bg-white hover:bg-gray-50 shadow-md' 
-                        : 'border-gray-700 bg-gray-800/20 hover:bg-gray-800/30 backdrop-blur-sm shadow-lg'
+                        ? 'border-gray-200 bg-white hover:bg-gray-50 shadow-sm' 
+                        : 'border-gray-700 bg-gray-800/20 hover:bg-gray-800/30 backdrop-blur-sm'
                     } transition-all duration-200 hover:transform hover:translate-x-1`}
                   >
                     <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-gradient-to-br ${
                       isLightMode ? 'from-[#FF6B00] to-[#FF9D5C] text-white' : 'from-[#FF6B00] to-[#FF8736] text-white'
-                    } shadow-lg`}>
+                    } shadow-md`}>
                       {passo.numero}
                     </div>
 
@@ -841,37 +559,25 @@ export default function EpictusIACopilotoCard() {
                           </p>
                           
                           {/* Detalhes adicionais do passo */}
-                          <div className="flex flex-wrap items-center gap-2 mt-2">
-                            <div className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-xs ${
-                              isLightMode ? 'bg-gray-100 text-gray-600' : 'bg-gray-800 text-gray-300'
-                            }`}>
-                              <Clock className="h-3 w-3" />
+                          <div className="flex items-center gap-3 mt-2">
+                            <div className={`inline-flex items-center gap-1 text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 8V12L15 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                                <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
+                              </svg>
                               <span>{passo.tempo}</span>
                             </div>
-                            
-                            <div className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-xs ${
+                            <div className={`inline-flex items-center gap-1 text-xs ${
                               passo.dificuldade === "Fácil" 
-                                ? `${isLightMode ? 'bg-green-50 text-green-600' : 'bg-green-900/30 text-green-400'}` 
+                                ? `${isLightMode ? 'text-green-600' : 'text-green-400'}` 
                                 : passo.dificuldade === "Médio" 
-                                  ? `${isLightMode ? 'bg-amber-50 text-amber-600' : 'bg-amber-900/30 text-amber-400'}`
-                                  : `${isLightMode ? 'bg-red-50 text-red-600' : 'bg-red-900/30 text-red-400'}`
+                                  ? `${isLightMode ? 'text-amber-600' : 'text-amber-400'}`
+                                  : `${isLightMode ? 'text-red-600' : 'text-red-400'}`
                             }`}>
-                              <BarChart className="h-3 w-3" />
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 6V18M8 10V14M16 8V16M4 12H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                              </svg>
                               <span>{passo.dificuldade}</span>
-                            </div>
-                            
-                            <div className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-xs ${
-                              isLightMode ? 'bg-blue-50 text-blue-600' : 'bg-blue-900/30 text-blue-400'
-                            }`}>
-                              <Trophy className="h-3 w-3" />
-                              <span>{passo.eficacia}% Eficaz</span>
-                            </div>
-                            
-                            <div className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-xs ${
-                              isLightMode ? 'bg-purple-50 text-purple-600' : 'bg-purple-900/30 text-purple-400'
-                            }`}>
-                              <MessageSquare className="h-3 w-3" />
-                              <span>{passo.usuariosUtilizando} Usuários</span>
                             </div>
                           </div>
                         </div>
@@ -881,9 +587,9 @@ export default function EpictusIACopilotoCard() {
                           onClick={() => navegarParaFerramenta(passo.ferramenta)}
                           className={`text-xs px-2.5 py-1.5 rounded-lg ${
                             isLightMode 
-                              ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700 shadow-md' 
-                              : 'bg-gradient-to-r from-purple-700 to-purple-800 text-purple-100 hover:from-purple-600 hover:to-purple-700 shadow-lg'
-                          } transition-all duration-200`}
+                              ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700' 
+                              : 'bg-gradient-to-r from-purple-700 to-purple-800 text-purple-100 hover:from-purple-600 hover:to-purple-700'
+                          } shadow-sm transition-all duration-200`}
                         >
                           Iniciar
                         </motion.button>
@@ -891,18 +597,13 @@ export default function EpictusIACopilotoCard() {
                     </div>
                   </motion.div>
                 ))}
-                <div ref={chatEndRef} />
               </div>
             </div>
 
-            {/* Ações do plano aprimoradas */}
-            <div className="mt-4 space-y-2.5">
-              {/* Botão de Aplicar Plano com efeito de brilho */}
+            {/* Ações do plano */}
+            <div className="mt-4 space-y-2">
               <motion.button
-                whileHover={{ 
-                  scale: 1.02, 
-                  boxShadow: "0 10px 15px -3px rgba(255, 107, 0, 0.3), 0 4px 6px -4px rgba(255, 107, 0, 0.3)" 
-                }}
+                whileHover={{ scale: 1.02, boxShadow: "0 10px 15px -3px rgba(255, 107, 0, 0.2), 0 4px 6px -4px rgba(255, 107, 0, 0.2)" }}
                 whileTap={{ scale: 0.98 }}
                 onClick={aplicarPlanoCompleto}
                 className={`w-full py-2.5 rounded-lg font-medium bg-gradient-to-r from-[#FF6B00] to-[#FF8736] text-white shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2`}
@@ -911,32 +612,14 @@ export default function EpictusIACopilotoCard() {
                 <span>APLICAR PLANO SUGERIDO</span>
               </motion.button>
 
-              {/* Barra de informações de uso */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.6, duration: 0.5 }}
-                className="flex justify-center gap-4 py-1.5"
-              >
-                <div className={`flex items-center gap-1 text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                  <Zap className="h-3 w-3 text-yellow-500" />
-                  <span>{planoGerado.passos.reduce((acc, passo) => acc + passo.usuariosUtilizando, 0)} usuários ativos</span>
-                </div>
-                <div className={`flex items-center gap-1 text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                  <Star className="h-3 w-3 text-amber-500" />
-                  <span>{Math.round(planoGerado.passos.reduce((acc, passo) => acc + passo.eficacia, 0) / planoGerado.passos.length) > 90 ? "Alta" : "Boa"} taxa de sucesso</span>
-                </div>
-              </motion.div>
-
-              {/* Botão de nova necessidade estilizado */}
               <motion.button
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.99 }}
                 onClick={reiniciarProcesso}
                 className={`w-full py-2 rounded-lg text-sm font-medium ${
                   isLightMode 
-                    ? 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200' 
-                    : 'bg-gray-800/60 text-gray-300 hover:bg-gray-700/60 backdrop-blur-sm border border-gray-700'
+                    ? 'bg-gray-100 text-gray-600 hover:bg-gray-200' 
+                    : 'bg-gray-800/60 text-gray-300 hover:bg-gray-700/60 backdrop-blur-sm'
                 } transition-all duration-200`}
               >
                 Nova necessidade
@@ -948,95 +631,38 @@ export default function EpictusIACopilotoCard() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
-            className="p-4 flex-grow flex flex-col justify-between relative z-10"
+            className="p-6 flex-grow flex flex-col justify-between relative z-10"
           >
             <div className="space-y-4">
-              {/* Título e dica de uso com efeito brilhante aprimorado */}
+              {/* Título e dica de uso com efeito brilhante */}
               <motion.div 
                 initial={{ y: -10 }}
                 animate={{ y: 0 }}
                 className="mb-1 text-center"
               >
-                <p className={`font-medium text-sm sm:text-base ${isLightMode ? 'text-gray-700' : 'text-gray-200'}`}>
+                <p className={`font-medium ${isLightMode ? 'text-gray-700' : 'text-gray-200'}`}>
                   Como posso te ajudar a potencializar seus estudos hoje?
                 </p>
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.3, duration: 0.5 }}
-                  className="flex justify-center gap-1.5 mt-1.5"
+                  className={`mt-1 px-2 py-0.5 rounded-full text-xs inline-flex items-center gap-1 ${isLightMode ? 'bg-blue-50 text-blue-600' : 'bg-blue-900/20 text-blue-300 border border-blue-800/30'}`}
                 >
-                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs ${
-                    isLightMode ? 'bg-blue-50 text-blue-600 border border-blue-100' : 'bg-blue-900/20 text-blue-300 border border-blue-800/30'
-                  }`}>
-                    <Sparkles className="h-3 w-3" />
-                    <span>Assistente inteligente</span>
-                  </span>
-                  
-                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs ${
-                    isLightMode ? 'bg-purple-50 text-purple-600 border border-purple-100' : 'bg-purple-900/20 text-purple-300 border border-purple-800/30'
-                  }`}>
-                    <BarChart className="h-3 w-3" />
-                    <span>+{formatNumber(estatisticas.planificacoes)} planos</span>
-                  </span>
+                  <Sparkles className="h-3 w-3" />
+                  <span>Seu assistente de estudos inteligente</span>
                 </motion.div>
-              </motion.div>
-
-              {/* Estatísticas da IA - NOVO */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2, duration: 0.4 }}
-                className="grid grid-cols-3 gap-2 p-2 rounded-lg border border-dashed bg-opacity-5 mb-3
-                  bg-gradient-to-br
-                  border-gray-200 dark:border-gray-700
-                  from-gray-50 to-gray-100 dark:from-gray-800/10 dark:to-gray-800/20"
-              >
-                <div className="flex flex-col items-center">
-                  <div className={`inline-flex items-center justify-center h-7 w-7 rounded-md ${
-                    isLightMode ? 'bg-blue-100 text-blue-600' : 'bg-blue-900/30 text-blue-300'
-                  }`}>
-                    <Brain className="h-4 w-4" />
-                  </div>
-                  <p className={`text-xs font-medium mt-1 ${isLightMode ? 'text-gray-700' : 'text-gray-200'}`}>
-                    {estatisticas.recursos} Recursos
-                  </p>
-                </div>
-                
-                <div className="flex flex-col items-center">
-                  <div className={`inline-flex items-center justify-center h-7 w-7 rounded-md ${
-                    isLightMode ? 'bg-green-100 text-green-600' : 'bg-green-900/30 text-green-300'
-                  }`}>
-                    <Rocket className="h-4 w-4" />
-                  </div>
-                  <p className={`text-xs font-medium mt-1 ${isLightMode ? 'text-gray-700' : 'text-gray-200'}`}>
-                    100% Premium
-                  </p>
-                </div>
-                
-                <div className="flex flex-col items-center">
-                  <div className={`inline-flex items-center justify-center h-7 w-7 rounded-md ${
-                    isLightMode ? 'bg-purple-100 text-purple-600' : 'bg-purple-900/30 text-purple-300'
-                  }`}>
-                    <Workflow className="h-4 w-4" />
-                  </div>
-                  <p className={`text-xs font-medium mt-1 ${isLightMode ? 'text-gray-700' : 'text-gray-200'}`}>
-                    {estatisticas.ferramentas} Ferramentas
-                  </p>
-                </div>
               </motion.div>
 
               {/* Campo de entrada de necessidade principal com animação */}
               <motion.form 
                 onSubmit={handleEnviarPergunta}
-                initial={{ y: 10, opacity: 0 }}
+                initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.1, duration: 0.5 }}
                 className="relative"
               >
-                <div className={`relative overflow-hidden rounded-xl border ${
-                  isLightMode ? 'border-gray-200 shadow-md' : 'border-gray-700 shadow-md'
-                } transition-all duration-300 ${
+                <div className={`relative overflow-hidden rounded-xl border ${isLightMode ? 'border-gray-200 shadow-md' : 'border-gray-700 shadow-inner'} transition-all duration-300 ${
                   isTyping 
                     ? isLightMode 
                       ? 'ring-2 ring-[#FF6B00]/30' 
@@ -1052,9 +678,7 @@ export default function EpictusIACopilotoCard() {
                     value={pergunta}
                     onChange={handleInputChange}
                     placeholder="Digite sua necessidade ou objetivo (ex: 'Criar resumo para prova de Física')"
-                    className={`w-full py-3.5 px-4 pr-12 ${
-                      isLightMode ? 'bg-white text-gray-800' : 'bg-gray-800/40 text-white backdrop-blur-sm'
-                    } placeholder-gray-400 focus:outline-none text-sm`}
+                    className={`w-full py-3.5 px-4 pr-12 ${isLightMode ? 'bg-white text-gray-800' : 'bg-gray-800/40 text-white backdrop-blur-sm'} placeholder-gray-400 focus:outline-none text-sm`}
                     autoFocus
                   />
 
@@ -1066,8 +690,8 @@ export default function EpictusIACopilotoCard() {
                     className={`absolute right-2 top-1/2 transform -translate-y-1/2 p-1.5 rounded-md ${
                       pergunta.trim() 
                         ? isLightMode 
-                          ? 'bg-gradient-to-r from-[#FF6B00] to-[#FF8736] text-white shadow-md' 
-                          : 'bg-gradient-to-r from-[#FF6B00] to-[#FF8736] text-white shadow-md' 
+                          ? 'bg-gradient-to-r from-[#FF6B00] to-[#FF8736] text-white' 
+                          : 'bg-gradient-to-r from-[#FF6B00] to-[#FF8736] text-white' 
                         : isLightMode 
                           ? 'bg-gray-100 text-gray-400' 
                           : 'bg-gray-700 text-gray-400'
@@ -1099,75 +723,6 @@ export default function EpictusIACopilotoCard() {
                 </motion.button>
               </motion.form>
 
-              {/* Ferramentas Populares - NOVO */}
-              {showFerramentasPopulares && (
-                <motion.div 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4, duration: 0.5 }}
-                  className="mt-3"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <p className={`text-xs flex items-center gap-1 ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                      <Trophy className="h-3 w-3" /> Ferramentas populares
-                    </p>
-                    <p className={`text-xs ${isLightMode ? 'text-gray-400' : 'text-gray-500'}`}>Eficiência</p>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    {ferramentasPopulares.map((ferramenta, index) => (
-                      <motion.div
-                        key={ferramenta.nome}
-                        initial={{ opacity: 0, y: 5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.4 + (index * 0.1), duration: 0.3 }}
-                        className={`flex items-center justify-between p-2 rounded-lg ${
-                          isLightMode
-                            ? 'bg-white border border-gray-200 shadow-sm hover:bg-gray-50'
-                            : 'bg-gray-800/20 border border-gray-700 hover:bg-gray-800/30'
-                        } transition-all duration-200`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <div className={`flex-shrink-0 h-8 w-8 rounded-md flex items-center justify-center ${
-                            isLightMode
-                              ? 'bg-gradient-to-br from-blue-100 to-blue-200 text-blue-600'
-                              : 'bg-gradient-to-br from-blue-900/30 to-blue-800/30 text-blue-400'
-                          }`}>
-                            {renderIcon(ferramenta.icone, "h-4 w-4")}
-                          </div>
-                          <div>
-                            <div className={`text-sm font-medium ${isLightMode ? 'text-gray-700' : 'text-gray-200'}`}>
-                              {ferramenta.nome}
-                            </div>
-                            <div className={`flex items-center text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                              <MessageSquare className="h-3 w-3 mr-1" /> {ferramenta.usos} usos
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center gap-1">
-                          <div className="w-16 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                            <div 
-                              className={`h-full rounded-full ${
-                                ferramenta.eficiencia >= 90
-                                  ? 'bg-green-500'
-                                  : ferramenta.eficiencia >= 80
-                                    ? 'bg-blue-500'
-                                    : 'bg-amber-500'
-                              }`}
-                              style={{ width: `${ferramenta.eficiencia}%` }}
-                            />
-                          </div>
-                          <span className={`text-xs font-medium ${isLightMode ? 'text-gray-600' : 'text-gray-300'}`}>
-                            {ferramenta.eficiencia}%
-                          </span>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-
               {/* Sugestões rápidas com design melhorado */}
               <motion.div 
                 initial={{ opacity: 0 }}
@@ -1178,8 +733,8 @@ export default function EpictusIACopilotoCard() {
                 <p className={`text-xs mb-2 flex items-center gap-1 ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
                   <Lightbulb className="h-3 w-3" /> Sugestões rápidas:
                 </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {["Criar Resumo", "Fazer Quiz", "Planejar Estudos", "Revisar Redação", "Gerar Slides", "Preparar Prova"].map((sugestao, index) => (
+                <div className="flex flex-wrap gap-2">
+                  {["Criar Resumo", "Fazer Quiz", "Planejar Estudos", "Revisar Redação", "Gerar Slides"].map((sugestao, index) => (
                     <motion.button
                       key={sugestao}
                       initial={{ opacity: 0, y: 10 }}
@@ -1191,7 +746,7 @@ export default function EpictusIACopilotoCard() {
                       className={`text-xs px-3 py-1.5 rounded-full border ${
                         isLightMode 
                           ? 'border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 text-gray-700 hover:from-gray-100 hover:to-gray-200 shadow-sm' 
-                          : 'border-gray-700 bg-gradient-to-r from-gray-800/60 to-gray-800/40 text-gray-300 hover:from-gray-700/60 hover:to-gray-700/40 backdrop-blur-sm shadow-md'
+                          : 'border-gray-700 bg-gradient-to-r from-gray-800/60 to-gray-800/40 text-gray-300 hover:from-gray-700/60 hover:to-gray-700/40 backdrop-blur-sm'
                       } transition-all duration-200`}
                     >
                       {sugestao}
@@ -1225,11 +780,11 @@ export default function EpictusIACopilotoCard() {
                         onClick={() => setPergunta(`Ajuda com ${category.name}`)}
                         className={`flex items-center gap-2 p-2 rounded-lg border ${
                           isLightMode 
-                            ? 'border-gray-200 bg-white hover:bg-gray-50 shadow-sm' 
-                            : 'border-gray-700 bg-gray-800/20 hover:bg-gray-800/40 shadow-md'
+                            ? 'border-gray-200 bg-white hover:bg-gray-50' 
+                            : 'border-gray-700 bg-gray-800/20 hover:bg-gray-800/40'
                         } transition-all duration-200`}
                       >
-                        <div className={`h-7 w-7 rounded-md bg-gradient-to-br ${category.color} flex items-center justify-center text-white shadow-md`}>
+                        <div className={`h-7 w-7 rounded-md bg-gradient-to-br ${category.color} flex items-center justify-center text-white`}>
                           {renderIcon(category.icon, "h-4 w-4")}
                         </div>
                         <div className="flex flex-col items-start">
@@ -1237,7 +792,7 @@ export default function EpictusIACopilotoCard() {
                             {category.name}
                           </span>
                           <span className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                            {formatNumber(category.count)}+ usos
+                            {category.count}+ usos
                           </span>
                         </div>
                       </motion.button>
@@ -1271,19 +826,15 @@ export default function EpictusIACopilotoCard() {
                   }}
                   className={`h-2 w-2 rounded-full`}
                 ></motion.div>
-                <span className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                  IA pronta para ajudar
-                </span>
+                <span className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>IA pronta para ajudar</span>
               </div>
 
               <motion.a 
                 href="/epictus-ia" 
                 whileHover={{ x: 3 }}
-                className={`text-xs flex items-center gap-1 ${
-                  isLightMode ? 'text-gray-500 hover:text-[#FF6B00]' : 'text-gray-400 hover:text-[#FF6B00]'
-                } transition-colors duration-200`}
+                className={`text-xs flex items-center gap-1 ${isLightMode ? 'text-gray-500 hover:text-[#FF6B00]' : 'text-gray-400 hover:text-[#FF6B00]'} transition-colors duration-200`}
               >
-                <Compass className="h-3 w-3" />
+                <Lightbulb className="h-3 w-3" />
                 <span>Explorar Todas as Ferramentas</span>
                 <ArrowRight className="h-2.5 w-2.5 ml-0.5" />
               </motion.a>
