@@ -3,7 +3,6 @@ import { Brain, Lightbulb, Send, ArrowRight, BarChart2, Sparkles, Zap, Check, St
 import { useTheme } from "@/components/ThemeProvider";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
-import { motion, AnimatePresence } from "framer-motion";
 
 export default function EpictusIACopilotoCard() {
   const { theme } = useTheme();
