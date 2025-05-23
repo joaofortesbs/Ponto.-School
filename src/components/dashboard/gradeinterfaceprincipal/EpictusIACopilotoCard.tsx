@@ -1,7 +1,4 @@
-Improved the initial interface of the Epictus IA Copiloto card to be more modern, visual, and sophisticated.
-```
 
-```replit_final_file
 import React, { useState, useEffect } from "react";
 import { Brain, Lightbulb, Send, ArrowRight, BarChart2, Sparkles, Zap, Check, Star, Wand2, Rocket, BookOpen, LucideIcon } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
@@ -940,5 +937,8 @@ export default function EpictusIACopilotoCard() {
             </motion.div>
           </div>
           
-        )
+        </AnimatePresence>
+      </AnimatePresence>
+    </motion.div>
+  );
 }
