@@ -241,7 +241,7 @@ export default function EpictusIACopilotoCard() {
     <motion.div
       whileHover={{ scale: 1.01 }}
       transition={{ duration: 0.2 }}
-      className="rounded-xl overflow-hidden border border-gray-100 dark:border-gray-800 shadow-xl bg-white dark:bg-gradient-to-br dark:from-[#0c1425] dark:to-[#0a1a2e] h-full w-full relative flex flex-col"
+      className="rounded-xl overflow-hidden border border-gray-100 dark:border-gray-800 shadow-xl bg-white dark:bg-gradient-to-br dark:from-[#0c1425] dark:to-[#0a1a2e] h-[673px] w-full relative flex flex-col"
     >
       {/* Elementos decorativos de fundo */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">

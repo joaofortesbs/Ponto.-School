@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { Flame, Award, TrendingUp, ExternalLink, Star, Zap, Trophy, Clock, CheckCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -27,7 +26,7 @@ interface StreakData {
 export default function SequenciaEstudosCard() {
   const { theme } = useTheme();
   const isLightMode = theme === "light";
-  
+
   // Estados para guardar os dados do usuário
   const [diasConsecutivos, setDiasConsecutivos] = useState<number>(0);
   const [recordeDias, setRecordeDias] = useState<number>(0);
@@ -37,23 +36,23 @@ export default function SequenciaEstudosCard() {
   const [streakEvents, setStreakEvents] = useState<StreakEvent[]>([]);
   const [ultimoCheckIn, setUltimoCheckIn] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
-  
+
   // Estado para o cronômetro
   const [tempoRestante, setTempoRestante] = useState<{
     horas: number;
     minutos: number;
     segundos: number;
   }>({ horas: 0, minutos: 0, segundos: 0 });
-  
+
   // Estado para controlar se o usuário já fez check-in hoje
   const [checkInHoje, setCheckInHoje] = useState<boolean>(false);
-  
+
   // Estado para animação do check-in
   const [showCheckInAnimation, setShowCheckInAnimation] = useState<boolean>(false);
-  
+
   // Referência para o timer do cronômetro
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  
+
   // Função para carregar o userId
   const carregarUserId = async () => {
     try {
@@ -68,7 +67,7 @@ export default function SequenciaEstudosCard() {
       return null;
     }
   };
-  
+
   // Função para carregar dados da sequência de estudos do usuário
   const carregarDadosStreakUsuario = async (id: string) => {
     try {
@@ -78,10 +77,10 @@ export default function SequenciaEstudosCard() {
         .select('*')
         .eq('user_id', id)
         .single();
-      
+
       if (error) {
         console.log("Dados não encontrados na API:", error);
-        
+
         if (error.code === '42P01') {
           console.log("Tabela user_streak não existe, criando...");
           // Caso a tabela não exista, carrega dados locais e salva no Supabase quando a tabela for criada
@@ -99,13 +98,13 @@ export default function SequenciaEstudosCard() {
           }
           return;
         }
-        
+
         // Se não conseguir, tenta carregar do localStorage
         const dadosLocais = carregarDadosLocaisSync();
         if (dadosLocais) {
           atualizarEstadosComDados(dadosLocais);
           verificarCheckInDeHoje(dadosLocais.ultimoCheckIn);
-          
+
           // Tenta salvar dados locais no Supabase para sincronizar
           try {
             await salvarDadosSequencia(dadosLocais);
@@ -116,7 +115,7 @@ export default function SequenciaEstudosCard() {
         }
         return;
       }
-      
+
       if (data) {
         const streakData: StreakData = {
           diasConsecutivos: data.dias_consecutivos || 0,
@@ -127,12 +126,12 @@ export default function SequenciaEstudosCard() {
           ultimoCheckIn: data.ultimo_check_in,
           eventos: data.eventos || []
         };
-        
+
         // Salvar dados no localStorage para acesso offline
         localStorage.setItem('streakData', JSON.stringify(streakData));
-        
+
         atualizarEstadosComDados(streakData);
-        
+
         // Verifica se já fez check-in hoje
         verificarCheckInDeHoje(data.ultimo_check_in);
       }
@@ -146,12 +145,12 @@ export default function SequenciaEstudosCard() {
       }
     }
   };
-  
+
   // Função para carregar dados locais (versão síncrona que retorna os dados)
   const carregarDadosLocaisSync = (): StreakData | null => {
     try {
       const dadosSalvos = localStorage.getItem('streakData');
-      
+
       if (dadosSalvos) {
         const dados = JSON.parse(dadosSalvos);
         return dados;
@@ -166,7 +165,7 @@ export default function SequenciaEstudosCard() {
           ultimoCheckIn: null,
           eventos: []
         };
-        
+
         // Salva os dados iniciais
         localStorage.setItem('streakData', JSON.stringify(dadosIniciais));
         return dadosIniciais;
@@ -176,7 +175,7 @@ export default function SequenciaEstudosCard() {
       return null;
     }
   };
-  
+
   // Função para carregar dados locais e aplicar ao estado
   const carregarDadosLocais = () => {
     const dados = carregarDadosLocaisSync();
@@ -185,7 +184,7 @@ export default function SequenciaEstudosCard() {
       verificarCheckInDeHoje(dados.ultimoCheckIn);
     }
   };
-  
+
   // Função para atualizar os estados com os dados carregados
   const atualizarEstadosComDados = (dados: StreakData) => {
     setDiasConsecutivos(dados.diasConsecutivos);
@@ -196,31 +195,31 @@ export default function SequenciaEstudosCard() {
     setUltimoCheckIn(dados.ultimoCheckIn);
     setStreakEvents(dados.eventos || []);
   };
-  
+
   // Verifica se o usuário já fez check-in hoje
   const verificarCheckInDeHoje = (ultimoCheckIn: string | null) => {
     if (!ultimoCheckIn) {
       setCheckInHoje(false);
       return;
     }
-    
+
     const hoje = new Date().toISOString().split('T')[0];
     const ultimoCheck = new Date(ultimoCheckIn).toISOString().split('T')[0];
-    
+
     setCheckInHoje(hoje === ultimoCheck);
-    
+
     // Se já fez check-in hoje, inicia o cronômetro
     if (hoje === ultimoCheck) {
       iniciarCronometro();
     }
   };
-  
+
   // Função para salvar os dados da sequência com tentativas de reconexão
   const salvarDadosSequencia = async (dados: StreakData, tentativas = 3) => {
     try {
       // Salva no localStorage como fallback
       localStorage.setItem('streakData', JSON.stringify(dados));
-      
+
       if (userId) {
         // Salva no Supabase
         const { error } = await supabase
@@ -235,14 +234,14 @@ export default function SequenciaEstudosCard() {
             ultimo_check_in: dados.ultimoCheckIn,
             eventos: dados.eventos
           });
-        
+
         if (error) {
           console.error("Erro ao salvar dados no Supabase:", error);
-          
+
           // Verifica se é erro de tabela inexistente
           if (error.code === '42P01' && tentativas > 0) {
             console.log("Tabela user_streak não existe. Tentando migração...");
-            
+
             // Executa migração para criar a tabela se aplicável (via workflow existente)
             try {
               await fetch('/api/aplicar-migracao', {
@@ -250,7 +249,7 @@ export default function SequenciaEstudosCard() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ migracao: '20241015000001_create_user_streak_table.sql' })
               });
-              
+
               // Tenta salvar novamente após um breve delay
               setTimeout(() => {
                 salvarDadosSequencia(dados, tentativas - 1);
@@ -259,7 +258,7 @@ export default function SequenciaEstudosCard() {
               console.error("Erro ao executar migração:", migracaoError);
             }
           }
-          
+
           // Se não for erro de tabela inexistente ou tentativas esgotadas
           // Agendar nova tentativa em caso de erro de rede
           if (tentativas > 1 && (error.code === 'NETWORK_ERROR' || error.code?.toString().startsWith('5'))) {
@@ -273,7 +272,7 @@ export default function SequenciaEstudosCard() {
         }
       } else {
         console.error("Usuário não autenticado. Dados salvos apenas localmente.");
-        
+
         // Agendar uma tentativa posterior quando o userId estiver disponível
         if (tentativas > 0) {
           setTimeout(async () => {
@@ -286,7 +285,7 @@ export default function SequenciaEstudosCard() {
       }
     } catch (error) {
       console.error("Erro ao salvar dados da sequência:", error);
-      
+
       // Tenta novamente em caso de erro inesperado
       if (tentativas > 1) {
         setTimeout(() => {
@@ -295,39 +294,39 @@ export default function SequenciaEstudosCard() {
       }
     }
   };
-  
+
   // Função para fazer check-in
   const realizarCheckIn = async () => {
     try {
       const agora = new Date();
       const dataCheckIn = agora.toISOString();
-      
+
       // Verifica se já fez check-in hoje
       const hoje = agora.toISOString().split('T')[0];
       const ultimoCheck = ultimoCheckIn ? new Date(ultimoCheckIn).toISOString().split('T')[0] : null;
-      
+
       if (hoje === ultimoCheck) {
         console.log("Já fez check-in hoje!");
         return;
       }
-      
+
       // Cria novo evento
       const novoEvento: StreakEvent = {
         type: 'login',
         date: dataCheckIn,
       };
-      
+
       let novosDiasConsecutivos = diasConsecutivos;
-      
+
       // Verifica se o último check-in foi no dia anterior
       if (ultimoCheckIn) {
         const ultimaData = new Date(ultimoCheckIn);
         const ontem = new Date(agora);
         ontem.setDate(ontem.getDate() - 1);
-        
+
         const ultimaDataStr = ultimaData.toISOString().split('T')[0];
         const ontemStr = ontem.toISOString().split('T')[0];
-        
+
         if (ultimaDataStr === ontemStr || hoje === ultimaDataStr) {
           // Check-in consecutivo
           novosDiasConsecutivos += 1;
@@ -339,14 +338,14 @@ export default function SequenciaEstudosCard() {
         // Primeiro check-in
         novosDiasConsecutivos = 1;
       }
-      
+
       // Atualiza o recorde se necessário
       const novoRecorde = Math.max(recordeDias, novosDiasConsecutivos);
-      
+
       // Calcula dias para próximo nível (simplificado)
       let novosDiasParaProximoNivel = 3;
       let novaRecompensa = "Badge Iniciante";
-      
+
       if (novosDiasConsecutivos >= 3 && novosDiasConsecutivos < 7) {
         novosDiasParaProximoNivel = 7 - novosDiasConsecutivos;
         novaRecompensa = "Badge Constante";
@@ -360,7 +359,7 @@ export default function SequenciaEstudosCard() {
         novosDiasParaProximoNivel = 0;
         novaRecompensa = "Badge Lendário";
       }
-      
+
       // Atualiza os estados
       setDiasConsecutivos(novosDiasConsecutivos);
       setRecordeDias(novoRecorde);
@@ -369,11 +368,11 @@ export default function SequenciaEstudosCard() {
       setUltimoCheckIn(dataCheckIn);
       setStreakEvents([...streakEvents, novoEvento]);
       setCheckInHoje(true);
-      
+
       // Mostra animação de check-in
       setShowCheckInAnimation(true);
       setTimeout(() => setShowCheckInAnimation(false), 3000);
-      
+
       // Salva os dados
       const novosDados: StreakData = {
         diasConsecutivos: novosDiasConsecutivos,
@@ -384,39 +383,39 @@ export default function SequenciaEstudosCard() {
         ultimoCheckIn: dataCheckIn,
         eventos: [...streakEvents, novoEvento]
       };
-      
+
       await salvarDadosSequencia(novosDados);
-      
+
       // Inicia o cronômetro
       iniciarCronometro();
-      
+
     } catch (error) {
       console.error("Erro ao fazer check-in:", error);
     }
   };
-  
+
   // Função para calcular o tempo restante até meia-noite
   const calcularTempoRestante = () => {
     const agora = new Date();
     const meianoite = new Date();
     meianoite.setHours(24, 0, 0, 0);
-    
+
     const diferencaMs = meianoite.getTime() - agora.getTime();
-    
+
     // Convertendo para horas, minutos e segundos
     const horas = Math.floor(diferencaMs / (1000 * 60 * 60));
     const minutos = Math.floor((diferencaMs % (1000 * 60 * 60)) / (1000 * 60));
     const segundos = Math.floor((diferencaMs % (1000 * 60)) / 1000);
-    
+
     return { horas, minutos, segundos, totalMs: diferencaMs };
   };
-  
+
   // Função para iniciar o cronômetro
   const iniciarCronometro = () => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
-    
+
     // Calcula tempo inicial
     const tempoInicial = calcularTempoRestante();
     setTempoRestante({
@@ -424,17 +423,17 @@ export default function SequenciaEstudosCard() {
       minutos: tempoInicial.minutos,
       segundos: tempoInicial.segundos
     });
-    
+
     // Inicia o timer
     timerRef.current = setInterval(() => {
       const tempo = calcularTempoRestante();
-      
+
       setTempoRestante({
         horas: tempo.horas,
         minutos: tempo.minutos,
         segundos: tempo.segundos
       });
-      
+
       // Se chegou à meia-noite, reseta o check-in
       if (tempo.totalMs <= 0) {
         if (timerRef.current) {
@@ -445,24 +444,24 @@ export default function SequenciaEstudosCard() {
       }
     }, 1000);
   };
-  
+
   // Carregar dados ao montar o componente e configurar sincronização periódica
   useEffect(() => {
     let isMounted = true;
-    
+
     const inicializar = async () => {
       // Primeiro carrega dados locais para exibição imediata
       carregarDadosLocais();
-      
+
       // Depois tenta obter dados do Supabase (que são mais atualizados)
       const id = await carregarUserId();
       if (id && isMounted) {
         await carregarDadosStreakUsuario(id);
       }
     };
-    
+
     inicializar();
-    
+
     // Configura sincronização periódica a cada 15 minutos
     const syncInterval = setInterval(async () => {
       const id = await carregarUserId();
@@ -473,17 +472,17 @@ export default function SequenciaEstudosCard() {
           .select('*')
           .eq('user_id', id)
           .single();
-          
+
         if (!error && data) {
           // Se encontrar dados no servidor e forem mais recentes que os locais,
           // atualiza os dados locais
           const localData = carregarDadosLocaisSync();
           const serverLastUpdate = new Date(data.updated_at || data.ultimo_check_in || 0);
           const localLastUpdate = localData?.ultimoCheckIn ? new Date(localData.ultimoCheckIn) : new Date(0);
-          
+
           if (serverLastUpdate > localLastUpdate) {
             console.log("Sincronizando dados do servidor para o dispositivo local");
-            
+
             const streakData: StreakData = {
               diasConsecutivos: data.dias_consecutivos || 0,
               recordeDias: data.recorde_dias || 0,
@@ -493,7 +492,7 @@ export default function SequenciaEstudosCard() {
               ultimoCheckIn: data.ultimo_check_in,
               eventos: data.eventos || []
             };
-            
+
             atualizarEstadosComDados(streakData);
             verificarCheckInDeHoje(data.ultimo_check_in);
             localStorage.setItem('streakData', JSON.stringify(streakData));
@@ -501,7 +500,7 @@ export default function SequenciaEstudosCard() {
         }
       }
     }, 15 * 60 * 1000); // 15 minutos
-    
+
     // Limpa timers ao desmontar
     return () => {
       isMounted = false;
@@ -511,7 +510,7 @@ export default function SequenciaEstudosCard() {
       clearInterval(syncInterval);
     };
   }, []);
-  
+
   // Verifica se a tabela existe, se não, tenta criar e migra dados locais
   useEffect(() => {
     const verificarECriarTabela = async () => {
@@ -522,10 +521,10 @@ export default function SequenciaEstudosCard() {
             .from('user_streak')
             .select('*')
             .limit(1);
-          
+
           if (error && error.code === '42P01') { // código de erro para tabela não existente
             console.log("Tabela user_streak não existe, tentando aplicar migração...");
-            
+
             // Tenta aplicar migração via API para criar a tabela
             try {
               await fetch('/api/aplicar-migracao', {
@@ -533,9 +532,9 @@ export default function SequenciaEstudosCard() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ migracao: '20241015000001_create_user_streak_table.sql' })
               });
-              
+
               console.log("Solicitação de migração enviada");
-              
+
               // Aguarda um momento e verifica se há dados locais para migrar
               setTimeout(async () => {
                 const dadosLocais = carregarDadosLocaisSync();
@@ -555,7 +554,7 @@ export default function SequenciaEstudosCard() {
               .select('*')
               .eq('user_id', userId)
               .single();
-            
+
             if (dataError || !data) {
               // Se não houver dados para o usuário, verifica se há dados locais para migrar
               const dadosLocais = carregarDadosLocaisSync();
@@ -570,15 +569,15 @@ export default function SequenciaEstudosCard() {
         }
       }
     };
-    
+
     verificarECriarTabela();
   }, [userId]);
-  
+
   // Função para formatar o tempo
   const formatarTempo = (valor: number): string => {
     return valor < 10 ? `0${valor}` : `${valor}`;
   };
-  
+
   // Cálculo da porcentagem de progresso para o próximo nível
   const calcularProgresso = () => {
     if (diasConsecutivos === 0 && diasParaProximoNivel === 0) return 0;
@@ -590,7 +589,7 @@ export default function SequenciaEstudosCard() {
     <motion.div
       whileHover={{ scale: 1.01 }}
       transition={{ duration: 0.2 }}
-      className="h-full w-full rounded-xl overflow-hidden border border-gray-100 dark:border-gray-800 shadow-xl bg-white dark:bg-gradient-to-br dark:from-[#0c1425] dark:to-[#0a1a2e] relative flex flex-col"
+      className="rounded-xl overflow-hidden border border-gray-100 dark:border-gray-800 shadow-xl bg-white dark:bg-gradient-to-br dark:from-[#0c1425] dark:to-[#0a1a2e] h-[673px] w-full relative flex flex-col"
     >
       {/* Elementos decorativos de fundo */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -677,7 +676,7 @@ export default function SequenciaEstudosCard() {
             {/* Efeito de partículas decorativas */}
             <div className="absolute top-1/3 left-1/4 w-1.5 h-1.5 rounded-full bg-[#FF6B00]/30 animate-pulse"></div>
             <div className="absolute bottom-1/3 right-1/4 w-2 h-2 rounded-full bg-[#FF6B00]/20 animate-pulse" style={{animationDelay: '1s'}}></div>
-            
+
             {/* Ícone principal com efeitos */}
             <div className="relative mb-6 group">
               {/* Aura externa animada */}
@@ -694,7 +693,7 @@ export default function SequenciaEstudosCard() {
                 }}
                 className="absolute -inset-3 rounded-full bg-gradient-to-r from-[#FF6B00]/10 to-[#FF8C40]/10 blur-xl"
               />
-              
+
               {/* Círculo principal */}
               <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#FF6B00]/10 to-[#FF8C40]/10 backdrop-blur-sm flex items-center justify-center border border-[#FF6B00]/30 relative">
                 <div className="absolute inset-1 rounded-full bg-gradient-to-r from-[#FF6B00]/20 to-[#FF8C40]/20 opacity-70"></div>
@@ -702,7 +701,7 @@ export default function SequenciaEstudosCard() {
                   <Flame className="h-10 w-10 text-[#FF6B00] drop-shadow-lg relative z-10" />
                 </div>
               </div>
-              
+
               {/* Pequenos elementos decorativos ao redor */}
               <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-white/10 dark:bg-[#0A2540]/70 border border-[#FF6B00]/30 flex items-center justify-center">
                 <Star className="h-2.5 w-2.5 text-[#FF8C40]" />
@@ -711,17 +710,17 @@ export default function SequenciaEstudosCard() {
                 <Trophy className="h-2.5 w-2.5 text-[#FF8C40]" />
               </div>
             </div>
-            
+
             {/* Texto principal com tipografia melhorada */}
             <h4 className={`font-semibold text-xl mb-2 ${isLightMode ? 'text-gray-800' : 'text-gray-100'} tracking-tight`}>
               Inicie sua jornada de estudos
             </h4>
-            
+
             {/* Descrição com informações mais detalhadas */}
             <p className={`text-sm max-w-[280px] mb-5 ${isLightMode ? 'text-gray-600' : 'text-gray-300'} leading-relaxed`}>
               Registre sua presença diária para construir uma sequência de estudos consistente e desbloquear recompensas
             </p>
-            
+
             {/* Informações de benefícios em formato de badges */}
             <div className="flex items-center justify-center gap-3 mb-5">
               <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${isLightMode ? 'bg-[#FF6B00]/5 text-[#FF6B00]' : 'bg-[#FF6B00]/10 text-[#FF6B00]'}`}>
@@ -733,7 +732,7 @@ export default function SequenciaEstudosCard() {
                 <span>Ganhe badges</span>
               </div>
             </div>
-            
+
             {/* Botão de ação principal redesenhado */}
             <Button 
               onClick={realizarCheckIn}
@@ -742,7 +741,7 @@ export default function SequenciaEstudosCard() {
               <CheckCircle className="h-4 w-4 mr-2" />
               <span className="font-medium">Marcar presença agora</span>
             </Button>
-            
+
             {/* Informação adicional discreta */}
             <p className={`text-xs mt-3 ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
               Crie um hábito de estudo com check-ins diários
@@ -808,7 +807,7 @@ export default function SequenciaEstudosCard() {
                     <Clock className="h-3.5 w-3.5 text-[#FF6B00]" />
                     <span className="text-xs font-medium text-gray-600 dark:text-gray-300">Próximo check-in em</span>
                   </div>
-                  
+
                   <div className="flex items-center justify-center space-x-2 text-xl font-mono font-semibold text-[#FF6B00]">
                     <div className="flex flex-col items-center">
                       <span className="bg-gray-100 dark:bg-[#0A2540] rounded px-2 py-1 min-w-[45px] text-center">
