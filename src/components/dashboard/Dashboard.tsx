@@ -46,13 +46,28 @@ export default function Dashboard() {
       </div>
       <div className="max-w-[1192px] mx-auto">
         <h1 className="text-3xl font-bold text-brand-black dark:text-white flex items-center gap-2">
-          <span className="text-2xl">👋</span> Olá, {(() => {
+          <span className="text-2xl">👋</span> {(() => {
                   // Obter o primeiro nome do usuário com prioridade consistente
                   const firstName = userProfile?.full_name?.split(' ')[0] || userProfile?.display_name || localStorage.getItem('userFirstName') || "Usuário";
                   // Salvar no localStorage para uso no sidebar e outros componentes
                   localStorage.setItem('userFirstName', firstName);
-                  return firstName;
-                })()}!
+                  
+                  // Determinar a saudação com base na hora atual
+                  const horaAtual = new Date().getHours();
+                  let saudacao = "Olá";
+                  
+                  if (horaAtual >= 5 && horaAtual < 12) {
+                    saudacao = "Bom dia";
+                  } else if (horaAtual >= 12 && horaAtual < 18.5) {
+                    saudacao = "Boa tarde";
+                  } else if (horaAtual >= 18.5 && horaAtual < 24) {
+                    saudacao = "Boa noite";
+                  } else {
+                    saudacao = "Boa madrugada";
+                  }
+                  
+                  return `${saudacao}, ${firstName}!`;
+                })()}
         </h1>
         
         {/* Dashboard Interface */}
