@@ -1,8 +1,9 @@
-
 import React, { useState, useEffect } from "react";
-import { Brain, Lightbulb, Send, ArrowRight, BarChart2, Sparkles, Zap, Check, Command, MessageSquare, Book, Clock, Bookmark, Star, FileText } from "lucide-react";
+import { Brain, Lightbulb, Send, ArrowRight, BarChart2, Sparkles, Zap, Check, Command, MessageSquare, Book, Clock, Bookmark, Star, FileText, Edit, Layout } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Calendar } from "@/components/ui/calendar";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function EpictusIACopilotoCard() {
@@ -33,7 +34,7 @@ export default function EpictusIACopilotoCard() {
         gerarPlanoDeAcao(pergunta);
         setIsProcessing(false);
         setPergunta("");
-        
+
         // Adicionar à lista de histórico
         if (historyItems.length >= 3) {
           historyItems.pop(); // Remove o último item
@@ -42,7 +43,7 @@ export default function EpictusIACopilotoCard() {
           { icon: "MessageSquare", text: pergunta.substring(0, 25) + (pergunta.length > 25 ? "..." : "") },
           ...historyItems.slice(0, 2)
         ]);
-        
+
         setRecentUsage(true);
       }, 1500);
     }
@@ -223,16 +224,16 @@ export default function EpictusIACopilotoCard() {
         {/* Gradientes de fundo mais suaves e modernos */}
         <div className="absolute -right-10 -top-10 w-64 h-64 bg-[#FF6B00]/5 dark:bg-[#FF6B00]/10 rounded-full blur-3xl"></div>
         <div className="absolute -left-20 -bottom-20 w-96 h-96 bg-blue-500/5 dark:bg-blue-500/5 rounded-full blur-3xl"></div>
-        
+
         {/* Linhas decorativas */}
         <div className="absolute top-0 right-0 w-1/3 h-px bg-gradient-to-r from-transparent to-[#FF6B00]/30 dark:to-[#FF6B00]/20"></div>
         <div className="absolute bottom-0 left-0 w-1/3 h-px bg-gradient-to-r from-[#FF6B00]/30 dark:from-[#FF6B00]/20 to-transparent"></div>
-        
+
         {/* Partículas decorativas mais sutis */}
         <div className="absolute top-1/4 right-10 w-2 h-2 bg-[#FF6B00]/30 rounded-full"></div>
         <div className="absolute top-1/3 left-10 w-3 h-3 bg-blue-400/20 dark:bg-blue-400/10 rounded-full"></div>
         <div className="absolute bottom-1/4 right-1/4 w-2 h-2 bg-purple-400/20 dark:bg-purple-400/10 rounded-full"></div>
-        
+
         {/* Padrão de pontos sutis */}
         <div className="absolute inset-0 opacity-5 dark:opacity-10 bg-[radial-gradient(#FF6B00_1px,transparent_1px)] bg-[length:20px_20px]"></div>
       </div>
@@ -295,12 +296,12 @@ export default function EpictusIACopilotoCard() {
                 : 'bg-[#FF6B00]/20 shadow-[0_0_15px_rgba(255,107,0,0.2)]'}`}>
                 <Brain className={`h-8 w-8 text-[#FF6B00] animate-pulse`} />
               </div>
-              
+
               {/* Texto informativo */}
               <p className={`text-center font-medium ${isLightMode ? 'text-gray-700' : 'text-gray-200'}`}>
                 Epictus está analisando sua necessidade...
               </p>
-              
+
               {/* Barra de progresso animada mais sofisticada */}
               <div className="w-full max-w-md h-1.5 bg-gray-200/60 dark:bg-gray-700/60 rounded-full overflow-hidden backdrop-blur-sm">
                 <motion.div 
@@ -310,13 +311,13 @@ export default function EpictusIACopilotoCard() {
                   transition={{ duration: 1.5, ease: "easeInOut" }}
                 />
               </div>
-              
+
               {/* Detalhes do processo */}
               <div className="text-center">
                 <p className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
                   Identificando ferramentas ideais para <span className="font-medium">{necessidadeOriginal}</span>
                 </p>
-                
+
                 {/* Etapas do processamento */}
                 <div className="mt-3 flex items-center justify-center gap-3">
                   <span className={`text-xs px-2 py-1 rounded-full ${isLightMode 
@@ -391,7 +392,7 @@ export default function EpictusIACopilotoCard() {
                             </span>
                           )}
                         </div>
-                        
+
                         {/* Botão iniciar */}
                         <motion.button
                           whileHover={{ scale: 1.05 }}
@@ -406,7 +407,7 @@ export default function EpictusIACopilotoCard() {
                           Iniciar
                         </motion.button>
                       </div>
-                      
+
                       {/* Descrição do passo */}
                       <p className={`text-xs mt-1 ${isLightMode ? 'text-gray-600' : 'text-gray-300'}`}>
                         {passo.descricao}
@@ -475,7 +476,7 @@ export default function EpictusIACopilotoCard() {
                       : 'bg-gray-800/50 text-white backdrop-blur-sm'} placeholder-gray-400 focus:outline-none text-sm`}
                     autoFocus
                   />
-                  
+
                   {/* Ícone de envio animado */}
                   <motion.button
                     whileHover={{ scale: 1.05 }}
