@@ -52,7 +52,7 @@ export default function EpictusIACopilotoCard() {
           descricao: "Use o Gerador de Resumos para organizar o conteúdo principal",
           ferramenta: "resumo-inteligente",
           icone: "BookOpen",
-          tempo: "15 min",
+          tempo: "4 min",
           dificuldade: "Fácil"
         },
         {
@@ -61,7 +61,7 @@ export default function EpictusIACopilotoCard() {
           descricao: "Organize seu pensamento com nosso Gerador de Mapas Mentais",
           ferramenta: "mapa-mental",
           icone: "Brain",
-          tempo: "20 min",
+          tempo: "5 min",
           dificuldade: "Médio"
         },
         {
@@ -70,7 +70,7 @@ export default function EpictusIACopilotoCard() {
           descricao: "Crie slides profissionais com nossa ferramenta de Slides Didáticos",
           ferramenta: "slides-didaticos",
           icone: "LayoutTemplate",
-          tempo: "30 min",
+          tempo: "5 min",
           dificuldade: "Médio"
         }
       ];
@@ -83,7 +83,7 @@ export default function EpictusIACopilotoCard() {
           descricao: "Use o Assistente de Objetivos para definir o propósito do quiz",
           ferramenta: "objetivos-aprendizagem",
           icone: "Target",
-          tempo: "10 min",
+          tempo: "3 min",
           dificuldade: "Fácil"
         },
         {
@@ -92,7 +92,7 @@ export default function EpictusIACopilotoCard() {
           descricao: "Crie questões eficazes com o Gerador de Questões",
           ferramenta: "gerador-questoes",
           icone: "FileQuestion",
-          tempo: "25 min",
+          tempo: "5 min",
           dificuldade: "Médio"
         }
       ];
@@ -105,7 +105,7 @@ export default function EpictusIACopilotoCard() {
           descricao: "Use o Resumidor Inteligente para destacar os conceitos principais",
           ferramenta: "resumo-inteligente",
           icone: "FileText",
-          tempo: "15 min",
+          tempo: "4 min",
           dificuldade: "Fácil"
         },
         {
@@ -114,7 +114,7 @@ export default function EpictusIACopilotoCard() {
           descricao: "Organize o conteúdo com ferramentas de estruturação",
           ferramenta: "organizador-conteudo",
           icone: "ListChecks",
-          tempo: "20 min",
+          tempo: "5 min",
           dificuldade: "Médio"
         }
       ];
@@ -127,7 +127,7 @@ export default function EpictusIACopilotoCard() {
           descricao: "Planeje sua redação com o Organizador de Ideias",
           ferramenta: "organizador-ideias",
           icone: "PenTool",
-          tempo: "15 min",
+          tempo: "4 min",
           dificuldade: "Médio"
         },
         {
@@ -136,7 +136,7 @@ export default function EpictusIACopilotoCard() {
           descricao: "Use o Revisor de Textos para aprimorar a qualidade",
           ferramenta: "revisor-textos",
           icone: "Edit",
-          tempo: "20 min",
+          tempo: "5 min",
           dificuldade: "Médio"
         }
       ];
@@ -150,7 +150,7 @@ export default function EpictusIACopilotoCard() {
           descricao: "Use o Tutor Inteligente para obter explicações detalhadas",
           ferramenta: "tutor-inteligente",
           icone: "Lightbulb",
-          tempo: "20 min",
+          tempo: "4 min",
           dificuldade: "Fácil"
         },
         {
@@ -159,7 +159,7 @@ export default function EpictusIACopilotoCard() {
           descricao: "Crie um plano de estudos organizado com o Cronograma Inteligente",
           ferramenta: "cronograma-estudos",
           icone: "Calendar",
-          tempo: "25 min",
+          tempo: "5 min",
           dificuldade: "Médio"
         }
       ];
