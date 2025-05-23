@@ -64,11 +64,11 @@ export default function AtalhoSchoolCard() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
     >
-      {/* Header elegante com gradiente */}
-      <div className={`p-5 ${isLightMode ? 'bg-gradient-to-r from-orange-50 via-orange-100/70 to-orange-50/40' : 'bg-gradient-to-r from-[#0F172A] via-[#1E293B] to-[#0F172A]'} border-b ${isLightMode ? 'border-orange-100' : 'border-[#FF6B00]/20'}`}>
+      {/* Header com gradiente igual ao card Seu Foco Hoje */}
+      <div className={`p-5 ${isLightMode ? 'bg-gradient-to-r from-orange-50 to-amber-50/50' : 'bg-gradient-to-br from-[#FF6B00]/10 to-transparent'} border-b ${isLightMode ? 'border-orange-100' : 'border-[#FF6B00]/20'}`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className={`p-2.5 rounded-full flex items-center justify-center ${isLightMode ? 'bg-white shadow-sm border border-orange-200' : 'bg-[#FF6B00]/15 shadow-lg shadow-[#FF6B00]/5 border border-[#FF6B00]/30'}`}>
+            <div className={`p-2.5 rounded-lg flex items-center justify-center ${isLightMode ? 'bg-white shadow-sm border border-orange-200' : 'bg-[#FF6B00]/15 shadow-lg shadow-[#FF6B00]/5 border border-[#FF6B00]/30'}`}>
               <Grid className={`h-5 w-5 text-[#FF6B00]`} />
             </div>
             <div>
