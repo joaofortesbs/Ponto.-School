@@ -17,24 +17,6 @@
 @import "./styles/rotina-calendar.css";
 
 
-@keyframes shine {
-  0% {
-    transform: translateX(-100%) skewX(-15deg);
-  }
-  100% {
-    transform: translateX(150%) skewX(-15deg);
-  }
-}
-
-.animate-shine {
-  animation: shine 2s infinite;
-}
-
-.clip-path-hexagon {
-  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-}
-
-
 /* Estilos para manter proporções consistentes em grid layouts */
 .dashboard-card {
   display: flex;
