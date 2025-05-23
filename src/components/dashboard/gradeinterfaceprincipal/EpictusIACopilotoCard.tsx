@@ -633,36 +633,157 @@ export default function EpictusIACopilotoCard() {
             transition={{ duration: 0.5 }}
             className="p-6 flex-grow flex flex-col justify-between relative z-10"
           >
-            <div className="space-y-4">
-              {/* Título e dica de uso com efeito brilhante */}
-              <motion.div 
-                initial={{ y: -10 }}
-                animate={{ y: 0 }}
-                className="mb-1 text-center"
-              >
-                <p className={`font-medium ${isLightMode ? 'text-gray-700' : 'text-gray-200'}`}>
-                  Como posso te ajudar a potencializar seus estudos hoje?
-                </p>
+            {/* Elemento decorativo - ondas sutis animadas */}
+            <div className="absolute inset-x-0 top-0 h-20 pointer-events-none overflow-hidden opacity-30">
+              <motion.div
+                animate={{ 
+                  y: [0, -8, 0],
+                  opacity: [0.4, 0.6, 0.4]
+                }}
+                transition={{
+                  duration: 7,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+                className={`w-full h-40 rounded-[100%] ${isLightMode ? 'bg-gradient-to-r from-orange-300/20 to-blue-300/20' : 'bg-gradient-to-r from-[#FF6B00]/20 to-blue-500/30'} blur-xl transform -translate-y-20`}
+              />
+            </div>
+            
+            <div className="space-y-5 relative">
+              {/* Cabeçalho e ícone principal com animação sofisticada */}
+              <div className="flex flex-col items-center relative">
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.3, duration: 0.5 }}
-                  className={`mt-1 px-2 py-0.5 rounded-full text-xs inline-flex items-center gap-1 ${isLightMode ? 'bg-blue-50 text-blue-600' : 'bg-blue-900/20 text-blue-300 border border-blue-800/30'}`}
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ 
+                    type: "spring",
+                    stiffness: 200,
+                    duration: 0.8
+                  }}
+                  className="mb-4 relative"
                 >
-                  <Sparkles className="h-3 w-3" />
-                  <span>Seu assistente de estudos inteligente</span>
+                  <div className={`h-16 w-16 rounded-full flex items-center justify-center ${isLightMode ? 'bg-gradient-to-br from-white to-gray-50' : 'bg-gradient-to-br from-gray-800 to-gray-900'} shadow-xl relative z-10`}>
+                    <div className={`absolute inset-0.5 rounded-full ${isLightMode ? 'bg-gradient-to-br from-orange-50 to-orange-100' : 'bg-gradient-to-br from-[#0c1425]/90 to-[#0a1a2e]'} z-0`}></div>
+                    
+                    <motion.div
+                      animate={{ 
+                        rotateY: [0, 180, 360],
+                        scale: [1, 1.1, 1]
+                      }}
+                      transition={{ 
+                        duration: 10,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                      className="relative z-20 flex items-center justify-center"
+                    >
+                      <Brain className={`h-8 w-8 text-[#FF6B00] drop-shadow-lg`} />
+                    </motion.div>
+                    
+                    {/* Aura pulsante em torno do ícone */}
+                    <motion.div
+                      animate={{ 
+                        scale: [1, 1.2, 1],
+                        opacity: [0, 0.2, 0]
+                      }}
+                      transition={{ 
+                        duration: 3,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                      className={`absolute inset-0 rounded-full ${isLightMode ? 'bg-[#FF6B00]/20' : 'bg-[#FF6B00]/30'} blur-md z-0`}
+                    />
+                  </div>
+                  
+                  {/* Partículas orbitando */}
+                  <motion.div 
+                    animate={{ 
+                      rotate: 360
+                    }}
+                    transition={{ 
+                      duration: 15,
+                      repeat: Infinity,
+                      ease: "linear"
+                    }}
+                    className="absolute inset-0 z-0"
+                    style={{ width: '100%', height: '100%' }}
+                  >
+                    {[0, 60, 120, 180, 240, 300].map((angle, i) => (
+                      <motion.div
+                        key={i}
+                        className="absolute w-1.5 h-1.5 rounded-full"
+                        style={{ 
+                          left: `calc(50% + ${Math.cos(angle * Math.PI / 180) * 35}px)`, 
+                          top: `calc(50% + ${Math.sin(angle * Math.PI / 180) * 35}px)`,
+                          backgroundColor: i % 2 === 0 ? '#FF6B00' : '#3B82F6',
+                          opacity: 0.6
+                        }}
+                        animate={{ 
+                          scale: [1, 1.5, 1],
+                          opacity: [0.4, 0.8, 0.4]
+                        }}
+                        transition={{ 
+                          duration: 3,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                          delay: i * 0.5
+                        }}
+                      />
+                    ))}
+                  </motion.div>
                 </motion.div>
-              </motion.div>
+                
+                {/* Título principal com efeito fadeIn mais elegante */}
+                <motion.div
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ 
+                    delay: 0.3,
+                    duration: 0.6,
+                    type: "spring"
+                  }}
+                  className="text-center mb-1"
+                >
+                  <h3 className={`text-xl font-semibold mb-1 ${isLightMode ? 'text-gray-800' : 'text-white'}`}>
+                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#FF6B00] to-[#FF8736]">Epictus IA</span>
+                  </h3>
+                  <p className={`font-medium ${isLightMode ? 'text-gray-700' : 'text-gray-200'}`}>
+                    Como posso potencializar seus estudos hoje?
+                  </p>
+                  
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.5, duration: 0.5 }}
+                    className={`mt-2 px-3 py-1 rounded-full text-xs inline-flex items-center gap-1.5 ${
+                      isLightMode 
+                        ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 text-blue-600 shadow-sm' 
+                        : 'bg-gradient-to-r from-blue-900/20 to-indigo-900/20 border border-blue-800/40 text-blue-300'
+                    }`}
+                  >
+                    <span className="relative flex h-2 w-2 mr-0.5">
+                      <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${isLightMode ? 'bg-blue-400' : 'bg-blue-500'} opacity-75`}></span>
+                      <span className={`relative inline-flex rounded-full h-2 w-2 ${isLightMode ? 'bg-blue-500' : 'bg-blue-400'}`}></span>
+                    </span>
+                    <Sparkles className="h-3 w-3" />
+                    <span className="font-medium">Assistente avançado de aprendizagem</span>
+                  </motion.div>
+                </motion.div>
+              </div>
 
-              {/* Campo de entrada de necessidade principal com animação */}
+              {/* Campo de entrada de necessidade principal com design premium */}
               <motion.form 
                 onSubmit={handleEnviarPergunta}
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.1, duration: 0.5 }}
-                className="relative"
+                transition={{ delay: 0.4, duration: 0.5, type: "spring" }}
+                className="relative z-10"
               >
-                <div className={`relative overflow-hidden rounded-xl border ${isLightMode ? 'border-gray-200 shadow-md' : 'border-gray-700 shadow-inner'} transition-all duration-300 ${
+                <div className={`relative overflow-hidden rounded-xl ${
+                  isLightMode 
+                    ? 'bg-gradient-to-r from-gray-50 to-white border border-gray-200' 
+                    : 'bg-gradient-to-r from-gray-800/30 to-gray-800/20 border border-gray-700'
+                } shadow-lg transition-all duration-300 ${
                   isTyping 
                     ? isLightMode 
                       ? 'ring-2 ring-[#FF6B00]/30' 
@@ -673,170 +794,216 @@ export default function EpictusIACopilotoCard() {
                         : 'ring-1 ring-[#FF6B00]/20 animate-pulse'
                       : ''
                 }`}>
-                  <input
-                    type="text"
-                    value={pergunta}
-                    onChange={handleInputChange}
-                    placeholder="Digite sua necessidade ou objetivo (ex: 'Criar resumo para prova de Física')"
-                    className={`w-full py-3.5 px-4 pr-12 ${isLightMode ? 'bg-white text-gray-800' : 'bg-gray-800/40 text-white backdrop-blur-sm'} placeholder-gray-400 focus:outline-none text-sm`}
-                    autoFocus
-                  />
-
-                  <motion.button
-                    whileHover={{ scale: 1.05, rotate: 5 }}
-                    whileTap={{ scale: 0.95, rotate: 0 }}
-                    type="submit"
-                    disabled={!pergunta.trim()}
-                    className={`absolute right-2 top-1/2 transform -translate-y-1/2 p-1.5 rounded-md ${
-                      pergunta.trim() 
-                        ? isLightMode 
-                          ? 'bg-gradient-to-r from-[#FF6B00] to-[#FF8736] text-white' 
-                          : 'bg-gradient-to-r from-[#FF6B00] to-[#FF8736] text-white' 
-                        : isLightMode 
-                          ? 'bg-gray-100 text-gray-400' 
-                          : 'bg-gray-700 text-gray-400'
-                    } transition-all duration-200`}
-                  >
-                    <Send className="h-4 w-4" />
-                  </motion.button>
+                  {/* Efeito gradiente na borda quando ativo */}
+                  {isTyping && (
+                    <motion.div 
+                      className="absolute inset-0 rounded-xl pointer-events-none"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      style={{
+                        background: `linear-gradient(90deg, ${isLightMode ? '#FF6B00' : '#FF6B00'}00, ${isLightMode ? '#FF6B00' : '#FF6B00'}30, ${isLightMode ? '#FF6B00' : '#FF6B00'}00)`,
+                        backgroundSize: '200% 100%',
+                        animation: 'border-wave 2s infinite linear'
+                      }}
+                    />
+                  )}
+                  
+                  <div className="relative">
+                    <div className={`absolute left-4 top-1/2 transform -translate-y-1/2 text-[#FF6B00] opacity-70`}>
+                      <Wand2 className="h-4 w-4" />
+                    </div>
+                    <input
+                      type="text"
+                      value={pergunta}
+                      onChange={handleInputChange}
+                      placeholder="Descreva sua necessidade de estudo..."
+                      className={`w-full py-4 pl-12 pr-12 ${
+                        isLightMode 
+                          ? 'bg-transparent text-gray-800 placeholder-gray-400' 
+                          : 'bg-transparent text-white placeholder-gray-400'
+                      } focus:outline-none text-sm font-medium`}
+                      autoFocus
+                    />
+                    <motion.button
+                      whileHover={{ scale: 1.05, rotate: 5 }}
+                      whileTap={{ scale: 0.95, rotate: 0 }}
+                      type="submit"
+                      disabled={!pergunta.trim()}
+                      className={`absolute right-3 top-1/2 transform -translate-y-1/2 p-2 rounded-lg ${
+                        pergunta.trim() 
+                          ? isLightMode 
+                            ? 'bg-gradient-to-r from-[#FF6B00] to-[#FF8736] text-white shadow-md' 
+                            : 'bg-gradient-to-r from-[#FF6B00] to-[#FF8736] text-white shadow-md' 
+                          : isLightMode 
+                            ? 'bg-gray-100 text-gray-400' 
+                            : 'bg-gray-700/50 text-gray-400'
+                      } transition-all duration-200`}
+                    >
+                      <Send className="h-4 w-4" />
+                    </motion.button>
+                  </div>
                 </div>
 
-                {/* Botão "Analisar Necessidade" com efeito de brilho */}
+                {/* Botão "Analisar Necessidade" com design elevado */}
                 <motion.button
                   whileHover={{ 
                     scale: pergunta.trim() ? 1.02 : 1, 
-                    boxShadow: pergunta.trim() ? "0 10px 15px -3px rgba(255, 107, 0, 0.2), 0 4px 6px -4px rgba(255, 107, 0, 0.2)" : "none" 
+                    boxShadow: pergunta.trim() ? "0 10px 25px -3px rgba(255, 107, 0, 0.3), 0 4px 6px -4px rgba(255, 107, 0, 0.3)" : "none" 
                   }}
                   whileTap={{ scale: pergunta.trim() ? 0.98 : 1 }}
                   type="submit"
                   disabled={!pergunta.trim()}
-                  className={`w-full mt-2 py-2.5 rounded-lg font-medium ${
+                  className={`w-full mt-3 py-3 rounded-xl font-medium ${
                     pergunta.trim() 
-                      ? 'bg-gradient-to-r from-[#FF6B00] to-[#FF8736] text-white shadow-md hover:from-[#FF8736] hover:to-[#FF6B00]' 
-                      : 'bg-gray-200 dark:bg-gray-700 text-gray-400'
-                  } transition-all duration-300`}
+                      ? 'bg-gradient-to-r from-[#FF6B00] to-[#FF8736] text-white shadow-lg hover:shadow-xl' 
+                      : 'bg-gray-200 dark:bg-gray-700/50 text-gray-400'
+                  } transition-all duration-300 relative overflow-hidden`}
                 >
-                  <span className="flex items-center justify-center gap-2">
-                    <Wand2 className={`h-4 w-4 ${pergunta.trim() ? 'animate-pulse' : ''}`} />
-                    Analisar Necessidade
+                  {pergunta.trim() && (
+                    <motion.div 
+                      className="absolute inset-0 bg-white opacity-10"
+                      animate={{ 
+                        x: ["0%", "100%"],
+                        opacity: [0, 0.2, 0]
+                      }}
+                      transition={{ 
+                        repeat: Infinity, 
+                        duration: 1.5,
+                        ease: "easeInOut"
+                      }}
+                      style={{
+                        clipPath: "polygon(0 0, 30% 0, 60% 100%, 0% 100%)"
+                      }}
+                    />
+                  )}
+                  
+                  <span className="flex items-center justify-center gap-2 relative z-10">
+                    <Sparkles className={`h-4 w-4 ${pergunta.trim() ? 'animate-pulse' : ''}`} />
+                    <span>Potencializar Aprendizado</span>
                   </span>
                 </motion.button>
               </motion.form>
 
-              {/* Sugestões rápidas com design melhorado */}
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3, duration: 0.5 }}
-                className="mt-3"
+              {/* Feature Cards - Uma abordagem mais visual e moderna */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6, duration: 0.6 }}
+                className="mt-5"
               >
-                <p className={`text-xs mb-2 flex items-center gap-1 ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                  <Lightbulb className="h-3 w-3" /> Sugestões rápidas:
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {["Criar Resumo", "Fazer Quiz", "Planejar Estudos", "Revisar Redação", "Gerar Slides"].map((sugestao, index) => (
-                    <motion.button
-                      key={sugestao}
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { title: "Resumos", description: "Gere resumos inteligentes", icon: <BookOpen className="h-4 w-4" />, color: "from-blue-500 to-indigo-600" },
+                    { title: "Questões", description: "Pratique com questões", icon: <Brain className="h-4 w-4" />, color: "from-emerald-500 to-teal-600" },
+                    { title: "Apresentações", description: "Crie slides profissionais", icon: <BarChart2 className="h-4 w-4" />, color: "from-amber-500 to-orange-600" },
+                    { title: "Planos", description: "Organize seus estudos", icon: <Calendar className="h-4 w-4" />, color: "from-purple-500 to-pink-600" }
+                  ].map((feature, index) => (
+                    <motion.div
+                      key={feature.title}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.3 + (index * 0.1), duration: 0.3 }}
-                      whileHover={{ scale: 1.05, y: -2 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setPergunta(sugestao)}
-                      className={`text-xs px-3 py-1.5 rounded-full border ${
+                      transition={{ delay: 0.7 + (index * 0.1) }}
+                      whileHover={{ y: -4, scale: 1.03 }}
+                      onClick={() => setPergunta(`Ajuda com ${feature.title}`)}
+                      className={`rounded-xl p-3 cursor-pointer ${
                         isLightMode 
-                          ? 'border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 text-gray-700 hover:from-gray-100 hover:to-gray-200 shadow-sm' 
-                          : 'border-gray-700 bg-gradient-to-r from-gray-800/60 to-gray-800/40 text-gray-300 hover:from-gray-700/60 hover:to-gray-700/40 backdrop-blur-sm'
-                      } transition-all duration-200`}
+                          ? 'bg-white border border-gray-100 shadow-sm hover:shadow-md' 
+                          : 'bg-gray-800/30 border border-gray-700/50 hover:bg-gray-800/50'
+                      } transition-all duration-300 flex flex-col items-center text-center`}
                     >
-                      {sugestao}
-                    </motion.button>
+                      <div className={`h-9 w-9 rounded-full mb-2 flex items-center justify-center bg-gradient-to-br ${feature.color} text-white shadow-md`}>
+                        {feature.icon}
+                      </div>
+                      <span className={`text-xs font-semibold mb-0.5 ${isLightMode ? 'text-gray-800' : 'text-gray-200'}`}>
+                        {feature.title}
+                      </span>
+                      <span className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                        {feature.description}
+                      </span>
+                    </motion.div>
                   ))}
                 </div>
               </motion.div>
 
-              {/* Categorias populares - mostrar apenas quando não está digitando */}
-              {showPopularTags && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 20 }}
-                  transition={{ delay: 0.5, duration: 0.5 }}
-                  className="mt-4"
-                >
-                  <p className={`text-xs mb-3 flex items-center gap-1 ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                    <BarChart2 className="h-3 w-3" /> Categorias populares:
-                  </p>
+              {/* Sugestões rápidas de uso com design aprimorado */}
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.9, duration: 0.5 }}
+                className="mt-5"
+              >
+                <div className={`p-3 rounded-xl border ${
+                  isLightMode 
+                    ? 'border-gray-100 bg-gradient-to-r from-gray-50/70 to-gray-50/30' 
+                    : 'border-gray-800 bg-gradient-to-r from-gray-800/20 to-gray-800/10 backdrop-blur-sm'
+                }`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className={`text-xs font-medium flex items-center gap-1 ${isLightMode ? 'text-gray-600' : 'text-gray-300'}`}>
+                      <Lightbulb className="h-3 w-3 text-[#FF6B00]" /> 
+                      <span>Comece com:</span>
+                    </p>
+                    <div className={`text-xs px-1.5 py-0.5 rounded-full ${
+                      isLightMode 
+                        ? 'bg-orange-50 text-orange-600 border border-orange-100' 
+                        : 'bg-[#FF6B00]/10 text-orange-400 border border-[#FF6B00]/20'
+                    }`}>
+                      Popular
+                    </div>
+                  </div>
                   
-                  <div className="grid grid-cols-2 gap-2">
-                    {topCategories.map((category, index) => (
+                  <div className="flex flex-wrap gap-2">
+                    {["Resumo de Física", "Quiz História", "Cronograma ENEM", "Revisar Redação", "Slides Geografia"].map((sugestao, index) => (
                       <motion.button
-                        key={category.name}
+                        key={sugestao}
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.6 + (index * 0.1) }}
-                        whileHover={{ scale: 1.03 }}
-                        whileTap={{ scale: 0.97 }}
-                        onClick={() => setPergunta(`Ajuda com ${category.name}`)}
-                        className={`flex items-center gap-2 p-2 rounded-lg border ${
+                        transition={{ delay: 1.0 + (index * 0.1), duration: 0.3 }}
+                        whileHover={{ scale: 1.05, y: -1 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setPergunta(sugestao)}
+                        className={`text-xs px-3 py-1.5 rounded-full ${
                           isLightMode 
-                            ? 'border-gray-200 bg-white hover:bg-gray-50' 
-                            : 'border-gray-700 bg-gray-800/20 hover:bg-gray-800/40'
+                            ? 'bg-white border border-gray-200 text-gray-700 hover:border-gray-300 shadow-sm' 
+                            : 'bg-gray-800/40 border border-gray-700 text-gray-300 hover:border-gray-600 backdrop-blur-sm'
                         } transition-all duration-200`}
                       >
-                        <div className={`h-7 w-7 rounded-md bg-gradient-to-br ${category.color} flex items-center justify-center text-white`}>
-                          {renderIcon(category.icon, "h-4 w-4")}
-                        </div>
-                        <div className="flex flex-col items-start">
-                          <span className={`text-xs font-medium ${isLightMode ? 'text-gray-700' : 'text-gray-200'}`}>
-                            {category.name}
-                          </span>
-                          <span className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                            {category.count}+ usos
-                          </span>
-                        </div>
+                        {sugestao}
                       </motion.button>
                     ))}
                   </div>
-                </motion.div>
-              )}
+                </div>
+              </motion.div>
             </div>
 
-            {/* Rodapé com status e link para explorar ferramentas */}
+            {/* Rodapé com status e links */}
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.7, duration: 0.5 }}
-              className="mt-5 flex items-center justify-between"
+              transition={{ delay: 1.1, duration: 0.5 }}
+              className="mt-6 flex items-center justify-between"
             >
               <div className="flex items-center gap-2">
-                <motion.div 
-                  animate={{ 
-                    scale: [1, 1.2, 1],
-                    backgroundColor: [
-                      isLightMode ? "rgb(74, 222, 128)" : "rgb(34, 197, 94)",
-                      isLightMode ? "rgb(74, 222, 128, 0.7)" : "rgb(34, 197, 94, 0.7)",
-                      isLightMode ? "rgb(74, 222, 128)" : "rgb(34, 197, 94)"
-                    ]
-                  }}
-                  transition={{ 
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
-                  className={`h-2 w-2 rounded-full`}
-                ></motion.div>
-                <span className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>IA pronta para ajudar</span>
+                <span className="relative flex h-3 w-3">
+                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${isLightMode ? 'bg-green-400' : 'bg-green-500'} opacity-75`}></span>
+                  <span className={`relative inline-flex rounded-full h-3 w-3 ${isLightMode ? 'bg-green-500' : 'bg-green-400'}`}></span>
+                </span>
+                <span className={`text-xs font-medium ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                  IA pronta para personalizar seu aprendizado
+                </span>
               </div>
 
               <motion.a 
                 href="/epictus-ia" 
                 whileHover={{ x: 3 }}
-                className={`text-xs flex items-center gap-1 ${isLightMode ? 'text-gray-500 hover:text-[#FF6B00]' : 'text-gray-400 hover:text-[#FF6B00]'} transition-colors duration-200`}
+                className={`text-xs flex items-center gap-1 px-2 py-1 rounded-lg ${
+                  isLightMode 
+                    ? 'text-[#FF6B00] hover:bg-orange-50 hover:text-[#FF8736]' 
+                    : 'text-[#FF6B00] hover:bg-[#FF6B00]/10 hover:text-[#FF8736]'
+                } transition-all duration-200`}
               >
-                <Lightbulb className="h-3 w-3" />
-                <span>Explorar Todas as Ferramentas</span>
-                <ArrowRight className="h-2.5 w-2.5 ml-0.5" />
+                <span className="font-medium">Modo completo</span>
+                <ArrowRight className="h-3 w-3" />
               </motion.a>
             </motion.div>
           </motion.div>
