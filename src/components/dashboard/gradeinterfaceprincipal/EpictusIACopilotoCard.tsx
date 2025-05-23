@@ -894,8 +894,7 @@ export default function EpictusIACopilotoCard() {
                   {[
                     { 
                       title: "Resumos", 
-                      description: "Gere resumos inteligentes", 
-                      icon: <BookOpen className="h-5 w-5" />, 
+                      icon: <BookOpen className="h-4 w-4" />, 
                       color: "from-blue-500 to-indigo-600",
                       lightBg: "bg-blue-50",
                       darkBg: "bg-blue-900/10",
@@ -905,8 +904,7 @@ export default function EpictusIACopilotoCard() {
                     },
                     { 
                       title: "Questões", 
-                      description: "Pratique com questões", 
-                      icon: <Brain className="h-5 w-5" />, 
+                      icon: <Brain className="h-4 w-4" />, 
                       color: "from-emerald-500 to-teal-600",
                       lightBg: "bg-emerald-50",
                       darkBg: "bg-emerald-900/10",
@@ -916,8 +914,7 @@ export default function EpictusIACopilotoCard() {
                     },
                     { 
                       title: "Apresentações", 
-                      description: "Crie slides profissionais", 
-                      icon: <BarChart2 className="h-5 w-5" />, 
+                      icon: <BarChart2 className="h-4 w-4" />, 
                       color: "from-amber-500 to-orange-600",
                       lightBg: "bg-amber-50",
                       darkBg: "bg-amber-900/10",
@@ -927,8 +924,7 @@ export default function EpictusIACopilotoCard() {
                     },
                     { 
                       title: "Planos", 
-                      description: "Organize seus estudos", 
-                      icon: <Wand2 className="h-5 w-5" />, 
+                      icon: <Wand2 className="h-4 w-4" />, 
                       color: "from-purple-500 to-pink-600",
                       lightBg: "bg-purple-50",
                       darkBg: "bg-purple-900/10",
@@ -949,7 +945,7 @@ export default function EpictusIACopilotoCard() {
                       }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => setPergunta(`Ajude-me com ${feature.title.toLowerCase()}`)}
-                      className={`relative p-4 rounded-xl backdrop-blur-sm border transition-all duration-300 cursor-pointer flex-1 min-w-[90px] flex flex-col items-center text-center overflow-hidden ${
+                      className={`relative p-2.5 rounded-xl backdrop-blur-sm border transition-all duration-300 cursor-pointer flex-1 min-w-[60px] flex flex-col items-center text-center overflow-hidden ${
                         isLightMode 
                           ? `${feature.lightBg} border-${feature.lightBorder}` 
                           : `${feature.darkBg} border-${feature.darkBorder}`
@@ -960,7 +956,7 @@ export default function EpictusIACopilotoCard() {
                       
                       {/* Círculo gradiente animado */}
                       <motion.div 
-                        className={`relative h-12 w-12 rounded-full mb-3 flex items-center justify-center bg-gradient-to-br ${feature.color} shadow-lg`}
+                        className={`relative h-10 w-10 rounded-full flex items-center justify-center bg-gradient-to-br ${feature.color} shadow-lg`}
                         whileHover={{ rotate: 5, scale: 1.1 }}
                         transition={{ duration: 0.2 }}
                       >
@@ -986,24 +982,6 @@ export default function EpictusIACopilotoCard() {
                           className="absolute inset-0 rounded-full bg-white opacity-0"
                         />
                       </motion.div>
-                      
-                      {/* Título com linha decorativa */}
-                      <div className="relative mb-1">
-                        <h4 className={`text-sm font-semibold ${isLightMode ? 'text-gray-800' : 'text-white'}`}>
-                          {feature.title}
-                        </h4>
-                        <motion.div 
-                          initial={{ width: 0 }}
-                          whileHover={{ width: "100%" }}
-                          className={`h-0.5 mt-1 mx-auto rounded-full bg-gradient-to-r ${feature.color}`}
-                          style={{ width: "40%" }}
-                        />
-                      </div>
-                      
-                      {/* Descrição */}
-                      <p className={`text-xs mt-1 ${isLightMode ? 'text-gray-600' : 'text-gray-300'} opacity-90`}>
-                        {feature.description}
-                      </p>
                     </motion.div>
                   ))}
                 </div>
