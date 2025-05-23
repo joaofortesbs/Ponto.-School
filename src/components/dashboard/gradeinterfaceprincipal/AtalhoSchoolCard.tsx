@@ -39,11 +39,11 @@ export default function AtalhoSchoolCard() {
       transition={{ duration: 0.5, ease: "easeOut" }}
     >
       {/* Header elegante com gradiente - estilo igual ao FocoDoDiaCard */}
-      <div className={`p-5 ${isLightMode ? 'bg-gradient-to-r from-blue-50 to-blue-100/50' : 'bg-gradient-to-r from-[#0A2540]/80 to-[#001427]'} border-b ${isLightMode ? 'border-blue-100' : 'border-blue-500/20'}`}>
+      <div className={`p-5 ${isLightMode ? 'bg-gradient-to-r from-orange-50 to-orange-100/50' : 'bg-gradient-to-r from-[#0A2540]/80 to-[#001427]'} border-b ${isLightMode ? 'border-orange-100' : 'border-[#FF6B00]/20'}`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className={`p-2.5 rounded-lg flex items-center justify-center ${isLightMode ? 'bg-white shadow-sm border border-blue-200' : 'bg-blue-500/10 border border-blue-500/30'}`}>
-              <Grid className={`h-5 w-5 text-blue-500`} />
+            <div className={`p-2.5 rounded-lg flex items-center justify-center ${isLightMode ? 'bg-white shadow-sm border border-orange-200' : 'bg-[#FF6B00]/10 border border-[#FF6B00]/30'}`}>
+              <Grid className={`h-5 w-5 text-[#FF6B00]`} />
             </div>
             <div>
               <h3 className={`font-semibold text-lg ${isLightMode ? 'text-gray-800' : 'text-white'}`}>
@@ -69,10 +69,10 @@ export default function AtalhoSchoolCard() {
       {/* Grid de atalhos */}
       <div className="p-5">
         {/* Mensagem de recomendação */}
-        <div className={`mb-4 p-3 rounded-lg ${isLightMode ? 'bg-blue-50' : 'bg-blue-500/5'} border ${isLightMode ? 'border-blue-100' : 'border-blue-500/20'}`}>
+        <div className={`mb-4 p-3 rounded-lg ${isLightMode ? 'bg-orange-50' : 'bg-[#FF6B00]/5'} border ${isLightMode ? 'border-orange-100' : 'border-[#FF6B00]/20'}`}>
           <div className="flex gap-2 items-start">
-            <div className={`mt-0.5 p-1.5 rounded-md ${isLightMode ? 'bg-blue-100' : 'bg-blue-500/20'}`}>
-              <Sparkles className="h-3.5 w-3.5 text-blue-500" />
+            <div className={`mt-0.5 p-1.5 rounded-md ${isLightMode ? 'bg-orange-100' : 'bg-[#FF6B00]/20'}`}>
+              <Sparkles className="h-3.5 w-3.5 text-[#FF6B00]" />
             </div>
             <p className={`text-xs ${isLightMode ? 'text-gray-600' : 'text-gray-300'}`}>
               <span className="font-medium">Dica:</span> Organize seus atalhos mais usados para maximizar sua produtividade.
