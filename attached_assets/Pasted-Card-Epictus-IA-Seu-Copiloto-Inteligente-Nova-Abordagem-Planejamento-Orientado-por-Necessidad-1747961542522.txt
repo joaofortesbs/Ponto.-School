@@ -1,0 +1,239 @@
+Card "Epictus IA: Seu Copiloto Inteligente" – (Nova Abordagem: Planejamento Orientado por Necessidade)
+
+I. Objetivo Principal (Revisado):
+
+Permitir que o usuário expresse sua necessidade ou desafio de estudo diretamente no Painel.
+
+Receber um plano de ação instantâneo e personalizado do Epictus IA, sugerindo as ferramentas mais adequadas da plataforma para resolver aquela necessidade, em uma ordem lógica.
+
+Facilitar o acesso direto e sequencial a essas ferramentas para executar o plano.
+
+II. Design e Layout (Estado Inicial – Card no Painel):
+
+Formato, Fundo, Cantos, Sombra: Manter o design sofisticado já definido (ex: gradiente roxo-azulado, cantos arredondados, sombra sutil).
+
+Elementos Visuais (Estado Inicial):
+
+Ícone e Título (Topo Esquerdo):
+
+Ícone: Logo do Epictus IA (com brilho/animação sutil).
+
+Título: "Epictus IA: Seu Copiloto" (ou "Copiloto Epictus").
+
+Selo "Premium" (se aplicável).
+
+Campo de Entrada Principal (Área Central – Foco Imediato):
+
+Label/Texto Acima: "Como posso te ajudar a potencializar seus estudos hoje?" (ou algo similar, convidativo e direto).
+
+Fonte: Open Sans, Regular, cor branca/cinza claro.
+
+Campo de Texto (Grande):
+
+Placeholder: "Digite sua necessidade ou objetivo (ex: 'Preciso criar uma apresentação sobre Relevo', 'Quero revisar para a prova de Funções', 'Como posso melhorar minha redação sobre sustentabilidade?')"
+
+Design: Fundo branco/cinza claríssimo, cantos arredondados, ícone de lupa ou "pensamento" dentro do campo à esquerda.
+
+Foco Automático: Ao carregar o Painel, o cursor deve piscar automaticamente dentro deste campo, convidando à digitação.
+
+Botão "Analisar Necessidade" (ou "Gerar Plano", "Pedir Ajuda ao Epictus"):
+
+Posição: Abaixo ou ao lado direito do campo de texto.
+
+Design: Laranja (cor de destaque), texto branco, Montserrat Bold.
+
+Ícone: (Opcional) Foguete, varinha mágica, ou um ícone de "play" estilizado.
+
+Sugestões Rápidas (Abaixo do Campo – Opcional, mas Útil):
+
+Pequenos botões/tags com exemplos de necessidades comuns que o Epictus IA pode ajudar a resolver:
+
+"Criar Resumo"
+
+"Fazer um Quiz"
+
+"Planejar Estudos"
+
+"Corrigir Redação"
+
+"Gerar Slides"
+
+Interação: Clicar em uma sugestão preenche o campo de texto principal com aquela necessidade, e o usuário pode refinar ou clicar em "Analisar Necessidade".
+
+Botão "Explorar Todas as Ferramentas" (Rodapé do Card – Menos Destaque Agora):
+
+Mantém-se como uma opção secundária para quem quer navegar pelas ferramentas individualmente.
+
+Responsividade:
+
+Em telas menores, o campo de texto pode ocupar mais largura, e as sugestões rápidas podem ser dispostas verticalmente ou em um carrossel horizontal.
+
+III. Fluxo de Interação e Geração do Plano:
+
+Primeiro Contato (Usuário Vê o Card Vazio):
+
+O card aparece conforme descrito acima, com o foco no campo de texto.
+
+Animação de entrada suave para o card e seus elementos.
+
+Usuário Digita sua Necessidade:
+
+O aluno digita sua necessidade no campo principal (ex: "Preciso de ajuda para fazer uma apresentação sobre Relevo").
+
+Autocompletar Inteligente (Opcional): Enquanto o usuário digita, o Epictus IA pode oferecer sugestões de frases completas ou refinamentos para a necessidade.
+
+Usuário Clica em "Analisar Necessidade" (ou Botão Equivalente):
+
+Feedback Visual:
+
+Efeito de clique no botão.
+
+O campo de texto e as sugestões rápidas podem ficar desabilitados ou esmaecidos.
+
+Uma animação de processamento aparece no card (ex: o ícone do Epictus IA pulsa, uma barra de progresso sutil, ou um texto "Epictus está planejando para você..."). Esta animação deve ser elegante e não muito longa.
+
+Processamento pelo Epictus IA (Backend):
+
+A IA recebe o texto da necessidade do usuário.
+
+Análise da Necessidade (NLP):
+
+Identifica as palavras-chave e a intenção principal do usuário (ex: "apresentação", "Relevo", "ajuda", "criar").
+
+Compreende o objetivo final (fazer uma apresentação).
+
+Mapeamento para Ferramentas:
+
+Com base na intenção, a IA mapeia a necessidade para as ferramentas mais adequadas do Epictus IA.
+
+Exemplo ("Apresentação sobre Relevo"):
+
+Pode precisar de: Pesquisa de conteúdo, Geração de Resumo, Criação de Mapa Mental, Gerador de Slides, Assistente de Apresentação (para o roteiro oral).
+
+Definição da Ordem Lógica (Planejamento):
+
+A IA organiza as ferramentas sugeridas em uma ordem lógica e sequencial, como um plano de ação.
+
+Exemplo (Relevo):
+
+"Pesquisar e Resumir Conteúdo sobre Relevo" (usando Explicador de PDFs/Vídeos ou Gerador de Resumos).
+
+"Estruturar Ideias com Mapa Mental" (usando Gerador de Mapa Mental).
+
+"Criar Slides Didáticos" (usando Gerador de Slides).
+
+"Preparar Roteiro Oral" (usando Assistente de Apresentação).
+
+Geração de Descrições Curtas: Para cada passo do plano, a IA gera uma descrição curta e o nome da ferramenta.
+
+Card "Epictus IA" Atualizado com o Plano de Ação:
+
+Transição Suave: A animação de processamento desaparece, e o novo conteúdo do card é revelado com uma transição suave (ex: fade-in dos novos elementos).
+
+Nova Aparência do Card:
+
+Título (Pode se Manter ou Mudar): "Epictus IA: Seu Plano para [Resumo da Necessidade]" (ex: "Epictus IA: Seu Plano para a Apresentação sobre Relevo").
+
+Texto da Necessidade Original (Pequeno, Acima do Plano): Relembrar ao usuário o que ele pediu (ex: "Você pediu: 'Preciso de ajuda para fazer uma apresentação sobre Relevo'").
+
+Plano de Ação (Lista Numerada e Visual):
+
+Design de Cada Passo do Plano:
+
+Número do Passo (Destaque): Círculo com o número (1, 2, 3...). Cor laranja ou roxa.
+
+Título do Passo/Ferramenta Sugerida: Curto e direto (ex: "1. Pesquisar e Resumir", "2. Criar Mapa Mental"). Fonte Montserrat SemiBold.
+
+Descrição Curta do Passo: Explicando brevemente o que será feito (ex: "Use o [Nome da Ferramenta] para extrair os pontos chave sobre Relevo."). Fonte Open Sans Regular.
+
+Ícone da Ferramenta: Ao lado do título do passo.
+
+Botão "Iniciar Passo" (ou "Usar Ferramenta"):
+
+Design: Alinhado à direita, menor que o botão principal do card, cor roxa ou secundária.
+
+Linhas Conectoras (Opcional): Linhas verticais sutis conectando os números dos passos, criando a sensação de um fluxo.
+
+Layout da Lista: Vertical, com bom espaçamento. Scroll interno se o plano tiver muitos passos e não couber no card.
+
+Botão Principal (Rodapé do Card): "APLICAR PLANO SUGERIDO"
+
+Design: Grande, laranja, texto branco, Montserrat Bold.
+
+Ícone (Opcional): Play, foguete.
+
+IV. Interação com o Plano de Ação Gerado:
+
+Análise do Plano pelo Usuário:
+
+O aluno lê os passos sugeridos pelo Epictus IA.
+
+Opção 1: Clicar em "APLICAR PLANO SUGERIDO":
+
+Ação: Inicia o fluxo guiado.
+
+Reação:
+
+A plataforma automaticamente leva o usuário para a interface da primeira ferramenta sugerida no plano (ex: abre o modal do "Gerador de Resumos").
+
+Guia Contextual:
+
+O Epictus IA pode exibir um pequeno banner ou tooltip na interface da ferramenta, relembrando o objetivo daquele passo (ex: "Lembre-se, o objetivo aqui é resumir o conteúdo sobre Relevo.").
+
+O campo de entrada da ferramenta pode ser pré-preenchido com informações relevantes da necessidade original (ex: o termo "Relevo" já no campo de busca do Gerador de Resumos).
+
+Após Concluir a Ação na Ferramenta:
+
+O usuário é automaticamente levado para a próxima ferramenta do plano, com um novo guia contextual.
+
+Ou, uma notificação/pop-up aparece: "Passo 1 concluído! Pronto para o Passo 2: Criar Mapa Mental?" [Botão: "Sim, Vamos!"].
+
+Progresso Visual: No card do Epictus IA no Painel (ou em um local dedicado), o plano de ação pode mostrar quais passos já foram concluídos (ex: checkbox preenchido ao lado do passo).
+
+Opção 2: Clicar em um "Iniciar Passo" Específico:
+
+Ação: O aluno pode querer pular um passo ou começar por outro.
+
+Reação:
+
+A plataforma leva o usuário diretamente para a interface da ferramenta daquele passo específico.
+
+O guia contextual do Epictus IA ainda se aplica.
+
+Opção 3: Clicar em "Explorar Todas as Ferramentas":
+
+O aluno ignora o plano sugerido e vai para a seção principal do Epictus IA para escolher as ferramentas manualmente.
+
+V. Benefícios Desta Nova Abordagem:
+
+Resolve Dores Cruciais:
+
+"Não saber por onde começar": A IA cria um plano claro.
+
+"Sobrecarga de Informação": A IA sugere as ferramentas certas para a necessidade.
+
+"Falta de Habilidades de Estudo": A IA ensina um processo para realizar tarefas complexas.
+
+Extremamente Intuitivo: O usuário apenas descreve sua necessidade, e a IA faz o resto.
+
+Foco na Ação: O objetivo é fazer, não apenas explorar ferramentas.
+
+Valoriza o Ecossistema de Ferramentas IA: Mostra como as diferentes ferramentas podem ser usadas em conjunto.
+
+Altamente Inovador e Sofisticado: Posiciona o Epictus IA como um verdadeiro "copiloto" inteligente.
+
+Ótimo para Novos Usuários: Oferece um caminho claro e guiado para começar a usar o poder da IA.
+
+VI. Design dos Cards e Modais das Ferramentas Individuais:
+
+Cada ferramenta do Epictus IA (Gerador de Resumos, Mapas Mentais, etc.) terá sua própria interface (seja um modal ou uma página dedicada).
+
+O design dessas interfaces deve ser:
+
+Consistente com o restante da plataforma.
+
+Focado na tarefa específica.
+
+Intuitivo e fácil de usar.
+
+Com inputs claros e outputs bem apresentados.
