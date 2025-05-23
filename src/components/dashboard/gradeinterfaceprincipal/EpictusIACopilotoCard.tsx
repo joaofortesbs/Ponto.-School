@@ -892,30 +892,66 @@ export default function EpictusIACopilotoCard() {
               >
                 <div className="flex gap-3">
                   {[
-                    { title: "Resumos", description: "Gere resumos inteligentes", icon: <BookOpen className="h-4 w-4" />, color: "from-blue-500 to-indigo-600" },
-                    { title: "Questões", description: "Pratique com questões", icon: <Brain className="h-4 w-4" />, color: "from-emerald-500 to-teal-600" },
-                    { title: "Apresentações", description: "Crie slides profissionais", icon: <BarChart2 className="h-4 w-4" />, color: "from-amber-500 to-orange-600" },
-                    { title: "Planos", description: "Organize seus estudos", icon: <Wand2 className="h-4 w-4" />, color: "from-purple-500 to-pink-600" }
+                    { title: "Resumos", description: "Gere resumos inteligentes", icon: <BookOpen className="h-4 w-4" />, color: "from-blue-500 to-indigo-600", accentColor: "rgba(79, 70, 229, 0.2)", lightBg: "bg-blue-50", darkBg: "bg-blue-900/10", iconColor: "text-blue-500", borderColor: "border-blue-200 dark:border-blue-800/30" },
+                    { title: "Questões", description: "Pratique com questões", icon: <Brain className="h-4 w-4" />, color: "from-emerald-500 to-teal-600", accentColor: "rgba(16, 185, 129, 0.2)", lightBg: "bg-emerald-50", darkBg: "bg-emerald-900/10", iconColor: "text-emerald-500", borderColor: "border-emerald-200 dark:border-emerald-800/30" },
+                    { title: "Apresentações", description: "Crie slides profissionais", icon: <BarChart2 className="h-4 w-4" />, color: "from-amber-500 to-orange-600", accentColor: "rgba(251, 146, 60, 0.2)", lightBg: "bg-amber-50", darkBg: "bg-amber-900/10", iconColor: "text-amber-500", borderColor: "border-amber-200 dark:border-amber-800/30" },
+                    { title: "Planos", description: "Organize seus estudos", icon: <Wand2 className="h-4 w-4" />, color: "from-purple-500 to-pink-600", accentColor: "rgba(168, 85, 247, 0.2)", lightBg: "bg-purple-50", darkBg: "bg-purple-900/10", iconColor: "text-purple-500", borderColor: "border-purple-200 dark:border-purple-800/30" }
                   ].map((feature, index) => (
                     <motion.div
                       key={feature.title}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.7 + (index * 0.1) }}
-                      whileHover={{ y: -4, scale: 1.03 }}
+                      whileHover={{ 
+                        y: -4, 
+                        boxShadow: `0 10px 25px -5px ${feature.accentColor}, 0 8px 10px -6px ${feature.accentColor}`,
+                        borderColor: isLightMode ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.15)'
+                      }}
                       onClick={() => setPergunta(`Ajude-me com ${feature.title.toLowerCase()}`)}
-                      className={`p-3 rounded-lg bg-gradient-to-br ${feature.color} transition-all cursor-pointer flex-1 min-w-[90px]`}
+                      className={`relative overflow-hidden p-4 rounded-xl border backdrop-blur-sm ${feature.borderColor} ${isLightMode ? feature.lightBg : feature.darkBg} transition-all duration-300 cursor-pointer flex-1 min-w-[90px] group`}
+                      style={{
+                        background: isLightMode 
+                          ? `linear-gradient(135deg, ${feature.lightBg.replace('bg-', '')}, white)`
+                          : `linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.6))`
+                      }}
                     >
+                      {/* Decorative elements */}
+                      <div className="absolute -bottom-6 -right-6 w-16 h-16 rounded-full opacity-20 bg-gradient-to-br blur-md transition-opacity duration-300 group-hover:opacity-40" 
+                        style={{ 
+                          background: `linear-gradient(to bottom right, ${isLightMode ? 'var(--tw-gradient-stops)' : 'var(--tw-gradient-stops))'`
+                        }}
+                      ></div>
                       
-                      <div className={`h-9 w-9 rounded-full mb-2 flex items-center justify-center bg-gradient-to-br ${feature.color} text-white shadow-md`}>
-                        {feature.icon}
+                      {/* Glass icon container with subtle glow effect */}
+                      <div 
+                        className={`relative h-8 w-8 rounded-full mb-3 flex items-center justify-center backdrop-blur-md ${isLightMode ? 'bg-white/70' : 'bg-gray-800/40'} shadow-sm border ${isLightMode ? 'border-gray-100' : 'border-gray-700/50'} transition-all duration-300 group-hover:scale-110 group-hover:rotate-3`}
+                      >
+                        {/* Glow effect behind icon */}
+                        <div className={`absolute inset-0 rounded-full blur-md opacity-0 group-hover:opacity-60 transition-opacity duration-300 ${feature.iconColor}`}></div>
+                        
+                        {/* Icon */}
+                        <div className={`relative z-10 ${feature.iconColor} group-hover:text-opacity-100`}>
+                          {feature.icon}
+                        </div>
                       </div>
-                      <span className={`text-xs font-semibold mb-0.5 ${isLightMode ? 'text-gray-800' : 'text-gray-200'}`}>
-                        {feature.title}
-                      </span>
-                      <span className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                        {feature.description}
-                      </span>
+                      
+                      {/* Content with smooth hover transitions */}
+                      <div className="relative z-10">
+                        <h4 className={`text-xs font-medium mb-1 transition-all duration-300 ${isLightMode ? 'text-gray-800' : 'text-white'} group-hover:translate-x-1`}>
+                          {feature.title}
+                        </h4>
+                        
+                        {/* Animated underline */}
+                        <div className="h-0.5 w-0 bg-gradient-to-r group-hover:w-full transition-all duration-300 mb-1.5 rounded-full opacity-70"
+                          style={{ 
+                            background: `linear-gradient(to right, ${isLightMode ? 'var(--tw-gradient-stops)' : 'var(--tw-gradient-stops)}'`
+                          }}
+                        ></div>
+                        
+                        <p className={`text-[10px] transition-all duration-300 ${isLightMode ? 'text-gray-500' : 'text-gray-400'} group-hover:text-opacity-90`}>
+                          {feature.description}
+                        </p>
+                      </div>
                     </motion.div>
                   ))}
                 </div>
