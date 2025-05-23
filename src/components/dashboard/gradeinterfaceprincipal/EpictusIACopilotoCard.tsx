@@ -20,7 +20,7 @@ export default function EpictusIACopilotoCard() {
       console.log("Necessidade enviada para IA:", pergunta);
       setNecessidadeOriginal(pergunta);
       setIsProcessing(true);
-      
+
       // Simulação do processamento da IA
       setTimeout(() => {
         gerarPlanoDeAcao(pergunta);
@@ -34,12 +34,12 @@ export default function EpictusIACopilotoCard() {
   const gerarPlanoDeAcao = (necessidade) => {
     // Simplificação - em produção, isto seria processado pelo backend
     const necessidadeLower = necessidade.toLowerCase();
-    
+
     let plano = {
       titulo: "Seu Plano Personalizado",
       passos: []
     };
-    
+
     // Regras básicas para gerar plano baseado em palavras-chave
     if (necessidadeLower.includes("apresentação") || necessidadeLower.includes("slides")) {
       plano.titulo = "Seu Plano para Criar uma Apresentação";
@@ -140,7 +140,7 @@ export default function EpictusIACopilotoCard() {
         }
       ];
     }
-    
+
     setPlanoGerado(plano);
   };
 
@@ -267,7 +267,7 @@ export default function EpictusIACopilotoCard() {
                   Você pediu: "{necessidadeOriginal}"
                 </p>
               </div>
-              
+
               {/* Lista de passos do plano */}
               <div className="space-y-3 max-h-[240px] overflow-y-auto pr-1">
                 {planoGerado.passos.map((passo) => (
@@ -287,7 +287,7 @@ export default function EpictusIACopilotoCard() {
                     }`}>
                       {passo.numero}
                     </div>
-                    
+
                     <div className="flex-grow">
                       <div className="flex justify-between items-start">
                         <h5 className={`font-medium text-sm ${isLightMode ? 'text-gray-800' : 'text-white'}`}>
@@ -314,7 +314,7 @@ export default function EpictusIACopilotoCard() {
                 ))}
               </div>
             </div>
-            
+
             {/* Ações do plano */}
             <div className="mt-4 space-y-2">
               <motion.button
@@ -326,7 +326,7 @@ export default function EpictusIACopilotoCard() {
                 <Zap className="h-4 w-4" />
                 <span>APLICAR PLANO SUGERIDO</span>
               </motion.button>
-              
+
               <motion.button
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.99 }}
@@ -342,84 +342,86 @@ export default function EpictusIACopilotoCard() {
             </div>
           </motion.div>
         ) : (
-      <div className="p-6 flex-grow flex flex-col justify-between relative z-10">
-        <div className="space-y-3">
-          {/* Título e dica de uso - label para o campo */}
-          <div className="mb-1 text-center">
-            <p className={`font-medium ${isLightMode ? 'text-gray-700' : 'text-gray-200'}`}>
-              Como posso te ajudar a potencializar seus estudos hoje?
-            </p>
-          </div>
-          
-          {/* Campo de entrada de necessidade principal */}
-          <form onSubmit={handleEnviarPergunta} className="relative">
-            <div className={`relative overflow-hidden rounded-xl border ${isLightMode ? 'border-gray-200 shadow-sm' : 'border-gray-700'} transition-all duration-300 ${isTyping ? (isLightMode ? 'ring-2 ring-[#FF6B00]/30' : 'ring-2 ring-[#FF6B00]/30') : ''}`}>
-              <input
-                type="text"
-                value={pergunta}
-                onChange={handleInputChange}
-                placeholder="Digite sua necessidade ou objetivo (ex: 'Preciso criar uma apresentação sobre Relevo')"
-                className={`w-full py-3.5 px-4 pr-12 ${isLightMode ? 'bg-white text-gray-800' : 'bg-gray-800/50 text-white backdrop-blur-sm'} placeholder-gray-400 focus:outline-none text-sm`}
-                autoFocus
-              />
+          <motion.div className="p-6 flex-grow flex flex-col justify-between relative z-10">
+            <div className="space-y-3">
+              {/* Título e dica de uso - label para o campo */}
+              <div className="mb-1 text-center">
+                <p className={`font-medium ${isLightMode ? 'text-gray-700' : 'text-gray-200'}`}>
+                  Como posso te ajudar a potencializar seus estudos hoje?
+                </p>
+              </div>
 
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                type="submit"
-                disabled={!pergunta.trim()}
-                className={`absolute right-2 top-1/2 transform -translate-y-1/2 p-1.5 rounded-md ${pergunta.trim() ? (isLightMode ? 'bg-[#FF6B00] text-white' : 'bg-[#FF6B00] text-white') : (isLightMode ? 'bg-gray-100 text-gray-400' : 'bg-gray-700 text-gray-400')}`}
-              >
-                <Send className="h-4 w-4" />
-              </motion.button>
-            </div>
-            
-            {/* Botão "Analisar Necessidade" abaixo do campo */}
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              type="submit"
-              disabled={!pergunta.trim()}
-              className={`w-full mt-2 py-2.5 rounded-lg font-medium ${pergunta.trim() ? 'bg-[#FF6B00] text-white hover:bg-[#FF6B00]/90' : 'bg-gray-200 dark:bg-gray-700 text-gray-400'} transition-all duration-200`}
-            >
-              Analisar Necessidade
-            </motion.button>
-          </form>
-          
-          {/* Sugestões rápidas */}
-          <div className="mt-3">
-            <p className={`text-xs mb-2 ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>Sugestões rápidas:</p>
-            <div className="flex flex-wrap gap-2">
-              {["Criar Resumo", "Fazer um Quiz", "Planejar Estudos", "Corrigir Redação", "Gerar Slides"].map((sugestao) => (
+              {/* Campo de entrada de necessidade principal */}
+              <form onSubmit={handleEnviarPergunta} className="relative">
+                <div className={`relative overflow-hidden rounded-xl border ${isLightMode ? 'border-gray-200 shadow-sm' : 'border-gray-700'} transition-all duration-300 ${isTyping ? (isLightMode ? 'ring-2 ring-[#FF6B00]/30' : 'ring-2 ring-[#FF6B00]/30') : ''}`}>
+                  <input
+                    type="text"
+                    value={pergunta}
+                    onChange={handleInputChange}
+                    placeholder="Digite sua necessidade ou objetivo (ex: 'Preciso criar uma apresentação sobre Relevo')"
+                    className={`w-full py-3.5 px-4 pr-12 ${isLightMode ? 'bg-white text-gray-800' : 'bg-gray-800/50 text-white backdrop-blur-sm'} placeholder-gray-400 focus:outline-none text-sm`}
+                    autoFocus
+                  />
+
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    type="submit"
+                    disabled={!pergunta.trim()}
+                    className={`absolute right-2 top-1/2 transform -translate-y-1/2 p-1.5 rounded-md ${pergunta.trim() ? (isLightMode ? 'bg-[#FF6B00] text-white' : 'bg-[#FF6B00] text-white') : (isLightMode ? 'bg-gray-100 text-gray-400' : 'bg-gray-700 text-gray-400')}`}
+                  >
+                    <Send className="h-4 w-4" />
+                  </motion.button>
+                </div>
+
+                {/* Botão "Analisar Necessidade" abaixo do campo */}
                 <motion.button
-                  key={sugestao}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setPergunta(sugestao)}
-                  className={`text-xs px-2.5 py-1.5 rounded-full border ${isLightMode ? 'border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100' : 'border-gray-700 bg-gray-800/60 text-gray-300 hover:bg-gray-700'}`}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  type="submit"
+                  disabled={!pergunta.trim()}
+                  className={`w-full mt-2 py-2.5 rounded-lg font-medium ${pergunta.trim() ? 'bg-[#FF6B00] text-white hover:bg-[#FF6B00]/90' : 'bg-gray-200 dark:bg-gray-700 text-gray-400'} transition-all duration-200`}
                 >
-                  {sugestao}
+                  Analisar Necessidade
                 </motion.button>
-              ))}
+              </form>
+
+              {/* Sugestões rápidas */}
+              <div className="mt-3">
+                <p className={`text-xs mb-2 ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>Sugestões rápidas:</p>
+                <div className="flex flex-wrap gap-2">
+                  {["Criar Resumo", "Fazer um Quiz", "Planejar Estudos", "Corrigir Redação", "Gerar Slides"].map((sugestao) => (
+                    <motion.button
+                      key={sugestao}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setPergunta(sugestao)}
+                      className={`text-xs px-2.5 py-1.5 rounded-full border ${isLightMode ? 'border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100' : 'border-gray-700 bg-gray-800/60 text-gray-300 hover:bg-gray-700'}`}
+                    >
+                      {sugestao}
+                    </motion.button>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
 
-        {/* Rodapé com status e link para explorar ferramentas */}
-        <div className="mt-5 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className={`h-2 w-2 rounded-full ${isLightMode ? 'bg-green-400' : 'bg-green-500'} animate-pulse`}></div>
-            <span className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>IA pronta para ajudar</span>
-          </div>
+            {/* Rodapé com status e link para explorar ferramentas */}
+            <div className="mt-5 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className={`h-2 w-2 rounded-full ${isLightMode ? 'bg-green-400' : 'bg-green-500'} animate-pulse`}></div>
+                <span className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>IA pronta para ajudar</span>
+              </div>
 
-          <a 
-            href="/epictus-ia" 
-            className={`text-xs flex items-center gap-1 ${isLightMode ? 'text-gray-500 hover:text-[#FF6B00]' : 'text-gray-400 hover:text-[#FF6B00]'} transition-colors duration-200`}
-          >
-            <Lightbulb className="h-3 w-3" />
-            <span>Explorar Todas as Ferramentas</span>
-          </a>
-        </div>
+              <a 
+                href="/epictus-ia" 
+                className={`text-xs flex items-center gap-1 ${isLightMode ? 'text-gray-500 hover:text-[#FF6B00]' : 'text-gray-400 hover:text-[#FF6B00]'} transition-colors duration-200`}
+              >
+                <Lightbulb className="h-3 w-3" />
+                <span>Explorar Todas as Ferramentas</span>
+              </a>
+            </div>
+          </motion.div>
+        )}
       </AnimatePresence>
     </motion.div>
   );
