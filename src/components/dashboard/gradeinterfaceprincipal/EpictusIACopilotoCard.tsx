@@ -660,7 +660,7 @@ export default function EpictusIACopilotoCard() {
                   }}
                   className="mb-4 relative"
                 >
-                  <div className={`h-16 w-16 rounded-full flex items-center justify-center ${isLightMode ? 'bg-gradient-to-br from-white to-gray-50' : 'bg-gradient-to-br from-gray-800 to-gray-900'} shadow-xl relative z-10`}>
+                  <div className={`h-16 w-16 rounded-full flex items-center justify-center ${isLightMode ? 'bg-gradient-to-br from-white to-gray-50' : ''bg-gradient-to-br from-gray-800 to-gray-900'} shadow-xl relative z-10`}>
                     <div className={`absolute inset-0.5 rounded-full ${isLightMode ? 'bg-gradient-to-br from-orange-50 to-orange-100' : 'bg-gradient-to-br from-[#0c1425]/90 to-[#0a1a2e]'} z-0`}></div>
 
                     <motion.div
@@ -921,33 +921,33 @@ export default function EpictusIACopilotoCard() {
                           background: `linear-gradient(to bottom right, ${isLightMode ? 'var(--tw-gradient-stops)' : 'var(--tw-gradient-stops))'`
                         }}
                       ></div>
-                      
+
                       {/* Glass icon container with subtle glow effect */}
                       <div 
                         className={`relative h-8 w-8 rounded-full mb-3 flex items-center justify-center backdrop-blur-md ${isLightMode ? 'bg-white/70' : 'bg-gray-800/40'} shadow-sm border ${isLightMode ? 'border-gray-100' : 'border-gray-700/50'} transition-all duration-300 group-hover:scale-110 group-hover:rotate-3`}
                       >
                         {/* Glow effect behind icon */}
                         <div className={`absolute inset-0 rounded-full blur-md opacity-0 group-hover:opacity-60 transition-opacity duration-300 ${feature.iconColor}`}></div>
-                        
+
                         {/* Icon */}
                         <div className={`relative z-10 ${feature.iconColor} group-hover:text-opacity-100`}>
                           {feature.icon}
                         </div>
                       </div>
-                      
+
                       {/* Content with smooth hover transitions */}
                       <div className="relative z-10">
                         <h4 className={`text-xs font-medium mb-1 transition-all duration-300 ${isLightMode ? 'text-gray-800' : 'text-white'} group-hover:translate-x-1`}>
                           {feature.title}
                         </h4>
-                        
+
                         {/* Animated underline */}
                         <div className="h-0.5 w-0 bg-gradient-to-r group-hover:w-full transition-all duration-300 mb-1.5 rounded-full opacity-70"
                           style={{ 
                             background: `linear-gradient(to right, ${isLightMode ? 'var(--tw-gradient-stops)' : 'var(--tw-gradient-stops)}'`
                           }}
                         ></div>
-                        
+
                         <p className={`text-[10px] transition-all duration-300 ${isLightMode ? 'text-gray-500' : 'text-gray-400'} group-hover:text-opacity-90`}>
                           {feature.description}
                         </p>
@@ -1011,6 +1011,7 @@ export default function EpictusIACopilotoCard() {
           </motion.div>
         )}
       </AnimatePresence>
+      </div>
     </motion.div>
   );
 }
