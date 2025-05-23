@@ -1,0 +1,38 @@
+[plugin:vite:react-swc] × the name `motion` is defined multiple times
+   ╭─[/home/runner/workspace/src/components/dashboard/gradeinterfaceprincipal/EpictusIACopilotoCard.tsx:2:1]
+ 2 │ import { Brain, Lightbulb, Send, ArrowRight, BarChart2, Sparkles, Zap, Check, Star, Wand2, Rocket, BookOpen, LucideIcon } from "lucide-react";
+ 3 │ import { useTheme } from "@/components/ThemeProvider";
+ 4 │ import { Button } from "@/components/ui/button";
+ 5 │ import { motion, AnimatePresence } from "framer-motion";
+   ·          ───┬──
+   ·             ╰── previous definition of `motion` here
+ 6 │ import { motion, AnimatePresence } from "framer-motion";
+   ·          ───┬──
+   ·             ╰── `motion` redefined here
+ 7 │ 
+ 8 │ export default function EpictusIACopilotoCard() {
+ 9 │   const { theme } = useTheme();
+   ╰────
+
+  × the name `AnimatePresence` is defined multiple times
+   ╭─[/home/runner/workspace/src/components/dashboard/gradeinterfaceprincipal/EpictusIACopilotoCard.tsx:2:1]
+ 2 │ import { Brain, Lightbulb, Send, ArrowRight, BarChart2, Sparkles, Zap, Check, Star, Wand2, Rocket, BookOpen, LucideIcon } from "lucide-react";
+ 3 │ import { useTheme } from "@/components/ThemeProvider";
+ 4 │ import { Button } from "@/components/ui/button";
+ 5 │ import { motion, AnimatePresence } from "framer-motion";
+   ·                  ───────┬───────
+   ·                         ╰── previous definition of `AnimatePresence` here
+ 6 │ import { motion, AnimatePresence } from "framer-motion";
+   ·                  ───────┬───────
+   ·                         ╰── `AnimatePresence` redefined here
+ 7 │ 
+ 8 │ export default function EpictusIACopilotoCard() {
+ 9 │   const { theme } = useTheme();
+   ╰────
+/home/runner/workspace/src/components/dashboard/gradeinterfaceprincipal/EpictusIACopilotoCard.tsx:2:1
+8  |  export default function EpictusIACopilotoCard() {
+9  |    const { theme } = useTheme();
+10 |    const isLightMode = theme === "light";
+   |                           ^
+11 |    const [pergunta, setPergunta] = useState("");
+12 |    const [isTyping, setIsTyping] = useState(false);
