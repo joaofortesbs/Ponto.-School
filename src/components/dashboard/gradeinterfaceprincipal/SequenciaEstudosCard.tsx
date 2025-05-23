@@ -648,7 +648,7 @@ export default function SequenciaEstudosCard() {
       </div>
 
       {/* Conteúdo principal com design premium */}
-      <div className="p-6 relative z-10 flex flex-col h-[calc(100%-76px)] justify-between">
+      <div className="p-4 relative z-10 flex flex-col h-[calc(100%-76px)] justify-between">
         <AnimatePresence>
           {showCheckInAnimation && (
             <motion.div 
@@ -752,7 +752,7 @@ export default function SequenciaEstudosCard() {
           // Interface com dados do usuário quando existirem
           <>
             {/* Contador principal estilizado */}
-            <div className="flex flex-col items-center mb-5 relative">
+            <div className="flex flex-col items-center mb-3 relative">
               {/* Efeito de brilho animado ao redor do ícone */}
               <motion.div 
                 initial={{ opacity: 0.6, scale: 0.9 }}
@@ -769,7 +769,7 @@ export default function SequenciaEstudosCard() {
               />
 
               {/* Ícone principal com design premium */}
-              <div className="relative mb-4">
+              <div className="relative mb-2">
                 <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-[#FF6B00]/20 to-[#FF8C40]/20 blur-md"></div>
                 <div className="w-20 h-20 rounded-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] flex items-center justify-center relative">
                   <div className="absolute inset-0.5 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] opacity-50"></div>
@@ -802,8 +802,8 @@ export default function SequenciaEstudosCard() {
 
             {/* Cronômetro elegante quando já tiver feito check-in */}
             {checkInHoje && (
-              <div className="mb-5">
-                <div className="bg-gray-50 dark:bg-[#14253d]/80 rounded-lg p-3 backdrop-blur-sm border border-gray-100 dark:border-gray-800/80 flex flex-col items-center">
+              <div className="mb-3">
+                <div className="bg-gray-50 dark:bg-[#14253d]/80 rounded-lg p-2 backdrop-blur-sm border border-gray-100 dark:border-gray-800/80 flex flex-col items-center">
                   <div className="flex items-center space-x-1.5 mb-1.5">
                     <Clock className="h-3.5 w-3.5 text-[#FF6B00]" />
                     <span className="text-xs font-medium text-gray-600 dark:text-gray-300">Próximo check-in em</span>
@@ -836,9 +836,9 @@ export default function SequenciaEstudosCard() {
             )}
 
             {/* Seção de informações adicionais com design premium */}
-            <div className="space-y-5 mt-2">
+            <div className="space-y-2 mt-1">
               {/* Progresso para o próximo nível com gradiente premium */}
-              <div className="bg-gray-50 dark:bg-[#14253d]/80 rounded-lg p-3.5 backdrop-blur-sm border border-gray-100 dark:border-gray-800/80">
+              <div className="bg-gray-50 dark:bg-[#14253d]/80 rounded-lg p-2.5 backdrop-blur-sm border border-gray-100 dark:border-gray-800/80">
                 <div className="flex justify-between items-center mb-1.5">
                   <div className="flex items-center space-x-1.5">
                     <Trophy className="h-3.5 w-3.5 text-[#FF6B00]" />
@@ -867,7 +867,7 @@ export default function SequenciaEstudosCard() {
               </div>
 
               {/* Estatísticas em design de cartões grid */}
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-1.5">
                 {/* Card de Recorde */}
                 <div className="bg-gray-50 dark:bg-[#14253d]/80 rounded-lg py-1 px-2 backdrop-blur-sm border border-gray-100 dark:border-gray-800/80 flex flex-col items-center justify-center">
                   <div className="flex items-center space-x-1">
@@ -890,7 +890,7 @@ export default function SequenciaEstudosCard() {
               </div>
 
               {/* Próxima recompensa com design premium */}
-              <div className="bg-gray-50 dark:bg-[#14253d]/80 rounded-lg p-3 backdrop-blur-sm border border-gray-100 dark:border-gray-800/80">
+              <div className="bg-gray-50 dark:bg-[#14253d]/80 rounded-lg p-2 backdrop-blur-sm border border-gray-100 dark:border-gray-800/80">
                 <div className="flex items-center justify-center space-x-1.5 mb-2">
                   <TrendingUp className="h-3.5 w-3.5 text-emerald-500" />
                   <span className="text-xs font-medium text-gray-600 dark:text-gray-300">Próxima recompensa</span>
