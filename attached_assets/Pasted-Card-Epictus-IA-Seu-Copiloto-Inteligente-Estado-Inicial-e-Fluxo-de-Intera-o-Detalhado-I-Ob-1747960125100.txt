@@ -1,0 +1,189 @@
+Card "Epictus IA: Seu Copiloto Inteligente" – Estado Inicial e Fluxo de Interação Detalhado
+
+I. Objetivo Principal (Relembrando):
+
+Ser a manifestação visível e ativa do Mentor IA no dia a dia do aluno.
+
+Oferecer insights rápidos, sugestões contextuais e acesso direto a ferramentas da IA que podem imediatamente auxiliar no aprendizado.
+
+Não ser apenas um campo para iniciar um chat, mas um hub dinâmico de interação com a IA.
+
+II. Design e Layout (Estado Inicial – Card no Painel):
+
+Formato: Retangular, com altura média/grande (precisa acomodar conteúdo dinâmico).
+
+Fundo:
+
+Consistente com a identidade visual do Epictus IA: Gradiente sutil nos tons de roxo/azul escuro/laranja, ou um padrão tecnológico discreto e elegante. Deve se destacar dos outros cards do Painel, mas sem ser excessivamente chamativo.
+
+Cantos: Arredondados (8px).
+
+Sombra: Sutil.
+
+Elementos Visuais (Estado Inicial – Antes de Interações Significativas do Usuário):
+
+Ícone e Título (Topo Esquerdo):
+
+Ícone: O logo oficial do Epictus IA (cérebro/circuito laranja). Pode ter um efeito de brilho sutil ou uma animação de pulso leve para indicar que está "ativo" e "pensando".
+
+Título: "Epictus IA: Seu Copiloto" (ou "Copiloto Epictus").
+
+Fonte: Montserrat, Bold/SemiBold.
+
+Cor: Branca (se fundo escuro).
+
+Selo "Premium" (ao lado, se aplicável).
+
+Mensagem de Boas-Vindas/Status Inicial (Área Central – Prioridade Máxima):
+
+Objetivo: Engajar o usuário imediatamente e mostrar o valor do Epictus IA.
+
+Conteúdo (Dinâmico e Contextual – Exemplos de Variações Iniciais):
+
+Variação 1 (Foco em Descoberta):
+
+Texto: "Olá [Nome do Aluno]! Estou aqui para turbinar seus estudos. Que tal começarmos explorando como posso te ajudar a [Sugerir uma ação relevante, ex: 'criar um resumo inteligente' ou 'planejar sua semana']?"
+
+Botões (Pequenos, com Ícones):
+
+"[Ícone de Resumo] Gerar Resumo Rápido"
+
+"[Ícone de Calendário] Planejar Minha Semana"
+
+"[Ícone de Lâmpada] Me Dê uma Dica de Estudo"
+
+Variação 2 (Foco em Ação Imediata – se houver dados da Agenda):
+
+Texto: "Percebi que você tem uma prova de [Matéria] amanhã! Gostaria de gerar um quiz rápido sobre [Tópico Principal da Matéria] para revisar?"
+
+Botões: "Sim, Gerar Quiz!", "Não, obrigado(a)".
+
+Variação 3 (Foco em Engajamento Geral):
+
+Texto: "Pronto para desbloquear seu potencial máximo? Pergunte-me qualquer coisa ou explore minhas ferramentas!"
+
+Campo de Busca/Pergunta Rápida (Ver abaixo).
+
+Design:
+
+Texto principal em destaque (fonte maior, cor contrastante).
+
+Botões com design claro e acionável (laranja ou roxo).
+
+Animação de Texto (Sutil): As palavras podem aparecer como se estivessem sendo digitadas pelo Epictus IA.
+
+Campo de "Pergunta Rápida" (Opcional – Pode ser um dos estados iniciais):
+
+Função: Permitir que o usuário faça uma pergunta direta ao Epictus IA sem sair do Painel.
+
+Design:
+
+Ícone do Epictus IA ao lado.
+
+Campo de Texto (Placeholder): "Pergunte ao Epictus..." ou "Como posso te ajudar hoje?".
+
+Botão "Enviar" (pequeno, ícone de avião de papel ou seta).
+
+Quando este campo estiver visível, a "Mensagem de Boas-Vindas" acima pode ser mais curta.
+
+Botão "Explorar Ferramentas Epictus IA" (Fixo no Rodapé do Card):
+
+Texto: "Explorar Todas as Ferramentas" ou "Ver Tudo que o Epictus Pode Fazer".
+
+Design: Secundário (fundo transparente, texto/borda laranja ou roxo).
+
+Funcionalidade: Leva para a seção principal e completa do Epictus IA (onde estão todas as ferramentas categorizadas).
+
+Responsividade:
+
+O card se adapta ao tamanho da tela. Em telas menores, o conteúdo pode ser reorganizado (ex: menos sugestões visíveis, texto mais conciso).
+
+III. Fluxo de Interação (Com o Card no Estado Inicial):
+
+Visualização Inicial:
+
+Ao carregar o Painel, o aluno vê o card "Epictus IA" com uma das variações de conteúdo inicial (Boas-vindas com sugestões, Pergunta Rápida, etc.).
+
+Animação de Entrada: O card pode ter um fade-in e os elementos internos podem surgir com animações sutis (ex: texto sendo "digitado").
+
+Interação com a Mensagem de Boas-Vindas/Status Inicial:
+
+Se houver botões de ação (Variação 1 ou 2):
+
+Ação: Aluno clica em um dos botões (ex: "Gerar Resumo Rápido").
+
+Feedback Visual: Efeito de clique no botão.
+
+Reação (Dentro do Card ou Abrindo Modal/Nova Tela):
+
+Opção A (Ação Direta no Card – Para ações rápidas):
+
+O conteúdo do card muda dinamicamente para a interface da ferramenta escolhida (ex: um campo para colar texto para o resumo).
+
+O título do card pode mudar para "Epictus IA: Gerador de Resumos".
+
+Após a ação, o card pode voltar ao estado inicial ou mostrar o resultado (ex: o resumo gerado, com opção de copiar/salvar).
+
+Opção B (Abrir Modal – Para ações que exigem mais inputs):
+
+Um modal é aberto com a interface completa da ferramenta (ex: modal para definir parâmetros do quiz).
+
+O card no Painel permanece no estado anterior (ou pode exibir uma mensagem "Epictus IA está te ajudando com [Nome da Ferramenta]...").
+
+Opção C (Redirecionar para a Seção Completa – Para funcionalidades complexas):
+
+O aluno é levado para a seção principal do Epictus IA, diretamente na ferramenta selecionada.
+
+Se for um campo de "Pergunta Rápida" (Variação 3):
+
+Ação: Aluno digita uma pergunta no campo e clica em "Enviar".
+
+Feedback Visual: Animação de envio da mensagem.
+
+Reação (Dentro do Card):
+
+A área de mensagens do chat aparece dentro do card.
+
+A pergunta do aluno é exibida.
+
+O Epictus IA processa e exibe a resposta.
+
+O aluno pode continuar a conversa dentro do card (com scroll se necessário) ou clicar em um botão "Abrir Chat Completo" que leva para a interface de chat principal do Epictus IA.
+
+Interação com o Botão "Explorar Ferramentas Epictus IA":
+
+Ação: Aluno clica no botão.
+
+Reação:
+
+O aluno é redirecionado para a página principal e completa da seção "Epictus IA" (aquela com o carrossel de categorias e todos os cards de funcionalidade).
+
+Transição de página suave.
+
+IV. Evolução do Card (Após Interações e com o Tempo):
+
+O card "Epictus IA: Seu Copiloto Inteligente" não é estático. Ele evolui com base nas interações do aluno e no contexto do seu aprendizado.
+
+Exemplos de Conteúdo Dinâmico (Após a Primeira Interação):
+
+Se o aluno usou recentemente o "Gerador de Resumos": O card pode perguntar "Gostaria de transformar seu último resumo em flashcards?".
+
+Se o aluno está com uma prova agendada na "Agenda": O card pode sugerir "Vamos criar um plano de revisão para sua prova de [Matéria]?".
+
+Se o aluno acabou de receber uma nota baixa em um quiz: O card pode oferecer "Percebi que você errou algumas questões sobre [Tópico]. Quer que eu te explique esse conceito ou gere mais exercícios?".
+
+Se o aluno não interage com o Epictus IA há algum tempo: O card pode mostrar uma "Dica do Dia" interessante ou destacar uma nova ferramenta da IA.
+
+V. Objetivo Maior (Além de um Chat):
+
+Com este design e fluxo, o card "Epictus IA: Seu Copiloto Inteligente" se torna:
+
+Ponto de Entrada Proativo: A IA toma a iniciativa de oferecer ajuda e sugestões relevantes.
+
+Hub de Ações Rápidas: Permite que o aluno acesse funcionalidades chave da IA sempre que precisar, diretamente do Painel.
+
+Contextual e Personalizado: O conteúdo do card se adapta ao momento e às necessidades do aluno.
+
+Educador sobre a IA: Apresenta gradualmente as diversas ferramentas do Epictus IA, incentivando a exploração.
+
+Interface de Conversa (quando necessário): Oferece a opção de um chat rápido para dúvidas pontuais, mas não se limita a isso.
