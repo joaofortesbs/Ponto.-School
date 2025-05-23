@@ -175,16 +175,23 @@ export default function AtalhoSchoolCard() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700/30 flex justify-end"
+          className="mt-auto pt-4 border-t border-gray-100 dark:border-gray-700/30 flex justify-end"
         >
           <motion.button 
-            className={`rounded-xl px-5 py-2.5 text-xs font-medium bg-gradient-to-r from-[#FF6B00] to-amber-500 text-white shadow-sm hover:shadow-lg transition-all flex items-center gap-2 ${isLightMode ? '' : 'border border-[#FF6B00]/40'}`}
-            whileHover={{ scale: 1.03, boxShadow: "0 10px 20px -10px rgba(255, 107, 0, 0.5)" }}
-            whileTap={{ scale: 0.98 }}
+            className={`rounded-lg px-5 py-2.5 text-sm font-medium bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white shadow-sm hover:shadow-md transition-all flex items-center gap-2 ${isLightMode ? '' : 'border border-[#FF6B00]/40'}`}
+            whileHover={{ scale: 1.03, y: -1 }}
+            whileTap={{ scale: 0.97 }}
+            initial={{ boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)" }}
+            animate={{ boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)" }}
+            whileHover={{ 
+              boxShadow: "0 4px 12px rgba(255, 107, 0, 0.25)",
+              scale: 1.03, 
+              y: -1 
+            }}
             onClick={abrirModal}
           >
             Personalizar Atalhos
-            <ChevronRight className="h-3.5 w-3.5" />
+            <ChevronRight className="h-4 w-4 opacity-80" />
           </motion.button>
         </motion.div>
       </div>
