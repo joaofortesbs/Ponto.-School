@@ -1,4 +1,7 @@
+Improved the initial interface of the Epictus IA Copiloto card to be more modern, visual, and sophisticated.
+```
 
+```replit_final_file
 import React, { useState, useEffect } from "react";
 import { Brain, Lightbulb, Send, ArrowRight, BarChart2, Sparkles, Zap, Check, Star, Wand2, Rocket, BookOpen, LucideIcon } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
@@ -247,7 +250,7 @@ export default function EpictusIACopilotoCard() {
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -right-10 -top-10 w-40 h-40 bg-[#FF6B00]/5 dark:bg-[#FF6B00]/10 rounded-full blur-2xl"></div>
         <div className="absolute -left-20 -bottom-20 w-72 h-72 bg-blue-500/5 dark:bg-blue-500/5 rounded-full blur-3xl"></div>
-        
+
         {/* Partículas decorativas animadas */}
         <motion.div 
           animate={{ 
@@ -261,7 +264,7 @@ export default function EpictusIACopilotoCard() {
           }}
           className="absolute top-1/4 right-10 w-2 h-2 bg-[#FF6B00]/40 rounded-full"
         ></motion.div>
-        
+
         <motion.div 
           animate={{ 
             y: [0, 10, 0],
@@ -275,7 +278,7 @@ export default function EpictusIACopilotoCard() {
           }}
           className="absolute top-1/3 left-10 w-3 h-3 bg-blue-400/30 dark:bg-blue-400/20 rounded-full"
         ></motion.div>
-        
+
         <motion.div 
           animate={{ 
             y: [0, -5, 0],
@@ -289,7 +292,7 @@ export default function EpictusIACopilotoCard() {
           }}
           className="absolute bottom-1/4 right-1/4 w-2 h-2 bg-purple-400/30 dark:bg-purple-400/20 rounded-full"
         ></motion.div>
-        
+
         {/* Linhas de conexão decorativas */}
         <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-10 dark:opacity-5" xmlns="http://www.w3.org/2000/svg">
           <path 
@@ -400,7 +403,7 @@ export default function EpictusIACopilotoCard() {
                   <Brain className={`h-8 w-8 text-[#FF6B00]`} />
                 </motion.div>
               </motion.div>
-              
+
               <motion.p
                 animate={{
                   opacity: [1, 0.7, 1]
@@ -414,7 +417,7 @@ export default function EpictusIACopilotoCard() {
               >
                 Epictus está planejando para você...
               </motion.p>
-              
+
               <div className="w-full max-w-md h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                 <motion.div 
                   className="h-full bg-gradient-to-r from-[#FF6B00] to-[#FF9D5C] rounded-full"
@@ -423,7 +426,7 @@ export default function EpictusIACopilotoCard() {
                   transition={{ duration: 1.5, ease: "easeInOut" }}
                 />
               </div>
-              
+
               <div className="flex flex-col items-center space-y-1">
                 <p className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
                   Analisando sua necessidade...
@@ -557,7 +560,7 @@ export default function EpictusIACopilotoCard() {
                           <p className={`text-xs mt-1 ${isLightMode ? 'text-gray-600' : 'text-gray-300'}`}>
                             {passo.descricao}
                           </p>
-                          
+
                           {/* Detalhes adicionais do passo */}
                           <div className="flex items-center gap-3 mt-2">
                             <div className={`inline-flex items-center gap-1 text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
@@ -633,215 +636,309 @@ export default function EpictusIACopilotoCard() {
             transition={{ duration: 0.5 }}
             className="p-6 flex-grow flex flex-col justify-between relative z-10"
           >
-            <div className="space-y-4">
-              {/* Título e dica de uso com efeito brilhante */}
+            {/* Interface inicial para primeiro contato - design ultra moderno */}
+          <div className="flex flex-col items-center justify-center h-full text-center relative">
+            {/* Background abstrato com gradientes animados */}
+            <div className="absolute inset-0 overflow-hidden">
               <motion.div 
-                initial={{ y: -10 }}
-                animate={{ y: 0 }}
-                className="mb-1 text-center"
-              >
-                <p className={`font-medium ${isLightMode ? 'text-gray-700' : 'text-gray-200'}`}>
-                  Como posso te ajudar a potencializar seus estudos hoje?
-                </p>
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.3, duration: 0.5 }}
-                  className={`mt-1 px-2 py-0.5 rounded-full text-xs inline-flex items-center gap-1 ${isLightMode ? 'bg-blue-50 text-blue-600' : 'bg-blue-900/20 text-blue-300 border border-blue-800/30'}`}
-                >
-                  <Sparkles className="h-3 w-3" />
-                  <span>Seu assistente de estudos inteligente</span>
-                </motion.div>
-              </motion.div>
-
-              {/* Campo de entrada de necessidade principal com animação */}
-              <motion.form 
-                onSubmit={handleEnviarPergunta}
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.1, duration: 0.5 }}
-                className="relative"
-              >
-                <div className={`relative overflow-hidden rounded-xl border ${isLightMode ? 'border-gray-200 shadow-md' : 'border-gray-700 shadow-inner'} transition-all duration-300 ${
-                  isTyping 
-                    ? isLightMode 
-                      ? 'ring-2 ring-[#FF6B00]/30' 
-                      : 'ring-2 ring-[#FF6B00]/30' 
-                    : animateInput 
-                      ? isLightMode 
-                        ? 'ring-1 ring-[#FF6B00]/20 animate-pulse' 
-                        : 'ring-1 ring-[#FF6B00]/20 animate-pulse'
-                      : ''
-                }`}>
-                  <input
-                    type="text"
-                    value={pergunta}
-                    onChange={handleInputChange}
-                    placeholder="Digite sua necessidade ou objetivo (ex: 'Criar resumo para prova de Física')"
-                    className={`w-full py-3.5 px-4 pr-12 ${isLightMode ? 'bg-white text-gray-800' : 'bg-gray-800/40 text-white backdrop-blur-sm'} placeholder-gray-400 focus:outline-none text-sm`}
-                    autoFocus
-                  />
-
-                  <motion.button
-                    whileHover={{ scale: 1.05, rotate: 5 }}
-                    whileTap={{ scale: 0.95, rotate: 0 }}
-                    type="submit"
-                    disabled={!pergunta.trim()}
-                    className={`absolute right-2 top-1/2 transform -translate-y-1/2 p-1.5 rounded-md ${
-                      pergunta.trim() 
-                        ? isLightMode 
-                          ? 'bg-gradient-to-r from-[#FF6B00] to-[#FF8736] text-white' 
-                          : 'bg-gradient-to-r from-[#FF6B00] to-[#FF8736] text-white' 
-                        : isLightMode 
-                          ? 'bg-gray-100 text-gray-400' 
-                          : 'bg-gray-700 text-gray-400'
-                    } transition-all duration-200`}
-                  >
-                    <Send className="h-4 w-4" />
-                  </motion.button>
-                </div>
-
-                {/* Botão "Analisar Necessidade" com efeito de brilho */}
-                <motion.button
-                  whileHover={{ 
-                    scale: pergunta.trim() ? 1.02 : 1, 
-                    boxShadow: pergunta.trim() ? "0 10px 15px -3px rgba(255, 107, 0, 0.2), 0 4px 6px -4px rgba(255, 107, 0, 0.2)" : "none" 
-                  }}
-                  whileTap={{ scale: pergunta.trim() ? 0.98 : 1 }}
-                  type="submit"
-                  disabled={!pergunta.trim()}
-                  className={`w-full mt-2 py-2.5 rounded-lg font-medium ${
-                    pergunta.trim() 
-                      ? 'bg-gradient-to-r from-[#FF6B00] to-[#FF8736] text-white shadow-md hover:from-[#FF8736] hover:to-[#FF6B00]' 
-                      : 'bg-gray-200 dark:bg-gray-700 text-gray-400'
-                  } transition-all duration-300`}
-                >
-                  <span className="flex items-center justify-center gap-2">
-                    <Wand2 className={`h-4 w-4 ${pergunta.trim() ? 'animate-pulse' : ''}`} />
-                    Analisar Necessidade
-                  </span>
-                </motion.button>
-              </motion.form>
-
-              {/* Sugestões rápidas com design melhorado */}
+                initial={{ opacity: 0.3 }}
+                animate={{ 
+                  opacity: [0.3, 0.7, 0.3],
+                  y: [0, -10, 0]
+                }}
+                transition={{ 
+                  duration: 10,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+                className="absolute top-[-5%] left-[-10%] w-[60%] h-[50%] rounded-full bg-gradient-to-br from-[#FF6B00]/5 to-blue-500/5 blur-3xl"
+              />
               <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3, duration: 0.5 }}
-                className="mt-3"
-              >
-                <p className={`text-xs mb-2 flex items-center gap-1 ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                  <Lightbulb className="h-3 w-3" /> Sugestões rápidas:
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {["Criar Resumo", "Fazer Quiz", "Planejar Estudos", "Revisar Redação", "Gerar Slides"].map((sugestao, index) => (
-                    <motion.button
-                      key={sugestao}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.3 + (index * 0.1), duration: 0.3 }}
-                      whileHover={{ scale: 1.05, y: -2 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setPergunta(sugestao)}
-                      className={`text-xs px-3 py-1.5 rounded-full border ${
-                        isLightMode 
-                          ? 'border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 text-gray-700 hover:from-gray-100 hover:to-gray-200 shadow-sm' 
-                          : 'border-gray-700 bg-gradient-to-r from-gray-800/60 to-gray-800/40 text-gray-300 hover:from-gray-700/60 hover:to-gray-700/40 backdrop-blur-sm'
-                      } transition-all duration-200`}
-                    >
-                      {sugestao}
-                    </motion.button>
-                  ))}
-                </div>
-              </motion.div>
-
-              {/* Categorias populares - mostrar apenas quando não está digitando */}
-              {showPopularTags && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 20 }}
-                  transition={{ delay: 0.5, duration: 0.5 }}
-                  className="mt-4"
-                >
-                  <p className={`text-xs mb-3 flex items-center gap-1 ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                    <BarChart2 className="h-3 w-3" /> Categorias populares:
-                  </p>
-                  
-                  <div className="grid grid-cols-2 gap-2">
-                    {topCategories.map((category, index) => (
-                      <motion.button
-                        key={category.name}
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.6 + (index * 0.1) }}
-                        whileHover={{ scale: 1.03 }}
-                        whileTap={{ scale: 0.97 }}
-                        onClick={() => setPergunta(`Ajuda com ${category.name}`)}
-                        className={`flex items-center gap-2 p-2 rounded-lg border ${
-                          isLightMode 
-                            ? 'border-gray-200 bg-white hover:bg-gray-50' 
-                            : 'border-gray-700 bg-gray-800/20 hover:bg-gray-800/40'
-                        } transition-all duration-200`}
-                      >
-                        <div className={`h-7 w-7 rounded-md bg-gradient-to-br ${category.color} flex items-center justify-center text-white`}>
-                          {renderIcon(category.icon, "h-4 w-4")}
-                        </div>
-                        <div className="flex flex-col items-start">
-                          <span className={`text-xs font-medium ${isLightMode ? 'text-gray-700' : 'text-gray-200'}`}>
-                            {category.name}
-                          </span>
-                          <span className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                            {category.count}+ usos
-                          </span>
-                        </div>
-                      </motion.button>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
+                initial={{ opacity: 0.2 }}
+                animate={{ 
+                  opacity: [0.2, 0.5, 0.2],
+                  y: [0, 15, 0]
+                }}
+                transition={{ 
+                  duration: 12,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: 1
+                }}
+                className="absolute bottom-[-10%] right-[-5%] w-[50%] h-[40%] rounded-full bg-gradient-to-bl from-purple-500/5 to-[#FF8C40]/5 blur-3xl"
+              />
             </div>
 
-            {/* Rodapé com status e link para explorar ferramentas */}
+            {/* Grid pattern decorativo */}
+            <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none" 
+                 style={{
+                   backgroundImage: 'radial-gradient(circle, rgba(255, 107, 0, 0.8) 1px, transparent 1px)', 
+                   backgroundSize: '20px 20px'
+                 }}>
+            </div>
+
+            {/* Partículas decorativas flutuantes */}
             <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.7, duration: 0.5 }}
-              className="mt-5 flex items-center justify-between"
-            >
-              <div className="flex items-center gap-2">
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="absolute inset-0 overflow-hidden pointer-events-none">
+              {[...Array(12)].map((_, i) => (
                 <motion.div 
-                  animate={{ 
-                    scale: [1, 1.2, 1],
-                    backgroundColor: [
-                      isLightMode ? "rgb(74, 222, 128)" : "rgb(34, 197, 94)",
-                      isLightMode ? "rgb(74, 222, 128, 0.7)" : "rgb(34, 197, 94, 0.7)",
-                      isLightMode ? "rgb(74, 222, 128)" : "rgb(34, 197, 94)"
-                    ]
+                  key={i}
+                  className={`absolute h-1 w-1 rounded-full ${
+                    i % 3 === 0 ? 'bg-[#FF6B00]/40' : i % 3 === 1 ? 'bg-blue-400/30' : 'bg-purple-400/30'
+                  }`}
+                  style={{
+                    top: `${Math.random() * 100}%`,
+                    left: `${Math.random() * 100}%`,
                   }}
-                  transition={{ 
-                    duration: 2,
+                  animate={{
+                    y: [0, -20, 0],
+                    opacity: [0.3, 0.8, 0.3],
+                  }}
+                  transition={{
+                    duration: 3 + Math.random() * 5,
                     repeat: Infinity,
+                    delay: Math.random() * 2,
                     ease: "easeInOut"
                   }}
-                  className={`h-2 w-2 rounded-full`}
-                ></motion.div>
-                <span className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>IA pronta para ajudar</span>
-              </div>
-
-              <motion.a 
-                href="/epictus-ia" 
-                whileHover={{ x: 3 }}
-                className={`text-xs flex items-center gap-1 ${isLightMode ? 'text-gray-500 hover:text-[#FF6B00]' : 'text-gray-400 hover:text-[#FF6B00]'} transition-colors duration-200`}
-              >
-                <Lightbulb className="h-3 w-3" />
-                <span>Explorar Todas as Ferramentas</span>
-                <ArrowRight className="h-2.5 w-2.5 ml-0.5" />
-              </motion.a>
+                />
+              ))}
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
-  );
+
+            {/* Seção visual principal com brain expandindo-se */}
+            <div className="mb-6 relative">
+              {/* Círculos concêntricos animados */}
+              {[...Array(3)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ 
+                    opacity: [0, 0.5, 0], 
+                    scale: [1, 1.8, 2.2],
+                  }}
+                  transition={{ 
+                    duration: 3,
+                    repeat: Infinity,
+                    ease: "easeOut",
+                    delay: i * 0.5,
+                  }}
+                  className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border
+                    ${isLightMode ? 'border-[#FF6B00]/20' : 'border-[#FF6B00]/15'} w-24 h-24`}
+                  style={{ scale: 1 + i * 0.3 }}
+                />
+              ))}
+
+              {/* Hexágono animado como base */}
+              <motion.div
+                className="relative"
+                initial={{ rotate: 0 }}
+                animate={{ rotate: 360 }}
+                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+              >
+                <div className={`w-24 h-28 clip-path-hexagon relative flex items-center justify-center
+                  ${isLightMode ? 'bg-gradient-to-br from-white to-orange-50 shadow-md' : 'bg-gradient-to-br from-[#14253d] to-[#0c1220]'}`}
+                  style={{
+                    clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+                    boxShadow: isLightMode ? '0 10px 25px -5px rgba(255, 120, 0, 0.15)' : '0 10px 25px -5px rgba(0, 0, 0, 0.5)'
+                  }}
+                >
+                  <div className={`w-20 h-24 absolute clip-path-hexagon 
+                    ${isLightMode ? 'bg-gradient-to-br from-orange-50 to-orange-100/50' : 'bg-gradient-to-br from-[#192c4a]/80 to-[#0d1526]/80'}`}
+                    style={{
+                      clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+                    }}
+                  ></div>
+
+                  {/* Elemento central com animação de pulso */}
+                  <motion.div
+                    animate={{ 
+                      scale: [1, 1.05, 1],
+                    }}
+                    transition={{ 
+                      duration: 2.5,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                    className="z-10 relative"
+                  >
+                    <div className="h-16 w-16 rounded-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] flex items-center justify-center shadow-lg">
+                      <Brain className="h-8 w-8 text-white drop-shadow-md" />
+                    </div>
+                  </motion.div>
+                </div>
+              </motion.div>
+
+              {/* Elementos flutuantes ao redor do hexágono */}
+              <motion.div
+                initial={{ y: 5, opacity: 0.7 }}
+                animate={{ y: -5, opacity: 1 }}
+                transition={{ 
+                  duration: 2,
+                  repeat: Infinity,
+                  repeatType: "reverse",
+                  ease: "easeInOut",
+                  delay: 0.5
+                }}
+                className="absolute -top-4 right-0 flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500/10 to-blue-600/5 backdrop-blur-sm border border-blue-500/20"
+              >
+                <Lightbulb className="h-4 w-4 text-blue-500" />
+              </motion.div>
+
+              <motion.div
+                initial={{ y: -5, opacity: 0.7 }}
+                animate={{ y: 5, opacity: 1 }}
+                transition={{ 
+                  duration: 2.3,
+                  repeat: Infinity,
+                  repeatType: "reverse",
+                  ease: "easeInOut",
+                  delay: 0.8
+                }}
+                className="absolute -bottom-3 -left-1 flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500/10 to-purple-600/5 backdrop-blur-sm border border-purple-500/20"
+              >
+                <Rocket className="h-4 w-4 text-purple-500" />
+              </motion.div>
+
+              <motion.div
+                initial={{ y: 5, opacity: 0.7 }}
+                animate={{ y: -5, opacity: 1 }}
+                transition={{ 
+                  duration: 2.7,
+                  repeat: Infinity,
+                  repeatType: "reverse",
+                  ease: "easeInOut",
+                  delay: 1.1
+                }}
+                className="absolute -bottom-2 right-2 flex items-center justify-center w-7 h-7 rounded-lg bg-gradient-to-br from-green-500/10 to-green-600/5 backdrop-blur-sm border border-green-500/20"
+              >
+                <Zap className="h-3.5 w-3.5 text-green-500" />
+              </motion.div>
+            </div>
+
+            {/* Título principal com efeito de destaque */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.3 }}
+              className="mb-3"
+            >
+              <h3 className={`font-bold text-xl mb-1 ${isLightMode ? 'text-gray-800' : 'text-white'} tracking-tight`}>
+                <span className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-transparent bg-clip-text">
+                  Epictus IA:
+                </span> Seu Copiloto
+              </h3>
+
+              <div className="flex items-center justify-center">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: '60px' }}
+                  transition={{ duration: 0.8, delay: 0.6 }}
+                  className="h-0.5 bg-gradient-to-r from-transparent via-[#FF6B00]/60 to-transparent rounded-full"
+                />
+              </div>
+            </motion.div>
+
+            {/* Descrição com estilo moderno e badges informativas */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.5 }}
+              className="mb-5 px-8"
+            >
+              <p className={`text-sm ${isLightMode ? 'text-gray-600' : 'text-gray-300'} leading-relaxed mb-4`}>
+                Potencialize seus estudos com um assistente inteligente personalizado que entende suas necessidades
+              </p>
+
+              {/* Recursos destacados */}
+              <div className="grid grid-cols-2 gap-2 mb-4">
+                {[
+                  { icon: <Sparkles className="h-3 w-3" />, text: "Respostas Personalizadas", color: "from-blue-500 to-blue-600" },
+                  { icon: <Rocket className="h-3 w-3" />, text: "Planos de Ação", color: "from-[#FF6B00] to-[#FF8C40]" },
+                  { icon: <Brain className="h-3 w-3" />, text: "Análise Inteligente", color: "from-purple-500 to-purple-600" },
+                  { icon: <Zap className="h-3 w-3" />, text: "Resultados Rápidos", color: "from-green-500 to-green-600" }
+                ].map((item, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, x: index % 2 === 0 ? -10 : 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.5, delay: 0.6 + (index * 0.1) }}
+                    className={`flex items-center gap-1.5 p-1.5 rounded-lg border 
+                      ${isLightMode 
+                        ? 'border-gray-200 bg-white/80 shadow-sm' 
+                        : 'border-gray-700/50 bg-gray-800/20 backdrop-blur-sm'}`}
+                  >
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center bg-gradient-to-r ${item.color} shadow-sm`}>
+                      {item.icon}
+                    </div>
+                    <span className={`text-xs font-medium ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
+                      {item.text}
+                    </span>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* Botão de ação principal com efeito de destaque */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6, delay: 0.7 }}
+              className="w-full px-8"
+            >
+              <motion.button
+                whileHover={{ 
+                  scale: 1.03,
+                  boxShadow: isLightMode 
+                    ? "0 10px 25px -5px rgba(255, 107, 0, 0.3), 0 4px 10px -5px rgba(255, 107, 0, 0.2)" 
+                    : "0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 4px 10px -5px rgba(255, 107, 0, 0.2)"
+                }}
+                whileTap={{ scale: 0.97 }}
+                className={`w-full py-3 rounded-xl font-medium text-white relative overflow-hidden group`}
+                onClick={() => setPergunta("Olá, preciso de ajuda com meus estudos")}
+              >
+                {/* Fundo com gradiente animado */}
+                <div className="absolute inset-0 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] z-0"></div>
+
+                {/* Efeito de brilho ao hover */}
+                <div className="absolute -inset-x-full inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 opacity-0 group-hover:opacity-100 group-hover:animate-shine z-10"></div>
+
+                {/* Texto e ícones */}
+                <div className="relative z-20 flex items-center justify-center gap-2">
+                  <Sparkles className="h-4 w-4" />
+                  <span>Comece agora</span>
+                </div>
+              </motion.button>
+
+              <motion.p 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 0.8 }}
+                transition={{ duration: 0.5, delay: 0.9 }}
+                className={`text-xs mt-3 text-center ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}
+              >
+                Otimize seu tempo e melhore seus resultados com IA avançada
+              </motion.p>
+            </motion.div>
+
+            {/* Indicador sutil de como utilizar */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 1, delay: 1.2 }}
+              className="absolute bottom-2 left-0 right-0 flex justify-center"
+            >
+              <div className={`flex items-center gap-1 ${isLightMode ? 'text-gray-400' : 'text-gray-500'} text-[10px]`}>
+                <motion.div
+                  animate={{ y: [0, -3, 0] }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                >
+                  <ArrowRight className="h-2.5 w-2.5 rotate-90" />
+                </motion.div>
+                <span>Deslize para explorar</span>
+              </div>
+            </motion.div>
+          </div>
+          
+        )
 }
