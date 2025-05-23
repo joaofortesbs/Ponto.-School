@@ -1,10 +1,9 @@
 
 import React, { useState, useEffect } from "react";
-import { Brain, Lightbulb, Send, ArrowRight, BarChart2, Sparkles, Zap, Check, Star, Wand2, Rocket, BookOpen, LucideIcon } from "lucide-react";
+import { Brain, Lightbulb, Send, BarChart2, Sparkles, Zap, Check, Star, Wand2, Rocket, BookOpen, LucideIcon } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
-import { Calendar } from "@/components/ui/calendar";
 
 export default function EpictusIACopilotoCard() {
   const { theme } = useTheme();
@@ -897,7 +896,7 @@ export default function EpictusIACopilotoCard() {
                     { title: "Resumos", description: "Gere resumos inteligentes", icon: <BookOpen className="h-4 w-4" />, color: "from-blue-500 to-indigo-600" },
                     { title: "Questões", description: "Pratique com questões", icon: <Brain className="h-4 w-4" />, color: "from-emerald-500 to-teal-600" },
                     { title: "Apresentações", description: "Crie slides profissionais", icon: <BarChart2 className="h-4 w-4" />, color: "from-amber-500 to-orange-600" },
-                    { title: "Planos", description: "Organize seus estudos", icon: <Calendar className="h-4 w-4" />, color: "from-purple-500 to-pink-600" }
+                    { title: "Planos", description: "Organize seus estudos", icon: <Wand2 className="h-4 w-4" />, color: "from-purple-500 to-pink-600" }
                   ].map((feature, index) => (
                     <motion.div
                       key={feature.title}
@@ -976,36 +975,7 @@ export default function EpictusIACopilotoCard() {
               </motion.div>
             </div>
 
-            {/* Rodapé com status e links */}
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1.1, duration: 0.5 }}
-              className="mt-6 flex items-center justify-between"
-            >
-              <div className="flex items-center gap-2">
-                <span className="relative flex h-3 w-3">
-                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${isLightMode ? 'bg-green-400' : 'bg-green-500'} opacity-75`}></span>
-                  <span className={`relative inline-flex rounded-full h-3 w-3 ${isLightMode ? 'bg-green-500' : 'bg-green-400'}`}></span>
-                </span>
-                <span className={`text-xs font-medium ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                  IA pronta para personalizar seu aprendizado
-                </span>
-              </div>
-
-              <motion.a 
-                href="/epictus-ia" 
-                whileHover={{ x: 3 }}
-                className={`text-xs flex items-center gap-1 px-2 py-1 rounded-lg ${
-                  isLightMode 
-                    ? 'text-[#FF6B00] hover:bg-orange-50 hover:text-[#FF8736]' 
-                    : 'text-[#FF6B00] hover:bg-[#FF6B00]/10 hover:text-[#FF8736]'
-                } transition-all duration-200`}
-              >
-                <span className="font-medium">Modo completo</span>
-                <ArrowRight className="h-3 w-3" />
-              </motion.a>
-            </motion.div>
+            {/* Rodapé removido conforme solicitado */}
           </motion.div>
         )}
       </AnimatePresence>
