@@ -536,29 +536,14 @@ export function SidebarNav({
         {!isCollapsed && (
           <div className="text-[#001427] dark:text-white text-center">
             <h3 className="font-semibold text-base mb-2 flex items-center justify-center">
-              <span className="mr-1">👋</span> {(() => {
+              <span className="mr-1">👋</span> Olá, {(() => {
                 // Obter o primeiro nome com a mesma lógica do Dashboard
                 const firstName = userProfile?.full_name?.split(' ')[0] || 
                                 userProfile?.display_name || 
                                 localStorage.getItem('userFirstName') || 
                                 "";
-                
-                // Determinar a saudação com base na hora atual
-                const horaAtual = new Date().getHours();
-                let saudacao = "Olá";
-                
-                if (horaAtual >= 5 && horaAtual < 12) {
-                  saudacao = "Bom dia";
-                } else if (horaAtual >= 12 && horaAtual < 18.5) {
-                  saudacao = "Boa tarde";
-                } else if (horaAtual >= 18.5 && horaAtual < 24) {
-                  saudacao = "Boa noite";
-                } else {
-                  saudacao = "Boa madrugada";
-                }
-                
-                return `${saudacao}, ${firstName}!`;
-              })()}
+                return firstName;
+              })()}!
             </h3>
             <div className="flex flex-col items-center mt-1">
               <p className="text-xs text-[#001427]/70 dark:text-white/70 mb-0.5">
