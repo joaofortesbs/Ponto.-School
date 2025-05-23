@@ -96,28 +96,6 @@ export default function AtalhoSchoolCard() {
 
       {/* Grid de atalhos com design sofisticado */}
       <div className="p-5">
-        {/* Mensagem de recomendação estilizada */}
-        <motion.div 
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className={`mb-6 p-4 rounded-xl ${isLightMode ? 'bg-gradient-to-r from-orange-50 to-amber-50' : 'bg-gradient-to-r from-[#FF6B00]/10 to-[#0F172A]'} border ${isLightMode ? 'border-orange-100' : 'border-[#FF6B00]/20'} backdrop-blur-sm shadow-sm`}
-        >
-          <div className="flex gap-3 items-start">
-            <div className={`mt-0.5 p-2 rounded-full ${isLightMode ? 'bg-orange-100' : 'bg-[#FF6B00]/20'} shadow-inner`}>
-              <Sparkles className="h-4 w-4 text-[#FF6B00]" />
-            </div>
-            <div>
-              <h4 className={`text-sm font-semibold mb-1 ${isLightMode ? 'text-gray-700' : 'text-white'}`}>
-                Organize seu fluxo de trabalho
-              </h4>
-              <p className={`text-xs ${isLightMode ? 'text-gray-600' : 'text-gray-300'}`}>
-                Personalize seus atalhos para maximizar a produtividade e acessar rapidamente suas ferramentas mais usadas.
-              </p>
-            </div>
-          </div>
-        </motion.div>
-
         {/* Grid de atalhos com animações aprimoradas */}
         <motion.div 
           className="grid grid-cols-2 md:grid-cols-3 gap-4"
