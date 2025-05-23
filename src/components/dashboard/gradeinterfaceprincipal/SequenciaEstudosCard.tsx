@@ -689,23 +689,23 @@ export default function SequenciaEstudosCard() {
               {/* Estatísticas em design de cartões grid */}
               <div className="grid grid-cols-2 gap-2">
                 {/* Card de Recorde */}
-                <div className="bg-gray-50 dark:bg-[#14253d]/80 rounded-lg py-2.5 px-3 backdrop-blur-sm border border-gray-100 dark:border-gray-800/80 flex flex-col items-center justify-center">
-                  <div className="flex items-center space-x-1 mb-1">
-                    <Award className="h-3.5 w-3.5 text-yellow-500" />
+                <div className="bg-gray-50 dark:bg-[#14253d]/80 rounded-lg py-1.5 px-2 backdrop-blur-sm border border-gray-100 dark:border-gray-800/80 flex flex-col items-center justify-center">
+                  <div className="flex items-center space-x-1">
+                    <Award className="h-3 w-3 text-yellow-500" />
                     <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Seu recorde</span>
                   </div>
-                  <p className="text-xl font-bold text-gray-700 dark:text-gray-200">{recordeDias}</p>
-                  <p className="text-xs text-gray-400 dark:text-gray-500">dias</p>
+                  <p className="text-lg font-bold text-gray-700 dark:text-gray-200 mb-0">{recordeDias}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-0">dias</p>
                 </div>
 
                 {/* Card de Meta Diária */}
-                <div className="bg-gray-50 dark:bg-[#14253d]/80 rounded-lg py-2.5 px-3 backdrop-blur-sm border border-gray-100 dark:border-gray-800/80 flex flex-col items-center justify-center">
-                  <div className="flex items-center space-x-1 mb-1">
-                    <Star className="h-3.5 w-3.5 text-[#FF8C40]" />
+                <div className="bg-gray-50 dark:bg-[#14253d]/80 rounded-lg py-1.5 px-2 backdrop-blur-sm border border-gray-100 dark:border-gray-800/80 flex flex-col items-center justify-center">
+                  <div className="flex items-center space-x-1">
+                    <Star className="h-3 w-3 text-[#FF8C40]" />
                     <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Meta diária</span>
                   </div>
-                  <p className="text-xl font-bold text-gray-700 dark:text-gray-200">{metaDiaria}</p>
-                  <p className="text-xs text-gray-400 dark:text-gray-500">dias</p>
+                  <p className="text-lg font-bold text-gray-700 dark:text-gray-200 mb-0">{metaDiaria}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-0">dias</p>
                 </div>
               </div>
 
