@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Brain, Lightbulb, Send, ArrowRight, BarChart2, Sparkles, Zap, Check, Star, Wand2, Rocket, BookOpen, LucideIcon } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
@@ -246,7 +245,7 @@ export default function EpictusIACopilotoCard() {
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -right-10 -top-10 w-40 h-40 bg-[#FF6B00]/5 dark:bg-[#FF6B00]/10 rounded-full blur-2xl"></div>
         <div className="absolute -left-20 -bottom-20 w-72 h-72 bg-blue-500/5 dark:bg-blue-500/5 rounded-full blur-3xl"></div>
-        
+
         {/* Partículas decorativas animadas */}
         <motion.div 
           animate={{ 
@@ -260,7 +259,7 @@ export default function EpictusIACopilotoCard() {
           }}
           className="absolute top-1/4 right-10 w-2 h-2 bg-[#FF6B00]/40 rounded-full"
         ></motion.div>
-        
+
         <motion.div 
           animate={{ 
             y: [0, 10, 0],
@@ -274,7 +273,7 @@ export default function EpictusIACopilotoCard() {
           }}
           className="absolute top-1/3 left-10 w-3 h-3 bg-blue-400/30 dark:bg-blue-400/20 rounded-full"
         ></motion.div>
-        
+
         <motion.div 
           animate={{ 
             y: [0, -5, 0],
@@ -288,7 +287,7 @@ export default function EpictusIACopilotoCard() {
           }}
           className="absolute bottom-1/4 right-1/4 w-2 h-2 bg-purple-400/30 dark:bg-purple-400/20 rounded-full"
         ></motion.div>
-        
+
         {/* Linhas de conexão decorativas */}
         <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-10 dark:opacity-5" xmlns="http://www.w3.org/2000/svg">
           <path 
@@ -399,7 +398,7 @@ export default function EpictusIACopilotoCard() {
                   <Brain className={`h-8 w-8 text-[#FF6B00]`} />
                 </motion.div>
               </motion.div>
-              
+
               <motion.p
                 animate={{
                   opacity: [1, 0.7, 1]
@@ -413,7 +412,7 @@ export default function EpictusIACopilotoCard() {
               >
                 Epictus está planejando para você...
               </motion.p>
-              
+
               <div className="w-full max-w-md h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                 <motion.div 
                   className="h-full bg-gradient-to-r from-[#FF6B00] to-[#FF9D5C] rounded-full"
@@ -422,7 +421,7 @@ export default function EpictusIACopilotoCard() {
                   transition={{ duration: 1.5, ease: "easeInOut" }}
                 />
               </div>
-              
+
               <div className="flex flex-col items-center space-y-1">
                 <p className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
                   Analisando sua necessidade...
@@ -556,7 +555,7 @@ export default function EpictusIACopilotoCard() {
                           <p className={`text-xs mt-1 ${isLightMode ? 'text-gray-600' : 'text-gray-300'}`}>
                             {passo.descricao}
                           </p>
-                          
+
                           {/* Detalhes adicionais do passo */}
                           <div className="flex items-center gap-3 mt-2">
                             <div className={`inline-flex items-center gap-1 text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
@@ -647,7 +646,7 @@ export default function EpictusIACopilotoCard() {
                 className={`w-full h-40 rounded-[100%] ${isLightMode ? 'bg-gradient-to-r from-orange-300/20 to-blue-300/20' : 'bg-gradient-to-r from-[#FF6B00]/20 to-blue-500/30'} blur-xl transform -translate-y-20`}
               />
             </div>
-            
+
             <div className="space-y-5 relative">
               {/* Cabeçalho e ícone principal com animação sofisticada */}
               <div className="flex flex-col items-center relative">
@@ -663,7 +662,7 @@ export default function EpictusIACopilotoCard() {
                 >
                   <div className={`h-16 w-16 rounded-full flex items-center justify-center ${isLightMode ? 'bg-gradient-to-br from-white to-gray-50' : 'bg-gradient-to-br from-gray-800 to-gray-900'} shadow-xl relative z-10`}>
                     <div className={`absolute inset-0.5 rounded-full ${isLightMode ? 'bg-gradient-to-br from-orange-50 to-orange-100' : 'bg-gradient-to-br from-[#0c1425]/90 to-[#0a1a2e]'} z-0`}></div>
-                    
+
                     <motion.div
                       animate={{ 
                         rotateY: [0, 180, 360],
@@ -678,7 +677,7 @@ export default function EpictusIACopilotoCard() {
                     >
                       <Brain className={`h-8 w-8 text-[#FF6B00] drop-shadow-lg`} />
                     </motion.div>
-                    
+
                     {/* Aura pulsante em torno do ícone */}
                     <motion.div
                       animate={{ 
@@ -693,7 +692,7 @@ export default function EpictusIACopilotoCard() {
                       className={`absolute inset-0 rounded-full ${isLightMode ? 'bg-[#FF6B00]/20' : 'bg-[#FF6B00]/30'} blur-md z-0`}
                     />
                   </div>
-                  
+
                   {/* Partículas orbitando */}
                   <motion.div 
                     animate={{ 
@@ -731,7 +730,7 @@ export default function EpictusIACopilotoCard() {
                     ))}
                   </motion.div>
                 </motion.div>
-                
+
                 {/* Título principal com efeito fadeIn mais elegante */}
                 <motion.div
                   initial={{ y: 20, opacity: 0 }}
@@ -749,7 +748,7 @@ export default function EpictusIACopilotoCard() {
                   <p className={`font-medium ${isLightMode ? 'text-gray-700' : 'text-gray-200'}`}>
                     Como posso potencializar seus estudos hoje?
                   </p>
-                  
+
                   <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -807,7 +806,7 @@ export default function EpictusIACopilotoCard() {
                       }}
                     />
                   )}
-                  
+
                   <div className="relative">
                     <div className={`absolute left-4 top-1/2 transform -translate-y-1/2 text-[#FF6B00] opacity-70`}>
                       <Wand2 className="h-4 w-4" />
@@ -876,7 +875,7 @@ export default function EpictusIACopilotoCard() {
                       }}
                     />
                   )}
-                  
+
                   <span className="flex items-center justify-center gap-2 relative z-10">
                     <Sparkles className={`h-4 w-4 ${pergunta.trim() ? 'animate-pulse' : ''}`} />
                     <span>Potencializar Aprendizado</span>
@@ -891,7 +890,7 @@ export default function EpictusIACopilotoCard() {
                 transition={{ delay: 0.6, duration: 0.6 }}
                 className="mt-5"
               >
-                <div className="grid grid-cols-2 gap-3">
+                <div className="flex gap-3">
                   {[
                     { title: "Resumos", description: "Gere resumos inteligentes", icon: <BookOpen className="h-4 w-4" />, color: "from-blue-500 to-indigo-600" },
                     { title: "Questões", description: "Pratique com questões", icon: <Brain className="h-4 w-4" />, color: "from-emerald-500 to-teal-600" },
@@ -904,13 +903,10 @@ export default function EpictusIACopilotoCard() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.7 + (index * 0.1) }}
                       whileHover={{ y: -4, scale: 1.03 }}
-                      onClick={() => setPergunta(`Ajuda com ${feature.title}`)}
-                      className={`rounded-xl p-3 cursor-pointer ${
-                        isLightMode 
-                          ? 'bg-white border border-gray-100 shadow-sm hover:shadow-md' 
-                          : 'bg-gray-800/30 border border-gray-700/50 hover:bg-gray-800/50'
-                      } transition-all duration-300 flex flex-col items-center text-center`}
+                      onClick={() => setPergunta(`Ajude-me com ${feature.title.toLowerCase()}`)}
+                      className={`p-3 rounded-lg bg-gradient-to-br ${feature.color} transition-all cursor-pointer flex-1 min-w-[90px]`}
                     >
+                      
                       <div className={`h-9 w-9 rounded-full mb-2 flex items-center justify-center bg-gradient-to-br ${feature.color} text-white shadow-md`}>
                         {feature.icon}
                       </div>
@@ -950,7 +946,7 @@ export default function EpictusIACopilotoCard() {
                       Popular
                     </div>
                   </div>
-                  
+
                   <div className="flex flex-wrap gap-2">
                     {["Resumo de Física", "Quiz História", "Cronograma ENEM", "Revisar Redação", "Slides Geografia"].map((sugestao, index) => (
                       <motion.button
