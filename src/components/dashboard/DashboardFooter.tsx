@@ -11,9 +11,9 @@ export default function DashboardFooter() {
     // Ensure focus is at the top of the document
     document.body.scrollIntoView({ behavior: "smooth", block: "start" });
 
-    // Find all scrollable elements and scroll them to the top
+    // Seleção mais abrangente de elementos com scroll
     const scrollableElements = document.querySelectorAll(
-      'div[style*="overflow"], div[style*="overflow-y"], div[class*="overflow"], div[class*="scroll"]',
+      'div[style*="overflow"], div[style*="overflow-y"], div[class*="overflow"], div[class*="scroll"], .overflow-auto, .overflow-y-auto, .overflow-scroll, .overflow-y-scroll'
     );
 
     scrollableElements.forEach((element) => {
@@ -21,6 +21,12 @@ export default function DashboardFooter() {
         element.scrollTo({ top: 0, behavior: "smooth" });
       }
     });
+    
+    // Garantir que o conteúdo principal também seja rolado para o topo
+    const mainContent = document.querySelector('.dashboard-content');
+    if (mainContent instanceof HTMLElement) {
+      mainContent.scrollTop = 0;
+    }
   };
 
   const sloganRef = useRef<HTMLParagraphElement>(null);

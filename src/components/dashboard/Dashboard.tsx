@@ -9,6 +9,21 @@ export default function Dashboard() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isMetricsLoading, setIsMetricsLoading] = useState(false); // Inicializado como false para carregar imediatamente
 
+  // Função para garantir que a página seja rolada para o topo
+  useEffect(() => {
+    // Scroll para o topo da página quando o componente for montado
+    window.scrollTo(0, 0);
+    
+    // Garantir que todos os elementos com scroll também sejam resetados
+    document.querySelectorAll('.overflow-auto, .overflow-y-auto, .overflow-scroll, .overflow-y-scroll').forEach(
+      (element) => {
+        if (element instanceof HTMLElement) {
+          element.scrollTop = 0;
+        }
+      }
+    );
+  }, []);
+
   useEffect(() => {
     // Carregar perfil do usuário imediatamente, sem simulação de carregamento
     const loadUserProfile = async () => {
