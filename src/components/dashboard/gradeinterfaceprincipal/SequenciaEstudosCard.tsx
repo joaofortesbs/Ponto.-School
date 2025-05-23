@@ -600,17 +600,17 @@ export default function SequenciaEstudosCard() {
       </div>
 
       {/* Header elegante com gradiente e botão de check-in */}
-      <div className={`p-5 ${isLightMode ? 'bg-gradient-to-r from-orange-50 to-orange-100/50' : 'bg-gradient-to-r from-[#0A2540]/80 to-[#001427]'} border-b ${isLightMode ? 'border-orange-100' : 'border-[#FF6B00]/20'}`}>
+      <div className={`p-4 ${isLightMode ? 'bg-gradient-to-r from-orange-50 to-orange-100/50' : 'bg-gradient-to-r from-[#0A2540]/80 to-[#001427]'} border-b ${isLightMode ? 'border-orange-100' : 'border-[#FF6B00]/20'}`}>
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className={`p-2.5 rounded-lg flex items-center justify-center ${isLightMode ? 'bg-white shadow-sm border border-orange-200' : 'bg-[#FF6B00]/10 border border-[#FF6B00]/30'}`}>
-              <Flame className={`h-5 w-5 text-[#FF6B00]`} />
+          <div className="flex items-center gap-2">
+            <div className={`p-2 rounded-lg flex items-center justify-center ${isLightMode ? 'bg-white shadow-sm border border-orange-200' : 'bg-[#FF6B00]/10 border border-[#FF6B00]/30'}`}>
+              <Flame className={`h-4 w-4 text-[#FF6B00]`} />
             </div>
             <div>
-              <h3 className={`font-semibold text-lg ${isLightMode ? 'text-gray-800' : 'text-white'}`}>
+              <h3 className={`font-semibold text-base ${isLightMode ? 'text-gray-800' : 'text-white'}`}>
                 Sua Sequência de Estudos
               </h3>
-              <p className={`text-sm ${isLightMode ? 'text-gray-500' : 'text-gray-300'}`}>
+              <p className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-300'}`}>
                 <span className="font-medium">{diasConsecutivos} dias consecutivos</span>
               </p>
             </div>
@@ -622,20 +622,20 @@ export default function SequenciaEstudosCard() {
               onClick={realizarCheckIn}
               variant="ghost" 
               size="sm" 
-              className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 
+              className={`flex items-center gap-1 text-xs font-medium px-2 py-1 
                 ${isLightMode 
                   ? 'bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20' 
                   : 'bg-[#FF6B00]/20 text-[#FF6B00] hover:bg-[#FF6B00]/30'}`}
             >
-              <CheckCircle className="h-3.5 w-3.5" />
+              <CheckCircle className="h-3 w-3" />
               <span>Marcar presença</span>
             </Button>
           ) : (
-            <div className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold 
+            <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold 
               ${isLightMode 
                 ? 'bg-gray-100 text-gray-700' 
                 : 'bg-[#14253d] text-gray-300'}`}>
-              <Clock className="h-3.5 w-3.5 text-[#FF6B00]" />
+              <Clock className="h-3 w-3 text-[#FF6B00]" />
               <span>
                 {formatarTempo(tempoRestante.horas)}:
                 {formatarTempo(tempoRestante.minutos)}:
@@ -647,7 +647,7 @@ export default function SequenciaEstudosCard() {
       </div>
 
       {/* Conteúdo principal com design premium */}
-      <div className="p-6 relative z-10 flex flex-col h-[calc(100%-76px)] justify-between">
+      <div className="p-4 relative z-10 flex flex-col h-[calc(100%-64px)] justify-between">
         <AnimatePresence>
           {showCheckInAnimation && (
             <motion.div 
@@ -657,10 +657,10 @@ export default function SequenciaEstudosCard() {
               transition={{ duration: 0.5 }}
               className="absolute inset-0 flex items-center justify-center z-50"
             >
-              <div className="bg-[#FF6B00]/10 dark:bg-[#FF6B00]/20 p-4 rounded-xl backdrop-blur-sm border border-[#FF6B00]/30 flex flex-col items-center max-w-[80%]">
-                <CheckCircle className="h-16 w-16 text-[#FF6B00] mb-2" />
-                <h4 className="text-lg font-semibold text-[#FF6B00]">Presença registrada!</h4>
-                <p className="text-sm text-gray-600 dark:text-gray-300">
+              <div className="bg-[#FF6B00]/10 dark:bg-[#FF6B00]/20 p-3 rounded-xl backdrop-blur-sm border border-[#FF6B00]/30 flex flex-col items-center max-w-[80%]">
+                <CheckCircle className="h-12 w-12 text-[#FF6B00] mb-1.5" />
+                <h4 className="text-base font-semibold text-[#FF6B00]">Presença registrada!</h4>
+                <p className="text-xs text-gray-600 dark:text-gray-300">
                   {diasConsecutivos === 1 
                     ? "Primeiro dia da sua jornada!" 
                     : `${diasConsecutivos} dias consecutivos!`}
@@ -672,13 +672,13 @@ export default function SequenciaEstudosCard() {
 
         {diasConsecutivos === 0 && !checkInHoje ? (
           // Estado inicial para novos usuários - design premium
-          <div className="flex flex-col items-center justify-center h-full text-center px-4">
+          <div className="flex flex-col items-center justify-center h-full text-center px-3">
             {/* Efeito de partículas decorativas */}
             <div className="absolute top-1/3 left-1/4 w-1.5 h-1.5 rounded-full bg-[#FF6B00]/30 animate-pulse"></div>
             <div className="absolute bottom-1/3 right-1/4 w-2 h-2 rounded-full bg-[#FF6B00]/20 animate-pulse" style={{animationDelay: '1s'}}></div>
 
             {/* Ícone principal com efeitos */}
-            <div className="relative mb-6 group">
+            <div className="relative mb-4 group">
               {/* Aura externa animada */}
               <motion.div 
                 initial={{ opacity: 0.4, scale: 0.8 }}
@@ -691,44 +691,44 @@ export default function SequenciaEstudosCard() {
                   repeat: Infinity,
                   ease: "easeInOut"
                 }}
-                className="absolute -inset-3 rounded-full bg-gradient-to-r from-[#FF6B00]/10 to-[#FF8C40]/10 blur-xl"
+                className="absolute -inset-2 rounded-full bg-gradient-to-r from-[#FF6B00]/10 to-[#FF8C40]/10 blur-xl"
               />
 
               {/* Círculo principal */}
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#FF6B00]/10 to-[#FF8C40]/10 backdrop-blur-sm flex items-center justify-center border border-[#FF6B00]/30 relative">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#FF6B00]/10 to-[#FF8C40]/10 backdrop-blur-sm flex items-center justify-center border border-[#FF6B00]/30 relative">
                 <div className="absolute inset-1 rounded-full bg-gradient-to-r from-[#FF6B00]/20 to-[#FF8C40]/20 opacity-70"></div>
-                <div className="w-16 h-16 rounded-full bg-gradient-to-r from-[#FF6B00]/40 to-[#FF8C40]/40 flex items-center justify-center z-10">
-                  <Flame className="h-10 w-10 text-[#FF6B00] drop-shadow-lg relative z-10" />
+                <div className="w-14 h-14 rounded-full bg-gradient-to-r from-[#FF6B00]/40 to-[#FF8C40]/40 flex items-center justify-center z-10">
+                  <Flame className="h-8 w-8 text-[#FF6B00] drop-shadow-lg relative z-10" />
                 </div>
               </div>
 
               {/* Pequenos elementos decorativos ao redor */}
-              <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-white/10 dark:bg-[#0A2540]/70 border border-[#FF6B00]/30 flex items-center justify-center">
-                <Star className="h-2.5 w-2.5 text-[#FF8C40]" />
+              <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-white/10 dark:bg-[#0A2540]/70 border border-[#FF6B00]/30 flex items-center justify-center">
+                <Star className="h-2 w-2 text-[#FF8C40]" />
               </div>
-              <div className="absolute -top-1 -left-1 w-5 h-5 rounded-full bg-white/10 dark:bg-[#0A2540]/70 border border-[#FF6B00]/30 flex items-center justify-center">
-                <Trophy className="h-2.5 w-2.5 text-[#FF8C40]" />
+              <div className="absolute -top-1 -left-1 w-4 h-4 rounded-full bg-white/10 dark:bg-[#0A2540]/70 border border-[#FF6B00]/30 flex items-center justify-center">
+                <Trophy className="h-2 w-2 text-[#FF8C40]" />
               </div>
             </div>
 
             {/* Texto principal com tipografia melhorada */}
-            <h4 className={`font-semibold text-xl mb-2 ${isLightMode ? 'text-gray-800' : 'text-gray-100'} tracking-tight`}>
+            <h4 className={`font-semibold text-lg mb-1.5 ${isLightMode ? 'text-gray-800' : 'text-gray-100'} tracking-tight`}>
               Inicie sua jornada de estudos
             </h4>
 
             {/* Descrição com informações mais detalhadas */}
-            <p className={`text-sm max-w-[280px] mb-5 ${isLightMode ? 'text-gray-600' : 'text-gray-300'} leading-relaxed`}>
-              Registre sua presença diária para construir uma sequência de estudos consistente e desbloquear recompensas
+            <p className={`text-sm max-w-[250px] mb-4 ${isLightMode ? 'text-gray-600' : 'text-gray-300'} leading-relaxed`}>
+              Registre sua presença diária para construir uma sequência de estudos consistente
             </p>
 
             {/* Informações de benefícios em formato de badges */}
-            <div className="flex items-center justify-center gap-3 mb-5">
-              <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${isLightMode ? 'bg-[#FF6B00]/5 text-[#FF6B00]' : 'bg-[#FF6B00]/10 text-[#FF6B00]'}`}>
-                <TrendingUp className="h-3 w-3" />
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${isLightMode ? 'bg-[#FF6B00]/5 text-[#FF6B00]' : 'bg-[#FF6B00]/10 text-[#FF6B00]'}`}>
+                <TrendingUp className="h-2.5 w-2.5" />
                 <span>Maior produtividade</span>
               </div>
-              <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${isLightMode ? 'bg-[#FF6B00]/5 text-[#FF6B00]' : 'bg-[#FF6B00]/10 text-[#FF6B00]'}`}>
-                <Award className="h-3 w-3" />
+              <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${isLightMode ? 'bg-[#FF6B00]/5 text-[#FF6B00]' : 'bg-[#FF6B00]/10 text-[#FF6B00]'}`}>
+                <Award className="h-2.5 w-2.5" />
                 <span>Ganhe badges</span>
               </div>
             </div>
@@ -736,14 +736,14 @@ export default function SequenciaEstudosCard() {
             {/* Botão de ação principal redesenhado */}
             <Button 
               onClick={realizarCheckIn}
-              className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white border-none shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 px-5 py-6 h-10 rounded-xl"
+              className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white border-none shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 px-4 py-5 h-9 rounded-xl"
             >
-              <CheckCircle className="h-4 w-4 mr-2" />
+              <CheckCircle className="h-3.5 w-3.5 mr-1.5" />
               <span className="font-medium">Marcar presença agora</span>
             </Button>
 
             {/* Informação adicional discreta */}
-            <p className={`text-xs mt-3 ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
+            <p className={`text-xs mt-2 ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
               Crie um hábito de estudo com check-ins diários
             </p>
           </div>
@@ -751,7 +751,7 @@ export default function SequenciaEstudosCard() {
           // Interface com dados do usuário quando existirem
           <>
             {/* Contador principal estilizado */}
-            <div className="flex flex-col items-center mb-5 relative">
+            <div className="flex flex-col items-center mb-3 relative">
               {/* Efeito de brilho animado ao redor do ícone */}
               <motion.div 
                 initial={{ opacity: 0.6, scale: 0.9 }}
@@ -768,11 +768,11 @@ export default function SequenciaEstudosCard() {
               />
 
               {/* Ícone principal com design premium */}
-              <div className="relative mb-4">
+              <div className="relative mb-3">
                 <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-[#FF6B00]/20 to-[#FF8C40]/20 blur-md"></div>
-                <div className="w-20 h-20 rounded-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] flex items-center justify-center relative">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] flex items-center justify-center relative">
                   <div className="absolute inset-0.5 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] opacity-50"></div>
-                  <Flame className="h-10 w-10 text-white drop-shadow-md relative z-10" />
+                  <Flame className="h-8 w-8 text-white drop-shadow-md relative z-10" />
                 </div>
 
                 {/* Indicador de streak com borda animada */}
@@ -780,20 +780,20 @@ export default function SequenciaEstudosCard() {
                   initial={{ rotate: 0 }}
                   animate={{ rotate: 360 }}
                   transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-                  className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-white dark:bg-[#14253d] flex items-center justify-center shadow-lg border border-[#FF6B00]/20"
+                  className="absolute -bottom-2 -right-2 w-6 h-6 rounded-full bg-white dark:bg-[#14253d] flex items-center justify-center shadow-lg border border-[#FF6B00]/20"
                 >
-                  <Zap className="h-4 w-4 text-[#FF6B00]" />
+                  <Zap className="h-3 w-3 text-[#FF6B00]" />
                 </motion.div>
               </div>
 
               {/* Contador de dias em design premium */}
               <div className="text-center">
-                <p className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-1">Sua sequência atual</p>
+                <p className="text-gray-500 dark:text-gray-400 text-xs font-medium mb-0.5">Sua sequência atual</p>
                 <div className="flex items-center justify-center">
-                  <p className="text-5xl font-bold bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-transparent bg-clip-text">{diasConsecutivos}</p>
-                  <p className="text-lg font-medium text-gray-400 dark:text-gray-500 ml-1 mt-2">dias</p>
+                  <p className="text-4xl font-bold bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-transparent bg-clip-text">{diasConsecutivos}</p>
+                  <p className="text-base font-medium text-gray-400 dark:text-gray-500 ml-1 mt-1.5">dias</p>
                 </div>
-                <p className="text-gray-500 dark:text-gray-400 text-xs mt-1 font-medium">
+                <p className="text-gray-500 dark:text-gray-400 text-[10px] mt-0.5 font-medium">
                   estudando consecutivamente
                 </p>
               </div>
@@ -801,33 +801,33 @@ export default function SequenciaEstudosCard() {
 
             {/* Cronômetro elegante quando já tiver feito check-in */}
             {checkInHoje && (
-              <div className="mb-5">
-                <div className="bg-gray-50 dark:bg-[#14253d]/80 rounded-lg p-3 backdrop-blur-sm border border-gray-100 dark:border-gray-800/80 flex flex-col items-center">
-                  <div className="flex items-center space-x-1.5 mb-1.5">
-                    <Clock className="h-3.5 w-3.5 text-[#FF6B00]" />
+              <div className="mb-3">
+                <div className="bg-gray-50 dark:bg-[#14253d]/80 rounded-lg p-2 backdrop-blur-sm border border-gray-100 dark:border-gray-800/80 flex flex-col items-center">
+                  <div className="flex items-center space-x-1 mb-1">
+                    <Clock className="h-3 w-3 text-[#FF6B00]" />
                     <span className="text-xs font-medium text-gray-600 dark:text-gray-300">Próximo check-in em</span>
                   </div>
 
-                  <div className="flex items-center justify-center space-x-2 text-xl font-mono font-semibold text-[#FF6B00]">
+                  <div className="flex items-center justify-center space-x-1 text-base font-mono font-semibold text-[#FF6B00]">
                     <div className="flex flex-col items-center">
-                      <span className="bg-gray-100 dark:bg-[#0A2540] rounded px-2 py-1 min-w-[45px] text-center">
+                      <span className="bg-gray-100 dark:bg-[#0A2540] rounded px-1.5 py-0.5 min-w-[35px] text-center">
                         {formatarTempo(tempoRestante.horas)}
                       </span>
-                      <span className="text-[10px] mt-0.5 text-gray-500">Horas</span>
+                      <span className="text-[9px] mt-0.5 text-gray-500">Horas</span>
                     </div>
                     <span className="text-gray-400">:</span>
                     <div className="flex flex-col items-center">
-                      <span className="bg-gray-100 dark:bg-[#0A2540] rounded px-2 py-1 min-w-[45px] text-center">
+                      <span className="bg-gray-100 dark:bg-[#0A2540] rounded px-1.5 py-0.5 min-w-[35px] text-center">
                         {formatarTempo(tempoRestante.minutos)}
                       </span>
-                      <span className="text-[10px] mt-0.5 text-gray-500">Min</span>
+                      <span className="text-[9px] mt-0.5 text-gray-500">Min</span>
                     </div>
                     <span className="text-gray-400">:</span>
                     <div className="flex flex-col items-center">
-                      <span className="bg-gray-100 dark:bg-[#0A2540] rounded px-2 py-1 min-w-[45px] text-center">
+                      <span className="bg-gray-100 dark:bg-[#0A2540] rounded px-1.5 py-0.5 min-w-[35px] text-center">
                         {formatarTempo(tempoRestante.segundos)}
                       </span>
-                      <span className="text-[10px] mt-0.5 text-gray-500">Seg</span>
+                      <span className="text-[9px] mt-0.5 text-gray-500">Seg</span>
                     </div>
                   </div>
                 </div>
@@ -835,25 +835,25 @@ export default function SequenciaEstudosCard() {
             )}
 
             {/* Seção de informações adicionais com design premium */}
-            <div className="space-y-5 mt-2">
+            <div className="space-y-3 mt-1">
               {/* Progresso para o próximo nível com gradiente premium */}
-              <div className="bg-gray-50 dark:bg-[#14253d]/80 rounded-lg p-3.5 backdrop-blur-sm border border-gray-100 dark:border-gray-800/80">
-                <div className="flex justify-between items-center mb-1.5">
-                  <div className="flex items-center space-x-1.5">
-                    <Trophy className="h-3.5 w-3.5 text-[#FF6B00]" />
+              <div className="bg-gray-50 dark:bg-[#14253d]/80 rounded-lg p-2.5 backdrop-blur-sm border border-gray-100 dark:border-gray-800/80">
+                <div className="flex justify-between items-center mb-1">
+                  <div className="flex items-center space-x-1">
+                    <Trophy className="h-3 w-3 text-[#FF6B00]" />
                     <span className="text-xs font-medium text-gray-600 dark:text-gray-300">Próximo nível</span>
                   </div>
-                  <span className="text-xs font-semibold text-[#FF6B00] bg-[#FF6B00]/10 px-2 py-0.5 rounded-full">+{diasParaProximoNivel} dias</span>
+                  <span className="text-[10px] font-semibold text-[#FF6B00] bg-[#FF6B00]/10 px-1.5 py-0.5 rounded-full">+{diasParaProximoNivel} dias</span>
                 </div>
-                <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                <div className="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                   <div 
                     className="h-full rounded-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] relative"
                     style={{ width: `${calcularProgresso()}%` }}
                   >
                     <motion.div 
-                      className="absolute top-0 right-0 h-full w-2 bg-white/50"
-                      initial={{ x: -20 }}
-                      animate={{ x: 20 }}
+                      className="absolute top-0 right-0 h-full w-1.5 bg-white/50"
+                      initial={{ x: -15 }}
+                      animate={{ x: 15 }}
                       transition={{ 
                         duration: 1.5, 
                         repeat: Infinity,
@@ -871,34 +871,34 @@ export default function SequenciaEstudosCard() {
                 <div className="bg-gray-50 dark:bg-[#14253d]/80 rounded-lg py-1 px-2 backdrop-blur-sm border border-gray-100 dark:border-gray-800/80 flex flex-col items-center justify-center">
                   <div className="flex items-center space-x-1">
                     <Award className="h-2.5 w-2.5 text-yellow-500" />
-                    <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400">Seu recorde</span>
+                    <span className="text-[9px] font-medium text-gray-500 dark:text-gray-400">Seu recorde</span>
                   </div>
-                  <p className="text-base font-bold text-gray-700 dark:text-gray-200 mb-0">{recordeDias}</p>
-                  <p className="text-[9px] text-gray-400 dark:text-gray-500 mt-0">dias</p>
+                  <p className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-0">{recordeDias}</p>
+                  <p className="text-[8px] text-gray-400 dark:text-gray-500 mt-0">dias</p>
                 </div>
 
                 {/* Card de Meta Diária */}
                 <div className="bg-gray-50 dark:bg-[#14253d]/80 rounded-lg py-1 px-2 backdrop-blur-sm border border-gray-100 dark:border-gray-800/80 flex flex-col items-center justify-center">
                   <div className="flex items-center space-x-1">
                     <Star className="h-2.5 w-2.5 text-[#FF8C40]" />
-                    <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400">Meta diária</span>
+                    <span className="text-[9px] font-medium text-gray-500 dark:text-gray-400">Meta diária</span>
                   </div>
-                  <p className="text-base font-bold text-gray-700 dark:text-gray-200 mb-0">{metaDiaria}</p>
-                  <p className="text-[9px] text-gray-400 dark:text-gray-500 mt-0">dias</p>
+                  <p className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-0">{metaDiaria}</p>
+                  <p className="text-[8px] text-gray-400 dark:text-gray-500 mt-0">dias</p>
                 </div>
               </div>
 
               {/* Próxima recompensa com design premium */}
-              <div className="bg-gray-50 dark:bg-[#14253d]/80 rounded-lg p-3 backdrop-blur-sm border border-gray-100 dark:border-gray-800/80">
-                <div className="flex items-center justify-center space-x-1.5 mb-2">
-                  <TrendingUp className="h-3.5 w-3.5 text-emerald-500" />
-                  <span className="text-xs font-medium text-gray-600 dark:text-gray-300">Próxima recompensa</span>
+              <div className="bg-gray-50 dark:bg-[#14253d]/80 rounded-lg p-2 backdrop-blur-sm border border-gray-100 dark:border-gray-800/80">
+                <div className="flex items-center justify-center space-x-1 mb-1">
+                  <TrendingUp className="h-3 w-3 text-emerald-500" />
+                  <span className="text-[10px] font-medium text-gray-600 dark:text-gray-300">Próxima recompensa</span>
                 </div>
-                <div className="flex items-center justify-center space-x-2">
-                  <div className="bg-gradient-to-r from-[#FF6B00]/10 to-[#FF8C40]/10 rounded-full p-1">
-                    <Trophy className="h-4 w-4 text-[#FF6B00]" />
+                <div className="flex items-center justify-center space-x-1.5">
+                  <div className="bg-gradient-to-r from-[#FF6B00]/10 to-[#FF8C40]/10 rounded-full p-0.5">
+                    <Trophy className="h-3 w-3 text-[#FF6B00]" />
                   </div>
-                  <span className="text-sm font-semibold bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-transparent bg-clip-text">
+                  <span className="text-xs font-semibold bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-transparent bg-clip-text">
                     {proximaRecompensa}
                   </span>
                 </div>
