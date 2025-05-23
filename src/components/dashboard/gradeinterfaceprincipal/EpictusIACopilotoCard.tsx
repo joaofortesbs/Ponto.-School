@@ -241,7 +241,69 @@ export default function EpictusIACopilotoCard() {
       transition={{ duration: 0.2 }}
       className="rounded-xl overflow-hidden border border-gray-100 dark:border-gray-800 shadow-xl bg-white dark:bg-gradient-to-br dark:from-[#0c1425] dark:to-[#0a1a2e] h-full w-full relative flex flex-col"
     >
-      {/* Sem elementos decorativos de fundo */}
+      {/* Elementos decorativos de fundo */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -right-10 -top-10 w-40 h-40 bg-[#FF6B00]/5 dark:bg-[#FF6B00]/10 rounded-full blur-2xl"></div>
+        <div className="absolute -left-20 -bottom-20 w-72 h-72 bg-blue-500/5 dark:bg-blue-500/5 rounded-full blur-3xl"></div>
+
+        {/* Partículas decorativas animadas */}
+        <motion.div 
+          animate={{ 
+            y: [0, -10, 0],
+            opacity: [0.4, 0.8, 0.4]
+          }}
+          transition={{ 
+            duration: 4,
+            repeat: Infinity,
+            ease: "easeInOut" 
+          }}
+          className="absolute top-1/4 right-10 w-2 h-2 bg-[#FF6B00]/40 rounded-full"
+        ></motion.div>
+
+        <motion.div 
+          animate={{ 
+            y: [0, 10, 0],
+            opacity: [0.3, 0.7, 0.3]
+          }}
+          transition={{ 
+            duration: 5,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 0.5
+          }}
+          className="absolute top-1/3 left-10 w-3 h-3 bg-blue-400/30 dark:bg-blue-400/20 rounded-full"
+        ></motion.div>
+
+        <motion.div 
+          animate={{ 
+            y: [0, -5, 0],
+            opacity: [0.2, 0.6, 0.2]
+          }}
+          transition={{ 
+            duration: 3,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 1
+          }}
+          className="absolute bottom-1/4 right-1/4 w-2 h-2 bg-purple-400/30 dark:bg-purple-400/20 rounded-full"
+        ></motion.div>
+
+        {/* Linhas de conexão decorativas */}
+        <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-10 dark:opacity-5" xmlns="http://www.w3.org/2000/svg">
+          <path 
+            d="M0,100 Q150,50 300,100 T600,100" 
+            fill="none" 
+            stroke={isLightMode ? "#FF6B00" : "#FF6B00"} 
+            strokeWidth="1"
+          />
+          <path 
+            d="M0,150 Q150,200 300,150 T600,150" 
+            fill="none" 
+            stroke={isLightMode ? "#3B82F6" : "#3B82F6"} 
+            strokeWidth="1"
+          />
+        </svg>
+      </div>
 
       {/* Header elegante com gradiente */}
       <div className={`p-5 ${isLightMode ? 'bg-gradient-to-r from-orange-50 to-orange-100/50' : 'bg-gradient-to-r from-[#0A2540]/80 to-[#001427]'} border-b ${isLightMode ? 'border-orange-100' : 'border-[#FF6B00]/20'}`}>
@@ -569,7 +631,21 @@ export default function EpictusIACopilotoCard() {
             transition={{ duration: 0.5 }}
             className="p-6 flex-grow flex flex-col justify-between relative z-10"
           >
-            {/* Sem efeitos de fundo */}
+            {/* Elemento decorativo - ondas sutis animadas */}
+            <div className="absolute inset-x-0 top-0 h-20 pointer-events-none overflow-hidden opacity-30">
+              <motion.div
+                animate={{ 
+                  y: [0, -8, 0],
+                  opacity: [0.4, 0.6, 0.4]
+                }}
+                transition={{
+                  duration: 7,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+                className={`w-full h-40 rounded-[100%] ${isLightMode ? 'bg-gradient-to-r from-orange-300/20 to-blue-300/20' : 'bg-gradient-to-r from-[#FF6B00]/20 to-blue-500/30'} blur-xl transform -translate-y-20`}
+              />
+            </div>
 
             <div className="space-y-5 relative">
               {/* Cabeçalho e ícone principal com animação sofisticada */}
@@ -862,7 +938,11 @@ export default function EpictusIACopilotoCard() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.7 + (index * 0.1) }}
-                      whileHover={{ scale: 1.02 }}
+                      whileHover={{ 
+                        y: -4, 
+                        scale: 1.05,
+                        boxShadow: `0 15px 30px -10px ${feature.shadowColor}`
+                      }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => setPergunta(`Ajude-me com ${feature.title.toLowerCase()}`)}
                       className={`relative p-2.5 rounded-xl backdrop-blur-sm border transition-all duration-300 cursor-pointer flex-1 min-w-[60px] flex flex-col items-center text-center overflow-hidden ${
@@ -871,15 +951,37 @@ export default function EpictusIACopilotoCard() {
                           : `${feature.darkBg} border-${feature.darkBorder}`
                       }`}
                     >
-                      {/* Círculo básico sem efeitos */}
-                      <div 
-                        className={`relative h-10 w-10 rounded-full flex items-center justify-center bg-gradient-to-br ${feature.color}`}
+                      {/* Fundo decorativo com gradiente */}
+                      <div className="absolute inset-0 opacity-10 bg-gradient-to-br from-transparent via-transparent to-white dark:to-white/20"></div>
+                      
+                      {/* Círculo gradiente animado */}
+                      <motion.div 
+                        className={`relative h-10 w-10 rounded-full flex items-center justify-center bg-gradient-to-br ${feature.color} shadow-lg`}
+                        whileHover={{ rotate: 5, scale: 1.1 }}
+                        transition={{ duration: 0.2 }}
                       >
+                        {/* Glow interno */}
+                        <div className="absolute inset-0 rounded-full blur-md opacity-40 bg-white"></div>
+                        
                         {/* Ícone */}
                         <div className="relative z-10 text-white">
                           {feature.icon}
                         </div>
-                      </div>
+                        
+                        {/* Efeito de pulso */}
+                        <motion.div
+                          animate={{ 
+                            scale: [1, 1.2, 1],
+                            opacity: [0.7, 0.2, 0.7]
+                          }}
+                          transition={{ 
+                            duration: 3,
+                            repeat: Infinity,
+                            ease: "easeInOut"
+                          }}
+                          className="absolute inset-0 rounded-full bg-white opacity-0"
+                        />
+                      </motion.div>
                     </motion.div>
                   ))}
                 </div>
