@@ -56,7 +56,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ isOpen, onClose }) =>
   const [searchError, setSearchError] = useState<string | null>(null);
   const [requestsError, setRequestsError] = useState<string | null>(null);
 
-  // Buscar solicitações pendentes ao carregar o modal e a cada 5 segundos
+  // Buscar solicitações pendentes ao carregar o modal e a cada 3 segundos
   useEffect(() => {
     let interval: NodeJS.Timeout;
     
@@ -66,16 +66,18 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ isOpen, onClose }) =>
         setPendingRequests(result.count || 0);
       } catch (error) {
         console.error('Erro ao buscar solicitações pendentes:', error);
+        // Não atualizar o contador em caso de erro, manter o valor anterior
       }
     };
     
     if (isOpen) {
       fetchPendingRequests();
-      interval = setInterval(fetchPendingRequests, 5000);
+      // Reduzir o intervalo de 5 para 3 segundos para atualização mais rápida
+      interval = setInterval(fetchPendingRequests, 3000);
     }
     
     return () => {
-      clearInterval(interval);
+      if (interval) clearInterval(interval);
       // Limpar estados ao fechar o modal
       if (!isOpen) {
         setSearchResults([]);
@@ -371,6 +373,12 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ isOpen, onClose }) =>
                       src={user.avatar_url || '/images/placeholder.png'}
                       alt={`${user.full_name} avatar`}
                       className="w-10 h-10 rounded-full object-cover"
+                      onError={(e) => {
+                        // Se a imagem falhar, substituir por placeholder
+                        const target = e.target as HTMLImageElement;
+                        console.error(`Erro ao carregar avatar para ${user.id}: ${target.src}`);
+                        target.src = '/images/placeholder.png';
+                      }}
                     />
 
                     <div className="flex-1 min-w-0">
@@ -473,7 +481,13 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ isOpen, onClose }) =>
                             <img 
                               src={request.avatar_url || '/images/placeholder.png'} 
                               alt={`${request.full_name} avatar`}
-                              className="w-10 h-10 rounded-full object-cover" 
+                              className="w-10 h-10 rounded-full object-cover"
+                              onError={(e) => {
+                                // Se a imagem falhar, substituir por placeholder
+                                const target = e.target as HTMLImageElement;
+                                console.error(`Erro ao carregar avatar para solicitação de ${request.sender_id}: ${target.src}`);
+                                target.src = '/images/placeholder.png';
+                              }}
                             />
                             
                             <div className="flex-1">
