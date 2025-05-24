@@ -1,0 +1,26 @@
+Atualize o modal 'Adicionar amigos' na plataforma usando React, mantendo o design atual (fundo #1E2A44, botões em #F28C38, fonte Open Sans ou similar). O modal deve:
+- Ter título "Adicionar amigos" (h2, branco, negrito, font-size 24px) e subtítulo "Adicione-se a estudantes como você" (p, cinza claro #B0B0B0, font-size 14px).
+- Incluir uma aba "Solicitações" (span, azul #4A90E2, font-size 16px) mostrando o número de solicitações pendentes (ex.: "Solicitações (2)", inicial 0, atualizado dinamicamente).
+- Ter um campo de busca (input, placeholder "Digite nome, e-mail ou @username", borda cinza #666, padding 8px, width 80%) com botão "Buscar Pessoas" (button, #F28C38, padding 8px 16px, font-size 14px, border-radius 4px).
+- Mostrar instrução "Comece a buscar pessoas, digite um nome ou @username para encontrar pessoas para conectar." (p, cinza claro #B0B0B0, italic, font-size 12px).
+- Exibir resultados abaixo do campo em uma lista ul (padding 0, list-style none) com li (margin-bottom 16px, display flex, align-items center) para cada resultado, contendo:
+  - Foto de perfil (img, 40x40px, border-radius 50%, src de avatar_url do Supabase, fallback para placeholder se null).
+  - Nome e @username (span, ex.: "Juliana Mendes @julmendes", branco, font-size 16px).
+  - Bio (p, ex.: "Estudante de Literatura...", cinza claro #B0B0B0, font-size 12px, max 100 chars).
+  - Botão "Seguir perfil" (button, #F28C38, padding 6px 12px, font-size 14px, chama /api/send-friend-request com o id) ou "Amigo" (button, desabilitado, cinza #666) se isFriend for true.
+  - Botão "Perfil público" (button, #4A90E2, padding 6px 12px, font-size 14px, abre modal fictício por enquanto).
+  - Ícone de informação (?) (span, font-size 12px, cursor pointer, tooltip com "Ao aceitar, você permite que o usuário veja seu conteúdo privado" em hover, fundo #333, texto branco).
+
+Use supabase-js para autenticação e inicialize o modal com useState e useEffect, carregando o usuário logado (auth.uid()) ao abrir.
+
+**Exemplo de Fluxo de Uso**:
+1. Usuário clica em "Adicionar amigos", modal abre.
+2. Digita "ju" e clica "Buscar Pessoas".
+3. Resultados mostram "Juliana Mendes @julmendes" com bio e botões.
+4. Clica "Seguir perfil", modal atualiza com alerta de sucesso.
+
+**Considerações**:
+- Use CSS Flexbox para alinhar elementos no li (ex.: foto à esquerda, texto e botões à direita).
+- Adicione debounce (200ms) no input para evitar buscas excessivas (use lodash.debounce).
+- Teste responsividade em telas menores (ex.: input width 100% em mobile).
+- Use uma imagem padrão (ex.: placeholder.png) se avatar_url for null.
