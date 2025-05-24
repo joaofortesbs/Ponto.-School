@@ -1,14 +1,90 @@
 
 import React, { useState, useRef, useEffect } from "react";
-import { Pencil, BookOpen, Calendar, Users, Brain, Settings, MessageSquare, ChevronRight, Grid, Sparkles, Plus } from "lucide-react";
+import { BookOpen, Calendar, Brain, MessageSquare, Users, Grid, Star, Plus, Library, FileText, BarChart } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import { motion } from "framer-motion";
+import { Card } from "@/components/ui/card";
+import { persistAtalhoOrder, getStoredAtalhoOrder } from "@/lib/persistence-utils";
+
+// Interface para os atalhos
+interface Atalho {
+  id: number;
+  title: string;
+  icon: React.ReactNode;
+  color: string;
+  gradient: string;
+  description: string;
+  path: string;
+}
 
 export default function AtalhoSchoolCard() {
   const { theme } = useTheme();
   const isLightMode = theme === "light";
   const [hoveredAtalho, setHoveredAtalho] = useState<number | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
+  
+  // Lista de atalhos pré-definidos
+  const defaultAtalhos: Atalho[] = [
+    {
+      id: 1,
+      title: "Biblioteca",
+      icon: <Library className="h-5 w-5" />,
+      color: "from-blue-600 to-indigo-700",
+      gradient: "bg-gradient-to-br from-blue-600/90 to-indigo-700/90",
+      description: "Materiais de estudo e livros digitais",
+      path: "/biblioteca"
+    },
+    {
+      id: 2,
+      title: "Planos de Estudo",
+      icon: <FileText className="h-5 w-5" />,
+      color: "from-green-600 to-emerald-700",
+      gradient: "bg-gradient-to-br from-green-600/90 to-emerald-700/90",
+      description: "Organize seu plano de estudos",
+      path: "/planos-estudo"
+    },
+    {
+      id: 3,
+      title: "Análises",
+      icon: <BarChart className="h-5 w-5" />,
+      color: "from-purple-600 to-violet-700",
+      gradient: "bg-gradient-to-br from-purple-600/90 to-violet-700/90",
+      description: "Métricas e desempenho",
+      path: "/organizacao"
+    },
+    {
+      id: 4,
+      title: "School IA",
+      icon: <Brain className="h-5 w-5" />,
+      color: "from-cyan-500 to-blue-600",
+      gradient: "bg-gradient-to-br from-cyan-500/90 to-blue-600/90",
+      description: "Assistente de estudos inteligente",
+      path: "/school-ia"
+    },
+    {
+      id: 5,
+      title: "Grupos",
+      icon: <Users className="h-5 w-5" />,
+      color: "from-amber-500 to-orange-600",
+      gradient: "bg-gradient-to-br from-amber-500/90 to-orange-600/90",
+      description: "Conecte-se com outros estudantes",
+      path: "/turmas/grupos"
+    },
+    {
+      id: 6,
+      title: "Agenda",
+      icon: <Calendar className="h-5 w-5" />,
+      color: "from-red-500 to-rose-600",
+      gradient: "bg-gradient-to-br from-red-500/90 to-rose-600/90",
+      description: "Organize sua rotina",
+      path: "/agenda"
+    }
+  ];
+
+  // Estado para controlar a ordem dos atalhos (com suporte a drag and drop)
+  const [atalhos, setAtalhos] = useState<Atalho[]>([...defaultAtalhos]);
+  const [draggingId, setDraggingId] = useState<number | null>(null);
+  const [dragOverId, setDragOverId] = useState<number | null>(null);
   
   // Observer para ajustar o tamanho do card de acordo com o card "Seu Foco Hoje"
   useEffect(() => {
@@ -23,223 +99,236 @@ export default function AtalhoSchoolCard() {
         atalhoCard.style.height = `${focoHojeHeight}px`;
       }
     };
-
-    // Configura um observador de mutação para detectar mudanças no card "Seu Foco Hoje"
-    const observer = new MutationObserver(adjustHeight);
-    const focoHojeCard = document.querySelector('[data-card-type="foco-hoje"]');
     
+    // Chama a função de ajuste imediatamente
+    adjustHeight();
+    
+    // Cria um observador para monitorar alterações no tamanho
+    const resizeObserver = new ResizeObserver(adjustHeight);
+    
+    // Inicia a observação no card "Seu Foco Hoje"
+    const focoHojeCard = document.querySelector('[data-card-type="foco-hoje"]');
     if (focoHojeCard) {
-      observer.observe(focoHojeCard, { 
-        attributes: true, 
-        childList: true, 
-        subtree: true,
-        attributeFilter: ['style', 'class']
-      });
-      
-      // Ajusta a altura inicialmente
-      adjustHeight();
+      resizeObserver.observe(focoHojeCard);
     }
     
-    // Também ajusta a altura quando a janela é redimensionada
-    window.addEventListener('resize', adjustHeight);
-    
-    // Ajusta periodicamente para garantir que está sincronizado
+    // Configura um intervalo de verificação para garantir que o ajuste ocorra mesmo após interações do usuário
     const intervalId = setInterval(adjustHeight, 500);
     
-    // Limpa o observador quando o componente é desmontado
+    // Limpa o observador e o intervalo quando o componente é desmontado
     return () => {
-      observer.disconnect();
-      window.removeEventListener('resize', adjustHeight);
+      resizeObserver.disconnect();
       clearInterval(intervalId);
     };
   }, []);
 
-  // Lista de atalhos padrão
-  const atalhos = [
-    { id: 1, nome: "Biblioteca", icone: <BookOpen className="h-5 w-5" />, cor: "text-blue-500", bgColor: isLightMode ? "bg-blue-100" : "bg-blue-500/10", link: "/biblioteca" },
-    { id: 2, nome: "Agenda", icone: <Calendar className="h-5 w-5" />, cor: "text-[#FF6B00]", bgColor: isLightMode ? "bg-orange-100" : "bg-[#FF6B00]/10", link: "/agenda" },
-    { id: 3, nome: "Turmas", icone: <Users className="h-5 w-5" />, cor: "text-green-500", bgColor: isLightMode ? "bg-green-100" : "bg-green-500/10", link: "/turmas" },
-    { id: 4, nome: "Epictus IA", icone: <Brain className="h-5 w-5" />, cor: "text-purple-500", bgColor: isLightMode ? "bg-purple-100" : "bg-purple-500/10", link: "/epictus-ia" },
-    { id: 5, nome: "Conexão Expert", icone: <MessageSquare className="h-5 w-5" />, cor: "text-yellow-500", bgColor: isLightMode ? "bg-yellow-100" : "bg-yellow-500/10", link: "/conexao-expert" },
-    { id: 6, nome: "Configurações", icone: <Settings className="h-5 w-5" />, cor: "text-gray-500", bgColor: isLightMode ? "bg-gray-100" : "bg-gray-500/10", link: "/configuracoes" },
-  ];
-
-  const abrirModal = () => {
-    // Aqui seria implementada a lógica para abrir o modal de personalização
-    console.log("Abrir modal de personalização");
-  };
-
-  const navegarPara = (link) => {
-    // Aqui seria implementada a lógica para navegar para o link
-    console.log(`Navegando para ${link}`);
-    window.location.href = link;
-  };
-
-  // Cards container variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
+  // Carregar ordem personalizada dos atalhos do armazenamento local
+  useEffect(() => {
+    const storedOrder = getStoredAtalhoOrder();
+    if (storedOrder && storedOrder.length === defaultAtalhos.length) {
+      // Recria os atalhos na ordem salva pelo usuário
+      const orderedAtalhos = storedOrder.map(id => 
+        defaultAtalhos.find(atalho => atalho.id === id) || defaultAtalhos[0]
+      );
+      setAtalhos(orderedAtalhos);
     }
+  }, []);
+
+  // Funções para lidar com drag and drop
+  const handleDragStart = (id: number) => {
+    setDraggingId(id);
   };
 
-  // Card item variants
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: { 
-      y: 0, 
-      opacity: 1,
-      transition: { type: "spring", stiffness: 300, damping: 24 }
-    },
-    hover: { 
-      y: -8,
-      boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
-      transition: { type: "spring", stiffness: 400, damping: 10 }
+  const handleDragOver = (e: React.DragEvent, id: number) => {
+    e.preventDefault();
+    setDragOverId(id);
+  };
+
+  const handleDrop = (e: React.DragEvent, dropId: number) => {
+    e.preventDefault();
+    
+    // Se não há item sendo arrastado ou é o mesmo item, não faz nada
+    if (draggingId === null || draggingId === dropId) {
+      setDraggingId(null);
+      setDragOverId(null);
+      return;
     }
+    
+    // Reorganiza os atalhos, movendo o item arrastado para a posição alvo
+    const draggedIndex = atalhos.findIndex(atalho => atalho.id === draggingId);
+    const dropIndex = atalhos.findIndex(atalho => atalho.id === dropId);
+    
+    if (draggedIndex !== -1 && dropIndex !== -1) {
+      const newAtalhos = [...atalhos];
+      const [draggedItem] = newAtalhos.splice(draggedIndex, 1);
+      newAtalhos.splice(dropIndex, 0, draggedItem);
+      
+      setAtalhos(newAtalhos);
+      
+      // Persiste a nova ordem no armazenamento local
+      persistAtalhoOrder(newAtalhos.map(atalho => atalho.id));
+    }
+    
+    // Reset estados de drag
+    setDraggingId(null);
+    setDragOverId(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggingId(null);
+    setDragOverId(null);
   };
 
   return (
-    <motion.div 
+    <Card 
       ref={cardRef}
-      className={`rounded-xl overflow-hidden ${isLightMode ? 'bg-white' : 'bg-gradient-to-br from-[#001e3a] to-[#00162b]'} shadow-lg ${isLightMode ? 'border border-gray-200' : 'border border-white/10'} flex-shrink-0 flex flex-col h-full w-full`}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
+      className={`
+        relative overflow-hidden flex flex-col w-full
+        ${isLightMode 
+          ? 'bg-white/95 border border-gray-200 shadow-lg' 
+          : 'bg-[#001e3a]/90 border border-[#1e3a5f] shadow-lg'}
+        rounded-xl backdrop-blur-sm transition-all duration-300
+      `}
+      data-card-type="atalhos-school"
     >
-      {/* Header com gradiente igual ao card Seu Foco Hoje */}
-      <div className={`p-5 ${isLightMode ? 'bg-gradient-to-r from-orange-50 to-amber-50/50' : 'bg-gradient-to-br from-[#FF6B00]/10 to-transparent'} border-b ${isLightMode ? 'border-orange-100' : 'border-[#FF6B00]/20'}`}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className={`p-2.5 rounded-lg flex items-center justify-center ${isLightMode ? 'bg-white shadow-sm border border-orange-200' : 'bg-[#FF6B00]/15 shadow-lg shadow-[#FF6B00]/5 border border-[#FF6B00]/30'}`}>
-              <Grid className={`h-5 w-5 text-[#FF6B00]`} />
-            </div>
-            <div>
-              <h3 className={`font-semibold text-lg ${isLightMode ? 'text-gray-800' : 'text-white'}`}>
-                Atalhos School
-              </h3>
-              <p className={`text-sm ${isLightMode ? 'text-gray-500' : 'text-gray-300'}`}>
-                <span className="font-medium">Acesso rápido às ferramentas</span>
-              </p>
-            </div>
+      {/* Fundo com efeito de gradiente sutil */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#00000005] to-[#00000015] dark:from-[#ffffff05] dark:to-[#ffffff10] opacity-50"></div>
+      
+      {/* Bolhas de design para efeito visual */}
+      <div className="absolute -right-12 -top-12 w-40 h-40 bg-blue-500/5 dark:bg-blue-400/10 rounded-full blur-2xl"></div>
+      <div className="absolute -left-8 -bottom-8 w-32 h-32 bg-purple-500/5 dark:bg-purple-400/10 rounded-full blur-xl"></div>
+      
+      {/* Cabeçalho do Card */}
+      <div className="p-4 flex items-center justify-between relative z-10 border-b border-gray-100 dark:border-gray-800/50">
+        <div className="flex items-center space-x-2">
+          <div className={`
+            flex items-center justify-center w-9 h-9 rounded-lg
+            ${isLightMode 
+              ? 'bg-gradient-to-br from-blue-50 to-indigo-100 shadow-sm border border-blue-100' 
+              : 'bg-gradient-to-br from-blue-900/30 to-indigo-900/30 border border-blue-800/30'}
+          `}>
+            <Grid className={`h-5 w-5 ${isLightMode ? 'text-indigo-600' : 'text-indigo-400'}`} />
           </div>
-          
-          <div className="hidden md:flex">
-            <motion.button 
-              onClick={abrirModal}
-              className={`rounded-full p-2 ${isLightMode ? 'bg-orange-50 hover:bg-orange-100' : 'bg-[#FF6B00]/10 hover:bg-[#FF6B00]/20'} transition-colors`}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Pencil className={`h-4 w-4 ${isLightMode ? 'text-[#FF6B00]' : 'text-[#FF6B00]'}`} />
-            </motion.button>
+          <div>
+            <h2 className={`font-medium text-base ${isLightMode ? 'text-gray-800' : 'text-white'}`}>
+              Atalhos School
+            </h2>
+            <p className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
+              Acesso rápido às ferramentas
+            </p>
           </div>
         </div>
+        <Star className={`h-4 w-4 ${isLightMode ? 'text-amber-400' : 'text-amber-300'}`} />
       </div>
-
-      {/* Grid de atalhos com design sofisticado */}
-      <div className="p-5 flex flex-col flex-1">
-        {/* Grid de atalhos com animações aprimoradas */}
-        <motion.div 
-          className="grid grid-cols-2 md:grid-cols-3 gap-4 flex-1"
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          {atalhos.map((atalho) => (
-            <motion.div
-              key={atalho.id}
-              className={`relative flex flex-col items-center justify-center p-5 rounded-xl cursor-pointer border transition-all ${
-                isLightMode 
-                  ? 'border-gray-100 bg-white/80 hover:border-orange-200 hover:bg-orange-50/50' 
-                  : 'border-gray-700/30 bg-gray-800/20 backdrop-blur-md hover:border-[#FF6B00]/30 hover:bg-[#FF6B00]/5'
-              } shadow-sm hover:shadow-md`}
-              variants={itemVariants}
-              whileHover="hover"
-              onMouseEnter={() => setHoveredAtalho(atalho.id)}
-              onMouseLeave={() => setHoveredAtalho(null)}
-              onClick={() => navegarPara(atalho.link)}
-            >
-              <div className={`flex items-center justify-center p-3.5 rounded-full mb-3 ${atalho.bgColor} transition-all duration-300 ${
-                hoveredAtalho === atalho.id ? 'scale-110 shadow-md' : 'scale-100'
-              }`}>
-                <div className={atalho.cor}>
-                  {atalho.icone}
+      
+      {/* Conteúdo Principal - Grid de Atalhos */}
+      <div className="p-4 grid grid-cols-2 gap-3 flex-grow overflow-auto relative z-10">
+        {atalhos.map((atalho) => (
+          <motion.div
+            key={atalho.id}
+            className={`
+              relative rounded-xl cursor-pointer overflow-hidden
+              ${draggingId === atalho.id ? 'opacity-60 scale-95' : 'opacity-100'}
+              ${dragOverId === atalho.id ? 'ring-2 ring-blue-400 dark:ring-blue-500' : ''}
+              transition-all duration-200 transform
+              ${isLightMode 
+                ? 'bg-gradient-to-br from-gray-50 to-gray-100 shadow-sm hover:shadow-md border border-gray-200/80' 
+                : 'bg-gradient-to-br from-gray-900/40 to-gray-800/40 hover:from-gray-900/60 hover:to-gray-800/60 border border-gray-700/50'}
+            `}
+            initial={{ scale: 1 }}
+            whileHover={{ scale: 1.02 }}
+            draggable
+            onDragStart={() => handleDragStart(atalho.id)}
+            onDragOver={(e) => handleDragOver(e, atalho.id)}
+            onDrop={(e) => handleDrop(e, atalho.id)}
+            onDragEnd={handleDragEnd}
+            onMouseEnter={() => setHoveredAtalho(atalho.id)}
+            onMouseLeave={() => setHoveredAtalho(null)}
+            onClick={() => window.location.href = atalho.path}
+          >
+            {/* Gradiente de fundo para efeito de destaque no hover */}
+            <div 
+              className={`
+                absolute inset-0 opacity-0 transition-opacity duration-300
+                ${hoveredAtalho === atalho.id ? 'opacity-100' : ''}
+                ${atalho.gradient}
+              `} 
+            />
+            
+            {/* Conteúdo do Atalho */}
+            <div className="p-3 flex flex-col h-full relative z-10">
+              <div className="flex justify-between items-start mb-2">
+                <div className={`
+                  p-2 rounded-md
+                  ${hoveredAtalho === atalho.id 
+                    ? 'bg-white/20' 
+                    : isLightMode 
+                      ? `bg-gradient-to-br ${atalho.color} bg-opacity-10` 
+                      : `bg-gradient-to-br ${atalho.color} bg-opacity-20`}
+                `}>
+                  <div className={`
+                    ${hoveredAtalho === atalho.id ? 'text-white' : isLightMode ? 'text-gray-700' : 'text-white'}
+                  `}>
+                    {atalho.icon}
+                  </div>
+                </div>
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                  {/* Indicador de arraste */}
+                  <div className="h-4 w-4 rounded-full bg-gray-200/40 dark:bg-gray-700/40 flex items-center justify-center">
+                    <span className="text-[8px] text-gray-500 dark:text-gray-400">↕</span>
+                  </div>
                 </div>
               </div>
-              <span className={`text-sm font-medium text-center ${isLightMode ? 'text-gray-700' : 'text-gray-200'}`}>
-                {atalho.nome}
-              </span>
-              
-              {/* Efeito de destaque ao passar o mouse */}
-              {hoveredAtalho === atalho.id && (
-                <motion.div 
-                  className="absolute inset-0 rounded-xl"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <div className="absolute inset-0 rounded-xl bg-gradient-to-tr from-transparent via-transparent to-transparent ring-1 ring-inset ring-white/10"></div>
-                  <div className="absolute bottom-0 left-0 right-0 h-1 mx-auto w-10 rounded-full"
-                    style={{ 
-                      backgroundColor: atalho.cor.includes("text-") ? atalho.cor.replace("text-", "bg-") : "bg-[#FF6B00]"
-                    }}
-                  ></div>
-                </motion.div>
-              )}
-            </motion.div>
-          ))}
-          
-          {/* Botão de adicionar novo atalho */}
-          <motion.div
-            className={`relative flex flex-col items-center justify-center p-5 rounded-xl cursor-pointer border border-dashed transition-all ${
-              isLightMode 
-                ? 'border-gray-300 hover:border-orange-300 bg-gray-50/50 hover:bg-orange-50/30' 
-                : 'border-gray-700 hover:border-[#FF6B00]/40 bg-gray-800/10 hover:bg-[#FF6B00]/5'
-            }`}
-            variants={itemVariants}
-            whileHover="hover"
-            onClick={abrirModal}
-          >
-            <div className={`flex items-center justify-center p-3.5 rounded-full mb-3 ${
-              isLightMode ? 'bg-gray-100 hover:bg-orange-100/50' : 'bg-gray-800/30 hover:bg-[#FF6B00]/10'
-            }`}>
-              <Plus className={`h-5 w-5 ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`} />
+              <h3 className={`
+                font-medium text-sm mb-1
+                ${hoveredAtalho === atalho.id ? 'text-white' : isLightMode ? 'text-gray-800' : 'text-white'}
+              `}>
+                {atalho.title}
+              </h3>
+              <p className={`
+                text-xs line-clamp-2
+                ${hoveredAtalho === atalho.id ? 'text-white/90' : isLightMode ? 'text-gray-500' : 'text-gray-400'}
+              `}>
+                {atalho.description}
+              </p>
             </div>
-            <span className={`text-sm font-medium text-center ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
+          </motion.div>
+        ))}
+        
+        {/* Atalho para adicionar novos atalhos (visual apenas) */}
+        <motion.div
+          className={`
+            rounded-xl cursor-pointer border border-dashed
+            flex items-center justify-center p-3
+            ${isLightMode 
+              ? 'border-gray-300 bg-gray-50/50 hover:bg-gray-100/80' 
+              : 'border-gray-700 bg-gray-900/20 hover:bg-gray-800/30'}
+            transition-all duration-200
+          `}
+          initial={{ scale: 1 }}
+          whileHover={{ scale: 1.02 }}
+        >
+          <div className="flex flex-col items-center text-center">
+            <div className={`
+              p-2 rounded-full mb-2
+              ${isLightMode ? 'bg-gray-100' : 'bg-gray-800/80'}
+            `}>
+              <Plus className={`h-4 w-4 ${isLightMode ? 'text-gray-600' : 'text-gray-400'}`} />
+            </div>
+            <span className={`text-xs font-medium ${isLightMode ? 'text-gray-600' : 'text-gray-400'}`}>
               Adicionar
             </span>
-          </motion.div>
-        </motion.div>
-
-        {/* Footer com botão de personalização */}
-        <motion.div 
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="mt-auto pt-4 border-t border-gray-100 dark:border-gray-700/30 flex justify-end"
-        >
-          <motion.button 
-            className={`rounded-lg px-5 py-2.5 text-sm font-medium bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white shadow-sm hover:shadow-md transition-all flex items-center gap-2 ${isLightMode ? '' : 'border border-[#FF6B00]/40'}`}
-            whileHover={{ scale: 1.03, y: -1 }}
-            whileTap={{ scale: 0.97 }}
-            initial={{ boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)" }}
-            animate={{ boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)" }}
-            whileHover={{ 
-              boxShadow: "0 4px 12px rgba(255, 107, 0, 0.25)",
-              scale: 1.03, 
-              y: -1 
-            }}
-            onClick={abrirModal}
-          >
-            Personalizar Atalhos
-            <ChevronRight className="h-4 w-4 opacity-80" />
-          </motion.button>
+          </div>
         </motion.div>
       </div>
-    </motion.div>
+      
+      {/* Rodapé com dica de uso */}
+      <div className={`
+        p-3 text-center text-xs relative z-10 border-t
+        ${isLightMode ? 'border-gray-100 text-gray-500' : 'border-gray-800/50 text-gray-500'}
+      `}>
+        Arraste para personalizar a ordem dos atalhos
+      </div>
+    </Card>
   );
 }
