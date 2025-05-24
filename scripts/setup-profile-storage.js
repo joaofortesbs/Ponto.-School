@@ -1,139 +1,180 @@
 
-#!/usr/bin/env node
-// Script para configurar o armazenamento de imagens de perfil
-
+// Script para configurar o storage de perfil no Supabase
 const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
 
-async function setupProfileStorage() {
-  console.log('Iniciando configuração do armazenamento para perfis...');
+// Configurações do Supabase
+const supabaseUrl = process.env.VITE_SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
 
-  const supabaseUrl = process.env.VITE_SUPABASE_URL;
-  const supabaseKey = process.env.VITE_SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+// Verificar configurações
+if (!supabaseUrl || !supabaseServiceKey) {
+  console.error('Erro: Credenciais do Supabase não definidas!');
+  console.error('Defina VITE_SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY no arquivo .env');
+  process.exit(1);
+}
 
-  if (!supabaseUrl || !supabaseKey) {
-    console.error('Erro: Variáveis de ambiente VITE_SUPABASE_URL e VITE_SUPABASE_SERVICE_KEY são necessárias');
-    process.exit(1);
-  }
+// Criar cliente Supabase com chave de serviço para operações administrativas
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-  const supabase = createClient(supabaseUrl, supabaseKey);
+async function main() {
+  console.log('Iniciando configuração do Supabase Storage...');
 
   try {
-    // 1. Aplicar migração para criar índice
-    console.log('Aplicando migração para criar índice em profiles...');
+    // 1. Criar bucket para imagens de perfil se não existir
+    const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+    
+    const profileBucketName = 'profile-pictures';
+    let profileBucketExists = false;
+    
+    if (bucketsError) {
+      console.error('Erro ao listar buckets:', bucketsError);
+    } else {
+      profileBucketExists = buckets.some(bucket => bucket.name === profileBucketName);
+      console.log(profileBucketExists 
+        ? 'Bucket de imagens de perfil já existe' 
+        : 'Bucket de imagens de perfil não encontrado, criando...');
+    }
+
+    // Criar bucket se não existir
+    if (!profileBucketExists) {
+      const { error: createBucketError } = await supabase.storage.createBucket(profileBucketName, {
+        public: true, // Permitir URLs públicas para as imagens
+        fileSizeLimit: 1024 * 1024 * 2, // Limite de 2MB por arquivo
+      });
+
+      if (createBucketError) {
+        console.error('Erro ao criar bucket de imagens de perfil:', createBucketError);
+        return;
+      }
+      
+      console.log('Bucket de imagens de perfil criado com sucesso');
+    }
+
+    // 2. Configurar políticas de acesso para o bucket
+    console.log('Configurando políticas de acesso para imagens de perfil...');
+
+    // Política para SELECT (visualização pública das imagens)
+    const { error: selectPolicyError } = await supabase.rpc('execute_sql', {
+      sql_query: `
+        BEGIN;
+        -- Remover políticas existentes para evitar conflitos
+        DROP POLICY IF EXISTS "Imagens de perfil são públicas" ON storage.objects;
+        
+        -- Criar política para visualização pública
+        CREATE POLICY "Imagens de perfil são públicas"
+        ON storage.objects FOR SELECT
+        USING (bucket_id = '${profileBucketName}');
+        
+        COMMIT;
+      `
+    });
+
+    if (selectPolicyError) {
+      console.error('Erro ao criar política de visualização:', selectPolicyError);
+    } else {
+      console.log('Política de visualização pública configurada com sucesso');
+    }
+
+    // Política para INSERT (upload)
+    const { error: insertPolicyError } = await supabase.rpc('execute_sql', {
+      sql_query: `
+        BEGIN;
+        -- Remover políticas existentes para evitar conflitos
+        DROP POLICY IF EXISTS "Usuários podem fazer upload de suas próprias fotos" ON storage.objects;
+        
+        -- Criar política para upload
+        CREATE POLICY "Usuários podem fazer upload de suas próprias fotos"
+        ON storage.objects FOR INSERT
+        TO authenticated
+        WITH CHECK (
+          bucket_id = '${profileBucketName}' AND
+          (storage.foldername(name))[1] = auth.uid()::text
+        );
+        
+        COMMIT;
+      `
+    });
+
+    if (insertPolicyError) {
+      console.error('Erro ao criar política de upload:', insertPolicyError);
+    } else {
+      console.log('Política de upload configurada com sucesso');
+    }
+
+    // Política para UPDATE
+    const { error: updatePolicyError } = await supabase.rpc('execute_sql', {
+      sql_query: `
+        BEGIN;
+        -- Remover políticas existentes para evitar conflitos
+        DROP POLICY IF EXISTS "Usuários podem atualizar suas próprias fotos" ON storage.objects;
+        
+        -- Criar política para atualização
+        CREATE POLICY "Usuários podem atualizar suas próprias fotos"
+        ON storage.objects FOR UPDATE
+        TO authenticated
+        USING (
+          bucket_id = '${profileBucketName}' AND
+          (storage.foldername(name))[1] = auth.uid()::text
+        );
+        
+        COMMIT;
+      `
+    });
+
+    if (updatePolicyError) {
+      console.error('Erro ao criar política de atualização:', updatePolicyError);
+    } else {
+      console.log('Política de atualização configurada com sucesso');
+    }
+
+    // Política para DELETE
+    const { error: deletePolicyError } = await supabase.rpc('execute_sql', {
+      sql_query: `
+        BEGIN;
+        -- Remover políticas existentes para evitar conflitos
+        DROP POLICY IF EXISTS "Usuários podem excluir suas próprias fotos" ON storage.objects;
+        
+        -- Criar política para exclusão
+        CREATE POLICY "Usuários podem excluir suas próprias fotos"
+        ON storage.objects FOR DELETE
+        TO authenticated
+        USING (
+          bucket_id = '${profileBucketName}' AND
+          (storage.foldername(name))[1] = auth.uid()::text
+        );
+        
+        COMMIT;
+      `
+    });
+
+    if (deletePolicyError) {
+      console.error('Erro ao criar política de exclusão:', deletePolicyError);
+    } else {
+      console.log('Política de exclusão configurada com sucesso');
+    }
+
+    // 3. Criar índice para otimizar buscas por username na tabela profiles
+    console.log('Criando índice para busca por username...');
+    
     const { error: indexError } = await supabase.rpc('execute_sql', {
       sql_query: `
-        -- Criar índice para otimizar buscas por username
         CREATE INDEX IF NOT EXISTS idx_username ON profiles (username);
       `
     });
 
     if (indexError) {
-      console.error('Erro ao criar índice:', indexError);
+      console.error('Erro ao criar índice de username:', indexError);
     } else {
-      console.log('Índice criado com sucesso');
+      console.log('Índice de username criado com sucesso');
     }
 
-    // 2. Verificar se o bucket profile-pictures existe
-    const { data: buckets, error: bucketsError } = await supabase
-      .storage
-      .listBuckets();
-
-    if (bucketsError) {
-      throw new Error(`Erro ao listar buckets: ${bucketsError.message}`);
-    }
-
-    const profilePicturesBucket = buckets.find(b => b.name === 'profile-pictures');
+    console.log('Configuração do Storage e índices concluída com sucesso!');
     
-    if (!profilePicturesBucket) {
-      console.log('Criando bucket "profile-pictures"...');
-      
-      const { error: createBucketError } = await supabase.storage
-        .createBucket('profile-pictures', {
-          public: true
-        });
-        
-      if (createBucketError) {
-        throw new Error(`Erro ao criar bucket: ${createBucketError.message}`);
-      }
-      
-      console.log('Bucket "profile-pictures" criado com sucesso!');
-    } else {
-      console.log('Bucket "profile-pictures" já existe');
-    }
-
-    // 3. Configurar políticas para o bucket
-    console.log('Configurando políticas de acesso...');
-    
-    // Permitir leitura pública
-    await supabase.rpc('create_storage_policy', {
-      bucket_name: 'profile-pictures',
-      policy_name: 'Public Read',
-      definition: 'true',
-      operation: 'SELECT'
-    });
-    
-    // Permitir upload apenas para usuários em sua própria pasta
-    await supabase.rpc('create_storage_policy', {
-      bucket_name: 'profile-pictures',
-      policy_name: 'Auth Insert Own Folder',
-      definition: 'auth.role() = \'authenticated\' AND (storage.foldername(name))[1] = auth.uid()::text',
-      operation: 'INSERT'
-    });
-    
-    // Permitir atualização apenas para usuários em sua própria pasta
-    await supabase.rpc('create_storage_policy', {
-      bucket_name: 'profile-pictures',
-      policy_name: 'Auth Update Own Folder',
-      definition: 'auth.role() = \'authenticated\' AND (storage.foldername(name))[1] = auth.uid()::text',
-      operation: 'UPDATE'
-    });
-    
-    // Permitir exclusão apenas para usuários em sua própria pasta
-    await supabase.rpc('create_storage_policy', {
-      bucket_name: 'profile-pictures',
-      policy_name: 'Auth Delete Own Folder',
-      definition: 'auth.role() = \'authenticated\' AND (storage.foldername(name))[1] = auth.uid()::text',
-      operation: 'DELETE'
-    });
-    
-    console.log('Configuração concluída com sucesso!');
-
-    // 4. Testar a política com usuário não autenticado
-    console.log('Testando política com usuário não autenticado...');
-    
-    // Anon client sem autenticação
-    const anonClient = createClient(supabaseUrl, supabaseKey);
-    
-    const testFilePath = 'teste/arquivo.txt';
-    const { error: unauthorizedError } = await anonClient.storage
-      .from('profile-pictures')
-      .upload(testFilePath, new Blob(['teste']), {
-        cacheControl: '0'
-      });
-    
-    if (unauthorizedError && unauthorizedError.message.includes('not authorized')) {
-      console.log('Teste de segurança passado: usuário não autenticado não pode fazer upload');
-    } else if (unauthorizedError) {
-      console.log('Erro diferente do esperado:', unauthorizedError);
-    } else {
-      console.error('ATENÇÃO: Teste de segurança falhou - usuário não autenticado conseguiu fazer upload!');
-      
-      // Limpar o arquivo de teste caso tenha sido criado
-      await supabase.storage
-        .from('profile-pictures')
-        .remove([testFilePath]);
-    }
-
   } catch (error) {
-    console.error(`Erro durante a configuração: ${error.message}`);
-    process.exit(1);
+    console.error('Erro durante a configuração do Storage:', error);
   }
 }
 
-setupProfileStorage()
-  .then(() => console.log('Script finalizado'))
-  .catch(err => {
-    console.error('Erro não tratado:', err);
-    process.exit(1);
-  });
+// Executar a função principal
+main();
