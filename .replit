@@ -218,6 +218,24 @@ mode = "sequential"
 task = "shell.exec"
 args = "npx supabase migration up"
 
+[[workflows.workflow]]
+name = "Servidor de Amizades"
+author = 42059808
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node api/friends-server.js"
+
+[[workflows.workflow]]
+name = "Configurar Tabelas de Amizade"
+author = 42059808
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node scripts/setup-replit-friendship-tables.js"
+
 [auth]
 pageEnabled = false
 buttonEnabled = false
