@@ -1,14 +1,16 @@
-import React, { useState, useEffect, useCallback } from 'react';
+
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import { debounce } from 'lodash';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { sendFriendRequest } from '@/services/friendsAPIService';
-import { Info, Loader2 } from 'lucide-react';
+import { sendFriendRequest, acceptFriendRequest, rejectFriendRequest, checkFriendRequests, getFriendRequests } from '@/services/friendsAPIService';
+import { Info, Loader2, CheckCircle, XCircle } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "@/components/ui/use-toast";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface User {
   id: string;
@@ -17,6 +19,17 @@ interface User {
   bio: string | null;
   avatar_url: string | null;
   isFriend: boolean;
+  requestSent?: boolean;
+}
+
+interface FriendRequest {
+  id: string;
+  sender_id: string;
+  username: string;
+  full_name: string;
+  avatar_url: string | null;
+  bio: string | null;
+  created_at: string;
 }
 
 interface AddFriendsModalProps {
@@ -25,31 +38,74 @@ interface AddFriendsModalProps {
 }
 
 const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ isOpen, onClose }) => {
+  // Estados principais
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<User[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [pendingRequests, setPendingRequests] = useState(0);
+  const [requestsList, setRequestsList] = useState<FriendRequest[]>([]);
+  const [showRequests, setShowRequests] = useState(false);
   const [activeTab, setActiveTab] = useState('buscar');
+  
+  // Estados de loading
+  const [isLoading, setIsLoading] = useState(false);
   const [requestLoading, setRequestLoading] = useState<string | null>(null);
+  const [responseLoading, setResponseLoading] = useState<string | null>(null);
+  const [isLoadingRequests, setIsLoadingRequests] = useState(false);
 
-  // Buscar solicitações pendentes ao carregar o modal
+  // Estados de erro
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const [requestsError, setRequestsError] = useState<string | null>(null);
+
+  // Buscar solicitações pendentes ao carregar o modal e a cada 5 segundos
   useEffect(() => {
+    let interval: NodeJS.Timeout;
+    
+    const fetchPendingRequests = async () => {
+      try {
+        const result = await checkFriendRequests();
+        setPendingRequests(result.count || 0);
+      } catch (error) {
+        console.error('Erro ao buscar solicitações pendentes:', error);
+      }
+    };
+    
     if (isOpen) {
       fetchPendingRequests();
+      interval = setInterval(fetchPendingRequests, 5000);
     }
+    
+    return () => {
+      clearInterval(interval);
+      // Limpar estados ao fechar o modal
+      if (!isOpen) {
+        setSearchResults([]);
+        setShowRequests(false);
+        setSearchQuery('');
+        setActiveTab('buscar');
+      }
+    };
   }, [isOpen]);
 
-  const fetchPendingRequests = async () => {
+  // Efeito para carregar solicitações quando a aba de solicitações é ativada
+  useEffect(() => {
+    if (activeTab === 'solicitacoes' && isOpen) {
+      loadFriendRequests();
+    }
+  }, [activeTab, isOpen]);
+
+  // Função para carregar solicitações de amizade
+  const loadFriendRequests = async () => {
     try {
-      const response = await fetch('/api/check-requests', {
-        headers: {
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
-        }
-      });
-      const data = await response.json();
-      setPendingRequests(data.count || 0);
+      setIsLoadingRequests(true);
+      setRequestsError(null);
+      const requests = await getFriendRequests();
+      setRequestsList(requests);
+      setShowRequests(true);
     } catch (error) {
-      console.error('Erro ao buscar solicitações pendentes:', error);
+      console.error('Erro ao carregar solicitações:', error);
+      setRequestsError('Não foi possível carregar suas solicitações de amizade.');
+    } finally {
+      setIsLoadingRequests(false);
     }
   };
 
@@ -64,15 +120,32 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ isOpen, onClose }) =>
 
       try {
         setIsLoading(true);
-        const results = await searchUsers(query);
+        setSearchError(null);
+        
+        const token = (await supabase.auth.getSession()).data.session?.access_token;
+        if (!token) {
+          throw new Error('Usuário não autenticado');
+        }
+        
+        const response = await fetch(`/api/search-users?query=${encodeURIComponent(query)}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Erro ao buscar usuários');
+        }
+        
+        const results = await response.json();
         setSearchResults(results);
+        
+        if (results.length === 0) {
+          setSearchError('Nenhum usuário encontrado com este termo de busca');
+        }
       } catch (error) {
         console.error('Erro na busca:', error);
-        toast({
-          title: "Erro na busca",
-          description: "Não foi possível realizar a busca. Tente novamente.",
-          variant: "destructive",
-        });
+        setSearchError('Ocorreu um erro ao realizar a busca. Tente novamente.');
       } finally {
         setIsLoading(false);
       }
@@ -80,23 +153,27 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ isOpen, onClose }) =>
     []
   );
 
-  // Função para buscar usuários
-  const searchUsers = async (query: string): Promise<User[]> => {
-    try {
-      const response = await fetch(`/api/search-users?query=${encodeURIComponent(query)}`, {
-        headers: {
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
-        }
-      });
+  // Handler para mudanças no campo de busca
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+    if (query.length >= 2) {
+      setIsLoading(true);
+      debouncedSearch(query);
+    } else {
+      setSearchResults([]);
+      setSearchError(null);
+    }
+  };
 
-      if (!response.ok) {
-        throw new Error('Erro ao buscar usuários');
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Erro ao buscar usuários:', error);
-      return [];
+  // Função para realizar busca imediata
+  const handleSearchClick = () => {
+    if (searchQuery.length >= 2) {
+      debouncedSearch.cancel();
+      setIsLoading(true);
+      debouncedSearch(searchQuery);
+    } else {
+      setSearchError('Digite pelo menos 2 caracteres para realizar a busca');
     }
   };
 
@@ -137,6 +214,74 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ isOpen, onClose }) =>
     }
   };
 
+  // Função para aceitar solicitação de amizade
+  const handleAcceptRequest = async (senderId: string) => {
+    try {
+      setResponseLoading(senderId);
+      const result = await acceptFriendRequest(senderId);
+
+      if (result.success) {
+        toast({
+          title: "Amizade confirmada!",
+          description: "Vocês agora são amigos.",
+        });
+
+        // Remover a solicitação da lista e atualizar contador
+        setRequestsList(prev => prev.filter(req => req.sender_id !== senderId));
+        setPendingRequests(prev => Math.max(0, prev - 1));
+      } else {
+        toast({
+          title: "Erro",
+          description: result.error || "Não foi possível aceitar a solicitação",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao aceitar solicitação:', error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao aceitar a solicitação",
+        variant: "destructive",
+      });
+    } finally {
+      setResponseLoading(null);
+    }
+  };
+
+  // Função para rejeitar solicitação de amizade
+  const handleRejectRequest = async (senderId: string) => {
+    try {
+      setResponseLoading(senderId);
+      const result = await rejectFriendRequest(senderId);
+
+      if (result.success) {
+        toast({
+          title: "Solicitação rejeitada",
+          description: "A solicitação de amizade foi rejeitada",
+        });
+
+        // Remover a solicitação da lista e atualizar contador
+        setRequestsList(prev => prev.filter(req => req.sender_id !== senderId));
+        setPendingRequests(prev => Math.max(0, prev - 1));
+      } else {
+        toast({
+          title: "Erro",
+          description: result.error || "Não foi possível rejeitar a solicitação",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao rejeitar solicitação:', error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao rejeitar a solicitação",
+        variant: "destructive",
+      });
+    } finally {
+      setResponseLoading(null);
+    }
+  };
+
   // Função para mostrar perfil público (placeholder por enquanto)
   const handleViewProfile = (userId: string) => {
     console.log('Ver perfil do usuário:', userId);
@@ -146,17 +291,10 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ isOpen, onClose }) =>
     });
   };
 
-  // Handler para mudanças no campo de busca
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const query = e.target.value;
-    setSearchQuery(query);
-    if (query.length >= 2) {
-      setIsLoading(true);
-      debouncedSearch(query);
-    } else {
-      setSearchResults([]);
-    }
-  };
+  // Usar useMemo para otimizar a renderização das solicitações
+  const memoizedRequestsList = useMemo(() => {
+    return requestsList;
+  }, [requestsList]);
 
   // Truncar texto da bio se for muito longo
   const truncateBio = (bio: string | null) => {
@@ -200,7 +338,7 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ isOpen, onClose }) =>
                 />
                 <Button 
                   className="bg-[#F28C38] hover:bg-[#E07A27] text-white font-medium"
-                  onClick={() => debouncedSearch(searchQuery)}
+                  onClick={handleSearchClick}
                   disabled={searchQuery.length < 2 || isLoading}
                 >
                   {isLoading ? (
@@ -214,6 +352,13 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ isOpen, onClose }) =>
                 Comece a buscar pessoas, digite um nome ou @username para encontrar pessoas para conectar.
               </p>
             </div>
+
+            {searchError && (
+              <Alert variant="destructive" className="bg-red-900/50 border-red-600 text-white">
+                <AlertTitle>Atenção</AlertTitle>
+                <AlertDescription>{searchError}</AlertDescription>
+              </Alert>
+            )}
 
             {searchResults.length > 0 ? (
               <ul className="p-0 list-none space-y-4">
@@ -300,11 +445,89 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ isOpen, onClose }) =>
           </TabsContent>
 
           <TabsContent value="solicitacoes">
-            <p className="text-[#B0B0B0] text-center py-4">
-              {pendingRequests > 0 
-                ? "Funcionalidade de visualização de solicitações em desenvolvimento." 
-                : "Você não tem solicitações de amizade pendentes."}
-            </p>
+            {pendingRequests === 0 ? (
+              <p className="text-[#B0B0B0] text-center py-4">
+                Você não tem solicitações de amizade pendentes.
+              </p>
+            ) : (
+              <div className="space-y-4">
+                {requestsError && (
+                  <Alert variant="destructive" className="bg-red-900/50 border-red-600 text-white">
+                    <AlertTitle>Erro</AlertTitle>
+                    <AlertDescription>{requestsError}</AlertDescription>
+                  </Alert>
+                )}
+                
+                {isLoadingRequests ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-[#F28C38]" />
+                  </div>
+                ) : (
+                  <div className="bg-[#2A3555] p-4 rounded-md">
+                    <h3 className="text-white font-medium mb-3">Solicitações pendentes</h3>
+                    
+                    {memoizedRequestsList.length > 0 ? (
+                      <ul className="space-y-3">
+                        {memoizedRequestsList.map((request) => (
+                          <li key={request.id} className="flex items-center gap-3 p-2 border border-gray-700 bg-[#1E2A44] rounded-md">
+                            <img 
+                              src={request.avatar_url || '/images/placeholder.png'} 
+                              alt={`${request.full_name} avatar`}
+                              className="w-10 h-10 rounded-full object-cover" 
+                            />
+                            
+                            <div className="flex-1">
+                              <span className="text-white text-sm font-medium block">
+                                {request.full_name} <span className="text-[#B0B0B0]">@{request.username}</span>
+                              </span>
+                              {request.bio && (
+                                <p className="text-[#B0B0B0] text-xs mt-1">
+                                  {truncateBio(request.bio)}
+                                </p>
+                              )}
+                            </div>
+                            
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                className="bg-green-600 hover:bg-green-700 text-white text-xs py-1 px-3"
+                                onClick={() => handleAcceptRequest(request.sender_id)}
+                                disabled={responseLoading === request.sender_id}
+                              >
+                                {responseLoading === request.sender_id ? (
+                                  <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                ) : (
+                                  <CheckCircle className="h-3 w-3 mr-1" />
+                                )}
+                                Aceitar
+                              </Button>
+                              
+                              <Button
+                                size="sm"
+                                className="bg-red-600 hover:bg-red-700 text-white text-xs py-1 px-3"
+                                onClick={() => handleRejectRequest(request.sender_id)}
+                                disabled={responseLoading === request.sender_id}
+                              >
+                                {responseLoading === request.sender_id ? (
+                                  <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                ) : (
+                                  <XCircle className="h-3 w-3 mr-1" />
+                                )}
+                                Rejeitar
+                              </Button>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-[#B0B0B0] text-center py-2">
+                        Carregando solicitações...
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </DialogContent>
