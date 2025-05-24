@@ -200,6 +200,15 @@ mode = "sequential"
 task = "shell.exec"
 args = "node scripts/test-replit-db.js"
 
+[[workflows.workflow]]
+name = "Configurar Armazenamento de Perfil"
+author = 42059808
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node scripts/setup-profile-storage.js"
+
 [auth]
 pageEnabled = false
 buttonEnabled = false
