@@ -100,13 +100,6 @@ export default function PersonalizarAtalhosModal({
     return selectedAtalhos.some((a) => a.id === id);
   };
 
-  // Filter available shortcuts based on search term and category
-  const filteredDisponiveis = disponiveis.filter((atalho) => {
-    const matchesSearch = atalho.nome.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategoria = !categoria || getCategoriaFromCor(atalho.cor) === categoria;
-    return matchesSearch && matchesCategoria;
-  });
-
   // Helper to determine a category from color
   const getCategoriaFromCor = (cor: string): string => {
     if (cor.includes("blue")) return "Aprendizado";
@@ -119,6 +112,13 @@ export default function PersonalizarAtalhosModal({
     if (cor.includes("pink")) return "Criativo";
     return "Outros";
   };
+
+  // Filter available shortcuts based on search term and category
+  const filteredDisponiveis = disponiveis.filter((atalho) => {
+    const matchesSearch = atalho.nome.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategoria = !categoria || getCategoriaFromCor(atalho.cor) === categoria;
+    return matchesSearch && matchesCategoria;
+  });
 
   // Get all categories from available shortcuts
   const categorias = ["Todos", ...new Set(disponiveis.map(a => getCategoriaFromCor(a.cor)))];
