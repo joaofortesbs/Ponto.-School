@@ -1,4 +1,4 @@
-modules = ["nodejs-20", "web", "postgresql-16"]
+modules = ["nodejs-20", "web"]
 run = "npm run dev"
 
 [nix]
@@ -181,78 +181,6 @@ mode = "sequential"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "npx supabase migration up"
-
-[[workflows.workflow]]
-name = "Configurar Banco de Dados Replit"
-author = 42059808
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "node scripts/setup-replit-db.js"
-
-[[workflows.workflow]]
-name = "Testar Conexão com Banco de Dados"
-author = 42059808
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "node scripts/test-replit-db.js"
-
-[[workflows.workflow]]
-name = "Configurar Armazenamento de Perfil"
-author = 42059808
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "node scripts/setup-profile-storage.js"
-
-[[workflows.workflow]]
-name = "Aplicar Migração de Amizades"
-author = 42059808
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "npx supabase migration up"
-
-[[workflows.workflow]]
-name = "Servidor de Amizades"
-author = 42059808
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "node api/friends-server.js"
-
-[[workflows.workflow]]
-name = "Configurar Tabelas de Amizade"
-author = 42059808
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "node scripts/setup-replit-friendship-tables.js"
-
-[[workflows.workflow]]
-name = "Testar Sistema de Amizades"
-author = 42059808
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "node scripts/test-amizades-completo.js"
-
-[[workflows.workflow]]
-name = "API de Amizades"
-author = 42059808
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "node api/friends-server.js"
 
 [auth]
 pageEnabled = false
