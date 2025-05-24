@@ -129,14 +129,20 @@ const AddFriendsModal: React.FC<AddFriendsModalProps> = ({ isOpen, onClose }) =>
           throw new Error('Usuário não autenticado');
         }
         
-        const response = await fetch(`/api/search-users?query=${encodeURIComponent(query)}`, {
+        // Usando URL absoluta para o servidor de amizades
+        const serverUrl = window.location.hostname === 'localhost' 
+          ? 'http://localhost:3000' 
+          : `https://${window.location.hostname.replace('kirk.replit.dev', 'replit.dev')}-3000.${window.location.hostname.split('.').slice(1).join('.')}`;
+          
+        const response = await fetch(`${serverUrl}/api/search-users?query=${encodeURIComponent(query)}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
 
         if (!response.ok) {
-          throw new Error('Erro ao buscar usuários');
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || 'Erro ao buscar usuários');
         }
         
         const results = await response.json();

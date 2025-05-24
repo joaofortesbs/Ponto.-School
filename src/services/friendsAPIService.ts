@@ -1,7 +1,19 @@
 
 import { supabase } from "@/lib/supabase";
 
-const API_URL = "http://localhost:3000/api";
+// Detecta automaticamente a URL do servidor de amizades
+const getAPIURL = () => {
+  // Para ambiente local
+  if (window.location.hostname === 'localhost') {
+    return "http://localhost:3000/api";
+  }
+  
+  // Para ambiente de produção no Replit
+  // Mapeia o domínio principal para o domínio do serviço na porta 3000
+  return `https://${window.location.hostname.replace('kirk.replit.dev', 'replit.dev')}-3000.${window.location.hostname.split('.').slice(1).join('.')}/api`;
+};
+
+const API_URL = getAPIURL();
 
 /**
  * Obtém o token JWT atual do usuário

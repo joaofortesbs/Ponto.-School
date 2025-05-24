@@ -245,6 +245,15 @@ mode = "sequential"
 task = "shell.exec"
 args = "node scripts/test-amizades-completo.js"
 
+[[workflows.workflow]]
+name = "API de Amizades"
+author = 42059808
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node api/friends-server.js"
+
 [auth]
 pageEnabled = false
 buttonEnabled = false
