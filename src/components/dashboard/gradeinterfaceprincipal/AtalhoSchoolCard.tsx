@@ -58,7 +58,8 @@ export default function AtalhoSchoolCard() {
 
   return (
     <motion.div 
-      className={`rounded-xl overflow-hidden ${isLightMode ? 'bg-white' : 'bg-gradient-to-br from-[#001e3a] to-[#00162b]'} shadow-lg ${isLightMode ? 'border border-gray-200' : 'border border-white/10'} flex-shrink-0 flex flex-col h-full`}
+      className={`rounded-xl overflow-hidden ${isLightMode ? 'bg-white' : 'bg-gradient-to-br from-[#001e3a] to-[#00162b]'} shadow-lg ${isLightMode ? 'border border-gray-200' : 'border border-white/10'} flex-shrink-0 flex flex-col`}
+      style={{ height: '600px' }}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
@@ -94,10 +95,10 @@ export default function AtalhoSchoolCard() {
       </div>
 
       {/* Grid de atalhos com design sofisticado */}
-      <div className="p-5 flex-grow flex flex-col">
+      <div className="p-5">
         {/* Grid de atalhos com animações aprimoradas */}
         <motion.div 
-          className="grid grid-cols-2 md:grid-cols-3 gap-4 flex-grow"
+          className="grid grid-cols-2 md:grid-cols-3 gap-4"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
@@ -174,7 +175,7 @@ export default function AtalhoSchoolCard() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700/30 flex justify-end"
+          className="mt-auto pt-4 border-t border-gray-100 dark:border-gray-700/30 flex justify-end"
         >
           <motion.button 
             className={`rounded-lg px-5 py-2.5 text-sm font-medium bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white shadow-sm hover:shadow-md transition-all flex items-center gap-2 ${isLightMode ? '' : 'border border-[#FF6B00]/40'}`}
