@@ -182,24 +182,6 @@ mode = "sequential"
 task = "shell.exec"
 args = "npx supabase migration up"
 
-[[workflows.workflow]]
-name = "Configurar Neon DB"
-author = 42059808
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "node scripts/setup-neon-db.js"
-
-[[workflows.workflow]]
-name = "Verificar Conexões de BD"
-author = 42059808
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "node scripts/check-db-connections.js"
-
 [auth]
 pageEnabled = false
 buttonEnabled = false
