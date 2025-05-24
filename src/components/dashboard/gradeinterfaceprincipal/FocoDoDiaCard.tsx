@@ -43,30 +43,30 @@ export default function FocoDoDiaCard() {
     const carregarFocoDia = async () => {
       try {
         setCarregando(true);
-        
+
         // Obter ID do usuário atual
         const { data: { session } } = await supabase.auth.getSession();
         const userId = session?.user?.id;
-        
+
         if (!userId) {
           console.log("Usuário não autenticado, carregando dados locais");
           carregarDadosLocais();
           return;
         }
-        
+
         // Importar o serviço de foco do dia
         const { obterFocoDia } = await import('@/services/focoDiaService');
-        
+
         // Obter dados do foco do dia
         const focoDia = await obterFocoDia(userId);
-        
+
         if (focoDia) {
           setFocoPrincipal(focoDia.focoPrincipal);
           setAtividades(focoDia.atividades);
           setTemFoco(true);
           setTodasAtividadesConcluidas(focoDia.todasConcluidas || false);
           console.log("Foco do dia carregado do servidor:", focoDia);
-          
+
           // Atualizar localStorage com dados do servidor para manter sincronizado
           localStorage.setItem('focoDia', JSON.stringify({
             focoPrincipal: focoDia.focoPrincipal,
@@ -84,32 +84,32 @@ export default function FocoDoDiaCard() {
         setCarregando(false);
       }
     };
-    
+
     // Função para carregar dados do localStorage como fallback
     const carregarDadosLocais = () => {
       try {
         const focoDadosSalvos = localStorage.getItem('focoDia');
         if (focoDadosSalvos) {
           const dados = JSON.parse(focoDadosSalvos);
-          
+
           // Validar dados carregados do localStorage
           if (!dados.focoPrincipal || !dados.atividades) {
             console.error("Dados inválidos no localStorage");
             setTemFoco(false);
             return;
           }
-          
+
           // Verificar se o foco do dia é de hoje
           const dataAtual = new Date().toDateString();
           const dataFoco = dados.criadoEm ? new Date(dados.criadoEm).toDateString() : null;
-          
+
           // Se tiver data e não for de hoje, considerar como não tendo foco
           if (dataFoco && dataFoco !== dataAtual) {
             console.log("Foco salvo é de outro dia, desconsiderando");
             setTemFoco(false);
             return;
           }
-          
+
           // Processar os dados carregados
           setFocoPrincipal(dados.focoPrincipal);
           setAtividades(Array.isArray(dados.atividades) ? dados.atividades : []);
@@ -118,10 +118,10 @@ export default function FocoDoDiaCard() {
           // Verificar se todas as atividades estão concluídas
           const todasConcluidas = dados.atividades.length > 0 && 
             dados.atividades.every((ativ: Atividade) => ativ.concluido);
-            
+
           setTodasAtividadesConcluidas(todasConcluidas || dados.todasConcluidas);
           console.log("Foco do dia carregado do localStorage");
-          
+
           // Tentar salvar no servidor se o usuário estiver autenticado
           sincronizarComServidor(dados);
         } else {
@@ -135,22 +135,22 @@ export default function FocoDoDiaCard() {
         setCarregando(false);
       }
     };
-    
+
     // Função para tentar sincronizar dados locais com o servidor
     const sincronizarComServidor = async (dadosLocais: any) => {
       try {
         // Obter ID do usuário atual
         const { data: { session } } = await supabase.auth.getSession();
         const userId = session?.user?.id;
-        
+
         if (!userId) {
           console.log("Usuário não autenticado, não é possível sincronizar");
           return;
         }
-        
+
         // Importar o serviço de foco do dia
         const { salvarFocoDia } = await import('@/services/focoDiaService');
-        
+
         // Criar objeto de foco do dia
         const focoDia = {
           userId,
@@ -159,7 +159,7 @@ export default function FocoDoDiaCard() {
           todasConcluidas: dadosLocais.todasConcluidas || false,
           criadoEm: new Date().toISOString()
         };
-        
+
         // Salvar no servidor
         await salvarFocoDia(focoDia);
         console.log("Dados sincronizados com o servidor");
@@ -167,7 +167,7 @@ export default function FocoDoDiaCard() {
         console.error("Erro ao sincronizar com servidor:", error);
       }
     };
-    
+
     // Adicionar listener para atualizações de outros componentes
     const handleFocoDiaAtualizado = (event: any) => {
       const novoFoco = event.detail?.focoDia;
@@ -179,12 +179,12 @@ export default function FocoDoDiaCard() {
         console.log("Foco do dia atualizado via evento");
       }
     };
-    
+
     window.addEventListener('foco-dia-atualizado', handleFocoDiaAtualizado);
-    
+
     // Iniciar carregamento de dados
     carregarFocoDia();
-    
+
     // Limpar listener ao desmontar
     return () => {
       window.removeEventListener('foco-dia-atualizado', handleFocoDiaAtualizado);
@@ -237,15 +237,15 @@ export default function FocoDoDiaCard() {
           atividades: atualizadas,
           todasConcluidas
         }));
-        
+
         // Obter ID do usuário atual
         const { data: { session } } = await supabase.auth.getSession();
         const userId = session?.user?.id;
-        
+
         if (userId) {
           // Importar o serviço de foco do dia
           const { atualizarStatusAtividade, salvarFocoDia } = await import('@/services/focoDiaService');
-          
+
           // Tentar atualizar apenas a atividade específica
           const atividadeAtualizada = atualizadas.find(ativ => ativ.id === id);
           if (atividadeAtualizada) {
@@ -254,10 +254,10 @@ export default function FocoDoDiaCard() {
               id, 
               atividadeAtualizada.concluido
             );
-            
+
             if (!sucesso) {
               console.warn("Não foi possível atualizar apenas a atividade, tentando salvar todo o foco");
-              
+
               // Fallback: salvar o foco completo
               await salvarFocoDia({
                 userId,
@@ -268,7 +268,7 @@ export default function FocoDoDiaCard() {
               });
             }
           }
-          
+
           console.log("Status da atividade atualizado com sucesso");
         } else {
           console.log("Usuário não autenticado, dados salvos apenas localmente");
@@ -298,7 +298,7 @@ export default function FocoDoDiaCard() {
 
       // Importar o serviço de IA para gerar sugestões
       const { generateFocusSuggestions } = await import('@/services/epictusIAService');
-      
+
       // Exibir debug das informações do formulário
       console.log("Dados recebidos do formulário:", {
         objetivo: dados.objetivo,
@@ -319,7 +319,7 @@ export default function FocoDoDiaCard() {
         gerarFocoSemIA(dados);
         return;
       }
-      
+
       console.log("Sugestões da IA recebidas:", aiSuggestions);
 
       // Estruturar dados de foco principal
@@ -337,7 +337,7 @@ export default function FocoDoDiaCard() {
 
       // Estruturar as atividades sugeridas pela IA
       let novasAtividades: Atividade[] = [];
-      
+
       if (aiSuggestions.atividades && aiSuggestions.atividades.length > 0) {
         // Usar atividades da IA
         novasAtividades = aiSuggestions.atividades.map((ativ: any) => ({
@@ -354,24 +354,24 @@ export default function FocoDoDiaCard() {
         // Fallback: gerar atividades manualmente com base nas entradas do usuário
         novasAtividades = gerarAtividades(dados);
       }
-      
+
       // Garantir que temos pelo menos 3 tarefas
       if (novasAtividades.length < 3) {
         console.log("Número insuficiente de tarefas geradas. Adicionando tarefas complementares.");
         const tarefasComplementares = gerarTarefasComplementares(dados, novasAtividades.length);
         novasAtividades = [...novasAtividades, ...tarefasComplementares];
       }
-      
+
       // Garantir que as tarefas selecionadas pelo usuário estejam incluídas
       if (dados.tarefasSelecionadas && dados.tarefasSelecionadas.length > 0) {
         // Verificar se as tarefas selecionadas já estão nas atividades
         const tarefasExistentes = new Set(novasAtividades.map(ativ => ativ.titulo.toLowerCase()));
-        
+
         // Adicionar tarefas selecionadas que não estão nas atividades
         const tarefasParaAdicionar = dados.tarefasSelecionadas.filter(
           tarefa => !tarefasExistentes.has(tarefa.toLowerCase())
         );
-        
+
         if (tarefasParaAdicionar.length > 0) {
           const tarefasAdicionais = tarefasParaAdicionar.map((tarefa, index) => {
             // Determinar se parece ser um evento (aula, prova, etc) para definir tipo
@@ -380,7 +380,7 @@ export default function FocoDoDiaCard() {
               tarefa.toLowerCase().includes("prova") || 
               tarefa.toLowerCase().includes("evento") || 
               tarefa.toLowerCase().includes("palestra");
-              
+
             // Definir urgência com base em palavras-chave
             const ehUrgente = 
               tarefa.toLowerCase().includes("urgent") || 
@@ -388,7 +388,7 @@ export default function FocoDoDiaCard() {
               tarefa.toLowerCase().includes("prazo") ||
               tarefa.toLowerCase().includes("hoje") ||
               tarefa.toLowerCase().includes("amanhã");
-              
+
             return {
               id: Date.now() + 1000 + index,
               titulo: tarefa,
@@ -400,12 +400,12 @@ export default function FocoDoDiaCard() {
               progresso: 0
             };
           });
-          
+
           // Adicionar as novas tarefas ao início da lista (prioridade)
           novasAtividades = [...tarefasAdicionais, ...novasAtividades];
         }
       }
-      
+
       // Limitar a 4 atividades no total para não sobrecarregar o usuário
       if (novasAtividades.length > 4) {
         novasAtividades = novasAtividades.slice(0, 4);
@@ -421,7 +421,7 @@ export default function FocoDoDiaCard() {
       // Salvar no Supabase e localStorage para persistência
       try {
         const { salvarFocoDia } = await import('@/services/focoDiaService');
-        
+
         // Criar objeto de foco do dia
         const focoDia = {
           userId,
@@ -430,21 +430,21 @@ export default function FocoDoDiaCard() {
           todasConcluidas: false,
           criadoEm: new Date().toISOString()
         };
-        
+
         // Salvar no backend
         await salvarFocoDia(focoDia);
-        
+
         // Também salvar localmente como backup
         localStorage.setItem('focoDia', JSON.stringify({
           focoPrincipal: novoFocoPrincipal,
           atividades: novasAtividades,
           todasConcluidas: false
         }));
-        
+
         console.log("Foco do dia salvo com sucesso.");
       } catch (saveError) {
         console.error("Erro ao salvar foco do dia:", saveError);
-        
+
         // Garantir que pelo menos o localStorage esteja atualizado
         localStorage.setItem('focoDia', JSON.stringify({
           focoPrincipal: novoFocoPrincipal,
@@ -475,7 +475,7 @@ export default function FocoDoDiaCard() {
 
     // Gerar atividades baseadas nas informações sem IA
     let novasAtividades = gerarAtividades(dados);
-    
+
     // Garantir que temos pelo menos 3 tarefas
     if (novasAtividades.length < 3) {
       console.log("Gerando tarefas complementares no fallback para garantir mínimo de 3 tarefas");
@@ -558,13 +558,13 @@ export default function FocoDoDiaCard() {
     // Combinar todas as atividades e limitar a 4 no máximo
     return atividades.slice(0, 4);
   };
-  
+
   // Função para gerar tarefas complementares quando não há tarefas suficientes
   const gerarTarefasComplementares = (dados: FocoData, quantidadeExistente: number): Atividade[] => {
     const tiposAtividade: ("video" | "exercicio" | "revisao" | "tarefa")[] = ["video", "exercicio", "revisao", "tarefa"];
     const quantidadeNecessaria = Math.max(3 - quantidadeExistente, 0);
     const tarefasComplementares: Atividade[] = [];
-    
+
     // Lista de tarefas genéricas por tipo
     const tarefasGenericas = {
       video: [
@@ -596,13 +596,13 @@ export default function FocoDoDiaCard() {
         "Pesquisar informações complementares"
       ]
     };
-    
+
     // Gerar tarefas genéricas com base no objetivo e estado emocional
     for (let i = 0; i < quantidadeNecessaria; i++) {
       const tipo = tiposAtividade[Math.floor(Math.random() * tiposAtividade.length)];
       const opcoesTitulos = tarefasGenericas[tipo];
       const tituloIndex = Math.floor(Math.random() * opcoesTitulos.length);
-      
+
       // Adicionar contexto do objetivo ou disciplinas se disponíveis
       let titulo = opcoesTitulos[tituloIndex];
       if (dados.disciplinas.length > 0) {
@@ -611,7 +611,7 @@ export default function FocoDoDiaCard() {
           titulo += ` de ${disciplina}`;
         }
       }
-      
+
       // Criar tarefa complementar
       tarefasComplementares.push({
         id: Date.now() + 1000 + i,
@@ -624,7 +624,7 @@ export default function FocoDoDiaCard() {
         progresso: 0
       });
     }
-    
+
     console.log(`Geradas ${tarefasComplementares.length} tarefas complementares para atingir o mínimo de 3`);
     return tarefasComplementares;
   };
@@ -784,6 +784,7 @@ export default function FocoDoDiaCard() {
 
   return (
     <motion.div 
+      data-card-type="foco-hoje"
       className={`rounded-xl overflow-hidden ${isLightMode ? 'bg-white' : 'bg-gradient-to-br from-[#001e3a] to-[#00162b]'} shadow-lg ${isLightMode ? 'border border-gray-200' : 'border border-white/10'} h-full self-start flex flex-col overflow-y-auto grid-cell`}
       style={{ minHeight: '600px' }}
       initial={{ opacity: 0, y: 20 }}
@@ -1163,7 +1164,7 @@ export default function FocoDoDiaCard() {
                   <Target className={`h-7 w-7 text-[#FF6B00]`} strokeWidth={1.5} />
                 </div>
               </div>
-              
+
               {/* Texto principal com design mais elegante */}
               <div className="text-center space-y-4 max-w-[80%]">
                 <h3 className={`text-lg font-semibold ${isLightMode ? 'text-gray-800' : 'text-white'}`}>
@@ -1173,7 +1174,7 @@ export default function FocoDoDiaCard() {
                   Organize seu dia priorizando o que realmente importa para seus estudos
                 </p>
               </div>
-              
+
               {/* Etapas - visual elegante */}
               <div className={`w-4/5 mt-2 ${isLightMode ? 'bg-orange-50/70' : 'bg-[#FF6B00]/5'} rounded-xl p-4 border ${isLightMode ? 'border-orange-100' : 'border-[#FF6B00]/20'}`}>
                 <div className="flex flex-col space-y-3">
@@ -1183,14 +1184,14 @@ export default function FocoDoDiaCard() {
                     </div>
                     <p className={`text-xs ${isLightMode ? 'text-gray-700' : 'text-gray-200'}`}>Defina objetivos e disciplinas prioritárias</p>
                   </div>
-                  
+
                   <div className="flex items-center gap-3">
                     <div className={`w-6 h-6 rounded-full flex items-center justify-center ${isLightMode ? 'bg-white text-orange-500 border border-orange-200' : 'bg-[#FF6B00]/20 text-[#FF6B00] border border-[#FF6B00]/30'}`}>
                       <span className="text-xs font-medium">2</span>
                     </div>
                     <p className={`text-xs ${isLightMode ? 'text-gray-700' : 'text-gray-200'}`}>Organize tarefas em ordem de prioridade</p>
                   </div>
-                  
+
                   <div className="flex items-center gap-3">
                     <div className={`w-6 h-6 rounded-full flex items-center justify-center ${isLightMode ? 'bg-white text-orange-500 border border-orange-200' : 'bg-[#FF6B00]/20 text-[#FF6B00] border border-[#FF6B00]/30'}`}>
                       <span className="text-xs font-medium">3</span>

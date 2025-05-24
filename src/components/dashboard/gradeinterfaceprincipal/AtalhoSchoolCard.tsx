@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Pencil, BookOpen, Calendar, Users, Brain, Settings, MessageSquare, ChevronRight, Grid, Sparkles, Plus } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import { motion } from "framer-motion";
@@ -8,6 +8,51 @@ export default function AtalhoSchoolCard() {
   const { theme } = useTheme();
   const isLightMode = theme === "light";
   const [hoveredAtalho, setHoveredAtalho] = useState<number | null>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  
+  // Observer para ajustar o tamanho do card de acordo com o card "Seu Foco Hoje"
+  useEffect(() => {
+    // Função para observar mudanças no card "Seu Foco Hoje"
+    const adjustHeight = () => {
+      const focoHojeCard = document.querySelector('[data-card-type="foco-hoje"]') as HTMLElement;
+      const atalhoCard = cardRef.current;
+      
+      if (focoHojeCard && atalhoCard) {
+        // Atualiza a altura do card para corresponder ao "Seu Foco Hoje"
+        const focoHojeHeight = focoHojeCard.offsetHeight;
+        atalhoCard.style.height = `${focoHojeHeight}px`;
+      }
+    };
+
+    // Configura um observador de mutação para detectar mudanças no card "Seu Foco Hoje"
+    const observer = new MutationObserver(adjustHeight);
+    const focoHojeCard = document.querySelector('[data-card-type="foco-hoje"]');
+    
+    if (focoHojeCard) {
+      observer.observe(focoHojeCard, { 
+        attributes: true, 
+        childList: true, 
+        subtree: true,
+        attributeFilter: ['style', 'class']
+      });
+      
+      // Ajusta a altura inicialmente
+      adjustHeight();
+    }
+    
+    // Também ajusta a altura quando a janela é redimensionada
+    window.addEventListener('resize', adjustHeight);
+    
+    // Ajusta periodicamente para garantir que está sincronizado
+    const intervalId = setInterval(adjustHeight, 500);
+    
+    // Limpa o observador quando o componente é desmontado
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', adjustHeight);
+      clearInterval(intervalId);
+    };
+  }, []);
 
   // Lista de atalhos padrão
   const atalhos = [
@@ -58,6 +103,7 @@ export default function AtalhoSchoolCard() {
 
   return (
     <motion.div 
+      ref={cardRef}
       className={`rounded-xl overflow-hidden ${isLightMode ? 'bg-white' : 'bg-gradient-to-br from-[#001e3a] to-[#00162b]'} shadow-lg ${isLightMode ? 'border border-gray-200' : 'border border-white/10'} flex-shrink-0 flex flex-col h-full w-full`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
