@@ -1,0 +1,133 @@
+Card "Atalhos School" – Sistema de Personalização Detalhado
+I. Design do Card "Atalhos School" (Como na Imagem, com Refinamentos):
+Título: "Atalhos School" (ou "Meus Atalhos" – mais pessoal).
+Ícone: Grade/Ícone de atalhos (como na imagem – bom!).
+Texto: "Acesso rápido às ferramentas".
+Botão "Editar" (Lápis): No canto superior direito do card (como na imagem – perfeito!).
+Corpo do Card (Grade de Atalhos):
+Layout: Grade 2x3 (6 atalhos visíveis).
+Cada Botão de Atalho:
+Fundo: Azul escuro (como na imagem).
+Cantos: Arredondados.
+Ícone (Centralizado, Acima do Texto): Grande, representando a seção/ferramenta.
+Cores dos Ícones: Usar as cores de destaque de cada seção (ex: laranja para "Agenda", roxo para "Epictus IA").
+Texto (Abaixo do Ícone): Nome da seção/ferramenta.
+Fonte: Open Sans, Regular/SemiBold.
+Cor: Branca.
+Efeito Hover:
+Leve aumento de escala do botão.
+Opcional: Mudança sutil na cor de fundo (ex: para um azul um pouco mais claro).
+Botão "Adicionar" (Sétimo Atalho – Se houver espaço):
+Design: Semelhante aos outros atalhos, mas com:
+Ícone: "+" (grande, centralizado).
+Texto: "Adicionar".
+Alternativa (se não houver espaço para um sétimo botão): O botão "Personalizar Atalhos" no rodapé cumpre essa função.
+Rodapé do Card:
+Botão "Personalizar Atalhos >"
+Design: Laranja (cor de destaque), texto branco, Montserrat Bold.
+Posição: Alinhado à direita (ou centralizado).
+Funcionalidade: Ao clicar, abre o modal de personalização (descrito abaixo).
+II. Fluxo de Interação (Personalização dos Atalhos):
+Clique no Botão "Personalizar Atalhos >" (ou no Botão "Editar" / Lápis no Topo do Card / Botão "Adicionar"):
+Feedback Visual Imediato:
+Efeito de clique no botão.
+Ação:
+A interface principal (Painel) atrás do modal fica com um efeito de "blur" (desfoque) e/ou um overlay escuro semi-transparente.
+Exceção: O card "Atalhos School" permanece nítido e sem desfoque/overlay, para que o usuário veja as mudanças em tempo real.
+Um modal (ou painel lateral) é aberto no lado esquerdo da tela.
+Modal "Personalizar Atalhos Rápidos" (Lado Esquerdo):
+Design do Modal:
+Formato: Painel vertical que ocupa uma parte da altura da tela (ex: 70-80% da altura), posicionado à esquerda.
+Fundo: Branco (ou cinza claríssimo – para contraste com o fundo escuro do Painel).
+Cantos: Arredondados (apenas os cantos direitos, se estiver encostado na borda esquerda da tela).
+Sombra: Sutil na borda direita (para dar profundidade).
+Cabeçalho do Modal:
+Título: "Personalizar Atalhos Rápidos" (fonte: Montserrat, Bold, cor: azul escuro).
+Botão de Fechar ("X"): Canto superior direito do modal.
+Opcional: Pequena descrição: "Escolha até 6 atalhos para seu acesso rápido."
+Corpo do Modal (Duas Seções Principais):
+Seção 1: "Meus Atalhos Atuais" (Topo):
+Layout: Miniatura dos 6 slots de atalho do card (visualização idêntica à do card, mas menor).
+Funcionalidade:
+Permitir reordenar os atalhos arrastando e soltando (drag and drop).
+Em cada atalho já adicionado:
+Um pequeno ícone "X" (vermelho) no canto para remover o atalho.
+Ao passar o mouse: O fundo pode mudar para um tom de cinza claro e o ícone "X" fica mais visível.
+Slots Vazios: Se houver menos de 6 atalhos, os slots vazios podem ter um placeholder (ex: ícone de "+" com texto "Adicionar").
+Seção 2: "Atalhos Disponíveis" (Abaixo):
+Título da Seção: "Adicionar Atalhos" (ou "Ferramentas Disponíveis").
+Layout: Lista vertical com rolagem (se houver muitas opções).
+Cada Item da Lista (Representando uma Seção/Ferramenta da Plataforma):
+Ícone (da seção/ferramenta).
+Nome da Seção/Ferramenta (ex: "Biblioteca", "Agenda", "Conexão Expert", "Epictus IA - Gerador de Resumos", "Criar Novo Pedido de Ajuda", "Minha Turma de Física", etc.).
+Botão "+" (ou "Adicionar"):
+Ícone: "+" (verde ou azul).
+Ação: Ao clicar, adiciona o atalho ao primeiro slot vazio na seção "Meus Atalhos Atuais" (com uma animação sutil).
+Se todos os slots estiverem cheios: Mostrar uma mensagem (ex: "Limite de 6 atalhos atingido. Remova um para adicionar outro.").
+Categorização (Opcional – se houver muitos atalhos disponíveis):
+Agrupar os atalhos por categoria (ex: "Principais Seções", "Ferramentas Epictus IA", "Minhas Turmas Ativas").
+Usar títulos de seção e/ou elementos expansíveis.
+Rodapé do Modal:
+Botão "Salvar Alterações":
+Fundo: Laranja.
+Texto: Branco.
+Ação: Salva as alterações e fecha o modal.
+Botão "Cancelar":
+Fundo: Transparente.
+Texto: Cinza.
+Ação: Fecha o modal sem salvar as alterações.
+Interação com o Modal:
+Adicionar Atalho:
+Usuário localiza a ferramenta desejada na lista "Atalhos Disponíveis".
+Clica no botão "+" ao lado da ferramenta.
+Reação:
+O atalho é adicionado visualmente ao primeiro slot vazio na seção "Meus Atalhos Atuais" (no topo do modal).
+Uma animação sutil (ex: o atalho "voa" da lista para o slot) pode ser usada.
+O card "Atalhos School" (no Painel, atrás do modal) é atualizado em tempo real para refletir a adição.
+O botão "+" na lista "Atalhos Disponíveis" pode mudar para um "✓" (check) ou ficar desabilitado para indicar que já foi adicionado.
+Remover Atalho:
+Na seção "Meus Atalhos Atuais", o usuário clica no ícone "X" em um atalho.
+Reação:
+O atalho é removido do slot (com uma animação sutil – ex: fade out).
+O card "Atalhos School" é atualizado em tempo real.
+O botão "+" correspondente na lista "Atalhos Disponíveis" volta ao estado normal.
+Reordenar Atalhos:
+Na seção "Meus Atalhos Atuais", o usuário clica e arrasta um atalho para um novo slot.
+Reação:
+Feedback visual durante o arrastar (ex: o atalho fica semi-transparente, os outros atalhos se movem para dar espaço).
+Ao soltar, o atalho é posicionado no novo slot.
+O card "Atalhos School" é atualizado em tempo real.
+Salvar Alterações:
+Usuário clica no botão "Salvar Alterações".
+Reação:
+As alterações são salvas permanentemente no perfil do usuário (banco de dados).
+O modal é fechado com uma animação suave (ex: slide out para a esquerda).
+O efeito de blur/overlay na página principal é removido.
+O card "Atalhos School" exibe a configuração finalizada.
+Cancelar:
+Usuário clica no botão "Cancelar" ou no "X" do modal.
+Reação:
+Todas as alterações feitas no modal são descartadas.
+O modal é fechado.
+O efeito de blur/overlay é removido.
+O card "Atalhos School" volta ao seu estado anterior (antes de abrir o modal).
+IV. Exemplos de Atalhos Disponíveis (Além das Seções Principais):
+Funcionalidades Específicas do Epictus IA:
+"Gerar Resumo Rápido"
+"Criar Mapa Mental"
+"Simulador de Provas"
+"Planner de Estudos"
+Ações Rápidas:
+"Criar Novo Pedido de Ajuda"
+"Adicionar Nova Tarefa na Agenda"
+"Iniciar Chat com Mentor IA"
+Links para Turmas/Grupos Específicos (Mais Usados):
+O Mentor IA pode sugerir os links diretos para as turmas ou grupos que o aluno mais acessa.
+Links para Materiais Favoritos/Recentes (Biblioteca):
+Acesso direto a um material específico que o aluno usa com frequência.
+V. Considerações Adicionais:
+Limite de Atalhos: Definir um limite (ex: 6 ou 8 atalhos) para manter o card visualmente limpo e funcional.
+Ícones Consistentes: Usar os mesmos ícones que são usados nas respectivas seções/funcionalidades da plataforma.
+Textos Curtos: Os nomes dos atalhos devem ser curtos e claros.
+Desempenho: A atualização em tempo real do card no Painel (enquanto o modal está aberto) deve ser eficiente e não causar lentidão.
+Acessibilidade: O modal e todas as interações (arrastar e soltar, cliques) devem ser acessíveis via teclado e compatíveis com leitores de tela.
