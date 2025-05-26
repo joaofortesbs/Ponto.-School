@@ -29,6 +29,8 @@ interface PersonalizarAtalhosModalProps {
 
 // Helper to determine a category from color
 const getCategoriaFromCor = (cor: string): string => {
+  if (!cor || typeof cor !== 'string') return "Outros";
+  
   if (cor.includes("blue")) return "Aprendizado";
   if (cor.includes("green")) return "Organização";
   if (cor.includes("purple")) return "Ferramentas";
