@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { X, Plus, Check, ArrowRight, Move, Search, Filter, Sparkles, AlertCircle } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
@@ -59,7 +60,7 @@ export default function PersonalizarAtalhosModal({
       // Show max limit reached message
       return;
     }
-
+    
     // Add the atalho if not already in selected
     if (!selectedAtalhos.some((a) => a.id === atalho.id)) {
       setSelectedAtalhos([...selectedAtalhos, atalho]);
@@ -83,11 +84,11 @@ export default function PersonalizarAtalhosModal({
   const handleDragEnd = (result: any) => {
     setIsDragging(false);
     if (!result.destination) return;
-
+    
     const items = Array.from(selectedAtalhos);
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
-
+    
     setSelectedAtalhos(items);
   };
 
@@ -132,7 +133,7 @@ export default function PersonalizarAtalhosModal({
         {/* Elementos decorativos de fundo */}
         <div className="absolute -right-24 -top-24 w-64 h-64 bg-orange-500/10 rounded-full blur-3xl opacity-70 animate-pulse" style={{ animationDuration: '8s' }}></div>
         <div className="absolute -left-24 -bottom-24 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl opacity-60" style={{ animationDuration: '12s' }}></div>
-
+        
         <DialogHeader className="px-7 pt-7 relative z-10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -168,7 +169,7 @@ export default function PersonalizarAtalhosModal({
             </motion.div>
           </div>
         </DialogHeader>
-
+        
         <AnimatePresence>
           {showTip && (
             <motion.div 
@@ -198,7 +199,7 @@ export default function PersonalizarAtalhosModal({
             </motion.div>
           )}
         </AnimatePresence>
-
+        
         <div className="flex-1 overflow-hidden flex flex-col gap-5 px-7 py-3 relative z-10">
           {/* Current shortcuts section with premium design */}
           <div className={`p-5 rounded-2xl backdrop-blur-sm ${
@@ -223,7 +224,7 @@ export default function PersonalizarAtalhosModal({
                 {selectedAtalhos.length}/{maxAtalhos}
               </Badge>
             </h3>
-
+            
             <DragDropContext onDragEnd={handleDragEnd} onDragStart={handleDragStart}>
               <Droppable droppableId="atalhos" direction="horizontal">
                 {(provided) => (
@@ -264,17 +265,18 @@ export default function PersonalizarAtalhosModal({
                                 transition={{ repeat: Infinity, duration: 2 }}
                               />
                             )}
-
-                            <motion.div 
+                            
+                            <motion.button 
+                              onClick={() => handleRemoveAtalho(atalho.id)}
                               initial={{ scale: 0, opacity: 0 }}
                               whileHover={{ scale: 1.2, backgroundColor: '#f43f5e' }}
                               whileTap={{ scale: 0.9 }}
                               animate={{ scale: 1, opacity: 1, transition: { delay: 0.1 } }}
-                              className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all z-10 shadow-md"
+                              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all z-10 shadow-md"
                             >
-                              <X className="w-3 h-3" />
-                            </motion.div>
-
+                              <X className="w-3.5 h-3.5" />
+                            </motion.button>
+                            
                             <motion.div 
                               whileHover={{ scale: 1.08, y: -2 }}
                               transition={{ type: "spring", stiffness: 400, damping: 10 }}
@@ -282,11 +284,11 @@ export default function PersonalizarAtalhosModal({
                             >
                               {atalho.icone}
                             </motion.div>
-
+                            
                             <span className="text-xs font-medium mt-3 text-center text-white px-1">
                               {atalho.nome}
                             </span>
-
+                            
                             {/* Dragging visual indicator */}
                             {snapshot.isDragging && (
                               <motion.div 
@@ -302,7 +304,7 @@ export default function PersonalizarAtalhosModal({
                         )}
                       </Draggable>
                     ))}
-
+                    
                     {/* Empty slots with premium design */}
                     {Array.from({ length: maxAtalhos - selectedAtalhos.length }).map((_, index) => (
                       <motion.div 
@@ -343,7 +345,7 @@ export default function PersonalizarAtalhosModal({
                 )}
               </Droppable>
             </DragDropContext>
-
+            
             {selectedAtalhos.length >= maxAtalhos && (
               <motion.div 
                 initial={{ opacity: 0, y: 10 }}
@@ -362,7 +364,7 @@ export default function PersonalizarAtalhosModal({
               </motion.div>
             )}
           </div>
-
+          
           <div className="relative py-2">
             <Separator className={isLightMode ? 'bg-gradient-to-r from-gray-200 via-orange-200/50 to-gray-200' : 'bg-gradient-to-r from-gray-700/30 via-[#FF6B00]/20 to-gray-700/30'} />
             <div className="absolute inset-x-0 top-1/2 flex justify-center">
@@ -375,7 +377,7 @@ export default function PersonalizarAtalhosModal({
               </div>
             </div>
           </div>
-
+          
           {/* Search and filter section */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 mt-2">
             <div className="relative flex-1 group">
@@ -416,7 +418,7 @@ export default function PersonalizarAtalhosModal({
               ))}
             </div>
           </div>
-
+          
           {/* Available shortcuts section with improved design */}
           <div className="flex-1 overflow-hidden flex flex-col">
             <h3 className={`text-md font-semibold mb-3 ${isLightMode ? 'text-gray-800' : 'text-gray-100'} flex items-center`}>
@@ -428,7 +430,7 @@ export default function PersonalizarAtalhosModal({
                 {filteredDisponiveis.length}
               </Badge>
             </h3>
-
+            
             <div className="flex-1 overflow-y-auto pr-2 rounded-lg space-y-2 custom-scrollbar">
               {filteredDisponiveis.length === 0 ? (
                 <motion.div 
@@ -504,7 +506,7 @@ export default function PersonalizarAtalhosModal({
                           </Badge>
                         </div>
                       </div>
-
+                      
                       <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                         <Button
                           size="sm"
@@ -553,10 +555,10 @@ export default function PersonalizarAtalhosModal({
             background: ${isLightMode ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.25)'};
           }
         `}</style>
-
+        
         <DialogFooter className="px-7 py-5 border-t border-gray-100 dark:border-gray-800/50 gap-3 relative z-10">
           <div className="absolute inset-0 bg-gradient-to-t from-orange-50/20 to-transparent dark:from-[#FF6B00]/5 dark:to-transparent opacity-70"></div>
-
+          
           <motion.div 
             whileHover={{ scale: 1.03, x: -2 }}
             whileTap={{ scale: 0.97 }}
@@ -573,7 +575,7 @@ export default function PersonalizarAtalhosModal({
               Cancelar
             </Button>
           </motion.div>
-
+          
           <motion.div 
             whileHover={{ scale: 1.03, x: 1 }}
             whileTap={{ scale: 0.97 }}
