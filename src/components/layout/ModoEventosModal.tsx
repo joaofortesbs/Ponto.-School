@@ -25,6 +25,7 @@ import {
   TreePine,
   Flame,
   Theater,
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/ThemeProvider";
@@ -44,6 +45,9 @@ interface EventMode {
   color: string;
   bgColor: string;
   neonColor: string;
+  releaseStart?: string;
+  releaseEnd?: string;
+  isLocked?: boolean;
 }
 
 export default function ModoEventosModal({
@@ -53,6 +57,28 @@ export default function ModoEventosModal({
   const { theme } = useTheme();
   const isLightMode = theme === 'light';
   
+  // Função para verificar se um modo está liberado
+  const isModeUnlocked = (releaseStart?: string, releaseEnd?: string) => {
+    if (!releaseStart || !releaseEnd) return true;
+    
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    
+    // Parse das datas no formato DD/MM
+    const [startDay, startMonth] = releaseStart.split('/').map(Number);
+    const [endDay, endMonth] = releaseEnd.split('/').map(Number);
+    
+    const startDate = new Date(currentYear, startMonth - 1, startDay);
+    const endDate = new Date(currentYear, endMonth - 1, endDay);
+    
+    // Se a data de fim é no ano seguinte (caso do Fim de Ano)
+    if (endMonth < startMonth) {
+      endDate.setFullYear(currentYear + 1);
+    }
+    
+    return now >= startDate && now <= endDate;
+  };
+
   const [eventModes, setEventModes] = useState<EventMode[]>([
     {
       id: "carnaval",
@@ -64,6 +90,9 @@ export default function ModoEventosModal({
       bgColor: "rgba(255, 20, 147, 0.1)",
       neonColor: "#FF1493",
       enabled: false,
+      releaseStart: "09/02",
+      releaseEnd: "23/02",
+      isLocked: !isModeUnlocked("09/02", "23/02"),
     },
     {
       id: "festa-junina",
@@ -108,6 +137,9 @@ export default function ModoEventosModal({
       bgColor: "rgba(128, 0, 128, 0.1)",
       neonColor: "#800080",
       enabled: false,
+      releaseStart: "13/10",
+      releaseEnd: "03/11",
+      isLocked: !isModeUnlocked("13/10", "03/11"),
     },
     {
       id: "natal",
@@ -119,6 +151,9 @@ export default function ModoEventosModal({
       bgColor: "rgba(220, 20, 60, 0.1)",
       neonColor: "#DC143C",
       enabled: false,
+      releaseStart: "15/12",
+      releaseEnd: "29/12",
+      isLocked: !isModeUnlocked("15/12", "29/12"),
     },
     {
       id: "final-ano",
@@ -130,6 +165,9 @@ export default function ModoEventosModal({
       bgColor: "rgba(255, 215, 0, 0.1)",
       neonColor: "#FFD700",
       enabled: false,
+      releaseStart: "26/12",
+      releaseEnd: "12/01",
+      isLocked: !isModeUnlocked("26/12", "12/01"),
     },
   ]);
 
@@ -139,6 +177,13 @@ export default function ModoEventosModal({
 
   // Função para ativar apenas um modo por vez
   const toggleEventMode = (id: string) => {
+    const mode = eventModes.find(m => m.id === id);
+    
+    // Não permitir ativar modos bloqueados
+    if (mode?.isLocked) {
+      return;
+    }
+    
     setEventModes(prev =>
       prev.map(mode => ({
         ...mode,
@@ -390,7 +435,7 @@ export default function ModoEventosModal({
                           rotateY: style.rotateY + 2,
                         } : {}}
                         onClick={() => {
-                          if (isCenter) {
+                          if (isCenter && !mode.isLocked) {
                             toggleEventMode(mode.id);
                           } else if (!isCenter) {
                             setCurrentIndex(index);
@@ -474,8 +519,51 @@ export default function ModoEventosModal({
                             />
                           )}
 
+                          {/* Overlay de bloqueio para modos sazonais */}
+                          {mode.isLocked && (
+                            <motion.div
+                              className="absolute inset-0 rounded-3xl z-20 flex flex-col items-center justify-center"
+                              style={{
+                                background: isLightMode 
+                                  ? 'linear-gradient(135deg, rgba(200, 200, 200, 0.85) 0%, rgba(150, 150, 150, 0.85) 100%)'
+                                  : 'linear-gradient(135deg, rgba(100, 100, 100, 0.85) 0%, rgba(60, 60, 60, 0.85) 100%)',
+                                backdropFilter: 'blur(2px)',
+                              }}
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              transition={{ duration: 0.3 }}
+                            >
+                              {/* Ícone do cadeado */}
+                              <motion.div
+                                className="mb-3"
+                                animate={{ 
+                                  rotate: [0, -5, 5, 0],
+                                  scale: [1, 1.1, 1]
+                                }}
+                                transition={{ 
+                                  duration: 2,
+                                  repeat: Infinity,
+                                  ease: "easeInOut"
+                                }}
+                              >
+                                <Lock className="h-8 w-8 text-gray-600 dark:text-gray-300" />
+                              </motion.div>
+                              
+                              {/* Mensagem de liberação */}
+                              <div className="text-center px-4">
+                                <p className={`text-xs font-medium leading-tight ${
+                                  isLightMode ? 'text-gray-700' : 'text-gray-300'
+                                }`}>
+                                  Esse Modo será liberado dos dias "{mode.releaseStart}" até os dias "{mode.releaseEnd}"!
+                                </p>
+                              </div>
+                            </motion.div>
+                          )}
+
                           {/* Card Content */}
-                          <div className="relative flex flex-col items-center text-center h-full justify-center space-y-4">
+                          <div className={`relative flex flex-col items-center text-center h-full justify-center space-y-4 ${
+                            mode.isLocked ? 'filter grayscale opacity-30' : ''
+                          }`}>
                             {/* Animated Icon */}
                             <motion.div 
                               className="w-16 h-16 rounded-2xl flex items-center justify-center relative"
