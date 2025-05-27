@@ -70,6 +70,7 @@ import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import MessageReplyModal from "@/components/layout/MessageReplyModal";
+import ModoEventosModal from "@/components/layout/ModoEventosModal";
 
 export default function Header() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -117,6 +118,7 @@ export default function Header() {
     useState(false);
   const [isDark, setIsDark] = useState(false); // Added isDark state
   const [theme, setTheme] = useState("light"); // Added theme state
+  const [isModoEventosOpen, setIsModoEventosOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -1319,10 +1321,7 @@ export default function Header() {
                 size="icon"
                 className="relative hover:bg-brand-card dark:hover:bg-white/5 group transition-all duration-300"
                 aria-label="Modo Eventos"
-                onClick={() => {
-                  // Implementar navegação para eventos ou modal
-                  console.log("Modo Eventos ativado");
-                }}
+                onClick={() => setIsModoEventosOpen(true)}
               >
                 <div className="relative">
                   <CalendarIcon className="h-5 w-5 text-brand-black dark:text-white group-hover:text-[#FF6B00] transition-colors duration-300" />
@@ -1884,6 +1883,12 @@ export default function Header() {
           </Tooltip>
         </TooltipProvider>
       </div>
+
+      {/* Modo Eventos Modal */}
+      <ModoEventosModal
+        open={isModoEventosOpen}
+        onOpenChange={setIsModoEventosOpen}
+      />
 
       {/* Message Reply Modal */}
       <MessageReplyModal
