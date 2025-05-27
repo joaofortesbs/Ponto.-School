@@ -128,11 +128,15 @@ export default function ModoEventosModal({
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Função para ativar apenas um modo por vez
   const toggleEventMode = (id: string) => {
+    if (id === 'ponto-school') return; // Ponto. School não pode ser desativado
+    
     setEventModes(prev =>
-      prev.map(mode =>
-        mode.id === id ? { ...mode, enabled: !mode.enabled } : mode
-      )
+      prev.map(mode => ({
+        ...mode,
+        enabled: mode.id === id ? !mode.enabled : mode.id === 'ponto-school' ? true : false
+      }))
     );
   };
 
@@ -206,56 +210,30 @@ export default function ModoEventosModal({
   // Easing customizado
   const customEasing = [0.25, 0.8, 0.25, 1];
 
-  const enabledCount = eventModes.filter(mode => mode.enabled).length;
+  // Encontrar o modo ativo atual
+  const activeModes = eventModes.filter(mode => mode.enabled);
+  const activeMode = activeModes.length > 0 ? activeModes[0] : eventModes.find(m => m.id === 'ponto-school');
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="w-[900px] h-[650px] max-w-none p-0 border-0 bg-transparent overflow-hidden">
         <div className="relative w-full h-full">
-          {/* Ultra-sophisticated background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#0A0F1C] via-[#1A1F2E] to-[#0D1117] rounded-3xl border border-[#FF6B00]/10 shadow-[0_0_100px_rgba(255,107,0,0.1)] backdrop-blur-3xl">
-            {/* Perspectiva 3D container */}
+          {/* Background com estilo do modal de boas-vindas */}
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-xl rounded-3xl border border-[#FF6B00]/30 shadow-[0_0_100px_rgba(255,107,0,0.2)]">
+            {/* Glassmorphism overlay com tom laranja */}
+            <div className="absolute inset-0 bg-gradient-to-br from-[#FF6B00]/10 via-black/20 to-[#FF8C40]/5 rounded-3xl" />
+            
+            {/* Grid sutil */}
             <div 
-              className="absolute inset-0 overflow-hidden rounded-3xl"
-              style={{ perspective: '1200px' }}
-            >
-              {/* Grid sutil e elementos flutuantes */}
-              <div 
-                className="absolute inset-0 opacity-[0.02]"
-                style={{
-                  backgroundImage: `
-                    linear-gradient(rgba(255, 107, 0, 0.1) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(255, 107, 0, 0.1) 1px, transparent 1px)
-                  `,
-                  backgroundSize: '40px 40px'
-                }}
-              />
-              
-              {/* Floating particles */}
-              {[...Array(6)].map((_, i) => (
-                <motion.div
-                  key={i}
-                  className="absolute w-1 h-1 bg-[#FF6B00]/30 rounded-full"
-                  style={{
-                    top: `${20 + i * 15}%`,
-                    left: `${10 + i * 12}%`,
-                  }}
-                  animate={{
-                    y: [0, -10, 0],
-                    opacity: [0.3, 0.8, 0.3],
-                  }}
-                  transition={{
-                    duration: 3 + i * 0.5,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
-                />
-              ))}
-            </div>
-
-            {/* Sophisticated glow effects */}
-            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[600px] h-[300px] bg-[#FF6B00]/[0.03] rounded-full blur-3xl" />
-            <div className="absolute bottom-0 right-0 w-[400px] h-[200px] bg-[#FF8C40]/[0.02] rounded-full blur-3xl" />
+              className="absolute inset-0 opacity-[0.02] rounded-3xl"
+              style={{
+                backgroundImage: `
+                  linear-gradient(rgba(255, 107, 0, 0.1) 1px, transparent 1px),
+                  linear-gradient(90deg, rgba(255, 107, 0, 0.1) 1px, transparent 1px)
+                `,
+                backgroundSize: '40px 40px'
+              }}
+            />
           </div>
 
           {/* Close button */}
@@ -263,7 +241,7 @@ export default function ModoEventosModal({
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="absolute top-6 right-6 z-50 h-9 w-9 rounded-full bg-black/10 hover:bg-black/20 border border-white/5 text-white/60 hover:text-white transition-all duration-700 group backdrop-blur-sm"
+            className="absolute top-6 right-6 z-50 h-9 w-9 rounded-full bg-black/20 hover:bg-black/30 border border-[#FF6B00]/20 text-white/60 hover:text-white transition-all duration-700 group backdrop-blur-sm"
           >
             <X className="h-4 w-4 group-hover:rotate-90 transition-transform duration-700" />
           </Button>
@@ -278,19 +256,19 @@ export default function ModoEventosModal({
                   animate={{ rotateY: [0, 5, -5, 0] }}
                   transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
                 >
-                  <div className="relative bg-gradient-to-br from-[#FF6B00]/10 to-[#FF8C40]/5 p-5 rounded-2xl border border-[#FF6B00]/10 backdrop-blur-sm">
+                  <div className="relative bg-[#FF6B00]/10 p-5 rounded-2xl border border-[#FF6B00]/20 backdrop-blur-sm">
                     <Calendar className="h-8 w-8 text-[#FF6B00]" />
                     
                     {/* Orbiting elements */}
                     <motion.div 
-                      className="absolute -top-1.5 -right-1.5 bg-gradient-to-br from-[#FFD700]/20 to-[#FF8C40]/10 p-1 rounded-lg border border-[#FFD700]/20 backdrop-blur-sm"
+                      className="absolute -top-1.5 -right-1.5 bg-[#FFD700]/10 p-1 rounded-lg border border-[#FFD700]/20 backdrop-blur-sm"
                       animate={{ rotate: 360 }}
                       transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
                     >
                       <Sparkles className="h-2.5 w-2.5 text-[#FFD700]" />
                     </motion.div>
                     <motion.div 
-                      className="absolute -bottom-1.5 -left-1.5 bg-gradient-to-br from-[#FF8C40]/20 to-[#FF6B00]/10 p-1 rounded-lg border border-[#FF8C40]/20 backdrop-blur-sm"
+                      className="absolute -bottom-1.5 -left-1.5 bg-[#FF8C40]/10 p-1 rounded-lg border border-[#FF8C40]/20 backdrop-blur-sm"
                       animate={{ rotate: -360 }}
                       transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
                     >
@@ -317,7 +295,7 @@ export default function ModoEventosModal({
               {/* Navigation arrows */}
               <motion.button
                 onClick={prevSlide}
-                className="absolute left-8 z-20 h-12 w-12 rounded-full bg-black/20 hover:bg-black/30 border border-white/10 text-white/60 hover:text-white transition-all duration-700 backdrop-blur-sm shadow-lg flex items-center justify-center group"
+                className="absolute left-8 z-20 h-12 w-12 rounded-full bg-black/20 hover:bg-black/30 border border-[#FF6B00]/20 text-white/60 hover:text-white transition-all duration-700 backdrop-blur-sm shadow-lg flex items-center justify-center group"
                 whileHover={{ scale: 1.1, boxShadow: "0 0 20px rgba(255, 107, 0, 0.3)" }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -385,16 +363,16 @@ export default function ModoEventosModal({
                             width: '200px',
                             height: '280px',
                             background: `linear-gradient(135deg, 
-                              rgba(255, 255, 255, ${isCenter ? 0.12 : 0.08}) 0%, 
-                              rgba(255, 255, 255, ${isCenter ? 0.06 : 0.03}) 100%)`,
-                            borderColor: mode.enabled ? `${mode.neonColor}60` : 'rgba(255, 255, 255, 0.1)',
+                              rgba(255, 107, 0, ${isCenter ? 0.08 : 0.04}) 0%, 
+                              rgba(0, 0, 0, ${isCenter ? 0.6 : 0.4}) 100%)`,
+                            borderColor: mode.enabled ? `${mode.neonColor}60` : 'rgba(255, 107, 0, 0.2)',
                             boxShadow: isCenter 
                               ? `0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 30px ${mode.neonColor}40`
                               : '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
                           }}
                         >
                           {/* Neon pulsing border */}
-                          {isCenter && (
+                          {isCenter && mode.enabled && (
                             <motion.div
                               className="absolute inset-0 rounded-3xl"
                               style={{
@@ -467,7 +445,7 @@ export default function ModoEventosModal({
                                   className="w-14 h-7 rounded-full border-2 transition-all duration-500 relative flex items-center"
                                   style={{
                                     backgroundColor: mode.enabled ? `${mode.color}30` : 'rgba(0, 0, 0, 0.3)',
-                                    borderColor: mode.enabled ? `${mode.color}80` : 'rgba(255, 255, 255, 0.2)',
+                                    borderColor: mode.enabled ? `${mode.color}80` : 'rgba(255, 107, 0, 0.2)',
                                     boxShadow: mode.enabled ? `0 0 15px ${mode.color}50` : 'none',
                                   }}
                                 >
@@ -517,7 +495,7 @@ export default function ModoEventosModal({
               {/* Navigation arrows */}
               <motion.button
                 onClick={nextSlide}
-                className="absolute right-8 z-20 h-12 w-12 rounded-full bg-black/20 hover:bg-black/30 border border-white/10 text-white/60 hover:text-white transition-all duration-700 backdrop-blur-sm shadow-lg flex items-center justify-center group"
+                className="absolute right-8 z-20 h-12 w-12 rounded-full bg-black/20 hover:bg-black/30 border border-[#FF6B00]/20 text-white/60 hover:text-white transition-all duration-700 backdrop-blur-sm shadow-lg flex items-center justify-center group"
                 whileHover={{ scale: 1.1, boxShadow: "0 0 20px rgba(255, 107, 0, 0.3)" }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -533,7 +511,7 @@ export default function ModoEventosModal({
                   onClick={() => setCurrentIndex(index)}
                   className="w-2 h-2 rounded-full transition-all duration-500"
                   style={{
-                    backgroundColor: index === currentIndex ? '#FF6B00' : 'rgba(255, 255, 255, 0.3)',
+                    backgroundColor: index === currentIndex ? '#FF6B00' : 'rgba(255, 107, 0, 0.3)',
                     boxShadow: index === currentIndex ? '0 0 10px #FF6B0080' : 'none',
                   }}
                   whileHover={{ scale: 1.5 }}
@@ -544,35 +522,67 @@ export default function ModoEventosModal({
 
             {/* Footer */}
             <div className="flex flex-col items-center space-y-4">
-              {/* Status */}
-              <motion.div 
-                className="inline-flex items-center gap-3 px-5 py-3 bg-black/10 border border-white/10 rounded-full backdrop-blur-sm"
-                animate={{ 
-                  boxShadow: enabledCount > 0 
-                    ? ['0 0 10px rgba(255, 107, 0, 0.3)', '0 0 20px rgba(255, 107, 0, 0.5)', '0 0 10px rgba(255, 107, 0, 0.3)']
-                    : 'none'
-                }}
-                transition={{ duration: 2, repeat: Infinity }}
-              >
+              {/* Modo Ativo Display - Estilo ultra sofisticado */}
+              {activeMode && (
                 <motion.div 
-                  className="w-2 h-2 rounded-full"
-                  style={{ backgroundColor: enabledCount > 0 ? '#FF6B00' : 'rgba(255, 255, 255, 0.3)' }}
-                  animate={enabledCount > 0 ? { scale: [1, 1.3, 1] } : {}}
-                  transition={{ duration: 1.5, repeat: Infinity }}
-                />
-                <span className="text-white/80 text-sm font-light">
-                  {enabledCount} {enabledCount === 1 ? 'modo ativado' : 'modos ativados'}
-                </span>
-              </motion.div>
+                  className="flex items-center gap-4 px-6 py-4 bg-black/20 border border-[#FF6B00]/20 rounded-2xl backdrop-blur-sm"
+                  animate={{ 
+                    boxShadow: ['0 0 20px rgba(255, 107, 0, 0.2)', '0 0 30px rgba(255, 107, 0, 0.4)', '0 0 20px rgba(255, 107, 0, 0.2)']
+                  }}
+                  transition={{ duration: 3, repeat: Infinity }}
+                >
+                  {/* Ícone do modo ativo */}
+                  <motion.div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center relative"
+                    style={{
+                      background: `linear-gradient(135deg, ${activeMode.color}40, ${activeMode.color}20)`,
+                      border: `2px solid ${activeMode.color}60`,
+                      boxShadow: `0 0 15px ${activeMode.color}40`,
+                    }}
+                    animate={{
+                      rotate: [0, 5, -5, 0],
+                      scale: [1, 1.1, 1],
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
+                  >
+                    <activeMode.icon 
+                      className="h-5 w-5" 
+                      style={{ color: activeMode.color }}
+                    />
+                  </motion.div>
+                  
+                  {/* Nome e status */}
+                  <div className="flex flex-col">
+                    <span className="text-white font-semibold text-lg">
+                      {activeMode.name}
+                    </span>
+                    <span className="text-white/60 text-sm">
+                      Modo ativo atual
+                    </span>
+                  </div>
+                  
+                  {/* Indicador de status */}
+                  <motion.div 
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: activeMode.color }}
+                    animate={{ scale: [1, 1.3, 1], opacity: [0.8, 1, 0.8] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                  />
+                </motion.div>
+              )}
 
               {/* Action buttons */}
               <div className="flex items-center justify-center gap-4">
                 <motion.button
                   onClick={onClose}
-                  className="px-6 py-3 bg-transparent border border-white/20 text-white/80 hover:text-white hover:border-white/40 transition-all duration-500 rounded-xl backdrop-blur-sm font-light text-sm"
+                  className="px-6 py-3 bg-transparent border border-[#FF6B00]/30 text-white/80 hover:text-white hover:border-[#FF6B00]/60 transition-all duration-500 rounded-xl backdrop-blur-sm font-light text-sm"
                   whileHover={{ 
                     scale: 1.05,
-                    boxShadow: "0 5px 15px rgba(255, 255, 255, 0.1)"
+                    boxShadow: "0 5px 15px rgba(255, 107, 0, 0.2)"
                   }}
                   whileTap={{ scale: 0.95 }}
                 >
