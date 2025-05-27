@@ -525,9 +525,9 @@ export default function ModoEventosModal({
                               className="absolute inset-0 rounded-3xl z-20 flex flex-col items-center justify-center"
                               style={{
                                 background: isLightMode 
-                                  ? 'linear-gradient(135deg, rgba(200, 200, 200, 0.85) 0%, rgba(150, 150, 150, 0.85) 100%)'
-                                  : 'linear-gradient(135deg, rgba(100, 100, 100, 0.85) 0%, rgba(60, 60, 60, 0.85) 100%)',
-                                backdropFilter: 'blur(2px)',
+                                  ? 'linear-gradient(135deg, rgba(200, 200, 200, 0.25) 0%, rgba(150, 150, 150, 0.25) 100%)'
+                                  : 'linear-gradient(135deg, rgba(100, 100, 100, 0.25) 0%, rgba(60, 60, 60, 0.25) 100%)',
+                                backdropFilter: 'blur(1px)',
                               }}
                               initial={{ opacity: 0 }}
                               animate={{ opacity: 1 }}
