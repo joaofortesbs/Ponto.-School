@@ -33,8 +33,11 @@ export function ThemeProvider({
 
   useEffect(() => {
     const root = window.document.documentElement;
+    const body = window.document.body;
 
+    // Remove classes existentes
     root.classList.remove("light", "dark");
+    body.classList.remove("light", "dark");
 
     if (theme === "system") {
       const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
@@ -43,10 +46,21 @@ export function ThemeProvider({
         : "light";
 
       root.classList.add(systemTheme);
+      body.classList.add(systemTheme);
+      
+      // Adiciona atributo data-theme para melhor compatibilidade
+      root.setAttribute("data-theme", systemTheme);
       return;
     }
 
     root.classList.add(theme);
+    body.classList.add(theme);
+    root.setAttribute("data-theme", theme);
+    
+    // Força re-renderização para aplicar estilos
+    setTimeout(() => {
+      root.style.colorScheme = theme;
+    }, 0);
   }, [theme]);
 
   const value = {
