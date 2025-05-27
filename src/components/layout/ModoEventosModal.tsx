@@ -55,17 +55,6 @@ export default function ModoEventosModal({
   
   const [eventModes, setEventModes] = useState<EventMode[]>([
     {
-      id: "ponto-school",
-      name: "Ponto. School",
-      description: "Modo padrão da plataforma",
-      icon: Target,
-      gradient: "from-[#FF6B00] to-[#FF8C40]",
-      color: "#FF6B00",
-      bgColor: "rgba(255, 107, 0, 0.1)",
-      neonColor: "#FF6B00",
-      enabled: true,
-    },
-    {
       id: "carnaval",
       name: "Carnaval",
       description: "Modo festivo e colorido",
@@ -97,6 +86,17 @@ export default function ModoEventosModal({
       bgColor: "rgba(0, 206, 209, 0.1)",
       neonColor: "#00CED1",
       enabled: false,
+    },
+    {
+      id: "ponto-school",
+      name: "Ponto. School",
+      description: "Modo padrão da plataforma",
+      icon: Target,
+      gradient: "from-[#FF6B00] to-[#FF8C40]",
+      color: "#FF6B00",
+      bgColor: "rgba(255, 107, 0, 0.1)",
+      neonColor: "#FF6B00",
+      enabled: true,
     },
     {
       id: "halloween",
@@ -133,7 +133,7 @@ export default function ModoEventosModal({
     },
   ]);
 
-  const [currentIndex, setCurrentIndex] = useState(0); // Centraliza no card "Ponto. School"
+  const [currentIndex, setCurrentIndex] = useState(3); // Centraliza no card "Ponto. School" (agora na posição 3)
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -242,13 +242,13 @@ export default function ModoEventosModal({
           {/* Background com estilo do modal de boas-vindas adaptado para tema claro/escuro */}
           <div className={`absolute inset-0 backdrop-blur-xl rounded-3xl border shadow-[0_0_50px_rgba(255,107,0,0.05)] ${
             isLightMode 
-              ? 'bg-white/40 border-[#FF6B00]/20' 
+              ? 'bg-white/25 border-[#FF6B00]/20' 
               : 'bg-black/40 border-[#FF6B00]/30'
           }`}>
             {/* Glassmorphism overlay com tom laranja mais suave */}
             <div className={`absolute inset-0 rounded-3xl ${
               isLightMode
-                ? 'bg-gradient-to-br from-white/60 via-white/40 to-white/60'
+                ? 'bg-gradient-to-br from-white/35 via-gray-100/25 to-white/35'
                 : 'bg-gradient-to-br from-[#FF6B00]/05 via-black/20 to-[#FF8C40]/03'
             }`} />
             
