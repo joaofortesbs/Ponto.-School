@@ -388,66 +388,32 @@ export default function ModoEventosModal({
                             height: '280px',
                             background: isLightMode 
                               ? `linear-gradient(135deg, 
-                                  ${mode.color}${isCenter ? '08' : '03'} 0%, 
+                                  rgba(255, 107, 0, ${isCenter ? 0.05 : 0.02}) 0%, 
                                   rgba(255, 255, 255, ${isCenter ? 0.9 : 0.7}) 100%)`
                               : `linear-gradient(135deg, 
-                                  ${mode.color}${isCenter ? '12' : '06'} 0%, 
+                                  rgba(255, 107, 0, ${isCenter ? 0.08 : 0.04}) 0%, 
                                   rgba(0, 0, 0, ${isCenter ? 0.6 : 0.4}) 100%)`,
-                            borderColor: mode.enabled 
-                              ? `${mode.neonColor}80` 
-                              : isCenter 
-                                ? `${mode.neonColor}40`
-                                : 'rgba(255, 107, 0, 0.2)',
-                            borderWidth: mode.enabled ? '2px' : '1px',
+                            borderColor: mode.enabled ? `${mode.neonColor}60` : 'rgba(255, 107, 0, 0.2)',
                             boxShadow: isCenter 
                               ? isLightMode
-                                ? `0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 30px ${mode.neonColor}40, 0 0 60px ${mode.neonColor}20`
-                                : `0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 30px ${mode.neonColor}50, 0 0 80px ${mode.neonColor}25`
+                                ? `0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 30px ${mode.neonColor}30`
+                                : `0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 30px ${mode.neonColor}40`
                               : isLightMode
                                 ? '0 10px 25px -5px rgba(0, 0, 0, 0.1)'
                                 : '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
                           }}
                         >
-                          {/* Neon pulsing border - agora usando a cor específica do modo */}
+                          {/* Neon pulsing border */}
                           {isCenter && mode.enabled && (
                             <motion.div
                               className="absolute inset-0 rounded-3xl"
                               style={{
-                                background: `linear-gradient(45deg, ${mode.neonColor}60, transparent, ${mode.neonColor}60)`,
+                                background: `linear-gradient(45deg, ${mode.neonColor}40, transparent, ${mode.neonColor}40)`,
                                 backgroundSize: '200% 200%',
-                                borderRadius: 'inherit',
                               }}
                               animate={{
                                 backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
-                                opacity: [0.4, 0.9, 0.4],
-                              }}
-                              transition={{
-                                duration: 2,
-                                repeat: Infinity,
-                                ease: "easeInOut",
-                              }}
-                            />
-                          )}
-                          
-                          {/* Borda adicional para modo ativo */}
-                          {mode.enabled && (
-                            <motion.div
-                              className="absolute inset-0 rounded-3xl pointer-events-none"
-                              style={{
-                                border: `2px solid ${mode.neonColor}`,
-                                borderRadius: 'inherit',
-                                boxShadow: `
-                                  0 0 20px ${mode.neonColor}60,
-                                  0 0 40px ${mode.neonColor}40,
-                                  inset 0 0 20px ${mode.neonColor}20
-                                `,
-                              }}
-                              animate={{
-                                boxShadow: [
-                                  `0 0 20px ${mode.neonColor}60, 0 0 40px ${mode.neonColor}40, inset 0 0 20px ${mode.neonColor}20`,
-                                  `0 0 30px ${mode.neonColor}80, 0 0 60px ${mode.neonColor}50, inset 0 0 30px ${mode.neonColor}30`,
-                                  `0 0 20px ${mode.neonColor}60, 0 0 40px ${mode.neonColor}40, inset 0 0 20px ${mode.neonColor}20`
-                                ],
+                                opacity: [0.3, 0.8, 0.3],
                               }}
                               transition={{
                                 duration: 2,
@@ -463,21 +429,13 @@ export default function ModoEventosModal({
                             <motion.div 
                               className="w-16 h-16 rounded-2xl flex items-center justify-center relative"
                               style={{
-                                background: mode.enabled 
-                                  ? `linear-gradient(135deg, ${mode.color}60, ${mode.color}40)`
-                                  : `linear-gradient(135deg, ${mode.color}40, ${mode.color}20)`,
-                                border: mode.enabled 
-                                  ? `3px solid ${mode.color}80`
-                                  : `2px solid ${mode.color}50`,
-                                boxShadow: mode.enabled 
-                                  ? `0 0 30px ${mode.color}80, 0 0 60px ${mode.color}50, inset 0 0 20px ${mode.color}30`
-                                  : isCenter 
-                                    ? `0 0 20px ${mode.color}60` 
-                                    : `0 0 10px ${mode.color}30`,
+                                background: `linear-gradient(135deg, ${mode.color}40, ${mode.color}20)`,
+                                border: `2px solid ${mode.color}50`,
+                                boxShadow: isCenter ? `0 0 20px ${mode.color}60` : `0 0 10px ${mode.color}30`,
                               }}
                               animate={isCenter ? {
                                 rotate: [0, 5, -5, 0],
-                                scale: mode.enabled ? [1, 1.15, 1] : [1, 1.1, 1],
+                                scale: [1, 1.1, 1],
                               } : {}}
                               transition={{
                                 duration: 2,
@@ -487,47 +445,15 @@ export default function ModoEventosModal({
                             >
                               <IconComponent 
                                 className="h-8 w-8" 
-                                style={{ 
-                                  color: mode.enabled ? '#FFFFFF' : mode.color,
-                                  filter: mode.enabled ? `drop-shadow(0 0 8px ${mode.color})` : 'none'
-                                }}
+                                style={{ color: mode.color }}
                               />
                               
-                              {/* Icon glow effect - melhorado para modo ativo */}
-                              {(isCenter || mode.enabled) && (
-                                <motion.div 
-                                  className="absolute inset-0 rounded-2xl"
+                              {/* Icon glow effect */}
+                              {isCenter && (
+                                <div 
+                                  className="absolute inset-0 rounded-2xl animate-pulse"
                                   style={{
-                                    background: `radial-gradient(circle, ${mode.color}${mode.enabled ? '40' : '30'} 0%, transparent 70%)`,
-                                  }}
-                                  animate={mode.enabled ? {
-                                    opacity: [0.6, 1, 0.6],
-                                    scale: [1, 1.1, 1],
-                                  } : {
-                                    opacity: [0.3, 0.6, 0.3],
-                                  }}
-                                  transition={{
-                                    duration: mode.enabled ? 1.5 : 2,
-                                    repeat: Infinity,
-                                    ease: "easeInOut",
-                                  }}
-                                />
-                              )}
-                              
-                              {/* Efeito adicional para modo ativo */}
-                              {mode.enabled && (
-                                <motion.div 
-                                  className="absolute inset-0 rounded-2xl"
-                                  style={{
-                                    background: `conic-gradient(from 0deg, ${mode.neonColor}60, transparent, ${mode.neonColor}60)`,
-                                  }}
-                                  animate={{
-                                    rotate: [0, 360],
-                                  }}
-                                  transition={{
-                                    duration: 3,
-                                    repeat: Infinity,
-                                    ease: "linear",
+                                    background: `radial-gradient(circle, ${mode.color}30 0%, transparent 70%)`,
                                   }}
                                 />
                               )}
@@ -554,18 +480,17 @@ export default function ModoEventosModal({
                                 <div 
                                   className="w-14 h-7 rounded-full border-2 transition-all duration-500 relative flex items-center"
                                   style={{
-                                    backgroundColor: mode.enabled ? `${mode.color}40` : 'rgba(128, 128, 128, 0.2)',
-                                    borderColor: mode.enabled ? `${mode.color}90` : 'rgba(128, 128, 128, 0.3)',
-                                    boxShadow: mode.enabled ? `0 0 20px ${mode.color}60, inset 0 0 10px ${mode.color}20` : 'none',
+                                    backgroundColor: mode.enabled ? `${mode.color}30` : 'rgba(0, 0, 0, 0.3)',
+                                    borderColor: mode.enabled ? `${mode.color}80` : 'rgba(255, 107, 0, 0.2)',
+                                    boxShadow: mode.enabled ? `0 0 15px ${mode.color}50` : 'none',
                                   }}
                                 >
                                   <motion.div 
-                                    className="w-5 h-5 rounded-full shadow-lg flex items-center justify-center relative"
+                                    className="w-5 h-5 rounded-full shadow-lg flex items-center justify-center"
                                     style={{
                                       background: mode.enabled 
-                                        ? `linear-gradient(135deg, ${mode.color}, ${mode.neonColor})` 
-                                        : 'linear-gradient(135deg, rgba(200, 200, 200, 0.8), rgba(150, 150, 150, 0.6))',
-                                      boxShadow: mode.enabled ? `0 0 15px ${mode.color}80` : 'none',
+                                        ? `linear-gradient(135deg, ${mode.color}, ${mode.color}CC)` 
+                                        : 'linear-gradient(135deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.3))'
                                     }}
                                     animate={{
                                       x: mode.enabled ? 22 : 2,
@@ -577,66 +502,23 @@ export default function ModoEventosModal({
                                     }}
                                   >
                                     {mode.enabled && (
-                                      <>
-                                        <Check className="h-3 w-3 text-white relative z-10" />
-                                        <motion.div 
-                                          className="absolute inset-0 rounded-full"
-                                          style={{
-                                            background: `radial-gradient(circle, ${mode.neonColor}60 0%, transparent 70%)`,
-                                          }}
-                                          animate={{
-                                            opacity: [0.5, 1, 0.5],
-                                          }}
-                                          transition={{
-                                            duration: 1.5,
-                                            repeat: Infinity,
-                                            ease: "easeInOut",
-                                          }}
-                                        />
-                                      </>
+                                      <Check className="h-3 w-3 text-white" />
                                     )}
                                   </motion.div>
                                 </div>
                               </motion.div>
                             ) : (
-                              <motion.div 
-                                className="px-4 py-2 rounded-full border-2 text-xs font-semibold flex items-center justify-center relative"
+                              <div 
+                                className="px-4 py-2 rounded-full border-2 text-xs font-semibold flex items-center justify-center"
                                 style={{
                                   borderColor: mode.color,
-                                  backgroundColor: `${mode.color}30`,
+                                  backgroundColor: `${mode.color}20`,
                                   color: mode.color,
-                                  boxShadow: `0 0 20px ${mode.color}50, inset 0 0 10px ${mode.color}20`,
-                                }}
-                                animate={{
-                                  boxShadow: [
-                                    `0 0 20px ${mode.color}50, inset 0 0 10px ${mode.color}20`,
-                                    `0 0 30px ${mode.color}70, inset 0 0 15px ${mode.color}30`,
-                                    `0 0 20px ${mode.color}50, inset 0 0 10px ${mode.color}20`
-                                  ],
-                                }}
-                                transition={{
-                                  duration: 2,
-                                  repeat: Infinity,
-                                  ease: "easeInOut",
+                                  boxShadow: `0 0 15px ${mode.color}40`,
                                 }}
                               >
                                 ATIVO
-                                <motion.div 
-                                  className="absolute inset-0 rounded-full"
-                                  style={{
-                                    background: `linear-gradient(45deg, ${mode.neonColor}20, transparent, ${mode.neonColor}20)`,
-                                    backgroundSize: '200% 200%',
-                                  }}
-                                  animate={{
-                                    backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
-                                  }}
-                                  transition={{
-                                    duration: 3,
-                                    repeat: Infinity,
-                                    ease: "easeInOut",
-                                  }}
-                                />
-                              </motion.div>
+                              </div>
                             )}
                           </div>
                         </div>
