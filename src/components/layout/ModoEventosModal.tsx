@@ -101,7 +101,7 @@ export default function ModoEventosModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-5xl max-w-[95vw] h-[90vh] p-0 border-0 bg-transparent overflow-hidden">
+      <DialogContent className="sm:max-w-4xl max-w-[90vw] h-[80vh] p-0 border-0 bg-transparent overflow-hidden">
         <div className="relative w-full h-full">
           {/* Ultra-sophisticated background */}
           <div className="absolute inset-0 bg-gradient-to-br from-[#0A0F1C] via-[#1A1F2E] to-[#0D1117] rounded-3xl border border-[#FF6B00]/10 shadow-[0_0_100px_rgba(255,107,0,0.1)] backdrop-blur-3xl">
@@ -145,11 +145,11 @@ export default function ModoEventosModal({
           </Button>
 
           {/* Main content */}
-          <div className="relative z-10 h-full flex flex-col px-12 py-10">
+          <div className="relative z-10 h-full flex flex-col px-8 py-6">
             {/* Ultra-sophisticated header */}
-            <DialogHeader className="text-center mb-12">
+            <DialogHeader className="text-center mb-8">
               {/* Central sophisticated icon */}
-              <div className="flex items-center justify-center mb-8">
+              <div className="flex items-center justify-center mb-6">
                 <div className="relative">
                   {/* Main icon container */}
                   <div className="relative bg-gradient-to-br from-[#FF6B00]/10 to-[#FF8C40]/5 p-8 rounded-2xl border border-[#FF6B00]/10 backdrop-blur-sm">
@@ -178,7 +178,7 @@ export default function ModoEventosModal({
             {/* Content area */}
             <div className="flex-1 flex flex-col">
               {/* Status indicator */}
-              <div className="text-center mb-10">
+              <div className="text-center mb-6">
                 <div className="inline-flex items-center gap-3 px-6 py-3 bg-black/10 border border-white/5 rounded-full backdrop-blur-sm">
                   <div className={`w-2 h-2 rounded-full ${enabledCount > 0 ? 'bg-[#FF6B00]' : 'bg-white/20'} transition-colors duration-300`} />
                   <span className="text-white/70 text-sm font-light">
@@ -188,7 +188,7 @@ export default function ModoEventosModal({
               </div>
 
               {/* Ultra-sophisticated events grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto flex-1">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto flex-1">
                 {eventModes.map((mode) => {
                   const IconComponent = mode.icon;
                   return (
@@ -246,7 +246,7 @@ export default function ModoEventosModal({
               </div>
 
               {/* Ultra-minimal action buttons */}
-              <div className="flex items-center justify-center gap-6 mt-12">
+              <div className="flex items-center justify-center gap-6 mt-8">
                 <Button
                   variant="ghost"
                   onClick={onClose}
