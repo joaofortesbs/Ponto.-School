@@ -393,11 +393,16 @@ export default function ModoEventosModal({
                               : `linear-gradient(135deg, 
                                   rgba(255, 107, 0, ${isCenter ? 0.08 : 0.04}) 0%, 
                                   rgba(0, 0, 0, ${isCenter ? 0.6 : 0.4}) 100%)`,
-                            borderColor: mode.enabled ? `${mode.neonColor}60` : 'rgba(255, 107, 0, 0.2)',
+                            borderColor: mode.enabled ? `${mode.neonColor}80` : 'rgba(255, 107, 0, 0.2)',
+                            borderWidth: mode.enabled ? '2px' : '1px',
                             boxShadow: isCenter 
                               ? isLightMode
-                                ? `0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 30px ${mode.neonColor}30`
-                                : `0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 30px ${mode.neonColor}40`
+                                ? mode.enabled 
+                                  ? `0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 30px ${mode.neonColor}50, 0 0 15px ${mode.neonColor}30`
+                                  : `0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 30px ${mode.neonColor}30`
+                                : mode.enabled
+                                  ? `0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 30px ${mode.neonColor}60, 0 0 20px ${mode.neonColor}40`
+                                  : `0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 30px ${mode.neonColor}40`
                               : isLightMode
                                 ? '0 10px 25px -5px rgba(0, 0, 0, 0.1)'
                                 : '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
@@ -406,14 +411,15 @@ export default function ModoEventosModal({
                           {/* Neon pulsing border */}
                           {isCenter && mode.enabled && (
                             <motion.div
-                              className="absolute inset-0 rounded-3xl"
+                              className="absolute inset-0 rounded-3xl pointer-events-none"
                               style={{
-                                background: `linear-gradient(45deg, ${mode.neonColor}40, transparent, ${mode.neonColor}40)`,
+                                background: `linear-gradient(45deg, ${mode.neonColor}50, transparent, ${mode.neonColor}50)`,
                                 backgroundSize: '200% 200%',
+                                border: `1px solid ${mode.neonColor}60`,
                               }}
                               animate={{
                                 backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
-                                opacity: [0.3, 0.8, 0.3],
+                                opacity: [0.4, 0.9, 0.4],
                               }}
                               transition={{
                                 duration: 2,
