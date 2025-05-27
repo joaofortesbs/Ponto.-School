@@ -1,0 +1,177 @@
+
+/* Estilos específicos para o Modal de Modo Eventos */
+
+/* Animações de partículas para os cards */
+@keyframes particle-float {
+  0% {
+    transform: translateY(0px) translateX(0px) rotate(0deg);
+    opacity: 0.6;
+  }
+  33% {
+    transform: translateY(-10px) translateX(5px) rotate(120deg);
+    opacity: 1;
+  }
+  66% {
+    transform: translateY(-5px) translateX(-5px) rotate(240deg);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(0px) translateX(0px) rotate(360deg);
+    opacity: 0.6;
+  }
+}
+
+/* Efeito de brilho para os cards ativos */
+.modo-eventos-card-active {
+  position: relative;
+  overflow: hidden;
+}
+
+.modo-eventos-card-active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  animation: shine 2s infinite;
+}
+
+@keyframes shine {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* Efeito de gradiente animado para borders */
+.modo-eventos-gradient-border {
+  position: relative;
+  background: linear-gradient(45deg, #ff6b00, #8b5cf6, #10b981, #f59e0b, #dc2626, #6366f1);
+  background-size: 400% 400%;
+  animation: gradient-shift 6s ease infinite;
+  border-radius: 1rem;
+  padding: 2px;
+}
+
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Efeito de pulsação para badges ativos */
+.modo-eventos-active-badge {
+  animation: pulse-glow 2s ease-in-out infinite;
+  box-shadow: 0 0 20px rgba(255, 107, 0, 0.5);
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 20px rgba(255, 107, 0, 0.5);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 30px rgba(255, 107, 0, 0.8);
+  }
+}
+
+/* Scroll customizado para o modal */
+.modo-eventos-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modo-eventos-scroll::-webkit-scrollbar-track {
+  background: rgba(148, 163, 184, 0.1);
+  border-radius: 10px;
+}
+
+.modo-eventos-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #ff6b00, #8b5cf6);
+  border-radius: 10px;
+}
+
+.modo-eventos-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to bottom, #ff8c40, #a855f7);
+}
+
+/* Efeito de hover especial para os cards */
+.modo-eventos-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.1),
+    0 0 30px rgba(255, 107, 0, 0.2);
+}
+
+/* Animação de entrada para os ícones */
+.modo-eventos-icon {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modo-eventos-icon:hover {
+  transform: rotate(360deg) scale(1.2);
+  filter: drop-shadow(0 0 10px currentColor);
+}
+
+/* Backdrop blur customizado */
+.modo-eventos-backdrop {
+  backdrop-filter: blur(20px) saturate(180%);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.dark .modo-eventos-backdrop {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* Efeito de texto brilhante */
+.modo-eventos-title {
+  background: linear-gradient(135deg, #ff6b00, #8b5cf6, #10b981);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradient-text 4s ease infinite;
+}
+
+@keyframes gradient-text {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .modo-eventos-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .modo-eventos-card {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .modo-eventos-modal {
+    margin: 1rem;
+    max-height: 85vh;
+  }
+}
