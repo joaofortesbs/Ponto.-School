@@ -233,3 +233,38 @@ div::-webkit-scrollbar-thumb:hover {
   scrollbar-width: thin;
 }
 
+/* Esconder scrollbar para carrossel de eventos */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Efeitos suaves para carrossel interativo */
+.carousel-scroll-smooth {
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+}
+
+.carousel-card-snap {
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
+}
+
+/* Animações para carrossel de eventos */
+@keyframes card-center-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(255, 107, 0, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(255, 107, 0, 0.3);
+  }
+}
+
+.card-center-active {
+  animation: card-center-glow 3s ease-in-out infinite;
+}
+

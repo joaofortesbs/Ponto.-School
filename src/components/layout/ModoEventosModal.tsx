@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -105,9 +105,9 @@ export default function ModoEventosModal({
     },
   ]);
 
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const itemsPerSlide = 2;
-  const totalSlides = Math.ceil(eventModes.length / itemsPerSlide);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const isScrolling = useRef(false);
 
   const toggleEventMode = (id: string) => {
     setEventModes(prev =>
@@ -117,24 +117,71 @@ export default function ModoEventosModal({
     );
   };
 
+  const scrollToIndex = (index: number) => {
+    if (carouselRef.current) {
+      const container = carouselRef.current;
+      const cardWidth = 350; // largura do card + gap
+      const targetScroll = index * cardWidth - (container.offsetWidth / 2) + (cardWidth / 2);
+      
+      container.scrollTo({
+        left: targetScroll,
+        behavior: 'smooth'
+      });
+    }
+  };
+
   const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % totalSlides);
+    const newIndex = currentIndex < eventModes.length - 1 ? currentIndex + 1 : 0;
+    setCurrentIndex(newIndex);
+    scrollToIndex(newIndex);
   };
 
   const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + totalSlides) % totalSlides);
+    const newIndex = currentIndex > 0 ? currentIndex - 1 : eventModes.length - 1;
+    setCurrentIndex(newIndex);
+    scrollToIndex(newIndex);
   };
 
-  const getCurrentSlideItems = () => {
-    const startIndex = currentSlide * itemsPerSlide;
-    return eventModes.slice(startIndex, startIndex + itemsPerSlide);
-  };
+  // Scroll com mouse wheel
+  useEffect(() => {
+    const handleWheel = (e: WheelEvent) => {
+      if (carouselRef.current && !isScrolling.current) {
+        e.preventDefault();
+        isScrolling.current = true;
+        
+        if (e.deltaY > 0) {
+          nextSlide();
+        } else {
+          prevSlide();
+        }
+        
+        setTimeout(() => {
+          isScrolling.current = false;
+        }, 500);
+      }
+    };
+
+    const carousel = carouselRef.current;
+    if (carousel) {
+      carousel.addEventListener('wheel', handleWheel, { passive: false });
+      return () => carousel.removeEventListener('wheel', handleWheel);
+    }
+  }, [currentIndex]);
+
+  // Inicializar posição central
+  useEffect(() => {
+    if (isOpen && carouselRef.current) {
+      setTimeout(() => {
+        scrollToIndex(currentIndex);
+      }, 100);
+    }
+  }, [isOpen]);
 
   const enabledCount = eventModes.filter(mode => mode.enabled).length;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-4xl max-w-[90vw] h-[80vh] p-0 border-0 bg-transparent overflow-hidden">
+      <DialogContent className="sm:max-w-5xl max-w-[95vw] h-[85vh] p-0 border-0 bg-transparent overflow-hidden">
         <div className="relative w-full h-full">
           {/* Ultra-sophisticated background */}
           <div className="absolute inset-0 bg-gradient-to-br from-[#0A0F1C] via-[#1A1F2E] to-[#0D1117] rounded-3xl border border-[#FF6B00]/10 shadow-[0_0_100px_rgba(255,107,0,0.1)] backdrop-blur-3xl">
@@ -208,161 +255,175 @@ export default function ModoEventosModal({
               </DialogTitle>
             </DialogHeader>
 
-            {/* Content area */}
-            <div className="flex-1 flex flex-col">
-              {/* Carrossel de eventos */}
-              <div className="relative max-w-4xl mx-auto flex-1 flex items-center justify-center">
-                {/* Botão anterior */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={prevSlide}
-                  className="absolute left-0 z-10 h-12 w-12 rounded-full bg-black/20 hover:bg-black/30 border border-white/10 text-white/60 hover:text-white transition-all duration-300 backdrop-blur-sm"
-                >
-                  <ChevronLeft className="h-6 w-6" />
-                </Button>
+            {/* Carrossel interativo */}
+            <div className="flex-1 flex items-center justify-center relative">
+              {/* Botão anterior */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={prevSlide}
+                className="absolute left-4 z-20 h-14 w-14 rounded-full bg-black/20 hover:bg-black/30 border border-white/10 text-white/60 hover:text-white transition-all duration-300 backdrop-blur-sm shadow-lg hover:shadow-[#FF6B00]/20"
+              >
+                <ChevronLeft className="h-7 w-7" />
+              </Button>
 
-                {/* Container do carrossel */}
-                <div className="overflow-hidden mx-16 w-full">
-                  <div 
-                    className="flex transition-transform duration-700 ease-out"
-                    style={{ transform: `translateX(-${currentSlide * 100}%)` }}
-                  >
-                    {Array.from({ length: totalSlides }).map((_, slideIndex) => (
-                      <div key={slideIndex} className="w-full flex-shrink-0 px-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          {eventModes
-                            .slice(slideIndex * itemsPerSlide, (slideIndex + 1) * itemsPerSlide)
-                            .map((mode) => {
-                              const IconComponent = mode.icon;
-                              return (
-                                <div
-                                  key={mode.id}
-                                  className="group relative bg-gradient-to-br from-white/[0.03] to-white/[0.08] rounded-3xl p-8 border transition-all duration-700 cursor-pointer backdrop-blur-sm hover:scale-105 transform"
-                                  style={{
-                                    borderColor: mode.enabled ? `${mode.color}40` : 'rgba(255, 255, 255, 0.08)',
-                                    backgroundColor: mode.enabled ? mode.bgColor : 'transparent'
-                                  }}
-                                  onClick={() => toggleEventMode(mode.id)}
-                                >
-                                  {/* Glow effect personalizado */}
-                                  <div 
-                                    className={`absolute inset-0 rounded-3xl transition-opacity duration-700 ${
-                                      mode.enabled ? 'opacity-100' : 'opacity-0 group-hover:opacity-40'
-                                    }`}
-                                    style={{
-                                      background: `radial-gradient(circle at center, ${mode.color}15 0%, transparent 70%)`
-                                    }}
-                                  />
+              {/* Container do carrossel com scroll personalizado */}
+              <div 
+                ref={carouselRef}
+                className="flex overflow-x-auto scrollbar-hide gap-6 px-20 py-8 w-full"
+                style={{
+                  scrollBehavior: 'smooth',
+                  scrollSnapType: 'x mandatory'
+                }}
+              >
+                {eventModes.map((mode, index) => {
+                  const IconComponent = mode.icon;
+                  const isCenter = index === currentIndex;
+                  
+                  return (
+                    <div
+                      key={mode.id}
+                      className={`group relative flex-shrink-0 bg-gradient-to-br from-white/[0.03] to-white/[0.08] rounded-3xl p-8 border transition-all duration-700 cursor-pointer backdrop-blur-sm transform ${
+                        isCenter 
+                          ? 'scale-110 z-10 shadow-2xl shadow-[#FF6B00]/20' 
+                          : 'scale-90 opacity-60 hover:opacity-80 hover:scale-95'
+                      }`}
+                      style={{
+                        width: '320px',
+                        height: '380px',
+                        borderColor: mode.enabled ? `${mode.color}40` : 'rgba(255, 255, 255, 0.08)',
+                        backgroundColor: mode.enabled ? mode.bgColor : 'transparent',
+                        scrollSnapAlign: 'center'
+                      }}
+                      onClick={() => {
+                        setCurrentIndex(index);
+                        scrollToIndex(index);
+                        toggleEventMode(mode.id);
+                      }}
+                    >
+                      {/* Glow effect personalizado */}
+                      <div 
+                        className={`absolute inset-0 rounded-3xl transition-opacity duration-700 ${
+                          mode.enabled ? 'opacity-100' : 'opacity-0 group-hover:opacity-40'
+                        }`}
+                        style={{
+                          background: `radial-gradient(circle at center, ${mode.color}15 0%, transparent 70%)`
+                        }}
+                      />
 
-                                  <div className="relative flex flex-col items-center text-center space-y-6">
-                                    {/* Ícone principal */}
-                                    <div 
-                                      className="w-20 h-20 rounded-2xl flex items-center justify-center transition-all duration-500 group-hover:scale-110"
-                                      style={{
-                                        background: `linear-gradient(135deg, ${mode.color}40, ${mode.color}20)`,
-                                        border: `1px solid ${mode.color}30`
-                                      }}
-                                    >
-                                      <IconComponent 
-                                        className="h-10 w-10 text-white" 
-                                        style={{ color: mode.color }}
-                                      />
-                                    </div>
-                                    
-                                    {/* Conteúdo */}
-                                    <div className="space-y-3">
-                                      <h4 className="text-2xl font-light text-white">{mode.name}</h4>
-                                      <p className="text-white/60 text-sm font-light leading-relaxed">
-                                        {mode.description}
-                                      </p>
-                                    </div>
+                      {/* Indicador de card central */}
+                      {isCenter && (
+                        <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 w-16 h-1 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-full" />
+                      )}
 
-                                    {/* Toggle sofisticado */}
-                                    <div className="relative">
-                                      <div 
-                                        className="w-16 h-8 rounded-full border transition-all duration-500 relative"
-                                        style={{
-                                          backgroundColor: mode.enabled ? `${mode.color}20` : 'rgba(0, 0, 0, 0.2)',
-                                          borderColor: mode.enabled ? `${mode.color}60` : 'rgba(255, 255, 255, 0.1)'
-                                        }}
-                                      >
-                                        <div 
-                                          className="absolute top-1 w-6 h-6 rounded-full transition-all duration-500 shadow-lg flex items-center justify-center"
-                                          style={{
-                                            left: mode.enabled ? '36px' : '4px',
-                                            background: mode.enabled 
-                                              ? `linear-gradient(135deg, ${mode.color}, ${mode.color}CC)` 
-                                              : 'linear-gradient(135deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.2))'
-                                          }}
-                                        >
-                                          {mode.enabled && (
-                                            <Check className="h-3 w-3 text-white" />
-                                          )}
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                              );
-                            })}
+                      <div className="relative flex flex-col items-center text-center space-y-6 h-full justify-center">
+                        {/* Ícone principal */}
+                        <div 
+                          className={`w-20 h-20 rounded-2xl flex items-center justify-center transition-all duration-500 ${
+                            isCenter ? 'scale-110' : 'group-hover:scale-110'
+                          }`}
+                          style={{
+                            background: `linear-gradient(135deg, ${mode.color}40, ${mode.color}20)`,
+                            border: `1px solid ${mode.color}30`
+                          }}
+                        >
+                          <IconComponent 
+                            className="h-10 w-10 text-white" 
+                            style={{ color: mode.color }}
+                          />
+                        </div>
+                        
+                        {/* Conteúdo */}
+                        <div className="space-y-3">
+                          <h4 className="text-2xl font-light text-white">{mode.name}</h4>
+                          <p className="text-white/60 text-sm font-light leading-relaxed">
+                            {mode.description}
+                          </p>
+                        </div>
+
+                        {/* Toggle sofisticado */}
+                        <div className="relative">
+                          <div 
+                            className="w-16 h-8 rounded-full border transition-all duration-500 relative"
+                            style={{
+                              backgroundColor: mode.enabled ? `${mode.color}20` : 'rgba(0, 0, 0, 0.2)',
+                              borderColor: mode.enabled ? `${mode.color}60` : 'rgba(255, 255, 255, 0.1)'
+                            }}
+                          >
+                            <div 
+                              className="absolute top-1 w-6 h-6 rounded-full transition-all duration-500 shadow-lg flex items-center justify-center"
+                              style={{
+                                left: mode.enabled ? '36px' : '4px',
+                                background: mode.enabled 
+                                  ? `linear-gradient(135deg, ${mode.color}, ${mode.color}CC)` 
+                                  : 'linear-gradient(135deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.2))'
+                              }}
+                            >
+                              {mode.enabled && (
+                                <Check className="h-3 w-3 text-white" />
+                              )}
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
+                    </div>
+                  );
+                })}
+              </div>
 
-                {/* Botão próximo */}
+              {/* Botão próximo */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={nextSlide}
+                className="absolute right-4 z-20 h-14 w-14 rounded-full bg-black/20 hover:bg-black/30 border border-white/10 text-white/60 hover:text-white transition-all duration-300 backdrop-blur-sm shadow-lg hover:shadow-[#FF6B00]/20"
+              >
+                <ChevronRight className="h-7 w-7" />
+              </Button>
+            </div>
+
+            {/* Indicadores de slide */}
+            <div className="flex justify-center space-x-3 mt-8 mb-6">
+              {eventModes.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => {
+                    setCurrentIndex(index);
+                    scrollToIndex(index);
+                  }}
+                  className={`w-3 h-3 rounded-full transition-all duration-500 ${
+                    index === currentIndex
+                      ? 'bg-[#FF6B00] scale-125 shadow-lg shadow-[#FF6B00]/50'
+                      : 'bg-white/20 hover:bg-white/40'
+                  }`}
+                />
+              ))}
+            </div>
+
+            {/* Status e botões de ação */}
+            <div className="flex flex-col items-center space-y-6">
+              {/* Status indicator */}
+              <div className="inline-flex items-center gap-3 px-6 py-3 bg-black/10 border border-white/5 rounded-full backdrop-blur-sm">
+                <div className={`w-2 h-2 rounded-full ${enabledCount > 0 ? 'bg-[#FF6B00]' : 'bg-white/20'} transition-colors duration-300`} />
+                <span className="text-white/70 text-sm font-light">
+                  {enabledCount} {enabledCount === 1 ? 'modo ativado' : 'modos ativados'}
+                </span>
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex items-center justify-center gap-6">
                 <Button
                   variant="ghost"
-                  size="icon"
-                  onClick={nextSlide}
-                  className="absolute right-0 z-10 h-12 w-12 rounded-full bg-black/20 hover:bg-black/30 border border-white/10 text-white/60 hover:text-white transition-all duration-300 backdrop-blur-sm"
+                  onClick={onClose}
+                  className="px-8 py-3 bg-transparent border border-white/10 text-white/70 hover:text-white hover:border-white/20 transition-all duration-500 rounded-xl backdrop-blur-sm font-light"
                 >
-                  <ChevronRight className="h-6 w-6" />
+                  Cancelar
                 </Button>
-              </div>
-
-              {/* Indicadores de slide */}
-              <div className="flex justify-center space-x-3 mt-8 mb-6">
-                {Array.from({ length: totalSlides }).map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentSlide(index)}
-                    className={`w-3 h-3 rounded-full transition-all duration-500 ${
-                      index === currentSlide
-                        ? 'bg-[#FF6B00] scale-125'
-                        : 'bg-white/20 hover:bg-white/40'
-                    }`}
-                  />
-                ))}
-              </div>
-
-              {/* Status e botões de ação */}
-              <div className="flex flex-col items-center space-y-6">
-                {/* Status indicator */}
-                <div className="inline-flex items-center gap-3 px-6 py-3 bg-black/10 border border-white/5 rounded-full backdrop-blur-sm">
-                  <div className={`w-2 h-2 rounded-full ${enabledCount > 0 ? 'bg-[#FF6B00]' : 'bg-white/20'} transition-colors duration-300`} />
-                  <span className="text-white/70 text-sm font-light">
-                    {enabledCount} {enabledCount === 1 ? 'modo ativado' : 'modos ativados'}
-                  </span>
-                </div>
-
-                {/* Action buttons */}
-                <div className="flex items-center justify-center gap-6">
-                  <Button
-                    variant="ghost"
-                    onClick={onClose}
-                    className="px-8 py-3 bg-transparent border border-white/10 text-white/70 hover:text-white hover:border-white/20 transition-all duration-500 rounded-xl backdrop-blur-sm font-light"
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    className="px-8 py-3 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white hover:from-[#FF8C40] hover:to-[#FFD700] border-0 transition-all duration-500 shadow-lg hover:shadow-[#FF6B00]/20 rounded-xl font-light"
-                  >
-                    Aplicar Configurações
-                  </Button>
-                </div>
+                <Button
+                  className="px-8 py-3 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white hover:from-[#FF8C40] hover:to-[#FFD700] border-0 transition-all duration-500 shadow-lg hover:shadow-[#FF6B00]/20 rounded-xl font-light"
+                >
+                  Aplicar Configurações
+                </Button>
               </div>
             </div>
           </div>
