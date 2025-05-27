@@ -554,7 +554,7 @@ export default function ModoEventosModal({
                                 <p className={`text-xs font-medium leading-tight ${
                                   isLightMode ? 'text-gray-700' : 'text-gray-300'
                                 }`}>
-                                  Esse Modo será liberado dos dias "{mode.releaseStart}" até os dias "{mode.releaseEnd}"!
+                                  Esse Modo será liberado dos dias "{mode.releaseStart}" a "{mode.releaseEnd}"!
                                 </p>
                               </div>
                             </motion.div>
