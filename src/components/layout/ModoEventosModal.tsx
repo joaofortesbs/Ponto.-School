@@ -20,6 +20,11 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
+  Umbrella,
+  Ghost,
+  TreePine,
+  Flame,
+  Theater,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/ThemeProvider";
@@ -50,39 +55,6 @@ export default function ModoEventosModal({
   
   const [eventModes, setEventModes] = useState<EventMode[]>([
     {
-      id: "carnaval",
-      name: "Carnaval",
-      description: "Modo festivo e colorido",
-      icon: Sparkles,
-      gradient: "from-[#FF1493] to-[#FFD700]",
-      color: "#FF1493",
-      bgColor: "rgba(255, 20, 147, 0.1)",
-      neonColor: "#FF1493",
-      enabled: false,
-    },
-    {
-      id: "festa-junina",
-      name: "Festa Junina",
-      description: "Temática rural e tradicional",
-      icon: Star,
-      gradient: "from-[#8B4513] to-[#FFD700]",
-      color: "#8B4513",
-      bgColor: "rgba(139, 69, 19, 0.1)",
-      neonColor: "#FFD700",
-      enabled: false,
-    },
-    {
-      id: "ferias",
-      name: "Férias",
-      description: "Modo relaxante e descontraído",
-      icon: Calendar,
-      gradient: "from-[#00CED1] to-[#87CEEB]",
-      color: "#00CED1",
-      bgColor: "rgba(0, 206, 209, 0.1)",
-      neonColor: "#00CED1",
-      enabled: false,
-    },
-    {
       id: "ponto-school",
       name: "Ponto. School",
       description: "Modo padrão da plataforma",
@@ -94,10 +66,43 @@ export default function ModoEventosModal({
       enabled: true,
     },
     {
+      id: "carnaval",
+      name: "Carnaval",
+      description: "Modo festivo e colorido",
+      icon: Theater,
+      gradient: "from-[#FF1493] to-[#FFD700]",
+      color: "#FF1493",
+      bgColor: "rgba(255, 20, 147, 0.1)",
+      neonColor: "#FF1493",
+      enabled: false,
+    },
+    {
+      id: "festa-junina",
+      name: "Festa Junina",
+      description: "Temática rural e tradicional",
+      icon: Flame,
+      gradient: "from-[#8B4513] to-[#FFD700]",
+      color: "#8B4513",
+      bgColor: "rgba(139, 69, 19, 0.1)",
+      neonColor: "#FFD700",
+      enabled: false,
+    },
+    {
+      id: "ferias",
+      name: "Férias",
+      description: "Modo relaxante e descontraído",
+      icon: Umbrella,
+      gradient: "from-[#00CED1] to-[#87CEEB]",
+      color: "#00CED1",
+      bgColor: "rgba(0, 206, 209, 0.1)",
+      neonColor: "#00CED1",
+      enabled: false,
+    },
+    {
       id: "halloween",
       name: "Halloween",
       description: "Modo misterioso e divertido",
-      icon: Zap,
+      icon: Ghost,
       gradient: "from-[#800080] to-[#FF4500]",
       color: "#800080",
       bgColor: "rgba(128, 0, 128, 0.1)",
@@ -108,7 +113,7 @@ export default function ModoEventosModal({
       id: "natal",
       name: "Natal",
       description: "Modo natalino e acolhedor",
-      icon: Star,
+      icon: TreePine,
       gradient: "from-[#DC143C] to-[#228B22]",
       color: "#DC143C",
       bgColor: "rgba(220, 20, 60, 0.1)",
@@ -128,20 +133,32 @@ export default function ModoEventosModal({
     },
   ]);
 
-  const [currentIndex, setCurrentIndex] = useState(3); // Centraliza no card "Ponto. School"
+  const [currentIndex, setCurrentIndex] = useState(0); // Centraliza no card "Ponto. School"
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Função para ativar apenas um modo por vez
   const toggleEventMode = (id: string) => {
-    if (id === 'ponto-school') return; // Ponto. School não pode ser desativado manualmente
-    
     setEventModes(prev =>
       prev.map(mode => ({
         ...mode,
-        enabled: mode.id === id ? !mode.enabled : mode.id === 'ponto-school' ? false : false
+        enabled: mode.id === id ? !mode.enabled : false
       }))
     );
+    
+    // Se nenhum modo estiver ativo após o toggle, ativar o modo padrão
+    setTimeout(() => {
+      setEventModes(prev => {
+        const hasAnyEnabled = prev.some(mode => mode.enabled);
+        if (!hasAnyEnabled) {
+          return prev.map(mode => ({
+            ...mode,
+            enabled: mode.id === 'ponto-school'
+          }));
+        }
+        return prev;
+      });
+    }, 100);
   };
 
   // Função para calcular posição e estilo de cada card
@@ -373,7 +390,7 @@ export default function ModoEventosModal({
                           rotateY: style.rotateY + 2,
                         } : {}}
                         onClick={() => {
-                          if (isCenter && mode.id !== 'ponto-school') {
+                          if (isCenter) {
                             toggleEventMode(mode.id);
                           } else if (!isCenter) {
                             setCurrentIndex(index);
@@ -546,111 +563,57 @@ export default function ModoEventosModal({
                             </div>
 
                             {/* Toggle/Status */}
-                            {mode.id !== 'ponto-school' ? (
-                              <motion.div 
-                                className="relative"
-                                whileHover={isCenter ? { scale: 1.1 } : {}}
+                            <motion.div 
+                              className="relative"
+                              whileHover={isCenter ? { scale: 1.1 } : {}}
+                            >
+                              <div 
+                                className="w-14 h-7 rounded-full border-2 transition-all duration-500 relative flex items-center"
+                                style={{
+                                  backgroundColor: mode.enabled ? `${mode.color}40` : 'rgba(128, 128, 128, 0.2)',
+                                  borderColor: mode.enabled ? `${mode.color}90` : 'rgba(128, 128, 128, 0.3)',
+                                  boxShadow: mode.enabled ? `0 0 20px ${mode.color}60, inset 0 0 10px ${mode.color}20` : 'none',
+                                }}
                               >
-                                <div 
-                                  className="w-14 h-7 rounded-full border-2 transition-all duration-500 relative flex items-center"
+                                <motion.div 
+                                  className="w-5 h-5 rounded-full shadow-lg flex items-center justify-center relative"
                                   style={{
-                                    backgroundColor: mode.enabled ? `${mode.color}40` : 'rgba(128, 128, 128, 0.2)',
-                                    borderColor: mode.enabled ? `${mode.color}90` : 'rgba(128, 128, 128, 0.3)',
-                                    boxShadow: mode.enabled ? `0 0 20px ${mode.color}60, inset 0 0 10px ${mode.color}20` : 'none',
+                                    background: mode.enabled 
+                                      ? `linear-gradient(135deg, ${mode.color}, ${mode.neonColor})` 
+                                      : 'linear-gradient(135deg, rgba(200, 200, 200, 0.8), rgba(150, 150, 150, 0.6))',
+                                    boxShadow: mode.enabled ? `0 0 15px ${mode.color}80` : 'none',
+                                  }}
+                                  animate={{
+                                    x: mode.enabled ? 22 : 2,
+                                  }}
+                                  transition={{
+                                    type: "spring",
+                                    stiffness: 500,
+                                    damping: 30,
                                   }}
                                 >
-                                  <motion.div 
-                                    className="w-5 h-5 rounded-full shadow-lg flex items-center justify-center relative"
-                                    style={{
-                                      background: mode.enabled 
-                                        ? `linear-gradient(135deg, ${mode.color}, ${mode.neonColor})` 
-                                        : 'linear-gradient(135deg, rgba(200, 200, 200, 0.8), rgba(150, 150, 150, 0.6))',
-                                      boxShadow: mode.enabled ? `0 0 15px ${mode.color}80` : 'none',
-                                    }}
-                                    animate={{
-                                      x: mode.enabled ? 22 : 2,
-                                    }}
-                                    transition={{
-                                      type: "spring",
-                                      stiffness: 500,
-                                      damping: 30,
-                                    }}
-                                  >
-                                    {mode.enabled && (
-                                      <>
-                                        <Check className="h-3 w-3 text-white relative z-10" />
-                                        <motion.div 
-                                          className="absolute inset-0 rounded-full"
-                                          style={{
-                                            background: `radial-gradient(circle, ${mode.neonColor}60 0%, transparent 70%)`,
-                                          }}
-                                          animate={{
-                                            opacity: [0.5, 1, 0.5],
-                                          }}
-                                          transition={{
-                                            duration: 1.5,
-                                            repeat: Infinity,
-                                            ease: "easeInOut",
-                                          }}
-                                        />
-                                      </>
-                                    )}
-                                  </motion.div>
-                                </div>
-                              </motion.div>
-                            ) : (
-                              <motion.div 
-                                className="relative"
-                                whileHover={isCenter ? { scale: 1.1 } : {}}
-                              >
-                                <div 
-                                  className="w-14 h-7 rounded-full border-2 transition-all duration-500 relative flex items-center"
-                                  style={{
-                                    backgroundColor: mode.enabled ? `${mode.color}40` : 'rgba(128, 128, 128, 0.2)',
-                                    borderColor: mode.enabled ? `${mode.color}90` : 'rgba(128, 128, 128, 0.3)',
-                                    boxShadow: mode.enabled ? `0 0 20px ${mode.color}60, inset 0 0 10px ${mode.color}20` : 'none',
-                                  }}
-                                >
-                                  <motion.div 
-                                    className="w-5 h-5 rounded-full shadow-lg flex items-center justify-center relative"
-                                    style={{
-                                      background: mode.enabled 
-                                        ? `linear-gradient(135deg, ${mode.color}, ${mode.neonColor})` 
-                                        : 'linear-gradient(135deg, rgba(200, 200, 200, 0.8), rgba(150, 150, 150, 0.6))',
-                                      boxShadow: mode.enabled ? `0 0 15px ${mode.color}80` : 'none',
-                                    }}
-                                    animate={{
-                                      x: mode.enabled ? 22 : 2,
-                                    }}
-                                    transition={{
-                                      type: "spring",
-                                      stiffness: 500,
-                                      damping: 30,
-                                    }}
-                                  >
-                                    {mode.enabled && (
-                                      <>
-                                        <Check className="h-3 w-3 text-white relative z-10" />
-                                        <motion.div 
-                                          className="absolute inset-0 rounded-full"
-                                          style={{
-                                            background: `radial-gradient(circle, ${mode.neonColor}60 0%, transparent 70%)`,
-                                          }}
-                                          animate={{
-                                            opacity: [0.5, 1, 0.5],
-                                          }}
-                                          transition={{
-                                            duration: 1.5,
-                                            repeat: Infinity,
-                                            ease: "easeInOut",
-                                          }}
-                                        />
-                                      </>
-                                    )}
-                                  </motion.div>
-                                </div>
-                              </motion.div>
-                            )}
+                                  {mode.enabled && (
+                                    <>
+                                      <Check className="h-3 w-3 text-white relative z-10" />
+                                      <motion.div 
+                                        className="absolute inset-0 rounded-full"
+                                        style={{
+                                          background: `radial-gradient(circle, ${mode.neonColor}60 0%, transparent 70%)`,
+                                        }}
+                                        animate={{
+                                          opacity: [0.5, 1, 0.5],
+                                        }}
+                                        transition={{
+                                          duration: 1.5,
+                                          repeat: Infinity,
+                                          ease: "easeInOut",
+                                        }}
+                                      />
+                                    </>
+                                  )}
+                                </motion.div>
+                              </div>
+                            </motion.div>
                           </div>
                         </div>
                       </motion.div>
