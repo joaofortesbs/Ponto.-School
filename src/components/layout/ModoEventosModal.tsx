@@ -22,6 +22,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTheme } from "@/components/ThemeProvider";
 
 interface ModoEventosModalProps {
   isOpen: boolean;
@@ -44,6 +45,9 @@ export default function ModoEventosModal({
   isOpen,
   onClose,
 }: ModoEventosModalProps) {
+  const { theme } = useTheme();
+  const isLightMode = theme === 'light';
+  
   const [eventModes, setEventModes] = useState<EventMode[]>([
     {
       id: "carnaval",
@@ -218,18 +222,26 @@ export default function ModoEventosModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="w-[900px] h-[650px] max-w-none p-0 border-0 bg-transparent overflow-hidden">
         <div className="relative w-full h-full">
-          {/* Background com estilo do modal de boas-vindas */}
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-xl rounded-3xl border border-[#FF6B00]/30 shadow-[0_0_100px_rgba(255,107,0,0.2)]">
-            {/* Glassmorphism overlay com tom laranja */}
-            <div className="absolute inset-0 bg-gradient-to-br from-[#FF6B00]/10 via-black/20 to-[#FF8C40]/5 rounded-3xl" />
+          {/* Background com estilo do modal de boas-vindas adaptado para tema claro/escuro */}
+          <div className={`absolute inset-0 backdrop-blur-xl rounded-3xl border shadow-[0_0_100px_rgba(255,107,0,0.1)] ${
+            isLightMode 
+              ? 'bg-white/90 border-[#FF6B00]/20' 
+              : 'bg-black/40 border-[#FF6B00]/30'
+          }`}>
+            {/* Glassmorphism overlay com tom laranja mais suave */}
+            <div className={`absolute inset-0 rounded-3xl ${
+              isLightMode
+                ? 'bg-gradient-to-br from-[#FF6B00]/03 via-white/10 to-[#FF8C40]/02'
+                : 'bg-gradient-to-br from-[#FF6B00]/05 via-black/20 to-[#FF8C40]/03'
+            }`} />
             
             {/* Grid sutil */}
             <div 
-              className="absolute inset-0 opacity-[0.02] rounded-3xl"
+              className="absolute inset-0 opacity-[0.015] rounded-3xl"
               style={{
                 backgroundImage: `
-                  linear-gradient(rgba(255, 107, 0, 0.1) 1px, transparent 1px),
-                  linear-gradient(90deg, rgba(255, 107, 0, 0.1) 1px, transparent 1px)
+                  linear-gradient(rgba(255, 107, 0, ${isLightMode ? '0.05' : '0.08'}) 1px, transparent 1px),
+                  linear-gradient(90deg, rgba(255, 107, 0, ${isLightMode ? '0.05' : '0.08'}) 1px, transparent 1px)
                 `,
                 backgroundSize: '40px 40px'
               }}
@@ -241,7 +253,11 @@ export default function ModoEventosModal({
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="absolute top-6 right-6 z-50 h-9 w-9 rounded-full bg-black/20 hover:bg-black/30 border border-[#FF6B00]/20 text-white/60 hover:text-white transition-all duration-700 group backdrop-blur-sm"
+            className={`absolute top-6 right-6 z-50 h-9 w-9 rounded-full border border-[#FF6B00]/20 transition-all duration-700 group backdrop-blur-sm ${
+              isLightMode
+                ? 'bg-white/60 hover:bg-white/80 text-gray-600 hover:text-gray-800'
+                : 'bg-black/20 hover:bg-black/30 text-white/60 hover:text-white'
+            }`}
           >
             <X className="h-4 w-4 group-hover:rotate-90 transition-transform duration-700" />
           </Button>
@@ -280,7 +296,11 @@ export default function ModoEventosModal({
 
               <DialogTitle className="text-center">
                 <motion.h1 
-                  className="text-4xl font-light bg-gradient-to-r from-[#FFFFFF] via-[#FF6B00] to-[#FF8C40] bg-clip-text text-transparent leading-tight tracking-wide mb-3"
+                  className={`text-4xl font-light leading-tight tracking-wide mb-3 ${
+                    isLightMode
+                      ? 'bg-gradient-to-r from-[#333333] via-[#FF6B00] to-[#FF8C40] bg-clip-text text-transparent'
+                      : 'bg-gradient-to-r from-[#FFFFFF] via-[#FF6B00] to-[#FF8C40] bg-clip-text text-transparent'
+                  }`}
                   animate={{ backgroundPosition: ["0%", "100%", "0%"] }}
                   transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
                 >
@@ -295,7 +315,11 @@ export default function ModoEventosModal({
               {/* Navigation arrows */}
               <motion.button
                 onClick={prevSlide}
-                className="absolute left-8 z-20 h-12 w-12 rounded-full bg-black/20 hover:bg-black/30 border border-[#FF6B00]/20 text-white/60 hover:text-white transition-all duration-700 backdrop-blur-sm shadow-lg flex items-center justify-center group"
+                className={`absolute left-8 z-20 h-12 w-12 rounded-full border border-[#FF6B00]/20 transition-all duration-700 backdrop-blur-sm shadow-lg flex items-center justify-center group ${
+                  isLightMode
+                    ? 'bg-white/60 hover:bg-white/80 text-gray-600 hover:text-gray-800'
+                    : 'bg-black/20 hover:bg-black/30 text-white/60 hover:text-white'
+                }`}
                 whileHover={{ scale: 1.1, boxShadow: "0 0 20px rgba(255, 107, 0, 0.3)" }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -362,13 +386,21 @@ export default function ModoEventosModal({
                           style={{
                             width: '200px',
                             height: '280px',
-                            background: `linear-gradient(135deg, 
-                              rgba(255, 107, 0, ${isCenter ? 0.08 : 0.04}) 0%, 
-                              rgba(0, 0, 0, ${isCenter ? 0.6 : 0.4}) 100%)`,
+                            background: isLightMode 
+                              ? `linear-gradient(135deg, 
+                                  rgba(255, 107, 0, ${isCenter ? 0.05 : 0.02}) 0%, 
+                                  rgba(255, 255, 255, ${isCenter ? 0.9 : 0.7}) 100%)`
+                              : `linear-gradient(135deg, 
+                                  rgba(255, 107, 0, ${isCenter ? 0.08 : 0.04}) 0%, 
+                                  rgba(0, 0, 0, ${isCenter ? 0.6 : 0.4}) 100%)`,
                             borderColor: mode.enabled ? `${mode.neonColor}60` : 'rgba(255, 107, 0, 0.2)',
                             boxShadow: isCenter 
-                              ? `0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 30px ${mode.neonColor}40`
-                              : '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
+                              ? isLightMode
+                                ? `0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 30px ${mode.neonColor}30`
+                                : `0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 30px ${mode.neonColor}40`
+                              : isLightMode
+                                ? '0 10px 25px -5px rgba(0, 0, 0, 0.1)'
+                                : '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
                           }}
                         >
                           {/* Neon pulsing border */}
@@ -429,8 +461,12 @@ export default function ModoEventosModal({
                             
                             {/* Text Content */}
                             <div className="space-y-2">
-                              <h4 className="text-lg font-semibold text-white">{mode.name}</h4>
-                              <p className="text-white/70 text-sm font-light leading-relaxed">
+                              <h4 className={`text-lg font-semibold ${isLightMode ? 'text-gray-800' : 'text-white'}`}>
+                                {mode.name}
+                              </h4>
+                              <p className={`text-sm font-light leading-relaxed ${
+                                isLightMode ? 'text-gray-600' : 'text-white/70'
+                              }`}>
                                 {mode.description}
                               </p>
                             </div>
@@ -495,7 +531,11 @@ export default function ModoEventosModal({
               {/* Navigation arrows */}
               <motion.button
                 onClick={nextSlide}
-                className="absolute right-8 z-20 h-12 w-12 rounded-full bg-black/20 hover:bg-black/30 border border-[#FF6B00]/20 text-white/60 hover:text-white transition-all duration-700 backdrop-blur-sm shadow-lg flex items-center justify-center group"
+                className={`absolute right-8 z-20 h-12 w-12 rounded-full border border-[#FF6B00]/20 transition-all duration-700 backdrop-blur-sm shadow-lg flex items-center justify-center group ${
+                  isLightMode
+                    ? 'bg-white/60 hover:bg-white/80 text-gray-600 hover:text-gray-800'
+                    : 'bg-black/20 hover:bg-black/30 text-white/60 hover:text-white'
+                }`}
                 whileHover={{ scale: 1.1, boxShadow: "0 0 20px rgba(255, 107, 0, 0.3)" }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -522,29 +562,31 @@ export default function ModoEventosModal({
 
             {/* Footer */}
             <div className="flex flex-col items-center space-y-4">
-              {/* Modo Ativo Display - Estilo ultra sofisticado */}
+              {/* Modo Ativo Display - Dinâmico e sem efeitos de borda */}
               {activeMode && (
                 <motion.div 
-                  className="flex items-center gap-4 px-6 py-4 bg-black/20 border border-[#FF6B00]/20 rounded-2xl backdrop-blur-sm"
-                  animate={{ 
-                    boxShadow: ['0 0 20px rgba(255, 107, 0, 0.2)', '0 0 30px rgba(255, 107, 0, 0.4)', '0 0 20px rgba(255, 107, 0, 0.2)']
-                  }}
-                  transition={{ duration: 3, repeat: Infinity }}
+                  className={`flex items-center gap-4 px-6 py-4 rounded-2xl backdrop-blur-sm transition-all duration-500 ${
+                    isLightMode
+                      ? 'bg-white/60 border border-gray-200/50'
+                      : 'bg-black/20 border border-gray-700/30'
+                  }`}
+                  key={activeMode.id} // Força re-render quando muda o modo
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.3 }}
                 >
                   {/* Ícone do modo ativo */}
                   <motion.div
                     className="w-10 h-10 rounded-xl flex items-center justify-center relative"
                     style={{
-                      background: `linear-gradient(135deg, ${activeMode.color}40, ${activeMode.color}20)`,
-                      border: `2px solid ${activeMode.color}60`,
-                      boxShadow: `0 0 15px ${activeMode.color}40`,
+                      background: `linear-gradient(135deg, ${activeMode.color}30, ${activeMode.color}15)`,
+                      border: `2px solid ${activeMode.color}50`,
                     }}
                     animate={{
-                      rotate: [0, 5, -5, 0],
-                      scale: [1, 1.1, 1],
+                      rotate: [0, 3, -3, 0],
                     }}
                     transition={{
-                      duration: 2,
+                      duration: 3,
                       repeat: Infinity,
                       ease: "easeInOut",
                     }}
@@ -557,10 +599,14 @@ export default function ModoEventosModal({
                   
                   {/* Nome e status */}
                   <div className="flex flex-col">
-                    <span className="text-white font-semibold text-lg">
+                    <span className={`font-semibold text-lg ${
+                      isLightMode ? 'text-gray-800' : 'text-white'
+                    }`}>
                       {activeMode.name}
                     </span>
-                    <span className="text-white/60 text-sm">
+                    <span className={`text-sm ${
+                      isLightMode ? 'text-gray-500' : 'text-white/60'
+                    }`}>
                       Modo ativo atual
                     </span>
                   </div>
@@ -569,8 +615,8 @@ export default function ModoEventosModal({
                   <motion.div 
                     className="w-3 h-3 rounded-full"
                     style={{ backgroundColor: activeMode.color }}
-                    animate={{ scale: [1, 1.3, 1], opacity: [0.8, 1, 0.8] }}
-                    transition={{ duration: 1.5, repeat: Infinity }}
+                    animate={{ scale: [1, 1.2, 1], opacity: [0.7, 1, 0.7] }}
+                    transition={{ duration: 2, repeat: Infinity }}
                   />
                 </motion.div>
               )}
@@ -579,7 +625,11 @@ export default function ModoEventosModal({
               <div className="flex items-center justify-center gap-4">
                 <motion.button
                   onClick={onClose}
-                  className="px-6 py-3 bg-transparent border border-[#FF6B00]/30 text-white/80 hover:text-white hover:border-[#FF6B00]/60 transition-all duration-500 rounded-xl backdrop-blur-sm font-light text-sm"
+                  className={`px-6 py-3 bg-transparent border border-[#FF6B00]/30 transition-all duration-500 rounded-xl backdrop-blur-sm font-light text-sm ${
+                    isLightMode
+                      ? 'text-gray-600 hover:text-gray-800 hover:border-[#FF6B00]/60'
+                      : 'text-white/80 hover:text-white hover:border-[#FF6B00]/60'
+                  }`}
                   whileHover={{ 
                     scale: 1.05,
                     boxShadow: "0 5px 15px rgba(255, 107, 0, 0.2)"
