@@ -1,15 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 @import url('https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Caveat:wght@400;600&family=Kalam:wght@400;700&display=swap');
 @import "./styles/animations.css";
 @import "./styles/hide-scrollbar.css";
 @import "./styles/typewriter-loader.css";
-
-/* Estilo para tópicos selecionados - apenas borda laranja (sem animação) */
-.topic-selected {
-  border: 2px solid #FF6B00;
-  position: relative;
-  box-shadow: 0 0 10px rgba(255, 107, 0, 0.4);
-}
-
 @import "./styles/notebook.css";
 @import "./styles/header-animations.css";
 @import "./styles/carousel-effects.css";
@@ -17,6 +13,12 @@
 @import "./styles/rotina-calendar.css";
 @import "./styles/modo-eventos.css";
 
+/* Estilo para tópicos selecionados - apenas borda laranja (sem animação) */
+.topic-selected {
+  border: 2px solid #FF6B00;
+  position: relative;
+  box-shadow: 0 0 10px rgba(255, 107, 0, 0.4);
+}
 
 /* Estilos para manter proporções consistentes em grid layouts */
 .dashboard-card {
@@ -92,6 +94,7 @@
   scrollbar-width: thin !important;
   scrollbar-color: rgba(255, 107, 0, 0.6) rgba(13, 34, 56, 0.4) !important;
 }
+
 .mode-epictus-turbo-advanced {
   min-height: 100vh;
   overflow-y: auto;
@@ -122,53 +125,7 @@
   }
   50% {
     opacity: 0;
-
-/* Estilo para a barra de rolagem customizada */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 107, 0, 0.3);
-  border-radius: 3px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 107, 0, 0.5);
-}
-
-
-/* Garantir que a barra de rolagem seja visível no componente EventosDoDia */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 5px !important;
-  display: block !important;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(13, 34, 56, 0.4) !important;
-  border-radius: 6px !important;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 107, 0, 0.6) !important;
-  border-radius: 6px !important;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(255, 107, 0, 0.8) !important;
-}
-
-/* Para Firefox */
-.custom-scrollbar {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 107, 0, 0.3) transparent;
-}
-
+    transform: scale(1.25);
   }
   100% {
     transform: scale(1.25);
@@ -198,35 +155,6 @@
 
 .active-topic::after {
   content: '';
-
-/* Personalização da scrollbar para o modal de atalhos */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(145, 145, 145, 0.4);
-  border-radius: 10px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(145, 145, 145, 0.6);
-}
-
-/* Estilo para tema escuro */
-.dark .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(100, 100, 100, 0.4);
-}
-
-.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(100, 100, 100, 0.6);
-}
-
   position: absolute;
   inset: 0;
   border-radius: inherit;
@@ -276,7 +204,6 @@
   font-weight: 700;
 }
 
-
 /* Estilos para efeitos 3D */
 .perspective-1000 {
   perspective: 1000px;
@@ -296,45 +223,6 @@
 .profile-3d-text {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
   transition: transform 0.2s ease-out, text-shadow 0.2s ease-out;
-}
-
-@keyframes ping-slow {
-  0% {
-    transform: scale(1);
-    opacity: 0.7;
-  }
-  50% {
-    transform: scale(1.5);
-    opacity: 0.3;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 0.7;
-  }
-}
-
-@keyframes float-particle {
-  0% {
-    transform: translateY(0) translateX(0) rotate(0deg);
-    opacity: 0.1;
-  }
-  50% {
-    transform: translateY(-15px) translateX(5px) rotate(180deg);
-    opacity: 0.3;
-  }
-  100% {
-    transform: translateY(0) translateX(0) rotate(360deg);
-    opacity: 0.1;
-  }
-}
-
-@keyframes subtle-glow {
-  0%, 100% {
-    filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.3));
-  }
-  50% {
-    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.5));
-  }
 }
 
 /* Melhorias para efeitos 3D e interações */
@@ -385,7 +273,6 @@
   }
 }
 
-
 /* Gradiente radial para efeitos de fundo */
 .bg-gradient-radial {
   background-image: radial-gradient(var(--tw-gradient-stops));
@@ -429,6 +316,300 @@
   background-image: 
     linear-gradient(to right, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+#topicos-container {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  position: relative;
+  padding: 0.5rem 0;
+}
+
+#topicos-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* Estilos para os botões de navegação dos tópicos */
+#scroll-left-btn,
+#scroll-right-btn {
+  transition: opacity 0.3s ease, transform 0.2s ease;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+#scroll-left-btn:hover,
+#scroll-right-btn:hover {
+  transform: translateY(-50%) scale(1.1);
+}
+
+#scroll-left-btn:active,
+#scroll-right-btn:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari and Opera */
+  }
+}
+
+/* Estilos auxiliares para o Hub Conectado */
+@keyframes pulse-glow {
+  0% { filter: drop-shadow(0 0 5px rgba(13, 35, 160, 0.3)); }
+  50% { filter: drop-shadow(0 0 10px rgba(91, 33, 189, 0.6)); }
+  100% { filter: drop-shadow(0 0 5px rgba(13, 35, 160, 0.3)); }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s infinite ease-in-out;
+}
+
+:root {
+  --primary: #FF6B00;
+  --primary-lighter: #FF9B50;
+  --dark-bg: #0A2540;
+  --text-primary: #29335C;
+  --text-secondary: #64748B;
+  --border-color: #E0E1DD;
+}
+
+/* Estilos para prevenir rolagem quando modal estiver aberto */
+body.modal-open {
+  overflow: hidden !important;
+  position: fixed !important;
+  width: 100% !important;
+  height: 100% !important;
+  padding-right: 15px !important; /* Compensar a barra de rolagem */
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  z-index: 9990 !important;
+}
+
+/* Garantir que o modal de boas-vindas tenha prioridade sobre outros elementos */
+.welcome-modal-overlay {
+  z-index: 9999 !important;
+  position: fixed !important;
+  inset: 0 !important;
+  pointer-events: auto !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  backdrop-filter: blur(5px) !important;
+  background-color: rgba(0, 0, 0, 0.7) !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  overflow: hidden !important;
+}
+
+.welcome-modal-content {
+  pointer-events: auto !important;
+  overscroll-behavior: none !important;
+  max-height: 90vh !important;
+  overflow-y: auto !important;
+}
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+  }
+}
+
+/* Animações para mensagens de sucesso */
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.typewriter-message {
+  overflow: hidden;
+  line-height: 1.5;
+}
+
+/* Estilos para o modal de personalidades */
+.personalidades-root {
+  position: relative !important;
+  z-index: 100000 !important;
+  isolation: isolate !important;
+}
+
+[role="dialog"].personalidades-modal {
+  position: fixed !important;
+  z-index: 100001 !important;
+}
+
+[data-radix-popper-content-wrapper] {
+  z-index: 100001 !important;
+}
+
+.personalidades-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(5px);
+  z-index: 100000 !important;
+}
+
+/* Custom cursor styles */
+body {
+  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="%23FF6B00" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" fill="rgba(255, 107, 0, 0.15)" stroke="%23FF6B00"/><path d="M2 2l7 4" stroke="%23FF6B00"/><path d="M8.5 9.5L5 6" stroke="%23FF6B00"/><path d="M18 13l-2.5-2.5" stroke="%23FF6B00"/><path d="M13 18l-2.5-2.5" stroke="%23FF6B00"/><circle cx="16.5" cy="11.5" r="0.5" fill="%23FF6B00" stroke="none"/></svg>') 1 1, auto;
+}
+
+.dark body {
+  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="%23FF6B00" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" fill="%23661A00" stroke="%23FF6B00"/><path d="M2 2l7 4" stroke="%23FF6B00"/><path d="M8.5 9.5L5 6" stroke="%23FF6B00"/><path d="M18 13l-2.5-2.5" stroke="%23FF6B00"/><path d="M13 18l-2.5-2.5" stroke="%23FF6B00"/><circle cx="16.5" cy="11.5" r="0.5" fill="%23FF6B00" stroke="none"/></svg>') 1 1, auto;
+}
+
+/* Adiciona cursor específico para inputs que permite digitação normal */
+input,
+input:hover,
+textarea,
+textarea:hover,
+[contenteditable="true"],
+[contenteditable="true"]:hover {
+  cursor: text !important;
+}
+
+/* Swipe to delete styles */
+.swipeable-item {
+  position: relative;
+  overflow: hidden;
+  touch-action: pan-y;
+  border-radius: 12px;
+  margin: 8px 0;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.swipeable-content {
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 100%;
+  border-radius: 12px;
+  background: white;
+}
+
+.dark .swipeable-content {
+  background: rgba(30, 41, 59, 0.8);
+}
+
+.delete-button {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #ef4444;
+  color: white;
+  width: 80px;
+  transform: translateX(100%);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 12px;
+  box-shadow: -5px 0 15px rgba(239, 68, 68, 0.2);
+}
+
+.swipe-delete-active .swipeable-content {
+  transform: translateX(-80px);
+}
+
+.swipe-delete-active .delete-button {
+  transform: translateX(0);
+}
+
+/* Custom scrollbar for the modal */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #0D2238;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #FF6B00;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #FF8C40;
+}
+
+/* Garantir espaço adequado para o botão "Ver Todos" */
+.custom-scrollbar {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  overflow-y: auto;
+  max-height: 200px;
+}
 
 /* Ensure modals and dialogs are always on top */
 
@@ -532,7 +713,6 @@ div[data-radix-focus-guard] {
   z-index: 999999 !important;
 }
 
-
 .radix-dialog-content,
 [data-radix-popper-content-wrapper],
 [role="dialog"] {
@@ -561,430 +741,7 @@ button[aria-haspopup="menu"] {
   z-index: 9999 !important;
 }
 
-  background-size: 20px 20px;
-}
-
-#topicos-container {
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  position: relative;
-  padding: 0.5rem 0;
-}
-
-#topicos-container::-webkit-scrollbar {
-  display: none;
-}
-
-/* Estilos para os botões de navegação dos tópicos */
-#scroll-left-btn,
-#scroll-right-btn {
-  transition: opacity 0.3s ease, transform 0.2s ease;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-}
-
-#scroll-left-btn:hover,
-#scroll-right-btn:hover {
-  transform: translateY(-50%) scale(1.1);
-}
-
-#scroll-left-btn:active,
-#scroll-right-btn:active {
-  transform: translateY(-50%) scale(0.95);
-}
-
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-@layer utilities {
-  .scrollbar-hide {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
-  }
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;  /* Chrome, Safari and Opera */
-  }
-}
-
-/* Estilos auxiliares para o Hub Conectado */
-@keyframes pulse-glow {
-  0% { filter: drop-shadow(0 0 5px rgba(13, 35, 160, 0.3)); }
-  50% { filter: drop-shadow(0 0 10px rgba(91, 33, 189, 0.6)); }
-  100% { filter: drop-shadow(0 0 5px rgba(13, 35, 160, 0.3)); }
-}
-
-.animate-pulse-glow {
-  animation: pulse-glow 3s infinite ease-in-out;
-}
-
-::root {
-
-/* Estilos para linhas tecnológicas */
-@keyframes pulse-tech-line {
-  0% { stroke-dashoffset: 0; }
-  100% { stroke-dashoffset: 20; }
-}
-
-@keyframes flow-pulse {
-  0% { stroke-width: 0.8px; opacity: 0.7; }
-  50% { stroke-width: 1.5px; opacity: 1; }
-  100% { stroke-width: 0.8px; opacity: 0.7; }
-}
-
-.tech-line {
-  animation: pulse-tech-line 3s linear infinite;
-  stroke-width: 1.5px !important;
-  opacity: 1 !important;
-}
-
-.tech-highlight {
-  animation: flow-pulse 2s ease-in-out infinite;
-  stroke-width: 1.2px !important;
-  opacity: 0.9 !important;
-}
-
-/* Certificar que as linhas SVG estejam sempre visíveis */
-svg.neural-connections {
-  z-index: 30 !important;
-  position: relative;
-}
-
-/* Efeito de brilho para conectores */
-.connector-node {
-  filter: drop-shadow(0 0 3px rgba(138, 99, 232, 0.8));
-}
-
-  --primary: #FF6B00;
-  --primary-lighter: #FF9B50;
-  --dark-bg: #0A2540;
-  --text-primary: #29335C;
-  --text-secondary: #64748B;
-  --border-color: #E0E1DD;
-}
-
-/* Animações para o card de perfil */
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
-}
-
-.animate-shimmer {
-  animation: shimmer 2s infinite linear;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-  background-size: 200% 100%;
-}
-
-.profile-3d-text {
-  text-shadow: 
-    0 2px 4px rgba(0, 0, 0, 0.1),
-    0 1px 2px rgba(0, 0, 0, 0.2);
-  transition: all 0.3s ease;
-}
-
-.profile-3d-text:hover {
-  text-shadow: 
-    0 4px 8px rgba(0, 0, 0, 0.15),
-    0 2px 4px rgba(0, 0, 0, 0.2);
-  transform: translateY(-1px);
-}
-
-@keyframes avatar-entrance {
-  0% {
-    transform: scale(0.8) rotate(-10deg);
-    opacity: 0;
-  }
-  50% {
-    transform: scale(1.1) rotate(5deg);
-  }
-  100% {
-    transform: scale(1) rotate(0);
-    opacity: 1;
-  }
-}
-
-.animate-avatar-entrance {
-  animation: avatar-entrance 1s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-}
-
-@keyframes pulse-border {
-  0% {
-    box-shadow: 0 0 0 0 rgba(255, 107, 0, 0.4);
-  }
-  70% {
-    box-shadow: 0 0 0 5px rgba(255, 107, 0, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(255, 107, 0, 0);
-  }
-}
-
-.pulse-border {
-  animation: pulse-border 2s infinite;
-}
-
-@keyframes float {
-  0% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-5px);
-  }
-  100% {
-    transform: translateY(0px);
-  }
-}
-
-
-/* Efeito de partículas brilhantes para os cards destacados */
-@keyframes float-particle {
-  0% {
-    transform: translateY(0) translateX(0) rotate(0deg);
-    opacity: 0;
-  }
-  20% {
-    opacity: 0.8;
-  }
-  100% {
-    transform: translateY(-60px) translateX(20px) rotate(360deg);
-    opacity: 0;
-  }
-}
-
-.glow-effect:hover .particle {
-  opacity: 1;
-}
-
-.particle {
-  position: absolute;
-  width: 4px;
-  height: 4px;
-  background-color: rgba(99, 102, 241, 0.6);
-  border-radius: 50%;
-  bottom: 0;
-  opacity: 0;
-  z-index: 10;
-  pointer-events: none;
-}
-
-.particle:nth-child(1) {
-  left: 10%;
-  width: 6px;
-  height: 6px;
-  animation: float-particle 3s ease-in-out infinite;
-  animation-delay: 0s;
-}
-
-.particle:nth-child(2) {
-  left: 30%;
-  animation: float-particle 4s ease-in-out infinite;
-  animation-delay: 0.3s;
-}
-
-.particle:nth-child(3) {
-  left: 50%;
-  width: 5px;
-  height: 5px;
-  animation: float-particle 3.5s ease-in-out infinite;
-  animation-delay: 0.7s;
-}
-
-.particle:nth-child(4) {
-  left: 70%;
-  animation: float-particle 4.5s ease-in-out infinite;
-  animation-delay: 1s;
-}
-
-.particle:nth-child(5) {
-  left: 90%;
-  width: 3px;
-  height: 3px;
-  animation: float-particle 3.2s ease-in-out infinite;
-  animation-delay: 1.3s;
-}
-
-.animate-float {
-  animation: float 5s ease-in-out infinite;
-}
-
-/* Efeito de partículas */
-@keyframes particle-float {
-  0% {
-    transform: translateY(0) translateX(0);
-    opacity: 0;
-  }
-  50% {
-    opacity: 0.5;
-  }
-  100% {
-    transform: translateY(-20px) translateX(10px);
-    opacity: 0;
-  }
-}
-
-.profile-particle {
-  position: absolute;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background-color: rgba(255, 107, 0, 0.3);
-  pointer-events: none;
-}
-
-.profile-particle-animation {
-  animation: particle-float 3s ease-out infinite;
-}
-
-/* Efeito de glass para os cards */
-.glass-effect {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.dark .glass-effect {
-  background: rgba(10, 37, 64, 0.5);
-}
-
-/* Efeito de borda brilhante */
-.glowing-border {
-  position: relative;
-}
-
-.glowing-border::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  border-radius: inherit;
-  padding: 2px;
-  background: linear-gradient(45deg, var(--primary), var(--primary-lighter), var(--primary));
-  -webkit-mask: 
-    linear-gradient(#fff 0 0) content-box, 
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.glowing-border:hover::before {
-  opacity: 1;
-}
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.5s ease-out forwards;
-  will-change: opacity, transform;
-  backface-visibility: hidden;
-}
-
-/* Fallback de conexão */
-.offline-indicator {
-  background-color: #f8d7da;
-  color: #721c24;
-  padding: 0.5rem;
-  border-radius: 0.25rem;
-  margin-bottom: 1rem;
-  font-size: 0.875rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-/* Estilo para a mensagem de sucesso */
-.success-message {
-  background-color: rgba(0, 200, 83, 0.1);
-  border: 2px solid #00c853;
-  color: #00a045;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  margin-bottom: 1rem;
-  animation: fadeIn 0.5s ease-out forwards;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.success-message-icon {
-  background-color: rgba(0, 200, 83, 0.2);
-  border-radius: 50%;
-  padding: 0.75rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-@layer utilities {
-  .animate-fadeIn {
-    animation: fadeIn 0.3s ease-out forwards; /* Modified line */
-  }
-
-  .animate-slideInUp {
-    animation: slideInUp 0.5s ease-out;
-  }
-
-  .animate-pulse-custom {
-    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
-
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(5px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes slideInUp {
-    from {
-      transform: translateY(10px);
-      opacity: 0;
-    }
-    to {
-      transform: translateY(0);
-      opacity: 1;
-    }
-  }
-
-  @keyframes pulse {
-    0%,
-    100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0.7;
-    }
-  }
-}
-
-/* Estilização para ícones de navegação e alertas - correção de fundo */
+/* Estilos para ícones de navegação e alertas - correção de fundo */
 .icon-nav-button {
   background-color: rgba(255, 255, 255, 0.9) !important;
   border: 1px solid rgba(0, 0, 0, 0.1) !important;
@@ -1008,7 +765,8 @@ svg.neural-connections {
 .dark .icon-nav-button:hover {
   background-color: rgba(15, 25, 35, 0.95) !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
-}```text
+}
+
 /* Estilos para ícones específicos */
 .calendar-icon {
   color: #FF6B00 !important;
@@ -1066,18 +824,6 @@ svg.neural-connections {
 }
 
 /* Estilos para prevenir rolagem quando modal estiver aberto */
-body.modal-open {
-  overflow: hidden !important;
-  position: fixed !important;
-  width: 100% !important;
-  height: 100% !important;
-  padding-right: 15px !important; /* Compensar a barra de rolagem */
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  z-index: 9990 !important;
-}
 
 /* Estilos para efeitos do modal */
 .bg-grid-pattern {
@@ -1085,33 +831,6 @@ body.modal-open {
     linear-gradient(to right, rgba(255, 107, 0, 0.1) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(255, 107, 0, 0.1) 1px, transparent 1px);
   background-size: 20px 20px;
-}
-
-/* Garantir que o modal de boas-vindas tenha prioridade sobre outros elementos */
-.welcome-modal-overlay {
-  z-index: 9999 !important;
-  position: fixed !important;
-  inset: 0 !important;
-  pointer-events: auto !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  backdrop-filter: blur(5px) !important;
-  background-color: rgba(0, 0, 0, 0.7) !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  overflow: hidden !important;
-}
-
-.welcome-modal-content {
-  pointer-events: auto !important;
-  overscroll-behavior: none !important;
-  max-height: 90vh !important;
-  overflow-y: auto !important;
 }
 
 /* Scrollbar personalizada para o modal */
@@ -1252,33 +971,6 @@ body.modal-open {
     --primary-foreground: 222.2 47.4% 11.2%;
 
     --secondary: 217.2 32.6% 17.5%;
-
-/* Custom scrollbar for the modal */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 4px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: #0D2238;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #FF6B00;
-  border-radius: 10px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #FF8C40;
-}
-
-/* Garantir espaço adequado para o botão "Ver Todos" */
-.custom-scrollbar {
-  margin-bottom: 0;
-  padding-bottom: 0;
-  overflow-y: auto;
-  max-height: 200px;
-}
-
     --secondary-foreground: 210 40% 98%;
 
     --muted: 217.2 32.6% 17.5%;
@@ -1339,31 +1031,12 @@ body.modal-open {
 }
 
 /* Forçar modal de personalidades por cima de TUDO */
-.personalidades-root {
-  position: relative !important;
-  z-index: 100000 !important;
-  isolation: isolate !important;
-}
 
 /* Estilos para o modal de personalidades */
-[role="dialog"].personalidades-modal {
-  position: fixed !important;
-  z-index: 100001 !important;
-}
 
 /* Garantir que o Radix UI Dialog seja exibido corretamente */
-[data-radix-popper-content-wrapper] {
-  z-index: 100001 !important;
-}
 
 /* Estilos para o backdrop do modal */
-.personalidades-modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(5px);
-  z-index: 100000 !important;
-}
 
 /* Estilos específicos para o componente de personalidades */
 .personalidades-list {
@@ -1435,7 +1108,7 @@ body.modal-open {
 }
 
 /* Custom cursor styles */
-::root:not(.dark) body {
+:::root:not(.dark) body {
   cursor:
     url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="%23FF6B00" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" fill="rgba(255, 107, 0, 0.15)" stroke="%23FF6B00"/><path d="M2 2l7 4" stroke="%23FF6B00"/><path d="M8.5 9.5L5 6" stroke="%23FF6B00"/><path d="M18 13l-2.5-2.5" stroke="%23FF6B00"/><path d="M13 18l-2.5-2.5" stroke="%23FF6B00"/><circle cx="16.5" cy="11.5" r="0.5" fill="%23FF6B00" stroke="none"/></svg>')
       1 1,
@@ -1667,62 +1340,9 @@ textarea:hover,
   transform-origin: top right;
 }
 
-/* Swipe to delete styles */
-.swipeable-item {
-  position: relative;
-  overflow: hidden;
-  touch-action: pan-y;
-  border-radius: 12px;
-  margin: 8px 0;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.swipeable-item:hover {
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-  transform: translateY(-2px);
-}
-
-.swipeable-content {
-  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  width: 100%;
-  border-radius: 12px;
-  background: white;
-}
-
-.dark .swipeable-content {
-  background: rgba(30, 41, 59, 0.8);
-}
-
-.delete-button {
-  position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #ef4444;
-  color: white;
-  width: 80px;
-  transform: translateX(100%);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  border-top-right-radius: 12px;
-  border-bottom-right-radius: 12px;
-  box-shadow: -5px 0 15px rgba(239, 68, 68, 0.2);
-}
-
 .delete-button:hover {
   background-color: #dc2626;
   width: 90px;
-}
-
-.swipe-delete-active .swipeable-content {
-  transform: translateX(-80px);
-}
-
-.swipe-delete-active .delete-button {
-  transform: translateX(0);
 }
 
 .swipe-delete-active:hover .delete-button {
@@ -1963,648 +1583,7 @@ textarea:hover,
   animation: fadeOut 0.2s ease-in-out forwards;
 }
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 .typewriter-message {
   overflow: hidden;
   line-height: 1.5;
-}
-
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-
-    --radius: 0.5rem;
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-  }
-}
-
-/* Pulse animation for the scroll to bottom button */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes fadeOut {
-  from { opacity: 1; }
-  to { opacity: 0; }
-}
-
-.animate-fadeIn {
-  animation: fadeIn 0.3s ease-in-out forwards;
-}
-
-.animate-fadeOut {
-  animation: fadeOut 0.3s ease-in-out forwards;
-}
-/* Estilo para centralizar o sistema solar */
-.solar-system-container {
-  position: fixed;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: 100%;
-  max-width: 900px;
-  height: 600px;
-  margin: 0 auto;
-  z-index: 10;
-}
-
-.dark .glass-effect {
-  background: rgba(10, 37, 64, 0.5);
-}
-
-/* Regras específicas para resolver conflito do modal com o chat */
-.epictus-chat-container,
-.chat-message-container,
-.message-content {
-  z-index: 1 !important; /* Força baixo z-index para o chat */
-}
-
-/* Forçar modal de personalidades por cima de TUDO */
-.personalidades-root {
-  position: relative !important;
-  z-index: 100000 !important;
-  isolation: isolate !important;
-}
-
-/* Estilos para o modal de personalidades */
-[role="dialog"].personalidades-modal {
-  position: fixed !important;
-  z-index: 100001 !important;
-}
-
-/* Garantir que o Radix UI Dialog seja exibido corretamente */
-[data-radix-popper-content-wrapper] {
-  z-index: 100001 !important;
-}
-
-/* Estilos para o backdrop do modal */
-.personalidades-modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(5px);
-  z-index: 100000 !important;
-}
-
-/* Estilos específicos para o componente de personalidades */
-.personalidades-list {
-  max-height: 60vh;
-  overflow-y: auto;
-  margin-right: -8px;
-  padding-right: 8px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
-}
-
-.personalidades-list::-webkit-scrollbar {
-  width: 4px;
-}
-
-.personalidades-list::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.personalidades-list::-webkit-scrollbar-thumb {
-  background-color: rgba(0, 0, 0, 0.2);
-  border-radius: 4px;
-}
-
-.dark .personalidades-list::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 255, 255, 0.2);
-}
-
-/* Efeito de transição suave ao selecionar personalidades */
-.personalidades-modal [role="dialog"] {
-  animation: modalFadeIn 0.2s ease-out;
-}
-
-@keyframes modalFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 107, 0, 0.3);
-  border-radius: 10px;
-}
-
-.dark .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 107, 0, 0.3);
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 107, 0, 0.5);
-}
-
-.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(255,107, 0, 0.5);
-}
-
-/* Custom cursor styles */
-::root:not(.dark) body {
-  cursor:
-    url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="%23FF6B00" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" fill="rgba(255, 107, 0, 0.15)" stroke="%23FF6B00"/><path d="M2 2l7 4" stroke="%23FF6B00"/><path d="M8.5 9.5L5 6" stroke="%23FF6B00"/><path d="M18 13l-2.5-2.5" stroke="%23FF6B00"/><path d="M13 18l-2.5-2.5" stroke="%23FF6B00"/><circle cx="16.5" cy="11.5" r="0.5" fill="%23FF6B00" stroke="none"/></svg>')
-      1 1,
-    auto;
-}
-
-.dark body {
-  cursor:
-    url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="%23FF6B00" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" fill="%23661A00" stroke="%23FF6B00"/><path d="M2 2l7 4" stroke="%23FF6B00"/><path d="M8.5 9.5L5 6" stroke="%23FF6B00"/><path d="M18 13l-2.5-2.5" stroke="%23FF6B00"/><path d="M13 18l-2.5-2.5" stroke="%23FF6B00"/><circle cx="16.5" cy="11.5" r="0.5" fill="%23FF6B00" stroke="none"/></svg>')
-      1 1,
-    auto;
-}
-
-a:hover,
-button:hover,
-select:hover,
-.interactive-element:hover {
-  cursor:
-    url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="%23FF6B00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" fill="%23330D00" stroke="%23FF6B00"/><path d="M2 2l7 4" stroke="%23FF6B00"/><path d="M8.5 9.5L5 6" stroke="%23992900"/><path d="M18 13l-2.5-2.5" stroke="%23992900"/><path d="M13 18l-2.5-2.5" stroke="%23992900"/><circle cx="16.5" cy="11.5" r="0.8" fill="%23FF6B00" stroke="none"/><path d="M3 3l1 1" stroke="%23FF6B00" stroke-width="1"/></svg>')
-      1 1,
-    auto;
-}
-
-/* Adiciona cursor específico para inputs que permite digitação normal */
-input,
-input:hover,
-textarea,
-textarea:hover,
-[contenteditable="true"],
-[contenteditable="true"]:hover {
-  cursor: text !important;
-}
-
-@keyframes subtle-pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.8;
-  }
-}
-
-.animate-subtle-pulse {
-  animation: subtle-pulse 2s ease-in-out infinite;
-}
-
-/* Typing animation */
-@keyframes typing {
-  from {
-    max-height: 0;
-  }
-  to {
-    max-height: 100px;
-  }
-}
-
-@keyframes blink-caret {
-  from,
-  to {
-    border-color: transparent;
-  }
-  50% {
-    border-color: rgba(255, 107, 0, 0.5);
-  }
-}
-
-.typing-animation {
-  display: inline-block;
-  overflow: hidden;
-  white-space: normal;
-  border-right: 2px solid transparent;
-  max-width: 100%;
-  animation:
-    typing 3.5s ease-in-out 1s 1 normal both,
-    blink-caret 0.75s step-end infinite;
-}
-
-/* Interactive light effect */
-.interactive-light {
-  position: relative;
-  overflow: hidden;
-  transition:
-    transform 0.3s ease,
-    color 0.3s ease;
-}
-
-.interactive-light:hover {
-  color: #ff6b00;
-  transform: translateY(-2px);
-  text-shadow: 0 2px 10px rgba(255, 107, 0, 0.3);
-}
-
-.interactive-light::before {
-  content: "";
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(
-    circle,
-    rgba(255, 107, 0, 0.2) 0%,
-    transparent 70%
-  );
-  opacity: 0;
-  transform: scale(0.5);
-  transition:
-    opacity 0.5s ease,
-    transform 0.5s ease;
-  pointer-events: none;
-}
-
-.interactive-light:hover::before {
-  opacity: 1;
-  transform: scale(1);
-}
-
-.interactive-light::after {
-  content: "";
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  width: 0;
-  height: 1px;
-  background: linear-gradient(to right, transparent, #ff6b00, transparent);
-  transition: width 0.3s ease;
-}
-
-.interactive-light:hover::after {
-  width: 100%;
-}
-
-/* 3D Text Effect */
-.text-3d {
-  perspective: 500px;
-  transition: transform 0.1s;
-  transform-style: preserve-3d;
-  display: inline-block;
-}
-
-.profile-3d-container {
-  perspective: 800px;
-  transform-style: preserve-3d;
-}
-
-.profile-3d-element {
-  transition: transform 0.1s ease-out;
-  transform-style: preserve-3d;
-}
-
-.profile-3d-text {
-  text-shadow:
-    1px 1px 0 rgba(0, 0, 0, 0.1),
-    2px 2px 0 rgba(0, 0, 0, 0.05);
-  transition:
-    transform 0.1s ease-out,
-    text-shadow 0.1s ease-out;
-}
-
-.profile-3d-avatar {
-  transition:
-    transform 0.1s ease-out,
-    box-shadow 0.1s ease-out;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-}
-
-@keyframes highlight {
-  0% {
-    transform: translateY(10px);
-    opacity: 0;
-  }
-  100% {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-.animate-highlight {
-  animation: highlight 0.5s ease-out forwards;
-}
-
-.shadow-glow-cyan {
-  box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
-}
-
-@keyframes gradient-x {
-  0%,
-  100% {
-    background-position: 0% 50%;
-    box-shadow: 0 0 10px rgba(255, 107, 0, 0.3);
-  }
-  50% {
-    background-position: 100% 50%;
-    box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
-  }
-}
-
-@keyframes popover-appear {
-  0% {
-    opacity: 0;
-    transform: scale(0.95) translateY(-5px);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-@keyframes notification-highlight {
-  0% {
-    background-color: rgba(255, 107, 0, 0.2);
-  }
-  50% {
-    background-color: rgba(255, 107, 0, 0.1);
-  }
-  100% {
-    background-color: transparent;
-  }
-}
-
-.popover-content-modern {
-  animation: popover-appear 0.2s ease-out forwards;
-  border-radius: 16px;
-  box-shadow:
-    0 10px 25px -5px rgba(0, 0, 0, 0.1),
-    0 8px10px -6px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  transform-origin: top right;
-}
-
-/* Swipe to delete styles */
-.swipeable-item {
-  position: relative;
-  overflow: hidden;
-  touch-action: pan-y;
-  border-radius: 12px;
-  margin: 8px 0;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.swipeable-item:hover {
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-  transform: translateY(-2px);
-}
-
-.swipeable-content {
-  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  width: 100%;
-  border-radius: 12px;
-  background: white;
-}
-
-.dark .swipeable-content {
-  background: rgba(30, 41, 59, 0.8);
-}
-
-.delete-button {
-  position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #ef4444;
-  color: white;
-  width: 80px;
-  transform: translateX(100%);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  border-top-right-radius: 12px;
-  border-bottom-right-radius: 12px;
-  box-shadow: -5px 0 15px rgba(239, 68, 68, 0.2);
-}
-
-.delete-button:hover {
-  background-color: #dc2626;
-  width: 90px;
-}
-
-.swipe-delete-active .swipeable-content {
-  transform: translateX(-80px);
-}
-
-.swipe-delete-active .delete-button {
-  transform: translateX(0);
-}
-
-.swipe-delete-active:hover .delete-button {
-  transform: translateX(0);
-  width: 90px;
-}
-
-.swipe-delete-active:hover .swipeable-content {
-  transform: translateX(-90px);
-}
-
-.dark .popover-content-modern {
-  box-shadow:
-    0 10px 25px -5px rgba(0, 0, 0, 0.3),
-    0 8px 10px -6px rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background-color: rgba(30, 41, 59, 0.95);
-  backdrop-filter: blur(8px);
-}
-
-/* Classes de alinhamento e grid para layout consistente */
-.flex-center {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.flex-between {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.grid-layout {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1rem;
-}
-
-/* Garantir que elementos não sejam cortados */
-.overflow-safe {
-  overflow: visible;
-  z-index: 10;
-}
-
-.animate-gradient-x {
-  background-size: 200% 100%;
-  animation: gradient-x 3s ease infinite;
-}
-
-@keyframes border-pulse {
-  0%,
-  100% {
-    border-color: rgba(255, 107, 0, 0.5);
-  }
-  50% {
-    border-color: rgba(255, 215, 0, 0.5);
-  }
-}
-
-@keyframes pulse-border {
-  0%,
-  100% {
-    border-color: rgba(255, 107, 0, 0.3);
-  }
-  50% {
-    border-color: rgba(255, 107,0, 0.8);
-  }
-}
-
-.animate-pulse-border {
-  animation: pulse-border 2s ease-in-out infinite;
-}
-
-.welcome-modal-overlay {
-  pointer-events: auto;
-}
-
-/* Estilos adicionais para botões interativos no modal */
-.welcome-modal-overlay button {
-  cursor: pointer;
-}
-
-/* Estilos para botão de voltar */
-.welcome-modal-overlay button:focus-visible {
-  outline: 2px solid #FF6B00;
-  outline-offset: 2px;
-}
-
-/* Melhorias para tema escuro */
-.dark .welcome-modal-overlay .bg-gradient-to-b {
-  background: linear-gradient(to bottom, #001427, #001427e8);
-}
-
-/* Melhoria de interação nos cards */
-.welcome-modal-overlay .group {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.welcome-modal-overlay .group:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(255, 107, 0, 0.15);
-}
-
-/* Ajuste de altura para mini cards */
-.welcome-modal-overlay .h-10.w-10.rounded-full,
-.welcome-modal-overlay .h-9.w-9.rounded-full {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Animações para o card de perfil */
-.progress-animation {
-  position: relative;
-  overflow: hidden;
-}
-
-.progress-animation::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transform: translateX(-100%);
-  animation: shimmer 2s infinite;
-}
-
-@keyframes shimmer {
-  100% {
-    transform: translateX(100%);
-  }
-}
-
-.profile-3d-text {
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
-}
-
-.profile-3d-text:hover {
-  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-  transform: translateY(-1px);
 }

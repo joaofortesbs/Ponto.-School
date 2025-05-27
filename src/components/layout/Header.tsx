@@ -746,6 +746,7 @@ export default function Header() {
         const result = e.target?.result as string;
 
         try {
+          // Remove duplicate supabase import to avoid conflicts
           // Get current version from Supabase
           const { data, error } = await supabase
             .from("platform_settings")
@@ -804,6 +805,7 @@ export default function Header() {
       // Import dynamically to avoid circular dependencies
       const { DEFAULT_LOGO } = await import("@/lib/logo-utils");
 
+      // Remove duplicate supabase import to avoid conflicts
       // Get current version from Supabase
       const { data, error } = await supabase
         .from("platform_settings")
@@ -965,6 +967,7 @@ export default function Header() {
         hour: "2-digit",
         minute: "2-digit",
       }),
+```tool_code
       date: "Agora mesmo",
       unread: false,
       attachments: attachments || [],
@@ -1046,6 +1049,7 @@ export default function Header() {
       localStorage.removeItem('auth_checked');
 
       // Depois realizar signOut no Supabase
+      // Remove duplicate supabase import to avoid conflicts
       const { error } = await supabase.auth.signOut();
 
       if (error) {
