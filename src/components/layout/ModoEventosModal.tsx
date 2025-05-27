@@ -177,16 +177,6 @@ export default function ModoEventosModal({
 
             {/* Content area */}
             <div className="flex-1 flex flex-col">
-              {/* Status indicator */}
-              <div className="text-center mb-6">
-                <div className="inline-flex items-center gap-3 px-6 py-3 bg-black/10 border border-white/5 rounded-full backdrop-blur-sm">
-                  <div className={`w-2 h-2 rounded-full ${enabledCount > 0 ? 'bg-[#FF6B00]' : 'bg-white/20'} transition-colors duration-300`} />
-                  <span className="text-white/70 text-sm font-light">
-                    {enabledCount} modos ativados
-                  </span>
-                </div>
-              </div>
-
               {/* Ultra-sophisticated events grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto flex-1">
                 {eventModes.map((mode) => {
