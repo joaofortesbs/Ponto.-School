@@ -223,15 +223,15 @@ export default function ModoEventosModal({
       <DialogContent className="w-[900px] h-[720px] max-w-none p-0 border-0 bg-transparent overflow-hidden">
         <div className="relative w-full h-full">
           {/* Background com estilo do modal de boas-vindas adaptado para tema claro/escuro */}
-          <div className={`absolute inset-0 backdrop-blur-xl rounded-3xl border shadow-[0_0_100px_rgba(255,107,0,0.1)] ${
+          <div className={`absolute inset-0 backdrop-blur-xl rounded-3xl border shadow-[0_0_50px_rgba(255,107,0,0.05)] ${
             isLightMode 
-              ? 'bg-white/90 border-[#FF6B00]/20' 
+              ? 'bg-white/40 border-[#FF6B00]/20' 
               : 'bg-black/40 border-[#FF6B00]/30'
           }`}>
             {/* Glassmorphism overlay com tom laranja mais suave */}
             <div className={`absolute inset-0 rounded-3xl ${
               isLightMode
-                ? 'bg-gradient-to-br from-[#FF6B00]/03 via-white/10 to-[#FF8C40]/02'
+                ? 'bg-gradient-to-br from-white/60 via-white/40 to-white/60'
                 : 'bg-gradient-to-br from-[#FF6B00]/05 via-black/20 to-[#FF8C40]/03'
             }`} />
             
@@ -248,18 +248,18 @@ export default function ModoEventosModal({
             />
           </div>
 
-          {/* Close button */}
+          {/* Close button simples */}
           <Button
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className={`absolute top-6 right-6 z-50 h-9 w-9 rounded-full border border-[#FF6B00]/20 transition-all duration-700 group backdrop-blur-sm ${
+            className={`absolute top-4 right-4 z-50 h-8 w-8 rounded-full transition-all duration-300 ${
               isLightMode
-                ? 'bg-white/60 hover:bg-white/80 text-gray-600 hover:text-gray-800'
-                : 'bg-black/20 hover:bg-black/30 text-white/60 hover:text-white'
+                ? 'bg-gray-100/80 hover:bg-gray-200/80 text-gray-600 hover:text-gray-800'
+                : 'bg-black/30 hover:bg-black/50 text-white/60 hover:text-white'
             }`}
           >
-            <X className="h-4 w-4 group-hover:rotate-90 transition-transform duration-700" />
+            <X className="h-4 w-4" />
           </Button>
 
           {/* Main content */}
@@ -394,18 +394,18 @@ export default function ModoEventosModal({
                                   ${mode.color}${isCenter ? '12' : '06'} 0%, 
                                   rgba(0, 0, 0, ${isCenter ? 0.6 : 0.4}) 100%)`,
                             borderColor: mode.enabled 
-                              ? `${mode.neonColor}80` 
+                              ? `${mode.neonColor}60` 
                               : isCenter 
-                                ? `${mode.neonColor}40`
+                                ? `${mode.neonColor}30`
                                 : 'rgba(255, 107, 0, 0.2)',
                             borderWidth: mode.enabled ? '2px' : '1px',
                             boxShadow: isCenter 
                               ? isLightMode
-                                ? `0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 30px ${mode.neonColor}40, 0 0 60px ${mode.neonColor}20`
-                                : `0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 30px ${mode.neonColor}50, 0 0 80px ${mode.neonColor}25`
+                                ? `0 20px 40px -12px rgba(0, 0, 0, 0.1), 0 0 15px ${mode.neonColor}25`
+                                : `0 20px 40px -12px rgba(0, 0, 0, 0.4), 0 0 20px ${mode.neonColor}30`
                               : isLightMode
-                                ? '0 10px 25px -5px rgba(0, 0, 0, 0.1)'
-                                : '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
+                                ? '0 8px 20px -5px rgba(0, 0, 0, 0.08)'
+                                : '0 8px 20px -5px rgba(0, 0, 0, 0.25)',
                           }}
                         >
                           {/* Neon pulsing border - agora usando a cor específica do modo */}
@@ -437,16 +437,16 @@ export default function ModoEventosModal({
                                 border: `2px solid ${mode.neonColor}`,
                                 borderRadius: 'inherit',
                                 boxShadow: `
-                                  0 0 20px ${mode.neonColor}60,
-                                  0 0 40px ${mode.neonColor}40,
-                                  inset 0 0 20px ${mode.neonColor}20
+                                  0 0 12px ${mode.neonColor}40,
+                                  0 0 24px ${mode.neonColor}25,
+                                  inset 0 0 12px ${mode.neonColor}15
                                 `,
                               }}
                               animate={{
                                 boxShadow: [
-                                  `0 0 20px ${mode.neonColor}60, 0 0 40px ${mode.neonColor}40, inset 0 0 20px ${mode.neonColor}20`,
-                                  `0 0 30px ${mode.neonColor}80, 0 0 60px ${mode.neonColor}50, inset 0 0 30px ${mode.neonColor}30`,
-                                  `0 0 20px ${mode.neonColor}60, 0 0 40px ${mode.neonColor}40, inset 0 0 20px ${mode.neonColor}20`
+                                  `0 0 12px ${mode.neonColor}40, 0 0 24px ${mode.neonColor}25, inset 0 0 12px ${mode.neonColor}15`,
+                                  `0 0 18px ${mode.neonColor}50, 0 0 36px ${mode.neonColor}30, inset 0 0 18px ${mode.neonColor}20`,
+                                  `0 0 12px ${mode.neonColor}40, 0 0 24px ${mode.neonColor}25, inset 0 0 12px ${mode.neonColor}15`
                                 ],
                               }}
                               transition={{
@@ -470,10 +470,10 @@ export default function ModoEventosModal({
                                   ? `3px solid ${mode.color}80`
                                   : `2px solid ${mode.color}50`,
                                 boxShadow: mode.enabled 
-                                  ? `0 0 30px ${mode.color}80, 0 0 60px ${mode.color}50, inset 0 0 20px ${mode.color}30`
+                                  ? `0 0 15px ${mode.color}50, 0 0 30px ${mode.color}30, inset 0 0 10px ${mode.color}20`
                                   : isCenter 
-                                    ? `0 0 20px ${mode.color}60` 
-                                    : `0 0 10px ${mode.color}30`,
+                                    ? `0 0 10px ${mode.color}40` 
+                                    : `0 0 5px ${mode.color}20`,
                               }}
                               animate={isCenter ? {
                                 rotate: [0, 5, -5, 0],
