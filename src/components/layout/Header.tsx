@@ -70,7 +70,6 @@ import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import MessageReplyModal from "@/components/layout/MessageReplyModal";
-import ModoEventosModal from "@/components/layout/ModoEventosModal";
 
 export default function Header() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -118,7 +117,6 @@ export default function Header() {
     useState(false);
   const [isDark, setIsDark] = useState(false); // Added isDark state
   const [theme, setTheme] = useState("light"); // Added theme state
-  const [isModoEventosOpen, setIsModoEventosOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -746,7 +744,6 @@ export default function Header() {
         const result = e.target?.result as string;
 
         try {
-          // Remove duplicate supabase import to avoid conflicts
           // Get current version from Supabase
           const { data, error } = await supabase
             .from("platform_settings")
@@ -805,7 +802,6 @@ export default function Header() {
       // Import dynamically to avoid circular dependencies
       const { DEFAULT_LOGO } = await import("@/lib/logo-utils");
 
-      // Remove duplicate supabase import to avoid conflicts
       // Get current version from Supabase
       const { data, error } = await supabase
         .from("platform_settings")
@@ -1048,7 +1044,6 @@ export default function Header() {
       localStorage.removeItem('auth_checked');
 
       // Depois realizar signOut no Supabase
-      // Remove duplicate supabase import to avoid conflicts
       const { error } = await supabase.auth.signOut();
 
       if (error) {
@@ -1324,7 +1319,10 @@ export default function Header() {
                 size="icon"
                 className="relative hover:bg-brand-card dark:hover:bg-white/5 group transition-all duration-300"
                 aria-label="Modo Eventos"
-                onClick={() => setIsModoEventosOpen(true)}
+                onClick={() => {
+                  // Implementar navegação para eventos ou modal
+                  console.log("Modo Eventos ativado");
+                }}
               >
                 <div className="relative">
                   <CalendarIcon className="h-5 w-5 text-brand-black dark:text-white group-hover:text-[#FF6B00] transition-colors duration-300" />
@@ -1886,12 +1884,6 @@ export default function Header() {
           </Tooltip>
         </TooltipProvider>
       </div>
-
-      {/* Modo Eventos Modal */}
-      <ModoEventosModal
-        isOpen={isModoEventosOpen}
-        onOpenChange={setIsModoEventosOpen}
-      />
 
       {/* Message Reply Modal */}
       <MessageReplyModal
