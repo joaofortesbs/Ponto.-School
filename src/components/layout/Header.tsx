@@ -967,7 +967,6 @@ export default function Header() {
         hour: "2-digit",
         minute: "2-digit",
       }),
-```tool_code
       date: "Agora mesmo",
       unread: false,
       attachments: attachments || [],
