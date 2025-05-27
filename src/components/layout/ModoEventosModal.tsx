@@ -220,7 +220,7 @@ export default function ModoEventosModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[900px] h-[650px] max-w-none p-0 border-0 bg-transparent overflow-hidden">
+      <DialogContent className="w-[900px] h-[720px] max-w-none p-0 border-0 bg-transparent overflow-hidden">
         <div className="relative w-full h-full">
           {/* Background com estilo do modal de boas-vindas adaptado para tema claro/escuro */}
           <div className={`absolute inset-0 backdrop-blur-xl rounded-3xl border shadow-[0_0_100px_rgba(255,107,0,0.1)] ${
@@ -600,42 +600,55 @@ export default function ModoEventosModal({
                               </motion.div>
                             ) : (
                               <motion.div 
-                                className="px-4 py-2 rounded-full border-2 text-xs font-semibold flex items-center justify-center relative"
-                                style={{
-                                  borderColor: mode.color,
-                                  backgroundColor: `${mode.color}30`,
-                                  color: mode.color,
-                                  boxShadow: `0 0 20px ${mode.color}50, inset 0 0 10px ${mode.color}20`,
-                                }}
-                                animate={{
-                                  boxShadow: [
-                                    `0 0 20px ${mode.color}50, inset 0 0 10px ${mode.color}20`,
-                                    `0 0 30px ${mode.color}70, inset 0 0 15px ${mode.color}30`,
-                                    `0 0 20px ${mode.color}50, inset 0 0 10px ${mode.color}20`
-                                  ],
-                                }}
-                                transition={{
-                                  duration: 2,
-                                  repeat: Infinity,
-                                  ease: "easeInOut",
-                                }}
+                                className="relative"
+                                whileHover={isCenter ? { scale: 1.1 } : {}}
                               >
-                                ATIVO
-                                <motion.div 
-                                  className="absolute inset-0 rounded-full"
+                                <div 
+                                  className="w-14 h-7 rounded-full border-2 transition-all duration-500 relative flex items-center"
                                   style={{
-                                    background: `linear-gradient(45deg, ${mode.neonColor}20, transparent, ${mode.neonColor}20)`,
-                                    backgroundSize: '200% 200%',
+                                    backgroundColor: mode.enabled ? `${mode.color}40` : 'rgba(128, 128, 128, 0.2)',
+                                    borderColor: mode.enabled ? `${mode.color}90` : 'rgba(128, 128, 128, 0.3)',
+                                    boxShadow: mode.enabled ? `0 0 20px ${mode.color}60, inset 0 0 10px ${mode.color}20` : 'none',
                                   }}
-                                  animate={{
-                                    backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
-                                  }}
-                                  transition={{
-                                    duration: 3,
-                                    repeat: Infinity,
-                                    ease: "easeInOut",
-                                  }}
-                                />
+                                >
+                                  <motion.div 
+                                    className="w-5 h-5 rounded-full shadow-lg flex items-center justify-center relative"
+                                    style={{
+                                      background: mode.enabled 
+                                        ? `linear-gradient(135deg, ${mode.color}, ${mode.neonColor})` 
+                                        : 'linear-gradient(135deg, rgba(200, 200, 200, 0.8), rgba(150, 150, 150, 0.6))',
+                                      boxShadow: mode.enabled ? `0 0 15px ${mode.color}80` : 'none',
+                                    }}
+                                    animate={{
+                                      x: mode.enabled ? 22 : 2,
+                                    }}
+                                    transition={{
+                                      type: "spring",
+                                      stiffness: 500,
+                                      damping: 30,
+                                    }}
+                                  >
+                                    {mode.enabled && (
+                                      <>
+                                        <Check className="h-3 w-3 text-white relative z-10" />
+                                        <motion.div 
+                                          className="absolute inset-0 rounded-full"
+                                          style={{
+                                            background: `radial-gradient(circle, ${mode.neonColor}60 0%, transparent 70%)`,
+                                          }}
+                                          animate={{
+                                            opacity: [0.5, 1, 0.5],
+                                          }}
+                                          transition={{
+                                            duration: 1.5,
+                                            repeat: Infinity,
+                                            ease: "easeInOut",
+                                          }}
+                                        />
+                                      </>
+                                    )}
+                                  </motion.div>
+                                </div>
                               </motion.div>
                             )}
                           </div>
