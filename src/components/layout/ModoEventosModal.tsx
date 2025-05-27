@@ -74,6 +74,16 @@ export default function ModoEventosModal({
       enabled: false,
     },
     {
+      id: "ponto-school",
+      name: "Ponto. School",
+      description: "Modo padrão da plataforma",
+      icon: Target,
+      gradient: "from-[#FF6B00] to-[#FF8C40]",
+      color: "#FF6B00",
+      bgColor: "rgba(255, 107, 0, 0.1)",
+      enabled: true,
+    },
+    {
       id: "halloween",
       name: "Halloween",
       description: "Modo misterioso e divertido",
@@ -105,7 +115,7 @@ export default function ModoEventosModal({
     },
   ]);
 
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(3); // Centraliza no card "Ponto. School"
   const carouselRef = useRef<HTMLDivElement>(null);
   const isScrolling = useRef(false);
 
@@ -120,11 +130,15 @@ export default function ModoEventosModal({
   const scrollToIndex = (index: number) => {
     if (carouselRef.current) {
       const container = carouselRef.current;
-      const cardWidth = 224; // largura do card (220px) + gap (4px)
-      const targetScroll = index * cardWidth - (container.offsetWidth / 2) + (cardWidth / 2);
+      const cardWidth = 200; // largura do card (180px) + gap (20px)
+      const containerWidth = container.offsetWidth;
+      const totalCards = eventModes.length;
+      
+      // Calcula a posição central
+      const targetScroll = (index * cardWidth) - (containerWidth / 2) + (cardWidth / 2);
       
       container.scrollTo({
-        left: targetScroll,
+        left: Math.max(0, Math.min(targetScroll, (totalCards * cardWidth) - containerWidth)),
         behavior: 'smooth'
       });
     }
@@ -157,7 +171,7 @@ export default function ModoEventosModal({
         
         setTimeout(() => {
           isScrolling.current = false;
-        }, 500);
+        }, 300);
       }
     };
 
@@ -181,7 +195,7 @@ export default function ModoEventosModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-6xl max-w-[95vw] h-[80vh] p-0 border-0 bg-transparent overflow-hidden">
+      <DialogContent className="w-[900px] h-[600px] max-w-none p-0 border-0 bg-transparent overflow-hidden">
         <div className="relative w-full h-full">
           {/* Ultra-sophisticated background */}
           <div className="absolute inset-0 bg-gradient-to-br from-[#0A0F1C] via-[#1A1F2E] to-[#0D1117] rounded-3xl border border-[#FF6B00]/10 shadow-[0_0_100px_rgba(255,107,0,0.1)] backdrop-blur-3xl">
@@ -270,7 +284,7 @@ export default function ModoEventosModal({
               {/* Container do carrossel com scroll personalizado */}
               <div 
                 ref={carouselRef}
-                className="flex overflow-x-auto scrollbar-hide gap-4 px-20 py-6 w-full"
+                className="flex overflow-x-auto scrollbar-hide gap-5 px-16 py-6 w-full"
                 style={{
                   scrollBehavior: 'smooth',
                   scrollSnapType: 'x mandatory'
@@ -283,22 +297,24 @@ export default function ModoEventosModal({
                   return (
                     <div
                       key={mode.id}
-                      className={`group relative flex-shrink-0 bg-gradient-to-br from-white/[0.03] to-white/[0.08] rounded-2xl p-6 border transition-all duration-700 cursor-pointer backdrop-blur-sm transform ${
+                      className={`group relative flex-shrink-0 bg-gradient-to-br from-white/[0.03] to-white/[0.08] rounded-2xl p-5 border transition-all duration-500 cursor-pointer backdrop-blur-sm transform ${
                         isCenter 
-                          ? 'scale-105 z-10 shadow-2xl shadow-[#FF6B00]/20' 
-                          : 'scale-95 opacity-70 hover:opacity-85 hover:scale-100'
+                          ? 'scale-110 z-10 shadow-2xl shadow-[#FF6B00]/30' 
+                          : 'scale-90 opacity-60 hover:opacity-80 hover:scale-95'
                       }`}
                       style={{
-                        width: '220px',
-                        height: '280px',
-                        borderColor: mode.enabled ? `${mode.color}40` : 'rgba(255, 255, 255, 0.08)',
+                        width: '180px',
+                        height: '240px',
+                        borderColor: mode.enabled ? `${mode.color}50` : 'rgba(255, 255, 255, 0.08)',
                         backgroundColor: mode.enabled ? mode.bgColor : 'transparent',
                         scrollSnapAlign: 'center'
                       }}
                       onClick={() => {
                         setCurrentIndex(index);
                         scrollToIndex(index);
-                        toggleEventMode(mode.id);
+                        if (mode.id !== 'ponto-school') {
+                          toggleEventMode(mode.id);
+                        }
                       }}
                     >
                       {/* Glow effect personalizado */}
@@ -319,8 +335,8 @@ export default function ModoEventosModal({
                       <div className="relative flex flex-col items-center text-center space-y-4 h-full justify-center">
                         {/* Ícone principal */}
                         <div 
-                          className={`w-16 h-16 rounded-xl flex items-center justify-center transition-all duration-700 ${
-                            isCenter ? 'scale-105' : 'group-hover:scale-105'
+                          className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-500 ${
+                            isCenter ? 'scale-110' : 'group-hover:scale-105'
                           }`}
                           style={{
                             background: `linear-gradient(135deg, ${mode.color}40, ${mode.color}20)`,
@@ -328,43 +344,51 @@ export default function ModoEventosModal({
                           }}
                         >
                           <IconComponent 
-                            className="h-8 w-8 text-white" 
+                            className="h-6 w-6 text-white" 
                             style={{ color: mode.color }}
                           />
                         </div>
                         
                         {/* Conteúdo */}
                         <div className="space-y-2">
-                          <h4 className="text-lg font-light text-white">{mode.name}</h4>
-                          <p className="text-white/60 text-xs font-light leading-relaxed">
+                          <h4 className="text-base font-medium text-white text-center">{mode.name}</h4>
+                          <p className="text-white/60 text-xs font-light leading-relaxed text-center">
                             {mode.description}
                           </p>
                         </div>
 
-                        {/* Toggle sofisticado */}
-                        <div className="relative">
-                          <div 
-                            className="w-14 h-7 rounded-full border transition-all duration-700 relative"
-                            style={{
-                              backgroundColor: mode.enabled ? `${mode.color}20` : 'rgba(0, 0, 0, 0.2)',
-                              borderColor: mode.enabled ? `${mode.color}60` : 'rgba(255, 255, 255, 0.1)'
-                            }}
-                          >
+                        {/* Toggle sofisticado - apenas se não for Ponto. School */}
+                        {mode.id !== 'ponto-school' ? (
+                          <div className="relative">
                             <div 
-                              className="absolute top-0.5 w-6 h-6 rounded-full transition-all duration-700 shadow-lg flex items-center justify-center"
+                              className="w-12 h-6 rounded-full border transition-all duration-500 relative"
                               style={{
-                                left: mode.enabled ? '32px' : '2px',
-                                background: mode.enabled 
-                                  ? `linear-gradient(135deg, ${mode.color}, ${mode.color}CC)` 
-                                  : 'linear-gradient(135deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.2))'
+                                backgroundColor: mode.enabled ? `${mode.color}20` : 'rgba(0, 0, 0, 0.2)',
+                                borderColor: mode.enabled ? `${mode.color}60` : 'rgba(255, 255, 255, 0.1)'
                               }}
                             >
-                              {mode.enabled && (
-                                <Check className="h-3 w-3 text-white" />
-                              )}
+                              <div 
+                                className="absolute top-0.5 w-5 h-5 rounded-full transition-all duration-500 shadow-lg flex items-center justify-center"
+                                style={{
+                                  left: mode.enabled ? '26px' : '2px',
+                                  background: mode.enabled 
+                                    ? `linear-gradient(135deg, ${mode.color}, ${mode.color}CC)` 
+                                    : 'linear-gradient(135deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.2))'
+                                }}
+                              >
+                                {mode.enabled && (
+                                  <Check className="h-2.5 w-2.5 text-white" />
+                                )}
+                              </div>
                             </div>
                           </div>
-                        </div>
+                        ) : (
+                          <div className="relative">
+                            <div className="w-12 h-6 rounded-full border-2 border-[#FF6B00] bg-[#FF6B00]/20 flex items-center justify-center">
+                              <div className="text-[#FF6B00] text-xs font-semibold">ATIVO</div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
