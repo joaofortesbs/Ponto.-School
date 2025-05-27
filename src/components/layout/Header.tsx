@@ -30,7 +30,6 @@ import {
   Menu,
   Sparkles
 } from "lucide-react";
-import ModoEventosModal from "./ModoEventosModal";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -118,7 +117,6 @@ export default function Header() {
     useState(false);
   const [isDark, setIsDark] = useState(false); // Added isDark state
   const [theme, setTheme] = useState("light"); // Added theme state
-  const [isModoEventosOpen, setIsModoEventosOpen] = useState(false); // Added state for Modo Eventos modal
   const fileInputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -1321,21 +1319,24 @@ export default function Header() {
                 size="icon"
                 className="relative hover:bg-brand-card dark:hover:bg-white/5 group transition-all duration-300"
                 aria-label="Modo Eventos"
-                onClick={() => setIsModoEventosOpen(true)}
+                onClick={() => {
+                  // Implementar navegação para eventos ou modal
+                  console.log("Modo Eventos ativado");
+                }}
               >
                 <div className="relative">
                   <CalendarIcon className="h-5 w-5 text-brand-black dark:text-white group-hover:text-[#FF6B00] transition-colors duration-300" />
                   <Sparkles className="absolute -top-1 -right-1 h-3 w-3 text-[#FF6B00] opacity-0 group-hover:opacity-100 transition-all duration-300 animate-pulse" />
                 </div>
                 <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white text-xs rounded-full animate-pulse shadow-lg">
-                  6
+                  2
                 </Badge>
               </Button>
             </TooltipTrigger>
             <TooltipContent>
               <div className="text-center">
                 <p className="font-semibold">Modo Eventos</p>
-                <p className="text-xs text-muted-foreground">Experiências temáticas exclusivas</p>
+                <p className="text-xs text-muted-foreground">Eventos próximos e atividades</p>
               </div>
             </TooltipContent>
           </Tooltip>
@@ -1890,12 +1891,6 @@ export default function Header() {
         onOpenChange={setIsReplyModalOpen}
         message={selectedMessageForReply}
         onSendReply={handleSendReply}
-      />
-
-      {/* Modo Eventos Modal */}
-      <ModoEventosModal
-        open={isModoEventosOpen}
-        onOpenChange={setIsModoEventosOpen}
       />
     </header>
   );
