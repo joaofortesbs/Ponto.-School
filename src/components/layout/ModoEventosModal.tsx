@@ -140,17 +140,147 @@ export default function ModoEventosModal({
               </div>
             </div>
 
-            {/* Content area - placeholder for future development */}
+            {/* Content area - Event modes */}
             <div className="flex-1 px-8 pb-8">
-              <div className="h-full flex items-center justify-center">
-                <div className="text-center space-y-4">
-                  <div className="w-16 h-16 mx-auto bg-gradient-to-br from-[#FF6B00]/20 to-[#FF8C40]/20 rounded-2xl flex items-center justify-center border border-[#FF6B00]/30">
-                    <Sparkles className="h-8 w-8 text-[#FF6B00] animate-pulse" />
-                  </div>
-                  <h3 className="text-xl font-bold text-white">Em Desenvolvimento</h3>
-                  <p className="text-white/60 max-w-md">
-                    Funcionalidades avançadas estão sendo desenvolvidas para oferecer a melhor experiência em gestão de eventos.
+              <div className="h-full">
+                <div className="text-center mb-8">
+                  <h3 className="text-2xl font-bold text-white mb-2">Ativar Modos de Eventos</h3>
+                  <p className="text-white/60">
+                    Selecione os modos de eventos que deseja ativar para personalizar sua experiência
                   </p>
+                </div>
+
+                {/* Event modes grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+                  {/* Carnaval */}
+                  <div className="group relative bg-gradient-to-br from-white/5 to-white/10 rounded-2xl p-6 border border-white/10 hover:border-[#FF6B00]/50 transition-all duration-300 hover:bg-white/15">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-gradient-to-br from-[#FF1493] to-[#FFD700] rounded-xl flex items-center justify-center">
+                          <Sparkles className="h-6 w-6 text-white" />
+                        </div>
+                        <div>
+                          <h4 className="text-lg font-bold text-white">Carnaval</h4>
+                          <p className="text-white/60 text-sm">Modo festivo e colorido</p>
+                        </div>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" className="sr-only peer" />
+                        <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#FF6B00]"></div>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Festa Junina */}
+                  <div className="group relative bg-gradient-to-br from-white/5 to-white/10 rounded-2xl p-6 border border-white/10 hover:border-[#FF6B00]/50 transition-all duration-300 hover:bg-white/15">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-gradient-to-br from-[#8B4513] to-[#FFD700] rounded-xl flex items-center justify-center">
+                          <Star className="h-6 w-6 text-white" />
+                        </div>
+                        <div>
+                          <h4 className="text-lg font-bold text-white">Festa Junina</h4>
+                          <p className="text-white/60 text-sm">Temática rural e tradicional</p>
+                        </div>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" className="sr-only peer" />
+                        <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#FF6B00]"></div>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Férias */}
+                  <div className="group relative bg-gradient-to-br from-white/5 to-white/10 rounded-2xl p-6 border border-white/10 hover:border-[#FF6B00]/50 transition-all duration-300 hover:bg-white/15">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-gradient-to-br from-[#00CED1] to-[#FFD700] rounded-xl flex items-center justify-center">
+                          <Calendar className="h-6 w-6 text-white" />
+                        </div>
+                        <div>
+                          <h4 className="text-lg font-bold text-white">Férias</h4>
+                          <p className="text-white/60 text-sm">Modo relaxante e descontraído</p>
+                        </div>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" className="sr-only peer" />
+                        <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#FF6B00]"></div>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Halloween */}
+                  <div className="group relative bg-gradient-to-br from-white/5 to-white/10 rounded-2xl p-6 border border-white/10 hover:border-[#FF6B00]/50 transition-all duration-300 hover:bg-white/15">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-gradient-to-br from-[#800080] to-[#FF4500] rounded-xl flex items-center justify-center">
+                          <Zap className="h-6 w-6 text-white" />
+                        </div>
+                        <div>
+                          <h4 className="text-lg font-bold text-white">Halloween</h4>
+                          <p className="text-white/60 text-sm">Modo misterioso e divertido</p>
+                        </div>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" className="sr-only peer" />
+                        <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#FF6B00]"></div>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Natal */}
+                  <div className="group relative bg-gradient-to-br from-white/5 to-white/10 rounded-2xl p-6 border border-white/10 hover:border-[#FF6B00]/50 transition-all duration-300 hover:bg-white/15">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-gradient-to-br from-[#DC143C] to-[#228B22] rounded-xl flex items-center justify-center">
+                          <Star className="h-6 w-6 text-white" />
+                        </div>
+                        <div>
+                          <h4 className="text-lg font-bold text-white">Natal</h4>
+                          <p className="text-white/60 text-sm">Modo natalino e acolhedor</p>
+                        </div>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" className="sr-only peer" />
+                        <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#FF6B00]"></div>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Final de Ano */}
+                  <div className="group relative bg-gradient-to-br from-white/5 to-white/10 rounded-2xl p-6 border border-white/10 hover:border-[#FF6B00]/50 transition-all duration-300 hover:bg-white/15">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-gradient-to-br from-[#FFD700] to-[#FF6B00] rounded-xl flex items-center justify-center">
+                          <Sparkles className="h-6 w-6 text-white" />
+                        </div>
+                        <div>
+                          <h4 className="text-lg font-bold text-white">Final de Ano</h4>
+                          <p className="text-white/60 text-sm">Modo celebrativo e reflexivo</p>
+                        </div>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" className="sr-only peer" />
+                        <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#FF6B00]"></div>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action buttons */}
+                <div className="flex items-center justify-center gap-4 mt-8">
+                  <Button
+                    variant="outline"
+                    onClick={onClose}
+                    className="px-8 py-3 bg-transparent border-2 border-white/20 text-white hover:bg-white/10 hover:border-white/40 transition-all duration-300"
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    className="px-8 py-3 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white hover:from-[#FF8C40] hover:to-[#FFD700] border-0 transition-all duration-300 shadow-lg hover:shadow-[#FF6B00]/25"
+                  >
+                    Aplicar Configurações
+                  </Button>
                 </div>
               </div>
             </div>
