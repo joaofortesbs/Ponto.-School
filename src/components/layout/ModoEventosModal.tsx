@@ -17,6 +17,8 @@ import {
   Target,
   X,
   Check,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -32,6 +34,8 @@ interface EventMode {
   icon: React.ElementType;
   gradient: string;
   enabled: boolean;
+  color: string;
+  bgColor: string;
 }
 
 export default function ModoEventosModal({
@@ -45,6 +49,8 @@ export default function ModoEventosModal({
       description: "Modo festivo e colorido",
       icon: Sparkles,
       gradient: "from-[#FF1493] to-[#FFD700]",
+      color: "#FF1493",
+      bgColor: "rgba(255, 20, 147, 0.1)",
       enabled: false,
     },
     {
@@ -53,6 +59,8 @@ export default function ModoEventosModal({
       description: "Temática rural e tradicional",
       icon: Star,
       gradient: "from-[#8B4513] to-[#FFD700]",
+      color: "#8B4513",
+      bgColor: "rgba(139, 69, 19, 0.1)",
       enabled: false,
     },
     {
@@ -61,6 +69,8 @@ export default function ModoEventosModal({
       description: "Modo relaxante e descontraído",
       icon: Calendar,
       gradient: "from-[#00CED1] to-[#87CEEB]",
+      color: "#00CED1",
+      bgColor: "rgba(0, 206, 209, 0.1)",
       enabled: false,
     },
     {
@@ -69,6 +79,8 @@ export default function ModoEventosModal({
       description: "Modo misterioso e divertido",
       icon: Zap,
       gradient: "from-[#800080] to-[#FF4500]",
+      color: "#800080",
+      bgColor: "rgba(128, 0, 128, 0.1)",
       enabled: false,
     },
     {
@@ -77,6 +89,8 @@ export default function ModoEventosModal({
       description: "Modo natalino e acolhedor",
       icon: Star,
       gradient: "from-[#DC143C] to-[#228B22]",
+      color: "#DC143C",
+      bgColor: "rgba(220, 20, 60, 0.1)",
       enabled: false,
     },
     {
@@ -85,9 +99,15 @@ export default function ModoEventosModal({
       description: "Modo celebrativo e reflexivo",
       icon: Trophy,
       gradient: "from-[#FFD700] to-[#FF6B00]",
+      color: "#FFD700",
+      bgColor: "rgba(255, 215, 0, 0.1)",
       enabled: false,
     },
   ]);
+
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const itemsPerSlide = 2;
+  const totalSlides = Math.ceil(eventModes.length / itemsPerSlide);
 
   const toggleEventMode = (id: string) => {
     setEventModes(prev =>
@@ -95,6 +115,19 @@ export default function ModoEventosModal({
         mode.id === id ? { ...mode, enabled: !mode.enabled } : mode
       )
     );
+  };
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % totalSlides);
+  };
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + totalSlides) % totalSlides);
+  };
+
+  const getCurrentSlideItems = () => {
+    const startIndex = currentSlide * itemsPerSlide;
+    return eventModes.slice(startIndex, startIndex + itemsPerSlide);
   };
 
   const enabledCount = eventModes.filter(mode => mode.enabled).length;
@@ -177,78 +210,159 @@ export default function ModoEventosModal({
 
             {/* Content area */}
             <div className="flex-1 flex flex-col">
-              {/* Ultra-sophisticated events grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto flex-1">
-                {eventModes.map((mode) => {
-                  const IconComponent = mode.icon;
-                  return (
-                    <div
-                      key={mode.id}
-                      className={`group relative bg-gradient-to-br from-white/[0.02] to-white/[0.05] rounded-2xl p-6 border transition-all duration-500 cursor-pointer backdrop-blur-sm ${
-                        mode.enabled
-                          ? 'border-[#FF6B00]/30 bg-gradient-to-br from-[#FF6B00]/[0.05] to-[#FF8C40]/[0.02]'
-                          : 'border-white/[0.08] hover:border-white/20'
-                      }`}
-                      onClick={() => toggleEventMode(mode.id)}
-                    >
-                      {/* Subtle hover glow */}
-                      <div className={`absolute inset-0 rounded-2xl transition-opacity duration-500 ${
-                        mode.enabled ? 'opacity-100' : 'opacity-0 group-hover:opacity-50'
-                      }`}>
-                        <div className="absolute inset-0 bg-gradient-to-r from-[#FF6B00]/[0.02] to-[#FF8C40]/[0.01] rounded-2xl" />
-                      </div>
-
-                      <div className="relative flex items-center justify-between">
-                        <div className="flex items-center gap-5">
-                          {/* Ultra-minimal icon */}
-                          <div className={`w-14 h-14 bg-gradient-to-br ${mode.gradient} rounded-xl flex items-center justify-center opacity-90 transition-all duration-300 group-hover:opacity-100`}>
-                            <IconComponent className="h-6 w-6 text-white" />
-                          </div>
-                          
-                          <div>
-                            <h4 className="text-xl font-light text-white mb-1">{mode.name}</h4>
-                            <p className="text-white/50 text-sm font-light">{mode.description}</p>
-                          </div>
-                        </div>
-
-                        {/* Ultra-sophisticated toggle */}
-                        <div className="relative">
-                          <div className={`w-12 h-7 rounded-full border transition-all duration-500 ${
-                            mode.enabled
-                              ? 'bg-[#FF6B00]/20 border-[#FF6B00]/40'
-                              : 'bg-black/20 border-white/10'
-                          }`}>
-                            <div className={`absolute top-0.5 w-6 h-6 bg-gradient-to-br rounded-full transition-all duration-500 shadow-lg ${
-                              mode.enabled
-                                ? 'left-5 from-[#FF6B00] to-[#FF8C40]'
-                                : 'left-0.5 from-white/40 to-white/20'
-                            }`}>
-                              {mode.enabled && (
-                                <Check className="h-3 w-3 text-white absolute top-1.5 left-1.5" />
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Ultra-minimal action buttons */}
-              <div className="flex items-center justify-center gap-6 mt-8">
+              {/* Carrossel de eventos */}
+              <div className="relative max-w-4xl mx-auto flex-1 flex items-center justify-center">
+                {/* Botão anterior */}
                 <Button
                   variant="ghost"
-                  onClick={onClose}
-                  className="px-8 py-3 bg-transparent border border-white/10 text-white/70 hover:text-white hover:border-white/20 transition-all duration-500 rounded-xl backdrop-blur-sm font-light"
+                  size="icon"
+                  onClick={prevSlide}
+                  className="absolute left-0 z-10 h-12 w-12 rounded-full bg-black/20 hover:bg-black/30 border border-white/10 text-white/60 hover:text-white transition-all duration-300 backdrop-blur-sm"
                 >
-                  Cancelar
+                  <ChevronLeft className="h-6 w-6" />
                 </Button>
+
+                {/* Container do carrossel */}
+                <div className="overflow-hidden mx-16 w-full">
+                  <div 
+                    className="flex transition-transform duration-700 ease-out"
+                    style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+                  >
+                    {Array.from({ length: totalSlides }).map((_, slideIndex) => (
+                      <div key={slideIndex} className="w-full flex-shrink-0 px-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {eventModes
+                            .slice(slideIndex * itemsPerSlide, (slideIndex + 1) * itemsPerSlide)
+                            .map((mode) => {
+                              const IconComponent = mode.icon;
+                              return (
+                                <div
+                                  key={mode.id}
+                                  className="group relative bg-gradient-to-br from-white/[0.03] to-white/[0.08] rounded-3xl p-8 border transition-all duration-700 cursor-pointer backdrop-blur-sm hover:scale-105 transform"
+                                  style={{
+                                    borderColor: mode.enabled ? `${mode.color}40` : 'rgba(255, 255, 255, 0.08)',
+                                    backgroundColor: mode.enabled ? mode.bgColor : 'transparent'
+                                  }}
+                                  onClick={() => toggleEventMode(mode.id)}
+                                >
+                                  {/* Glow effect personalizado */}
+                                  <div 
+                                    className={`absolute inset-0 rounded-3xl transition-opacity duration-700 ${
+                                      mode.enabled ? 'opacity-100' : 'opacity-0 group-hover:opacity-40'
+                                    }`}
+                                    style={{
+                                      background: `radial-gradient(circle at center, ${mode.color}15 0%, transparent 70%)`
+                                    }}
+                                  />
+
+                                  <div className="relative flex flex-col items-center text-center space-y-6">
+                                    {/* Ícone principal */}
+                                    <div 
+                                      className="w-20 h-20 rounded-2xl flex items-center justify-center transition-all duration-500 group-hover:scale-110"
+                                      style={{
+                                        background: `linear-gradient(135deg, ${mode.color}40, ${mode.color}20)`,
+                                        border: `1px solid ${mode.color}30`
+                                      }}
+                                    >
+                                      <IconComponent 
+                                        className="h-10 w-10 text-white" 
+                                        style={{ color: mode.color }}
+                                      />
+                                    </div>
+                                    
+                                    {/* Conteúdo */}
+                                    <div className="space-y-3">
+                                      <h4 className="text-2xl font-light text-white">{mode.name}</h4>
+                                      <p className="text-white/60 text-sm font-light leading-relaxed">
+                                        {mode.description}
+                                      </p>
+                                    </div>
+
+                                    {/* Toggle sofisticado */}
+                                    <div className="relative">
+                                      <div 
+                                        className="w-16 h-8 rounded-full border transition-all duration-500 relative"
+                                        style={{
+                                          backgroundColor: mode.enabled ? `${mode.color}20` : 'rgba(0, 0, 0, 0.2)',
+                                          borderColor: mode.enabled ? `${mode.color}60` : 'rgba(255, 255, 255, 0.1)'
+                                        }}
+                                      >
+                                        <div 
+                                          className="absolute top-1 w-6 h-6 rounded-full transition-all duration-500 shadow-lg flex items-center justify-center"
+                                          style={{
+                                            left: mode.enabled ? '36px' : '4px',
+                                            background: mode.enabled 
+                                              ? `linear-gradient(135deg, ${mode.color}, ${mode.color}CC)` 
+                                              : 'linear-gradient(135deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.2))'
+                                          }}
+                                        >
+                                          {mode.enabled && (
+                                            <Check className="h-3 w-3 text-white" />
+                                          )}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Botão próximo */}
                 <Button
-                  className="px-8 py-3 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white hover:from-[#FF8C40] hover:to-[#FFD700] border-0 transition-all duration-500 shadow-lg hover:shadow-[#FF6B00]/20 rounded-xl font-light"
+                  variant="ghost"
+                  size="icon"
+                  onClick={nextSlide}
+                  className="absolute right-0 z-10 h-12 w-12 rounded-full bg-black/20 hover:bg-black/30 border border-white/10 text-white/60 hover:text-white transition-all duration-300 backdrop-blur-sm"
                 >
-                  Aplicar Configurações
+                  <ChevronRight className="h-6 w-6" />
                 </Button>
+              </div>
+
+              {/* Indicadores de slide */}
+              <div className="flex justify-center space-x-3 mt-8 mb-6">
+                {Array.from({ length: totalSlides }).map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentSlide(index)}
+                    className={`w-3 h-3 rounded-full transition-all duration-500 ${
+                      index === currentSlide
+                        ? 'bg-[#FF6B00] scale-125'
+                        : 'bg-white/20 hover:bg-white/40'
+                    }`}
+                  />
+                ))}
+              </div>
+
+              {/* Status e botões de ação */}
+              <div className="flex flex-col items-center space-y-6">
+                {/* Status indicator */}
+                <div className="inline-flex items-center gap-3 px-6 py-3 bg-black/10 border border-white/5 rounded-full backdrop-blur-sm">
+                  <div className={`w-2 h-2 rounded-full ${enabledCount > 0 ? 'bg-[#FF6B00]' : 'bg-white/20'} transition-colors duration-300`} />
+                  <span className="text-white/70 text-sm font-light">
+                    {enabledCount} {enabledCount === 1 ? 'modo ativado' : 'modos ativados'}
+                  </span>
+                </div>
+
+                {/* Action buttons */}
+                <div className="flex items-center justify-center gap-6">
+                  <Button
+                    variant="ghost"
+                    onClick={onClose}
+                    className="px-8 py-3 bg-transparent border border-white/10 text-white/70 hover:text-white hover:border-white/20 transition-all duration-500 rounded-xl backdrop-blur-sm font-light"
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    className="px-8 py-3 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white hover:from-[#FF8C40] hover:to-[#FFD700] border-0 transition-all duration-500 shadow-lg hover:shadow-[#FF6B00]/20 rounded-xl font-light"
+                  >
+                    Aplicar Configurações
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
