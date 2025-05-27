@@ -120,7 +120,7 @@ export default function ModoEventosModal({
   const scrollToIndex = (index: number) => {
     if (carouselRef.current) {
       const container = carouselRef.current;
-      const cardWidth = 350; // largura do card + gap
+      const cardWidth = 224; // largura do card (220px) + gap (4px)
       const targetScroll = index * cardWidth - (container.offsetWidth / 2) + (cardWidth / 2);
       
       container.scrollTo({
@@ -181,7 +181,7 @@ export default function ModoEventosModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-5xl max-w-[95vw] h-[85vh] p-0 border-0 bg-transparent overflow-hidden">
+      <DialogContent className="sm:max-w-6xl max-w-[95vw] h-[80vh] p-0 border-0 bg-transparent overflow-hidden">
         <div className="relative w-full h-full">
           {/* Ultra-sophisticated background */}
           <div className="absolute inset-0 bg-gradient-to-br from-[#0A0F1C] via-[#1A1F2E] to-[#0D1117] rounded-3xl border border-[#FF6B00]/10 shadow-[0_0_100px_rgba(255,107,0,0.1)] backdrop-blur-3xl">
@@ -219,28 +219,28 @@ export default function ModoEventosModal({
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="absolute top-6 right-6 z-50 h-9 w-9 rounded-full bg-black/10 hover:bg-black/20 border border-white/5 text-white/60 hover:text-white transition-all duration-500 group backdrop-blur-sm"
+            className="absolute top-6 right-6 z-50 h-9 w-9 rounded-full bg-black/10 hover:bg-black/20 border border-white/5 text-white/60 hover:text-white transition-all duration-700 group backdrop-blur-sm"
           >
-            <X className="h-4 w-4 group-hover:rotate-90 transition-transform duration-500" />
+            <X className="h-4 w-4 group-hover:rotate-90 transition-transform duration-700" />
           </Button>
 
           {/* Main content */}
-          <div className="relative z-10 h-full flex flex-col px-8 py-6">
+          <div className="relative z-10 h-full flex flex-col px-8 py-5">
             {/* Ultra-sophisticated header */}
-            <DialogHeader className="text-center mb-8">
+            <DialogHeader className="text-center mb-6">
               {/* Central sophisticated icon */}
-              <div className="flex items-center justify-center mb-6">
+              <div className="flex items-center justify-center mb-4">
                 <div className="relative">
                   {/* Main icon container */}
-                  <div className="relative bg-gradient-to-br from-[#FF6B00]/10 to-[#FF8C40]/5 p-8 rounded-2xl border border-[#FF6B00]/10 backdrop-blur-sm">
-                    <Calendar className="h-10 w-10 text-[#FF6B00]" />
+                  <div className="relative bg-gradient-to-br from-[#FF6B00]/10 to-[#FF8C40]/5 p-5 rounded-2xl border border-[#FF6B00]/10 backdrop-blur-sm">
+                    <Calendar className="h-8 w-8 text-[#FF6B00]" />
                     
                     {/* Subtle orbiting elements */}
-                    <div className="absolute -top-2 -right-2 bg-gradient-to-br from-[#FFD700]/20 to-[#FF8C40]/10 p-1.5 rounded-lg border border-[#FFD700]/20 backdrop-blur-sm">
-                      <Sparkles className="h-3 w-3 text-[#FFD700]" />
+                    <div className="absolute -top-1.5 -right-1.5 bg-gradient-to-br from-[#FFD700]/20 to-[#FF8C40]/10 p-1 rounded-lg border border-[#FFD700]/20 backdrop-blur-sm">
+                      <Sparkles className="h-2.5 w-2.5 text-[#FFD700]" />
                     </div>
-                    <div className="absolute -bottom-2 -left-2 bg-gradient-to-br from-[#FF8C40]/20 to-[#FF6B00]/10 p-1.5 rounded-lg border border-[#FF8C40]/20 backdrop-blur-sm">
-                      <Zap className="h-3 w-3 text-[#FF8C40]" />
+                    <div className="absolute -bottom-1.5 -left-1.5 bg-gradient-to-br from-[#FF8C40]/20 to-[#FF6B00]/10 p-1 rounded-lg border border-[#FF8C40]/20 backdrop-blur-sm">
+                      <Zap className="h-2.5 w-2.5 text-[#FF8C40]" />
                     </div>
                   </div>
                 </div>
@@ -248,10 +248,10 @@ export default function ModoEventosModal({
 
               {/* Ultra-elegant title */}
               <DialogTitle className="text-center">
-                <h1 className="text-5xl font-light bg-gradient-to-r from-[#FFFFFF] via-[#FF6B00] to-[#FF8C40] bg-clip-text text-transparent leading-tight tracking-wide mb-4">
+                <h1 className="text-4xl font-light bg-gradient-to-r from-[#FFFFFF] via-[#FF6B00] to-[#FF8C40] bg-clip-text text-transparent leading-tight tracking-wide mb-3">
                   Modo Eventos
                 </h1>
-                <div className="w-24 h-px bg-gradient-to-r from-transparent via-[#FF6B00]/30 to-transparent mx-auto" />
+                <div className="w-20 h-px bg-gradient-to-r from-transparent via-[#FF6B00]/30 to-transparent mx-auto" />
               </DialogTitle>
             </DialogHeader>
 
@@ -262,15 +262,15 @@ export default function ModoEventosModal({
                 variant="ghost"
                 size="icon"
                 onClick={prevSlide}
-                className="absolute left-4 z-20 h-14 w-14 rounded-full bg-black/20 hover:bg-black/30 border border-white/10 text-white/60 hover:text-white transition-all duration-300 backdrop-blur-sm shadow-lg hover:shadow-[#FF6B00]/20"
+                className="absolute left-8 z-20 h-12 w-12 rounded-full bg-black/20 hover:bg-black/30 border border-white/10 text-white/60 hover:text-white transition-all duration-700 backdrop-blur-sm shadow-lg hover:shadow-[#FF6B00]/20"
               >
-                <ChevronLeft className="h-7 w-7" />
+                <ChevronLeft className="h-6 w-6" />
               </Button>
 
               {/* Container do carrossel com scroll personalizado */}
               <div 
                 ref={carouselRef}
-                className="flex overflow-x-auto scrollbar-hide gap-6 px-20 py-8 w-full"
+                className="flex overflow-x-auto scrollbar-hide gap-4 px-20 py-6 w-full"
                 style={{
                   scrollBehavior: 'smooth',
                   scrollSnapType: 'x mandatory'
@@ -283,14 +283,14 @@ export default function ModoEventosModal({
                   return (
                     <div
                       key={mode.id}
-                      className={`group relative flex-shrink-0 bg-gradient-to-br from-white/[0.03] to-white/[0.08] rounded-3xl p-8 border transition-all duration-700 cursor-pointer backdrop-blur-sm transform ${
+                      className={`group relative flex-shrink-0 bg-gradient-to-br from-white/[0.03] to-white/[0.08] rounded-2xl p-6 border transition-all duration-700 cursor-pointer backdrop-blur-sm transform ${
                         isCenter 
-                          ? 'scale-110 z-10 shadow-2xl shadow-[#FF6B00]/20' 
-                          : 'scale-90 opacity-60 hover:opacity-80 hover:scale-95'
+                          ? 'scale-105 z-10 shadow-2xl shadow-[#FF6B00]/20' 
+                          : 'scale-95 opacity-70 hover:opacity-85 hover:scale-100'
                       }`}
                       style={{
-                        width: '320px',
-                        height: '380px',
+                        width: '220px',
+                        height: '280px',
                         borderColor: mode.enabled ? `${mode.color}40` : 'rgba(255, 255, 255, 0.08)',
                         backgroundColor: mode.enabled ? mode.bgColor : 'transparent',
                         scrollSnapAlign: 'center'
@@ -303,7 +303,7 @@ export default function ModoEventosModal({
                     >
                       {/* Glow effect personalizado */}
                       <div 
-                        className={`absolute inset-0 rounded-3xl transition-opacity duration-700 ${
+                        className={`absolute inset-0 rounded-2xl transition-opacity duration-700 ${
                           mode.enabled ? 'opacity-100' : 'opacity-0 group-hover:opacity-40'
                         }`}
                         style={{
@@ -313,14 +313,14 @@ export default function ModoEventosModal({
 
                       {/* Indicador de card central */}
                       {isCenter && (
-                        <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 w-16 h-1 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-full" />
+                        <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-12 h-0.5 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-full" />
                       )}
 
-                      <div className="relative flex flex-col items-center text-center space-y-6 h-full justify-center">
+                      <div className="relative flex flex-col items-center text-center space-y-4 h-full justify-center">
                         {/* Ícone principal */}
                         <div 
-                          className={`w-20 h-20 rounded-2xl flex items-center justify-center transition-all duration-500 ${
-                            isCenter ? 'scale-110' : 'group-hover:scale-110'
+                          className={`w-16 h-16 rounded-xl flex items-center justify-center transition-all duration-700 ${
+                            isCenter ? 'scale-105' : 'group-hover:scale-105'
                           }`}
                           style={{
                             background: `linear-gradient(135deg, ${mode.color}40, ${mode.color}20)`,
@@ -328,15 +328,15 @@ export default function ModoEventosModal({
                           }}
                         >
                           <IconComponent 
-                            className="h-10 w-10 text-white" 
+                            className="h-8 w-8 text-white" 
                             style={{ color: mode.color }}
                           />
                         </div>
                         
                         {/* Conteúdo */}
-                        <div className="space-y-3">
-                          <h4 className="text-2xl font-light text-white">{mode.name}</h4>
-                          <p className="text-white/60 text-sm font-light leading-relaxed">
+                        <div className="space-y-2">
+                          <h4 className="text-lg font-light text-white">{mode.name}</h4>
+                          <p className="text-white/60 text-xs font-light leading-relaxed">
                             {mode.description}
                           </p>
                         </div>
@@ -344,16 +344,16 @@ export default function ModoEventosModal({
                         {/* Toggle sofisticado */}
                         <div className="relative">
                           <div 
-                            className="w-16 h-8 rounded-full border transition-all duration-500 relative"
+                            className="w-14 h-7 rounded-full border transition-all duration-700 relative"
                             style={{
                               backgroundColor: mode.enabled ? `${mode.color}20` : 'rgba(0, 0, 0, 0.2)',
                               borderColor: mode.enabled ? `${mode.color}60` : 'rgba(255, 255, 255, 0.1)'
                             }}
                           >
                             <div 
-                              className="absolute top-1 w-6 h-6 rounded-full transition-all duration-500 shadow-lg flex items-center justify-center"
+                              className="absolute top-0.5 w-6 h-6 rounded-full transition-all duration-700 shadow-lg flex items-center justify-center"
                               style={{
-                                left: mode.enabled ? '36px' : '4px',
+                                left: mode.enabled ? '32px' : '2px',
                                 background: mode.enabled 
                                   ? `linear-gradient(135deg, ${mode.color}, ${mode.color}CC)` 
                                   : 'linear-gradient(135deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.2))'
@@ -376,14 +376,14 @@ export default function ModoEventosModal({
                 variant="ghost"
                 size="icon"
                 onClick={nextSlide}
-                className="absolute right-4 z-20 h-14 w-14 rounded-full bg-black/20 hover:bg-black/30 border border-white/10 text-white/60 hover:text-white transition-all duration-300 backdrop-blur-sm shadow-lg hover:shadow-[#FF6B00]/20"
+                className="absolute right-8 z-20 h-12 w-12 rounded-full bg-black/20 hover:bg-black/30 border border-white/10 text-white/60 hover:text-white transition-all duration-700 backdrop-blur-sm shadow-lg hover:shadow-[#FF6B00]/20"
               >
-                <ChevronRight className="h-7 w-7" />
+                <ChevronRight className="h-6 w-6" />
               </Button>
             </div>
 
             {/* Indicadores de slide */}
-            <div className="flex justify-center space-x-3 mt-8 mb-6">
+            <div className="flex justify-center space-x-2 mt-4 mb-4">
               {eventModes.map((_, index) => (
                 <button
                   key={index}
@@ -391,7 +391,7 @@ export default function ModoEventosModal({
                     setCurrentIndex(index);
                     scrollToIndex(index);
                   }}
-                  className={`w-3 h-3 rounded-full transition-all duration-500 ${
+                  className={`w-2 h-2 rounded-full transition-all duration-700 ${
                     index === currentIndex
                       ? 'bg-[#FF6B00] scale-125 shadow-lg shadow-[#FF6B00]/50'
                       : 'bg-white/20 hover:bg-white/40'
@@ -401,26 +401,26 @@ export default function ModoEventosModal({
             </div>
 
             {/* Status e botões de ação */}
-            <div className="flex flex-col items-center space-y-6">
+            <div className="flex flex-col items-center space-y-4">
               {/* Status indicator */}
-              <div className="inline-flex items-center gap-3 px-6 py-3 bg-black/10 border border-white/5 rounded-full backdrop-blur-sm">
-                <div className={`w-2 h-2 rounded-full ${enabledCount > 0 ? 'bg-[#FF6B00]' : 'bg-white/20'} transition-colors duration-300`} />
-                <span className="text-white/70 text-sm font-light">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-black/10 border border-white/5 rounded-full backdrop-blur-sm">
+                <div className={`w-1.5 h-1.5 rounded-full ${enabledCount > 0 ? 'bg-[#FF6B00]' : 'bg-white/20'} transition-colors duration-700`} />
+                <span className="text-white/70 text-xs font-light">
                   {enabledCount} {enabledCount === 1 ? 'modo ativado' : 'modos ativados'}
                 </span>
               </div>
 
               {/* Action buttons */}
-              <div className="flex items-center justify-center gap-6">
+              <div className="flex items-center justify-center gap-4">
                 <Button
                   variant="ghost"
                   onClick={onClose}
-                  className="px-8 py-3 bg-transparent border border-white/10 text-white/70 hover:text-white hover:border-white/20 transition-all duration-500 rounded-xl backdrop-blur-sm font-light"
+                  className="px-6 py-2 bg-transparent border border-white/10 text-white/70 hover:text-white hover:border-white/20 transition-all duration-700 rounded-xl backdrop-blur-sm font-light text-sm"
                 >
                   Cancelar
                 </Button>
                 <Button
-                  className="px-8 py-3 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white hover:from-[#FF8C40] hover:to-[#FFD700] border-0 transition-all duration-500 shadow-lg hover:shadow-[#FF6B00]/20 rounded-xl font-light"
+                  className="px-6 py-2 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white hover:from-[#FF8C40] hover:to-[#FFD700] border-0 transition-all duration-700 shadow-lg hover:shadow-[#FF6B00]/20 rounded-xl font-light text-sm"
                 >
                   Aplicar Configurações
                 </Button>
