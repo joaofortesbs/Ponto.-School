@@ -134,12 +134,12 @@ export default function ModoEventosModal({
 
   // Função para ativar apenas um modo por vez
   const toggleEventMode = (id: string) => {
-    if (id === 'ponto-school') return; // Ponto. School não pode ser desativado
+    if (id === 'ponto-school') return; // Ponto. School não pode ser desativado manualmente
     
     setEventModes(prev =>
       prev.map(mode => ({
         ...mode,
-        enabled: mode.id === id ? !mode.enabled : mode.id === 'ponto-school' ? true : false
+        enabled: mode.id === id ? !mode.enabled : mode.id === 'ponto-school' ? false : false
       }))
     );
   };
@@ -752,40 +752,7 @@ export default function ModoEventosModal({
                 </motion.div>
               )}
 
-              {/* Action buttons */}
-              <div className="flex items-center justify-center gap-4">
-                <motion.button
-                  onClick={onClose}
-                  className={`px-6 py-3 bg-transparent border border-[#FF6B00]/30 transition-all duration-500 rounded-xl backdrop-blur-sm font-light text-sm ${
-                    isLightMode
-                      ? 'text-gray-600 hover:text-gray-800 hover:border-[#FF6B00]/60'
-                      : 'text-white/80 hover:text-white hover:border-[#FF6B00]/60'
-                  }`}
-                  whileHover={{ 
-                    scale: 1.05,
-                    boxShadow: "0 5px 15px rgba(255, 107, 0, 0.2)"
-                  }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  Cancelar
-                </motion.button>
-                <motion.button
-                  className="px-6 py-3 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white border-0 rounded-xl font-light text-sm relative overflow-hidden"
-                  whileHover={{ 
-                    scale: 1.05,
-                    boxShadow: "0 10px 25px rgba(255, 107, 0, 0.4)"
-                  }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-[#FF8C40] to-[#FFD700]"
-                    initial={{ x: '-100%' }}
-                    whileHover={{ x: '0%' }}
-                    transition={{ duration: 0.3 }}
-                  />
-                  <span className="relative z-10">Aplicar Configurações</span>
-                </motion.button>
-              </div>
+              
             </div>
           </div>
         </div>
