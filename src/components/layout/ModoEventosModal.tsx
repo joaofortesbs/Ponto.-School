@@ -55,6 +55,17 @@ export default function ModoEventosModal({
   
   const [eventModes, setEventModes] = useState<EventMode[]>([
     {
+      id: "ponto-school",
+      name: "Ponto. School",
+      description: "Modo padrão da plataforma",
+      icon: Target,
+      gradient: "from-[#FF6B00] to-[#FF8C40]",
+      color: "#FF6B00",
+      bgColor: "rgba(255, 107, 0, 0.1)",
+      neonColor: "#FF6B00",
+      enabled: true,
+    },
+    {
       id: "carnaval",
       name: "Carnaval",
       description: "Modo festivo e colorido",
@@ -69,7 +80,7 @@ export default function ModoEventosModal({
       id: "festa-junina",
       name: "Festa Junina",
       description: "Temática rural e tradicional",
-      icon: Sparkles,
+      icon: Flame,
       gradient: "from-[#8B4513] to-[#FFD700]",
       color: "#8B4513",
       bgColor: "rgba(139, 69, 19, 0.1)",
@@ -86,17 +97,6 @@ export default function ModoEventosModal({
       bgColor: "rgba(0, 206, 209, 0.1)",
       neonColor: "#00CED1",
       enabled: false,
-    },
-    {
-      id: "ponto-school",
-      name: "Ponto. School",
-      description: "Modo padrão da plataforma",
-      icon: Target,
-      gradient: "from-[#FF6B00] to-[#FF8C40]",
-      color: "#FF6B00",
-      bgColor: "rgba(255, 107, 0, 0.1)",
-      neonColor: "#FF6B00",
-      enabled: true,
     },
     {
       id: "halloween",
@@ -124,7 +124,7 @@ export default function ModoEventosModal({
       id: "final-ano",
       name: "Final de Ano",
       description: "Modo celebrativo e reflexivo",
-      icon: Users,
+      icon: Trophy,
       gradient: "from-[#FFD700] to-[#FF6B00]",
       color: "#FFD700",
       bgColor: "rgba(255, 215, 0, 0.1)",
@@ -133,7 +133,7 @@ export default function ModoEventosModal({
     },
   ]);
 
-  const [currentIndex, setCurrentIndex] = useState(3); // Centraliza no card "Ponto. School" (posição 3)
+  const [currentIndex, setCurrentIndex] = useState(0); // Centraliza no card "Ponto. School"
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
