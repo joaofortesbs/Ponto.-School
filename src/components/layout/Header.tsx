@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
-  ShoppingCart,
+  Calendar as CalendarIcon,
   MessageCircle,
   Bell,
   Search,
@@ -27,7 +27,8 @@ import {
   BellRing,
   Brain,
   Reply,
-  Menu
+  Menu,
+  Sparkles
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -1316,17 +1317,28 @@ export default function Header() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="relative hover:bg-brand-card dark:hover:bg-white/5"
-                aria-label="Shopping Cart"
-                onClick={() => navigate("/mercado")}
+                className="relative hover:bg-brand-card dark:hover:bg-white/5 group transition-all duration-300"
+                aria-label="Modo Eventos"
+                onClick={() => {
+                  // Implementar navegação para eventos ou modal
+                  console.log("Modo Eventos ativado");
+                }}
               >
-                <ShoppingCart className="h-5 w-5 text-brand-black dark:text-white" />
-                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-[#FF6B00] text-white text-xs rounded-full">
-                  3
+                <div className="relative">
+                  <CalendarIcon className="h-5 w-5 text-brand-black dark:text-white group-hover:text-[#FF6B00] transition-colors duration-300" />
+                  <Sparkles className="absolute -top-1 -right-1 h-3 w-3 text-[#FF6B00] opacity-0 group-hover:opacity-100 transition-all duration-300 animate-pulse" />
+                </div>
+                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white text-xs rounded-full animate-pulse shadow-lg">
+                  2
                 </Badge>
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Carrinho</TooltipContent>
+            <TooltipContent>
+              <div className="text-center">
+                <p className="font-semibold">Modo Eventos</p>
+                <p className="text-xs text-muted-foreground">Eventos próximos e atividades</p>
+              </div>
+            </TooltipContent>
           </Tooltip>
         </TooltipProvider>
 
