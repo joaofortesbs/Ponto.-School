@@ -94,50 +94,12 @@ export default function ModoEventosModal({
                       Modo Eventos
                     </h1>
                     
-                    {/* Subtitle */}
-                    <div className="flex items-center justify-center gap-2 text-white/80">
-                      <div className="h-px w-8 bg-gradient-to-r from-transparent to-[#FF6B00]"></div>
-                      <span className="text-sm font-medium tracking-widest uppercase">
-                        Sistema Inteligente de Eventos
-                      </span>
-                      <div className="h-px w-8 bg-gradient-to-l from-transparent to-[#FF6B00]"></div>
-                    </div>
-
-                    {/* Description */}
-                    <p className="text-white/60 text-lg font-light max-w-2xl mx-auto leading-relaxed">
-                      Organize, monitore e otimize seus eventos acadêmicos com tecnologia avançada
-                    </p>
+                    
                   </div>
                 </DialogTitle>
               </DialogHeader>
 
-              {/* Feature indicators */}
-              <div className="mt-8 flex items-center justify-center gap-8">
-                <div className="flex items-center gap-2 text-white/70 group hover:text-[#FF6B00] transition-colors duration-300">
-                  <div className="p-2 rounded-lg bg-white/5 group-hover:bg-[#FF6B00]/10 transition-colors duration-300">
-                    <Clock className="h-4 w-4" />
-                  </div>
-                  <span className="text-sm font-medium">Tempo Real</span>
-                </div>
-                <div className="flex items-center gap-2 text-white/70 group hover:text-[#FF8C40] transition-colors duration-300">
-                  <div className="p-2 rounded-lg bg-white/5 group-hover:bg-[#FF8C40]/10 transition-colors duration-300">
-                    <Users className="h-4 w-4" />
-                  </div>
-                  <span className="text-sm font-medium">Colaborativo</span>
-                </div>
-                <div className="flex items-center gap-2 text-white/70 group hover:text-[#FFD700] transition-colors duration-300">
-                  <div className="p-2 rounded-lg bg-white/5 group-hover:bg-[#FFD700]/10 transition-colors duration-300">
-                    <Trophy className="h-4 w-4" />
-                  </div>
-                  <span className="text-sm font-medium">Gamificado</span>
-                </div>
-                <div className="flex items-center gap-2 text-white/70 group hover:text-[#FF6B00] transition-colors duration-300">
-                  <div className="p-2 rounded-lg bg-white/5 group-hover:bg-[#FF6B00]/10 transition-colors duration-300">
-                    <Target className="h-4 w-4" />
-                  </div>
-                  <span className="text-sm font-medium">Inteligente</span>
-                </div>
-              </div>
+              
             </div>
 
             {/* Content area - Event modes */}
