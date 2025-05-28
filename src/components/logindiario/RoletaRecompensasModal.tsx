@@ -294,45 +294,74 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
             <X className="h-4 w-4 text-orange-700" />
           </Button>
 
-          {/* Título e ícone */}
+          {/* Título moderno e sofisticado inspirado na imagem */}
           <div className="mb-8">
-            <div className="flex items-center gap-4 mb-4">
+            <div className="flex items-center gap-5 mb-6">
               <motion.div
                 initial={{ scale: 0, rotate: -180 }}
                 animate={{ scale: 1, rotate: 0 }}
                 transition={{ delay: 0.2, type: "spring", damping: 20, stiffness: 300 }}
                 className="relative flex-shrink-0"
               >
-                <div className="bg-gradient-to-br from-orange-400 to-orange-600 p-3 rounded-full shadow-lg">
-                  <Gift className="h-6 w-6 text-white" />
+                {/* Ícone moderno com design sofisticado */}
+                <div className="relative">
+                  <div className="bg-gradient-to-br from-orange-500 via-orange-600 to-orange-700 p-4 rounded-2xl shadow-2xl border border-orange-300/20">
+                    <Gift className="h-8 w-8 text-white drop-shadow-lg" />
+                  </div>
+                  
+                  {/* Efeito de brilho moderno */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-orange-400/40 to-orange-600/40 rounded-2xl blur-xl animate-pulse"></div>
+                  
+                  {/* Anel de destaque */}
+                  <div className="absolute -inset-1 bg-gradient-to-r from-orange-400/30 via-orange-500/20 to-orange-600/30 rounded-2xl blur-sm"></div>
                 </div>
-                
-                {/* Efeito de brilho ao redor do ícone */}
-                <div className="absolute inset-0 bg-gradient-to-br from-orange-400/30 to-orange-600/30 rounded-full blur-lg animate-pulse"></div>
               </motion.div>
 
-              <motion.h2
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.3, duration: 0.5 }}
-                className="text-3xl font-bold bg-gradient-to-r from-orange-600 via-orange-500 to-orange-700 bg-clip-text text-transparent"
-                style={{
-                  fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-                  letterSpacing: "-0.025em",
-                }}
-              >
-                Resgate sua recompensa
-              </motion.h2>
+              <div className="flex-1">
+                <motion.h1
+                  initial={{ y: 30, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.3, duration: 0.6, type: "spring", damping: 25 }}
+                  className="text-4xl font-black tracking-tight leading-tight"
+                  style={{
+                    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+                    background: "linear-gradient(135deg, #1e293b 0%, #334155 25%, #FF6B00 50%, #FF8C40 75%, #1e293b 100%)",
+                    backgroundSize: "200% 100%",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    backgroundClip: "text",
+                    letterSpacing: "-0.04em",
+                    textShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  Login Diário
+                </motion.h1>
+                
+                <motion.div
+                  initial={{ width: 0, opacity: 0 }}
+                  animate={{ width: "100%", opacity: 1 }}
+                  transition={{ delay: 0.5, duration: 0.8 }}
+                  className="h-1 bg-gradient-to-r from-orange-500 via-orange-600 to-orange-500 rounded-full mt-2 shadow-lg"
+                  style={{
+                    background: "linear-gradient(90deg, transparent 0%, #FF6B00 25%, #FF8C40 50%, #FF6B00 75%, transparent 100%)",
+                  }}
+                />
+              </div>
             </div>
 
-            <motion.p
+            <motion.div
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.4, duration: 0.5 }}
-              className="text-orange-700/80 text-sm font-medium text-center"
+              transition={{ delay: 0.6, duration: 0.5 }}
+              className="text-center"
             >
-              Parabéns por manter sua sequência diária!
-            </motion.p>
+              <p className="text-lg font-semibold text-slate-700/90 mb-1">
+                Resgate sua recompensa
+              </p>
+              <p className="text-sm text-slate-600/80 font-medium">
+                Parabéns por manter sua sequência diária!
+              </p>
+            </motion.div>
 
             {/* Roleta de Recompensas */}
             <motion.div
