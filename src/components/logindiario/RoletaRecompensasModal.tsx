@@ -311,18 +311,94 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                 <div className="absolute inset-0 bg-gradient-to-br from-orange-400/30 to-orange-600/30 rounded-full blur-lg animate-pulse"></div>
               </motion.div>
 
-              <motion.h2
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.3, duration: 0.5 }}
-                className="text-3xl font-bold bg-gradient-to-r from-orange-600 via-orange-500 to-orange-700 bg-clip-text text-transparent"
-                style={{
-                  fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-                  letterSpacing: "-0.025em",
-                }}
+              <motion.div
+                initial={{ y: 30, opacity: 0, scale: 0.95 }}
+                animate={{ y: 0, opacity: 1, scale: 1 }}
+                transition={{ delay: 0.3, duration: 0.8, type: "spring", damping: 20 }}
+                className="text-center mb-2"
               >
-                Resgate sua recompensa
-              </motion.h2>
+                {/* Linha decorativa superior */}
+                <motion.div
+                  initial={{ width: 0, opacity: 0 }}
+                  animate={{ width: "100%", opacity: 1 }}
+                  transition={{ delay: 0.5, duration: 1.2, ease: "easeOut" }}
+                  className="h-px bg-gradient-to-r from-transparent via-orange-400/60 to-transparent mb-4"
+                />
+                
+                {/* Container do título principal */}
+                <div className="relative">
+                  {/* Efeito de brilho de fundo */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-orange-400/20 via-orange-500/30 to-orange-600/20 blur-3xl scale-110 animate-pulse"></div>
+                  
+                  {/* Título principal com múltiplos efeitos */}
+                  <motion.h1
+                    initial={{ y: 20, opacity: 0, rotateX: 30 }}
+                    animate={{ y: 0, opacity: 1, rotateX: 0 }}
+                    transition={{ delay: 0.4, duration: 0.9, type: "spring", damping: 15 }}
+                    className="relative text-4xl md:text-5xl font-black leading-tight tracking-tight"
+                    style={{
+                      fontFamily: "'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif",
+                      letterSpacing: "-0.02em",
+                      textShadow: "0 4px 20px rgba(255, 107, 0, 0.3), 0 0 40px rgba(255, 107, 0, 0.15)",
+                    }}
+                  >
+                    {/* Camada de texto com gradiente principal */}
+                    <span className="bg-gradient-to-br from-orange-300 via-orange-500 to-orange-700 bg-clip-text text-transparent">
+                      Resgate sua
+                    </span>
+                    <br />
+                    {/* Segunda linha com efeito especial */}
+                    <motion.span
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.7, duration: 0.6 }}
+                      className="relative inline-block"
+                    >
+                      <span className="bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 bg-clip-text text-transparent font-extrabold">
+                        Recompensa
+                      </span>
+                      
+                      {/* Efeito de destaque especial na palavra "Recompensa" */}
+                      <motion.div
+                        initial={{ scaleX: 0, opacity: 0 }}
+                        animate={{ scaleX: 1, opacity: 1 }}
+                        transition={{ delay: 1, duration: 0.8, ease: "easeOut" }}
+                        className="absolute -bottom-1 left-0 right-0 h-1 bg-gradient-to-r from-orange-400/40 via-orange-500/60 to-orange-600/40 rounded-full"
+                      />
+                      
+                      {/* Partículas brilhantes ao redor da palavra */}
+                      <motion.div
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ delay: 1.2, duration: 0.5 }}
+                        className="absolute -top-2 -right-2 w-2 h-2 bg-orange-400 rounded-full animate-pulse"
+                      />
+                      <motion.div
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ delay: 1.4, duration: 0.5 }}
+                        className="absolute -bottom-1 -left-1 w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse"
+                      />
+                    </motion.span>
+                  </motion.h1>
+                  
+                  {/* Efeito de reflexo sutil */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 0.3, y: 0 }}
+                    transition={{ delay: 0.8, duration: 0.6 }}
+                    className="absolute top-full left-0 right-0 h-16 bg-gradient-to-b from-orange-500/10 to-transparent transform scale-y-[-1] blur-sm pointer-events-none"
+                  />
+                </div>
+                
+                {/* Linha decorativa inferior */}
+                <motion.div
+                  initial={{ width: 0, opacity: 0 }}
+                  animate={{ width: "60%", opacity: 1 }}
+                  transition={{ delay: 0.9, duration: 1, ease: "easeOut" }}
+                  className="h-px bg-gradient-to-r from-transparent via-orange-500/50 to-transparent mx-auto mt-4"
+                />
+              </motion.div>
             </div>
 
             <motion.p
