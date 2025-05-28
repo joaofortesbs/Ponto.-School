@@ -84,6 +84,77 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
             >
               Parabéns por manter sua sequência diária!
             </motion.p>
+
+            {/* Roleta de Recompensas */}
+            <motion.div
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.6, duration: 0.8, type: "spring", damping: 15 }}
+              className="mt-8 flex justify-center"
+            >
+              <div className="relative">
+                {/* Container da Roleta */}
+                <div className="relative w-64 h-64">
+                  {/* Círculo da Roleta */}
+                  <div className="w-full h-full rounded-full border-4 border-orange-300 bg-gradient-to-br from-orange-100 to-orange-200 relative overflow-hidden shadow-xl">
+                    {/* Seções da Roleta */}
+                    <div className="absolute inset-0 rounded-full" style={{
+                      background: `conic-gradient(
+                        from 0deg,
+                        #FF6B00 0deg 60deg,
+                        #FF8C40 60deg 120deg,
+                        #FFB366 120deg 180deg,
+                        #FF9933 180deg 240deg,
+                        #FFA366 240deg 300deg,
+                        #FF7A1A 300deg 360deg
+                      )`
+                    }}>
+                      {/* Textos das recompensas */}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="text-white font-bold text-xs transform -rotate-30 absolute top-8">
+                          100 SP
+                        </div>
+                        <div className="text-white font-bold text-xs transform rotate-30 absolute top-8 right-8">
+                          Badge
+                        </div>
+                        <div className="text-white font-bold text-xs transform rotate-90 absolute right-4">
+                          150 SP
+                        </div>
+                        <div className="text-white font-bold text-xs transform rotate-150 absolute bottom-8 right-8">
+                          Curso
+                        </div>
+                        <div className="text-white font-bold text-xs transform -rotate-150 absolute bottom-8 left-8">
+                          200 SP
+                        </div>
+                        <div className="text-white font-bold text-xs transform -rotate-90 absolute left-4">
+                          E-book
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Centro da Roleta */}
+                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-white rounded-full border-4 border-orange-400 flex items-center justify-center shadow-lg z-10">
+                    <Gift className="h-8 w-8 text-orange-600" />
+                  </div>
+
+                  {/* Ponteiro da Roleta */}
+                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2 z-20">
+                    <div className="w-0 h-0 border-l-4 border-r-4 border-b-8 border-l-transparent border-r-transparent border-b-orange-600 shadow-lg"></div>
+                  </div>
+                </div>
+
+                {/* Botão Girar */}
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="mt-6 w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
+                >
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin opacity-0 group-hover:opacity-100"></div>
+                  Girar Roleta
+                </motion.button>
+              </div>
+            </motion.div>
           </div>
 
           {/* Efeitos decorativos */}
