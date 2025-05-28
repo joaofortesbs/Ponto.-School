@@ -109,30 +109,30 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                         #FF7A1A 300deg 360deg
                       )`
                     }}>
-                      {/* Bolinhas Separadoras - Posicionadas nas Divisões das Fatias */}
+                      {/* Bolinhas Separadoras - Posicionadas nas Linhas Divisórias */}
                       <div className="absolute inset-0">
                         {Array.from({ length: 6 }, (_, index) => {
-                          const numberOfSegments = 6;
-                          const angleStep = 360 / numberOfSegments;
-                          // Posicionar nas divisões (entre as fatias) em vez de dentro delas
-                          const angle = index * angleStep;
+                          const totalSegments = 6;
+                          // Ângulos das linhas divisórias: 0°, 60°, 120°, 180°, 240°, 300°
+                          const angle = index * (360 / totalSegments);
                           const radians = (angle * Math.PI) / 180;
-                          const radius = 45; // Porcentagem do raio da roleta
+                          const radius = 47; // Raio aumentado para posicionar nas bordas das fatias
                           const centerX = 50; // Centro X em porcentagem
                           const centerY = 50; // Centro Y em porcentagem
                           
-                          // Cálculo preciso da posição usando seno e cosseno para as divisões
+                          // Cálculo preciso para posicionar nas linhas divisórias
                           const x = centerX + radius * Math.cos(radians);
                           const y = centerY + radius * Math.sin(radians);
                           
                           return (
                             <div 
-                              key={`bolinha-divisao-${index}`}
-                              className="absolute w-3 h-3 bg-white rounded-full shadow-md border border-orange-200"
+                              key={`bolinha-divisoria-${index}`}
+                              className="absolute w-3 h-3 bg-white rounded-full shadow-lg border-2 border-orange-300"
                               style={{
                                 left: `${x}%`,
                                 top: `${y}%`,
-                                transform: 'translate(-50%, -50%)'
+                                transform: 'translate(-50%, -50%)',
+                                zIndex: 10
                               }}
                             />
                           );
