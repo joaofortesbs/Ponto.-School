@@ -17,6 +17,53 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
   open,
   onOpenChange,
 }) => {
+  // Configuração otimizada do pino da roleta para eventos futuros
+  const pinoConfig = {
+    // Propriedades de posicionamento
+    position: {
+      x: 128 + (128 * 1.1), // 1.1 * raio da roleta
+      y: 128, // Centro vertical
+      angle: -15, // Ângulo de inclinação para dentro
+    },
+    
+    // Propriedades visuais
+    design: {
+      grafiteColor: '#333333',
+      madeiraColor: '#D2B48C',
+      borrachaColor: '#FFC1CC',
+      seloColor: '#FF6B00'
+    },
+    
+    // Estado do pino
+    state: {
+      active: true,
+      interactionEnabled: false // Para expansão futura
+    },
+    
+    // Métodos para eventos futuros (placeholders otimizados)
+    events: {
+      onClick: () => {
+        // Placeholder para clique no pino
+        console.log('Pino clicado - evento futuro');
+      },
+      
+      onHover: () => {
+        // Placeholder para hover no pino
+        console.log('Pino hover - evento futuro');
+      },
+      
+      onInteraction: () => {
+        // Placeholder para interações gerais
+        console.log('Pino interação - evento futuro');
+      },
+      
+      onCollisionDetection: (target: any) => {
+        // Placeholder para detecção de colisão
+        console.log('Pino colisão detectada:', target);
+      }
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
@@ -169,9 +216,77 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                     <Gift className="h-8 w-8 text-orange-600" />
                   </div>
 
-                  {/* Ponteiro da Roleta */}
-                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2 z-20">
-                    <div className="w-0 h-0 border-l-4 border-r-4 border-b-8 border-l-transparent border-r-transparent border-b-orange-600 shadow-lg"></div>
+                  {/* Pino da Roleta - Design Educacional de Lápis */}
+                  <div 
+                    className="absolute z-20"
+                    style={{
+                      right: '-24px', // Posiciona 1.1 * raio da roleta (128px * 1.1 = ~140px, ajustado para -24px)
+                      top: '50%',
+                      transform: 'translateY(-50%) rotate(-15deg)', // Inclinado para dentro
+                      transformOrigin: 'center'
+                    }}
+                  >
+                    {/* Container do Pino Educacional */}
+                    <div className="relative flex items-center">
+                      {/* Ponta do Grafite (cinza escura) */}
+                      <div 
+                        className="absolute left-0 z-30"
+                        style={{
+                          width: '0',
+                          height: '0',
+                          borderTop: '6px solid transparent',
+                          borderBottom: '6px solid transparent',
+                          borderRight: '12px solid #333333',
+                          filter: 'drop-shadow(1px 1px 2px rgba(0,0,0,0.3))'
+                        }}
+                      ></div>
+
+                      {/* Corpo do Lápis (madeira - marrom claro) */}
+                      <div 
+                        className="relative ml-3"
+                        style={{
+                          width: '32px',
+                          height: '16px',
+                          backgroundColor: '#D2B48C',
+                          borderRadius: '0 8px 8px 0',
+                          background: 'linear-gradient(135deg, #D2B48C 0%, #B8965F 50%, #D2B48C 100%)',
+                          boxShadow: '2px 2px 4px rgba(0,0,0,0.2), inset 1px 1px 2px rgba(255,255,255,0.3)'
+                        }}
+                      >
+                        {/* Detalhes de Textura da Madeira */}
+                        <div 
+                          className="absolute top-1 left-2 w-6 h-0.5 rounded"
+                          style={{ backgroundColor: '#A0805F', opacity: 0.6 }}
+                        ></div>
+                        <div 
+                          className="absolute bottom-1 left-2 w-4 h-0.5 rounded"
+                          style={{ backgroundColor: '#A0805F', opacity: 0.4 }}
+                        ></div>
+                        
+                        {/* Borracha Rosa (detalhe superior) */}
+                        <div 
+                          className="absolute -right-1 top-1/2 transform -translate-y-1/2"
+                          style={{
+                            width: '8px',
+                            height: '10px',
+                            backgroundColor: '#FFC1CC',
+                            borderRadius: '0 4px 4px 0',
+                            background: 'linear-gradient(135deg, #FFC1CC 0%, #FFB3C1 50%, #FFC1CC 100%)',
+                            boxShadow: '1px 1px 2px rgba(0,0,0,0.15)'
+                          }}
+                        ></div>
+                      </div>
+
+                      {/* Marca Educacional (pequeno selo de qualidade) */}
+                      <div 
+                        className="absolute top-0 left-4 w-2 h-2 rounded-full"
+                        style={{
+                          backgroundColor: '#FF6B00',
+                          opacity: 0.8,
+                          boxShadow: '0 0 3px rgba(255, 107, 0, 0.5)'
+                        }}
+                      ></div>
+                    </div>
                   </div>
                 </div>
 
