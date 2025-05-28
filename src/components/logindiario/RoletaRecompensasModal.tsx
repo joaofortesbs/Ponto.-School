@@ -109,26 +109,62 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                         #FF7A1A 300deg 360deg
                       )`
                     }}>
-                      {/* Textos das recompensas */}
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="text-white font-bold text-xs transform -rotate-30 absolute top-8">
-                          100 SP
-                        </div>
-                        <div className="text-white font-bold text-xs transform rotate-30 absolute top-8 right-8">
-                          Badge
-                        </div>
-                        <div className="text-white font-bold text-xs transform rotate-90 absolute right-4">
-                          150 SP
-                        </div>
-                        <div className="text-white font-bold text-xs transform rotate-150 absolute bottom-8 right-8">
-                          Curso
-                        </div>
-                        <div className="text-white font-bold text-xs transform -rotate-150 absolute bottom-8 left-8">
-                          200 SP
-                        </div>
-                        <div className="text-white font-bold text-xs transform -rotate-90 absolute left-4">
-                          E-book
-                        </div>
+                      {/* Bolinhas Separadoras */}
+                      <div className="absolute inset-0">
+                        {/* Bolinha no ângulo 60° */}
+                        <div 
+                          className="absolute w-3 h-3 bg-white rounded-full shadow-md"
+                          style={{
+                            top: '20%',
+                            right: '20%',
+                            transform: 'translate(50%, -50%)'
+                          }}
+                        />
+                        {/* Bolinha no ângulo 120° */}
+                        <div 
+                          className="absolute w-3 h-3 bg-white rounded-full shadow-md"
+                          style={{
+                            top: '50%',
+                            right: '2%',
+                            transform: 'translate(50%, -50%)'
+                          }}
+                        />
+                        {/* Bolinha no ângulo 180° */}
+                        <div 
+                          className="absolute w-3 h-3 bg-white rounded-full shadow-md"
+                          style={{
+                            bottom: '20%',
+                            right: '20%',
+                            transform: 'translate(50%, 50%)'
+                          }}
+                        />
+                        {/* Bolinha no ângulo 240° */}
+                        <div 
+                          className="absolute w-3 h-3 bg-white rounded-full shadow-md"
+                          style={{
+                            bottom: '20%',
+                            left: '20%',
+                            transform: 'translate(-50%, 50%)'
+                          }}
+                        />
+                        {/* Bolinha no ângulo 300° */}
+                        <div 
+                          className="absolute w-3 h-3 bg-white rounded-full shadow-md"
+                          style={{
+                            top: '50%',
+                            left: '2%',
+                            transform: 'translate(-50%, -50%)'
+                          }}
+                        />
+                        {/* Bolinha no ângulo 360°/0° */}
+                        <div 
+                          className="absolute w-3 h-3 bg-white rounded-full shadow-md"
+                          style={{
+                            top: '20%',
+                            left: '20%',
+                            transform: 'translate(-50%, -50%)'
+                          }}
+                        />
                       </div>
                     </div>
                   </div>
@@ -138,9 +174,9 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                     <Gift className="h-8 w-8 text-orange-600" />
                   </div>
 
-                  {/* Ponteiro da Roleta */}
-                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2 z-20">
-                    <div className="w-0 h-0 border-l-4 border-r-4 border-b-8 border-l-transparent border-r-transparent border-b-orange-600 shadow-lg"></div>
+                  {/* Ponteiro da Roleta - Lateral Direita */}
+                  <div className="absolute top-1/2 right-0 transform translate-x-2 -translate-y-1/2 z-20">
+                    <div className="w-0 h-0 border-t-4 border-b-4 border-l-8 border-t-transparent border-b-transparent border-l-orange-600 shadow-lg"></div>
                   </div>
                 </div>
 
