@@ -109,26 +109,79 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                         #FF7A1A 300deg 360deg
                       )`
                     }}>
-                      {/* Textos das recompensas */}
+                      {/* Linhas divisórias entre as seções */}
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="text-white font-bold text-xs transform -rotate-30 absolute top-8">
-                          100 SP
-                        </div>
-                        <div className="text-white font-bold text-xs transform rotate-30 absolute top-8 right-8">
-                          Badge
-                        </div>
-                        <div className="text-white font-bold text-xs transform rotate-90 absolute right-4">
-                          150 SP
-                        </div>
-                        <div className="text-white font-bold text-xs transform rotate-150 absolute bottom-8 right-8">
-                          Curso
-                        </div>
-                        <div className="text-white font-bold text-xs transform -rotate-150 absolute bottom-8 left-8">
-                          200 SP
-                        </div>
-                        <div className="text-white font-bold text-xs transform -rotate-90 absolute left-4">
-                          E-book
-                        </div>
+                        {/* Linha 1 - 0 graus (topo) */}
+                        <div 
+                          className="absolute w-0.5 h-32 bg-white/50 origin-bottom"
+                          style={{
+                            transform: 'rotate(0deg)',
+                            transformOrigin: '50% 100%',
+                            bottom: '50%',
+                            left: '50%',
+                            marginLeft: '-1px'
+                          }}
+                        ></div>
+                        
+                        {/* Linha 2 - 60 graus */}
+                        <div 
+                          className="absolute w-0.5 h-32 bg-white/50 origin-bottom"
+                          style={{
+                            transform: 'rotate(60deg)',
+                            transformOrigin: '50% 100%',
+                            bottom: '50%',
+                            left: '50%',
+                            marginLeft: '-1px'
+                          }}
+                        ></div>
+                        
+                        {/* Linha 3 - 120 graus */}
+                        <div 
+                          className="absolute w-0.5 h-32 bg-white/50 origin-bottom"
+                          style={{
+                            transform: 'rotate(120deg)',
+                            transformOrigin: '50% 100%',
+                            bottom: '50%',
+                            left: '50%',
+                            marginLeft: '-1px'
+                          }}
+                        ></div>
+                        
+                        {/* Linha 4 - 180 graus (baixo) */}
+                        <div 
+                          className="absolute w-0.5 h-32 bg-white/50 origin-bottom"
+                          style={{
+                            transform: 'rotate(180deg)',
+                            transformOrigin: '50% 100%',
+                            bottom: '50%',
+                            left: '50%',
+                            marginLeft: '-1px'
+                          }}
+                        ></div>
+                        
+                        {/* Linha 5 - 240 graus */}
+                        <div 
+                          className="absolute w-0.5 h-32 bg-white/50 origin-bottom"
+                          style={{
+                            transform: 'rotate(240deg)',
+                            transformOrigin: '50% 100%',
+                            bottom: '50%',
+                            left: '50%',
+                            marginLeft: '-1px'
+                          }}
+                        ></div>
+                        
+                        {/* Linha 6 - 300 graus */}
+                        <div 
+                          className="absolute w-0.5 h-32 bg-white/50 origin-bottom"
+                          style={{
+                            transform: 'rotate(300deg)',
+                            transformOrigin: '50% 100%',
+                            bottom: '50%',
+                            left: '50%',
+                            marginLeft: '-1px'
+                          }}
+                        ></div>
                       </div>
                     </div>
                   </div>
