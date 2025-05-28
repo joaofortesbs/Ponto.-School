@@ -27,12 +27,12 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
   
   // Configuração dos prêmios da roleta (6 setores)
   const prizes = [
-    { name: "5 School Points", color: "#FF6B00", angle: 0 },
-    { name: "10 School Points", color: "#FF8C40", angle: 60 },
-    { name: "15 School Points", color: "#FFB366", angle: 120 },
-    { name: "20 School Points", color: "#FF9933", angle: 180 },
-    { name: "25 School Points", color: "#FFA366", angle: 240 },
-    { name: "30 School Points", color: "#FF7A1A", angle: 300 },
+    { name: "250 XP", color: "#FF6B00", angle: 0 },
+    { name: "100 SPs", color: "#FF8C40", angle: 60 },
+    { name: "Epictus Turbo", color: "#FFB366", angle: 120 },
+    { name: "Avatar Raro", color: "#FF9933", angle: 180 },
+    { name: "999 SPs", color: "#FFA366", angle: 240 },
+    { name: "Material Exclusivo", color: "#FF7A1A", angle: 300 },
   ];
 
   // Função para animar inclinação do lápis com movimento físico realista
@@ -332,10 +332,47 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                           
                           // Definir ícone baseado no prêmio
                           const getIcon = (prizeName: string) => {
-                            if (prizeName.includes('School Points') || prizeName.includes('SP')) {
-                              return '🪙'; // Moeda
+                            if (prizeName.includes('250 XP')) {
+                              return (
+                                <div className="w-4 h-4 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center text-[8px] font-bold text-white">
+                                  XP
+                                </div>
+                              );
                             }
-                            return '🎁'; // Presente padrão
+                            if (prizeName.includes('100 SPs') || prizeName.includes('999 SPs')) {
+                              return (
+                                <div className="w-4 h-4 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center">
+                                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                                </div>
+                              );
+                            }
+                            if (prizeName.includes('Epictus Turbo')) {
+                              return (
+                                <div className="w-4 h-4 bg-gradient-to-br from-blue-400 to-purple-600 rounded flex items-center justify-center">
+                                  <div className="w-1 h-1 bg-white rounded-full"></div>
+                                  <div className="w-0.5 h-2 bg-white ml-0.5"></div>
+                                </div>
+                              );
+                            }
+                            if (prizeName.includes('Avatar Raro')) {
+                              return (
+                                <div className="w-4 h-4 bg-gradient-to-br from-purple-400 to-pink-600 rounded-full flex items-center justify-center">
+                                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                                </div>
+                              );
+                            }
+                            if (prizeName.includes('Material Exclusivo')) {
+                              return (
+                                <div className="w-4 h-4 bg-gradient-to-br from-green-400 to-emerald-600 rounded flex items-center justify-center">
+                                  <div className="w-2 h-1 bg-white rounded"></div>
+                                </div>
+                              );
+                            }
+                            return (
+                              <div className="w-4 h-4 bg-gradient-to-br from-gray-400 to-gray-600 rounded flex items-center justify-center">
+                                <div className="w-2 h-2 bg-white rounded"></div>
+                              </div>
+                            );
                           };
                           
                           return (
@@ -355,9 +392,8 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                             >
                               {/* Ícone temático */}
                               <div 
-                                className="mb-1"
+                                className="mb-1 flex items-center justify-center"
                                 style={{ 
-                                  fontSize: '14px',
                                   filter: 'drop-shadow(1px 1px 2px rgba(0,0,0,0.8))'
                                 }}
                               >
