@@ -26,21 +26,21 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/70 backdrop-blur-lg z-[9999] flex items-center justify-center p-4"
           style={{ pointerEvents: 'auto' }}
         >
           <motion.div
             className="rounded-xl p-6 max-w-md w-full shadow-2xl relative overflow-hidden glassmorphism-modal"
             style={{
-              background: "linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)",
-              backdropFilter: "blur(25px) saturate(180%)",
-              WebkitBackdropFilter: "blur(25px) saturate(180%)",
-              border: "1px solid rgba(255, 107, 0, 0.2)",
+              background: "linear-gradient(135deg, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0.15) 50%, rgba(255, 255, 255, 0.03) 100%)",
+              backdropFilter: "blur(40px) saturate(200%) brightness(0.7)",
+              WebkitBackdropFilter: "blur(40px) saturate(200%) brightness(0.7)",
+              border: "1px solid rgba(255, 107, 0, 0.3)",
               boxShadow: `
-                0 8px 32px rgba(0, 0, 0, 0.3),
-                0 2px 8px rgba(255, 107, 0, 0.15),
-                inset 0 1px 0 rgba(255, 255, 255, 0.2),
-                inset 0 -1px 0 rgba(0, 0, 0, 0.1)
+                0 12px 48px rgba(0, 0, 0, 0.5),
+                0 4px 16px rgba(255, 107, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.2)
               `,
             }}
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
