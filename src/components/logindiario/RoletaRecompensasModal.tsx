@@ -23,6 +23,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
   const [selectedPrize, setSelectedPrize] = React.useState<string | null>(null);
   const [showResult, setShowResult] = React.useState(false);
   const [pinoBlinking, setPinoBlinking] = React.useState(false);
+  const [pinoTilt, setPinoTilt] = React.useState(0); // Estado para inclinação do lápis
   
   // Configuração dos prêmios da roleta (6 setores)
   const prizes = [
@@ -34,23 +35,53 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
     { name: "30 School Points", color: "#FF7A1A", angle: 300 },
   ];
 
+  // Função para animar inclinação do lápis com movimento físico realista
+  const animatePencilTilt = () => {
+    // Movimento de empurrão para trás (impulso rápido)
+    setPinoTilt(-12); // Inclinação negativa (para trás)
+    
+    // Retorno elástico com efeito de mola
+    setTimeout(() => {
+      setPinoTilt(3); // Pequeno overshoot para frente
+      
+      setTimeout(() => {
+        setPinoTilt(-1); // Leve movimento de volta
+        
+        setTimeout(() => {
+          setPinoTilt(0); // Posição final original
+        }, 80);
+      }, 120);
+    }, 100);
+  };
+
   // Função para detectar colisão com os pontos divisórios
   const detectCollision = (angle: number, previousAngle: number) => {
     const sectorBoundaries = [0, 60, 120, 180, 240, 300];
     
     for (const boundary of sectorBoundaries) {
+      // Normaliza ângulos para comparação precisa
+      const prevNormalized = ((previousAngle % 360) + 360) % 360;
+      const currentNormalized = ((angle % 360) + 360) % 360;
+      
       // Verifica se passou por um ponto divisório
-      if (
-        (previousAngle % 360 < boundary && angle % 360 >= boundary) ||
-        (previousAngle % 360 > boundary && angle % 360 <= boundary)
-      ) {
-        // Efeito visual de colisão
+      const crossedBoundary = 
+        (prevNormalized < boundary && currentNormalized >= boundary) ||
+        (prevNormalized > boundary && currentNormalized <= boundary) ||
+        // Casos especiais para cruzamento do 0°/360°
+        (prevNormalized > 350 && currentNormalized < 10 && boundary === 0) ||
+        (prevNormalized < 10 && currentNormalized > 350 && boundary === 0);
+      
+      if (crossedBoundary) {
+        // Efeito visual de piscada
         setPinoBlinking(true);
         setTimeout(() => setPinoBlinking(false), 100);
         
+        // Movimento físico realista do lápis
+        animatePencilTilt();
+        
         // Som de tick (simulado com vibração se disponível)
         if (navigator.vibrate) {
-          navigator.vibrate(10);
+          navigator.vibrate(15);
         }
         
         // Aqui você pode adicionar um som real:
@@ -359,12 +390,13 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
 
                   {/* Pino da Roleta - Design Educacional de Lápis */}
                   <div 
-                    className={`absolute z-20 transition-all duration-100 ${pinoBlinking ? 'scale-110 brightness-150' : ''}`}
+                    className={`absolute z-20 transition-all ${pinoBlinking ? 'scale-110 brightness-150' : ''}`}
                     style={{
                       right: '-24px', // Posiciona 1.1 * raio da roleta (128px * 1.1 = ~140px, ajustado para -24px)
                       top: '50%',
-                      transform: 'translateY(-50%) rotate(-15deg)', // Inclinado para dentro
-                      transformOrigin: 'center'
+                      transform: `translateY(-50%) rotate(${-15 + pinoTilt}deg)`, // Inclinação base + movimento físico
+                      transformOrigin: 'center bottom', // Origem na base do lápis para movimento realista
+                      transition: pinoTilt !== 0 ? 'transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55)' : 'transform 0.1s ease-out'
                     }}
                   >
                     {/* Container do Pino Educacional */}
