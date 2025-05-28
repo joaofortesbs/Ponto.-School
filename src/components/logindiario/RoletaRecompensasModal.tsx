@@ -40,7 +40,12 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
               stiffness: 300,
               duration: 0.4 
             }}
-            className="bg-transparent backdrop-blur-sm rounded-xl p-6 max-w-md w-full shadow-2xl border border-[#FF6B00]/20 relative overflow-hidden"
+            className="backdrop-blur-md rounded-xl p-6 max-w-md w-full shadow-2xl border border-[#FF6B00]/30 relative overflow-hidden"
+            style={{
+              background: "rgba(255, 255, 255, 0.08)",
+              backdropFilter: "blur(20px)",
+              WebkitBackdropFilter: "blur(20px)",
+            }}
           >
             {/* Efeitos visuais de fundo idênticos ao modal Bem-vindo de volta */}
             <div className="absolute -top-20 -right-20 w-40 h-40 bg-[#FF6B00]/10 rounded-full blur-3xl"></div>
