@@ -966,7 +966,8 @@ export default function Header() {
         minute: "2-digit",
       }),
       date: "Agora mesmo",
-      unread: false      attachments: attachments || [],
+      unread: false,
+      attachments: attachments || [],
     };
 
     // Add the new message to the beginning of the list
