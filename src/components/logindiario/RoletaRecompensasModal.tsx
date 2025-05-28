@@ -27,11 +27,6 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
   const [pinoColor, setPinoColor] = React.useState('#FF6B00'); // Cor do pino
   const [activePoint, setActivePoint] = React.useState<number | null>(null); // Ponto ativo atual
   
-  // Estados para o card de sequência
-  const [sequenciaDias, setSequenciaDias] = React.useState(4); // Exemplo: 4 dias seguidos
-  const [cardState, setCardState] = React.useState<'contador' | 'cronometro'>('contador');
-  const [timeUntilNext, setTimeUntilNext] = React.useState({ hours: 0, minutes: 0, seconds: 0 });
-  
   // Ref para áudio
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
   
@@ -75,42 +70,6 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
     
     audioRef.current = createClickSound();
   }, []);
-
-  // Função para calcular tempo até a meia-noite
-  const calculateTimeUntilMidnight = () => {
-    const now = new Date();
-    const tomorrow = new Date(now);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(0, 0, 0, 0);
-    
-    const diff = tomorrow.getTime() - now.getTime();
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-    
-    return { hours, minutes, seconds };
-  };
-
-  // Cronômetro para atualizar o tempo restante
-  React.useEffect(() => {
-    let interval: NodeJS.Timeout;
-    
-    if (cardState === 'cronometro') {
-      interval = setInterval(() => {
-        const time = calculateTimeUntilMidnight();
-        setTimeUntilNext(time);
-        
-        // Se chegou na meia-noite, volta para o estado contador
-        if (time.hours === 0 && time.minutes === 0 && time.seconds === 0) {
-          setCardState('contador');
-        }
-      }, 1000);
-    }
-    
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [cardState]);
 
   // Função para reproduzir som de clique
   const playClickSound = () => {
@@ -252,12 +211,6 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
           const winner = determinePrize(totalRotation);
           setSelectedPrize(winner.name);
           setShowResult(true);
-          
-          // Ativar cronômetro após girar
-          setCardState('cronometro');
-          setSequenciaDias(prev => prev + 1); // Incrementa a sequência
-          const time = calculateTimeUntilMidnight();
-          setTimeUntilNext(time);
         }, 500);
       }
     };
@@ -316,7 +269,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
-        className="sm:max-w-[900px] p-0 bg-transparent border-0 shadow-none"
+        className="sm:max-w-[500px] p-0 bg-transparent border-0 shadow-none"
         onInteractOutside={(e) => e.preventDefault()}
       >
         <motion.div
@@ -381,14 +334,13 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
               Parabéns por manter sua sequência diária!
             </motion.p>
 
-            {/* Container Principal - Roleta + Card */}
+            {/* Roleta de Recompensas */}
             <motion.div
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.6, duration: 0.8, type: "spring", damping: 15 }}
-              className="mt-8 flex justify-center items-start gap-8"
+              className="mt-8 flex justify-center"
             >
-              {/* Roleta de Recompensas */}
               <div className="relative">
                 {/* Container da Roleta */}
                 <div className="relative w-64 h-64">
@@ -646,129 +598,8 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Card de Sequência de Dias */}
-              <motion.div
-                initial={{ x: 50, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: 0.8, duration: 0.6 }}
-                className="w-64 h-80"
-              >
-                <div 
-                  className="h-full rounded-2xl p-6 shadow-xl border border-cyan-200/30 backdrop-blur-sm transition-all duration-500"
-                  style={{
-                    background: cardState === 'cronometro' 
-                      ? "linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(147, 51, 234, 0.15) 100%)"
-                      : "linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(168, 85, 247, 0.15) 100%)",
-                    backdropFilter: "blur(20px)",
-                    WebkitBackdropFilter: "blur(20px)",
-                  }}
-                >
-                  {/* Topo do Card - Sempre visível */}
-                  <div className="text-center mb-6">
-                    <p className="text-xs text-cyan-600 font-medium mb-1">Dias de sequência:</p>
-                    <motion.div
-                      key={sequenciaDias}
-                      initial={{ scale: 1.2 }}
-                      animate={{ scale: 1 }}
-                      className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent"
-                    >
-                      {sequenciaDias} dias seguidos!
-                    </motion.div>
-                  </div>
-
-                  {/* Centro do Card - Condicional */}
-                  <div className="flex-1 flex flex-col items-center justify-center h-40">
-                    {cardState === 'contador' ? (
-                      /* Estado 1: Contador de Dias */
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="text-center"
-                      >
-                        {/* Ícone de Progresso */}
-                        <motion.div
-                          animate={{ 
-                            rotate: [0, 5, -5, 0],
-                            scale: [1, 1.05, 1] 
-                          }}
-                          transition={{ 
-                            duration: 2,
-                            repeat: Infinity,
-                            repeatType: "reverse"
-                          }}
-                          className="mb-4"
-                        >
-                          <div className="w-16 h-16 mx-auto bg-gradient-to-br from-cyan-400 to-purple-500 rounded-full flex items-center justify-center shadow-lg">
-                            <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-                              <div className="w-4 h-4 bg-gradient-to-br from-cyan-500 to-purple-600 rounded-full"></div>
-                            </div>
-                          </div>
-                        </motion.div>
-                        
-                        <h3 className="text-lg font-semibold text-cyan-600 mb-2">
-                          Continue a sequência!
-                        </h3>
-                        <p className="text-sm text-cyan-500/80">
-                          Gire hoje para manter a sequência!
-                        </p>
-                      </motion.div>
-                    ) : (
-                      /* Estado 2: Cronômetro */
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="text-center"
-                      >
-                        <p className="text-sm text-purple-400 mb-4">
-                          Próximo giro liberado em:
-                        </p>
-                        
-                        {/* Cronômetro Digital */}
-                        <div className="bg-black/20 rounded-xl p-4 border border-purple-300/20">
-                          <div className="text-3xl font-mono font-bold text-transparent bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text">
-                            {String(timeUntilNext.hours).padStart(2, '0')}:
-                            {String(timeUntilNext.minutes).padStart(2, '0')}:
-                            {String(timeUntilNext.seconds).padStart(2, '0')}
-                          </div>
-                        </div>
-                        
-                        {/* Indicador Visual de Tempo */}
-                        <div className="mt-4 w-full bg-purple-900/20 rounded-full h-2">
-                          <motion.div
-                            className="h-full bg-gradient-to-r from-cyan-400 to-purple-400 rounded-full"
-                            initial={{ width: "100%" }}
-                            animate={{ 
-                              width: `${((23 - timeUntilNext.hours) * 60 * 60 + (59 - timeUntilNext.minutes) * 60 + (59 - timeUntilNext.seconds)) / (24 * 60 * 60) * 100}%`
-                            }}
-                            transition={{ duration: 1 }}
-                          />
-                        </div>
-                      </motion.div>
-                    )}
-                  </div>
-
-                  {/* Rodapé do Card */}
-                  <div className="text-center mt-6">
-                    {cardState === 'contador' ? (
-                      <div className="text-xs text-cyan-500/60">
-                        Próximo giro disponível: 00:00
-                      </div>
-                    ) : (
-                      <motion.div
-                        animate={{ opacity: [0.5, 1, 0.5] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                        className="text-xs text-purple-400"
-                      >
-                        Giro realizado hoje! ✓
-                      </motion.div>
-                    )}
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* Resultado da Roleta */}
+                {/* Resultado da Roleta */}
                 {showResult && selectedPrize && (
                   <motion.div
                     initial={{ scale: 0, opacity: 0 }}
