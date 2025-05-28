@@ -40,11 +40,39 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
               stiffness: 300,
               duration: 0.4 
             }}
-            className="bg-white/10 dark:bg-gray-900/30 backdrop-blur-xl rounded-xl p-6 max-w-md w-full shadow-2xl border border-white/20 dark:border-gray-700/30 relative overflow-hidden"
+            className="bg-transparent backdrop-blur-sm rounded-xl p-6 max-w-md w-full shadow-2xl border border-[#FF6B00]/20 relative overflow-hidden"
           >
-            {/* Efeito sutil de brilho laranja */}
-            <div className="absolute -top-10 -right-10 w-20 h-20 bg-[#FF6B00]/5 rounded-full blur-2xl"></div>
-            <div className="absolute -bottom-10 -left-10 w-20 h-20 bg-[#FF8C40]/5 rounded-full blur-2xl"></div>
+            {/* Efeitos visuais de fundo idênticos ao modal Bem-vindo de volta */}
+            <div className="absolute -top-20 -right-20 w-40 h-40 bg-[#FF6B00]/10 rounded-full blur-3xl"></div>
+            <div className="absolute -bottom-24 -left-20 w-40 h-40 bg-[#FF8C40]/10 rounded-full blur-3xl"></div>
+
+            {/* Bolhas de efeito */}
+            {[...Array(4)].map((_, i) => (
+              <motion.div 
+                key={i}
+                className={`absolute w-24 h-24 rounded-full blur-3xl pointer-events-none opacity-30 ${
+                  i === 0 ? "bg-[#FF6B00]/20 top-0 left-0" : ""
+                }${
+                  i === 1 ? "bg-[#FF8C40]/20 top-0 right-0" : ""
+                }${
+                  i === 2 ? "bg-indigo-500/10 bottom-0 right-0" : ""
+                }${
+                  i === 3 ? "bg-cyan-500/10 bottom-0 left-0" : ""
+                }`}
+                animate={{
+                  opacity: [0.2, 0.5, 0.2],
+                  scale: [1, 1.5, 1],
+                }}
+                transition={{ 
+                  duration: 4 + i, 
+                  ease: "easeInOut",
+                  repeat: Infinity 
+                }}
+              />
+            ))}
+
+            {/* Linhas de grade de fundo - efeito Tron/cyberpunk */}
+            <div className="absolute inset-0 bg-grid-pattern bg-[length:40px_40px] opacity-5"></div>
 
             <Button
               variant="ghost"
