@@ -1,358 +1,240 @@
 
-import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { X, Clock, Gift, Star, Flame, Eye } from "lucide-react";
+import React from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
 } from "@/components/ui/dialog";
-
-interface Recompensa {
-  id: string;
-  nome: string;
-  valor: number;
-  tipo: "pontos" | "xp" | "moldura" | "badge" | "desconto" | "boost";
-  probabilidade: number;
-  icone: string;
-  cor: string;
-}
+import { Gift, X, Calendar, Target, Bell } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface RoletaRecompensasModalProps {
-  isOpen: boolean;
-  onClose: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-const recompensas: Recompensa[] = [
-  { id: "1", nome: "10 SP", valor: 10, tipo: "pontos", probabilidade: 25, icone: "💰", cor: "#FFD700" },
-  { id: "2", nome: "25 SP", valor: 25, tipo: "pontos", probabilidade: 20, icone: "💰", cor: "#FFD700" },
-  { id: "3", nome: "50 SP", valor: 50, tipo: "pontos", probabilidade: 15, icone: "💰", cor: "#FFD700" },
-  { id: "4", nome: "20 XP", valor: 20, tipo: "xp", probabilidade: 15, icone: "⭐", cor: "#FF6B00" },
-  { id: "5", nome: "Moldura Rara", valor: 1, tipo: "moldura", probabilidade: 10, icone: "🖼️", cor: "#9C27B0" },
-  { id: "6", nome: "Badge Especial", valor: 1, tipo: "badge", probabilidade: 8, icone: "🏆", cor: "#E91E63" },
-  { id: "7", nome: "+10% XP (1h)", valor: 1, tipo: "boost", probabilidade: 5, icone: "⚡", cor: "#2196F3" },
-  { id: "8", nome: "100 SP", valor: 100, tipo: "pontos", probabilidade: 2, icone: "💎", cor: "#4CAF50" },
-];
-
 const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
-  isOpen,
-  onClose,
+  open,
+  onOpenChange,
 }) => {
-  const [isSpinning, setIsSpinning] = useState(false);
-  const [rotation, setRotation] = useState(0);
-  const [selectedReward, setSelectedReward] = useState<Recompensa | null>(null);
-  const [showRewardModal, setShowRewardModal] = useState(false);
-  const [diasConsecutivos, setDiasConsecutivos] = useState(23);
-  const [proximoGiroEm, setProximoGiroEm] = useState({ horas: 12, minutos: 34, segundos: 56 });
-  const [giroDisponivel, setGiroDisponivel] = useState(true);
-  const [showChances, setShowChances] = useState(false);
-
-  // Timer para próximo giro
-  useEffect(() => {
-    if (!giroDisponivel) {
-      const timer = setInterval(() => {
-        setProximoGiroEm(prev => {
-          let { horas, minutos, segundos } = prev;
-          
-          if (segundos > 0) {
-            segundos--;
-          } else if (minutos > 0) {
-            minutos--;
-            segundos = 59;
-          } else if (horas > 0) {
-            horas--;
-            minutos = 59;
-            segundos = 59;
-          } else {
-            setGiroDisponivel(true);
-            return { horas: 0, minutos: 0, segundos: 0 };
-          }
-          
-          return { horas, minutos, segundos };
-        });
-      }, 1000);
-
-      return () => clearInterval(timer);
-    }
-  }, [giroDisponivel]);
-
-  const girarRoleta = () => {
-    if (!giroDisponivel || isSpinning) return;
-
-    setIsSpinning(true);
-    
-    // Selecionar recompensa baseada na probabilidade
-    const rand = Math.random() * 100;
-    let accumulator = 0;
-    let selectedRecompensa = recompensas[0];
-    
-    for (const recompensa of recompensas) {
-      accumulator += recompensa.probabilidade;
-      if (rand <= accumulator) {
-        selectedRecompensa = recompensa;
-        break;
-      }
-    }
-
-    // Calcular rotação para parar na recompensa selecionada
-    const segmentAngle = 360 / recompensas.length;
-    const selectedIndex = recompensas.findIndex(r => r.id === selectedRecompensa.id);
-    const targetAngle = selectedIndex * segmentAngle;
-    const fullRotations = 5; // 5 voltas completas
-    const finalRotation = fullRotations * 360 + targetAngle;
-
-    setRotation(finalRotation);
-
-    // Depois da animação, mostrar resultado
-    setTimeout(() => {
-      setIsSpinning(false);
-      setSelectedReward(selectedRecompensa);
-      setShowRewardModal(true);
-      setGiroDisponivel(false);
-      setProximoGiroEm({ horas: 24, minutos: 0, segundos: 0 });
-    }, 3000);
-  };
-
-  const fecharRewardModal = () => {
-    setShowRewardModal(false);
-    setSelectedReward(null);
-  };
-
   return (
-    <>
-      <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden bg-gradient-to-br from-[#001427] via-[#001427] to-[#29335C] border-[#FF6B00]/30">
-          <DialogHeader className="relative">
-            <DialogTitle className="text-2xl font-bold text-white text-center mb-4">
-              🎁 Sua Recompensa Diária!
-            </DialogTitle>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent 
+        className="sm:max-w-[500px] p-0 bg-transparent border-0 shadow-none"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/70 backdrop-blur-lg z-[9999] flex items-center justify-center p-4"
+          style={{ pointerEvents: 'auto' }}
+        >
+          <motion.div
+            className="rounded-xl p-6 max-w-md w-full shadow-2xl relative overflow-hidden glassmorphism-modal"
+            style={{
+              background: "linear-gradient(135deg, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0.15) 50%, rgba(255, 255, 255, 0.03) 100%)",
+              backdropFilter: "blur(40px) saturate(200%) brightness(0.7)",
+              WebkitBackdropFilter: "blur(40px) saturate(200%) brightness(0.7)",
+              border: "1px solid rgba(255, 107, 0, 0.3)",
+              boxShadow: `
+                0 12px 48px rgba(0, 0, 0, 0.5),
+                0 4px 16px rgba(255, 107, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.2)
+              `,
+            }}
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.95, opacity: 0, y: 10 }}
+            transition={{ 
+              type: "spring", 
+              damping: 25, 
+              stiffness: 300,
+              duration: 0.4 
+            }}
+          >
+            {/* Efeitos visuais de fundo idênticos ao modal Bem-vindo de volta */}
+            <div className="absolute -top-20 -right-20 w-40 h-40 bg-[#FF6B00]/10 rounded-full blur-3xl"></div>
+            <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-[#FF8C40]/8 rounded-full blur-3xl"></div>
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-[#FF6B00]/5 rounded-full blur-2xl"></div>
+
+            {/* Botão de fechar idêntico */}
             <Button
               variant="ghost"
               size="icon"
-              className="absolute -top-2 -right-2 h-8 w-8 text-white/60 hover:text-white hover:bg-white/10"
-              onClick={onClose}
+              className="absolute top-4 right-4 h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 transition-all duration-300 text-white/70 hover:text-white"
+              onClick={() => onOpenChange(false)}
             >
-              <X className="h-5 w-5" />
+              <X className="h-4 w-4" />
             </Button>
-          </DialogHeader>
 
-          <div className="flex flex-col lg:flex-row gap-6 p-6">
-            {/* Avatar do Usuário - Lado Esquerdo */}
-            <div className="flex-shrink-0 flex justify-center lg:justify-start">
+            {/* Conteúdo do modal */}
+            <div className="relative z-10 text-center">
+              {/* Ícone principal com mesmo estilo */}
               <motion.div
-                className="w-32 h-32 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] flex items-center justify-center text-4xl"
-                animate={{ 
-                  rotate: [0, 10, -10, 0],
-                  scale: [1, 1.05, 1]
-                }}
-                transition={{ 
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "easeInOut"
+                initial={{ scale: 0, rotate: -180 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ delay: 0.2, type: "spring", damping: 20, stiffness: 300 }}
+                className="relative mb-6 flex justify-center"
+              >
+                <div className="relative">
+                  <div 
+                    className="w-16 h-16 rounded-full flex items-center justify-center relative"
+                    style={{
+                      background: "linear-gradient(135deg, #FF6B00 0%, #FF8C40 100%)",
+                      boxShadow: `
+                        0 0 20px rgba(255, 107, 0, 0.4),
+                        0 0 40px rgba(255, 107, 0, 0.2),
+                        inset 0 2px 4px rgba(255, 255, 255, 0.2),
+                        inset 0 -2px 4px rgba(0, 0, 0, 0.2)
+                      `,
+                    }}
+                  >
+                    <Gift className="h-8 w-8 text-white" />
+                  </div>
+                  
+                  {/* Efeito de brilho ao redor do ícone */}
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#FF6B00]/30 to-[#FF8C40]/30 blur-lg animate-pulse"></div>
+                </div>
+              </motion.div>
+
+              {/* Título principal com mesmo estilo */}
+              <motion.h2
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.3, duration: 0.5 }}
+                className="text-2xl font-bold text-white mb-2"
+                style={{
+                  fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+                  letterSpacing: "-0.025em",
+                  textShadow: "0 2px 8px rgba(0, 0, 0, 0.3)"
                 }}
               >
-                👋
-              </motion.div>
-            </div>
+                Resgate sua recompensa! ✨
+              </motion.h2>
 
-            {/* Área Central - Roleta e Informações */}
-            <div className="flex-1 flex flex-col items-center">
-              {/* Sequência de Dias Consecutivos */}
-              <div className="flex items-center gap-2 mb-4">
-                <Flame className="h-6 w-6 text-[#FF6B00]" />
-                <span className="text-xl font-bold text-white">
-                  {diasConsecutivos} dias consecutivos
-                </span>
-              </div>
+              {/* Subtítulo */}
+              <motion.p
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.4, duration: 0.5 }}
+                className="text-white/80 text-sm font-medium mb-8"
+                style={{ textShadow: "0 1px 4px rgba(0, 0, 0, 0.3)" }}
+              >
+                Parabéns por manter sua sequência diária!
+              </motion.p>
 
-              {/* Recompensas em Destaque */}
-              <div className="flex gap-3 mb-4">
-                {recompensas.slice(5, 8).map((recompensa) => (
-                  <div key={recompensa.id} className="text-2xl opacity-60">
-                    {recompensa.icone}
-                  </div>
-                ))}
-              </div>
-
-              {/* Roleta */}
-              <div className="relative mb-6">
+              {/* Lista de ações com mesmo estilo do modal Bem-vindo */}
+              <div className="space-y-3 mb-8">
                 <motion.div
-                  className="w-80 h-80 rounded-full border-4 border-[#FF6B00] relative overflow-hidden shadow-2xl"
-                  style={{
-                    background: `conic-gradient(${recompensas.map((_, index) => 
-                      `${index % 2 === 0 ? '#29335C' : '#001427'} ${(index * 360 / recompensas.length)}deg ${((index + 1) * 360 / recompensas.length)}deg`
-                    ).join(', ')})`
-                  }}
-                  animate={{ rotate: rotation }}
-                  transition={{ 
-                    duration: isSpinning ? 3 : 0,
-                    ease: isSpinning ? "easeOut" : "linear"
-                  }}
+                  initial={{ x: -20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: 0.5, duration: 0.4 }}
+                  className="flex items-center gap-3 p-3 rounded-lg bg-black/20 border border-white/10 backdrop-blur-sm hover:bg-black/30 transition-all duration-300"
                 >
-                  {/* Segmentos da Roleta */}
-                  {recompensas.map((recompensa, index) => {
-                    const angle = (360 / recompensas.length) * index;
-                    return (
-                      <div
-                        key={recompensa.id}
-                        className="absolute w-full h-full flex items-center justify-center"
-                        style={{
-                          transform: `rotate(${angle + 360 / recompensas.length / 2}deg)`,
-                          transformOrigin: 'center'
-                        }}
-                      >
-                        <div className="absolute top-8 text-2xl">
-                          {recompensa.icone}
-                        </div>
-                        <div className="absolute top-16 text-xs text-white font-semibold">
-                          {recompensa.nome}
-                        </div>
-                      </div>
-                    );
-                  })}
+                  <div className="w-10 h-10 rounded-lg bg-[#FF6B00]/20 flex items-center justify-center border border-[#FF6B00]/30">
+                    <Calendar className="h-5 w-5 text-[#FF6B00]" />
+                  </div>
+                  <div className="text-left">
+                    <div className="text-white font-medium text-sm">Ver sequência de estudos</div>
+                    <div className="text-white/60 text-xs">Acompanhe seus dias consecutivos</div>
+                  </div>
                 </motion.div>
 
-                {/* Ponteiro */}
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 w-8 h-8 bg-[#FF6B00] rotate-45 border-2 border-white shadow-lg z-10"></div>
+                <motion.div
+                  initial={{ x: -20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: 0.6, duration: 0.4 }}
+                  className="flex items-center gap-3 p-3 rounded-lg bg-black/20 border border-white/10 backdrop-blur-sm hover:bg-black/30 transition-all duration-300"
+                >
+                  <div className="w-10 h-10 rounded-lg bg-[#FF8C40]/20 flex items-center justify-center border border-[#FF8C40]/30">
+                    <Bell className="h-5 w-5 text-[#FF8C40]" />
+                  </div>
+                  <div className="text-left">
+                    <div className="text-white font-medium text-sm">Receber lembretes</div>
+                    <div className="text-white/60 text-xs">Configure notificações diárias</div>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  initial={{ x: -20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: 0.7, duration: 0.4 }}
+                  className="flex items-center gap-3 p-3 rounded-lg bg-black/20 border border-white/10 backdrop-blur-sm hover:bg-black/30 transition-all duration-300"
+                >
+                  <div className="w-10 h-10 rounded-lg bg-[#FFD700]/20 flex items-center justify-center border border-[#FFD700]/30">
+                    <Target className="h-5 w-5 text-[#FFD700]" />
+                  </div>
+                  <div className="text-left">
+                    <div className="text-white font-medium text-sm">Definir metas diárias</div>
+                    <div className="text-white/60 text-xs">Estabeleça objetivos de estudo</div>
+                  </div>
+                </motion.div>
               </div>
 
-              {/* Botão Ver Chances */}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-[#FF6B00] hover:text-[#FF8C40] hover:bg-[#FF6B00]/10"
-                onClick={() => setShowChances(!showChances)}
-              >
-                <Eye className="h-4 w-4 mr-2" />
-                Ver Chances das Recompensas
-              </Button>
-            </div>
-
-            {/* Lado Direito - Informações e Controles */}
-            <div className="flex-shrink-0 w-full lg:w-80 space-y-4">
-              {/* Cronômetro */}
-              {!giroDisponivel && (
-                <div className="bg-[#29335C]/50 rounded-lg p-4 text-center">
-                  <div className="flex items-center justify-center gap-2 mb-2">
-                    <Clock className="h-5 w-5 text-[#FF6B00]" />
-                    <span className="text-white font-semibold">Próximo Giro em:</span>
-                  </div>
-                  <div className="text-2xl font-bold text-[#FF6B00]">
-                    {String(proximoGiroEm.horas).padStart(2, '0')}:
-                    {String(proximoGiroEm.minutos).padStart(2, '0')}:
-                    {String(proximoGiroEm.segundos).padStart(2, '0')}
-                  </div>
-                </div>
-              )}
-
-              {/* Botões de Giro */}
-              <div className="space-y-3">
-                <Button
-                  onClick={girarRoleta}
-                  disabled={!giroDisponivel || isSpinning}
-                  className="w-full h-12 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isSpinning ? (
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                    >
-                      <Gift className="h-5 w-5 mr-2" />
-                    </motion.div>
-                  ) : giroDisponivel ? (
-                    <>
-                      <Gift className="h-5 w-5 mr-2" />
-                      Girar Agora!
-                    </>
-                  ) : (
-                    "Aguarde o Próximo Giro"
-                  )}
-                </Button>
-
-                <Button
-                  variant="outline"
-                  className="w-full border-[#FF6B00] text-[#FF6B00] hover:bg-[#FF6B00]/10"
-                  disabled
-                >
-                  <Star className="h-4 w-4 mr-2" />
-                  Girar 10x por 100 SP
-                </Button>
-
-                {diasConsecutivos >= 30 && (
-                  <Button
-                    variant="outline"
-                    className="w-full border-purple-500 text-purple-400 hover:bg-purple-500/10"
-                  >
-                    <Star className="h-4 w-4 mr-2" />
-                    Giro Especial (+25% Sorte)
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Modal de Chances */}
-          <AnimatePresence>
-            {showChances && (
+              {/* Botão principal com mesmo estilo */}
               <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="border-t border-[#FF6B00]/30 p-4 bg-[#29335C]/30"
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.8, duration: 0.4 }}
+                className="w-full"
               >
-                <h3 className="text-lg font-bold text-white mb-3">Chances das Recompensas:</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {recompensas.map((recompensa) => (
-                    <div key={recompensa.id} className="bg-[#001427]/50 rounded-lg p-3 text-center">
-                      <div className="text-2xl mb-1">{recompensa.icone}</div>
-                      <div className="text-xs text-white font-semibold">{recompensa.nome}</div>
-                      <div className="text-xs text-[#FF6B00]">{recompensa.probabilidade}%</div>
-                    </div>
-                  ))}
-                </div>
+                <Button
+                  onClick={() => onOpenChange(false)}
+                  className="w-full h-12 text-white font-semibold text-base rounded-lg transition-all duration-300 hover:scale-105 active:scale-95"
+                  style={{
+                    background: "linear-gradient(135deg, #FF6B00 0%, #FF8C40 100%)",
+                    boxShadow: `
+                      0 4px 16px rgba(255, 107, 0, 0.4),
+                      0 2px 8px rgba(255, 107, 0, 0.3),
+                      inset 0 1px 0 rgba(255, 255, 255, 0.2)
+                    `,
+                    border: "1px solid rgba(255, 107, 0, 0.3)"
+                  }}
+                >
+                  Continuar 🚀
+                </Button>
               </motion.div>
-            )}
-          </AnimatePresence>
-        </DialogContent>
-      </Dialog>
-
-      {/* Modal de Recompensa Ganha */}
-      <Dialog open={showRewardModal} onOpenChange={fecharRewardModal}>
-        <DialogContent className="max-w-md bg-gradient-to-br from-[#001427] to-[#29335C] border-[#FF6B00]/30">
-          <div className="text-center p-6">
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", damping: 15 }}
-              className="text-6xl mb-4"
-            >
-              {selectedReward?.icone}
-            </motion.div>
-            
-            <h3 className="text-2xl font-bold text-white mb-2">
-              🎉 Parabéns! Você Ganhou!
-            </h3>
-            
-            <div className="text-xl text-[#FF6B00] font-bold mb-4">
-              {selectedReward?.nome}
             </div>
-            
-            <p className="text-white/80 mb-6">
-              Sua recompensa foi adicionada à sua conta!
-            </p>
-            
-            <Button
-              onClick={fecharRewardModal}
-              className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-bold"
-            >
-              Coletar Recompensa
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </>
+
+            {/* Efeitos decorativos com partículas */}
+            <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden rounded-xl">
+              {[...Array(8)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute w-1 h-1 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-full opacity-60"
+                  initial={{ 
+                    x: Math.random() * 400, 
+                    y: Math.random() * 300,
+                    scale: 0 
+                  }}
+                  animate={{ 
+                    y: [null, -15, 15, -8, 3],
+                    scale: [0, 1, 0.6, 1, 0.4],
+                    opacity: [0, 0.8, 0.3, 0.8, 0]
+                  }}
+                  transition={{
+                    duration: 4,
+                    delay: i * 0.4,
+                    repeat: Infinity,
+                    repeatDelay: 3
+                  }}
+                />
+              ))}
+            </div>
+
+            {/* Gradiente sutil no fundo */}
+            <div 
+              className="absolute inset-0 rounded-xl opacity-20 pointer-events-none"
+              style={{
+                background: "radial-gradient(circle at 50% 30%, rgba(255, 107, 0, 0.08) 0%, transparent 70%)"
+              }}
+            />
+          </motion.div>
+        </motion.div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
