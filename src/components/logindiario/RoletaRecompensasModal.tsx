@@ -244,15 +244,15 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
           <div className="flex flex-col items-center space-y-6">
             {/* Roleta */}
             <div className="relative">
-              {/* Pino/Seta da roleta - Apontando para baixo com efeitos realistas */}
-              <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-20">
+              {/* Pino/Seta da roleta - Centralizado no topo apontando para baixo */}
+              <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 z-20">
                 <motion.div
                   animate={{
                     scale: highlightedPoint !== null ? 1.3 : 1,
                     y: highlightedPoint !== null ? 2 : 0,
-                    boxShadow: highlightedPoint !== null ? 
-                      "0 8px 25px rgba(255, 107, 0, 0.6), 0 0 20px rgba(239, 68, 68, 0.8)" : 
-                      "0 4px 15px rgba(0, 0, 0, 0.3)"
+                    filter: highlightedPoint !== null ? 
+                      "drop-shadow(0 8px 25px rgba(255, 107, 0, 0.6)) drop-shadow(0 0 20px rgba(239, 68, 68, 0.8))" : 
+                      "drop-shadow(0 4px 15px rgba(0, 0, 0, 0.3))"
                   }}
                   transition={{ 
                     duration: 0.15,
@@ -260,20 +260,12 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                     stiffness: 300,
                     damping: 20
                   }}
-                  className="relative filter drop-shadow-xl"
+                  className="relative"
                 >
-                  {/* Corpo principal do pino */}
-                  <div className={`w-0 h-0 border-l-[14px] border-r-[14px] border-t-[28px] border-l-transparent border-r-transparent transition-all duration-150 ${
+                  {/* Corpo principal do pino - triangulo apontando para baixo */}
+                  <div className={`w-0 h-0 border-l-[20px] border-r-[20px] border-t-[35px] border-l-transparent border-r-transparent transition-all duration-150 ${
                     highlightedPoint !== null ? 'border-t-red-500' : 'border-t-orange-600'
                   }`}></div>
-                  
-                  {/* Base circular do pino com gradiente */}
-                  <div className={`absolute -top-[30px] left-1/2 transform -translate-x-1/2 w-5 h-5 rounded-full border-3 border-white shadow-2xl transition-all duration-150 ${
-                    highlightedPoint !== null ? 'bg-gradient-to-br from-red-400 to-red-600' : 'bg-gradient-to-br from-orange-500 to-orange-700'
-                  }`}>
-                    {/* Reflexo interno */}
-                    <div className="absolute top-1 left-1 w-2 h-2 bg-white/40 rounded-full blur-[1px]"></div>
-                  </div>
                   
                   {/* Efeito de brilho quando ativo */}
                   {highlightedPoint !== null && (
@@ -282,7 +274,10 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                       animate={{ scale: 1.5, opacity: 1 }}
                       exit={{ scale: 0, opacity: 0 }}
                       transition={{ duration: 0.2 }}
-                      className="absolute -top-[35px] left-1/2 transform -translate-x-1/2 w-8 h-8 rounded-full bg-gradient-to-r from-orange-400 to-red-500 opacity-60 blur-sm"
+                      className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-12 h-10 bg-gradient-to-r from-orange-400 to-red-500 opacity-60 blur-sm"
+                      style={{
+                        clipPath: "polygon(50% 0%, 0% 100%, 100% 100%)"
+                      }}
                     />
                   )}
                   
@@ -300,7 +295,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                             opacity: [1, 0.7, 0]
                           }}
                           transition={{ duration: 0.4, delay: i * 0.05 }}
-                          className="absolute -top-[28px] left-1/2 transform -translate-x-1/2 w-1 h-1 bg-orange-400 rounded-full"
+                          className="absolute top-2 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-orange-400 rounded-full"
                         />
                       ))}
                     </>
