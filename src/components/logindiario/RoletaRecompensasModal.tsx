@@ -68,34 +68,50 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
     };
   }, []);
 
-  // Função para detectar colisão com pontos
+  // Função para detectar colisão com pontos - Melhorada
   const detectarColisao = (angulo: number) => {
     const anguloNormalizado = angulo % 360;
     for (let i = 0; i < totalSetores; i++) {
       const centroSetor = (i * anguloSetor) + (anguloSetor / 2);
-      const diferenca = Math.abs(anguloNormalizado - centroSetor);
+      let diferenca = Math.abs(anguloNormalizado - centroSetor);
       
-      // Detecta se está próximo ao centro do setor (±5°)
-      if (diferenca <= 5 || diferenca >= 355) {
+      // Ajustar para a menor diferença circular
+      if (diferenca > 180) {
+        diferenca = 360 - diferenca;
+      }
+      
+      // Detecta se está próximo ao centro do setor (±8° para maior precisão)
+      if (diferenca <= 8) {
         return i;
       }
     }
     return null;
   };
 
-  // Função para reproduzir som de clique
-  const reproduzirSomClique = () => {
+  // Função para reproduzir som de clique com variações realistas
+  const reproduzirSomClique = (velocidade: number = 1) => {
     try {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
+      
       oscillator.connect(gainNode);
       gainNode.connect(audioContext.destination);
-      oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
-      gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.08);
+      
+      // Varia a frequência baseada na velocidade
+      const baseFreq = 800 + (velocidade * 200);
+      const freq = baseFreq + (Math.random() * 100 - 50); // Adiciona variação
+      
+      oscillator.frequency.setValueAtTime(freq, audioContext.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(freq * 0.7, audioContext.currentTime + 0.05);
+      
+      // Volume baseado na velocidade
+      const volume = Math.min(0.3, 0.1 + (velocidade * 0.05));
+      gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+      
       oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.08);
+      oscillator.stop(audioContext.currentTime + 0.1);
     } catch (error) {
       console.log("Áudio não disponível");
     }
@@ -124,11 +140,15 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
     let anguloAtual = 0;
     let ultimoPontoDetectado = -1;
 
-    // Animação customizada com detecção de colisão
+    // Animação customizada com detecção de colisão e efeitos realistas
     const animar = () => {
-      if (velocidadeAtual > 0.1) {
+      if (velocidadeAtual > 0.08) {
         anguloAtual += velocidadeAtual;
-        velocidadeAtual *= 0.985; // Atrito gradual mais suave
+        
+        // Atrito progressivo mais realista
+        const atritoBase = 0.982;
+        const atritoAdicional = velocidadeAtual > 5 ? 0.998 : 0.985;
+        velocidadeAtual *= (atritoBase * atritoAdicional);
         
         setCurrentAngle(anguloAtual);
         
@@ -136,25 +156,43 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
         const pontoColisao = detectarColisao(anguloAtual);
         if (pontoColisao !== null && pontoColisao !== ultimoPontoDetectado) {
           setHighlightedPoint(pontoColisao);
-          reproduzirSomClique();
+          reproduzirSomClique(velocidadeAtual);
           ultimoPontoDetectado = pontoColisao;
           
-          // Remove o highlight após um tempo
-          setTimeout(() => setHighlightedPoint(null), 150);
+          // Remove o highlight com timing baseado na velocidade
+          const highlightDuration = Math.max(100, Math.min(250, 300 - (velocidadeAtual * 20)));
+          setTimeout(() => setHighlightedPoint(null), highlightDuration);
+        }
+
+        // Adicionar pequenas vibrações quando muito lento
+        let anguloFinal = anguloAtual;
+        if (velocidadeAtual < 2) {
+          const vibracao = Math.sin(anguloAtual * 0.1) * (2 - velocidadeAtual) * 0.1;
+          anguloFinal += vibracao;
         }
 
         // Usar animação mais suave com framer-motion
-        roletaControls.set({ rotate: anguloAtual });
+        roletaControls.set({ rotate: anguloFinal });
         
         animationRef.current = requestAnimationFrame(animar);
       } else {
-        // Parada final
+        // Parada final com pequeno ajuste para alinhar perfeitamente
         const recompensaVencedora = determinarRecompensa(anguloAtual);
+        
+        // Pequeno ajuste final para centralizar no prêmio
+        const setorEscolhido = recompensasRoleta.findIndex(r => r.id === recompensaVencedora.id);
+        const anguloIdeal = (setorEscolhido * anguloSetor) + (anguloSetor / 2);
+        const anguloFinalAjustado = anguloAtual + (anguloIdeal - (anguloAtual % 360));
+        
+        roletaControls.start({
+          rotate: anguloFinalAjustado,
+          transition: { duration: 0.3, ease: "easeOut" }
+        });
         
         setTimeout(() => {
           setResultado(recompensaVencedora.nome);
           setIsSpinning(false);
-        }, 500);
+        }, 800);
       }
     };
 
@@ -224,21 +262,59 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
           <div className="flex flex-col items-center space-y-6">
             {/* Roleta */}
             <div className="relative">
-              {/* Pino/Seta da roleta - Agora com feedback visual */}
-              <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 z-20">
+              {/* Pino/Seta da roleta - Virado para trás com efeitos realistas */}
+              <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 z-20">
                 <motion.div
                   animate={{
-                    scale: highlightedPoint !== null ? 1.2 : 1,
-                    boxShadow: highlightedPoint !== null ? "0 0 15px rgba(255, 107, 0, 0.8)" : "none"
+                    scale: highlightedPoint !== null ? 1.3 : 1,
+                    y: highlightedPoint !== null ? -3 : 0,
+                    rotateZ: highlightedPoint !== null ? [0, -2, 2, 0] : 0,
+                    boxShadow: highlightedPoint !== null ? 
+                      "0 0 20px rgba(255, 107, 0, 0.9), 0 0 40px rgba(255, 107, 0, 0.5)" : 
+                      "0 4px 8px rgba(0, 0, 0, 0.3)"
                   }}
-                  transition={{ duration: 0.1 }}
+                  transition={{ 
+                    duration: highlightedPoint !== null ? 0.15 : 0.3,
+                    type: "spring",
+                    stiffness: 300,
+                    damping: 20
+                  }}
                   className="relative"
                 >
-                  <div className={`w-0 h-0 border-l-[12px] border-r-[12px] border-b-[24px] border-l-transparent border-r-transparent transition-colors duration-100 ${
-                    highlightedPoint !== null ? 'border-b-red-500' : 'border-b-orange-600'
-                  } drop-shadow-lg`}></div>
-                  <div className={`absolute top-[20px] left-1/2 transform -translate-x-1/2 w-4 h-4 rounded-full border-2 border-white shadow-lg transition-colors duration-100 ${
-                    highlightedPoint !== null ? 'bg-red-500' : 'bg-orange-600'
+                  {/* Pino principal virado para trás */}
+                  <div className={`w-0 h-0 border-l-[14px] border-r-[14px] border-t-[28px] border-l-transparent border-r-transparent transition-all duration-150 ${
+                    highlightedPoint !== null ? 'border-t-red-500 filter brightness-125' : 'border-t-orange-600'
+                  } drop-shadow-xl`}></div>
+                  
+                  {/* Base do pino com efeito metálico */}
+                  <div className={`absolute -top-[26px] left-1/2 transform -translate-x-1/2 w-5 h-5 rounded-full border-3 border-white shadow-xl transition-all duration-150 ${
+                    highlightedPoint !== null ? 'bg-gradient-to-br from-red-400 to-red-600 border-yellow-200' : 'bg-gradient-to-br from-orange-500 to-orange-700'
+                  }`}>
+                    {/* Brilho metálico */}
+                    <div className="absolute top-1 left-1 w-2 h-2 bg-white/40 rounded-full blur-[1px]"></div>
+                  </div>
+                  
+                  {/* Efeito de vibração quando ativo */}
+                  {highlightedPoint !== null && (
+                    <motion.div
+                      className="absolute -top-[30px] left-1/2 transform -translate-x-1/2 w-8 h-8 rounded-full border-2 border-orange-400/30"
+                      animate={{
+                        scale: [1, 1.5, 1],
+                        opacity: [0.8, 0, 0.8]
+                      }}
+                      transition={{
+                        duration: 0.4,
+                        repeat: Infinity,
+                        ease: "easeOut"
+                      }}
+                    />
+                  )}
+                  
+                  {/* Sombra dinâmica */}
+                  <div className={`absolute top-[30px] left-1/2 transform -translate-x-1/2 w-6 h-2 rounded-full transition-all duration-150 ${
+                    highlightedPoint !== null ? 
+                      'bg-black/40 blur-sm scale-110' : 
+                      'bg-black/20 blur-[1px]'
                   }`}></div>
                 </motion.div>
               </div>
@@ -250,8 +326,36 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                 className="relative w-80 h-80 rounded-full border-8 border-white shadow-2xl overflow-hidden"
                 style={{
                   background: "conic-gradient(from 0deg, #FF6B00, #FFD700, #9333EA, #3B82F6, #10B981, #EF4444, #8B5CF6, #F59E0B)",
+                  filter: isSpinning ? "brightness(1.1) contrast(1.05)" : "none",
+                  transition: "filter 0.3s ease"
                 }}
               >
+                {/* Efeito de movimento quando girando */}
+                {isSpinning && (
+                  <motion.div
+                    className="absolute inset-0 rounded-full"
+                    style={{
+                      background: "radial-gradient(circle, transparent 60%, rgba(255, 255, 255, 0.1) 70%, transparent 80%)",
+                    }}
+                    animate={{
+                      rotate: [0, 360],
+                      opacity: [0.3, 0.6, 0.3]
+                    }}
+                    transition={{
+                      duration: 0.8,
+                      repeat: Infinity,
+                      ease: "linear"
+                    }}
+                  />
+                )}
+                
+                {/* Reflexo realista */}
+                <div 
+                  className="absolute inset-2 rounded-full pointer-events-none"
+                  style={{
+                    background: "linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, transparent 50%, rgba(255, 255, 255, 0.1) 100%)",
+                  }}
+                /></motion.div>
                 {/* Segmentos da roleta */}
                 {recompensasRoleta.map((recompensa, index) => {
                   const angulo = (360 / recompensasRoleta.length) * index;
