@@ -1344,6 +1344,39 @@ export default function Header() {
           </Tooltip>
         </TooltipProvider>
 
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative hover:bg-brand-card dark:hover:bg-white/5 group transition-all duration-300"
+                aria-label="Login Diário"
+                onClick={() => {
+                  // Aqui você pode adicionar a lógica para marcar o login diário
+                  console.log("Login diário realizado!");
+                }}
+              >
+                <div className="relative">
+                  <Award className="h-5 w-5 text-brand-black dark:text-white group-hover:text-[#FFD700] transition-colors duration-300" />
+                  {/* Efeito de brilho ao redor do ícone */}
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#FFD700]/20 via-[#FF6B00]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse scale-150"></div>
+                  {/* Partículas de brilho */}
+                  <div className="absolute -top-1 -right-1 h-2 w-2 bg-[#FFD700] rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 animate-ping"></div>
+                  <div className="absolute -bottom-1 -left-1 h-1.5 w-1.5 bg-[#FF6B00] rounded-full opacity-0 group-hover:opacity-100 transition-all duration-500 animate-pulse delay-200"></div>
+                  <div className="absolute top-0 left-0 h-1 w-1 bg-[#FFD700] rounded-full opacity-0 group-hover:opacity-100 transition-all duration-700 animate-bounce delay-300"></div>
+                </div>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <div className="text-center">
+                <p className="font-semibold">Login Diário</p>
+                <p className="text-xs text-muted-foreground">Marque sua presença diária</p>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
         <Popover open={isMessagesOpen} onOpenChange={setIsMessagesOpen}>
           <PopoverTrigger asChild>
             <Button
