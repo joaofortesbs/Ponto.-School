@@ -183,69 +183,6 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                           }}
                         ></div>
                       </div>
-
-                      {/* Bolinhas sobre as linhas */}
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        {/* Bolinha 1 - 0 graus (topo) */}
-                        <div 
-                          className="absolute w-2 h-2 bg-white border border-orange-300 rounded-full shadow-sm"
-                          style={{
-                            top: '4px',
-                            left: '50%',
-                            transform: 'translateX(-50%)'
-                          }}
-                        ></div>
-                        
-                        {/* Bolinha 2 - 60 graus */}
-                        <div 
-                          className="absolute w-2 h-2 bg-white border border-orange-300 rounded-full shadow-sm"
-                          style={{
-                            top: '32px',
-                            right: '32px',
-                            transform: 'translate(50%, -50%)'
-                          }}
-                        ></div>
-                        
-                        {/* Bolinha 3 - 120 graus */}
-                        <div 
-                          className="absolute w-2 h-2 bg-white border border-orange-300 rounded-full shadow-sm"
-                          style={{
-                            bottom: '32px',
-                            right: '32px',
-                            transform: 'translate(50%, 50%)'
-                          }}
-                        ></div>
-                        
-                        {/* Bolinha 4 - 180 graus (baixo) */}
-                        <div 
-                          className="absolute w-2 h-2 bg-white border border-orange-300 rounded-full shadow-sm"
-                          style={{
-                            bottom: '4px',
-                            left: '50%',
-                            transform: 'translateX(-50%)'
-                          }}
-                        ></div>
-                        
-                        {/* Bolinha 5 - 240 graus */}
-                        <div 
-                          className="absolute w-2 h-2 bg-white border border-orange-300 rounded-full shadow-sm"
-                          style={{
-                            bottom: '32px',
-                            left: '32px',
-                            transform: 'translate(-50%, 50%)'
-                          }}
-                        ></div>
-                        
-                        {/* Bolinha 6 - 300 graus */}
-                        <div 
-                          className="absolute w-2 h-2 bg-white border border-orange-300 rounded-full shadow-sm"
-                          style={{
-                            top: '32px',
-                            left: '32px',
-                            transform: 'translate(-50%, -50%)'
-                          }}
-                        ></div>
-                      </div>
                     </div>
                   </div>
 
