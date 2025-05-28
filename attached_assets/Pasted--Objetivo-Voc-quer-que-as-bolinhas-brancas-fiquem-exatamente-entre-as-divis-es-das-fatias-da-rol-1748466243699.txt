@@ -1,0 +1,62 @@
+📌 Objetivo:
+Você quer que as bolinhas brancas fiquem exatamente entre as divisões das fatias da roleta (como a 2ª imagem que você mandou: roleta com nomes de cidades), ou seja, alinhadas com as linhas divisórias e fora das fatias, e não centralizadas dentro das fatias como está na sua roleta atual.
+
+🧠 Explicação Técnica:
+Atualmente, suas bolinhas estão provavelmente posicionadas usando transform: rotate(Xdeg) com X baseado em 360 / númeroDePartes, mas esse valor centraliza dentro da fatia.
+
+Para colocá-las nas linhas divisórias, o cálculo angular precisa ser ajustado para estar "no meio de dois setores".
+
+✅ Solução exata para alinhar as bolinhas nas divisões das fatias:
+Suponha que sua roleta tenha n fatias (exemplo: 6 fatias como na sua roleta atual).
+Você pode posicionar cada bolinha com este cálculo angular:
+
+js
+Copiar
+Editar
+const numberOfSegments = 6; // ou quantas forem
+const angleStep = 360 / numberOfSegments;
+
+for (let i = 0; i < numberOfSegments; i++) {
+  const angle = i * angleStep;
+  // use angle para posicionar as bolinhas nas divisões
+}
+Mas no seu caso, você quer que elas fiquem entre as fatias, ou seja:
+js
+Copiar
+Editar
+const angle = i * angleStep - angleStep / 2;
+Com isso, as bolinhas ficam nas linhas divisórias.
+
+🧩 Exemplo CSS para cada bolinha:
+Vamos supor que você usa position: absolute e transform para rotacionar:
+
+css
+Copiar
+Editar
+.bolinha {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: rotate(ANGLEdeg) translateX(-50%) translateY(-100px); /* ajuste de distância radial */
+}
+Substitua ANGLEdeg com o valor calculado no JS.
+
+Ajuste translateY(-100px) para a distância do centro da roleta.
+
+🧲 Ajuste do pino (seta):
+Quanto ao pino, ele precisa de:
+
+css
+Copiar
+Editar
+transform: rotate(0deg); /* ou 180deg dependendo da imagem */
+E ajuste de posição top e left/right para garantir que ele fique apontando para o centro da roleta.
+
+✅ Resumo:
+Use angle = i * angleStep - angleStep / 2 para posicionar as bolinhas nas divisões.
+
+Use transform: rotate(...) translate(...) para cada bolinha com base nesse ângulo.
+
+Reposicione e rotacione o pino para apontar corretamente para o centro.
+
+Se quiser, posso te dar um código pronto com base em HTML/CSS/JS para esse efeito. Deseja isso?
