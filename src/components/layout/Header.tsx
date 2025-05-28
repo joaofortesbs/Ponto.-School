@@ -1844,25 +1844,30 @@ export default function Header() {
                     <ChevronDown className="h-4 w-4 text-brand-muted dark:text-white/40 ml-1" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 p-0 overflow-hidden"
+                <DropdownMenuContent align="end" className="w-56 p-0 overflow-hidden border-0"
                     style={{
-                      background: 'transparent',
-                      backdropFilter: 'blur(32px) saturate(150%)',
-                      WebkitBackdropFilter: 'blur(32px) saturate(150%)',
-                      border: '1px solid #FF6B00',
+                      background: isLightMode 
+                        ? 'linear-gradient(135deg, rgba(255, 107, 0, 0.03) 0%, rgba(30, 30, 30, 0.85) 50%, rgba(20, 20, 20, 0.92) 100%)'
+                        : 'linear-gradient(135deg, rgba(255, 107, 0, 0.05) 0%, rgba(15, 15, 15, 0.88) 50%, rgba(10, 10, 10, 0.95) 100%)',
+                      backdropFilter: 'blur(28px) saturate(180%)',
+                      WebkitBackdropFilter: 'blur(28px) saturate(180%)',
+                      border: '1px solid rgba(255, 107, 0, 0.15)',
                       borderRadius: '18px',
-                      boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4), 0 8px 16px -8px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.06)'
+                      boxShadow: isLightMode
+                        ? '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 8px 16px -8px rgba(255, 107, 0, 0.1), inset 0 1px 0 rgba(255, 107, 0, 0.1)'
+                        : '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 8px 16px -8px rgba(255, 107, 0, 0.15), inset 0 1px 0 rgba(255, 107, 0, 0.12)'
                     }}
                   >
                     {/* Header minimalista */}
                     <div 
                       className="px-5 py-4 relative"
                       style={{
-                        background: 'transparent',
-                        borderBottom: '1px solid #FF6B00'
+                        background: 'linear-gradient(135deg, rgba(255, 107, 0, 0.08) 0%, rgba(255, 140, 64, 0.04) 100%)',
+                        borderBottom: '1px solid rgba(255, 107, 0, 0.12)'
                       }}
                     >
-                      <h3 className={`text-sm font-light relative z-10 tracking-wide ${theme === 'light' ? 'text-black' : 'text-white/90'}`}>
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#FF6B00]/3 to-transparent" />
+                      <h3 className="text-sm font-light relative z-10 text-white/90 tracking-wide">
                         Minha Conta
                       </h3>
                     </div>
@@ -1870,25 +1875,28 @@ export default function Header() {
                     {/* Menu Items com design minimalista */}
                     <div className="py-3 px-2">
                       <DropdownMenuItem 
-                        className={`mx-2 my-1.5 rounded-lg cursor-pointer transition-all duration-300 group relative overflow-hidden hover:bg-white/3 ${theme === 'light' ? 'text-black hover:text-black focus:text-black' : 'text-white/80 hover:text-white focus:text-white'} focus:bg-white/3 border border-transparent hover:border-white/10`}
+                        className="mx-2 my-1.5 rounded-lg cursor-pointer transition-all duration-300 group relative overflow-hidden hover:bg-white/5 text-white/80 hover:text-white focus:bg-white/5 focus:text-white border border-transparent hover:border-white/10"
                         onClick={() => window.location.href = '/profile'}
                       >
-                        <User className={`mr-3.5 h-4 w-4 relative z-10 group-hover:text-[#FF6B00] transition-colors duration-300 ${theme === 'light' ? 'text-black/60' : 'text-white/60'}`} />
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#FF6B00]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        <User className="mr-3.5 h-4 w-4 relative z-10 text-white/60 group-hover:text-[#FF6B00] transition-colors duration-300" />
                         <span className="relative z-10 font-normal text-sm">Perfil</span>
                       </DropdownMenuItem>
 
                       <DropdownMenuItem 
-                        className={`mx-2 my-1.5 rounded-lg cursor-pointer transition-all duration-300 group relative overflow-hidden hover:bg-white/3 ${theme === 'light' ? 'text-black hover:text-black focus:text-black' : 'text-white/80 hover:text-white focus:text-white'} focus:bg-white/3 border border-transparent hover:border-white/10`}
+                        className="mx-2 my-1.5 rounded-lg cursor-pointer transition-all duration-300 group relative overflow-hidden hover:bg-white/5 text-white/80 hover:text-white focus:bg-white/5 focus:text-white border border-transparent hover:border-white/10"
                         onClick={() => window.location.href = '/configuracoes'}
                       >
-                        <Settings className={`mr-3.5 h-4 w-4 relative z-10 group-hover:text-[#FF6B00] transition-colors duration-300 ${theme === 'light' ? 'text-black/60' : 'text-white/60'}`} />
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#FF6B00]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        <Settings className="mr-3.5 h-4 w-4 relative z-10 text-white/60 group-hover:text-[#FF6B00] transition-colors duration-300" />
                         <span className="relative z-10 font-normal text-sm">Configurações</span>
                       </DropdownMenuItem>
 
                       <DropdownMenuItem 
-                        className={`mx-2 my-1.5 rounded-lg cursor-pointer transition-all duration-300 group relative overflow-hidden hover:bg-white/3 ${theme === 'light' ? 'text-black hover:text-black focus:text-black' : 'text-white/80 hover:text-white focus:text-white'} focus:bg-white/3 border border-transparent hover:border-white/10`}
+                        className="mx-2 my-1.5 rounded-lg cursor-pointer transition-all duration-300 group relative overflow-hidden hover:bg-white/5 text-white/80 hover:text-white focus:bg-white/5 focus:text-white border border-transparent hover:border-white/10"
                       >
-                        <HelpCircle className={`mr-3.5 h-4 w-4 relative z-10 group-hover:text-[#FF6B00] transition-colors duration-300 ${theme === 'light' ? 'text-black/60' : 'text-white/60'}`} />
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#FF6B00]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        <HelpCircle className="mr-3.5 h-4 w-4 relative z-10 text-white/60 group-hover:text-[#FF6B00] transition-colors duration-300" />
                         <span className="relative z-10 font-normal text-sm">Ajuda</span>
                       </DropdownMenuItem>
                     </div>
@@ -1897,17 +1905,18 @@ export default function Header() {
                     <div 
                       className="mx-4 my-2 h-px"
                       style={{
-                        background: `linear-gradient(to right, transparent, ${theme === 'light' ? 'rgba(0, 0, 0, 0.12)' : 'rgba(255, 255, 255, 0.12)'}, transparent)`
+                        background: 'linear-gradient(to right, transparent, rgba(255, 107, 0, 0.15), transparent)'
                       }}
                     />
 
                     {/* Logout com destaque sutil */}
                     <div className="pb-3 px-2">
                       <DropdownMenuItem 
-                        className={`mx-2 my-1.5 rounded-lg cursor-pointer transition-all duration-300 group relative overflow-hidden hover:bg-red-500/5 ${theme === 'light' ? 'text-black/70' : 'text-white/70'} hover:text-red-400 focus:bg-red-500/5 focus:text-red-400 border border-transparent hover:border-red-500/15`}
+                        className="mx-2 my-1.5 rounded-lg cursor-pointer transition-all duration-300 group relative overflow-hidden hover:bg-red-500/10 text-white/70 hover:text-red-400 focus:bg-red-500/10 focus:text-red-400 border border-transparent hover:border-red-500/20"
                         onClick={handleLogout}
                       >
-                        <LogOut className={`mr-3.5 h-4 w-4 relative z-10 group-hover:text-red-400 transition-colors duration-300 ${theme === 'light' ? 'text-black/50' : 'text-white/50'}`} />
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-500/8 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        <LogOut className="mr-3.5 h-4 w-4 relative z-10 text-white/50 group-hover:text-red-400 transition-colors duration-300" />
                         <span className="relative z-10 font-normal text-sm">Sair</span>
                       </DropdownMenuItem>
                     </div>
