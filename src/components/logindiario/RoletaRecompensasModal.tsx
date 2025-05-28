@@ -28,9 +28,9 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
           transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          className="relative bg-orange-50/20 backdrop-blur-md border border-orange-200/30 rounded-2xl p-8 shadow-2xl"
+          className="relative backdrop-blur-md border border-orange-400/60 rounded-2xl p-8 shadow-2xl"
           style={{
-            background: "rgba(255, 245, 235, 0.15)",
+            background: "rgba(255, 165, 0, 0.25)",
             backdropFilter: "blur(20px)",
             WebkitBackdropFilter: "blur(20px)",
           }}
@@ -39,7 +39,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
           <Button
             variant="ghost"
             size="icon"
-            className="absolute top-4 right-4 h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 border border-orange-200/30 transition-all duration-300"
+            className="absolute top-4 right-4 h-8 w-8 rounded-full bg-white/15 hover:bg-white/25 border border-orange-400/50 transition-all duration-300"
             onClick={() => onOpenChange(false)}
           >
             <X className="h-4 w-4 text-orange-700" />
