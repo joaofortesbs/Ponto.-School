@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -8,12 +8,22 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Award } from "lucide-react";
+import RoletaRecompensasModal from "./RoletaRecompensasModal";
 
 interface LoginDiarioProps {
   onClick?: () => void;
 }
 
 const LoginDiario: React.FC<LoginDiarioProps> = ({ onClick }) => {
+  const [showRecompensasModal, setShowRecompensasModal] = useState(false);
+
+  const handleClick = () => {
+    console.log("Login diário realizado!");
+    setShowRecompensasModal(true);
+    if (onClick) {
+      onClick();
+    }
+  };
   return (
     <TooltipProvider>
       <Tooltip>
@@ -23,9 +33,7 @@ const LoginDiario: React.FC<LoginDiarioProps> = ({ onClick }) => {
             size="icon"
             className="relative group transition-all duration-300 bg-gradient-to-r from-orange-100/80 to-orange-200/60 dark:from-orange-900/30 dark:to-orange-800/20 hover:from-orange-200/90 hover:to-orange-300/70 dark:hover:from-orange-800/40 dark:hover:to-orange-700/30 border border-orange-200/50 dark:border-orange-700/30 hover:border-orange-300/70 dark:hover:border-orange-600/50 rounded-lg backdrop-blur-sm"
             aria-label="Login Diário"
-            onClick={onClick || (() => {
-              console.log("Login diário realizado!");
-            })}
+            onClick={handleClick}
           >
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#FF6B00]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg"></div>
             <Award className="h-5 w-5 text-[#FF6B00] group-hover:text-[#FF8C40] transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-lg relative z-10" />
@@ -45,6 +53,11 @@ const LoginDiario: React.FC<LoginDiarioProps> = ({ onClick }) => {
           </div>
         </TooltipContent>
       </Tooltip>
+      
+      <RoletaRecompensasModal 
+        open={showRecompensasModal}
+        onOpenChange={setShowRecompensasModal}
+      />
     </TooltipProvider>
   );
 };
