@@ -1,0 +1,26 @@
+Entendi perfeitamente! Vou criar um prompt claro e detalhado para a IA de Vibe code, que programa a roleta, adicionar bolinhas nas linhas divisórias, inspirando-me na roleta que você enviou anteriormente. O foco será apenas na adição das bolinhas, posicionadas corretamente, para que o pino possa interagir com elas no futuro. Aqui está o prompt:
+
+Prompt para a IA de Vibe code:
+
+"Você está programando uma roleta interativa semelhante à roleta de recompensas que foi fornecida como inspiração, onde há um círculo dividido em seções com linhas divisórias entre elas. Sua tarefa agora é adicionar uma bolinha circular em cima de cada linha divisória da roleta, para que essas bolinhas fiquem corretamente posicionadas e possam interagir com o pino no futuro, de acordo com o movimento da roleta. Siga estas instruções detalhadas:
+
+Contexto da roleta atual: A roleta é um círculo dividido em 10 seções iguais (como na imagem fornecida anteriormente), cada uma representando uma cidade (Pequim, Santo Domingo, Paris, Singapura, Roma, Berlim, Washington, Buenos Aires, Lima, Tóquio). As seções são separadas por linhas divisórias que partem do centro do círculo até a borda externa, formando ângulos de 36 graus entre cada linha (360 graus ÷ 10 seções).
+Objetivo: Adicione uma bolinha circular em cima de cada uma das 10 linhas divisórias, posicionada na borda externa da roleta, exatamente no ponto onde a linha divisória encontra a circunferência externa do círculo.
+Detalhes visuais das bolinhas (inspirados na roleta de inspiração):
+As bolinhas devem ser pequenas e circulares, com um diâmetro proporcional ao tamanho da roleta (aproximadamente 5% do diâmetro total da roleta, para manter a proporção visual).
+A cor das bolinhas deve ser branca, com uma borda fina preta para contraste, garantindo visibilidade em qualquer tema (claro ou escuro).
+As bolinhas devem ser posicionadas de forma que o centro de cada bolinha fique exatamente sobre a linha divisória, na borda externa da roleta.
+Posicionamento matemático:
+Considere que o centro da roleta está na coordenada (0,0) e o raio da roleta é R.
+As linhas divisórias estão em ângulos de 0°, 36°, 72°, 108°, 144°, 180°, 216°, 252°, 288° e 324°.
+Para cada linha divisória, calcule a posição da bolinha na borda externa usando as coordenadas polares: (x, y) = (R * cos(ângulo), R * sin(ângulo)).
+Posicione o centro de cada bolinha nessas coordenadas.
+Implementação:
+Adicione as 10 bolinhas como elementos visuais (por exemplo, usando SVG, canvas ou outro método que você já utiliza para desenhar a roleta).
+Certifique-se de que as bolinhas sejam fixas nas posições calculadas e não se movam com a rotação da roleta (elas devem ser parte do elemento estático que contém as linhas divisórias).
+Restrições:
+Não modifique o design ou comportamento atual da roleta (como cores das seções, rotação ou pino).
+Não implemente ainda a interação do pino com as bolinhas; apenas posicione as bolinhas corretamente.
+Resultado esperado:
+Após a implementação, a roleta deve ter 10 bolinhas brancas com borda preta, uma em cada linha divisória, posicionadas na borda externa do círculo, visíveis e bem alinhadas com as linhas.
+Prossiga com a implementação apenas da adição das bolinhas, conforme descrito. Se precisar de mais detalhes sobre o código atual da roleta, posso fornecer, mas foque apenas em adicionar as bolinhas por agora."
