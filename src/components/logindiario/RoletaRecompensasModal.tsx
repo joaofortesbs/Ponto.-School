@@ -25,14 +25,14 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
   const [pinoBlinking, setPinoBlinking] = React.useState(false);
   const [pinoTilt, setPinoTilt] = React.useState(0); // Estado para inclinação do lápis
   
-  // Configuração dos prêmios da roleta (6 setores)
+  // Configuração dos prêmios da roleta (6 setores) - Design Temático
   const prizes = [
-    { name: "5 School Points", color: "#FF6B00", angle: 0 },
-    { name: "10 School Points", color: "#FF8C40", angle: 60 },
-    { name: "15 School Points", color: "#FFB366", angle: 120 },
-    { name: "20 School Points", color: "#FF9933", angle: 180 },
-    { name: "25 School Points", color: "#FFA366", angle: 240 },
-    { name: "30 School Points", color: "#FF7A1A", angle: 300 },
+    { name: "250 XP", color: "#FFD700", angle: 0, icon: "⭐", bgGradient: "linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #87CEEB 100%)" },
+    { name: "100 SPs", color: "#8A2BE2", angle: 60, icon: "💎", bgGradient: "linear-gradient(135deg, #8A2BE2 0%, #4169E1 50%, #C0C0C0 100%)" },
+    { name: "Epictus Turbo", color: "#FFFF00", angle: 120, icon: "⚡", bgGradient: "linear-gradient(135deg, #FFFF00 0%, #FFD700 50%, #2F4F4F 100%)" },
+    { name: "Avatar Raro", color: "#9370DB", angle: 180, icon: "👾", bgGradient: "linear-gradient(135deg, #9370DB 0%, #4169E1 50%, #00FF7F 100%)" },
+    { name: "999 SPs", color: "#8B008B", angle: 240, icon: "💰", bgGradient: "linear-gradient(135deg, #8B008B 0%, #C0C0C0 50%, #FFD700 100%)" },
+    { name: "Material Exclusivo", color: "#00FFFF", angle: 300, icon: "📜", bgGradient: "linear-gradient(135deg, #00FFFF 0%, #4169E1 50%, #FFFFFF 100%)" },
   ];
 
   // Função para animar inclinação do lápis com movimento físico realista
@@ -280,25 +280,25 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                 <div className="relative w-64 h-64">
                   {/* Círculo da Roleta */}
                   <div 
-                    className="w-full h-full rounded-full border-4 border-orange-300 bg-gradient-to-br from-orange-100 to-orange-200 relative overflow-hidden shadow-xl transition-transform duration-100"
+                    className="w-full h-full rounded-full border-4 border-purple-400 bg-gradient-to-br from-purple-100 to-blue-200 relative overflow-hidden shadow-xl transition-transform duration-100"
                     style={{
                       transform: `rotate(${currentRotation}deg)`,
                       transformOrigin: 'center'
                     }}
                   >
-                    {/* Seções da Roleta */}
+                    {/* Seções da Roleta com Gradientes Temáticos */}
                     <div className="absolute inset-0 rounded-full" style={{
                       background: `conic-gradient(
                         from 0deg,
-                        #FF6B00 0deg 60deg,
-                        #FF8C40 60deg 120deg,
-                        #FFB366 120deg 180deg,
-                        #FF9933 180deg 240deg,
-                        #FFA366 240deg 300deg,
-                        #FF7A1A 300deg 360deg
+                        #FFD700 0deg 60deg,
+                        #8A2BE2 60deg 120deg,
+                        #FFFF00 120deg 180deg,
+                        #9370DB 180deg 240deg,
+                        #8B008B 240deg 300deg,
+                        #00FFFF 300deg 360deg
                       )`
                     }}>
-                      {/* Linhas divisórias entre as seções */}
+                      {/* Linhas Divisórias Futuristas */}
                       <div className="absolute inset-0 flex items-center justify-center">
                         {/* Gerando as 6 linhas divisórias com ângulos de 60 graus */}
                         {[...Array(6)].map((_, index) => {
@@ -306,54 +306,95 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                           return (
                             <div 
                               key={`linha-${index}`}
-                              className="absolute w-0.5 h-32 bg-white/50 origin-bottom"
+                              className="absolute origin-bottom"
                               style={{
                                 transform: `rotate(${angle}deg)`,
                                 transformOrigin: '50% 100%',
                                 bottom: '50%',
                                 left: '50%',
-                                marginLeft: '-1px'
+                                marginLeft: '-1.5px',
+                                width: '3px',
+                                height: '128px',
+                                background: 'linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(138,43,226,0.7) 50%, rgba(255,255,255,0.3) 100%)',
+                                boxShadow: '0 0 6px rgba(255,255,255,0.5), 0 0 12px rgba(138,43,226,0.3)',
+                                borderRadius: '2px'
                               }}
                             ></div>
                           );
                         })}
                       </div>
 
-                      {/* Textos dos prêmios nos setores */}
+                      {/* Ícones e Textos Temáticos dos Prêmios */}
                       <div className="absolute inset-0 flex items-center justify-center">
                         {prizes.map((prize, index) => {
                           const angle = prize.angle + 30; // Centro do setor (30° do início)
-                          const radius = 80; // Distância do centro para o texto
+                          const iconRadius = 65; // Distância para o ícone (60% do setor)
+                          const textRadius = 95; // Distância para o texto (30% do setor)
                           
-                          // Convertendo ângulo para radianos e calculando posição
+                          // Convertendo ângulo para radianos e calculando posições
                           const angleRad = (angle - 90) * (Math.PI / 180); // -90 para começar no topo
-                          const x = radius * Math.cos(angleRad);
-                          const y = radius * Math.sin(angleRad);
+                          const iconX = iconRadius * Math.cos(angleRad);
+                          const iconY = iconRadius * Math.sin(angleRad);
+                          const textX = textRadius * Math.cos(angleRad);
+                          const textY = textRadius * Math.sin(angleRad);
                           
                           return (
-                            <div
-                              key={`prize-${index}`}
-                              className="absolute text-white font-bold text-xs text-center"
-                              style={{
-                                left: '50%',
-                                top: '50%',
-                                transform: `translate(${x - 25}px, ${y - 10}px)`,
-                                zIndex: 15,
-                                width: '50px',
-                                textShadow: '1px 1px 2px rgba(0,0,0,0.8)',
-                                fontSize: '10px',
-                                lineHeight: '1.2'
-                              }}
-                            >
-                              {prize.name.split(' ').map((word, i) => (
-                                <div key={i}>{word}</div>
-                              ))}
-                            </div>
+                            <React.Fragment key={`prize-${index}`}>
+                              {/* Ícone Temático */}
+                              <div
+                                className="absolute flex items-center justify-center"
+                                style={{
+                                  left: '50%',
+                                  top: '50%',
+                                  transform: `translate(${iconX - 20}px, ${iconY - 20}px)`,
+                                  zIndex: 16,
+                                  width: '40px',
+                                  height: '40px',
+                                  fontSize: '24px',
+                                  filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.6)) drop-shadow(0 0 12px rgba(255,215,0,0.4))',
+                                  animation: 'pulse 2s infinite'
+                                }}
+                              >
+                                {prize.icon}
+                              </div>
+                              
+                              {/* Texto Futurista */}
+                              <div
+                                className="absolute text-white font-bold text-center"
+                                style={{
+                                  left: '50%',
+                                  top: '50%',
+                                  transform: `translate(${textX - 30}px, ${textY - 8}px)`,
+                                  zIndex: 15,
+                                  width: '60px',
+                                  fontSize: '9px',
+                                  lineHeight: '1.1',
+                                  fontFamily: "'Orbitron', 'Inter', monospace",
+                                  fontWeight: '900',
+                                  textShadow: `
+                                    2px 2px 4px rgba(0,0,0,0.9),
+                                    0 0 6px rgba(255,255,255,0.3),
+                                    0 0 12px ${prize.color}40
+                                  `,
+                                  color: '#FFFFFF',
+                                  letterSpacing: '0.5px'
+                                }}
+                              >
+                                {prize.name.split(' ').map((word, i) => (
+                                  <div key={i} style={{ 
+                                    textTransform: 'uppercase',
+                                    filter: 'brightness(1.2)'
+                                  }}>
+                                    {word}
+                                  </div>
+                                ))}
+                              </div>
+                            </React.Fragment>
                           );
                         })}
                       </div>
 
-                      {/* Bolinhas nas linhas divisórias */}
+                      {/* Bolinhas Futuristas nas Divisórias */}
                       <div className="absolute inset-0 flex items-center justify-center">
                         {[...Array(6)].map((_, index) => {
                           const angle = index * 60; // Ângulos: 0°, 60°, 120°, 180°, 240°, 300°
@@ -368,13 +409,22 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                           return (
                             <div
                               key={`bolinha-${index}`}
-                              className="absolute w-3 h-3 bg-white rounded-full shadow-lg"
+                              className="absolute rounded-full shadow-lg"
                               style={{
                                 left: '50%',
                                 top: '50%',
                                 transform: `translate(${x - ballRadius}px, ${y - ballRadius}px)`,
                                 zIndex: 10,
-                                border: '2px solid #FFA500'
+                                width: '12px',
+                                height: '12px',
+                                background: 'linear-gradient(135deg, #FFFFFF 0%, #E6E6FA 50%, #9370DB 100%)',
+                                border: '2px solid #8A2BE2',
+                                boxShadow: `
+                                  0 0 6px rgba(138, 43, 226, 0.6),
+                                  0 0 12px rgba(255, 255, 255, 0.4),
+                                  inset 0 1px 3px rgba(255, 255, 255, 0.8)
+                                `,
+                                filter: 'drop-shadow(0 0 4px rgba(138, 43, 226, 0.3))'
                               }}
                             />
                           );
@@ -527,9 +577,27 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
           <div 
             className="absolute inset-0 rounded-2xl opacity-30 pointer-events-none"
             style={{
-              background: "radial-gradient(circle at 50% 50%, rgba(255, 107, 0, 0.1) 0%, transparent 70%)"
+              background: "radial-gradient(circle at 50% 50%, rgba(138, 43, 226, 0.15) 0%, rgba(75, 0, 130, 0.1) 50%, transparent 70%)"
             }}
           />
+
+          {/* Estilos CSS para animações */}
+          <style jsx>{`
+            @keyframes pulse {
+              0%, 100% { transform: scale(1); opacity: 1; }
+              50% { transform: scale(1.1); opacity: 0.8; }
+            }
+            
+            @keyframes shimmer {
+              0% { filter: brightness(1) drop-shadow(0 0 8px rgba(255,255,255,0.6)); }
+              50% { filter: brightness(1.3) drop-shadow(0 0 16px rgba(255,215,0,0.8)); }
+              100% { filter: brightness(1) drop-shadow(0 0 8px rgba(255,255,255,0.6)); }
+            }
+            
+            .prize-icon {
+              animation: shimmer 3s ease-in-out infinite;
+            }
+          `}</style>
         </motion.div>
       </DialogContent>
     </Dialog>
