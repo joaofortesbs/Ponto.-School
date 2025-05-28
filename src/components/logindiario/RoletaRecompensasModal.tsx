@@ -46,39 +46,41 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
           </Button>
 
           {/* Título e ícone */}
-          <div className="flex flex-col items-center text-center mb-8">
-            <motion.div
-              initial={{ scale: 0, rotate: -180 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ delay: 0.2, type: "spring", damping: 20, stiffness: 300 }}
-              className="relative mb-4"
-            >
-              <div className="bg-gradient-to-br from-orange-400 to-orange-600 p-4 rounded-full shadow-lg">
-                <Gift className="h-8 w-8 text-white" />
-              </div>
-              
-              {/* Efeito de brilho ao redor do ícone */}
-              <div className="absolute inset-0 bg-gradient-to-br from-orange-400/30 to-orange-600/30 rounded-full blur-lg animate-pulse"></div>
-            </motion.div>
+          <div className="mb-8">
+            <div className="flex items-center gap-4 mb-4">
+              <motion.div
+                initial={{ scale: 0, rotate: -180 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ delay: 0.2, type: "spring", damping: 20, stiffness: 300 }}
+                className="relative flex-shrink-0"
+              >
+                <div className="bg-gradient-to-br from-orange-400 to-orange-600 p-3 rounded-full shadow-lg">
+                  <Gift className="h-6 w-6 text-white" />
+                </div>
+                
+                {/* Efeito de brilho ao redor do ícone */}
+                <div className="absolute inset-0 bg-gradient-to-br from-orange-400/30 to-orange-600/30 rounded-full blur-lg animate-pulse"></div>
+              </motion.div>
 
-            <motion.h2
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.3, duration: 0.5 }}
-              className="text-3xl font-bold bg-gradient-to-r from-orange-600 via-orange-500 to-orange-700 bg-clip-text text-transparent mb-2"
-              style={{
-                fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-                letterSpacing: "-0.025em",
-              }}
-            >
-              Resgate sua recompensa
-            </motion.h2>
+              <motion.h2
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.3, duration: 0.5 }}
+                className="text-3xl font-bold bg-gradient-to-r from-orange-600 via-orange-500 to-orange-700 bg-clip-text text-transparent"
+                style={{
+                  fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+                  letterSpacing: "-0.025em",
+                }}
+              >
+                Resgate sua recompensa
+              </motion.h2>
+            </div>
 
             <motion.p
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.4, duration: 0.5 }}
-              className="text-orange-700/80 text-sm font-medium"
+              className="text-orange-700/80 text-sm font-medium text-center"
             >
               Parabéns por manter sua sequência diária!
             </motion.p>
