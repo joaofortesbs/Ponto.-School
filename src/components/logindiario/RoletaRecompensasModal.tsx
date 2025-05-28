@@ -17,6 +17,26 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
   open,
   onOpenChange,
 }) => {
+  // Estrutura otimizada para eventos futuros do pino
+  const pinConfig = {
+    x: 128, // Posição X do pino (lado direito da roleta)
+    y: 128, // Posição Y do pino (centro vertical)
+    angle: 0, // Ângulo do pino (0° = apontando para o centro)
+    // Métodos para eventos futuros (placeholders)
+    onSpin: () => {
+      // Placeholder para lógica de animação durante o giro
+      console.log('Pino: Evento de giro detectado');
+    },
+    onCollision: (ballIndex: number) => {
+      // Placeholder para detecção de colisão com bolinhas
+      console.log(`Pino: Colisão detectada com bolinha ${ballIndex}`);
+    },
+    onStop: (selectedSection: number) => {
+      // Placeholder para quando a roleta parar
+      console.log(`Pino: Roleta parou na seção ${selectedSection}`);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
@@ -169,9 +189,51 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                     <Gift className="h-8 w-8 text-orange-600" />
                   </div>
 
-                  {/* Ponteiro da Roleta */}
-                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2 z-20">
-                    <div className="w-0 h-0 border-l-4 border-r-4 border-b-8 border-l-transparent border-r-transparent border-b-orange-600 shadow-lg"></div>
+                  {/* Pino da Roleta - Design Educacional Personalizado */}
+                  <div 
+                    className="absolute right-0 top-1/2 transform translate-x-2 -translate-y-1/2 z-20"
+                    style={{
+                      left: `${pinConfig.x + 128}px`,
+                      top: `${pinConfig.y}px`,
+                      transform: `translate(-50%, -50%) rotate(${pinConfig.angle}deg)`
+                    }}
+                  >
+                    {/* Pino estilizado como lápis educacional */}
+                    <div className="relative flex items-center">
+                      {/* Corpo principal do lápis (azul escuro #0066CC) */}
+                      <div 
+                        className="w-8 h-3 rounded-r-lg shadow-lg transform rotate-180 relative"
+                        style={{ backgroundColor: '#0066CC' }}
+                      >
+                        {/* Ponta afiada do lápis (preta #000000) */}
+                        <div 
+                          className="absolute -left-2 top-1/2 transform -translate-y-1/2 w-0 h-0"
+                          style={{
+                            borderTop: '6px solid transparent',
+                            borderBottom: '6px solid transparent',
+                            borderRight: '8px solid #000000'
+                          }}
+                        ></div>
+                        
+                        {/* Base graduação (amarela #FFCC00) */}
+                        <div 
+                          className="absolute right-0 top-1/2 transform -translate-y-1/2 w-1.5 h-4 rounded-r"
+                          style={{ 
+                            backgroundColor: '#FFCC00',
+                            borderRight: '2px solid #E6B800'
+                          }}
+                        ></div>
+                        
+                        {/* Detalhes educacionais - marca do lápis */}
+                        <div 
+                          className="absolute right-2 top-1/2 transform -translate-y-1/2 w-0.5 h-2 rounded"
+                          style={{ backgroundColor: '#0052A3' }}
+                        ></div>
+                        
+                        {/* Indicador de qualidade educacional */}
+                        <div className="absolute top-0 right-1 w-1 h-1 bg-white rounded-full opacity-80"></div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
