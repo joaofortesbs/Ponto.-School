@@ -1,0 +1,103 @@
+Roleta de Recompensas Diárias – Especificação "Ponto de Virada"
+I. Conceito Visual e Sensorial (Além do Básico):
+Inspiração: Elementos de tecnologia avançada, interfaces holográficas, partículas de energia e design minimalista elegante. Queremos que o usuário sinta que está interagindo com algo futurista e especial.
+Tema: "Conexão de Conhecimento" ou "Energia do Aprendizado". A roleta não é apenas sorte, é um reflexo do fluxo de conhecimento na plataforma.
+Sensação: Antecipação, excitação, recompensa e um toque de "magia tecnológica".
+II. Design Detalhado da Roleta:
+Estrutura e Forma:
+Formato: Círculo perfeito.
+Base:
+Opção 1 (Flutuante): A roleta parece flutuar no centro do modal, com uma sombra suave abaixo para dar profundidade.
+Opção 2 (Encaixada): Uma base circular sutilmente integrada ao fundo do modal, com a roleta girando sobre ela.
+Aro Externo:
+Material: Aparência de metal escovado escuro (ex: titânio, grafite) ou um material translúcido com brilho interno.
+Iluminação Sutil: Uma fina linha de luz LED (cor laranja ou azul Ponto. School) percorrendo a borda do aro, pulsando suavemente quando o giro está disponível.
+Segmentos da Roleta (Divisões dos Prêmios):
+Número: 8 a 12 segmentos (para variedade sem poluir visualmente).
+Divisórias: Linhas finas e luminosas (cor contrastante, ex: branco ou ciano claro) que se irradiam do centro. Podem ter um leve efeito de pulsação de energia quando a roleta está parada.
+Fundo de Cada Segmento:
+Opção 1 (Translúcido): Um material levemente translúcido (vidro fosco ou acrílico escuro) que permite ver um padrão de fundo sutil e tecnológico (ex: linhas de circuito, partículas de energia) se movendo lentamente por trás de toda a roleta.
+Opção 2 (Gradiente Sofisticado): Gradientes sutis e elegantes dentro de cada segmento, usando cores da paleta Ponto. School, talvez com um leve brilho metálico.
+Ícones das Recompensas (Dentro de Cada Segmento):
+Estilo: Ícones 3D minimalistas e elegantes, ou ícones 2D com efeito de profundidade e brilho sutil.
+Animação (Hover – Opcional): Ao passar o mouse sobre um segmento (quando a roleta está parada), o ícone pode ter uma leve animação (ex: girar lentamente, pulsar).
+Destaque do "Grande Prêmio": O segmento com a recompensa mais valiosa deve ter um design sutilmente diferenciado (ex: um brilho mais intenso, um fundo ligeiramente diferente).
+Centro da Roleta:
+Um círculo menor, com um design tecnológico.
+Opção 1: Um núcleo de energia pulsante (animação de partículas ou luz).
+Opção 2: O logo do Epictus IA (se a roleta for uma "oferta" da IA).
+Opção 3: Um botão "GIRAR" integrado, com design futurista.
+Ponteiro/Seletor:
+Design: Não um ponteiro tradicional. Sugestões:
+Feixe de Luz: Um feixe de luz fino e brilhante (laranja ou branco) que emana do topo (ou de um ponto fixo) e aponta para o segmento selecionado.
+Indicador Holográfico: Uma forma geométrica translúcida e flutuante que se alinha com o segmento vencedor.
+Animação: O feixe/indicador se move suavemente com a roleta e "trava" no segmento vencedor com um efeito visual.
+III. Animações e Efeitos Visuais (A Alma da Roleta):
+Estado "Giro Disponível":
+Aro externo com pulsação de luz LED suave.
+Centro da roleta com núcleo de energia pulsante.
+Opcional: Partículas de luz flutuando suavemente ao redor da roleta.
+Ao Clicar em "Girar Agora!":
+Feedback no Botão: Efeito de clique (afundamento, mudança de cor).
+Animação de "Carga":
+O botão "Girar" pode diminuir de tamanho e depois expandir rapidamente, como se estivesse carregando energia.
+O núcleo de energia no centro da roleta se intensifica.
+Som: Um som curto de "power up" tecnológico.
+Início da Rotação:
+A roleta começa a girar suavemente, ganhando velocidade progressivamente.
+As luzes nas divisórias dos segmentos podem criar um efeito de rastro luminoso.
+O fundo da roleta (se for o padrão de partículas) pode ter as partículas se movendo mais rapidamente.
+Som: Som de roleta girando (moderno, não de cassino antigo – algo mais "digital").
+Durante a Rotação:
+Os ícones das recompensas podem ficar levemente desfocados ou ter um efeito de movimento.
+O ponteiro/seletor acompanha a rotação, talvez com um leve "arrasto" visual.
+Opcional (Avançado): Efeitos de partículas emanando da roleta enquanto ela gira.
+Desaceleração e Parada:
+A roleta começa a desacelerar gradualmente.
+O som da roleta diminui de intensidade.
+À medida que se aproxima do segmento vencedor, pode haver um efeito de "tensão" (ex: a roleta "hesita" entre dois segmentos antes de parar).
+Animação de Parada:
+Quando para no segmento vencedor, há um flash de luz (cor da recompensa ou branco/laranja).
+O ponteiro/seletor "trava" no segmento com um efeito visual e sonoro (ex: um "clique" digital satisfatório).
+O segmento vencedor fica totalmente destacado (ex: brilho intenso, fundo mais claro, ícone animado).
+Exibição da Recompensa (Modal Menor sobre a Roleta):
+Animação de Entrada: O modal aparece com um fade-in e scale-up suave.
+Ícone da Recompensa: O ícone (possivelmente uma versão maior e mais detalhada) pode ter uma animação de "revelação" (ex: girar, brilhar).
+Texto "Parabéns! Você Ganhou!": Aparece com um efeito de digitação ou fade-in.
+Nome da Recompensa: Surge abaixo do título.
+Botão "OK" / "Coletar": Aparece com um leve delay.
+Opcional: Confetes digitais ou partículas de luz flutuando brevemente dentro do modal.
+Após Coletar a Recompensa:
+O modal da recompensa desaparece com um fade-out.
+A roleta volta ao estado "esperando próximo giro".
+O cronômetro para o próximo giro é iniciado (com animação de contagem regressiva).
+A luz LED no aro externo para de pulsar intensamente (volta à pulsação suave de "disponível no próximo dia").
+IV. Interatividade Adicional:
+Hover nos Segmentos (Roleta Parada):
+Ao passar o mouse sobre um segmento (quando o giro não está ativo), o segmento pode ter um leve destaque (ex: borda mais brilhante, fundo ligeiramente mais claro).
+Um tooltip aparece mostrando o nome completo da recompensa naquele segmento.
+Clique nos Indicadores de Posição do Carrossel (se o modal tiver múltiplas "telas" – ex: Roleta, Missão Diária, Dica do IA):
+Transição suave (slide horizontal) entre as telas do modal.
+V. Considerações Técnicas e de Design:
+Performance: As animações devem ser fluidas e otimizadas para não causar lentidão, especialmente em dispositivos mais antigos ou com menos recursos. Usar aceleração de hardware (CSS transforms e opacity sempre que possível).
+Consistência Visual: Todos os elementos (ícones, fontes, cores, botões) devem seguir rigorosamente a identidade visual da Ponto. School.
+Usabilidade: Mesmo com design sofisticado, a roleta deve ser fácil de entender e usar. O botão de girar deve ser óbvio.
+Acessibilidade:
+Garantir que os contrastes de cores sejam adequados.
+Oferecer textos alternativos para elementos visuais importantes (para leitores de tela).
+Permitir a interação com a roleta via teclado (ex: tecla Espaço para girar).
+Som: Os efeitos sonoros devem ser agradáveis, sutis e, o mais importante, configuráveis (o usuário deve poder desativá-los).
+Responsividade: O modal e a roleta devem se adaptar perfeitamente a diferentes tamanhos de tela. Em telas menores, a disposição dos elementos (avatar, roleta, informações) pode precisar ser ajustada (ex: empilhamento vertical).
+VI. Fluxo do Usuário (Resumido):
+Acesso: Usuário clica no ícone de "Recompensa Diária" no cabeçalho.
+Modal Aberto: Vê o avatar animado, a roleta com o aro pulsando, o cronômetro (se não for o primeiro giro do dia) e o botão "Girar Agora!".
+Giro: Clica em "Girar Agora!".
+Animação de "carga".
+Roleta gira com efeitos visuais e sonoros.
+Roleta desacelera e para no segmento vencedor.
+Efeito de destaque no segmento.
+Recompensa: Modal menor aparece com a recompensa ganha.
+Coleta: Clica em "OK".
+Atualização: Recompensa é adicionada, cronômetro é reiniciado.
+Próximo Dia: O ciclo se repete.
+Ao implementar esta roleta com este nível de detalhe e sofisticação, você não apenas recompensa o login diário, mas cria um momento de engajamento memorável, reforça a imagem tecnológica da Ponto. School e deixa os usuários ansiosos para voltar no dia seguinte. É uma pequena funcionalidade que pode ter um grande impacto na experiência geral.
