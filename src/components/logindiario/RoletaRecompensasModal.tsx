@@ -322,16 +322,11 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                   initial={{ y: 30, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.3, duration: 0.6, type: "spring", damping: 25 }}
-                  className="text-4xl font-black tracking-tight leading-tight"
+                  className="text-3xl font-black tracking-tight leading-tight text-white"
                   style={{
                     fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-                    background: "linear-gradient(135deg, #1e293b 0%, #334155 25%, #FF6B00 50%, #FF8C40 75%, #1e293b 100%)",
-                    backgroundSize: "200% 100%",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                    backgroundClip: "text",
                     letterSpacing: "-0.04em",
-                    textShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                    textShadow: "0 2px 4px rgba(0,0,0,0.3)",
                   }}
                 >
                   Login Diário
@@ -349,19 +344,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
               </div>
             </div>
 
-            <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.6, duration: 0.5 }}
-              className="text-center"
-            >
-              <p className="text-lg font-semibold text-slate-700/90 mb-1">
-                Resgate sua recompensa
-              </p>
-              <p className="text-sm text-slate-600/80 font-medium">
-                Parabéns por manter sua sequência diária!
-              </p>
-            </motion.div>
+            
 
             {/* Roleta de Recompensas */}
             <motion.div
