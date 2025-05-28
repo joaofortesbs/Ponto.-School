@@ -24,6 +24,11 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
   const [showResult, setShowResult] = React.useState(false);
   const [pinoBlinking, setPinoBlinking] = React.useState(false);
   const [pinoTilt, setPinoTilt] = React.useState(0); // Estado para inclinação do lápis
+  const [pinoColor, setPinoColor] = React.useState('#FF6B00'); // Cor do pino
+  const [activePoint, setActivePoint] = React.useState<number | null>(null); // Ponto ativo atual
+  
+  // Ref para áudio
+  const audioRef = React.useRef<HTMLAudioElement | null>(null);
   
   // Configuração dos prêmios da roleta (6 setores)
   const prizes = [
@@ -34,6 +39,53 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
     { name: "999 SPs", color: "#FFA366", angle: 240 },
     { name: "Material Exclusivo", color: "#FF7A1A", angle: 300 },
   ];
+
+  // Inicialização do áudio
+  React.useEffect(() => {
+    // Criar áudio sintético para clique (já que não temos arquivo de áudio)
+    const createClickSound = () => {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      
+      return () => {
+        try {
+          const oscillator = audioContext.createOscillator();
+          const gainNode = audioContext.createGain();
+          
+          oscillator.connect(gainNode);
+          gainNode.connect(audioContext.destination);
+          
+          oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+          oscillator.frequency.exponentialRampToValueAtTime(200, audioContext.currentTime + 0.1);
+          
+          gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+          
+          oscillator.start(audioContext.currentTime);
+          oscillator.stop(audioContext.currentTime + 0.1);
+        } catch (error) {
+          console.log('Áudio não disponível:', error);
+        }
+      };
+    };
+    
+    audioRef.current = createClickSound();
+  }, []);
+
+  // Função para reproduzir som de clique
+  const playClickSound = () => {
+    if (audioRef.current) {
+      try {
+        audioRef.current();
+      } catch (error) {
+        console.log('Erro ao reproduzir áudio:', error);
+      }
+    }
+    
+    // Alternativa: vibração se disponível
+    if (navigator.vibrate) {
+      navigator.vibrate(25);
+    }
+  };
 
   // Função para animar inclinação do lápis com movimento físico realista
   const animatePencilTilt = () => {
@@ -54,11 +106,35 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
     }, 100);
   };
 
+  // Função para efeitos visuais do pino
+  const animatePinoEffects = (pointIndex: number) => {
+    // Definir ponto ativo
+    setActivePoint(pointIndex);
+    
+    // Mudar cor do pino temporariamente
+    setPinoColor('#FF0000'); // Vermelho ao ativar
+    
+    // Efeito de piscada
+    setPinoBlinking(true);
+    
+    // Reproduzir som
+    playClickSound();
+    
+    // Restaurar cor original após efeito
+    setTimeout(() => {
+      setPinoColor('#FF6B00');
+      setPinoBlinking(false);
+      setActivePoint(null);
+    }, 150);
+  };
+
   // Função para detectar colisão com os pontos divisórios
   const detectCollision = (angle: number, previousAngle: number) => {
     const sectorBoundaries = [0, 60, 120, 180, 240, 300];
     
-    for (const boundary of sectorBoundaries) {
+    for (let i = 0; i < sectorBoundaries.length; i++) {
+      const boundary = sectorBoundaries[i];
+      
       // Normaliza ângulos para comparação precisa
       const prevNormalized = ((previousAngle % 360) + 360) % 360;
       const currentNormalized = ((angle % 360) + 360) % 360;
@@ -72,21 +148,11 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
         (prevNormalized < 10 && currentNormalized > 350 && boundary === 0);
       
       if (crossedBoundary) {
-        // Efeito visual de piscada
-        setPinoBlinking(true);
-        setTimeout(() => setPinoBlinking(false), 100);
+        // Aplicar todos os efeitos visuais e auditivos
+        animatePinoEffects(i);
         
         // Movimento físico realista do lápis
         animatePencilTilt();
-        
-        // Som de tick (simulado com vibração se disponível)
-        if (navigator.vibrate) {
-          navigator.vibrate(15);
-        }
-        
-        // Aqui você pode adicionar um som real:
-        // const audio = new Audio('/click.mp3');
-        // audio.play().catch(() => {}); // Ignora erro se não conseguir tocar
         
         break;
       }
@@ -417,6 +483,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                           const angle = index * 60; // Ângulos: 0°, 60°, 120°, 180°, 240°, 300°
                           const radius = 121; // Ajustado para 95% do raio original (128 * 0.95) para evitar cortes
                           const ballRadius = 6; // Raio das bolinhas (5% do diâmetro da roleta)
+                          const isActive = activePoint === index;
                           
                           // Convertendo ângulo para radianos e calculando posição
                           const angleRad = (angle - 90) * (Math.PI / 180); // -90 para começar no topo
@@ -426,13 +493,18 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                           return (
                             <div
                               key={`bolinha-${index}`}
-                              className="absolute w-3 h-3 bg-white rounded-full shadow-lg"
+                              className={`absolute w-3 h-3 rounded-full shadow-lg transition-all duration-150 ${
+                                isActive ? 'bg-red-400 scale-125' : 'bg-white'
+                              }`}
                               style={{
                                 left: '50%',
                                 top: '50%',
-                                transform: `translate(${x - ballRadius}px, ${y - ballRadius}px)`,
+                                transform: `translate(${x - ballRadius}px, ${y - ballRadius}px) ${isActive ? 'scale(1.25)' : 'scale(1)'}`,
                                 zIndex: 10,
-                                border: '2px solid #FFA500'
+                                border: isActive ? '2px solid #FF0000' : '2px solid #FFA500',
+                                boxShadow: isActive 
+                                  ? '0 0 15px rgba(255, 0, 0, 0.6), 2px 2px 8px rgba(0,0,0,0.3)'
+                                  : '2px 2px 4px rgba(0,0,0,0.2)'
                               }}
                             />
                           );
@@ -448,13 +520,14 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
 
                   {/* Pino da Roleta - Design Educacional de Lápis */}
                   <div 
-                    className={`absolute z-20 transition-all ${pinoBlinking ? 'scale-110 brightness-150' : ''}`}
+                    className={`absolute z-20 transition-all duration-150 ${pinoBlinking ? 'scale-110 brightness-150 drop-shadow-lg' : ''}`}
                     style={{
                       right: '-24px', // Posiciona 1.1 * raio da roleta (128px * 1.1 = ~140px, ajustado para -24px)
                       top: '50%',
                       transform: `translateY(-50%) rotate(${-15 + pinoTilt}deg)`, // Inclinação base + movimento físico
                       transformOrigin: 'center bottom', // Origem na base do lápis para movimento realista
-                      transition: pinoTilt !== 0 ? 'transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55)' : 'transform 0.1s ease-out'
+                      transition: pinoTilt !== 0 ? 'transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55)' : 'transform 0.1s ease-out',
+                      filter: pinoBlinking ? 'drop-shadow(0 0 10px rgba(255, 0, 0, 0.8))' : 'none'
                     }}
                   >
                     {/* Container do Pino Educacional */}
@@ -474,14 +547,19 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
 
                       {/* Corpo do Lápis (laranja educacional) */}
                       <div 
-                        className="relative ml-3"
+                        className="relative ml-3 transition-all duration-150"
                         style={{
                           width: '32px',
                           height: '16px',
-                          backgroundColor: '#FF6B00',
+                          backgroundColor: pinoColor,
                           borderRadius: '0 8px 8px 0',
-                          background: 'linear-gradient(135deg, #FF6B00 0%, #FF8F40 50%, #FF6B00 100%)',
-                          boxShadow: '2px 2px 4px rgba(0,0,0,0.2), inset 1px 1px 2px rgba(255,255,255,0.3)'
+                          background: pinoBlinking 
+                            ? `linear-gradient(135deg, ${pinoColor} 0%, #FF0000 50%, ${pinoColor} 100%)`
+                            : `linear-gradient(135deg, ${pinoColor} 0%, #FF8F40 50%, ${pinoColor} 100%)`,
+                          boxShadow: pinoBlinking 
+                            ? '2px 2px 8px rgba(255,0,0,0.4), inset 1px 1px 2px rgba(255,255,255,0.3), 0 0 15px rgba(255,0,0,0.3)'
+                            : '2px 2px 4px rgba(0,0,0,0.2), inset 1px 1px 2px rgba(255,255,255,0.3)',
+                          transform: pinoBlinking ? 'scale(1.05)' : 'scale(1)'
                         }}
                       >
                         {/* Detalhes de Textura do Lápis */}
