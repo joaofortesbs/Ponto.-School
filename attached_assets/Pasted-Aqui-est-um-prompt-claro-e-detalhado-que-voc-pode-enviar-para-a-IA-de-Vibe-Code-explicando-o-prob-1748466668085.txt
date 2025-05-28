@@ -1,0 +1,40 @@
+Aqui está um prompt claro e detalhado que você pode enviar para a IA de Vibe Code, explicando o problema com o posicionamento das bolinhas e como corrigi-lo. O prompt inclui instruções específicas para garantir que as bolinhas fiquem nas linhas divisórias da roleta, como você deseja.
+
+Prompt para a IA de Vibe Code:
+
+Olá, preciso de ajustes no código da roleta da minha plataforma. Atualmente, as bolinhas (marcadores) estão posicionadas incorretamente: elas estão dentro das fatias da roleta, mas eu quero que elas fiquem nas linhas divisórias entre as fatias, como na imagem de referência que enviei (a segunda imagem, com as bolinhas nos ângulos 0°, 60°, 120°, 180°, 240°, 300°).
+
+Problema:
+A roleta tem 6 divisões, o que significa que cada fatia ocupa 60 graus (360° / 6).
+As bolinhas estão centralizadas dentro das fatias (provavelmente nos ângulos 30°, 90°, 150°, etc.), mas elas devem estar nas linhas divisórias, ou seja, nos ângulos 0°, 60°, 120°, 180°, 240°, 300°.
+O pino (seta indicadora) já está correto, apontando para dentro da roleta, então não precisa de ajustes.
+Instruções para corrigir:
+Ajuste os ângulos das bolinhas:
+As bolinhas devem ser posicionadas nos ângulos 0°, 60°, 120°, 180°, 240°, 300°, que são as linhas divisórias entre as fatias.
+Use a fórmula abaixo para calcular as posições corretamente:
+javascript
+
+Copiar
+const totalSegments = 6; // 6 divisões
+const centerX = roletaWidth / 2; // Centro X da roleta
+const centerY = roletaHeight / 2; // Centro Y da roleta
+const desiredRadius = roletaRadius; // Raio da roleta (ajuste se necessário)
+
+for (let index = 0; index < totalSegments; index++) {
+    const angle = index * (360 / totalSegments); // 0°, 60°, 120°, 180°, 240°, 300°
+    const radians = (angle * Math.PI) / 180;
+    const x = centerX + desiredRadius * Math.cos(radians);
+    const y = centerY + desiredRadius * Math.sin(radians);
+    placeMarker(x, y); // Posicione a bolinha nas coordenadas (x, y)
+}
+Verifique o raio (desiredRadius):
+Certifique-se de que o desiredRadius seja igual ao raio da roleta (ou um pouco maior/menor, dependendo de onde as bolinhas devem ficar visualmente). O objetivo é que as bolinhas fiquem exatamente sobre as linhas divisórias, na borda da roleta.
+Se as bolinhas ainda estiverem dentro das fatias, ajuste o desiredRadius para um valor maior, próximo ao raio externo da roleta.
+Confirme os ângulos:
+Certifique-se de que os ângulos usados são os das linhas divisórias (0°, 60°, 120°, etc.) e não os ângulos centrais das fatias (30°, 90°, 150°, etc.).
+Não altere o pino:
+O pino (seta indicadora) já está correto, apontando para dentro da roleta. Não precisa de ajustes.
+Resultado esperado:
+As bolinhas devem estar posicionadas nas linhas divisórias da roleta, como na segunda imagem que enviei, e não dentro das fatias, como na primeira imagem. Ajuste o código para garantir que isso aconteça.
+
+Por favor, implemente essas correções e teste para confirmar que as bolinhas estão nas posições corretas. Obrigado!
