@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -57,7 +56,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                 <div className="bg-gradient-to-br from-orange-400 to-orange-600 p-3 rounded-full shadow-lg">
                   <Gift className="h-6 w-6 text-white" />
                 </div>
-                
+
                 {/* Efeito de brilho ao redor do ícone */}
                 <div className="absolute inset-0 bg-gradient-to-br from-orange-400/30 to-orange-600/30 rounded-full blur-lg animate-pulse"></div>
               </motion.div>
@@ -109,26 +108,56 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                         #FF7A1A 300deg 360deg
                       )`
                     }}>
-                      {/* Bolinhas Separadoras - Posicionamento Matemático Preciso */}
+                      {/* Linhas Divisórias Fixas */}
                       <div className="absolute inset-0">
-                        {[0, 60, 120, 180, 240, 300].map((angle, index) => {
+                        {Array.from({ length: 6 }, (_, index) => {
+                          const angle = index * 60; // 0°, 60°, 120°, 180°, 240°, 300°
+                          return (
+                            <div
+                              key={`linha-divisoria-${index}`}
+                              className="absolute w-0.5 bg-white/30 shadow-sm"
+                              style={{
+                                height: '50%',
+                                left: '50%',
+                                top: '50%',
+                                transformOrigin: 'center bottom',
+                                transform: `translate(-50%, -100%) rotate(${angle}deg)`,
+                                zIndex: 10
+                              }}
+                            />
+                          );
+                        })}
+                      </div>
+
+                      {/* Bolinhas Marcadoras - Posicionadas nas Linhas Divisórias */}
+                      <div className="absolute inset-0">
+                        {Array.from({ length: 6 }, (_, index) => {
+                          const totalSegments = 6;
+                          const roletaWidth = 256; // 64 * 4 (w-64 em pixels)
+                          const roletaHeight = 256; // 64 * 4 (h-64 em pixels)
+                          const centerX = roletaWidth / 2; // Centro X da roleta
+                          const centerY = roletaHeight / 2; // Centro Y da roleta
+                          const desiredRadius = 120; // Raio ajustado para a borda da roleta
+
+                          // Ângulos das linhas divisórias: 0°, 60°, 120°, 180°, 240°, 300°
+                          const angle = index * (360 / totalSegments);
                           const radians = (angle * Math.PI) / 180;
-                          const radius = 45; // Porcentagem do raio da roleta
-                          const centerX = 50; // Centro X em porcentagem
-                          const centerY = 50; // Centro Y em porcentagem
-                          
-                          // Cálculo preciso da posição usando seno e cosseno
-                          const x = centerX + radius * Math.cos(radians);
-                          const y = centerY + radius * Math.sin(radians);
-                          
+                          const x = centerX + desiredRadius * Math.cos(radians);
+                          const y = centerY + desiredRadius * Math.sin(radians);
+
+                          // Converter para porcentagem
+                          const xPercent = (x / roletaWidth) * 100;
+                          const yPercent = (y / roletaHeight) * 100;
+
                           return (
                             <div 
-                              key={`bolinha-${angle}`}
-                              className="absolute w-3 h-3 bg-white rounded-full shadow-md border border-orange-200"
+                              key={`bolinha-marcador-${index}`}
+                              className="absolute w-4 h-4 bg-white rounded-full shadow-xl border-2 border-orange-400"
                               style={{
-                                left: `${x}%`,
-                                top: `${y}%`,
-                                transform: 'translate(-50%, -50%)'
+                                left: `${xPercent}%`,
+                                top: `${yPercent}%`,
+                                transform: 'translate(-50%, -50%)',
+                                zIndex: 15
                               }}
                             />
                           );
