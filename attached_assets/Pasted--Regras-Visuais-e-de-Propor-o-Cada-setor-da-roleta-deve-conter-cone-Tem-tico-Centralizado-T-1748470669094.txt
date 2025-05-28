@@ -1,0 +1,97 @@
+🔥 Regras Visuais e de Proporção:
+Cada setor da roleta deve conter:
+
+Ícone Temático Centralizado.
+
+Texto Explicativo abaixo ou sobreposto (dependendo do design).
+
+Proporções:
+
+O ícone ocupa 60% do espaço do setor.
+
+O texto ocupa 20% a 30%, com limite para manter alta legibilidade, independentemente do tamanho da roleta.
+
+Orientação:
+
+Todos os textos e ícones devem estar sempre na orientação correta de leitura, ou seja, alinhados para cima quando a roleta está parada.
+
+Estilo Geral:
+
+Visual futurista, tecnológico, mas com toque lúdico.
+
+Iluminação suave, sombreamento leve e pequenos brilhos.
+
+Bordas arredondadas e suaves, sem poluição visual.
+
+🏗️ Especificações para Cada Espaço da Roleta:
+🎁 1. 250 XP
+Ícone: Uma estrela dourada com efeito de energia, partículas ao redor, indicando crescimento ou evolução.
+
+Cores: Dourado brilhante com contorno branco e fundo levemente azulado.
+
+Texto: “250 XP” em fonte bold, futurista, com contorno branco ou sombra escura para destacar.
+
+💎 2. 100 SPs
+Ícone: Uma moeda roxa com brilho metálico, símbolo "$SP" no centro da moeda, com efeito 3D suave.
+
+Cores: Roxo neon, degrade entre roxo e azul, com detalhes em prata.
+
+Texto: “100 SPs” em roxo vibrante, contornado em branco ou preto, dependendo do fundo do setor.
+
+⚡ 3. Epictus Turbo
+Ícone: Um raio estilizado cortando uma engrenagem futurista ou uma turbina em movimento, indicando velocidade e poder.
+
+Cores: Amarelo neon + detalhes em preto e cinza metálico.
+
+Animação Opcional: Efeito de brilho pulsante ou partículas saindo da turbina.
+
+Texto: “Epictus Turbo” com fonte moderna, bold, em amarelo vibrante, contornado.
+
+👾 4. Avatar Raro
+Ícone: Uma silhueta estilizada de um avatar misterioso, com uma aura holográfica brilhante, contornos pixelados ou glitch para sugerir raridade.
+
+Cores: Degrade de roxo, azul e verde neon, com efeitos holográficos.
+
+Brilho: Efeito de cintilação para parecer algo valioso.
+
+Texto: “Avatar Raro” em branco puro ou neon suave, com sombra.
+
+💰 5. 999 SPs
+Ícone: Um baú futurista semiaberto, cheio de moedas SPs brilhando, algumas flutuando.
+
+Cores: Roxo intenso, prata e detalhes dourados.
+
+Detalhe: Luz interna saindo do baú, indicando prêmio máximo de SPs.
+
+Texto: “999 SPs” em fonte bem grande, bold, roxo vibrante com contorno branco forte para destacar como item premium.
+
+📜 6. Material Exclusivo
+Ícone: Um pergaminho digitalizado ou tablet holográfico aberto, com linhas de texto simulando conteúdo.
+
+Cores: Ciano, azul neon e detalhes em branco.
+
+Efeito: Leve brilho azul, partículas saindo dos cantos, simulando que é um item de conhecimento valioso.
+
+Texto: “Material Exclusivo” em azul forte, com sombra leve para separação do fundo.
+
+✅ Regras Específicas para Texto:
+Sempre centralizado no setor.
+
+Máximo de 1 ou 2 linhas.
+
+Fonte: Bold, futurista, de fácil leitura.
+
+Contraste garantido em qualquer fundo do setor (usar sombra escura ou contorno branco conforme necessidade).
+
+🎯 Regras para Ícones:
+Todos no mesmo estilo visual (paleta consistente, nível de detalhe, iluminação).
+
+Tamanho máximo permitido dentro do setor, mantendo margem mínima de 5% entre ícone e borda.
+
+Se houver animações (opcional), devem ser sutis, como brilho pulsante, faíscas ou partículas.
+
+🌟 Resultado Esperado:
+Uma roleta altamente profissional, com setores bem definidos, intuitivos e esteticamente impecáveis.
+
+Clareza total sobre os prêmios, gerando desejo, engajamento e valorização da experiência de girar a roleta.
+
