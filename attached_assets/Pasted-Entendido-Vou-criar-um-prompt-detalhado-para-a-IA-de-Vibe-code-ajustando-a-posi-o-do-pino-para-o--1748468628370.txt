@@ -1,0 +1,28 @@
+Entendido! Vou criar um prompt detalhado para a IA de Vibe code, ajustando a posição do pino para o lado direito da roleta, virado para dentro, com um design personalizado baseado no tema educacional da plataforma, e otimizando a programação para suportar eventos futuros. Aqui está o prompt:
+
+Prompt para a IA de Vibe code:
+
+"Você está trabalhando na roleta interativa de uma plataforma educacional e precisa ajustar o pino da roleta e otimizar sua programação. Siga estas instruções detalhadas:
+
+Posicionamento do pino:
+Mova o pino para o lado direito da roleta, posicionando-o na borda externa do círculo, alinhado com o ponto mais à direita (ângulo de 0° ou 360°, dependendo da orientação da roleta).
+O pino deve estar virado para dentro do círculo, apontando para o centro da roleta (coordenada (0,0)), como mostrado na imagem fornecida, onde o pino está à direita e inclinado para dentro.
+Design personalizado do pino (tema educacional):
+Redesenhe o pino para refletir o tema educacional da plataforma. Substitua o design padrão por um pino estilizado como um lápis ou caneta apontando para dentro, com detalhes como uma ponta de escrita e uma coroa ou marca de graduação na base.
+Use uma paleta de cores educacionais: o corpo do pino deve ser em tons de azul escuro (por exemplo, RGB(0, 102, 204) ou #0066CC), a ponta em preto (RGB(0, 0, 0) ou #000000), e a base com um tom de amarelo (RGB(255, 204, 0) ou #FFCC00) para simbolizar aprendizado e destaque.
+Mantenha o tamanho do pino proporcional à roleta (aproximadamente 15% do diâmetro da roleta), com a ponta fina e a base ligeiramente mais larga para estabilidade visual.
+Otimização da programação para eventos futuros:
+Estruture o código do pino para ser modular e otimizado, permitindo a adição de eventos futuros (como detecção de colisão com bolinhas ou animação de giro).
+Use uma abordagem baseada em eventos, como um objeto ou função que escute ações (por exemplo, 'onSpin', 'onCollision'), com placeholders para métodos que serão implementados depois.
+Minimize o uso de recursos, evitando cálculos redundantes, e armazene as coordenadas do pino (x, y) e ângulo como variáveis acessíveis para futuras interações.
+Certifique-se de que o pino seja renderizado como um elemento separado da roleta, mas sincronizado com sua posição estática, para facilitar animações ou ajustes dinâmicos.
+Implementação:
+Atualize o código existente para reposicionar o pino no lado direito da roleta, com a nova estilização de lápis/caneta.
+Adicione uma estrutura de eventos básica, como um objeto pin com propriedades (x, y, angle) e métodos vazios (ex.: onSpin(), onCollision()), que possam ser preenchidos com lógica futura.
+Use SVG, canvas ou o método atual da roleta para desenhar o pino personalizado, garantindo que ele permaneça fixo na posição direita e apontando para o centro.
+Restrições:
+Não altere o design ou comportamento da roleta (como seções ou bolinhas) além do pino.
+Mantenha a compatibilidade com o código atual da roleta e das bolinhas.
+Resultado esperado:
+Após a implementação, a roleta deve ter um pino posicionado à direita, virado para dentro, estilizado como um lápis/caneta educacional (azul escuro com ponta preta e base amarela), e o código deve incluir uma estrutura otimizada para eventos futuros, pronta para expansões.
+Prossiga com a implementação conforme descrito."
