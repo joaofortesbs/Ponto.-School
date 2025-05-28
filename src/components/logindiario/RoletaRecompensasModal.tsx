@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -56,7 +57,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                 <div className="bg-gradient-to-br from-orange-400 to-orange-600 p-3 rounded-full shadow-lg">
                   <Gift className="h-6 w-6 text-white" />
                 </div>
-
+                
                 {/* Efeito de brilho ao redor do ícone */}
                 <div className="absolute inset-0 bg-gradient-to-br from-orange-400/30 to-orange-600/30 rounded-full blur-lg animate-pulse"></div>
               </motion.div>
@@ -108,51 +109,26 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                         #FF7A1A 300deg 360deg
                       )`
                     }}>
-                      {/* Linhas Divisórias Fixas */}
-                      <div className="absolute inset-0">
-                        {Array.from({ length: 6 }, (_, index) => {
-                          const angle = index * 60; // 0°, 60°, 120°, 180°, 240°, 300°
-                          return (
-                            <div
-                              key={`linha-divisoria-${index}`}
-                              className="absolute w-0.5 bg-white/30 shadow-sm"
-                              style={{
-                                height: '50%',
-                                left: '50%',
-                                top: '50%',
-                                transformOrigin: 'center bottom',
-                                transform: `translate(-50%, -100%) rotate(${angle}deg)`,
-                                zIndex: 10
-                              }}
-                            />
-                          );
-                        })}
-                      </div>
-
-                      {/* Bolinhas Marcadoras - Posicionadas Exatamente Sobre as Linhas */}
-                      <div className="absolute inset-0">
-                        {Array.from({ length: 6 }, (_, index) => {
-                          const angle = index * 60; // Mesmo ângulo das linhas: 0°, 60°, 120°, 180°, 240°, 300°
-                          const radians = (angle * Math.PI) / 180;
-                          const radius = 47; // Raio em porcentagem para posicionar na borda da roleta
-                          
-                          // Calcular posição usando seno e cosseno
-                          const x = 50 + radius * Math.cos(radians); // Centro em 50% + deslocamento
-                          const y = 50 + radius * Math.sin(radians); // Centro em 50% + deslocamento
-
-                          return (
-                            <div 
-                              key={`bolinha-linha-${index}`}
-                              className="absolute w-4 h-4 bg-white rounded-full shadow-xl border-2 border-orange-400"
-                              style={{
-                                left: `${x}%`,
-                                top: `${y}%`,
-                                transform: 'translate(-50%, -50%)',
-                                zIndex: 20 // Z-index maior que as linhas para ficar por cima
-                              }}
-                            />
-                          );
-                        })}
+                      {/* Textos das recompensas */}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="text-white font-bold text-xs transform -rotate-30 absolute top-8">
+                          100 SP
+                        </div>
+                        <div className="text-white font-bold text-xs transform rotate-30 absolute top-8 right-8">
+                          Badge
+                        </div>
+                        <div className="text-white font-bold text-xs transform rotate-90 absolute right-4">
+                          150 SP
+                        </div>
+                        <div className="text-white font-bold text-xs transform rotate-150 absolute bottom-8 right-8">
+                          Curso
+                        </div>
+                        <div className="text-white font-bold text-xs transform -rotate-150 absolute bottom-8 left-8">
+                          200 SP
+                        </div>
+                        <div className="text-white font-bold text-xs transform -rotate-90 absolute left-4">
+                          E-book
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -162,9 +138,9 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                     <Gift className="h-8 w-8 text-orange-600" />
                   </div>
 
-                  {/* Ponteiro da Roleta - Lateral Direita Apontando para Dentro */}
-                  <div className="absolute top-1/2 right-0 transform translate-x-2 -translate-y-1/2 z-20">
-                    <div className="w-0 h-0 border-t-4 border-b-4 border-l-8 border-t-transparent border-b-transparent border-l-orange-600 shadow-lg transform rotate-180"></div>
+                  {/* Ponteiro da Roleta */}
+                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2 z-20">
+                    <div className="w-0 h-0 border-l-4 border-r-4 border-b-8 border-l-transparent border-r-transparent border-b-orange-600 shadow-lg"></div>
                   </div>
                 </div>
 
