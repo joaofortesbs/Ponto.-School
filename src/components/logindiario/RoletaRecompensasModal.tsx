@@ -17,6 +17,111 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
   open,
   onOpenChange,
 }) => {
+  // Estados para a funcionalidade da roleta
+  const [isSpinning, setIsSpinning] = React.useState(false);
+  const [currentRotation, setCurrentRotation] = React.useState(0);
+  const [selectedPrize, setSelectedPrize] = React.useState<string | null>(null);
+  const [showResult, setShowResult] = React.useState(false);
+  const [pinoBlinking, setPinoBlinking] = React.useState(false);
+  
+  // Configuração dos prêmios da roleta (6 setores)
+  const prizes = [
+    { name: "5 School Points", color: "#FF6B00", angle: 0 },
+    { name: "10 School Points", color: "#FF8C40", angle: 60 },
+    { name: "15 School Points", color: "#FFB366", angle: 120 },
+    { name: "20 School Points", color: "#FF9933", angle: 180 },
+    { name: "25 School Points", color: "#FFA366", angle: 240 },
+    { name: "30 School Points", color: "#FF7A1A", angle: 300 },
+  ];
+
+  // Função para detectar colisão com os pontos divisórios
+  const detectCollision = (angle: number, previousAngle: number) => {
+    const sectorBoundaries = [0, 60, 120, 180, 240, 300];
+    
+    for (const boundary of sectorBoundaries) {
+      // Verifica se passou por um ponto divisório
+      if (
+        (previousAngle % 360 < boundary && angle % 360 >= boundary) ||
+        (previousAngle % 360 > boundary && angle % 360 <= boundary)
+      ) {
+        // Efeito visual de colisão
+        setPinoBlinking(true);
+        setTimeout(() => setPinoBlinking(false), 100);
+        
+        // Som de tick (simulado com vibração se disponível)
+        if (navigator.vibrate) {
+          navigator.vibrate(10);
+        }
+        
+        // Aqui você pode adicionar um som real:
+        // const audio = new Audio('/click.mp3');
+        // audio.play().catch(() => {}); // Ignora erro se não conseguir tocar
+        
+        break;
+      }
+    }
+  };
+
+  // Função para determinar o prêmio vencedor
+  const determinePrize = (finalAngle: number) => {
+    // Normaliza o ângulo para 0-360
+    const normalizedAngle = ((finalAngle % 360) + 360) % 360;
+    
+    // Calcula qual setor foi selecionado
+    const sectorIndex = Math.floor(normalizedAngle / 60);
+    return prizes[sectorIndex] || prizes[0];
+  };
+
+  // Função principal de giro da roleta
+  const spinWheel = () => {
+    if (isSpinning) return;
+    
+    setIsSpinning(true);
+    setShowResult(false);
+    setSelectedPrize(null);
+    
+    // Parâmetros de giro
+    let velocity = 15 + Math.random() * 10; // Velocidade inicial aleatória
+    const friction = 0.02; // Fator de atrito
+    const minSpins = 3; // Mínimo de voltas completas
+    let totalRotation = currentRotation + (360 * minSpins) + Math.random() * 360;
+    let previousAngle = currentRotation;
+    
+    const animate = () => {
+      // Atualiza a rotação
+      setCurrentRotation(prev => {
+        const newRotation = prev + velocity;
+        
+        // Detecta colisão com pontos divisórios
+        detectCollision(newRotation, previousAngle);
+        previousAngle = newRotation;
+        
+        return newRotation;
+      });
+      
+      // Reduz a velocidade (atrito)
+      velocity -= friction;
+      
+      // Continua girando se ainda há velocidade
+      if (velocity > 0.1) {
+        requestAnimationFrame(animate);
+      } else {
+        // Para a roleta e determina o prêmio
+        setIsSpinning(false);
+        
+        // Pequeno delay para mostrar o resultado
+        setTimeout(() => {
+          const winner = determinePrize(totalRotation);
+          setSelectedPrize(winner.name);
+          setShowResult(true);
+        }, 500);
+      }
+    };
+    
+    // Inicia a animação
+    requestAnimationFrame(animate);
+  };
+
   // Configuração otimizada do pino da roleta para eventos futuros
   const pinoConfig = {
     // Propriedades de posicionamento
@@ -143,7 +248,13 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                 {/* Container da Roleta */}
                 <div className="relative w-64 h-64">
                   {/* Círculo da Roleta */}
-                  <div className="w-full h-full rounded-full border-4 border-orange-300 bg-gradient-to-br from-orange-100 to-orange-200 relative overflow-hidden shadow-xl">
+                  <div 
+                    className="w-full h-full rounded-full border-4 border-orange-300 bg-gradient-to-br from-orange-100 to-orange-200 relative overflow-hidden shadow-xl transition-transform duration-100"
+                    style={{
+                      transform: `rotate(${currentRotation}deg)`,
+                      transformOrigin: 'center'
+                    }}
+                  >
                     {/* Seções da Roleta */}
                     <div className="absolute inset-0 rounded-full" style={{
                       background: `conic-gradient(
@@ -173,6 +284,40 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                                 marginLeft: '-1px'
                               }}
                             ></div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Textos dos prêmios nos setores */}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        {prizes.map((prize, index) => {
+                          const angle = prize.angle + 30; // Centro do setor (30° do início)
+                          const radius = 80; // Distância do centro para o texto
+                          
+                          // Convertendo ângulo para radianos e calculando posição
+                          const angleRad = (angle - 90) * (Math.PI / 180); // -90 para começar no topo
+                          const x = radius * Math.cos(angleRad);
+                          const y = radius * Math.sin(angleRad);
+                          
+                          return (
+                            <div
+                              key={`prize-${index}`}
+                              className="absolute text-white font-bold text-xs text-center"
+                              style={{
+                                left: '50%',
+                                top: '50%',
+                                transform: `translate(${x - 25}px, ${y - 10}px)`,
+                                zIndex: 15,
+                                width: '50px',
+                                textShadow: '1px 1px 2px rgba(0,0,0,0.8)',
+                                fontSize: '10px',
+                                lineHeight: '1.2'
+                              }}
+                            >
+                              {prize.name.split(' ').map((word, i) => (
+                                <div key={i}>{word}</div>
+                              ))}
+                            </div>
                           );
                         })}
                       </div>
@@ -214,7 +359,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
 
                   {/* Pino da Roleta - Design Educacional de Lápis */}
                   <div 
-                    className="absolute z-20"
+                    className={`absolute z-20 transition-all duration-100 ${pinoBlinking ? 'scale-110 brightness-150' : ''}`}
                     style={{
                       right: '-24px', // Posiciona 1.1 * raio da roleta (128px * 1.1 = ~140px, ajustado para -24px)
                       top: '50%',
@@ -286,14 +431,34 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                   </div>
                 </div>
 
+                {/* Resultado da Roleta */}
+                {showResult && selectedPrize && (
+                  <motion.div
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="mt-4 p-4 bg-gradient-to-r from-green-500 to-green-600 rounded-lg text-white text-center"
+                  >
+                    <h3 className="text-lg font-bold">🎉 Parabéns!</h3>
+                    <p className="text-sm mt-1">Você ganhou: <span className="font-bold">{selectedPrize}</span></p>
+                  </motion.div>
+                )}
+
                 {/* Botão Girar */}
                 <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="mt-6 w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
+                  whileHover={{ scale: isSpinning ? 1 : 1.05 }}
+                  whileTap={{ scale: isSpinning ? 1 : 0.95 }}
+                  onClick={spinWheel}
+                  disabled={isSpinning}
+                  className={`mt-6 w-full font-bold py-3 px-6 rounded-full shadow-lg transition-all duration-300 flex items-center justify-center gap-2 ${
+                    isSpinning 
+                      ? 'bg-gray-400 cursor-not-allowed text-gray-200' 
+                      : 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white'
+                  }`}
                 >
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin opacity-0 group-hover:opacity-100"></div>
-                  Girar Roleta
+                  {isSpinning && (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  )}
+                  {isSpinning ? 'Girando...' : 'Girar Roleta'}
                 </motion.button>
               </div>
             </motion.div>
