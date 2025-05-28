@@ -319,7 +319,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                         })}
                       </div>
 
-                      {/* Textos dos prêmios nos setores */}
+                      {/* Textos e ícones dos prêmios nos setores */}
                       <div className="absolute inset-0 flex items-center justify-center">
                         {prizes.map((prize, index) => {
                           const angle = prize.angle + 30; // Centro do setor (30° do início)
@@ -330,14 +330,22 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                           const x = radius * Math.cos(angleRad);
                           const y = radius * Math.sin(angleRad);
                           
+                          // Definir ícone baseado no prêmio
+                          const getIcon = (prizeName: string) => {
+                            if (prizeName.includes('School Points') || prizeName.includes('SP')) {
+                              return '🪙'; // Moeda
+                            }
+                            return '🎁'; // Presente padrão
+                          };
+                          
                           return (
                             <div
                               key={`prize-${index}`}
-                              className="absolute text-white font-bold text-xs text-center"
+                              className="absolute text-white font-bold text-xs text-center flex flex-col items-center"
                               style={{
                                 left: '50%',
                                 top: '50%',
-                                transform: `translate(${x - 25}px, ${y - 10}px)`,
+                                transform: `translate(${x - 25}px, ${y - 15}px)`,
                                 zIndex: 15,
                                 width: '50px',
                                 textShadow: '1px 1px 2px rgba(0,0,0,0.8)',
@@ -345,9 +353,23 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                                 lineHeight: '1.2'
                               }}
                             >
-                              {prize.name.split(' ').map((word, i) => (
-                                <div key={i}>{word}</div>
-                              ))}
+                              {/* Ícone temático */}
+                              <div 
+                                className="mb-1"
+                                style={{ 
+                                  fontSize: '14px',
+                                  filter: 'drop-shadow(1px 1px 2px rgba(0,0,0,0.8))'
+                                }}
+                              >
+                                {getIcon(prize.name)}
+                              </div>
+                              
+                              {/* Texto do prêmio */}
+                              <div>
+                                {prize.name.split(' ').map((word, i) => (
+                                  <div key={i}>{word}</div>
+                                ))}
+                              </div>
                             </div>
                           );
                         })}
