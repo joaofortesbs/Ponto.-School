@@ -109,34 +109,26 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                         #FF7A1A 300deg 360deg
                       )`
                     }}>
-                      {/* Bolinhas Separadoras - Posicionadas nas Linhas Divisórias */}
-                      <div className="absolute inset-0">
-                        {Array.from({ length: 6 }, (_, index) => {
-                          const totalSegments = 6;
-                          // Ângulos das linhas divisórias: 0°, 60°, 120°, 180°, 240°, 300°
-                          const angle = index * (360 / totalSegments);
-                          const radians = (angle * Math.PI) / 180;
-                          const radius = 47; // Raio aumentado para posicionar nas bordas das fatias
-                          const centerX = 50; // Centro X em porcentagem
-                          const centerY = 50; // Centro Y em porcentagem
-                          
-                          // Cálculo preciso para posicionar nas linhas divisórias
-                          const x = centerX + radius * Math.cos(radians);
-                          const y = centerY + radius * Math.sin(radians);
-                          
-                          return (
-                            <div 
-                              key={`bolinha-divisoria-${index}`}
-                              className="absolute w-3 h-3 bg-white rounded-full shadow-lg border-2 border-orange-300"
-                              style={{
-                                left: `${x}%`,
-                                top: `${y}%`,
-                                transform: 'translate(-50%, -50%)',
-                                zIndex: 10
-                              }}
-                            />
-                          );
-                        })}
+                      {/* Textos das recompensas */}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="text-white font-bold text-xs transform -rotate-30 absolute top-8">
+                          100 SP
+                        </div>
+                        <div className="text-white font-bold text-xs transform rotate-30 absolute top-8 right-8">
+                          Badge
+                        </div>
+                        <div className="text-white font-bold text-xs transform rotate-90 absolute right-4">
+                          150 SP
+                        </div>
+                        <div className="text-white font-bold text-xs transform rotate-150 absolute bottom-8 right-8">
+                          Curso
+                        </div>
+                        <div className="text-white font-bold text-xs transform -rotate-150 absolute bottom-8 left-8">
+                          200 SP
+                        </div>
+                        <div className="text-white font-bold text-xs transform -rotate-90 absolute left-4">
+                          E-book
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -146,9 +138,9 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                     <Gift className="h-8 w-8 text-orange-600" />
                   </div>
 
-                  {/* Ponteiro da Roleta - Lateral Direita Apontando para Dentro */}
-                  <div className="absolute top-1/2 right-0 transform translate-x-2 -translate-y-1/2 z-20">
-                    <div className="w-0 h-0 border-t-4 border-b-4 border-l-8 border-t-transparent border-b-transparent border-l-orange-600 shadow-lg transform rotate-180"></div>
+                  {/* Ponteiro da Roleta */}
+                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2 z-20">
+                    <div className="w-0 h-0 border-l-4 border-r-4 border-b-8 border-l-transparent border-r-transparent border-b-orange-600 shadow-lg"></div>
                   </div>
                 </div>
 
