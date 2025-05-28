@@ -129,35 +129,26 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                         })}
                       </div>
 
-                      {/* Bolinhas Marcadoras - Posicionadas nas Linhas Divisórias */}
+                      {/* Bolinhas Marcadoras - Posicionadas Exatamente Sobre as Linhas */}
                       <div className="absolute inset-0">
                         {Array.from({ length: 6 }, (_, index) => {
-                          const totalSegments = 6;
-                          const roletaWidth = 256; // 64 * 4 (w-64 em pixels)
-                          const roletaHeight = 256; // 64 * 4 (h-64 em pixels)
-                          const centerX = roletaWidth / 2; // Centro X da roleta
-                          const centerY = roletaHeight / 2; // Centro Y da roleta
-                          const desiredRadius = 120; // Raio ajustado para a borda da roleta
-
-                          // Ângulos das linhas divisórias: 0°, 60°, 120°, 180°, 240°, 300°
-                          const angle = index * (360 / totalSegments);
+                          const angle = index * 60; // Mesmo ângulo das linhas: 0°, 60°, 120°, 180°, 240°, 300°
                           const radians = (angle * Math.PI) / 180;
-                          const x = centerX + desiredRadius * Math.cos(radians);
-                          const y = centerY + desiredRadius * Math.sin(radians);
-
-                          // Converter para porcentagem
-                          const xPercent = (x / roletaWidth) * 100;
-                          const yPercent = (y / roletaHeight) * 100;
+                          const radius = 47; // Raio em porcentagem para posicionar na borda da roleta
+                          
+                          // Calcular posição usando seno e cosseno
+                          const x = 50 + radius * Math.cos(radians); // Centro em 50% + deslocamento
+                          const y = 50 + radius * Math.sin(radians); // Centro em 50% + deslocamento
 
                           return (
                             <div 
-                              key={`bolinha-marcador-${index}`}
+                              key={`bolinha-linha-${index}`}
                               className="absolute w-4 h-4 bg-white rounded-full shadow-xl border-2 border-orange-400"
                               style={{
-                                left: `${xPercent}%`,
-                                top: `${yPercent}%`,
+                                left: `${x}%`,
+                                top: `${y}%`,
                                 transform: 'translate(-50%, -50%)',
-                                zIndex: 15
+                                zIndex: 20 // Z-index maior que as linhas para ficar por cima
                               }}
                             />
                           );
