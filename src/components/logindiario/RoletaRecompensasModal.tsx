@@ -200,8 +200,8 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                         <div 
                           className="absolute w-2 h-2 bg-white border border-orange-300 rounded-full shadow-sm"
                           style={{
-                            top: '18px',
-                            right: '12px',
+                            top: '32px',
+                            right: '32px',
                             transform: 'translate(50%, -50%)'
                           }}
                         ></div>
@@ -210,8 +210,8 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                         <div 
                           className="absolute w-2 h-2 bg-white border border-orange-300 rounded-full shadow-sm"
                           style={{
-                            bottom: '18px',
-                            right: '12px',
+                            bottom: '32px',
+                            right: '32px',
                             transform: 'translate(50%, 50%)'
                           }}
                         ></div>
@@ -230,8 +230,8 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                         <div 
                           className="absolute w-2 h-2 bg-white border border-orange-300 rounded-full shadow-sm"
                           style={{
-                            bottom: '18px',
-                            left: '12px',
+                            bottom: '32px',
+                            left: '32px',
                             transform: 'translate(-50%, 50%)'
                           }}
                         ></div>
@@ -240,8 +240,8 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                         <div 
                           className="absolute w-2 h-2 bg-white border border-orange-300 rounded-full shadow-sm"
                           style={{
-                            top: '18px',
-                            left: '12px',
+                            top: '32px',
+                            left: '32px',
                             transform: 'translate(-50%, -50%)'
                           }}
                         ></div>
