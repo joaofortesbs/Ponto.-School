@@ -1,0 +1,31 @@
+Entendido! Vou criar um prompt detalhado para posicionar o pino ao lado direito da roleta, voltado para dentro, inspirado na imagem que você enviou, e personalizá-lo como a ponta de um lápis, refletindo o tema educacional da sua plataforma. O prompt também incluirá otimizações para que o pino possa receber eventos futuros. Aqui está o prompt:
+
+Prompt para a IA de Vibe code:
+
+"Você está trabalhando na roleta interativa da plataforma educacional e agora precisa adicionar e otimizar o pino da roleta. Siga estas instruções detalhadas para implementar o pino com base na imagem fornecida e nas especificações:
+
+Posicionamento do pino:
+Posicione o pino ao lado direito da roleta, alinhado verticalmente com o centro da circunferência da roleta.
+O pino deve estar voltado para dentro da roleta, apontando para o centro do círculo, como mostrado na imagem fornecida, onde o pino está à direita e inclinado ligeiramente para dentro.
+A distância do centro da roleta ao pino deve ser aproximadamente 1,1 vezes o raio (R) da roleta, garantindo que ele fique fora da borda externa mas próximo o suficiente para interagir.
+Design personalizado do pino:
+Crie o pino como a ponta de um lápis, refletindo o tema educacional da plataforma. O design deve incluir:
+Uma forma triangular afiada representando a ponta do grafite do lápis, com cor cinza escura (#333333).
+Uma base ligeiramente mais larga em madeira (cor marrom claro, #D2B48C) conectando a ponta ao resto do pino, simbolizando o corpo do lápis.
+Um pequeno detalhe de borracha na parte superior da base (cor rosa claro, #FFC1CC) para um toque realista.
+O tamanho total do pino deve ser proporcional à roleta, com a altura sendo cerca de 20% do diâmetro da roleta e a largura da base cerca de 10% do diâmetro.
+Otimização para eventos futuros:
+Estruture o código do pino para ser modular e otimizado, permitindo a adição futura de eventos (como detecção de colisão com as bolinhas ou animações de giro).
+Use uma abordagem baseada em objeto (por exemplo, uma classe ou função reutilizável) para o pino, com propriedades como posição (x, y), ângulo de inclinação e estado (ex.: ativo/inativo).
+Adicione um evento de clique ou gatilho que possa ser expandido posteriormente (por exemplo, uma função vazia handleInteraction() que pode ser preenchida com lógica futura).
+Certifique-se de que o pino seja renderizado como um elemento independente (usando SVG, canvas ou outro método compatível), separado da rotação da roleta, para facilitar animações ou interações.
+Implementação:
+Desenhe o pino usando coordenadas calculadas: o centro do pino deve estar a (1.1 * R, 0) em relação ao centro da roleta (0,0), com o ângulo de inclinação ajustado para apontar para o centro (aproximadamente -45° em relação à vertical).
+Use gradientes ou preenchimentos simples para dar profundidade ao design do lápis (ex.: gradiente de cinza para a ponta, textura sutil na madeira).
+Integre o pino ao código existente da roleta, mas mantenha-o estático por agora (sem rotação junto com a roleta).
+Restrições:
+Não altere o design ou comportamento atual da roleta (seções, bolinhas ou rotação) além da adição do pino.
+Não implemente interações específicas com as bolinhas ou animações de giro neste momento; apenas posicione e otimize o pino para futuros eventos.
+Resultado esperado:
+Após a implementação, a roleta deve exibir um pino personalizado no formato de uma ponta de lápis (com grafite cinza, base de madeira e borracha rosa) posicionado ao lado direito, apontando para dentro, e otimizado para receber eventos futuros.
+Prossiga com a implementação do pino conforme descrito, integrando-o ao código atual da roleta."
