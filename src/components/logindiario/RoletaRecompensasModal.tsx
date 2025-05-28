@@ -109,21 +109,25 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                         #FF7A1A 300deg 360deg
                       )`
                     }}>
-                      {/* Bolinhas Separadoras - Posicionamento Matemático Preciso */}
+                      {/* Bolinhas Separadoras - Posicionadas nas Divisões das Fatias */}
                       <div className="absolute inset-0">
-                        {[0, 60, 120, 180, 240, 300].map((angle, index) => {
+                        {Array.from({ length: 6 }, (_, index) => {
+                          const numberOfSegments = 6;
+                          const angleStep = 360 / numberOfSegments;
+                          // Posicionar nas divisões (entre as fatias) em vez de dentro delas
+                          const angle = index * angleStep;
                           const radians = (angle * Math.PI) / 180;
                           const radius = 45; // Porcentagem do raio da roleta
                           const centerX = 50; // Centro X em porcentagem
                           const centerY = 50; // Centro Y em porcentagem
                           
-                          // Cálculo preciso da posição usando seno e cosseno
+                          // Cálculo preciso da posição usando seno e cosseno para as divisões
                           const x = centerX + radius * Math.cos(radians);
                           const y = centerY + radius * Math.sin(radians);
                           
                           return (
                             <div 
-                              key={`bolinha-${angle}`}
+                              key={`bolinha-divisao-${index}`}
                               className="absolute w-3 h-3 bg-white rounded-full shadow-md border border-orange-200"
                               style={{
                                 left: `${x}%`,
