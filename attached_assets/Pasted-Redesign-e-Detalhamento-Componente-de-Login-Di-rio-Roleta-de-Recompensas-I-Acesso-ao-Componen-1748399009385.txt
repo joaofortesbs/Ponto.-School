@@ -1,0 +1,162 @@
+Redesign e Detalhamento (Componente de Login Diário – Roleta de Recompensas):
+I. Acesso ao Componente:
+Ícone no Cabeçalho (Principal):
+Posição: No cabeçalho principal da plataforma (ao lado do sino de notificações, avatar do usuário, etc.).
+Design do Ícone:
+Algo relacionado a "presente", "recompensa" ou "roleta".
+Exemplos: Caixa de presente estilizada, estrela cadente, ícone de roleta minimalista.
+Cor: Laranja (ou a cor de destaque da Ponto. School).
+Indicador Visual (Se Houver Giro Disponível):
+Um pequeno ponto vermelho (ou laranja) no ícone para indicar que o giro diário está disponível.
+Opcional: Uma animação sutil no ícone (ex: leve pulsação).
+Notificação (Opcional):
+Se o usuário não acessou a plataforma no dia anterior, uma notificação discreta pode aparecer no Painel (ou em outro lugar) lembrando-o do giro diário.
+II. Modal "Login Diário – Sua Recompensa de Hoje!" (Ao Clicar no Ícone):
+Design do Modal:
+Formato:
+Centralizado na tela.
+Tamanho: Grande o suficiente para acomodar todos os elementos, mas não ocupar a tela inteira.
+Fundo: Gradiente sutil (ex: azul escuro para um tom mais claro) ou uma cor sólida (azul escuro ou cinza escuro).
+Cantos: Arredondados.
+Sombra: Sutil.
+Cabeçalho do Modal:
+Título: "Sua Recompensa Diária!" (ou "Gire e Ganhe!", "Login Premiado").
+Fonte: Montserrat, Bold, tamanho grande.
+Cor: Branca (ou laranja).
+Botão de Fechar ("X"): Canto superior direito (pequeno, discreto).
+Corpo do Modal (Layout – Inspirado na Imagem, com Refinamentos):
+Avatar do Usuário (Animado – Lado Esquerdo):
+O avatar personalizado do usuário (se ele tiver um) ou um avatar padrão da Ponto. School.
+Animação:
+Pode estar acenando, sorrindo, ou fazendo um gesto de expectativa.
+Sutil e agradável.
+Posição: Lado esquerdo do modal.
+Roleta (Centro):
+Design:
+Estilo Moderno e Sofisticado:
+Evitar um visual muito infantil ou excessivamente "gamer".
+Usar cores da Ponto. School (azul escuro, laranja, branco, cinza).
+Elementos gráficos limpos e elegantes.
+Opcional: Efeitos de luz/brilho sutis (na borda da roleta, no ponteiro).
+Ponteiro:
+Design moderno (ex: uma seta estilizada).
+Posicionado no topo (ou onde fizer mais sentido).
+Segmentos da Roleta:
+Cada segmento representa uma recompensa.
+Design de Cada Segmento:
+Fundo: Cores alternadas (ex: azul escuro e cinza escuro) ou um gradiente sutil.
+Ícone: Representando a recompensa (ex: ícone de Ponto Coin, ícone de XP, ícone de moldura).
+Texto (Opcional): Nome da recompensa (curto).
+Borda: Linha fina separando os segmentos.
+Informações e Ações (Lado Direito – Ou Abaixo da Roleta, se o Modal for Mais Alto):
+Sequência de Giros Consecutivos (Topo – Acima da Roleta):
+Design (Como na Segunda Imagem):
+Usar o ícone de chama (fogo).
+Cor: Laranja (ou um gradiente de amarelo para laranja).
+Número de dias consecutivos ao lado da chama (ex: "🔥 23 dias").
+Fonte: Montserrat, Bold, tamanho médio.
+Cronômetro para Próximo Giro:
+Texto: "Próximo Giro em:".
+Contador: "[HH:MM:SS]" (formato claro e legível).
+Opcional: Ícone de relógio.
+Botões de Giro:
+"Girar Agora!" (Principal – Se o Giro Estiver Disponível):
+Design: Grande, fundo laranja, texto branco, Montserrat, Bold.
+Animação Hover: Leve aumento de escala, brilho.
+"Girar 10 Vezes" (Opcional – Se você quiser permitir giros pagos):
+Design: Semelhante ao botão principal, mas com texto "Girar 10x por [X Ponto Coins]".
+"Giro Especial" (Apenas se o aluno tiver desbloqueado):
+Design: Botão diferenciado (ex: fundo roxo/dourado, ícone de estrela).
+Texto: "Girar com +[X]% de Sorte!".
+Recompensas em Destaque (Opcional – Acima da Roleta):
+Mostrar pequenos ícones das melhores recompensas que podem ser ganhas na roleta (para criar expectativa).
+Botão "Chances dos Itens" (Abaixo da Roleta):
+Texto: "Ver Chances das Recompensas".
+Design: Link de texto (cor laranja) ou um botão pequeno e discreto.
+Ação: Abre um modal menor (ou uma área expansível) com a lista de todas as recompensas e a probabilidade de ganhar cada uma.
+Responsividade: O modal deve se adaptar a telas menores (ex: os elementos podem ser empilhados verticalmente).
+III. Funcionalidades e Interações:
+Giro da Roleta:
+Ação: Usuário clica no botão "Girar Agora!" (ou "Girar 10x", "Giro Especial").
+Feedback Visual:
+O botão clicado tem um efeito de "pressionar".
+A roleta começa a girar (animação suave e realista).
+Som: Um som curto e empolgante de roleta girando (configurável pelo usuário).
+Determinação da Recompensa (Backend):
+O sistema seleciona aleatoriamente uma recompensa com base nas probabilidades definidas.
+Importante: A seleção deve ser feita no backend para evitar manipulação no frontend.
+Animação da Roleta Parando:
+A roleta desacelera gradualmente e para no segmento da recompensa selecionada.
+Som: Um som de "parada" ou de "prêmio ganho".
+Exibição da Recompensa:
+Modal Menor (Pop-up sobre a Roleta):
+Título: "Parabéns! Você Ganhou!".
+Ícone grande da recompensa.
+Nome da recompensa (ex: "35 Ponto Coins").
+Opcional: Texto de parabenização.
+Botão: "OK" (ou "Coletar Recompensa").
+Animação: O ícone da recompensa pode ter uma animação de "destaque" (ex: brilho, aumento de escala).
+Atualização:
+O saldo de Ponto Coins/XP do usuário é atualizado.
+O item (moldura, etc.) é adicionado ao inventário do usuário.
+O cronômetro para o próximo giro é iniciado.
+O contador de giros consecutivos é incrementado.
+Cronômetro:
+Conta o tempo regressivamente até o próximo giro gratuito estar disponível (24 horas após o último giro).
+Quando o tempo acaba:
+O botão "Girar Agora!" fica ativo.
+O ícone no cabeçalho da plataforma recebe o indicador visual (ponto vermelho).
+Opcional: Uma notificação (discreta) pode aparecer para o usuário.
+Sequência de Giros Consecutivos:
+Funcionamento:
+Cada vez que o usuário gira a roleta (giro gratuito diário), o contador de dias consecutivos é incrementado.
+Se o usuário perder um dia (não girar a roleta em 24 horas), o contador é resetado.
+Recompensas por Marco:
+Ao atingir marcos (ex: 7 dias, 15 dias, 30 dias, 60 dias), o aluno recebe recompensas especiais:
+30 dias: 1 "Giro Especial" (+25% de sorte).
+60 dias: 1 "Giro Especial" (+45% de sorte).
+Outros Marcos (Sugestões):
+Ponto Coins extras.
+Badges exclusivas ("Mestre da Roleta", "Sortudo do Dia").
+Descontos em itens da loja (se houver).
+Notificação de Marco: Ao atingir um marco, mostrar um modal de parabéns com a recompensa desbloqueada.
+Visualização (Ícone de Chama):
+A chama fica maior e mais vibrante à medida que a sequência aumenta.
+Opcional: Pequenas animações na chama (ex: faíscas) ao atingir marcos.
+Chances dos Itens:
+Clicar no botão "Ver Chances das Recompensas" abre um modal menor com:
+Lista de todas as recompensas da roleta.
+Probabilidade (em porcentagem) de ganhar cada uma.
+Transparência total para o usuário.
+Botão "Pular Cenas" (se houver animações longas):
+Permite que o usuário pule a animação da roleta girando e vá direto para a exibição da recompensa (para quem não tem paciência).
+IV. Recompensas (Sugestões – Expandindo):
+Ponto Coins: Diferentes valores (ex: 10, 25, 50, 100, 250 SP).
+XP (Pontos de Experiência): Para subir de nível na plataforma (ex: 10, 20, 50 XP).
+Itens de Personalização (Avatar):
+Molduras de perfil (simples, raras, épicas).
+Acessórios para o avatar (ex: chapéus, óculos, roupas temáticas – se o avatar for 3D).
+Fundos de perfil.
+Descontos:
+Descontos em cursos/materiais do Mercado (se houver).
+Descontos na assinatura de planos (ex: 10% no próximo mês).
+Acesso a Conteúdo Exclusivo (Temporário):
+Ex: Acesso a um curso premium por 24 horas.
+Acesso a uma ferramenta do Epictus IA (se algumas forem pagas).
+"Boosts" Temporários:
+Ex: "+10% de XP por 1 hora", "+5% de chance de item raro na próxima roleta".
+Badges Exclusivas: Badges que só podem ser ganhas na roleta.
+"Nada" (Opcional – Com Cuidado):
+Um ou dois segmentos da roleta podem ter "Tente Novamente" ou "Nada Desta Vez".
+Cuidado: Pode ser frustrante para o usuário. Se usar, que seja com baixa probabilidade.
+V. Integração com Outras Seções:
+Notificações: Lembrar o usuário do giro diário.
+Conquistas: Adicionar badges relacionadas à roleta (ex: "Girou 7 dias seguidos").
+Carteira: Atualizar o saldo de Ponto Coins.
+Perfil: Mostrar molduras e outros itens de personalização ganhos.
+VI. Design e Usabilidade (Considerações Finais):
+Moderno e Sofisticado: Usar a identidade visual da Ponto. School, com animações suaves e elementos gráficos de alta qualidade.
+Intuitivo: O fluxo deve ser fácil de entender e usar, mesmo para usuários menos experientes.
+Engajador: A roleta deve ser divertida e motivadora.
+Transparente: As chances das recompensas devem ser claras.
+Responsivo: Funcionar perfeitamente em todos os dispositivos.
