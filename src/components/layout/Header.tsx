@@ -1847,14 +1847,16 @@ export default function Header() {
                 <DropdownMenuContent align="end" className="w-56 p-0 overflow-hidden border-0"
                     style={{
                       background: isLightMode 
-                        ? 'linear-gradient(135deg, rgba(255, 107, 0, 0.03) 0%, rgba(30, 30, 30, 0.85) 50%, rgba(20, 20, 20, 0.92) 100%)'
+                        ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.98) 50%, rgba(241, 245, 249, 0.99) 100%)'
                         : 'linear-gradient(135deg, rgba(255, 107, 0, 0.05) 0%, rgba(15, 15, 15, 0.88) 50%, rgba(10, 10, 10, 0.95) 100%)',
                       backdropFilter: 'blur(28px) saturate(180%)',
                       WebkitBackdropFilter: 'blur(28px) saturate(180%)',
-                      border: '1px solid rgba(255, 107, 0, 0.15)',
+                      border: isLightMode 
+                        ? '1px solid rgba(255, 107, 0, 0.2)'
+                        : '1px solid rgba(255, 107, 0, 0.15)',
                       borderRadius: '18px',
                       boxShadow: isLightMode
-                        ? '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 8px 16px -8px rgba(255, 107, 0, 0.1), inset 0 1px 0 rgba(255, 107, 0, 0.1)'
+                        ? '0 25px 50px -12px rgba(0, 0, 0, 0.08), 0 8px 16px -8px rgba(255, 107, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.7)'
                         : '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 8px 16px -8px rgba(255, 107, 0, 0.15), inset 0 1px 0 rgba(255, 107, 0, 0.12)'
                     }}
                   >
@@ -1862,12 +1864,16 @@ export default function Header() {
                     <div 
                       className="px-5 py-4 relative"
                       style={{
-                        background: 'linear-gradient(135deg, rgba(255, 107, 0, 0.08) 0%, rgba(255, 140, 64, 0.04) 100%)',
-                        borderBottom: '1px solid rgba(255, 107, 0, 0.12)'
+                        background: isLightMode 
+                          ? 'linear-gradient(135deg, rgba(255, 107, 0, 0.06) 0%, rgba(255, 140, 64, 0.03) 100%)'
+                          : 'linear-gradient(135deg, rgba(255, 107, 0, 0.08) 0%, rgba(255, 140, 64, 0.04) 100%)',
+                        borderBottom: isLightMode 
+                          ? '1px solid rgba(255, 107, 0, 0.15)'
+                          : '1px solid rgba(255, 107, 0, 0.12)'
                       }}
                     >
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#FF6B00]/3 to-transparent" />
-                      <h3 className="text-sm font-light relative z-10 text-white/90 tracking-wide">
+                      <div className={`absolute inset-0 ${isLightMode ? 'bg-gradient-to-r from-transparent via-[#FF6B00]/5 to-transparent' : 'bg-gradient-to-r from-transparent via-[#FF6B00]/3 to-transparent'}`} />
+                      <h3 className={`text-sm font-light relative z-10 tracking-wide ${isLightMode ? 'text-gray-700' : 'text-white/90'}`}>
                         Minha Conta
                       </h3>
                     </div>
@@ -1875,28 +1881,58 @@ export default function Header() {
                     {/* Menu Items com design minimalista */}
                     <div className="py-3 px-2">
                       <DropdownMenuItem 
-                        className="mx-2 my-1.5 rounded-lg cursor-pointer transition-all duration-300 group relative overflow-hidden hover:bg-white/5 text-white/80 hover:text-white focus:bg-white/5 focus:text-white border border-transparent hover:border-white/10"
+                        className={`mx-2 my-1.5 rounded-lg cursor-pointer transition-all duration-300 group relative overflow-hidden border border-transparent ${
+                          isLightMode 
+                            ? 'hover:bg-orange-50 text-gray-700 hover:text-gray-900 focus:bg-orange-50 focus:text-gray-900 hover:border-orange-200'
+                            : 'hover:bg-white/5 text-white/80 hover:text-white focus:bg-white/5 focus:text-white hover:border-white/10'
+                        }`}
                         onClick={() => window.location.href = '/profile'}
                       >
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#FF6B00]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        <User className="mr-3.5 h-4 w-4 relative z-10 text-white/60 group-hover:text-[#FF6B00] transition-colors duration-300" />
+                        <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
+                          isLightMode 
+                            ? 'bg-gradient-to-r from-transparent via-orange-100/50 to-transparent'
+                            : 'bg-gradient-to-r from-transparent via-[#FF6B00]/5 to-transparent'
+                        }`} />
+                        <User className={`mr-3.5 h-4 w-4 relative z-10 group-hover:text-[#FF6B00] transition-colors duration-300 ${
+                          isLightMode ? 'text-gray-500' : 'text-white/60'
+                        }`} />
                         <span className="relative z-10 font-normal text-sm">Perfil</span>
                       </DropdownMenuItem>
 
                       <DropdownMenuItem 
-                        className="mx-2 my-1.5 rounded-lg cursor-pointer transition-all duration-300 group relative overflow-hidden hover:bg-white/5 text-white/80 hover:text-white focus:bg-white/5 focus:text-white border border-transparent hover:border-white/10"
+                        className={`mx-2 my-1.5 rounded-lg cursor-pointer transition-all duration-300 group relative overflow-hidden border border-transparent ${
+                          isLightMode 
+                            ? 'hover:bg-orange-50 text-gray-700 hover:text-gray-900 focus:bg-orange-50 focus:text-gray-900 hover:border-orange-200'
+                            : 'hover:bg-white/5 text-white/80 hover:text-white focus:bg-white/5 focus:text-white hover:border-white/10'
+                        }`}
                         onClick={() => window.location.href = '/configuracoes'}
                       >
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#FF6B00]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        <Settings className="mr-3.5 h-4 w-4 relative z-10 text-white/60 group-hover:text-[#FF6B00] transition-colors duration-300" />
+                        <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
+                          isLightMode 
+                            ? 'bg-gradient-to-r from-transparent via-orange-100/50 to-transparent'
+                            : 'bg-gradient-to-r from-transparent via-[#FF6B00]/5 to-transparent'
+                        }`} />
+                        <Settings className={`mr-3.5 h-4 w-4 relative z-10 group-hover:text-[#FF6B00] transition-colors duration-300 ${
+                          isLightMode ? 'text-gray-500' : 'text-white/60'
+                        }`} />
                         <span className="relative z-10 font-normal text-sm">Configurações</span>
                       </DropdownMenuItem>
 
                       <DropdownMenuItem 
-                        className="mx-2 my-1.5 rounded-lg cursor-pointer transition-all duration-300 group relative overflow-hidden hover:bg-white/5 text-white/80 hover:text-white focus:bg-white/5 focus:text-white border border-transparent hover:border-white/10"
+                        className={`mx-2 my-1.5 rounded-lg cursor-pointer transition-all duration-300 group relative overflow-hidden border border-transparent ${
+                          isLightMode 
+                            ? 'hover:bg-orange-50 text-gray-700 hover:text-gray-900 focus:bg-orange-50 focus:text-gray-900 hover:border-orange-200'
+                            : 'hover:bg-white/5 text-white/80 hover:text-white focus:bg-white/5 focus:text-white hover:border-white/10'
+                        }`}
                       >
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#FF6B00]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        <HelpCircle className="mr-3.5 h-4 w-4 relative z-10 text-white/60 group-hover:text-[#FF6B00] transition-colors duration-300" />
+                        <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
+                          isLightMode 
+                            ? 'bg-gradient-to-r from-transparent via-orange-100/50 to-transparent'
+                            : 'bg-gradient-to-r from-transparent via-[#FF6B00]/5 to-transparent'
+                        }`} />
+                        <HelpCircle className={`mr-3.5 h-4 w-4 relative z-10 group-hover:text-[#FF6B00] transition-colors duration-300 ${
+                          isLightMode ? 'text-gray-500' : 'text-white/60'
+                        }`} />
                         <span className="relative z-10 font-normal text-sm">Ajuda</span>
                       </DropdownMenuItem>
                     </div>
@@ -1905,18 +1941,30 @@ export default function Header() {
                     <div 
                       className="mx-4 my-2 h-px"
                       style={{
-                        background: 'linear-gradient(to right, transparent, rgba(255, 107, 0, 0.15), transparent)'
+                        background: isLightMode 
+                          ? 'linear-gradient(to right, transparent, rgba(255, 107, 0, 0.25), transparent)'
+                          : 'linear-gradient(to right, transparent, rgba(255, 107, 0, 0.15), transparent)'
                       }}
                     />
 
                     {/* Logout com destaque sutil */}
                     <div className="pb-3 px-2">
                       <DropdownMenuItem 
-                        className="mx-2 my-1.5 rounded-lg cursor-pointer transition-all duration-300 group relative overflow-hidden hover:bg-red-500/10 text-white/70 hover:text-red-400 focus:bg-red-500/10 focus:text-red-400 border border-transparent hover:border-red-500/20"
+                        className={`mx-2 my-1.5 rounded-lg cursor-pointer transition-all duration-300 group relative overflow-hidden border border-transparent ${
+                          isLightMode 
+                            ? 'hover:bg-red-50 text-gray-600 hover:text-red-600 focus:bg-red-50 focus:text-red-600 hover:border-red-200'
+                            : 'hover:bg-red-500/10 text-white/70 hover:text-red-400 focus:bg-red-500/10 focus:text-red-400 hover:border-red-500/20'
+                        }`}
                         onClick={handleLogout}
                       >
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-500/8 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        <LogOut className="mr-3.5 h-4 w-4 relative z-10 text-white/50 group-hover:text-red-400 transition-colors duration-300" />
+                        <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
+                          isLightMode 
+                            ? 'bg-gradient-to-r from-transparent via-red-100/50 to-transparent'
+                            : 'bg-gradient-to-r from-transparent via-red-500/8 to-transparent'
+                        }`} />
+                        <LogOut className={`mr-3.5 h-4 w-4 relative z-10 group-hover:text-red-500 transition-colors duration-300 ${
+                          isLightMode ? 'text-gray-400' : 'text-white/50'
+                        }`} />
                         <span className="relative z-10 font-normal text-sm">Sair</span>
                       </DropdownMenuItem>
                     </div>
