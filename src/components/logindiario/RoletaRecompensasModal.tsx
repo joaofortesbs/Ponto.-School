@@ -311,18 +311,111 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                 <div className="absolute inset-0 bg-gradient-to-br from-orange-400/30 to-orange-600/30 rounded-full blur-lg animate-pulse"></div>
               </motion.div>
 
-              <motion.h2
+              <motion.div
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.3, duration: 0.5 }}
-                className="text-3xl font-bold bg-gradient-to-r from-orange-600 via-orange-500 to-orange-700 bg-clip-text text-transparent"
-                style={{
-                  fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-                  letterSpacing: "-0.025em",
-                }}
+                transition={{ delay: 0.3, duration: 0.8, type: "spring", damping: 25 }}
+                className="relative"
               >
-                Resgate sua recompensa
-              </motion.h2>
+                {/* Container principal do título com efeitos avançados */}
+                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-slate-900/95 p-6 border border-orange-200/20 shadow-2xl">
+                  {/* Efeito de luz de fundo */}
+                  <div 
+                    className="absolute inset-0 opacity-40"
+                    style={{
+                      background: "radial-gradient(circle at 30% 20%, rgba(255, 107, 0, 0.15) 0%, transparent 50%), radial-gradient(circle at 70% 80%, rgba(255, 140, 64, 0.1) 0%, transparent 50%)"
+                    }}
+                  />
+                  
+                  {/* Linhas decorativas animadas */}
+                  <div className="absolute top-0 left-0 w-full h-0.5">
+                    <motion.div 
+                      className="h-full bg-gradient-to-r from-transparent via-orange-400 to-transparent"
+                      initial={{ scaleX: 0 }}
+                      animate={{ scaleX: 1 }}
+                      transition={{ delay: 0.5, duration: 1.2, ease: "easeOut" }}
+                    />
+                  </div>
+                  
+                  {/* Título principal com tipografia premium */}
+                  <motion.h2
+                    initial={{ y: 10, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.6, duration: 0.6 }}
+                    className="relative text-center"
+                    style={{
+                      fontFamily: "'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif",
+                      fontWeight: 700,
+                      fontSize: "2.5rem",
+                      lineHeight: "1.1",
+                      letterSpacing: "-0.04em",
+                      background: "linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 25%, #FFFFFF 50%, #E2E8F0 75%, #FFFFFF 100%)",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                      backgroundClip: "text",
+                      textShadow: "0 0 30px rgba(255, 255, 255, 0.3)",
+                      filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))"
+                    }}
+                  >
+                    Recompensa Diária
+                  </motion.h2>
+                  
+                  {/* Subtítulo elegante */}
+                  <motion.div
+                    initial={{ y: 10, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.8, duration: 0.6 }}
+                    className="mt-3 text-center"
+                  >
+                    <span 
+                      className="text-lg font-medium"
+                      style={{
+                        fontFamily: "'Inter', sans-serif",
+                        letterSpacing: "0.02em",
+                        background: "linear-gradient(90deg, #FF6B00 0%, #FF8C40 50%, #FFB366 100%)",
+                        WebkitBackgroundClip: "text",
+                        WebkitTextFillColor: "transparent",
+                        backgroundClip: "text",
+                        filter: "drop-shadow(0 1px 2px rgba(255, 107, 0, 0.3))"
+                      }}
+                    >
+                      Sistema de Recompensas Premium
+                    </span>
+                  </motion.div>
+                  
+                  {/* Elemento decorativo inferior */}
+                  <motion.div
+                    initial={{ scaleX: 0, opacity: 0 }}
+                    animate={{ scaleX: 1, opacity: 1 }}
+                    transition={{ delay: 1, duration: 0.8 }}
+                    className="mt-4 mx-auto w-24 h-0.5 bg-gradient-to-r from-transparent via-orange-400/60 to-transparent rounded-full"
+                  />
+                  
+                  {/* Partículas flutuantes decorativas */}
+                  <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                    {[...Array(3)].map((_, i) => (
+                      <motion.div
+                        key={`particle-${i}`}
+                        className="absolute w-1 h-1 bg-orange-400/40 rounded-full"
+                        style={{
+                          left: `${20 + i * 30}%`,
+                          top: `${30 + i * 15}%`,
+                        }}
+                        animate={{
+                          y: [-2, 2, -2],
+                          opacity: [0.3, 0.8, 0.3],
+                          scale: [0.8, 1.2, 0.8]
+                        }}
+                        transition={{
+                          duration: 2.5 + i * 0.5,
+                          repeat: Infinity,
+                          delay: i * 0.8
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
             </div>
 
             <motion.p
