@@ -47,19 +47,6 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
     // Criar um áudio silencioso para contornar políticas de autoplay
     audioRef.current = new Audio();
     audioRef.current.volume = 0.3;
-    // Simular som de clique usando tom gerado
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const createClickSound = () => {
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.1);
-    };
     
     return () => {
       if (animationRef.current) {
@@ -355,7 +342,8 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                   style={{
                     background: "linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, transparent 50%, rgba(255, 255, 255, 0.1) 100%)",
                   }}
-                /></motion.div>
+                />
+
                 {/* Segmentos da roleta */}
                 {recompensasRoleta.map((recompensa, index) => {
                   const angulo = (360 / recompensasRoleta.length) * index;
