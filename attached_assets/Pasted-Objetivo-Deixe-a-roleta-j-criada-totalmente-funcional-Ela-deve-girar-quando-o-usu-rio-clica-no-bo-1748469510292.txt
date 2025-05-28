@@ -1,0 +1,107 @@
+Objetivo:
+Deixe a roleta já criada totalmente funcional. Ela deve girar quando o usuário clica no botão “Girar Roleta”, desacelerar gradualmente e parar em uma das opções.
+
+Implemente os seguintes efeitos:
+
+🛑 Detecção de Colisão
+Cada opção da roleta corresponde a um setor delimitado por ângulos específicos.
+
+Exemplo: se houver 6 setores, cada um ocupa 60° (0°–60°, 60°–120°, etc.).
+
+Os pontos brancos na borda da roleta representam os limites dos setores.
+
+Funcionamento:
+
+Enquanto a roleta gira, calcule o ângulo atual do ponteiro (ou pino).
+
+Sempre que esse ângulo ultrapassar um dos pontos (limite do setor), dispare um evento de colisão, simulando aquele efeito de "tic-tic" que roletas físicas fazem ao passar pelos marcadores.
+
+Para isso, crie uma função que compara o ângulo atual com os ângulos dos pontos.
+
+Exemplo de lógica:
+
+javascript
+Copiar
+Editar
+if (currentAngle >= setorInicio && currentAngle < setorFim) {
+   // Colisão detectada
+}
+🎯 Seleção da Opção Correta
+A roleta está dividida em 6 setores (como na imagem). Cada setor tem 60 graus.
+
+Quando a roleta parar, o ângulo final do ponteiro deve ser mapeado para um dos setores.
+
+Exemplo:
+
+Se o ponteiro parar em 75°, ele está no setor 2 (60°–120°).
+
+Lógica:
+
+javascript
+Copiar
+Editar
+const setorIndex = Math.floor(currentAngle / 60);
+const premioSelecionado = setores[setorIndex];
+🔊 Feedback Visual e Auditivo
+Visual:
+
+Quando o pino passar por um ponto (colisão), ele deve:
+
+Brevemente piscar (ex.: mudar de cor).
+
+Pode adicionar um leve efeito de vibração no pino ou na roleta.
+
+Auditivo:
+
+Toque um som de "tic" ou "click" sempre que uma colisão acontecer.
+
+Exemplo com JavaScript:
+
+javascript
+Copiar
+Editar
+const audio = new Audio('click.mp3');
+audio.play();
+🌀 Lógica de Giro e Parada Suave
+Quando o usuário clicar em "Girar Roleta":
+
+A roleta inicia com uma velocidade angular alta.
+
+Um fator de atrito faz a rotação desacelerar naturalmente até parar.
+
+Fórmula da desaceleração:
+
+javascript
+Copiar
+Editar
+velocidade -= atrito;
+if (velocidade <= 0) {
+   // Parar rotação
+   // Disparar resultado
+}
+Utilize requestAnimationFrame() para criar uma animação suave de rotação.
+
+Atualize a rotação com base na velocidade atual.
+
+🎁 Resultado Final:
+Quando a roleta parar:
+
+Destacar o setor vencedor (ex.: brilho, borda, animação).
+
+Mostrar uma mensagem na interface, como:
+
+🎉 “Parabéns! Você ganhou: [nome do prêmio]”
+
+⚙️ Observação Técnica:
+A roleta já está criada. Este prompt solicita apenas a implementação da lógica de:
+
+Giração.
+
+Desaceleração.
+
+Detecção de colisão.
+
+Seleção correta da opção vencedora.
+
+Feedback visual e sonoro.
+
