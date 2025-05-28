@@ -1,0 +1,72 @@
+🎯 Objetivo do Efeito:
+Adicionar um movimento realista no lápis (ou pino) da roleta sempre que ele passa por uma bolinha (ou marcador de setor). Esse movimento simula fisicamente a vibração ou o empurrão que ocorre em roletas reais, onde o pino “bate” na bolinha e se move levemente para cima e volta para a posição original, criando uma sensação tátil e visual precisa.
+
+🔥 Como o Efeito Deve Funcionar:
+Detecção de Passagem:
+
+Toda vez que a roleta gira e o marcador central (pino/lápis) alinha-se com uma bolinha, dispare uma animação no lápis.
+
+Isso acontece no momento da detecção de colisão angular, ou seja, quando o ângulo atual da roleta cruza o ângulo de uma das bolinhas (setores).
+
+Movimento do Lápis:
+
+O lápis realiza um movimento de inclinação rápida para cima ou para trás, seguido de um retorno elástico para a posição original.
+
+O movimento é pequeno, mas perceptível, simulando a resistência física da bolinha.
+
+Curva de Animação:
+
+Use uma curva de tipo "ease-out" para o impulso (subida rápida) e "ease-in elastic" para o retorno (efeito de mola ou vibração curta).
+
+Parâmetros do Movimento:
+
+Amplitude: Entre 10° a 15° de rotação no eixo do lápis.
+
+Duração:
+
+Empurrão: 100ms (rápido).
+
+Retorno: 200ms a 300ms (levemente mais lento, com elasticidade).
+
+Direção:
+
+A inclinação é sempre para o sentido oposto ao giro da roleta.
+
+Exemplo:
+
+Se a roleta gira no sentido horário, o lápis se inclina levemente para cima e para a esquerda (contra o giro) ao bater na bolinha.
+
+🔄 Fluxo do Efeito:
+[Detectar Colisão] → Verifica se o ângulo atual cruzou o ângulo de uma bolinha.
+
+[Disparar Animação] → O lápis se inclina levemente para trás (ou para cima).
+
+[Efeito Sonoro] → Toca um som de "tic".
+
+[Animação de Retorno] → O lápis volta com efeito elástico para a posição original.
+
+🎨 Detalhes Visuais:
+Pode adicionar junto um leve balanço ou vibração na estrutura do lápis, além da inclinação.
+
+O movimento deve parecer mecânico, como se o lápis estivesse montado sobre uma mola resistente.
+
+💡 Resumo de Como Implementar:
+Detecte a colisão com base no ângulo atual da roleta.
+
+Quando detectar:
+
+Aplique no lápis uma rotação rápida em seu eixo X ou Z (dependendo do eixo de inclinação).
+
+Use requestAnimationFrame() ou uma biblioteca de animação (ex.: GSAP, Framer Motion, Anime.js) para controlar o tempo e a curva de movimento.
+
+Garanta que o movimento do lápis seja sincronizado exatamente com o som de "tic" e com o momento que a roleta passa pela bolinha.
+
+🏆 Resultado Esperado:
+O usuário sente uma experiência sensorial realista:
+
+Ouve o "tic".
+
+Vê o lápis se mover de forma coerente, como se fosse uma peça mecânica real sendo empurrada a cada bolinha.
+
+Isso adiciona imersão, qualidade visual e sensação de realismo profissional na interação com a roleta.
+
