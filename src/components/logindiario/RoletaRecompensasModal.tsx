@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,6 +30,19 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
           style={{ pointerEvents: 'auto' }}
         >
           <motion.div
+            className="rounded-xl p-6 max-w-md w-full shadow-2xl relative overflow-hidden glassmorphism-modal"
+            style={{
+              background: "linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)",
+              backdropFilter: "blur(25px) saturate(180%)",
+              WebkitBackdropFilter: "blur(25px) saturate(180%)",
+              border: "1px solid rgba(255, 107, 0, 0.2)",
+              boxShadow: `
+                0 8px 32px rgba(0, 0, 0, 0.3),
+                0 2px 8px rgba(255, 107, 0, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.1)
+              `,
+            }}
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: 10 }}
@@ -40,7 +52,6 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
               stiffness: 300,
               duration: 0.4 
             }}
-            className="bg-transparent backdrop-blur-sm rounded-xl p-6 max-w-md w-full shadow-2xl border border-[#FF6B00]/20 relative overflow-hidden"
           >
             {/* Efeitos visuais de fundo idênticos ao modal Bem-vindo de volta */}
             <div className="absolute -top-20 -right-20 w-40 h-40 bg-[#FF6B00]/10 rounded-full blur-3xl"></div>
