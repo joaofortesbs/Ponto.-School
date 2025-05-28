@@ -29,7 +29,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
     // Propriedades visuais
     design: {
       grafiteColor: '#333333',
-      madeiraColor: '#D2B48C',
+      madeiraColor: '#FF6B00',
       borrachaColor: '#FFC1CC',
       seloColor: '#FF6B00'
     },
@@ -241,26 +241,26 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                         }}
                       ></div>
 
-                      {/* Corpo do Lápis (madeira - marrom claro) */}
+                      {/* Corpo do Lápis (laranja educacional) */}
                       <div 
                         className="relative ml-3"
                         style={{
                           width: '32px',
                           height: '16px',
-                          backgroundColor: '#D2B48C',
+                          backgroundColor: '#FF6B00',
                           borderRadius: '0 8px 8px 0',
-                          background: 'linear-gradient(135deg, #D2B48C 0%, #B8965F 50%, #D2B48C 100%)',
+                          background: 'linear-gradient(135deg, #FF6B00 0%, #FF8F40 50%, #FF6B00 100%)',
                           boxShadow: '2px 2px 4px rgba(0,0,0,0.2), inset 1px 1px 2px rgba(255,255,255,0.3)'
                         }}
                       >
-                        {/* Detalhes de Textura da Madeira */}
+                        {/* Detalhes de Textura do Lápis */}
                         <div 
                           className="absolute top-1 left-2 w-6 h-0.5 rounded"
-                          style={{ backgroundColor: '#A0805F', opacity: 0.6 }}
+                          style={{ backgroundColor: '#E55A00', opacity: 0.6 }}
                         ></div>
                         <div 
                           className="absolute bottom-1 left-2 w-4 h-0.5 rounded"
-                          style={{ backgroundColor: '#A0805F', opacity: 0.4 }}
+                          style={{ backgroundColor: '#E55A00', opacity: 0.4 }}
                         ></div>
                         
                         {/* Borracha Rosa (detalhe superior) */}
