@@ -109,25 +109,26 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                         #FF7A1A 300deg 360deg
                       )`
                     }}>
-                      {/* Linhas divisórias entre as seções */}
+                      {/* Textos das recompensas */}
                       <div className="absolute inset-0 flex items-center justify-center">
-                        {/* Linha 1 - 0 graus (topo) */}
-                        <div className="absolute w-0.5 h-32 bg-white/60 transform rotate-0 origin-center top-0 left-1/2 -translate-x-0.5"></div>
-                        
-                        {/* Linha 2 - 60 graus */}
-                        <div className="absolute w-0.5 h-32 bg-white/60 transform rotate-60 origin-center top-0 left-1/2 -translate-x-0.5"></div>
-                        
-                        {/* Linha 3 - 120 graus */}
-                        <div className="absolute w-0.5 h-32 bg-white/60 transform rotate-120 origin-center top-0 left-1/2 -translate-x-0.5"></div>
-                        
-                        {/* Linha 4 - 180 graus (baixo) */}
-                        <div className="absolute w-0.5 h-32 bg-white/60 transform rotate-180 origin-center top-0 left-1/2 -translate-x-0.5"></div>
-                        
-                        {/* Linha 5 - 240 graus */}
-                        <div className="absolute w-0.5 h-32 bg-white/60 transform rotate-240 origin-center top-0 left-1/2 -translate-x-0.5"></div>
-                        
-                        {/* Linha 6 - 300 graus */}
-                        <div className="absolute w-0.5 h-32 bg-white/60 transform rotate-300 origin-center top-0 left-1/2 -translate-x-0.5"></div>
+                        <div className="text-white font-bold text-xs transform -rotate-30 absolute top-8">
+                          100 SP
+                        </div>
+                        <div className="text-white font-bold text-xs transform rotate-30 absolute top-8 right-8">
+                          Badge
+                        </div>
+                        <div className="text-white font-bold text-xs transform rotate-90 absolute right-4">
+                          150 SP
+                        </div>
+                        <div className="text-white font-bold text-xs transform rotate-150 absolute bottom-8 right-8">
+                          Curso
+                        </div>
+                        <div className="text-white font-bold text-xs transform -rotate-150 absolute bottom-8 left-8">
+                          200 SP
+                        </div>
+                        <div className="text-white font-bold text-xs transform -rotate-90 absolute left-4">
+                          E-book
+                        </div>
                       </div>
                     </div>
                   </div>
