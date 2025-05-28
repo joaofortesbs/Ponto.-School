@@ -190,9 +190,9 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                         <div 
                           className="absolute w-2 h-2 bg-white border border-orange-300 rounded-full shadow-sm"
                           style={{
-                            top: '12px',
+                            top: '4px',
                             left: '50%',
-                            marginLeft: '-4px'
+                            transform: 'translateX(-50%)'
                           }}
                         ></div>
                         
@@ -200,8 +200,9 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                         <div 
                           className="absolute w-2 h-2 bg-white border border-orange-300 rounded-full shadow-sm"
                           style={{
-                            top: '22px',
-                            right: '18px'
+                            top: '18px',
+                            right: '12px',
+                            transform: 'translate(50%, -50%)'
                           }}
                         ></div>
                         
@@ -209,8 +210,9 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                         <div 
                           className="absolute w-2 h-2 bg-white border border-orange-300 rounded-full shadow-sm"
                           style={{
-                            bottom: '22px',
-                            right: '18px'
+                            bottom: '18px',
+                            right: '12px',
+                            transform: 'translate(50%, 50%)'
                           }}
                         ></div>
                         
@@ -218,9 +220,9 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                         <div 
                           className="absolute w-2 h-2 bg-white border border-orange-300 rounded-full shadow-sm"
                           style={{
-                            bottom: '12px',
+                            bottom: '4px',
                             left: '50%',
-                            marginLeft: '-4px'
+                            transform: 'translateX(-50%)'
                           }}
                         ></div>
                         
@@ -228,8 +230,9 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                         <div 
                           className="absolute w-2 h-2 bg-white border border-orange-300 rounded-full shadow-sm"
                           style={{
-                            bottom: '22px',
-                            left: '18px'
+                            bottom: '18px',
+                            left: '12px',
+                            transform: 'translate(-50%, 50%)'
                           }}
                         ></div>
                         
@@ -237,8 +240,9 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                         <div 
                           className="absolute w-2 h-2 bg-white border border-orange-300 rounded-full shadow-sm"
                           style={{
-                            top: '22px',
-                            left: '18px'
+                            top: '18px',
+                            left: '12px',
+                            transform: 'translate(-50%, -50%)'
                           }}
                         ></div>
                       </div>
