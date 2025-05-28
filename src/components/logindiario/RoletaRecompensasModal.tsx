@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -56,7 +57,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                 <div className="bg-gradient-to-br from-orange-400 to-orange-600 p-3 rounded-full shadow-lg">
                   <Gift className="h-6 w-6 text-white" />
                 </div>
-
+                
                 {/* Efeito de brilho ao redor do ícone */}
                 <div className="absolute inset-0 bg-gradient-to-br from-orange-400/30 to-orange-600/30 rounded-full blur-lg animate-pulse"></div>
               </motion.div>
@@ -96,6 +97,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                 <div className="relative w-64 h-64">
                   {/* Círculo da Roleta */}
                   <div className="w-full h-full rounded-full border-4 border-orange-300 bg-gradient-to-br from-orange-100 to-orange-200 relative overflow-hidden shadow-xl">
+                    {/* Seções da Roleta */}
                     <div className="absolute inset-0 rounded-full" style={{
                       background: `conic-gradient(
                         from 0deg,
@@ -107,39 +109,62 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                         #FF7A1A 300deg 360deg
                       )`
                     }}>
-                      {/* Bolinhas Marcadoras - Posicionadas nas Linhas Divisórias */}
+                      {/* Bolinhas Separadoras */}
                       <div className="absolute inset-0">
-                        {Array.from({ length: 6 }, (_, index) => {
-                          const totalSegments = 6;
-                          const roletaWidth = 256; // 64 * 4 (w-64 em pixels)
-                          const roletaHeight = 256; // 64 * 4 (h-64 em pixels)
-                          const centerX = roletaWidth / 2; // Centro X da roleta
-                          const centerY = roletaHeight / 2; // Centro Y da roleta
-                          const desiredRadius = 120; // Raio ajustado para a borda da roleta
-
-                          // Ângulos das linhas divisórias: 0°, 60°, 120°, 180°, 240°, 300°
-                          const angle = index * (360 / totalSegments);
-                          const radians = (angle * Math.PI) / 180;
-                          const x = centerX + desiredRadius * Math.cos(radians);
-                          const y = centerY + desiredRadius * Math.sin(radians);
-
-                          // Converter para porcentagem
-                          const xPercent = (x / roletaWidth) * 100;
-                          const yPercent = (y / roletaHeight) * 100;
-
-                          return (
-                            <div 
-                              key={`bolinha-marcador-${index}`}
-                              className="absolute w-4 h-4 bg-white rounded-full shadow-xl border-2 border-orange-400"
-                              style={{
-                                left: `${xPercent}%`,
-                                top: `${yPercent}%`,
-                                transform: 'translate(-50%, -50%)',
-                                zIndex: 15
-                              }}
-                            />
-                          );
-                        })}
+                        {/* Bolinha no ângulo 60° */}
+                        <div 
+                          className="absolute w-3 h-3 bg-white rounded-full shadow-md"
+                          style={{
+                            top: '20%',
+                            right: '20%',
+                            transform: 'translate(50%, -50%)'
+                          }}
+                        />
+                        {/* Bolinha no ângulo 120° */}
+                        <div 
+                          className="absolute w-3 h-3 bg-white rounded-full shadow-md"
+                          style={{
+                            top: '50%',
+                            right: '2%',
+                            transform: 'translate(50%, -50%)'
+                          }}
+                        />
+                        {/* Bolinha no ângulo 180° */}
+                        <div 
+                          className="absolute w-3 h-3 bg-white rounded-full shadow-md"
+                          style={{
+                            bottom: '20%',
+                            right: '20%',
+                            transform: 'translate(50%, 50%)'
+                          }}
+                        />
+                        {/* Bolinha no ângulo 240° */}
+                        <div 
+                          className="absolute w-3 h-3 bg-white rounded-full shadow-md"
+                          style={{
+                            bottom: '20%',
+                            left: '20%',
+                            transform: 'translate(-50%, 50%)'
+                          }}
+                        />
+                        {/* Bolinha no ângulo 300° */}
+                        <div 
+                          className="absolute w-3 h-3 bg-white rounded-full shadow-md"
+                          style={{
+                            top: '50%',
+                            left: '2%',
+                            transform: 'translate(-50%, -50%)'
+                          }}
+                        />
+                        {/* Bolinha no ângulo 360°/0° */}
+                        <div 
+                          className="absolute w-3 h-3 bg-white rounded-full shadow-md"
+                          style={{
+                            top: '20%',
+                            left: '20%',
+                            transform: 'translate(-50%, -50%)'
+                          }}
+                        />
                       </div>
                     </div>
                   </div>
@@ -149,9 +174,9 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                     <Gift className="h-8 w-8 text-orange-600" />
                   </div>
 
-                  {/* Ponteiro da Roleta */}
-                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2 z-20">
-                    <div className="w-0 h-0 border-l-4 border-r-4 border-b-8 border-l-transparent border-r-transparent border-b-orange-600 shadow-lg"></div>
+                  {/* Ponteiro da Roleta - Lateral Direita */}
+                  <div className="absolute top-1/2 right-0 transform translate-x-2 -translate-y-1/2 z-20">
+                    <div className="w-0 h-0 border-t-4 border-b-4 border-l-8 border-t-transparent border-b-transparent border-l-orange-600 shadow-lg"></div>
                   </div>
                 </div>
 
