@@ -101,87 +101,64 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                     <div className="absolute inset-0 rounded-full" style={{
                       background: `conic-gradient(
                         from 0deg,
-                        #FF6B00 0deg 60deg,
-                        #FF8C40 60deg 120deg,
-                        #FFB366 120deg 180deg,
-                        #FF9933 180deg 240deg,
-                        #FFA366 240deg 300deg,
-                        #FF7A1A 300deg 360deg
+                        #FF6B00 0deg 36deg,
+                        #FF8C40 36deg 72deg,
+                        #FFB366 72deg 108deg,
+                        #FF9933 108deg 144deg,
+                        #FFA366 144deg 180deg,
+                        #FF7A1A 180deg 216deg,
+                        #FF6B00 216deg 252deg,
+                        #FF8C40 252deg 288deg,
+                        #FFB366 288deg 324deg,
+                        #FF9933 324deg 360deg
                       )`
                     }}>
                       {/* Linhas divisórias entre as seções */}
                       <div className="absolute inset-0 flex items-center justify-center">
-                        {/* Linha 1 - 0 graus (topo) */}
-                        <div 
-                          className="absolute w-0.5 h-32 bg-white/50 origin-bottom"
-                          style={{
-                            transform: 'rotate(0deg)',
-                            transformOrigin: '50% 100%',
-                            bottom: '50%',
-                            left: '50%',
-                            marginLeft: '-1px'
-                          }}
-                        ></div>
-                        
-                        {/* Linha 2 - 60 graus */}
-                        <div 
-                          className="absolute w-0.5 h-32 bg-white/50 origin-bottom"
-                          style={{
-                            transform: 'rotate(60deg)',
-                            transformOrigin: '50% 100%',
-                            bottom: '50%',
-                            left: '50%',
-                            marginLeft: '-1px'
-                          }}
-                        ></div>
-                        
-                        {/* Linha 3 - 120 graus */}
-                        <div 
-                          className="absolute w-0.5 h-32 bg-white/50 origin-bottom"
-                          style={{
-                            transform: 'rotate(120deg)',
-                            transformOrigin: '50% 100%',
-                            bottom: '50%',
-                            left: '50%',
-                            marginLeft: '-1px'
-                          }}
-                        ></div>
-                        
-                        {/* Linha 4 - 180 graus (baixo) */}
-                        <div 
-                          className="absolute w-0.5 h-32 bg-white/50 origin-bottom"
-                          style={{
-                            transform: 'rotate(180deg)',
-                            transformOrigin: '50% 100%',
-                            bottom: '50%',
-                            left: '50%',
-                            marginLeft: '-1px'
-                          }}
-                        ></div>
-                        
-                        {/* Linha 5 - 240 graus */}
-                        <div 
-                          className="absolute w-0.5 h-32 bg-white/50 origin-bottom"
-                          style={{
-                            transform: 'rotate(240deg)',
-                            transformOrigin: '50% 100%',
-                            bottom: '50%',
-                            left: '50%',
-                            marginLeft: '-1px'
-                          }}
-                        ></div>
-                        
-                        {/* Linha 6 - 300 graus */}
-                        <div 
-                          className="absolute w-0.5 h-32 bg-white/50 origin-bottom"
-                          style={{
-                            transform: 'rotate(300deg)',
-                            transformOrigin: '50% 100%',
-                            bottom: '50%',
-                            left: '50%',
-                            marginLeft: '-1px'
-                          }}
-                        ></div>
+                        {/* Gerando as 10 linhas divisórias com ângulos de 36 graus */}
+                        {[...Array(10)].map((_, index) => {
+                          const angle = index * 36; // 0°, 36°, 72°, 108°, 144°, 180°, 216°, 252°, 288°, 324°
+                          return (
+                            <div 
+                              key={`linha-${index}`}
+                              className="absolute w-0.5 h-32 bg-white/50 origin-bottom"
+                              style={{
+                                transform: `rotate(${angle}deg)`,
+                                transformOrigin: '50% 100%',
+                                bottom: '50%',
+                                left: '50%',
+                                marginLeft: '-1px'
+                              }}
+                            ></div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Bolinhas nas linhas divisórias */}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        {[...Array(10)].map((_, index) => {
+                          const angle = index * 36; // Ângulos: 0°, 36°, 72°, etc.
+                          const radius = 128; // Raio da roleta (metade de 256px de diâmetro)
+                          const ballRadius = 6; // Raio das bolinhas (5% do diâmetro da roleta)
+                          
+                          // Convertendo ângulo para radianos e calculando posição
+                          const angleRad = (angle - 90) * (Math.PI / 180); // -90 para começar no topo
+                          const x = radius * Math.cos(angleRad);
+                          const y = radius * Math.sin(angleRad);
+                          
+                          return (
+                            <div
+                              key={`bolinha-${index}`}
+                              className="absolute w-3 h-3 bg-white border-2 border-black rounded-full shadow-lg"
+                              style={{
+                                left: '50%',
+                                top: '50%',
+                                transform: `translate(${x - ballRadius}px, ${y - ballRadius}px)`,
+                                zIndex: 10
+                              }}
+                            />
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
