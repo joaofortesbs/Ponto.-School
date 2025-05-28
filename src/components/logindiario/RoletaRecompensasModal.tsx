@@ -148,23 +148,19 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                     <div className="absolute inset-0 rounded-full" style={{
                       background: `conic-gradient(
                         from 0deg,
-                        #FF6B00 0deg 36deg,
-                        #FF8C40 36deg 72deg,
-                        #FFB366 72deg 108deg,
-                        #FF9933 108deg 144deg,
-                        #FFA366 144deg 180deg,
-                        #FF7A1A 180deg 216deg,
-                        #FF6B00 216deg 252deg,
-                        #FF8C40 252deg 288deg,
-                        #FFB366 288deg 324deg,
-                        #FF9933 324deg 360deg
+                        #FF6B00 0deg 60deg,
+                        #FF8C40 60deg 120deg,
+                        #FFB366 120deg 180deg,
+                        #FF9933 180deg 240deg,
+                        #FFA366 240deg 300deg,
+                        #FF7A1A 300deg 360deg
                       )`
                     }}>
                       {/* Linhas divisórias entre as seções */}
                       <div className="absolute inset-0 flex items-center justify-center">
-                        {/* Gerando as 10 linhas divisórias com ângulos de 36 graus */}
-                        {[...Array(10)].map((_, index) => {
-                          const angle = index * 36; // 0°, 36°, 72°, 108°, 144°, 180°, 216°, 252°, 288°, 324°
+                        {/* Gerando as 6 linhas divisórias com ângulos de 60 graus */}
+                        {[...Array(6)].map((_, index) => {
+                          const angle = index * 60; // 0°, 60°, 120°, 180°, 240°, 300°
                           return (
                             <div 
                               key={`linha-${index}`}
@@ -183,8 +179,8 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
 
                       {/* Bolinhas nas linhas divisórias */}
                       <div className="absolute inset-0 flex items-center justify-center">
-                        {[...Array(10)].map((_, index) => {
-                          const angle = index * 36; // Ângulos: 0°, 36°, 72°, etc.
+                        {[...Array(6)].map((_, index) => {
+                          const angle = index * 60; // Ângulos: 0°, 60°, 120°, 180°, 240°, 300°
                           const radius = 121; // Ajustado para 95% do raio original (128 * 0.95) para evitar cortes
                           const ballRadius = 6; // Raio das bolinhas (5% do diâmetro da roleta)
                           
