@@ -28,23 +28,21 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
           transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          className="relative bg-gray-900/80 backdrop-blur-md border-2 rounded-2xl p-8 shadow-2xl"
+          className="relative bg-orange-50/20 backdrop-blur-md border border-orange-200/30 rounded-2xl p-8 shadow-2xl"
           style={{
-            background: "rgba(20, 20, 20, 0.85)",
+            background: "rgba(255, 245, 235, 0.15)",
             backdropFilter: "blur(20px)",
             WebkitBackdropFilter: "blur(20px)",
-            borderColor: "#921c11",
           }}
         >
           {/* Botão de fechar */}
           <Button
             variant="ghost"
             size="icon"
-            className="absolute top-4 right-4 h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 border transition-all duration-300"
-            style={{ borderColor: "#921c11" }}
+            className="absolute top-4 right-4 h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 border border-orange-200/30 transition-all duration-300"
             onClick={() => onOpenChange(false)}
           >
-            <X className="h-4 w-4 text-white" />
+            <X className="h-4 w-4 text-orange-700" />
           </Button>
 
           {/* Título e ícone */}
@@ -67,7 +65,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.3, duration: 0.5 }}
-              className="text-3xl font-bold bg-gradient-to-r from-orange-400 via-orange-300 to-orange-500 bg-clip-text text-transparent mb-2"
+              className="text-3xl font-bold bg-gradient-to-r from-orange-600 via-orange-500 to-orange-700 bg-clip-text text-transparent mb-2"
               style={{
                 fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
                 letterSpacing: "-0.025em",
@@ -80,7 +78,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.4, duration: 0.5 }}
-              className="text-orange-200/90 text-sm font-medium"
+              className="text-orange-700/80 text-sm font-medium"
             >
               Parabéns por manter sua sequência diária!
             </motion.p>
