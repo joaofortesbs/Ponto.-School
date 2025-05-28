@@ -1,0 +1,13 @@
+Detecção de Colisão:
+Sistema: Cada opção (ex.: Madrid, Paris, Tokyo) é representada por um setor da roleta, delimitado por ângulos específicos (ex.: 0° a 30° para Madrid, 30° a 60° para Londres, etc.). Os pontos (pequenos círculos) marcam os limites ou centros de cada setor.
+Efeito: O pino, ao girar, tem sua posição angular calculada continuamente. Quando a posição angular do pino coincide com a de um ponto (ou entra no intervalo de um setor), um evento de colisão é registrado. Isso pode ser feito usando uma função que verifica se o ângulo do pino está dentro do intervalo de um setor (ex.: if (pinoAngle >= setorInicio && pinoAngle < setorFim)).
+Seleção de Opção:
+Sistema: A roleta é dividida em 12 setores iguais (30° cada), correspondendo às 12 opções listadas (Madrid, Londres, Montevideo, etc.). Cada ponto representa o centro ou limite de um setor.
+Efeito: Quando o pino para, seu ângulo final é mapeado para o setor correspondente. Por exemplo, se o pino parar a 45°, ele seleciona a opção associada ao setor que inclui 45° (ex.: Paris). Isso pode ser implementado com uma função que retorna o índice do setor com base no ângulo (setor = Math.floor(pinoAngle / 30)).
+Feedback Visual/Auditivo:
+Sistema: O pino e os pontos são elementos gráficos animados. Cada ponto pode ter uma área de ativação ao redor dele.
+Efeito: Ao passar por um ponto, o pino pode mudar de cor ou piscar brevemente, e um som de "clique" pode ser reproduzido (usando áudio pré-carregado). Isso é implementado com animações CSS/JavaScript (ex.: pino.style.backgroundColor = 'red') e a API de áudio (new Audio('click.mp3').play()).
+Lógica de Parada:
+Sistema: O movimento do pino é simulado com uma velocidade inicial que diminui gradualmente (ex.: usando uma função de desaceleração como velocidade -= atrito).
+Efeito: O pino gira e desacelera até parar naturalmente. A posição final determina a opção vencedora com base no setor mais próximo. Por exemplo, se parar a 75°, o setor de Singapur (60°-90°) é selecionado. Isso pode ser controlado por um loop de animação que atualiza a posição até velocidade <= 0.
+Esse sistema cria uma experiência interativa onde o pino interage dinamicamente com os pontos, simulando uma roleta realista. Se quiser, posso sugerir um exemplo de código para implementar isso!
