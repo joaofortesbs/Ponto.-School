@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -31,41 +31,145 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
 }) => {
   const [isSpinning, setIsSpinning] = useState(false);
   const [resultado, setResultado] = useState<string | null>(null);
+  const [currentAngle, setCurrentAngle] = useState(0);
+  const [highlightedPoint, setHighlightedPoint] = useState<number | null>(null);
   const roletaControls = useAnimation();
   const roletaRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const animationRef = useRef<number>();
+
+  // Configuração dos setores
+  const totalSetores = recompensasRoleta.length;
+  const anguloSetor = 360 / totalSetores; // 45° para 8 setores
+
+  // Inicializar áudio
+  useEffect(() => {
+    // Criar um áudio silencioso para contornar políticas de autoplay
+    audioRef.current = new Audio();
+    audioRef.current.volume = 0.3;
+    // Simular som de clique usando tom gerado
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const createClickSound = () => {
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.1);
+    };
+    
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, []);
+
+  // Função para detectar colisão com pontos
+  const detectarColisao = (angulo: number) => {
+    const anguloNormalizado = angulo % 360;
+    for (let i = 0; i < totalSetores; i++) {
+      const centroSetor = (i * anguloSetor) + (anguloSetor / 2);
+      const diferenca = Math.abs(anguloNormalizado - centroSetor);
+      
+      // Detecta se está próximo ao centro do setor (±5°)
+      if (diferenca <= 5 || diferenca >= 355) {
+        return i;
+      }
+    }
+    return null;
+  };
+
+  // Função para reproduzir som de clique
+  const reproduzirSomClique = () => {
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
+      gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.08);
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.08);
+    } catch (error) {
+      console.log("Áudio não disponível");
+    }
+  };
+
+  // Função para determinar recompensa com base no ângulo
+  const determinarRecompensa = (anguloFinal: number) => {
+    const anguloNormalizado = (360 - (anguloFinal % 360)) % 360;
+    const indiceSetor = Math.floor(anguloNormalizado / anguloSetor);
+    return recompensasRoleta[indiceSetor];
+  };
 
   const girarRoleta = async () => {
     if (isSpinning) return;
 
     setIsSpinning(true);
     setResultado(null);
+    setHighlightedPoint(null);
 
-    // Calcular rotação aleatória (múltiplos de 360 + ângulo final)
-    const recompensaEscolhida = Math.floor(Math.random() * recompensasRoleta.length);
-    const anguloRecompensa = (360 / recompensasRoleta.length) * recompensaEscolhida;
-    const voltasCompletas = Math.floor(Math.random() * 5) + 8; // 8-12 voltas
-    const rotacaoTotal = voltasCompletas * 360 + (360 - anguloRecompensa);
+    // Calcular rotação com física realista
+    const voltasCompletas = Math.floor(Math.random() * 4) + 6; // 6-9 voltas
+    const anguloFinalAlvo = Math.random() * 360;
+    const rotacaoTotal = voltasCompletas * 360 + anguloFinalAlvo;
 
-    // Animação com desaceleração suave
-    await roletaControls.start({
-      rotate: rotacaoTotal,
-      transition: {
-        duration: 4,
-        ease: [0.25, 0.1, 0.25, 1], // Cubic bezier para desaceleração suave
-      },
-    });
+    let velocidadeAtual = 25; // Velocidade inicial alta
+    let anguloAtual = 0;
+    let ultimoPontoDetectado = -1;
 
-    // Mostrar resultado após a animação
-    setTimeout(() => {
-      setResultado(recompensasRoleta[recompensaEscolhida].nome);
-      setIsSpinning(false);
-    }, 500);
+    // Animação customizada com detecção de colisão
+    const animar = () => {
+      if (velocidadeAtual > 0.1) {
+        anguloAtual += velocidadeAtual;
+        velocidadeAtual *= 0.985; // Atrito gradual mais suave
+        
+        setCurrentAngle(anguloAtual);
+        
+        // Detectar colisão com pontos
+        const pontoColisao = detectarColisao(anguloAtual);
+        if (pontoColisao !== null && pontoColisao !== ultimoPontoDetectado) {
+          setHighlightedPoint(pontoColisao);
+          reproduzirSomClique();
+          ultimoPontoDetectado = pontoColisao;
+          
+          // Remove o highlight após um tempo
+          setTimeout(() => setHighlightedPoint(null), 150);
+        }
+
+        // Usar animação mais suave com framer-motion
+        roletaControls.set({ rotate: anguloAtual });
+        
+        animationRef.current = requestAnimationFrame(animar);
+      } else {
+        // Parada final
+        const recompensaVencedora = determinarRecompensa(anguloAtual);
+        
+        setTimeout(() => {
+          setResultado(recompensaVencedora.nome);
+          setIsSpinning(false);
+        }, 500);
+      }
+    };
+
+    animar();
   };
 
   const resetarRoleta = () => {
     roletaControls.set({ rotate: 0 });
+    setCurrentAngle(0);
     setResultado(null);
     setIsSpinning(false);
+    setHighlightedPoint(null);
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+    }
   };
 
   return (
@@ -120,10 +224,23 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
           <div className="flex flex-col items-center space-y-6">
             {/* Roleta */}
             <div className="relative">
-              {/* Pino/Seta da roleta */}
-              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-20">
-                <div className="w-0 h-0 border-l-[12px] border-r-[12px] border-b-[24px] border-l-transparent border-r-transparent border-b-orange-600 drop-shadow-lg"></div>
-                <div className="absolute top-[20px] left-1/2 transform -translate-x-1/2 w-4 h-4 bg-orange-600 rounded-full border-2 border-white shadow-lg"></div>
+              {/* Pino/Seta da roleta - Agora com feedback visual */}
+              <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 z-20">
+                <motion.div
+                  animate={{
+                    scale: highlightedPoint !== null ? 1.2 : 1,
+                    boxShadow: highlightedPoint !== null ? "0 0 15px rgba(255, 107, 0, 0.8)" : "none"
+                  }}
+                  transition={{ duration: 0.1 }}
+                  className="relative"
+                >
+                  <div className={`w-0 h-0 border-l-[12px] border-r-[12px] border-b-[24px] border-l-transparent border-r-transparent transition-colors duration-100 ${
+                    highlightedPoint !== null ? 'border-b-red-500' : 'border-b-orange-600'
+                  } drop-shadow-lg`}></div>
+                  <div className={`absolute top-[20px] left-1/2 transform -translate-x-1/2 w-4 h-4 rounded-full border-2 border-white shadow-lg transition-colors duration-100 ${
+                    highlightedPoint !== null ? 'bg-red-500' : 'bg-orange-600'
+                  }`}></div>
+                </motion.div>
               </div>
 
               {/* Roleta */}
@@ -162,6 +279,30 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                         </div>
                       </div>
                     </div>
+                  );
+                })}
+
+                {/* Pontos de colisão nos limites dos setores */}
+                {recompensasRoleta.map((_, index) => {
+                  const angulo = (360 / recompensasRoleta.length) * index;
+                  const x = 50 + 45 * Math.cos((angulo - 90) * Math.PI / 180);
+                  const y = 50 + 45 * Math.sin((angulo - 90) * Math.PI / 180);
+                  
+                  return (
+                    <motion.div
+                      key={`point-${index}`}
+                      className="absolute w-3 h-3 rounded-full border-2 border-white shadow-lg transform -translate-x-1/2 -translate-y-1/2 z-10"
+                      style={{
+                        left: `${x}%`,
+                        top: `${y}%`,
+                        backgroundColor: highlightedPoint === index ? '#ef4444' : '#fbbf24',
+                      }}
+                      animate={{
+                        scale: highlightedPoint === index ? 1.5 : 1,
+                        boxShadow: highlightedPoint === index ? "0 0 10px rgba(239, 68, 68, 0.8)" : "none"
+                      }}
+                      transition={{ duration: 0.1 }}
+                    />
                   );
                 })}
 
