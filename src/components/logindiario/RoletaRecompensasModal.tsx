@@ -138,7 +138,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                       <div className="absolute inset-0 flex items-center justify-center">
                         {[...Array(10)].map((_, index) => {
                           const angle = index * 36; // Ângulos: 0°, 36°, 72°, etc.
-                          const radius = 128; // Raio da roleta (metade de 256px de diâmetro)
+                          const radius = 121; // Ajustado para 95% do raio original (128 * 0.95) para evitar cortes
                           const ballRadius = 6; // Raio das bolinhas (5% do diâmetro da roleta)
                           
                           // Convertendo ângulo para radianos e calculando posição
@@ -149,12 +149,13 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                           return (
                             <div
                               key={`bolinha-${index}`}
-                              className="absolute w-3 h-3 bg-white border-2 border-black rounded-full shadow-lg"
+                              className="absolute w-3 h-3 bg-white rounded-full shadow-lg"
                               style={{
                                 left: '50%',
                                 top: '50%',
                                 transform: `translate(${x - ballRadius}px, ${y - ballRadius}px)`,
-                                zIndex: 10
+                                zIndex: 10,
+                                border: '2px solid #FFA500'
                               }}
                             />
                           );
