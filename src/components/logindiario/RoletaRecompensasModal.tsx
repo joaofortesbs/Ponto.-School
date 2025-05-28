@@ -68,34 +68,50 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
     };
   }, []);
 
-  // Função para detectar colisão com pontos
+  // Função para detectar colisão com pontos - mais precisa
   const detectarColisao = (angulo: number) => {
     const anguloNormalizado = angulo % 360;
     for (let i = 0; i < totalSetores; i++) {
       const centroSetor = (i * anguloSetor) + (anguloSetor / 2);
-      const diferenca = Math.abs(anguloNormalizado - centroSetor);
+      let diferenca = Math.abs(anguloNormalizado - centroSetor);
       
-      // Detecta se está próximo ao centro do setor (±5°)
-      if (diferenca <= 5 || diferenca >= 355) {
+      // Ajustar para diferenças que cruzam 0°/360°
+      if (diferenca > 180) {
+        diferenca = 360 - diferenca;
+      }
+      
+      // Detecta se está próximo ao centro do setor (±3° para mais precisão)
+      if (diferenca <= 3) {
         return i;
       }
     }
     return null;
   };
 
-  // Função para reproduzir som de clique
-  const reproduzirSomClique = () => {
+  // Função para reproduzir som de clique com variações
+  const reproduzirSomClique = (intensidade: number = 1) => {
     try {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
+      
       oscillator.connect(gainNode);
       gainNode.connect(audioContext.destination);
-      oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
-      gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.08);
+      
+      // Frequência varia com a velocidade (mais agudo = mais rápido)
+      const frequencia = 400 + (intensidade * 300);
+      oscillator.frequency.setValueAtTime(frequencia, audioContext.currentTime);
+      
+      // Volume varia com a intensidade
+      const volume = Math.min(0.2 * intensidade, 0.25);
+      gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+      
+      // Tipo de onda para som mais interessante
+      oscillator.type = 'triangle';
+      
       oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.08);
+      oscillator.stop(audioContext.currentTime + 0.1);
     } catch (error) {
       console.log("Áudio não disponível");
     }
@@ -136,11 +152,15 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
         const pontoColisao = detectarColisao(anguloAtual);
         if (pontoColisao !== null && pontoColisao !== ultimoPontoDetectado) {
           setHighlightedPoint(pontoColisao);
-          reproduzirSomClique();
+          
+          // Som varia com a velocidade
+          const intensidadeAudio = Math.min(velocidadeAtual / 15, 1);
+          reproduzirSomClique(intensidadeAudio);
           ultimoPontoDetectado = pontoColisao;
           
-          // Remove o highlight após um tempo
-          setTimeout(() => setHighlightedPoint(null), 150);
+          // Remove o highlight após um tempo proporcional à velocidade
+          const tempoHighlight = Math.max(100, 200 - (velocidadeAtual * 5));
+          setTimeout(() => setHighlightedPoint(null), tempoHighlight);
         }
 
         // Usar animação mais suave com framer-motion
@@ -224,22 +244,67 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
           <div className="flex flex-col items-center space-y-6">
             {/* Roleta */}
             <div className="relative">
-              {/* Pino/Seta da roleta - Agora com feedback visual */}
-              <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 z-20">
+              {/* Pino/Seta da roleta - Apontando para baixo com efeitos realistas */}
+              <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-20">
                 <motion.div
                   animate={{
-                    scale: highlightedPoint !== null ? 1.2 : 1,
-                    boxShadow: highlightedPoint !== null ? "0 0 15px rgba(255, 107, 0, 0.8)" : "none"
+                    scale: highlightedPoint !== null ? 1.3 : 1,
+                    y: highlightedPoint !== null ? 2 : 0,
+                    boxShadow: highlightedPoint !== null ? 
+                      "0 8px 25px rgba(255, 107, 0, 0.6), 0 0 20px rgba(239, 68, 68, 0.8)" : 
+                      "0 4px 15px rgba(0, 0, 0, 0.3)"
                   }}
-                  transition={{ duration: 0.1 }}
-                  className="relative"
+                  transition={{ 
+                    duration: 0.15,
+                    type: "spring",
+                    stiffness: 300,
+                    damping: 20
+                  }}
+                  className="relative filter drop-shadow-xl"
                 >
-                  <div className={`w-0 h-0 border-l-[12px] border-r-[12px] border-b-[24px] border-l-transparent border-r-transparent transition-colors duration-100 ${
-                    highlightedPoint !== null ? 'border-b-red-500' : 'border-b-orange-600'
-                  } drop-shadow-lg`}></div>
-                  <div className={`absolute top-[20px] left-1/2 transform -translate-x-1/2 w-4 h-4 rounded-full border-2 border-white shadow-lg transition-colors duration-100 ${
-                    highlightedPoint !== null ? 'bg-red-500' : 'bg-orange-600'
+                  {/* Corpo principal do pino */}
+                  <div className={`w-0 h-0 border-l-[14px] border-r-[14px] border-t-[28px] border-l-transparent border-r-transparent transition-all duration-150 ${
+                    highlightedPoint !== null ? 'border-t-red-500' : 'border-t-orange-600'
                   }`}></div>
+                  
+                  {/* Base circular do pino com gradiente */}
+                  <div className={`absolute -top-[30px] left-1/2 transform -translate-x-1/2 w-5 h-5 rounded-full border-3 border-white shadow-2xl transition-all duration-150 ${
+                    highlightedPoint !== null ? 'bg-gradient-to-br from-red-400 to-red-600' : 'bg-gradient-to-br from-orange-500 to-orange-700'
+                  }`}>
+                    {/* Reflexo interno */}
+                    <div className="absolute top-1 left-1 w-2 h-2 bg-white/40 rounded-full blur-[1px]"></div>
+                  </div>
+                  
+                  {/* Efeito de brilho quando ativo */}
+                  {highlightedPoint !== null && (
+                    <motion.div
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1.5, opacity: 1 }}
+                      exit={{ scale: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute -top-[35px] left-1/2 transform -translate-x-1/2 w-8 h-8 rounded-full bg-gradient-to-r from-orange-400 to-red-500 opacity-60 blur-sm"
+                    />
+                  )}
+                  
+                  {/* Partículas de impacto */}
+                  {highlightedPoint !== null && (
+                    <>
+                      {[...Array(6)].map((_, i) => (
+                        <motion.div
+                          key={i}
+                          initial={{ scale: 0, x: 0, y: 0, opacity: 1 }}
+                          animate={{ 
+                            scale: [0, 1, 0], 
+                            x: [0, (Math.random() - 0.5) * 30],
+                            y: [0, (Math.random() - 0.5) * 30],
+                            opacity: [1, 0.7, 0]
+                          }}
+                          transition={{ duration: 0.4, delay: i * 0.05 }}
+                          className="absolute -top-[28px] left-1/2 transform -translate-x-1/2 w-1 h-1 bg-orange-400 rounded-full"
+                        />
+                      ))}
+                    </>
+                  )}
                 </motion.div>
               </div>
 
@@ -291,18 +356,38 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                   return (
                     <motion.div
                       key={`point-${index}`}
-                      className="absolute w-3 h-3 rounded-full border-2 border-white shadow-lg transform -translate-x-1/2 -translate-y-1/2 z-10"
+                      className="absolute w-3 h-3 rounded-full border-2 border-white shadow-xl transform -translate-x-1/2 -translate-y-1/2 z-10"
                       style={{
                         left: `${x}%`,
                         top: `${y}%`,
-                        backgroundColor: highlightedPoint === index ? '#ef4444' : '#fbbf24',
                       }}
                       animate={{
-                        scale: highlightedPoint === index ? 1.5 : 1,
-                        boxShadow: highlightedPoint === index ? "0 0 10px rgba(239, 68, 68, 0.8)" : "none"
+                        scale: highlightedPoint === index ? 1.8 : 1,
+                        backgroundColor: highlightedPoint === index ? '#ef4444' : '#fbbf24',
+                        boxShadow: highlightedPoint === index ? 
+                          "0 0 20px rgba(239, 68, 68, 1), 0 0 10px rgba(255, 255, 255, 0.8)" : 
+                          "0 2px 8px rgba(0, 0, 0, 0.3)"
                       }}
-                      transition={{ duration: 0.1 }}
-                    />
+                      transition={{ 
+                        duration: 0.15,
+                        type: "spring",
+                        stiffness: 400,
+                        damping: 25
+                      }}
+                    >
+                      {/* Anel de energia quando ativo */}
+                      {highlightedPoint === index && (
+                        <motion.div
+                          initial={{ scale: 0, opacity: 1 }}
+                          animate={{ scale: 3, opacity: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="absolute inset-0 rounded-full border-2 border-red-400"
+                        />
+                      )}
+                      
+                      {/* Reflexo interno */}
+                      <div className="absolute top-0.5 left-0.5 w-1 h-1 bg-white/60 rounded-full"></div>
+                    </motion.div>
                   );
                 })}
 
