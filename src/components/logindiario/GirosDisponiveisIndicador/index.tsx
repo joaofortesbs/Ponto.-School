@@ -44,9 +44,9 @@ const GirosDisponiveisIndicador: React.FC<GirosDisponiveisIndicadorProps> = ({
           key={totalGiros}
           initial={{ scale: 1.1, opacity: 0.8 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="bg-gradient-to-r from-orange-500/30 to-orange-600/30 px-3 py-1 rounded-full border border-orange-300/40"
+          className="bg-gradient-to-r from-orange-500/30 to-orange-600/30 px-2 py-0.5 rounded-full border border-orange-300/40 w-6 h-6 flex items-center justify-center"
         >
-          <span className="text-sm font-bold text-white">
+          <span className="text-xs font-bold text-white">
             {totalGiros}
           </span>
         </motion.div>
