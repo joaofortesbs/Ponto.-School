@@ -36,7 +36,7 @@ const RecompensasDisponiveisCard: React.FC<RecompensasDisponiveisCardProps> = ({
     if (count === 0) return 25;
     if (count === 1) return 50;
     if (count === 2) return 99;
-    return 99; // Máximo
+    return 0; // Não há mais regenerações após a 3ª
   };
 
   const cost = getRegenerationCost(regenerationCount);
@@ -521,7 +521,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
   const handleRegeneratePrizes = () => {
     if (regenerationCount >= 3) return;
 
-    const cost = regenerationCount === 0 ? 25 : regenerationCount === 1 ? 50 : 99;
+    const cost = getRegenerationCost(regenerationCount);
     if (userSPs < cost) return;
 
     setUserSPs(prev => prev - cost);
