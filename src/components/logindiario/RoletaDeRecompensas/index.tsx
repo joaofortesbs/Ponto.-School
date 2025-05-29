@@ -251,17 +251,7 @@ const RoletaDeRecompensas: React.FC<RoletaDeRecompensasProps> = ({
         </div>
       </div>
 
-      {/* Resultado da Roleta */}
-      {showResult && selectedPrize && (
-        <motion.div
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="mt-4 p-4 bg-gradient-to-r from-green-500 to-green-600 rounded-lg text-white text-center"
-        >
-          <h3 className="text-lg font-bold">🎉 Parabéns!</h3>
-          <p className="text-sm mt-1">Você ganhou: <span className="font-bold">{selectedPrize}</span></p>
-        </motion.div>
-      )}
+      
 
       {/* Botão Girar */}
       <motion.button

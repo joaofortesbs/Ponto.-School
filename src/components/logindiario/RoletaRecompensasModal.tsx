@@ -183,19 +183,20 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
     }
   };
 
-  // Função para determinar o prêmio vencedor
+  // Função para determinar o prêmio vencedor com base na posição exata da roleta
   const determinePrize = () => {
-    const random = Math.random() * 100;
-    let cumulativeChance = 0;
+    // Normalizar o ângulo da roleta (0-360)
+    const normalizedAngle = ((currentRotation % 360) + 360) % 360;
 
-    for (const prize of prizes) {
-      cumulativeChance += prize.chance;
-      if (random <= cumulativeChance) {
-        return prize;
-      }
-    }
+    // O pino está no topo (0 graus), então calculamos qual setor está sob ele
+    // Invertemos a direção porque a roleta gira no sentido horário
+    const sectorAngle = (360 - normalizedAngle + 90) % 360;
 
-    return prizes[prizes.length - 1];
+    // Cada setor tem 60 graus (360/6)
+    const sectorIndex = Math.floor(sectorAngle / 60);
+
+    // Retornar o prêmio do setor correspondente
+    return prizes[sectorIndex] || prizes[0];
   };
 
   // Função para processar recompensas especiais
