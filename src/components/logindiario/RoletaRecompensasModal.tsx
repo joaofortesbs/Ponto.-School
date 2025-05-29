@@ -338,7 +338,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
 
   // Grupos de recompensas por regeneração
   const prizeGroups = [
-    // Grupo Inicial - Ordenado por probabilidade (maior para menor)
+    // Grupo Inicial (Padrão) - Ordenado por probabilidade (maior para menor)
     [
       { name: "250 XPs", color: "#FFA366", angle: 240, chance: 45 },
       { name: "100 SPs", color: "#FF9933", angle: 180, chance: 25 },
@@ -349,21 +349,30 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
     ],
     // Após 1ª Regeneração
     [
-      { name: "+50% Chance Aumentada", color: "#FF6B00", angle: 0, chance: 7 },
-      { name: "Kit Materiais", color: "#FF8C40", angle: 60, chance: 3 },
-      { name: "199 SPs", color: "#FFB366", angle: 120, chance: 25 },
-      { name: "75 XP", color: "#FF9933", angle: 180, chance: 45 },
-      { name: "15% Desconto Mercado", color: "#FFA366", angle: 240, chance: 5 },
+      { name: "50 XP", color: "#FF9933", angle: 180, chance: 45 },
+      { name: "99 SPs", color: "#FFA366", angle: 240, chance: 25 },
       { name: "+3 Giros Grátis", color: "#FF7A1A", angle: 300, chance: 15 },
+      { name: "Giro Especial", color: "#FF6B00", angle: 0, chance: 7 },
+      { name: "3 Avatares Raros", color: "#FF8C40", angle: 60, chance: 5 },
+      { name: "Kit de Estudos ENEM", color: "#FFB366", angle: 120, chance: 3 },
     ],
     // Após 2ª Regeneração
     [
-      { name: "299 SPs", color: "#FF6B00", angle: 0, chance: 25 },
-      { name: "150 XP", color: "#FF8C40", angle: 60, chance: 45 },
-      { name: "Giro Especial", color: "#FFB366", angle: 120, chance: 15 },
-      { name: "Conquistas Especiais", color: "#FF9933", angle: 180, chance: 7 },
-      { name: "Evento Exclusivo", color: "#FFA366", angle: 240, chance: 3 },
-      { name: "1 Badge Raro", color: "#FF7A1A", angle: 300, chance: 5 },
+      { name: "75 XP", color: "#FF9933", angle: 180, chance: 45 },
+      { name: "199 SPs", color: "#FFA366", angle: 240, chance: 25 },
+      { name: "+3 Giros Grátis", color: "#FF7A1A", angle: 300, chance: 15 },
+      { name: "+50% Chance Aumentada", color: "#FF6B00", angle: 0, chance: 7 },
+      { name: "15% Desconto Mercado", color: "#FF8C40", angle: 60, chance: 5 },
+      { name: "Kit Materiais", color: "#FFB366", angle: 120, chance: 3 },
+    ],
+    // Após 3ª Regeneração
+    [
+      { name: "150 XP", color: "#FF9933", angle: 180, chance: 45 },
+      { name: "299 SPs", color: "#FFA366", angle: 240, chance: 25 },
+      { name: "Giro Especial", color: "#FF7A1A", angle: 300, chance: 15 },
+      { name: "Conquistas Especiais", color: "#FF6B00", angle: 0, chance: 7 },
+      { name: "1 Badge Raro", color: "#FF8C40", angle: 60, chance: 5 },
+      { name: "Evento Exclusivo", color: "#FFB366", angle: 120, chance: 3 },
     ]
   ];
 
@@ -516,19 +525,19 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
 
     setUserSPs(prev => prev - cost);
     setRegenerationCount(prev => prev + 1);
-    setCurrentPrizeGroup(prev => Math.min(prev + 1, 2));
+    setCurrentPrizeGroup(prev => Math.min(prev + 1, 3));
   };
 
   // Função para obter ícone da recompensa
   const getPrizeIcon = (prizeName: string) => {
-    if (prizeName.includes('Avatar')) {
+    if (prizeName.includes('Avatar') || prizeName.includes('Avatares')) {
       return (
         <div className="w-4 h-4 bg-gradient-to-br from-purple-400 to-pink-600 rounded-full flex items-center justify-center">
           <div className="w-2 h-2 bg-white rounded-full"></div>
         </div>
       );
     }
-    if (prizeName.includes('Material')) {
+    if (prizeName.includes('Material') || prizeName.includes('Kit')) {
       return (
         <div className="w-4 h-4 bg-gradient-to-br from-blue-400 to-blue-600 rounded flex items-center justify-center">
           <div className="w-2 h-1 bg-white rounded"></div>
@@ -557,6 +566,14 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
         </div>
       );
     }
+    if (prizeName.includes('Giros') || prizeName.includes('Giro')) {
+      return (
+        <div className="w-4 h-4 bg-gradient-to-br from-green-400 to-emerald-600 rounded-full flex items-center justify-center">
+          <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+          <div className="absolute w-1 h-1 bg-green-200 rounded-full transform translate-x-0.5 -translate-y-0.5"></div>
+        </div>
+      );
+    }
     if (prizeName.includes('Chance') || prizeName.includes('Desconto')) {
       return (
         <div className="w-4 h-4 bg-gradient-to-br from-indigo-400 to-purple-600 rounded flex items-center justify-center">
@@ -575,6 +592,13 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
       return (
         <div className="w-4 h-4 bg-gradient-to-br from-pink-400 to-red-600 rounded-full flex items-center justify-center">
           <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+        </div>
+      );
+    }
+    if (prizeName.includes('ENEM')) {
+      return (
+        <div className="w-4 h-4 bg-gradient-to-br from-teal-400 to-cyan-600 rounded flex items-center justify-center">
+          <div className="w-2 h-1.5 bg-white rounded-sm"></div>
         </div>
       );
     }
