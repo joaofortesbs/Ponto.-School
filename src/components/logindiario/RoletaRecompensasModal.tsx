@@ -4,7 +4,7 @@ import {
   Dialog,
   DialogContent,
 } from "@/components/ui/dialog";
-import { Gift, X, Calendar, Clock } from "lucide-react";
+import { Gift, X, Calendar, Clock, Trophy } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface RoletaRecompensasModalProps {
@@ -57,10 +57,9 @@ const RecompensasDisponiveisCard: React.FC<RecompensasDisponiveisCardProps> = ({
         {/* Topo - Título e Botão de Regeneração */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            {/* Ícone personalizado da plataforma */}
-            <div className="w-5 h-5 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center shadow-lg">
-              <div className="w-2.5 h-2.5 bg-white rounded-full"></div>
-              <div className="absolute w-1 h-1 bg-orange-200 rounded-full transform -translate-x-0.5 -translate-y-0.5"></div>
+            {/* Ícone de troféu para recompensas */}
+            <div className="w-5 h-5 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center shadow-lg transform rotate-12">
+              <Trophy className="w-3 h-3 text-white drop-shadow-sm" />
             </div>
             <h3 className="text-sm font-semibold text-white">Recompensas Disponíveis</h3>
           </div>
