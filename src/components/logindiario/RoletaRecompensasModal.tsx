@@ -22,13 +22,15 @@ interface RecompensasDisponiveisCardProps {
   onRegeneratePrizes: () => void;
   regenerationCount: number;
   userSPs: number;
+  isSpinning: boolean;
 }
 
 const RecompensasDisponiveisCard: React.FC<RecompensasDisponiveisCardProps> = ({ 
   currentPrizes, 
   onRegeneratePrizes, 
   regenerationCount, 
-  userSPs
+  userSPs,
+  isSpinning 
 }) => {
   const getRegenerationCost = (count: number) => {
     if (count === 0) return 25;
@@ -38,7 +40,7 @@ const RecompensasDisponiveisCard: React.FC<RecompensasDisponiveisCardProps> = ({
   };
 
   const cost = getRegenerationCost(regenerationCount);
-  const canRegenerate = userSPs >= cost && regenerationCount < 3;
+  const canRegenerate = userSPs >= cost && regenerationCount < 3 && !isSpinning;
 
   return (
     <motion.div
@@ -75,7 +77,7 @@ const RecompensasDisponiveisCard: React.FC<RecompensasDisponiveisCardProps> = ({
                 ? 'bg-orange-500/20 hover:bg-orange-500/30 text-white border border-orange-300/30 cursor-pointer'
                 : 'bg-gray-500/20 text-gray-400 border border-gray-500/30 cursor-not-allowed opacity-50'
             }`}
-            title={!canRegenerate ? (userSPs < cost ? "SPs insuficientes" : "Limite de regenerações atingido") : ""}
+            title={!canRegenerate ? (isSpinning ? "Aguarde a roleta parar" : userSPs < cost ? "SPs insuficientes" : "Limite de regenerações atingido") : ""}
           >
             <motion.div
               animate={{ rotate: canRegenerate ? [0, 360] : 0 }}
@@ -498,31 +500,21 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
     }
   };
 
-  // Função para determinar o prêmio vencedor baseado na posição real do lápis
+  // Função para determinar o prêmio vencedor baseado em probabilidade
   const determinePrize = (finalAngle: number) => {
-    // Normaliza o ângulo para 0-360 graus
-    const normalizedAngle = ((finalAngle % 360) + 360) % 360;
-    
-    // O lápis aponta para a direita (0°), então calculamos qual setor está sendo apontado
-    // Cada setor tem 60° (360° / 6 setores)
-    const sectorSize = 60;
-    
-    // Encontra qual setor o lápis está apontando
-    // Adicionamos 30° para ajustar ao centro dos setores
-    const adjustedAngle = (normalizedAngle + 30) % 360;
-    const sectorIndex = Math.floor(adjustedAngle / sectorSize);
-    
-    // Mapeia os setores para os prêmios baseado nos ângulos definidos
-    const sectorToPrizeMap = {
-      0: prizes.find(p => p.angle === 0),   // 330° - 30° (setor 0)
-      1: prizes.find(p => p.angle === 60),  // 30° - 90° (setor 1)
-      2: prizes.find(p => p.angle === 120), // 90° - 150° (setor 2)
-      3: prizes.find(p => p.angle === 180), // 150° - 210° (setor 3)
-      4: prizes.find(p => p.angle === 240), // 210° - 270° (setor 4)
-      5: prizes.find(p => p.angle === 300), // 270° - 330° (setor 5)
-    };
-    
-    return sectorToPrizeMap[sectorIndex] || prizes[0];
+    // Gera um número aleatório para determinar o prêmio baseado na probabilidade
+    const random = Math.random() * 100;
+    let cumulativeChance = 0;
+
+    for (const prize of prizes) {
+      cumulativeChance += prize.chance;
+      if (random <= cumulativeChance) {
+        return prize;
+      }
+    }
+
+    // Fallback para o último prêmio
+    return prizes[prizes.length - 1];
   };
 
   // Função para regenerar recompensas
@@ -531,10 +523,6 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
 
     const cost = getRegenerationCost(regenerationCount);
     if (userSPs < cost) return;
-
-    // Remove o resultado anterior se existir
-    setShowResult(false);
-    setSelectedPrize(null);
 
     setUserSPs(prev => prev - cost);
     setRegenerationCount(prev => prev + 1);
@@ -1084,6 +1072,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                   onRegeneratePrizes={handleRegeneratePrizes}
                   regenerationCount={regenerationCount}
                   userSPs={userSPs}
+                  isSpinning={isSpinning}
                 />
               </motion.div>
             </motion.div>
