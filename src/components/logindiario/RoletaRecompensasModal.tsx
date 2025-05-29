@@ -93,27 +93,26 @@ const SequenciaGirosCard: React.FC<SequenciaGirosCardProps> = ({ isSpinning, sho
               initial={{ scale: 1.1, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.5, type: "spring" }}
-              className="text-lg font-bold text-white"
+              className="flex items-center justify-center gap-2 text-lg font-bold text-white"
             >
+              <motion.div
+                animate={{ 
+                  scale: [1, 1.05, 1]
+                }}
+                transition={{ 
+                  duration: 2,
+                  repeat: Infinity,
+                  repeatType: "reverse"
+                }}
+              >
+                <Calendar className="h-5 w-5 text-orange-300" />
+              </motion.div>
               {diasSequencia} dias seguidos!
             </motion.div>
           </div>
 
-          {/* Centro - Ícone e texto motivacional */}
+          {/* Centro - Texto motivacional */}
           <div className="text-center flex-1 flex flex-col justify-center">
-            <motion.div
-              animate={{ 
-                scale: [1, 1.05, 1]
-              }}
-              transition={{ 
-                duration: 2,
-                repeat: Infinity,
-                repeatType: "reverse"
-              }}
-              className="mb-2"
-            >
-              <Calendar className="h-6 w-6 text-orange-300 mx-auto" />
-            </motion.div>
             <p className="text-xs text-white/80 font-medium">
               Continue a sequência!
             </p>
@@ -157,25 +156,37 @@ const SequenciaGirosCard: React.FC<SequenciaGirosCardProps> = ({ isSpinning, sho
               scale: [1, 1.02, 1]
             }}
             transition={{ duration: 2, repeat: Infinity }}
-            className="text-lg font-bold text-white"
+            className="flex items-center justify-center gap-2 text-lg font-bold text-white"
           >
+            <motion.div
+              animate={{ 
+                scale: [1, 1.05, 1]
+              }}
+              transition={{ 
+                duration: 2,
+                repeat: Infinity,
+                repeatType: "reverse"
+              }}
+            >
+              <Calendar className="h-5 w-5 text-orange-300" />
+            </motion.div>
             {diasSequencia} dias seguidos!
           </motion.div>
         </div>
 
         {/* Centro - Cronômetro */}
         <div className="text-center flex-1 flex flex-col justify-center">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-            className="mb-2"
-          >
-            <Clock className="h-5 w-5 text-orange-300 mx-auto" />
-          </motion.div>
-          
-          <p className="text-xs text-white/80 font-medium mb-1">
-            Próximo giro liberado em:
-          </p>
+          <div className="flex items-center justify-center gap-2 mb-1">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+            >
+              <Clock className="h-4 w-4 text-orange-300" />
+            </motion.div>
+            <p className="text-xs text-white/80 font-medium">
+              Próximo giro liberado em:
+            </p>
+          </div>
           
           {/* Cronômetro Digital */}
           <motion.div
