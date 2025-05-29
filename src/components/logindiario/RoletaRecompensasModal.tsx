@@ -686,9 +686,9 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                     stiffness: 300,
                     duration: 0.5 
                   }}
-                  className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[101]"
+                  className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[101]"
                   style={{
-                    position: 'fixed',
+                    position: 'absolute',
                     top: '50%',
                     left: '50%',
                     transform: 'translate(-50%, -50%)',
