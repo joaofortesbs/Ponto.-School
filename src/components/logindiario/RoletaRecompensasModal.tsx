@@ -5,13 +5,256 @@ import {
   Dialog,
   DialogContent,
 } from "@/components/ui/dialog";
-import { Gift, X } from "lucide-react";
+import { Gift, X, Calendar, Clock } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface RoletaRecompensasModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
+
+interface SequenciaGirosCardProps {
+  isSpinning: boolean;
+  showResult: boolean;
+}
+
+const SequenciaGirosCard: React.FC<SequenciaGirosCardProps> = ({ isSpinning, showResult }) => {
+  const [diasSequencia, setDiasSequencia] = React.useState(4); // Exemplo: 4 dias seguidos
+  const [proximoGiroEm, setProximoGiroEm] = React.useState<string>("");
+  const [jaGirouHoje, setJaGirouHoje] = React.useState(false);
+  const [tempoRestante, setTempoRestante] = React.useState<{
+    horas: number;
+    minutos: number;
+    segundos: number;
+  }>({ horas: 0, minutos: 0, segundos: 0 });
+
+  // Efeito para calcular tempo até próximo giro (meia-noite)
+  React.useEffect(() => {
+    const calcularProximoGiro = () => {
+      const agora = new Date();
+      const proximaMeiaNoite = new Date();
+      proximaMeiaNoite.setDate(agora.getDate() + 1);
+      proximaMeiaNoite.setHours(0, 0, 0, 0);
+      
+      const diferenca = proximaMeiaNoite.getTime() - agora.getTime();
+      
+      const horas = Math.floor(diferenca / (1000 * 60 * 60));
+      const minutos = Math.floor((diferenca % (1000 * 60 * 60)) / (1000 * 60));
+      const segundos = Math.floor((diferenca % (1000 * 60)) / 1000);
+      
+      setTempoRestante({ horas, minutos, segundos });
+    };
+
+    // Calcular imediatamente
+    calcularProximoGiro();
+
+    // Atualizar a cada segundo se já girou hoje
+    let intervalo: NodeJS.Timeout | null = null;
+    if (jaGirouHoje) {
+      intervalo = setInterval(calcularProximoGiro, 1000);
+    }
+
+    return () => {
+      if (intervalo) clearInterval(intervalo);
+    };
+  }, [jaGirouHoje]);
+
+  // Efeito para detectar quando o usuário girou a roleta
+  React.useEffect(() => {
+    if (showResult && !jaGirouHoje) {
+      setJaGirouHoje(true);
+      setDiasSequencia(prev => prev + 1); // Incrementa a sequência
+    }
+  }, [showResult, jaGirouHoje]);
+
+  // Estado 1: Antes de girar (Contador de Dias)
+  if (!jaGirouHoje) {
+    return (
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.6, type: "spring", damping: 20 }}
+        className="w-48 h-32 rounded-xl overflow-hidden relative"
+        style={{
+          background: "linear-gradient(135deg, #00C9FF 0%, #92FE9D 25%, #00C9FF 50%, #92FE9D 75%, #00C9FF 100%)",
+          backgroundSize: "200% 200%",
+          animation: "gradientShift 4s ease infinite",
+          boxShadow: "0 8px 32px rgba(0, 201, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)"
+        }}
+      >
+        {/* Efeito de brilho no fundo */}
+        <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/10 pointer-events-none" />
+        
+        <div className="relative z-10 p-4 h-full flex flex-col justify-between">
+          {/* Topo - Label e dias */}
+          <div className="text-center">
+            <p className="text-xs text-white/80 font-medium mb-1">
+              Dias de sequência:
+            </p>
+            <motion.div
+              key={diasSequencia}
+              initial={{ scale: 1.2, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.5, type: "spring" }}
+              className="text-lg font-bold text-white"
+              style={{ textShadow: "0 2px 4px rgba(0,0,0,0.3)" }}
+            >
+              {diasSequencia} dias seguidos!
+            </motion.div>
+          </div>
+
+          {/* Centro - Ícone e texto motivacional */}
+          <div className="text-center flex-1 flex flex-col justify-center">
+            <motion.div
+              animate={{ 
+                scale: [1, 1.1, 1],
+                rotate: [0, 5, -5, 0]
+              }}
+              transition={{ 
+                duration: 2,
+                repeat: Infinity,
+                repeatType: "reverse"
+              }}
+              className="mb-2"
+            >
+              <Calendar className="h-6 w-6 text-white mx-auto drop-shadow-lg" />
+            </motion.div>
+            <p className="text-xs text-white font-semibold">
+              Continue a sequência!
+            </p>
+          </div>
+
+          {/* Rodapé - Status */}
+          <div className="text-center">
+            <div className="bg-white/20 backdrop-blur-sm rounded-lg px-2 py-1">
+              <p className="text-xs text-white/90 font-medium">
+                Gire hoje para manter!
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Partículas decorativas */}
+        <div className="absolute top-2 right-2 w-2 h-2 bg-white/60 rounded-full animate-pulse" />
+        <div className="absolute bottom-3 left-3 w-1 h-1 bg-white/40 rounded-full animate-pulse" style={{ animationDelay: "0.5s" }} />
+        
+        <style jsx>{`
+          @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+          }
+        `}</style>
+      </motion.div>
+    );
+  }
+
+  // Estado 2: Após girar (Cronômetro)
+  return (
+    <motion.div
+      initial={{ scale: 1.05, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ duration: 0.8, type: "spring", damping: 15 }}
+      className="w-48 h-32 rounded-xl overflow-hidden relative"
+      style={{
+        background: "linear-gradient(135deg, #667eea 0%, #764ba2 25%, #667eea 50%, #764ba2 75%, #667eea 100%)",
+        backgroundSize: "200% 200%",
+        animation: "gradientShift 6s ease infinite",
+        boxShadow: "0 8px 32px rgba(102, 126, 234, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2)"
+      }}
+    >
+      {/* Efeito de brilho mais intenso após giro */}
+      <div className="absolute inset-0 bg-gradient-to-br from-white/15 via-transparent to-black/10 pointer-events-none" />
+      
+      <div className="relative z-10 p-4 h-full flex flex-col justify-between">
+        {/* Topo - Mantém a sequência visível */}
+        <div className="text-center">
+          <p className="text-xs text-white/80 font-medium mb-1">
+            Dias de sequência:
+          </p>
+          <motion.div
+            animate={{ 
+              scale: [1, 1.05, 1],
+              textShadow: [
+                "0 2px 4px rgba(0,0,0,0.3)",
+                "0 4px 8px rgba(255,255,255,0.3)",
+                "0 2px 4px rgba(0,0,0,0.3)"
+              ]
+            }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="text-lg font-bold text-white"
+          >
+            {diasSequencia} dias seguidos!
+          </motion.div>
+        </div>
+
+        {/* Centro - Cronômetro */}
+        <div className="text-center flex-1 flex flex-col justify-center">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            className="mb-2"
+          >
+            <Clock className="h-5 w-5 text-white mx-auto drop-shadow-lg" />
+          </motion.div>
+          
+          <p className="text-xs text-white/90 font-medium mb-1">
+            Próximo giro liberado em:
+          </p>
+          
+          {/* Cronômetro Digital */}
+          <motion.div
+            key={`${tempoRestante.horas}-${tempoRestante.minutos}-${tempoRestante.segundos}`}
+            initial={{ scale: 1.1, opacity: 0.8 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-black/30 backdrop-blur-sm rounded-lg px-2 py-1 border border-white/20"
+          >
+            <div className="text-sm font-mono font-bold text-white tracking-wider">
+              {String(tempoRestante.horas).padStart(2, '0')}:
+              {String(tempoRestante.minutos).padStart(2, '0')}:
+              {String(tempoRestante.segundos).padStart(2, '0')}
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Indicador visual de que o giro foi feito */}
+        <div className="text-center">
+          <div className="bg-green-500/80 backdrop-blur-sm rounded-lg px-2 py-1 border border-green-300/30">
+            <p className="text-xs text-white font-semibold">
+              ✅ Giro realizado hoje!
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Partículas animadas mais intensas */}
+      <motion.div
+        animate={{ 
+          x: [0, 10, -10, 0],
+          y: [0, -5, 5, 0],
+          opacity: [0.6, 1, 0.6]
+        }}
+        transition={{ duration: 3, repeat: Infinity }}
+        className="absolute top-2 right-2 w-2 h-2 bg-yellow-300/80 rounded-full"
+      />
+      <motion.div
+        animate={{ 
+          x: [0, -8, 8, 0],
+          y: [0, 8, -8, 0],
+          opacity: [0.4, 0.8, 0.4]
+        }}
+        transition={{ duration: 4, repeat: Infinity, delay: 1 }}
+        className="absolute bottom-3 left-3 w-1.5 h-1.5 bg-cyan-300/70 rounded-full"
+      />
+      
+      <style jsx>{`
+        @keyframes gradientShift {
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+      `}</style>
+    </motion.div>
+  );
+};
 
 const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
   open,
@@ -661,11 +904,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                 transition={{ delay: 0.8, duration: 0.6 }}
                 className="flex flex-col justify-center"
               >
-                <div className="bg-white/10 backdrop-blur-sm border border-orange-200/30 rounded-xl p-4 w-48 h-32 flex items-center justify-center">
-                  <h3 className="text-white font-semibold text-center text-sm">
-                    Sua sequência de giros
-                  </h3>
-                </div>
+                <SequenciaGirosCard isSpinning={isSpinning} showResult={showResult} />
               </motion.div>
             </motion.div>
           </div>
