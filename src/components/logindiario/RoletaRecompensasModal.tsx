@@ -17,6 +17,110 @@ interface SequenciaGirosCardProps {
   showResult: boolean;
 }
 
+interface RecompensasDisponiveisCardProps {
+  currentPrizes: Array<{name: string; color: string; angle: number; icon: React.ReactNode; chance: number}>;
+  onRegeneratePrizes: () => void;
+  regenerationCount: number;
+  userSPs: number;
+}
+
+const RecompensasDisponiveisCard: React.FC<RecompensasDisponiveisCardProps> = ({ 
+  currentPrizes, 
+  onRegeneratePrizes, 
+  regenerationCount, 
+  userSPs 
+}) => {
+  const getRegenerationCost = (count: number) => {
+    if (count === 0) return 25;
+    if (count === 1) return 50;
+    if (count === 2) return 99;
+    return 99; // Máximo
+  };
+
+  const cost = getRegenerationCost(regenerationCount);
+  const canRegenerate = userSPs >= cost && regenerationCount < 3;
+
+  return (
+    <motion.div
+      initial={{ scale: 0.95, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ duration: 0.6, type: "spring", damping: 20 }}
+      className="w-56 h-72 rounded-xl overflow-hidden relative bg-white/10 backdrop-blur-sm border border-orange-200/30 mt-4"
+      style={{
+        boxShadow: "0 4px 16px rgba(255, 107, 0, 0.1)"
+      }}
+    >
+      {/* Efeito de brilho sutil */}
+      <div className="absolute inset-0 bg-gradient-to-br from-orange-100/5 via-transparent to-orange-200/5 pointer-events-none" />
+
+      <div className="relative z-10 p-4 h-full flex flex-col">
+        {/* Topo - Título e Botão de Regeneração */}
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold text-white">Recompensas Disponíveis</h3>
+          
+          {/* Botão de Regeneração */}
+          <motion.button
+            whileHover={canRegenerate ? { scale: 1.05 } : {}}
+            whileTap={canRegenerate ? { scale: 0.95 } : {}}
+            onClick={canRegenerate ? onRegeneratePrizes : undefined}
+            disabled={!canRegenerate}
+            className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium transition-all duration-200 ${
+              canRegenerate 
+                ? 'bg-orange-500/20 hover:bg-orange-500/30 text-white border border-orange-300/30 cursor-pointer'
+                : 'bg-gray-500/20 text-gray-400 border border-gray-500/30 cursor-not-allowed opacity-50'
+            }`}
+            title={!canRegenerate ? (userSPs < cost ? "SPs insuficientes" : "Limite de regenerações atingido") : ""}
+          >
+            <motion.div
+              animate={{ rotate: canRegenerate ? [0, 360] : 0 }}
+              transition={{ duration: 0.6, ease: "easeInOut" }}
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </motion.div>
+            <span>{cost} SPs</span>
+          </motion.button>
+        </div>
+
+        {/* Grade de Recompensas */}
+        <div className="flex-1 grid grid-cols-3 gap-2">
+          {currentPrizes.map((prize, index) => (
+            <motion.div
+              key={`${prize.name}-${regenerationCount}-${index}`}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: index * 0.1, duration: 0.4 }}
+              className="relative bg-white/5 backdrop-blur-sm rounded-lg p-2 border border-orange-200/20 hover:border-orange-300/40 transition-all duration-200"
+            >
+              {/* Badge de Probabilidade */}
+              <div className="absolute -top-1 -right-1 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-orange-300/50">
+                {prize.chance}%
+              </div>
+
+              {/* Ícone da Recompensa */}
+              <div className="flex items-center justify-center mb-1.5">
+                <div className="w-6 h-6 flex items-center justify-center">
+                  {prize.icon}
+                </div>
+              </div>
+
+              {/* Nome da Recompensa */}
+              <div className="text-center">
+                <p className="text-[9px] text-white/90 font-medium leading-tight">
+                  {prize.name.split(' ').map((word, i) => (
+                    <span key={i} className="block">{word}</span>
+                  ))}
+                </p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
 const SequenciaGirosCard: React.FC<SequenciaGirosCardProps> = ({ isSpinning, showResult }) => {
   const [diasSequencia, setDiasSequencia] = React.useState(4); // Exemplo: 4 dias seguidos
   const [proximoGiroEm, setProximoGiroEm] = React.useState<string>("");
@@ -219,19 +323,46 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
   const [pinoTilt, setPinoTilt] = React.useState(0); // Estado para inclinação do lápis
   const [pinoColor, setPinoColor] = React.useState('#FF6B00'); // Cor do pino
   const [activePoint, setActivePoint] = React.useState<number | null>(null); // Ponto ativo atual
+  const [regenerationCount, setRegenerationCount] = React.useState(0);
+  const [userSPs, setUserSPs] = React.useState(150); // Mock de SPs do usuário
 
   // Ref para áudio
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
 
-  // Configuração dos prêmios da roleta (6 setores)
-  const prizes = [
-    { name: "250 XP", color: "#FF6B00", angle: 0 },
-    { name: "100 SPs", color: "#FF8C40", angle: 60 },
-    { name: "Epictus Turbo", color: "#FFB366", angle: 120 },
-    { name: "Avatar Raro", color: "#FF9933", angle: 180 },
-    { name: "999 SPs", color: "#FFA366", angle: 240 },
-    { name: "Material Exclusivo", color: "#FF7A1A", angle: 300 },
+  // Grupos de recompensas por regeneração
+  const prizeGroups = [
+    // Grupo Inicial
+    [
+      { name: "3 Avatares Raros", color: "#FF6B00", angle: 0, chance: 5 },
+      { name: "+3 Giros Grátis", color: "#FF8C40", angle: 60, chance: 15 },
+      { name: "Kit Estudos ENEM", color: "#FFB366", angle: 120, chance: 3 },
+      { name: "99 SPs", color: "#FF9933", angle: 180, chance: 25 },
+      { name: "50 XP", color: "#FFA366", angle: 240, chance: 45 },
+      { name: "Giro Especial", color: "#FF7A1A", angle: 300, chance: 7 },
+    ],
+    // Após 1ª Regeneração
+    [
+      { name: "+50% Chance Aumentada", color: "#FF6B00", angle: 0, chance: 7 },
+      { name: "Kit Materiais", color: "#FF8C40", angle: 60, chance: 3 },
+      { name: "199 SPs", color: "#FFB366", angle: 120, chance: 25 },
+      { name: "75 XP", color: "#FF9933", angle: 180, chance: 45 },
+      { name: "15% Desconto Mercado", color: "#FFA366", angle: 240, chance: 5 },
+      { name: "+3 Giros Grátis", color: "#FF7A1A", angle: 300, chance: 15 },
+    ],
+    // Após 2ª Regeneração
+    [
+      { name: "299 SPs", color: "#FF6B00", angle: 0, chance: 25 },
+      { name: "150 XP", color: "#FF8C40", angle: 60, chance: 45 },
+      { name: "Giro Especial", color: "#FFB366", angle: 120, chance: 15 },
+      { name: "Conquistas Especiais", color: "#FF9933", angle: 180, chance: 7 },
+      { name: "Evento Exclusivo", color: "#FFA366", angle: 240, chance: 3 },
+      { name: "1 Badge Raro", color: "#FF7A1A", angle: 300, chance: 5 },
+    ]
   ];
+
+  // Estado atual dos prêmios
+  const [currentPrizeGroup, setCurrentPrizeGroup] = React.useState(0);
+  const prizes = prizeGroups[currentPrizeGroup];
 
   // Inicialização do áudio
   React.useEffect(() => {
@@ -352,15 +483,106 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
     }
   };
 
-  // Função para determinar o prêmio vencedor
+  // Função para determinar o prêmio vencedor baseado em probabilidade
   const determinePrize = (finalAngle: number) => {
-    // Normaliza o ângulo para 0-360
-    const normalizedAngle = ((finalAngle % 360) + 360) % 360;
+    // Gera um número aleatório para determinar o prêmio baseado na probabilidade
+    const random = Math.random() * 100;
+    let cumulativeChance = 0;
 
-    // Calcula qual setor foi selecionado
-    const sectorIndex = Math.floor(normalizedAngle / 60);
-    return prizes[sectorIndex] || prizes[0];
+    for (const prize of prizes) {
+      cumulativeChance += prize.chance;
+      if (random <= cumulativeChance) {
+        return prize;
+      }
+    }
+
+    // Fallback para o último prêmio
+    return prizes[prizes.length - 1];
   };
+
+  // Função para regenerar recompensas
+  const handleRegeneratePrizes = () => {
+    if (regenerationCount >= 3) return;
+
+    const cost = regenerationCount === 0 ? 25 : regenerationCount === 1 ? 50 : 99;
+    if (userSPs < cost) return;
+
+    setUserSPs(prev => prev - cost);
+    setRegenerationCount(prev => prev + 1);
+    setCurrentPrizeGroup(prev => Math.min(prev + 1, 2));
+  };
+
+  // Função para obter ícone da recompensa
+  const getPrizeIcon = (prizeName: string) => {
+    if (prizeName.includes('Avatares') || prizeName.includes('Avatar')) {
+      return (
+        <div className="w-4 h-4 bg-gradient-to-br from-purple-400 to-pink-600 rounded-full flex items-center justify-center">
+          <div className="w-2 h-2 bg-white rounded-full"></div>
+        </div>
+      );
+    }
+    if (prizeName.includes('Giros') || prizeName.includes('Giro')) {
+      return (
+        <div className="w-4 h-4 bg-gradient-to-br from-green-400 to-emerald-600 rounded-full flex items-center justify-center">
+          <div className="w-1 h-1 bg-white rounded-full"></div>
+          <div className="w-0.5 h-2 bg-white ml-0.5"></div>
+        </div>
+      );
+    }
+    if (prizeName.includes('Kit') || prizeName.includes('Material')) {
+      return (
+        <div className="w-4 h-4 bg-gradient-to-br from-blue-400 to-blue-600 rounded flex items-center justify-center">
+          <div className="w-2 h-1 bg-white rounded"></div>
+        </div>
+      );
+    }
+    if (prizeName.includes('SP')) {
+      return (
+        <div className="w-4 h-4 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center">
+          <div className="w-2 h-2 bg-white rounded-full"></div>
+        </div>
+      );
+    }
+    if (prizeName.includes('XP')) {
+      return (
+        <div className="w-4 h-4 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center text-[8px] font-bold text-white">
+          XP
+        </div>
+      );
+    }
+    if (prizeName.includes('Chance') || prizeName.includes('Desconto')) {
+      return (
+        <div className="w-4 h-4 bg-gradient-to-br from-indigo-400 to-purple-600 rounded flex items-center justify-center">
+          <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+        </div>
+      );
+    }
+    if (prizeName.includes('Conquistas') || prizeName.includes('Badge')) {
+      return (
+        <div className="w-4 h-4 bg-gradient-to-br from-amber-400 to-yellow-600 rounded flex items-center justify-center">
+          <div className="w-2 h-1.5 bg-white rounded-sm"></div>
+        </div>
+      );
+    }
+    if (prizeName.includes('Evento')) {
+      return (
+        <div className="w-4 h-4 bg-gradient-to-br from-pink-400 to-red-600 rounded-full flex items-center justify-center">
+          <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+        </div>
+      );
+    }
+    return (
+      <div className="w-4 h-4 bg-gradient-to-br from-gray-400 to-gray-600 rounded flex items-center justify-center">
+        <div className="w-2 h-2 bg-white rounded"></div>
+      </div>
+    );
+  };
+
+  // Adiciona ícone aos prêmios
+  const prizesWithIcons = prizes.map(prize => ({
+    ...prize,
+    icon: getPrizeIcon(prize.name)
+  }));
 
   // Função principal de giro da roleta
   const spinWheel = () => {
@@ -604,7 +826,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
 
                       {/* Textos e ícones dos prêmios nos setores */}
                       <div className="absolute inset-0 flex items-center justify-center">
-                        {prizes.map((prize, index) => {
+                        {prizesWithIcons.map((prize, index) => {
                           const angle = prize.angle + 30; // Centro do setor (30° do início)
                           const radius = 80; // Distância do centro para o texto
 
@@ -613,54 +835,9 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                           const x = radius * Math.cos(angleRad);
                           const y = radius * Math.sin(angleRad);
 
-                          // Definir ícone baseado no prêmio
-                          const getIcon = (prizeName: string) => {
-                            if (prizeName.includes('250 XP')) {
-                              return (
-                                <div className="w-4 h-4 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center text-[8px] font-bold text-white">
-                                  XP
-                                </div>
-                              );
-                            }
-                            if (prizeName.includes('100 SPs') || prizeName.includes('999 SPs')) {
-                              return (
-                                <div className="w-4 h-4 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center">
-                                  <div className="w-2 h-2 bg-white rounded-full"></div>
-                                </div>
-                              );
-                            }
-                            if (prizeName.includes('Epictus Turbo')) {
-                              return (
-                                <div className="w-4 h-4 bg-gradient-to-br from-blue-400 to-purple-600 rounded flex items-center justify-center">
-                                  <div className="w-1 h-1 bg-white rounded-full"></div>
-                                  <div className="w-0.5 h-2 bg-white ml-0.5"></div>
-                                </div>
-                              );
-                            }
-                            if (prizeName.includes('Avatar Raro')) {
-                              return (
-                                <div className="w-4 h-4 bg-gradient-to-br from-purple-400 to-pink-600 rounded-full flex items-center justify-center">
-                                  <div className="w-2 h-2 bg-white rounded-full"></div>
-                                </div>
-                              );
-                            }
-                            if (prizeName.includes('Material Exclusivo')) {
-                              return (
-                                <div className="w-4 h-4 bg-gradient-to-br from-green-400 to-emerald-600 rounded flex items-center justify-center">
-                                  <div className="w-2 h-1 bg-white rounded"></div>
-                                </div>
-                              );
-                            }
-                            return (
-                              <div className="w-4 h-4 bg-gradient-to-br from-gray-400 to-gray-600 rounded flex items-center justify-center">
-                                <div className="w-2 h-2 bg-white rounded"></div>
-                              </div>
-                            );
-                          };
-
                           return (
                             <div
-                              key={`prize-${index}`}
+                              key={`prize-${index}-${currentPrizeGroup}`}
                               className="absolute text-white font-bold text-xs text-center flex flex-col items-center"
                               style={{
                                 left: '50%',
@@ -680,7 +857,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                                   filter: 'drop-shadow(1px 1px 2px rgba(0,0,0,0.8))'
                                 }}
                               >
-                                {getIcon(prize.name)}
+                                {prize.icon}
                               </div>
 
                               {/* Texto do prêmio */}
@@ -847,14 +1024,23 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                 </motion.button>
               </div>
 
-              {/* Card Sequência de Giros */}
+              {/* Cards laterais */}
               <motion.div
                 initial={{ x: 30, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ delay: 0.8, duration: 0.6 }}
-                className="flex flex-col justify-center"
+                className="flex flex-col justify-start"
               >
+                {/* Card Sequência de Giros */}
                 <SequenciaGirosCard isSpinning={isSpinning} showResult={showResult} />
+                
+                {/* Card Recompensas Disponíveis */}
+                <RecompensasDisponiveisCard 
+                  currentPrizes={prizesWithIcons}
+                  onRegeneratePrizes={handleRegeneratePrizes}
+                  regenerationCount={regenerationCount}
+                  userSPs={userSPs}
+                />
               </motion.div>
             </motion.div>
           </div>
