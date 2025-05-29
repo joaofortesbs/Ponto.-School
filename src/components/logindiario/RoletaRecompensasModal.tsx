@@ -45,7 +45,7 @@ const RecompensasDisponiveisCard: React.FC<RecompensasDisponiveisCardProps> = ({
       initial={{ scale: 0.95, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ duration: 0.6, type: "spring", damping: 20 }}
-      className="w-56 h-72 rounded-xl overflow-hidden relative bg-white/10 backdrop-blur-sm border border-orange-200/30 mt-4"
+      className="w-72 h-72 rounded-xl overflow-hidden relative bg-white/10 backdrop-blur-sm border border-orange-200/30 mt-4"
       style={{
         boxShadow: "0 4px 16px rgba(255, 107, 0, 0.1)"
       }}
@@ -91,7 +91,7 @@ const RecompensasDisponiveisCard: React.FC<RecompensasDisponiveisCardProps> = ({
         </div>
 
         {/* Grade de Recompensas */}
-        <div className="flex-1 grid grid-cols-3 gap-2">
+        <div className="flex-1 grid grid-cols-3 gap-3">
           {currentPrizes.map((prize, index) => (
             <motion.div
               key={`${prize.name}-${regenerationCount}-${index}`}
@@ -184,7 +184,7 @@ const SequenciaGirosCard: React.FC<SequenciaGirosCardProps> = ({ isSpinning, sho
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.6, type: "spring", damping: 20 }}
-        className="w-56 h-32 rounded-xl overflow-hidden relative bg-white/10 backdrop-blur-sm border border-orange-200/30"
+        className="w-72 h-32 rounded-xl overflow-hidden relative bg-white/10 backdrop-blur-sm border border-orange-200/30"
         style={{
           boxShadow: "0 4px 16px rgba(255, 107, 0, 0.1)"
         }}
@@ -247,7 +247,7 @@ const SequenciaGirosCard: React.FC<SequenciaGirosCardProps> = ({ isSpinning, sho
       initial={{ scale: 1.05, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ duration: 0.8, type: "spring", damping: 15 }}
-      className="w-56 h-32 rounded-xl overflow-hidden relative bg-white/15 backdrop-blur-sm border border-orange-200/40"
+      className="w-72 h-32 rounded-xl overflow-hidden relative bg-white/15 backdrop-blur-sm border border-orange-200/40"
       style={{
         boxShadow: "0 6px 20px rgba(255, 107, 0, 0.15)"
       }}
@@ -338,14 +338,14 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
 
   // Grupos de recompensas por regeneração
   const prizeGroups = [
-    // Grupo Inicial
+    // Grupo Inicial - Ordenado por probabilidade (maior para menor)
     [
-      { name: "3 Avatares Raros", color: "#FF6B00", angle: 0, chance: 5 },
-      { name: "+3 Giros Grátis", color: "#FF8C40", angle: 60, chance: 15 },
-      { name: "Kit Estudos ENEM", color: "#FFB366", angle: 120, chance: 3 },
-      { name: "99 SPs", color: "#FF9933", angle: 180, chance: 25 },
-      { name: "50 XP", color: "#FFA366", angle: 240, chance: 45 },
-      { name: "Giro Especial", color: "#FF7A1A", angle: 300, chance: 7 },
+      { name: "250 XPs", color: "#FFA366", angle: 240, chance: 45 },
+      { name: "100 SPs", color: "#FF9933", angle: 180, chance: 25 },
+      { name: "Avatar Raro", color: "#FF8C40", angle: 60, chance: 15 },
+      { name: "Epictus Turbo", color: "#FF7A1A", angle: 300, chance: 7 },
+      { name: "Material Exclusivo", color: "#FFB366", angle: 120, chance: 5 },
+      { name: "999 SPs", color: "#FF6B00", angle: 0, chance: 3 },
     ],
     // Após 1ª Regeneração
     [
@@ -521,22 +521,14 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
 
   // Função para obter ícone da recompensa
   const getPrizeIcon = (prizeName: string) => {
-    if (prizeName.includes('Avatares') || prizeName.includes('Avatar')) {
+    if (prizeName.includes('Avatar')) {
       return (
         <div className="w-4 h-4 bg-gradient-to-br from-purple-400 to-pink-600 rounded-full flex items-center justify-center">
           <div className="w-2 h-2 bg-white rounded-full"></div>
         </div>
       );
     }
-    if (prizeName.includes('Giros') || prizeName.includes('Giro')) {
-      return (
-        <div className="w-4 h-4 bg-gradient-to-br from-green-400 to-emerald-600 rounded-full flex items-center justify-center">
-          <div className="w-1 h-1 bg-white rounded-full"></div>
-          <div className="w-0.5 h-2 bg-white ml-0.5"></div>
-        </div>
-      );
-    }
-    if (prizeName.includes('Kit') || prizeName.includes('Material')) {
+    if (prizeName.includes('Material')) {
       return (
         <div className="w-4 h-4 bg-gradient-to-br from-blue-400 to-blue-600 rounded flex items-center justify-center">
           <div className="w-2 h-1 bg-white rounded"></div>
@@ -554,6 +546,14 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
       return (
         <div className="w-4 h-4 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center text-[8px] font-bold text-white">
           XP
+        </div>
+      );
+    }
+    if (prizeName.includes('Turbo')) {
+      return (
+        <div className="w-4 h-4 bg-gradient-to-br from-violet-400 to-purple-600 rounded-full flex items-center justify-center">
+          <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+          <div className="absolute w-1 h-1 bg-purple-200 rounded-full transform translate-x-0.5 -translate-y-0.5"></div>
         </div>
       );
     }
