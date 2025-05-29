@@ -363,7 +363,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.6, duration: 0.8, type: "spring", damping: 15 }}
-              className="mt-8 flex justify-center"
+              className="mt-8 flex justify-center gap-6"
             >
               <div className="relative">
                 {/* Container da Roleta */}
@@ -653,6 +653,20 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                   {isSpinning ? 'Girando...' : 'Girar Roleta'}
                 </motion.button>
               </div>
+
+              {/* Card Sequência de Giros */}
+              <motion.div
+                initial={{ x: 30, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.8, duration: 0.6 }}
+                className="flex flex-col justify-center"
+              >
+                <div className="bg-white/10 backdrop-blur-sm border border-orange-200/30 rounded-xl p-4 w-48 h-32 flex items-center justify-center">
+                  <h3 className="text-white font-semibold text-center text-sm">
+                    Sua sequência de giros
+                  </h3>
+                </div>
+              </motion.div>
             </motion.div>
           </div>
 
