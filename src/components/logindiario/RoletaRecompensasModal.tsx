@@ -64,7 +64,7 @@ const RecompensasDisponiveisCard: React.FC<RecompensasDisponiveisCardProps> = ({
             </div>
             <h3 className="text-sm font-semibold text-white">Recompensas Disponíveis</h3>
           </div>
-          
+
           {/* Botão de Regeneração */}
           <motion.button
             whileHover={canRegenerate ? { scale: 1.05 } : {}}
@@ -367,8 +367,8 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
     ],
     // Após 3ª Regeneração
     [
-      { name: "150 XP", color: "#FF9933", angle: 180, chance: 45 },
       { name: "299 SPs", color: "#FFA366", angle: 240, chance: 25 },
+      { name: "150 XP", color: "#FF9933", angle: 180, chance: 45 },
       { name: "Giro Especial", color: "#FF7A1A", angle: 300, chance: 15 },
       { name: "Conquistas Especiais", color: "#FF6B00", angle: 0, chance: 7 },
       { name: "1 Badge Raro", color: "#FF8C40", angle: 60, chance: 5 },
@@ -522,6 +522,10 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
 
     const cost = regenerationCount === 0 ? 25 : regenerationCount === 1 ? 50 : 99;
     if (userSPs < cost) return;
+
+    // Remove o resultado anterior se existir
+    setShowResult(false);
+    setSelectedPrize(null);
 
     setUserSPs(prev => prev - cost);
     setRegenerationCount(prev => prev + 1);
@@ -1064,7 +1068,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
               >
                 {/* Card Sequência de Giros */}
                 <SequenciaGirosCard isSpinning={isSpinning} showResult={showResult} />
-                
+
                 {/* Card Recompensas Disponíveis */}
                 <RecompensasDisponiveisCard 
                   currentPrizes={prizesWithIcons}
