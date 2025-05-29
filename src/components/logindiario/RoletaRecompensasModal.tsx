@@ -58,7 +58,7 @@ const RecompensasDisponiveisCard: React.FC<RecompensasDisponiveisCardProps> = ({
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             {/* Ícone de troféu para recompensas */}
-            <div className="w-5 h-5 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center shadow-lg transform rotate-12">
+            <div className="w-5 h-5 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center shadow-lg">
               <Trophy className="w-3 h-3 text-white drop-shadow-sm" />
             </div>
             <h3 className="text-sm font-semibold text-white">Recompensas Disponíveis</h3>
