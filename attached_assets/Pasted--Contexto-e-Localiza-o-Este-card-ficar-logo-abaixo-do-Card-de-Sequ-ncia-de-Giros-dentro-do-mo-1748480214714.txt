@@ -1,0 +1,101 @@
+
+🎯 Contexto e Localização:
+Este card ficará logo abaixo do Card de Sequência de Giros, dentro do modal de Login Diário.
+
+O design deve ser exatamente no mesmo estilo do Card de Sequência: moderno, elegante, com gradientes, sombras suaves, bordas arredondadas e uma estética tecnológica, alinhado visualmente com toda a interface da plataforma.
+
+🔥 Função Principal do Card:
+Exibir as recompensas atualmente disponíveis na roleta.
+
+Mostrar a probabilidade de cada item da roleta ser obtido.
+
+Permitir que o usuário gaste SPs (School Points) para regenerar as recompensas, tanto no card quanto na própria roleta (os dois são sincronizados).
+
+🧩 Estrutura do Card:
+🔸 Header (Topo do Card):
+No canto superior esquerdo, há um botão pequeno, retangular com bordas arredondadas, com:
+
+Ícone de troca/refresh (duas setas em círculo ou ícone de atualizar).
+
+Texto à direita mostrando a quantidade de SPs necessários para regenerar (ex.: “25 SPs”).
+
+Aparência de botão clicável, com efeito hover (leve brilho, aumento de sombra ou pulsação).
+
+🔸 Corpo do Card (Main Area):
+Contém 6 mini-cards organizados em 2 linhas de 3 cards.
+
+Cada mini-card representa uma das recompensas disponíveis na roleta atual.
+
+Dentro de cada mini-card:
+
+Ícone ou ilustração personalizada e temática da recompensa.
+
+Nome da recompensa, com fonte bem legível.
+
+Porcentagem da probabilidade de ganhar aquela recompensa (ex.: “15%” ou “8.3%”).
+
+As proporções dos mini-cards são balanceadas para ocupar o espaço de forma harmônica, sem poluir a interface.
+
+🔄 Mecânica de Regeneração:
+Ao clicar no botão de regenerar (gastando 25 SPs):
+
+As 6 recompensas atuais são substituídas por um novo conjunto de recompensas.
+
+A roleta também é atualizada imediatamente, com os mesmos itens exibidos no card.
+
+Isso mantém uma integração 100% direta e em tempo real entre o card e a roleta.
+
+🎁 Listas de Recompensas por Regeneração:
+⭐ Primeira Recompensa (Padrão Inicial):
+3x Avatares Raros
+
++3 Giros Grátis
+
+Kit de Estudos ENEM
+
+99 SPs
+
+50 XP
+
+Giro Especial
+
+⭐ Segunda Regeneração (Após 1 troca):
++50% Chance Aumentada
+
+Kit de Materiais
+
+199 SPs
+
+75 XP
+
+15% Desconto no Mercado
+
++3 Giros Grátis
+
+⭐ Terceira Regeneração (Após 2 trocas):
+299 SPs
+
+150 XP
+
+Giro Especial
+
+Conquistas Especiais
+
+Evento Exclusivo
+
+1 Badge Raro
+
+💡 Detalhes Visuais Importantes:
+Cada recompensa tem:
+
+Ícones personalizados e temáticos, refletindo visualmente seu significado (ex.: moeda para SP, medalha para badge, caixa de presente para kit, etc.).
+
+Cores e estilos diferenciados para recompensas mais raras (ex.: brilho, borda neon, ou efeito glow).
+
+O texto das probabilidades é de tamanho pequeno, porém claro, sempre abaixo ou ao lado do nome da recompensa.
+
+🔗 Integração Funcional:
+Toda alteração nas recompensas do card reflete imediatamente na roleta, e vice-versa.
+
+Ao regenerar, tanto o card quanto a roleta mudam juntos.
+
