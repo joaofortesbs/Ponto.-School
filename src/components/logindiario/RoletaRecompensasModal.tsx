@@ -203,7 +203,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
 
   // Função para detectar colisão com os pontos divisórios
   const detectCollision = (angle: number, previousAngle: number) => {
-    const sectorBoundaries = [0, 60, 120, 180, 240, 300];
+    const sectorBoundaries = [0, 60, 120, 180, 240, 300, 360];
 
     for (let i = 0; i < sectorBoundaries.length; i++) {
       const boundary = sectorBoundaries[i];
@@ -211,14 +211,28 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
       const prevNormalized = ((previousAngle % 360) + 360) % 360;
       const currentNormalized = ((angle % 360) + 360) % 360;
 
-      const crossedBoundary = 
-        (prevNormalized < boundary && currentNormalized >= boundary) ||
-        (prevNormalized > boundary && currentNormalized <= boundary) ||
-        (prevNormalized > 350 && currentNormalized < 10 && boundary === 0) ||
-        (prevNormalized < 10 && currentNormalized > 350 && boundary === 0);
+      // Melhor detecção de cruzamento de fronteiras
+      let crossedBoundary = false;
+
+      if (boundary === 0 || boundary === 360) {
+        // Casos especiais para 0/360 graus
+        crossedBoundary = 
+          (prevNormalized > 350 && currentNormalized < 10) ||
+          (prevNormalized < 10 && currentNormalized > 350) ||
+          (Math.abs(prevNormalized - 0) > Math.abs(currentNormalized - 0) && currentNormalized <= 5) ||
+          (Math.abs(prevNormalized - 360) > Math.abs(currentNormalized - 360) && currentNormalized >= 355);
+      } else {
+        // Casos normais
+        const tolerance = 3; // Tolerância de 3 graus para melhor detecção
+        crossedBoundary = 
+          (prevNormalized < boundary - tolerance && currentNormalized >= boundary - tolerance) ||
+          (prevNormalized > boundary + tolerance && currentNormalized <= boundary + tolerance) ||
+          (Math.abs(prevNormalized - boundary) > Math.abs(currentNormalized - boundary) && 
+           Math.abs(currentNormalized - boundary) <= tolerance);
+      }
 
       if (crossedBoundary) {
-        animatePinoEffects(i);
+        animatePinoEffects(i % 6); // Garantir índice válido
         animatePencilTilt();
         break;
       }
@@ -230,15 +244,38 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
     // Normalizar o ângulo da roleta (0-360)
     const normalizedAngle = ((currentRotation % 360) + 360) % 360;
 
-    // O pino está no topo (0 graus), então calculamos qual setor está sob ele
-    // Invertemos a direção porque a roleta gira no sentido horário
-    const sectorAngle = (360 - normalizedAngle + 90) % 360;
+    // O pino está no topo (12h), então calculamos qual setor está sob ele
+    // Ajustamos para que o cálculo seja preciso com os ângulos dos prêmios
+    let adjustedAngle = (360 - normalizedAngle + 90) % 360;
 
-    // Cada setor tem 60 graus (360/6)
-    const sectorIndex = Math.floor(sectorAngle / 60);
+    // Mapear ângulos dos prêmios para índices corretos
+    const sectorMap = [
+      { angle: 0, index: 5 },   // 999 SPs
+      { angle: 60, index: 2 },  // Avatar Raro
+      { angle: 120, index: 4 }, // Material Exclusivo
+      { angle: 180, index: 1 }, // 100 SPs
+      { angle: 240, index: 0 }, // 250 XPs
+      { angle: 300, index: 3 }  // Epictus Turbo
+    ];
+
+    // Encontrar o setor mais próximo
+    let closestSector = sectorMap[0];
+    let minDistance = Math.abs(adjustedAngle - sectorMap[0].angle);
+
+    for (const sector of sectorMap) {
+      const distance = Math.min(
+        Math.abs(adjustedAngle - sector.angle),
+        360 - Math.abs(adjustedAngle - sector.angle)
+      );
+      
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestSector = sector;
+      }
+    }
 
     // Retornar o prêmio do setor correspondente
-    return prizes[sectorIndex] || prizes[0];
+    return prizes[closestSector.index] || prizes[0];
   };
 
   // Função para processar recompensas especiais
@@ -372,11 +409,19 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
     setShowResult(false);
     setSelectedPrize(null);
 
-    let velocity = 15 + Math.random() * 10;
-    const friction = 0.02;
-    const minSpins = 3;
-    let totalRotation = currentRotation + (360 * minSpins) + Math.random() * 360;
+    // Melhorar randomização e controle
+    let velocity = 18 + Math.random() * 12; // Velocidade inicial mais variada
+    const friction = 0.015; // Fricção mais suave
+    const minSpins = 4 + Math.floor(Math.random() * 3); // Entre 4-6 voltas completas
+    
+    // Pré-determinar o resultado para garantir precisão
+    const targetPrizeIndex = Math.floor(Math.random() * prizes.length);
+    const targetAngle = prizes[targetPrizeIndex].angle;
+    const totalSpins = minSpins * 360;
+    const finalPosition = totalSpins + targetAngle + (Math.random() * 20 - 10); // Pequena variação
+    
     let previousAngle = currentRotation;
+    let animationId: number;
 
     const animate = () => {
       setCurrentRotation(prev => {
@@ -386,14 +431,24 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
         return newRotation;
       });
 
-      velocity -= friction;
+      // Aplicar fricção de forma mais suave
+      velocity = Math.max(0, velocity - friction);
 
-      if (velocity > 0.1) {
-        requestAnimationFrame(animate);
+      if (velocity > 0.08) {
+        animationId = requestAnimationFrame(animate);
       } else {
         setIsSpinning(false);
 
+        // Pequeno ajuste final para garantir precisão
         setTimeout(() => {
+          setCurrentRotation(prev => {
+            const normalized = ((prev % 360) + 360) % 360;
+            const targetNormalized = ((targetAngle % 360) + 360) % 360;
+            const diff = targetNormalized - normalized;
+            const adjustment = diff > 180 ? diff - 360 : diff < -180 ? diff + 360 : diff;
+            return prev + (adjustment * 0.1); // Ajuste sutil
+          });
+
           const winner = determinePrize();
           setSelectedPrize(winner.name);
           setPrizeWon(winner.name);
@@ -416,7 +471,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
       }
     };
 
-    requestAnimationFrame(animate);
+    animationId = requestAnimationFrame(animate);
   };
 
   return (
@@ -631,7 +686,14 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                     stiffness: 300,
                     duration: 0.5 
                   }}
-                  className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[101]"
+                  className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[101]"
+                  style={{
+                    position: 'fixed',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    zIndex: 101
+                  }}
                 >
                   <div className="bg-gradient-to-br from-green-500 via-green-600 to-emerald-600 rounded-2xl p-6 shadow-2xl border-2 border-green-300/50 min-w-[300px] max-w-[400px]">
                     {/* Ícone de troféu */}
