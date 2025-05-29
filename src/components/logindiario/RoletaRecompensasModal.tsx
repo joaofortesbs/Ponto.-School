@@ -201,15 +201,6 @@ const SequenciaGirosCard: React.FC<SequenciaGirosCardProps> = ({ isSpinning, sho
             </div>
           </motion.div>
         </div>
-
-        {/* Indicador visual de que o giro foi feito */}
-        <div className="text-center">
-          <div className="bg-green-500/30 backdrop-blur-sm rounded-lg px-2 py-1 border border-green-300/40">
-            <p className="text-xs text-white/90 font-medium">
-              ✅ Giro realizado hoje!
-            </p>
-          </div>
-        </div>
       </div>
     </motion.div>
   );
@@ -562,10 +553,10 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
 
             {/* Roleta de Recompensas */}
             <motion.div
-              initial={{ scale: 0, opacity: 0 }}
+              initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.6, duration: 0.8, type: "spring", damping: 15 }}
-              className="mt-8 flex justify-start items-start gap-8"
+              className="mt-8 flex justify-start items-start gap-12"
             >
               <div className="relative">
                 {/* Container da Roleta */}
