@@ -22,15 +22,13 @@ interface RecompensasDisponiveisCardProps {
   onRegeneratePrizes: () => void;
   regenerationCount: number;
   userSPs: number;
-  isSpinning: boolean;
 }
 
 const RecompensasDisponiveisCard: React.FC<RecompensasDisponiveisCardProps> = ({ 
   currentPrizes, 
   onRegeneratePrizes, 
   regenerationCount, 
-  userSPs,
-  isSpinning 
+  userSPs
 }) => {
   const getRegenerationCost = (count: number) => {
     if (count === 0) return 25;
@@ -40,7 +38,7 @@ const RecompensasDisponiveisCard: React.FC<RecompensasDisponiveisCardProps> = ({
   };
 
   const cost = getRegenerationCost(regenerationCount);
-  const canRegenerate = userSPs >= cost && regenerationCount < 3 && !isSpinning;
+  const canRegenerate = userSPs >= cost && regenerationCount < 3;
 
   return (
     <motion.div
@@ -77,7 +75,7 @@ const RecompensasDisponiveisCard: React.FC<RecompensasDisponiveisCardProps> = ({
                 ? 'bg-orange-500/20 hover:bg-orange-500/30 text-white border border-orange-300/30 cursor-pointer'
                 : 'bg-gray-500/20 text-gray-400 border border-gray-500/30 cursor-not-allowed opacity-50'
             }`}
-            title={!canRegenerate ? (isSpinning ? "Aguarde a roleta parar" : userSPs < cost ? "SPs insuficientes" : "Limite de regenerações atingido") : ""}
+            title={!canRegenerate ? (userSPs < cost ? "SPs insuficientes" : "Limite de regenerações atingido") : ""}
           >
             <motion.div
               animate={{ rotate: canRegenerate ? [0, 360] : 0 }}
@@ -533,6 +531,10 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
 
     const cost = getRegenerationCost(regenerationCount);
     if (userSPs < cost) return;
+
+    // Remove o resultado anterior se existir
+    setShowResult(false);
+    setSelectedPrize(null);
 
     setUserSPs(prev => prev - cost);
     setRegenerationCount(prev => prev + 1);
@@ -1082,7 +1084,6 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                   onRegeneratePrizes={handleRegeneratePrizes}
                   regenerationCount={regenerationCount}
                   userSPs={userSPs}
-                  isSpinning={isSpinning}
                 />
               </motion.div>
             </motion.div>
