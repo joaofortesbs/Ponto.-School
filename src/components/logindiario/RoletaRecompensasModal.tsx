@@ -322,7 +322,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                   initial={{ y: 30, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.3, duration: 0.6, type: "spring", damping: 25 }}
-                  className="text-3xl font-black tracking-tight leading-tight text-white"
+                  className="text-3xl font-semibold tracking-tight leading-tight text-white"
                   style={{
                     fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
                     letterSpacing: "-0.04em",
@@ -331,6 +331,18 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                 >
                   Login Diário
                 </motion.h1>
+                
+                <motion.p
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.5, duration: 0.5 }}
+                  className="text-sm font-medium text-white/80 mt-1"
+                  style={{
+                    textShadow: "0 1px 2px rgba(0,0,0,0.2)",
+                  }}
+                >
+                  Resgate sua recompensa
+                </motion.p>
                 
                 <motion.div
                   initial={{ width: 0, opacity: 0 }}
