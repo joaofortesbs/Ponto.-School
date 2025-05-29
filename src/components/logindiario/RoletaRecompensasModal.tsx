@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,13 +34,13 @@ const SequenciaGirosCard: React.FC<SequenciaGirosCardProps> = ({ isSpinning, sho
       const proximaMeiaNoite = new Date();
       proximaMeiaNoite.setDate(agora.getDate() + 1);
       proximaMeiaNoite.setHours(0, 0, 0, 0);
-      
+
       const diferenca = proximaMeiaNoite.getTime() - agora.getTime();
-      
+
       const horas = Math.floor(diferenca / (1000 * 60 * 60));
       const minutos = Math.floor((diferenca % (1000 * 60 * 60)) / (1000 * 60));
       const segundos = Math.floor((diferenca % (1000 * 60)) / 1000);
-      
+
       setTempoRestante({ horas, minutos, segundos });
     };
 
@@ -74,14 +73,14 @@ const SequenciaGirosCard: React.FC<SequenciaGirosCardProps> = ({ isSpinning, sho
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.6, type: "spring", damping: 20 }}
-        className="w-48 h-32 rounded-xl overflow-hidden relative bg-white/10 backdrop-blur-sm border border-orange-200/30"
+        className="w-56 h-32 rounded-xl overflow-hidden relative bg-white/10 backdrop-blur-sm border border-orange-200/30"
         style={{
           boxShadow: "0 4px 16px rgba(255, 107, 0, 0.1)"
         }}
       >
         {/* Efeito de brilho sutil */}
         <div className="absolute inset-0 bg-gradient-to-br from-orange-100/5 via-transparent to-orange-200/5 pointer-events-none" />
-        
+
         <div className="relative z-10 p-4 h-full flex flex-col justify-between">
           {/* Topo - Label e dias */}
           <div className="text-center">
@@ -137,14 +136,14 @@ const SequenciaGirosCard: React.FC<SequenciaGirosCardProps> = ({ isSpinning, sho
       initial={{ scale: 1.05, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ duration: 0.8, type: "spring", damping: 15 }}
-      className="w-48 h-32 rounded-xl overflow-hidden relative bg-white/15 backdrop-blur-sm border border-orange-200/40"
+      className="w-56 h-32 rounded-xl overflow-hidden relative bg-white/15 backdrop-blur-sm border border-orange-200/40"
       style={{
         boxShadow: "0 6px 20px rgba(255, 107, 0, 0.15)"
       }}
     >
       {/* Efeito de brilho sutil após giro */}
       <div className="absolute inset-0 bg-gradient-to-br from-orange-100/10 via-transparent to-orange-200/10 pointer-events-none" />
-      
+
       <div className="relative z-10 p-4 h-full flex flex-col justify-between">
         {/* Topo - Mantém a sequência visível */}
         <div className="text-center">
@@ -187,7 +186,7 @@ const SequenciaGirosCard: React.FC<SequenciaGirosCardProps> = ({ isSpinning, sho
               Próximo giro liberado em:
             </p>
           </div>
-          
+
           {/* Cronômetro Digital */}
           <motion.div
             key={`${tempoRestante.horas}-${tempoRestante.minutos}-${tempoRestante.segundos}`}
@@ -229,10 +228,10 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
   const [pinoTilt, setPinoTilt] = React.useState(0); // Estado para inclinação do lápis
   const [pinoColor, setPinoColor] = React.useState('#FF6B00'); // Cor do pino
   const [activePoint, setActivePoint] = React.useState<number | null>(null); // Ponto ativo atual
-  
+
   // Ref para áudio
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
-  
+
   // Configuração dos prêmios da roleta (6 setores)
   const prizes = [
     { name: "250 XP", color: "#FF6B00", angle: 0 },
@@ -248,21 +247,21 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
     // Criar áudio sintético para clique (já que não temos arquivo de áudio)
     const createClickSound = () => {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      
+
       return () => {
         try {
           const oscillator = audioContext.createOscillator();
           const gainNode = audioContext.createGain();
-          
+
           oscillator.connect(gainNode);
           gainNode.connect(audioContext.destination);
-          
+
           oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
           oscillator.frequency.exponentialRampToValueAtTime(200, audioContext.currentTime + 0.1);
-          
+
           gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
           gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-          
+
           oscillator.start(audioContext.currentTime);
           oscillator.stop(audioContext.currentTime + 0.1);
         } catch (error) {
@@ -270,7 +269,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
         }
       };
     };
-    
+
     audioRef.current = createClickSound();
   }, []);
 
@@ -283,7 +282,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
         console.log('Erro ao reproduzir áudio:', error);
       }
     }
-    
+
     // Alternativa: vibração se disponível
     if (navigator.vibrate) {
       navigator.vibrate(25);
@@ -294,14 +293,14 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
   const animatePencilTilt = () => {
     // Movimento de empurrão para trás (impulso rápido)
     setPinoTilt(-12); // Inclinação negativa (para trás)
-    
+
     // Retorno elástico com efeito de mola
     setTimeout(() => {
       setPinoTilt(3); // Pequeno overshoot para frente
-      
+
       setTimeout(() => {
         setPinoTilt(-1); // Leve movimento de volta
-        
+
         setTimeout(() => {
           setPinoTilt(0); // Posição final original
         }, 80);
@@ -313,16 +312,16 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
   const animatePinoEffects = (pointIndex: number) => {
     // Definir ponto ativo
     setActivePoint(pointIndex);
-    
+
     // Mudar cor do pino temporariamente
     setPinoColor('#FF0000'); // Vermelho ao ativar
-    
+
     // Efeito de piscada
     setPinoBlinking(true);
-    
+
     // Reproduzir som
     playClickSound();
-    
+
     // Restaurar cor original após efeito
     setTimeout(() => {
       setPinoColor('#FF6B00');
@@ -334,14 +333,14 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
   // Função para detectar colisão com os pontos divisórios
   const detectCollision = (angle: number, previousAngle: number) => {
     const sectorBoundaries = [0, 60, 120, 180, 240, 300];
-    
+
     for (let i = 0; i < sectorBoundaries.length; i++) {
       const boundary = sectorBoundaries[i];
-      
+
       // Normaliza ângulos para comparação precisa
       const prevNormalized = ((previousAngle % 360) + 360) % 360;
       const currentNormalized = ((angle % 360) + 360) % 360;
-      
+
       // Verifica se passou por um ponto divisório
       const crossedBoundary = 
         (prevNormalized < boundary && currentNormalized >= boundary) ||
@@ -349,14 +348,14 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
         // Casos especiais para cruzamento do 0°/360°
         (prevNormalized > 350 && currentNormalized < 10 && boundary === 0) ||
         (prevNormalized < 10 && currentNormalized > 350 && boundary === 0);
-      
+
       if (crossedBoundary) {
         // Aplicar todos os efeitos visuais e auditivos
         animatePinoEffects(i);
-        
+
         // Movimento físico realista do lápis
         animatePencilTilt();
-        
+
         break;
       }
     }
@@ -366,7 +365,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
   const determinePrize = (finalAngle: number) => {
     // Normaliza o ângulo para 0-360
     const normalizedAngle = ((finalAngle % 360) + 360) % 360;
-    
+
     // Calcula qual setor foi selecionado
     const sectorIndex = Math.floor(normalizedAngle / 60);
     return prizes[sectorIndex] || prizes[0];
@@ -375,40 +374,40 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
   // Função principal de giro da roleta
   const spinWheel = () => {
     if (isSpinning) return;
-    
+
     setIsSpinning(true);
     setShowResult(false);
     setSelectedPrize(null);
-    
+
     // Parâmetros de giro
     let velocity = 15 + Math.random() * 10; // Velocidade inicial aleatória
     const friction = 0.02; // Fator de atrito
     const minSpins = 3; // Mínimo de voltas completas
     let totalRotation = currentRotation + (360 * minSpins) + Math.random() * 360;
     let previousAngle = currentRotation;
-    
+
     const animate = () => {
       // Atualiza a rotação
       setCurrentRotation(prev => {
         const newRotation = prev + velocity;
-        
+
         // Detecta colisão com pontos divisórios
         detectCollision(newRotation, previousAngle);
         previousAngle = newRotation;
-        
+
         return newRotation;
       });
-      
+
       // Reduz a velocidade (atrito)
       velocity -= friction;
-      
+
       // Continua girando se ainda há velocidade
       if (velocity > 0.1) {
         requestAnimationFrame(animate);
       } else {
         // Para a roleta e determina o prêmio
         setIsSpinning(false);
-        
+
         // Pequeno delay para mostrar o resultado
         setTimeout(() => {
           const winner = determinePrize(totalRotation);
@@ -417,7 +416,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
         }, 500);
       }
     };
-    
+
     // Inicia a animação
     requestAnimationFrame(animate);
   };
@@ -430,7 +429,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
       y: 128, // Centro vertical
       angle: -15, // Ângulo de inclinação para dentro
     },
-    
+
     // Propriedades visuais
     design: {
       grafiteColor: '#333333',
@@ -438,30 +437,30 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
       borrachaColor: '#FFC1CC',
       seloColor: '#FF6B00'
     },
-    
+
     // Estado do pino
     state: {
       active: true,
       interactionEnabled: false // Para expansão futura
     },
-    
+
     // Métodos para eventos futuros (placeholders otimizados)
     events: {
       onClick: () => {
         // Placeholder para clique no pino
         console.log('Pino clicado - evento futuro');
       },
-      
+
       onHover: () => {
         // Placeholder para hover no pino
         console.log('Pino hover - evento futuro');
       },
-      
+
       onInteraction: () => {
         // Placeholder para interações gerais
         console.log('Pino interação - evento futuro');
       },
-      
+
       onCollisionDetection: (target: any) => {
         // Placeholder para detecção de colisão
         console.log('Pino colisão detectada:', target);
@@ -511,10 +510,10 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                   <div className="bg-gradient-to-br from-orange-500 via-orange-600 to-orange-700 p-4 rounded-2xl shadow-2xl border border-orange-300/20">
                     <Gift className="h-8 w-8 text-white drop-shadow-lg" />
                   </div>
-                  
+
                   {/* Efeito de brilho moderno */}
                   <div className="absolute inset-0 bg-gradient-to-br from-orange-400/40 to-orange-600/40 rounded-2xl blur-xl animate-pulse"></div>
-                  
+
                   {/* Anel de destaque */}
                   <div className="absolute -inset-1 bg-gradient-to-r from-orange-400/30 via-orange-500/20 to-orange-600/30 rounded-2xl blur-sm"></div>
                 </div>
@@ -534,7 +533,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                 >
                   Login Diário
                 </motion.h1>
-                
+
                 <motion.p
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
@@ -546,7 +545,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                 >
                   Resgate sua recompensa
                 </motion.p>
-                
+
                 <motion.div
                   initial={{ width: 0, opacity: 0 }}
                   animate={{ width: "100%", opacity: 1 }}
@@ -559,7 +558,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
               </div>
             </div>
 
-            
+
 
             {/* Roleta de Recompensas */}
             <motion.div
@@ -617,12 +616,12 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                         {prizes.map((prize, index) => {
                           const angle = prize.angle + 30; // Centro do setor (30° do início)
                           const radius = 80; // Distância do centro para o texto
-                          
+
                           // Convertendo ângulo para radianos e calculando posição
                           const angleRad = (angle - 90) * (Math.PI / 180); // -90 para começar no topo
                           const x = radius * Math.cos(angleRad);
                           const y = radius * Math.sin(angleRad);
-                          
+
                           // Definir ícone baseado no prêmio
                           const getIcon = (prizeName: string) => {
                             if (prizeName.includes('250 XP')) {
@@ -667,7 +666,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                               </div>
                             );
                           };
-                          
+
                           return (
                             <div
                               key={`prize-${index}`}
@@ -692,7 +691,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                               >
                                 {getIcon(prize.name)}
                               </div>
-                              
+
                               {/* Texto do prêmio */}
                               <div>
                                 {prize.name.split(' ').map((word, i) => (
@@ -711,12 +710,12 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                           const radius = 121; // Ajustado para 95% do raio original (128 * 0.95) para evitar cortes
                           const ballRadius = 6; // Raio das bolinhas (5% do diâmetro da roleta)
                           const isActive = activePoint === index;
-                          
+
                           // Convertendo ângulo para radianos e calculando posição
                           const angleRad = (angle - 90) * (Math.PI / 180); // -90 para começar no topo
                           const x = radius * Math.cos(angleRad);
                           const y = radius * Math.sin(angleRad);
-                          
+
                           return (
                             <div
                               key={`bolinha-${index}`}
@@ -798,7 +797,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                           className="absolute bottom-1 left-2 w-4 h-0.5 rounded"
                           style={{ backgroundColor: '#E55A00', opacity: 0.4 }}
                         ></div>
-                        
+
                         {/* Borracha Rosa (detalhe superior) */}
                         <div 
                           className="absolute -right-1 top-1/2 transform -translate-y-1/2"
