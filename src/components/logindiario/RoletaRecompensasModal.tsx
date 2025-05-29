@@ -481,6 +481,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                   pinoTilt={pinoTilt}
                   pinoBlinking={pinoBlinking}
                   pinoColor={pinoColor}
+                  canSpin={canSpin}
                 />
               </div>
 

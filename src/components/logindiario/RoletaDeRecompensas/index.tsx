@@ -21,6 +21,7 @@ interface RoletaDeRecompensasProps {
   pinoTilt: number;
   pinoBlinking: boolean;
   pinoColor: string;
+  canSpin: boolean;
 }
 
 const RoletaDeRecompensas: React.FC<RoletaDeRecompensasProps> = ({
@@ -34,6 +35,7 @@ const RoletaDeRecompensas: React.FC<RoletaDeRecompensasProps> = ({
   pinoTilt,
   pinoBlinking,
   pinoColor,
+  canSpin,
 }) => {
   return (
     <div className="relative">
@@ -263,20 +265,22 @@ const RoletaDeRecompensas: React.FC<RoletaDeRecompensasProps> = ({
 
       {/* Botão Girar */}
       <motion.button
-        whileHover={{ scale: isSpinning ? 1 : 1.05 }}
-        whileTap={{ scale: isSpinning ? 1 : 0.95 }}
-        onClick={onSpin}
-        disabled={isSpinning}
+        whileHover={{ scale: (isSpinning || !canSpin) ? 1 : 1.05 }}
+        whileTap={{ scale: (isSpinning || !canSpin) ? 1 : 0.95 }}
+        onClick={canSpin ? onSpin : undefined}
+        disabled={isSpinning || !canSpin}
         className={`mt-6 w-full font-bold py-3 px-6 rounded-full shadow-lg transition-all duration-300 flex items-center justify-center gap-2 ${
           isSpinning 
             ? 'bg-gray-400 cursor-not-allowed text-gray-200' 
+            : !canSpin
+            ? 'bg-gray-500 cursor-not-allowed text-gray-300 opacity-60'
             : 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white'
         }`}
       >
         {isSpinning && (
           <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
         )}
-        {isSpinning ? 'Girando...' : 'Girar Roleta'}
+        {isSpinning ? 'Girando...' : !canSpin ? 'Sem Giros Disponíveis' : 'Girar Roleta'}
       </motion.button>
     </div>
   );
