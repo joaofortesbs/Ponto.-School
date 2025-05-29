@@ -22,32 +22,30 @@ interface RecompensasDisponiveisCardProps {
   onRegeneratePrizes: () => void;
   regenerationCount: number;
   userSPs: number;
-  isSpinning: boolean;
 }
 
 const RecompensasDisponiveisCard: React.FC<RecompensasDisponiveisCardProps> = ({ 
   currentPrizes, 
   onRegeneratePrizes, 
   regenerationCount, 
-  userSPs,
-  isSpinning 
+  userSPs 
 }) => {
   const getRegenerationCost = (count: number) => {
     if (count === 0) return 25;
     if (count === 1) return 50;
     if (count === 2) return 99;
-    return 0; // Não há mais regenerações após a 3ª
+    return 99; // Máximo
   };
 
   const cost = getRegenerationCost(regenerationCount);
-  const canRegenerate = userSPs >= cost && regenerationCount < 3 && !isSpinning;
+  const canRegenerate = userSPs >= cost && regenerationCount < 3;
 
   return (
     <motion.div
       initial={{ scale: 0.95, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ duration: 0.6, type: "spring", damping: 20 }}
-      className="w-72 h-64 rounded-xl overflow-hidden relative bg-white/10 backdrop-blur-sm border border-orange-200/30 mt-4"
+      className="w-72 h-72 rounded-xl overflow-hidden relative bg-white/10 backdrop-blur-sm border border-orange-200/30 mt-4"
       style={{
         boxShadow: "0 4px 16px rgba(255, 107, 0, 0.1)"
       }}
@@ -59,9 +57,10 @@ const RecompensasDisponiveisCard: React.FC<RecompensasDisponiveisCardProps> = ({
         {/* Topo - Título e Botão de Regeneração */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            {/* Ícone de recompensas */}
-            <div className="w-5 h-5 bg-gradient-to-br from-amber-400 to-amber-600 rounded flex items-center justify-center shadow-lg">
-              <Gift className="h-3 w-3 text-white" />
+            {/* Ícone personalizado da plataforma */}
+            <div className="w-5 h-5 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center shadow-lg">
+              <div className="w-2.5 h-2.5 bg-white rounded-full"></div>
+              <div className="absolute w-1 h-1 bg-orange-200 rounded-full transform -translate-x-0.5 -translate-y-0.5"></div>
             </div>
             <h3 className="text-sm font-semibold text-white">Recompensas Disponíveis</h3>
           </div>
@@ -77,7 +76,7 @@ const RecompensasDisponiveisCard: React.FC<RecompensasDisponiveisCardProps> = ({
                 ? 'bg-orange-500/20 hover:bg-orange-500/30 text-white border border-orange-300/30 cursor-pointer'
                 : 'bg-gray-500/20 text-gray-400 border border-gray-500/30 cursor-not-allowed opacity-50'
             }`}
-            title={!canRegenerate ? (isSpinning ? "Aguarde a roleta parar" : userSPs < cost ? "SPs insuficientes" : "Limite de regenerações atingido") : ""}
+            title={!canRegenerate ? (userSPs < cost ? "SPs insuficientes" : "Limite de regenerações atingido") : ""}
           >
             <motion.div
               animate={{ rotate: canRegenerate ? [0, 360] : 0 }}
@@ -521,7 +520,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
   const handleRegeneratePrizes = () => {
     if (regenerationCount >= 3) return;
 
-    const cost = getRegenerationCost(regenerationCount);
+    const cost = regenerationCount === 0 ? 25 : regenerationCount === 1 ? 50 : 99;
     if (userSPs < cost) return;
 
     setUserSPs(prev => prev - cost);
@@ -1072,7 +1071,6 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                   onRegeneratePrizes={handleRegeneratePrizes}
                   regenerationCount={regenerationCount}
                   userSPs={userSPs}
-                  isSpinning={isSpinning}
                 />
               </motion.div>
             </motion.div>
