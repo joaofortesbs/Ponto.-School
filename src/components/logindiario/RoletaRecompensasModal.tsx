@@ -56,7 +56,14 @@ const RecompensasDisponiveisCard: React.FC<RecompensasDisponiveisCardProps> = ({
       <div className="relative z-10 p-4 h-full flex flex-col">
         {/* Topo - Título e Botão de Regeneração */}
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-white">Recompensas Disponíveis</h3>
+          <div className="flex items-center gap-2">
+            {/* Ícone personalizado da plataforma */}
+            <div className="w-5 h-5 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center shadow-lg">
+              <div className="w-2.5 h-2.5 bg-white rounded-full"></div>
+              <div className="absolute w-1 h-1 bg-orange-200 rounded-full transform -translate-x-0.5 -translate-y-0.5"></div>
+            </div>
+            <h3 className="text-sm font-semibold text-white">Recompensas Disponíveis</h3>
+          </div>
           
           {/* Botão de Regeneração */}
           <motion.button
@@ -684,7 +691,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
-        className="sm:max-w-[500px] p-0 bg-transparent border-0 shadow-none"
+        className="sm:max-w-[650px] p-0 bg-transparent border-0 shadow-none"
         onInteractOutside={(e) => e.preventDefault()}
       >
         <motion.div
