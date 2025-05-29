@@ -1,0 +1,108 @@
+🧠 Descrição Geral:
+Abaixo do card de sequência de giros, dentro do modal de Login Diário, será adicionado um novo card chamado “Recompensas Disponíveis”, que terá exatamente o mesmo estilo visual, proporções e design do card de sequência de giros, mantendo a harmonia estética da interface.
+
+🎯 Funcionalidade Principal:
+Este card exibe as 6 recompensas atuais da roleta, cada uma representada por um mini-card temático, com:
+
+Ícone personalizado.
+
+Nome da recompensa.
+
+Probabilidade (% de chance) bem visível.
+
+Este card é 100% integrado com a roleta. As recompensas que aparecem nele são exatamente as mesmas que estão na roleta no momento.
+
+Ao clicar em “Regenerar Recompensas”, as recompensas tanto do card quanto da roleta são atualizadas para um novo conjunto, junto com as respectivas probabilidades.
+
+🏗️ Estrutura do Card:
+🔸 Topo do Card — Componente de Troca:
+Um pequeno componente no canto superior esquerdo, em formato retangular com bordas arredondadas.
+
+Dentro desse componente:
+
+À esquerda, um ícone de troca/refresh, estilizado (pode ser duas setas circulares ou símbolo de atualização).
+
+À direita, o custo em SPs, como:
+👉 Ex.: “25 SPs”, “50 SPs”, “99 SPs” (dependendo da quantidade de regenerações feitas).
+
+Aparência de botão clicável, com efeitos visuais de hover (brilho, aumento leve, sombra suave).
+
+🔸 Área Principal do Card — Mini-Cards de Recompensas:
+6 mini-cards organizados em duas linhas de três cards.
+
+Cada mini-card apresenta:
+
+Ícone grande e temático da recompensa (bem centralizado).
+
+Nome da recompensa abaixo do ícone, texto legível, proporcional.
+
+Probabilidade em percentual visível, em destaque (em cima ou canto superior direito do mini-card, dentro de uma badge ou selo).
+
+🎰 Sistema de Probabilidades — Totalmente Funcional:
+A roleta é 100% guiada por probabilidade real.
+
+Cada item na roleta tem sua chance matemática precisa, definida conforme os grupos de recompensas gerados.
+
+O sistema deve calcular de forma real a distribuição e sorteio dos itens baseado nas probabilidades informadas.
+
+♻️ Sistema de Regeneração de Recompensas:
+Sempre que o usuário clica no botão de troca:
+
+As 6 recompensas atuais são substituídas por um novo conjunto de recompensas.
+
+As recompensas na roleta também são atualizadas simultaneamente.
+
+As chances são atualizadas e aplicadas corretamente no funcionamento da roleta.
+
+💰 Custo de Regeneração:
+🔁 Número da Regeneração	💸 Custo em SPs
+1ª Regeneração	25 SPs
+2ª Regeneração	50 SPs
+3ª Regeneração	99 SPs
+
+Após a 3ª regeneração, o sistema pode bloquear novas regenerações até o dia seguinte ou resetar para o primeiro ciclo, conforme definição da lógica do produto.
+
+🎁 Grupos de Recompensas por Regeneração:
+🥇 Grupo Inicial (Padrão):
+🎯 Recompensa	🎲 Chance (%)
+3 Avatares Raros	5%
++3 Giros Grátis	15%
+Kit de Estudos ENEM	3%
+99 SPs	25%
+50 XP	45%
+Giro Especial	7%
+
+🥈 Após 1ª Regeneração:
+🎯 Recompensa	🎲 Chance (%)
++50% Chance Aumentada	7%
+Kit Materiais	3%
+199 SPs	25%
+75 XP	45%
+15% Desconto Mercado	5%
++3 Giros Grátis	15%
+
+🥉 Após 2ª Regeneração:
+🎯 Recompensa	🎲 Chance (%)
+299 SPs	25%
+150 XP	45%
+Giro Especial	15%
+Conquistas Especiais	7%
+Evento Exclusivo	3%
+1 Badge Raro	5%
+
+🔗 Regras e Integrações Essenciais:
+A regeneração afeta tanto o card de Recompensas Disponíveis quanto a roleta.
+
+As probabilidades são atualizadas em tempo real e impactam diretamente o giro.
+
+O custo de regeneração é descontado dos SPs do usuário automaticamente.
+
+Se o usuário não possuir SPs suficientes, o botão de troca fica desabilitado ou com aparência esmaecida, junto de uma tooltip dizendo “Saldo insuficiente de SPs”.
+
+✨ Estilo Visual:
+Seguir a mesma paleta, tipografia e estética da interface atual do modal de Login Diário.
+
+Mini-cards com efeito de profundidade, sombra suave, cantos bem arredondados, gradientes suaves e interatividade (hover, click, feedback visual claro).
+
+As porcentagens podem estar dentro de badges circulares ou pequenas tags no canto superior direito dos mini-cards, destacando-se, mas sem poluir visualmente.
+
