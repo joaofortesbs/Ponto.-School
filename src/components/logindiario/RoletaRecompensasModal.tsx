@@ -4,9 +4,8 @@ import {
   Dialog,
   DialogContent,
 } from "@/components/ui/dialog";
-import { Gift, X, Trophy, Zap } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import Confetti from 'react-confetti';
+import { Gift, X } from "lucide-react";
+import { motion } from "framer-motion";
 
 // Importar os novos componentes
 import RoletaDeRecompensas from "./RoletaDeRecompensas";
@@ -40,13 +39,8 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
   const [girosEspeciais, setGirosEspeciais] = React.useState(0);
   const [jaGirouHoje, setJaGirouHoje] = React.useState(false);
 
-  // Estados para modal de Parabéns
-  const [showParabensModal, setShowParabensModal] = React.useState(false);
-  const [prizeWon, setPrizeWon] = React.useState<string>("");
-
   // Ref para áudio
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
-  const celebrationAudioRef = React.useRef<HTMLAudioElement | null>(null);
 
   // Grupos de recompensas por regeneração
   const prizeGroups = [
@@ -137,42 +131,6 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
     }
   };
 
-  // Função para reproduzir som de comemoração
-  const playCelebrationSound = () => {
-    try {
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      
-      // Som de comemoração com múltiplas frequências
-      const frequencies = [523, 659, 784, 1047]; // C5, E5, G5, C6
-      
-      frequencies.forEach((freq, index) => {
-        setTimeout(() => {
-          const oscillator = audioContext.createOscillator();
-          const gainNode = audioContext.createGain();
-          
-          oscillator.connect(gainNode);
-          gainNode.connect(audioContext.destination);
-          
-          oscillator.frequency.setValueAtTime(freq, audioContext.currentTime);
-          oscillator.type = 'sine';
-          
-          gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-          
-          oscillator.start(audioContext.currentTime);
-          oscillator.stop(audioContext.currentTime + 0.5);
-        }, index * 100);
-      });
-      
-      // Vibração de comemoração
-      if (navigator.vibrate) {
-        navigator.vibrate([100, 50, 100, 50, 200]);
-      }
-    } catch (error) {
-      console.log('Erro ao reproduzir som de comemoração:', error);
-    }
-  };
-
   // Função para animar inclinação do lápis
   const animatePencilTilt = () => {
     setPinoTilt(-12);
@@ -203,7 +161,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
 
   // Função para detectar colisão com os pontos divisórios
   const detectCollision = (angle: number, previousAngle: number) => {
-    const sectorBoundaries = [0, 60, 120, 180, 240, 300, 360];
+    const sectorBoundaries = [0, 60, 120, 180, 240, 300];
 
     for (let i = 0; i < sectorBoundaries.length; i++) {
       const boundary = sectorBoundaries[i];
@@ -211,71 +169,33 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
       const prevNormalized = ((previousAngle % 360) + 360) % 360;
       const currentNormalized = ((angle % 360) + 360) % 360;
 
-      // Melhor detecção de cruzamento de fronteiras
-      let crossedBoundary = false;
-
-      if (boundary === 0 || boundary === 360) {
-        // Casos especiais para 0/360 graus
-        crossedBoundary = 
-          (prevNormalized > 350 && currentNormalized < 10) ||
-          (prevNormalized < 10 && currentNormalized > 350) ||
-          (Math.abs(prevNormalized - 0) > Math.abs(currentNormalized - 0) && currentNormalized <= 5) ||
-          (Math.abs(prevNormalized - 360) > Math.abs(currentNormalized - 360) && currentNormalized >= 355);
-      } else {
-        // Casos normais
-        const tolerance = 3; // Tolerância de 3 graus para melhor detecção
-        crossedBoundary = 
-          (prevNormalized < boundary - tolerance && currentNormalized >= boundary - tolerance) ||
-          (prevNormalized > boundary + tolerance && currentNormalized <= boundary + tolerance) ||
-          (Math.abs(prevNormalized - boundary) > Math.abs(currentNormalized - boundary) && 
-           Math.abs(currentNormalized - boundary) <= tolerance);
-      }
+      const crossedBoundary = 
+        (prevNormalized < boundary && currentNormalized >= boundary) ||
+        (prevNormalized > boundary && currentNormalized <= boundary) ||
+        (prevNormalized > 350 && currentNormalized < 10 && boundary === 0) ||
+        (prevNormalized < 10 && currentNormalized > 350 && boundary === 0);
 
       if (crossedBoundary) {
-        animatePinoEffects(i % 6); // Garantir índice válido
+        animatePinoEffects(i);
         animatePencilTilt();
         break;
       }
     }
   };
 
-  // Função para determinar o prêmio vencedor com base na posição exata da roleta
+  // Função para determinar o prêmio vencedor
   const determinePrize = () => {
-    // Normalizar o ângulo da roleta (0-360)
-    const normalizedAngle = ((currentRotation % 360) + 360) % 360;
+    const random = Math.random() * 100;
+    let cumulativeChance = 0;
 
-    // O pino está no topo (12h), então calculamos qual setor está sob ele
-    // Ajustamos para que o cálculo seja preciso com os ângulos dos prêmios
-    let adjustedAngle = (360 - normalizedAngle + 90) % 360;
-
-    // Mapear ângulos dos prêmios para índices corretos
-    const sectorMap = [
-      { angle: 0, index: 5 },   // 999 SPs
-      { angle: 60, index: 2 },  // Avatar Raro
-      { angle: 120, index: 4 }, // Material Exclusivo
-      { angle: 180, index: 1 }, // 100 SPs
-      { angle: 240, index: 0 }, // 250 XPs
-      { angle: 300, index: 3 }  // Epictus Turbo
-    ];
-
-    // Encontrar o setor mais próximo
-    let closestSector = sectorMap[0];
-    let minDistance = Math.abs(adjustedAngle - sectorMap[0].angle);
-
-    for (const sector of sectorMap) {
-      const distance = Math.min(
-        Math.abs(adjustedAngle - sector.angle),
-        360 - Math.abs(adjustedAngle - sector.angle)
-      );
-      
-      if (distance < minDistance) {
-        minDistance = distance;
-        closestSector = sector;
+    for (const prize of prizes) {
+      cumulativeChance += prize.chance;
+      if (random <= cumulativeChance) {
+        return prize;
       }
     }
 
-    // Retornar o prêmio do setor correspondente
-    return prizes[closestSector.index] || prizes[0];
+    return prizes[prizes.length - 1];
   };
 
   // Função para processar recompensas especiais
@@ -409,19 +329,11 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
     setShowResult(false);
     setSelectedPrize(null);
 
-    // Melhorar randomização e controle
-    let velocity = 18 + Math.random() * 12; // Velocidade inicial mais variada
-    const friction = 0.015; // Fricção mais suave
-    const minSpins = 4 + Math.floor(Math.random() * 3); // Entre 4-6 voltas completas
-    
-    // Pré-determinar o resultado para garantir precisão
-    const targetPrizeIndex = Math.floor(Math.random() * prizes.length);
-    const targetAngle = prizes[targetPrizeIndex].angle;
-    const totalSpins = minSpins * 360;
-    const finalPosition = totalSpins + targetAngle + (Math.random() * 20 - 10); // Pequena variação
-    
+    let velocity = 15 + Math.random() * 10;
+    const friction = 0.02;
+    const minSpins = 3;
+    let totalRotation = currentRotation + (360 * minSpins) + Math.random() * 360;
     let previousAngle = currentRotation;
-    let animationId: number;
 
     const animate = () => {
       setCurrentRotation(prev => {
@@ -431,34 +343,17 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
         return newRotation;
       });
 
-      // Aplicar fricção de forma mais suave
-      velocity = Math.max(0, velocity - friction);
+      velocity -= friction;
 
-      if (velocity > 0.08) {
-        animationId = requestAnimationFrame(animate);
+      if (velocity > 0.1) {
+        requestAnimationFrame(animate);
       } else {
         setIsSpinning(false);
 
-        // Pequeno ajuste final para garantir precisão
         setTimeout(() => {
-          setCurrentRotation(prev => {
-            const normalized = ((prev % 360) + 360) % 360;
-            const targetNormalized = ((targetAngle % 360) + 360) % 360;
-            const diff = targetNormalized - normalized;
-            const adjustment = diff > 180 ? diff - 360 : diff < -180 ? diff + 360 : diff;
-            return prev + (adjustment * 0.1); // Ajuste sutil
-          });
-
           const winner = determinePrize();
           setSelectedPrize(winner.name);
-          setPrizeWon(winner.name);
           setShowResult(true);
-
-          // Mostrar modal de Parabéns
-          setTimeout(() => {
-            setShowParabensModal(true);
-            playCelebrationSound();
-          }, 300);
 
           // Processar recompensas especiais
           processSpecialReward(winner.name);
@@ -471,7 +366,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
       }
     };
 
-    animationId = requestAnimationFrame(animate);
+    requestAnimationFrame(animate);
   };
 
   return (
@@ -647,184 +542,6 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
               background: "radial-gradient(circle at 50% 50%, rgba(255, 107, 0, 0.1) 0%, transparent 70%)"
             }}
           />
-
-          {/* Modal de Parabéns Centralizado */}
-          <AnimatePresence>
-            {showParabensModal && (
-              <>
-                {/* Confetes */}
-                <div className="fixed inset-0 pointer-events-none z-[9999]">
-                  <Confetti
-                    width={window.innerWidth}
-                    height={window.innerHeight}
-                    recycle={false}
-                    numberOfPieces={200}
-                    gravity={0.3}
-                    colors={['#FF6B00', '#FF8C40', '#FFA366', '#FFB366', '#FF9933', '#FF7A1A']}
-                    wind={0.1}
-                    initialVelocityY={20}
-                  />
-                </div>
-
-                {/* Fundo de desfoque */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="absolute inset-0 bg-black/60 backdrop-blur-sm rounded-2xl z-[100]"
-                  onClick={() => setShowParabensModal(false)}
-                />
-
-                {/* Modal de Parabéns */}
-                <motion.div
-                  initial={{ scale: 0.7, opacity: 0, y: 20 }}
-                  animate={{ scale: 1, opacity: 1, y: 0 }}
-                  exit={{ scale: 0.7, opacity: 0, y: 20 }}
-                  transition={{ 
-                    type: "spring", 
-                    damping: 20, 
-                    stiffness: 300,
-                    duration: 0.5 
-                  }}
-                  className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[101]"
-                  style={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    zIndex: 101
-                  }}
-                >
-                  <div className="bg-gradient-to-br from-green-500 via-green-600 to-emerald-600 rounded-2xl p-6 shadow-2xl border-2 border-green-300/50 min-w-[300px] max-w-[400px]">
-                    {/* Ícone de troféu */}
-                    <div className="flex justify-center mb-4">
-                      <motion.div
-                        initial={{ scale: 0, rotate: -180 }}
-                        animate={{ scale: 1, rotate: 0 }}
-                        transition={{ delay: 0.2, type: "spring", damping: 15, stiffness: 300 }}
-                        className="bg-yellow-400 p-3 rounded-full shadow-lg"
-                      >
-                        <Trophy className="h-8 w-8 text-yellow-800" />
-                      </motion.div>
-                    </div>
-
-                    {/* Título */}
-                    <motion.h2
-                      initial={{ y: 20, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ delay: 0.3, duration: 0.5 }}
-                      className="text-2xl font-bold text-white text-center mb-3"
-                      style={{
-                        textShadow: "0 2px 4px rgba(0,0,0,0.5)",
-                      }}
-                    >
-                      🎉 Parabéns!
-                    </motion.h2>
-
-                    {/* Prêmio ganho */}
-                    <motion.div
-                      initial={{ y: 20, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ delay: 0.4, duration: 0.5 }}
-                      className="text-center mb-4"
-                    >
-                      <p className="text-white/90 text-sm mb-2">Você ganhou:</p>
-                      <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3 border border-white/30">
-                        <div className="flex items-center justify-center gap-2">
-                          {getPrizeIcon(prizeWon)}
-                          <span className="text-white font-semibold text-lg">
-                            {prizeWon}
-                          </span>
-                        </div>
-                      </div>
-                    </motion.div>
-
-                    {/* Efeitos visuais decorativos */}
-                    <div className="absolute top-2 left-2">
-                      <motion.div
-                        animate={{ 
-                          rotate: [0, 360],
-                          scale: [1, 1.2, 1]
-                        }}
-                        transition={{ 
-                          duration: 2,
-                          repeat: Infinity,
-                          ease: "linear"
-                        }}
-                        className="text-yellow-300 text-xl"
-                      >
-                        ✨
-                      </motion.div>
-                    </div>
-                    
-                    <div className="absolute top-2 right-2">
-                      <motion.div
-                        animate={{ 
-                          rotate: [360, 0],
-                          scale: [1, 1.3, 1]
-                        }}
-                        transition={{ 
-                          duration: 2.5,
-                          repeat: Infinity,
-                          ease: "linear"
-                        }}
-                        className="text-yellow-300 text-xl"
-                      >
-                        🎊
-                      </motion.div>
-                    </div>
-
-                    <div className="absolute bottom-2 left-3">
-                      <motion.div
-                        animate={{ 
-                          y: [-5, 5, -5],
-                          scale: [1, 1.1, 1]
-                        }}
-                        transition={{ 
-                          duration: 1.5,
-                          repeat: Infinity,
-                          ease: "easeInOut"
-                        }}
-                        className="text-yellow-300 text-lg"
-                      >
-                        🌟
-                      </motion.div>
-                    </div>
-
-                    <div className="absolute bottom-2 right-3">
-                      <motion.div
-                        animate={{ 
-                          y: [5, -5, 5],
-                          scale: [1, 1.2, 1]
-                        }}
-                        transition={{ 
-                          duration: 1.8,
-                          repeat: Infinity,
-                          ease: "easeInOut"
-                        }}
-                        className="text-yellow-300 text-lg"
-                      >
-                        🎁
-                      </motion.div>
-                    </div>
-
-                    {/* Botão de fechar */}
-                    <motion.button
-                      initial={{ y: 20, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ delay: 0.5, duration: 0.5 }}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setShowParabensModal(false)}
-                      className="w-full bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white font-semibold py-3 px-6 rounded-lg border border-white/30 transition-all duration-300 mt-2"
-                    >
-                      Continuar
-                    </motion.button>
-                  </div>
-                </motion.div>
-              </>
-            )}
-          </AnimatePresence>
         </motion.div>
       </DialogContent>
     </Dialog>
