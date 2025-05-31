@@ -1,3 +1,4 @@
+
 import { cn } from "@/lib/utils";
 import { SidebarNav } from "@/components/sidebar/SidebarNav";
 import { useState, useEffect, useRef } from "react";
@@ -216,28 +217,30 @@ export default function Sidebar({
           </div>
         </div>
 
-        <SidebarNav
-          isCollapsed={sidebarCollapsed}
-          onToggleCollapse={handleToggleCollapse}
-          className="p-2"
-        />
+        <div className="relative">
+          <SidebarNav
+            isCollapsed={sidebarCollapsed}
+            onToggleCollapse={handleToggleCollapse}
+            className="p-2"
+          />
 
-        {/* Toggle Button - positioned at bottom right, only visible on hover */}
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={handleToggleCollapse}
-          className={cn(
-            "h-8 w-8 rounded-full bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20 border-[#FF6B00]/30 transition-all duration-300 absolute bottom-4 right-2 shadow-sm hover:shadow-md",
-            isHovered ? "opacity-100" : "opacity-0"
-          )}
-        >
-          {sidebarCollapsed ? (
-            <ChevronRight className="h-5 w-5" />
-          ) : (
-            <ChevronLeft className="h-5 w-5" />
-          )}
-        </Button>
+          {/* Toggle Button - positioned next to profile image but more to the corner */}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleToggleCollapse}
+            className={cn(
+              "h-6 w-6 rounded-full bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20 border-[#FF6B00]/30 transition-all duration-300 absolute top-[120px] right-1 shadow-sm hover:shadow-md z-10",
+              isHovered ? "opacity-100" : "opacity-0"
+            )}
+          >
+            {sidebarCollapsed ? (
+              <ChevronRight className="h-3 w-3" />
+            ) : (
+              <ChevronLeft className="h-3 w-3" />
+            )}
+          </Button>
+        </div>
       </aside>
     </>
   );
