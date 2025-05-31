@@ -47,6 +47,7 @@
     "@sendgrid/mail": "^8.1.5",
     "@supabase/supabase-js": "^2.49.8",
     "@types/dagre": "^0.7.52",
+    "@types/react-beautiful-dnd": "^13.1.8",
     "@types/uuid": "^10.0.0",
     "axios": "^1.8.4",
     "canvas-confetti": "^1.9.3",

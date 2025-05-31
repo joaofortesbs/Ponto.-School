@@ -1,5 +1,6 @@
+
 import React from "react";
-import { useDrop } from "react-dnd";
+import { Droppable } from "react-beautiful-dnd";
 import TaskCard from "./TaskCard";
 import { Task, TaskStatus } from "./TasksView";
 import { Plus } from "lucide-react";
@@ -21,68 +22,38 @@ const TaskColumn: React.FC<TaskColumnProps> = ({
   onMoveTask,
   onCompleteTask,
 }) => {
-  const [{ isOver }, drop] = useDrop(() => ({
-    accept: "TASK",
-    drop: (item: { id: string }) => {
-      onMoveTask(item.id, status);
-    },
-    collect: (monitor) => ({
-      isOver: !!monitor.isOver(),
-    }),
-  }));
-
   // Definir cores com base no status
   const getColumnColors = () => {
     switch (status) {
       case "a-fazer":
         return {
           header: "bg-blue-500 dark:bg-blue-600",
-          body: isOver
-            ? "bg-blue-50 dark:bg-blue-900/20"
-            : "bg-white dark:bg-[#1E293B]",
-          border: isOver
-            ? "border-blue-300 dark:border-blue-700"
-            : "border-gray-200 dark:border-gray-700",
+          body: "bg-white dark:bg-[#1E293B]",
+          border: "border-gray-200 dark:border-gray-700",
         };
       case "em-andamento":
         return {
           header: "bg-purple-500 dark:bg-purple-600",
-          body: isOver
-            ? "bg-purple-50 dark:bg-purple-900/20"
-            : "bg-white dark:bg-[#1E293B]",
-          border: isOver
-            ? "border-purple-300 dark:border-purple-700"
-            : "border-gray-200 dark:border-gray-700",
+          body: "bg-white dark:bg-[#1E293B]",
+          border: "border-gray-200 dark:border-gray-700",
         };
       case "concluido":
         return {
           header: "bg-green-500 dark:bg-green-600",
-          body: isOver
-            ? "bg-green-50 dark:bg-green-900/20"
-            : "bg-white dark:bg-[#1E293B]",
-          border: isOver
-            ? "border-green-300 dark:border-green-700"
-            : "border-gray-200 dark:border-gray-700",
+          body: "bg-white dark:bg-[#1E293B]",
+          border: "border-gray-200 dark:border-gray-700",
         };
       case "atrasado":
         return {
           header: "bg-red-500 dark:bg-red-600",
-          body: isOver
-            ? "bg-red-50 dark:bg-red-900/20"
-            : "bg-white dark:bg-[#1E293B]",
-          border: isOver
-            ? "border-red-300 dark:border-red-700"
-            : "border-gray-200 dark:border-gray-700",
+          body: "bg-white dark:bg-[#1E293B]",
+          border: "border-gray-200 dark:border-gray-700",
         };
       default:
         return {
           header: "bg-gray-500 dark:bg-gray-600",
-          body: isOver
-            ? "bg-gray-50 dark:bg-gray-800"
-            : "bg-white dark:bg-[#1E293B]",
-          border: isOver
-            ? "border-gray-300 dark:border-gray-600"
-            : "border-gray-200 dark:border-gray-700",
+          body: "bg-white dark:bg-[#1E293B]",
+          border: "border-gray-200 dark:border-gray-700",
         };
     }
   };
@@ -91,8 +62,7 @@ const TaskColumn: React.FC<TaskColumnProps> = ({
 
   return (
     <div
-      ref={drop}
-      className={`flex flex-col h-[550px] rounded-xl shadow-md overflow-hidden border ${colors.border} transition-all duration-300 ${isOver ? "scale-[1.02] shadow-lg border-[#FF6B00]/50" : "hover:shadow-lg hover:border-[#FF6B00]/30"} custom-scrollbar`}
+      className={`flex flex-col h-[550px] rounded-xl shadow-md overflow-hidden border ${colors.border} transition-all duration-300 hover:shadow-lg hover:border-[#FF6B00]/30 custom-scrollbar`}
       data-status={status}
     >
       <div
@@ -103,34 +73,44 @@ const TaskColumn: React.FC<TaskColumnProps> = ({
           {tasks.length}
         </span>
       </div>
-      <div
-        className={`flex-1 p-2 overflow-y-auto ${colors.body} transition-colors duration-200 custom-scrollbar`}
-      >
-        {tasks.length > 0 ? (
-          <div className="space-y-2">
-            {tasks.map((task) => (
-              <TaskCard
-                key={task.id}
-                task={task}
-                onClick={() => onTaskClick(task)}
-                onComplete={(completed) => onCompleteTask(task.id, completed)}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="h-full flex flex-col items-center justify-center text-center p-4">
-            <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-2">
-              <Plus className="h-6 w-6 text-gray-400 dark:text-gray-500" />
-            </div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Nenhuma tarefa aqui.
-            </p>
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-              Arraste tarefas ou adicione novas.
-            </p>
+      <Droppable droppableId={status}>
+        {(provided, snapshot) => (
+          <div
+            ref={provided.innerRef}
+            {...provided.droppableProps}
+            className={`flex-1 p-2 overflow-y-auto ${colors.body} transition-colors duration-200 custom-scrollbar ${
+              snapshot.isDraggingOver ? "bg-blue-50 dark:bg-blue-900/20" : ""
+            }`}
+          >
+            {tasks.length > 0 ? (
+              <div className="space-y-2">
+                {tasks.map((task, index) => (
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    index={index}
+                    onClick={() => onTaskClick(task)}
+                    onComplete={(completed) => onCompleteTask(task.id, completed)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center text-center p-4">
+                <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-2">
+                  <Plus className="h-6 w-6 text-gray-400 dark:text-gray-500" />
+                </div>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Nenhuma tarefa aqui.
+                </p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                  Arraste tarefas ou adicione novas.
+                </p>
+              </div>
+            )}
+            {provided.placeholder}
           </div>
         )}
-      </div>
+      </Droppable>
     </div>
   );
 };
