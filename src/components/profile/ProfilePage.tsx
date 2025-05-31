@@ -13,6 +13,10 @@ import AboutMe from "./AboutMe";
 import Education from "./Education";
 import Skills from "./Skills";
 import Interests from "./Interests";
+import AddPartnersModal from "./AddPartnersModal";
+import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
+import { UserPlus } from "lucide-react";
 
 // Import tabs content
 import ActivitiesTab from "../tabs/ActivitiesTab";
@@ -29,6 +33,7 @@ export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAddPartnersModalOpen, setIsAddPartnersModalOpen] = useState(false);
   const [contactInfo, setContactInfo] = useState({
     email: "",
     phone: "Adicionar telefone",
@@ -44,24 +49,24 @@ export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
     const fetchProfile = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        
+
         if (!user) {
           setLoading(false);
           return;
         }
-        
+
         const { data, error } = await supabase
           .from("profiles")
           .select("*")
           .eq("id", user.id)
           .single();
-          
+
         if (error) {
           console.error("Error fetching user profile:", error);
           setLoading(false);
           return;
         }
-        
+
         if (data) {
           // Ensure level and rank are set with defaults if not present
           const profile = {
@@ -69,9 +74,9 @@ export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
             level: data.level || 1,
             rank: data.rank || "Aprendiz",
           };
-          
+
           setUserProfile(profile);
-          
+
           // Set contact info from user data
           setContactInfo({
             email: data.email || user.email || "",
@@ -82,7 +87,7 @@ export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
               (user.raw_user_meta_data?.birth_date) || 
               "Adicionar data de nascimento",
           });
-          
+
           if (data.bio) {
             setAboutMe(data.bio);
           }
@@ -303,7 +308,7 @@ export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
                   </ScrollArea>
                 </Tabs>
               </div>
-              
+
               {/* Badges & Achievements - Segunda célula do grid */}
               <div className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 overflow-hidden shadow-sm p-6" style={{ minHeight: "420px" }}>
                 <h3 className="text-lg font-semibold text-[#29335C] dark:text-white mb-4">Conquistas</h3>
@@ -315,6 +320,11 @@ export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
           </div>
         </div>
       </div>
+       {/* Modal de Adicionar Parceiros */}
+       <AddPartnersModal
+        isOpen={isAddPartnersModalOpen}
+        onClose={() => setIsAddPartnersModalOpen(false)}
+      />
     </div>
   );
 }
