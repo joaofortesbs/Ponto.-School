@@ -1,10 +1,11 @@
 
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
 
 export const useProfileCover = () => {
   const [isUploading, setIsUploading] = useState(false);
+  const { toast } = useToast();
 
   const uploadCoverImage = async (file: File): Promise<string | null> => {
     try {
@@ -12,7 +13,11 @@ export const useProfileCover = () => {
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        toast.error('Usuário não autenticado');
+        toast({
+          title: "Erro",
+          description: "Usuário não autenticado",
+          variant: "destructive",
+        });
         return null;
       }
 
@@ -29,7 +34,11 @@ export const useProfileCover = () => {
 
       if (uploadError) {
         console.error('Erro no upload:', uploadError);
-        toast.error('Erro ao fazer upload da imagem');
+        toast({
+          title: "Erro",
+          description: "Erro ao fazer upload da imagem",
+          variant: "destructive",
+        });
         return null;
       }
 
@@ -46,16 +55,27 @@ export const useProfileCover = () => {
 
       if (updateError) {
         console.error('Erro ao atualizar perfil:', updateError);
-        toast.error('Erro ao salvar a capa no perfil');
+        toast({
+          title: "Erro",
+          description: "Erro ao salvar a capa no perfil",
+          variant: "destructive",
+        });
         return null;
       }
 
-      toast.success('Capa de perfil atualizada com sucesso!');
+      toast({
+        title: "Sucesso",
+        description: "Capa de perfil atualizada com sucesso!",
+      });
       return publicUrl;
 
     } catch (error) {
       console.error('Erro inesperado:', error);
-      toast.error('Erro inesperado ao atualizar a capa');
+      toast({
+        title: "Erro",
+        description: "Erro inesperado ao atualizar a capa",
+        variant: "destructive",
+      });
       return null;
     } finally {
       setIsUploading(false);
@@ -68,7 +88,11 @@ export const useProfileCover = () => {
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        toast.error('Usuário não autenticado');
+        toast({
+          title: "Erro",
+          description: "Usuário não autenticado",
+          variant: "destructive",
+        });
         return false;
       }
 
@@ -86,16 +110,27 @@ export const useProfileCover = () => {
 
       if (updateError) {
         console.error('Erro ao remover capa do perfil:', updateError);
-        toast.error('Erro ao remover a capa do perfil');
+        toast({
+          title: "Erro",
+          description: "Erro ao remover a capa do perfil",
+          variant: "destructive",
+        });
         return false;
       }
 
-      toast.success('Capa de perfil removida com sucesso!');
+      toast({
+        title: "Sucesso",
+        description: "Capa de perfil removida com sucesso!",
+      });
       return true;
 
     } catch (error) {
       console.error('Erro inesperado:', error);
-      toast.error('Erro inesperado ao remover a capa');
+      toast({
+        title: "Erro",
+        description: "Erro inesperado ao remover a capa",
+        variant: "destructive",
+      });
       return false;
     } finally {
       setIsUploading(false);
