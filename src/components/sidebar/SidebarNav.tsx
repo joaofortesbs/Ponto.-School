@@ -1,4 +1,3 @@
-
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -486,53 +485,8 @@ export function SidebarNav({
         </div>
       )}
 
-      {/* User Profile Component - Exactly like the image */}
+      {/* User Profile Component - Removed the circular profile image, keeping only greeting and progress */}
       <div className="bg-white dark:bg-[#001427] p-3 mb-4 mt-2 flex flex-col items-center relative group">
-        <div className="relative mb-2">
-          <div
-            className="rounded-full overflow-hidden mx-auto relative group"
-            style={{
-              width: isCollapsed ? "40px" : "60px",
-              height: isCollapsed ? "40px" : "60px",
-              background: "linear-gradient(45deg, #FFD700, #FF6B00, #FF0000)",
-              padding: "2px",
-            }}
-          >
-            <div
-              className="cursor-pointer w-full h-full rounded-full overflow-hidden relative"
-              style={{
-                background: "#001427",
-                padding: "2px",
-              }}
-            >
-              <img
-                src={
-                  profileImage ||
-                  "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&mouth=smile&eyes=happy"
-                }
-                alt="Perfil do Usuário"
-                className="w-full h-full object-cover rounded-full"
-              />
-              <div
-                className="absolute inset-0 bg-black/50 opacity-0 group-hover/avatar:opacity-100 transition-opacity flex items-center justify-center"
-                onClick={handleImageUploadClick}
-              >
-                {isUploading ? (
-                  <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                ) : (
-                  <Upload className="h-5 w-5 text-white" />
-                )}
-              </div>
-              <input
-                type="file"
-                ref={fileInputRef}
-                className="hidden"
-                accept="image/*"
-                onChange={handleImageChange}
-              />
-            </div>
-          </div>
-        </div>
         {!isCollapsed && (
           <div className="text-[#001427] dark:text-white text-center">
             <h3 className="font-semibold text-base mb-2 flex items-center justify-center">
