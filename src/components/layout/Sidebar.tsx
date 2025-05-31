@@ -1,4 +1,3 @@
-
 import { cn } from "@/lib/utils";
 import { SidebarNav } from "@/components/sidebar/SidebarNav";
 import { useState, useEffect, useRef } from "react";
@@ -19,6 +18,7 @@ export default function Sidebar({
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(isCollapsed);
   const [customLogo, setCustomLogo] = useState<string | null>(null);
+  const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
     // Obter a imagem padrão da configuração global ou usar o valor padrão
@@ -180,6 +180,8 @@ export default function Sidebar({
           className,
         )}
         key="sidebar-container"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
         {...props}
       >
         {/* Header Section with Logo */}
@@ -196,7 +198,7 @@ export default function Sidebar({
                 alt="Logo Ponto School"
                 className={cn(
                   "object-contain mx-auto transition-all duration-300",
-                  sidebarCollapsed ? "h-8 w-8" : "h-16 w-auto"
+                  sidebarCollapsed ? "h-12 w-12" : "h-16 w-auto"
                 )}
                 loading="eager"
                 fetchpriority="high"
@@ -212,21 +214,6 @@ export default function Sidebar({
               />
             </div>
           </div>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handleToggleCollapse}
-            className={cn(
-              "h-8 w-8 rounded-full bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20 border-[#FF6B00]/30 transition-all duration-300 absolute shadow-sm hover:shadow-md",
-              sidebarCollapsed ? "right-2" : "right-2",
-            )}
-          >
-            {sidebarCollapsed ? (
-              <ChevronRight className="h-5 w-5" />
-            ) : (
-              <ChevronLeft className="h-5 w-5" />
-            )}
-          </Button>
         </div>
 
         <SidebarNav
@@ -234,6 +221,23 @@ export default function Sidebar({
           onToggleCollapse={handleToggleCollapse}
           className="p-2"
         />
+
+        {/* Toggle Button - positioned at bottom right, only visible on hover */}
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={handleToggleCollapse}
+          className={cn(
+            "h-8 w-8 rounded-full bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20 border-[#FF6B00]/30 transition-all duration-300 absolute bottom-4 right-2 shadow-sm hover:shadow-md",
+            isHovered ? "opacity-100" : "opacity-0"
+          )}
+        >
+          {sidebarCollapsed ? (
+            <ChevronRight className="h-5 w-5" />
+          ) : (
+            <ChevronLeft className="h-5 w-5" />
+          )}
+        </Button>
       </aside>
     </>
   );
