@@ -3,8 +3,7 @@ import { cn } from "@/lib/utils";
 import { SidebarNav } from "@/components/sidebar/SidebarNav";
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X, ChevronLeft, ChevronRight, Camera } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { Menu, X, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   isCollapsed?: boolean;
@@ -20,14 +19,8 @@ export default function Sidebar({
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(isCollapsed);
   const [customLogo, setCustomLogo] = useState<string | null>(null);
-  const [profileImage, setProfileImage] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    // Load user profile image on component mount
-    loadUserProfile();
-    
     // Obter a imagem padrão da configuração global ou usar o valor padrão
     const defaultLogo =
       window.PONTO_SCHOOL_CONFIG?.defaultLogo ||
@@ -147,120 +140,6 @@ export default function Sidebar({
     };
   }, []);
 
-  const loadUserProfile = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        console.log("No user found");
-        return;
-      }
-
-      const { data: profile, error } = await supabase
-        .from("profiles")
-        .select("avatar_url")
-        .eq("id", user.id)
-        .single();
-
-      if (error) {
-        console.error("Error loading user profile:", error);
-        return;
-      }
-
-      if (profile?.avatar_url) {
-        setProfileImage(profile.avatar_url);
-        console.log("Profile image loaded:", profile.avatar_url);
-      }
-    } catch (error) {
-      console.error("Error in loadUserProfile:", error);
-    }
-  };
-
-  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    if (!allowedTypes.includes(file.type)) {
-      alert('Por favor, selecione uma imagem válida (JPEG, PNG, GIF ou WebP).');
-      return;
-    }
-
-    // Validate file size (max 5MB)
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    if (file.size > maxSize) {
-      alert('A imagem deve ter no máximo 5MB.');
-      return;
-    }
-
-    setUploading(true);
-
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        alert('Você precisa estar logado para fazer upload da imagem.');
-        return;
-      }
-
-      // Create unique filename
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}-${Math.random()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
-
-      // Upload file to Supabase Storage
-      const { error: uploadError } = await supabase.storage
-        .from('profile-images')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
-
-      if (uploadError) {
-        console.error('Upload error:', uploadError);
-        alert('Erro ao fazer upload da imagem. Tente novamente.');
-        return;
-      }
-
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('profile-images')
-        .getPublicUrl(filePath);
-
-      // Update user profile with new avatar URL
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .upsert({
-          id: user.id,
-          avatar_url: publicUrl,
-          email: user.email,
-          updated_at: new Date().toISOString()
-        });
-
-      if (updateError) {
-        console.error('Database update error:', updateError);
-        alert('Erro ao salvar a imagem no perfil. Tente novamente.');
-        return;
-      }
-
-      // Update local state
-      setProfileImage(publicUrl);
-      console.log('Profile image uploaded and saved successfully:', publicUrl);
-      
-      // Clear file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-
-    } catch (error) {
-      console.error('Error uploading profile image:', error);
-      alert('Erro inesperado ao fazer upload da imagem.');
-    } finally {
-      setUploading(false);
-    }
-  };
-
   const handleToggleCollapse = () => {
     setSidebarCollapsed(!sidebarCollapsed);
     if (onToggleCollapse) {
@@ -357,61 +236,6 @@ export default function Sidebar({
               <ChevronLeft className="h-5 w-5" />
             )}
           </Button>
-        </div>
-
-        {/* Profile Image Section */}
-        <div className="p-4 border-b border-gray-200 dark:border-gray-800">
-          <div className="flex flex-col items-center">
-            <div className="relative">
-              <div 
-                className="w-16 h-16 rounded-full overflow-hidden bg-gradient-to-r from-[#FF6B00] to-[#FF8736] p-0.5 cursor-pointer"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-[#001427] flex items-center justify-center">
-                  {profileImage ? (
-                    <img
-                      src={profileImage}
-                      alt="Profile"
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        console.error("Error loading profile image");
-                        setProfileImage(null);
-                      }}
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
-                      <div className="w-8 h-8 bg-yellow-300 rounded-full flex items-center justify-center">
-                        <div className="w-6 h-6 bg-orange-400 rounded-full"></div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-              
-              {/* Camera Icon Overlay */}
-              <div 
-                className="absolute -bottom-1 -right-1 w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center cursor-pointer shadow-lg"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <Camera className="w-3 h-3 text-white" />
-              </div>
-            </div>
-            
-            {uploading && (
-              <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                Enviando...
-              </div>
-            )}
-          </div>
-          
-          {/* Hidden File Input */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleFileSelect}
-            className="hidden"
-          />
         </div>
 
         <SidebarNav

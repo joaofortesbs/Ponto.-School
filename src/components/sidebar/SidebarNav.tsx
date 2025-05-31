@@ -43,6 +43,7 @@ import {
   GraduationCap,
   CalendarClock,
   Upload,
+  Camera,
 } from "lucide-react";
 import MentorAI from "@/components/mentor/MentorAI";
 import AgendaNav from "./AgendaNav";
@@ -155,7 +156,7 @@ export function SidebarNav({
             document.dispatchEvent(new CustomEvent('usernameUpdated', { 
               detail: { 
                 displayName: data.display_name,
-                firstName: bestName,
+                firstName: firstName,
                 username: data.username
               } 
             }));
@@ -485,8 +486,61 @@ export function SidebarNav({
         </div>
       )}
 
-      {/* User Profile Component - Removed the circular profile image, keeping only greeting and progress */}
-      <div className="bg-white dark:bg-[#001427] p-3 mb-4 mt-2 flex flex-col items-center relative group">
+      {/* Profile Image Component - Moved above greeting */}
+      <div className="p-4 flex flex-col items-center">
+        <div className="relative mb-4">
+          <div 
+            className="w-16 h-16 rounded-full overflow-hidden bg-gradient-to-r from-[#FF6B00] via-[#FF8736] to-[#FFB366] p-0.5 cursor-pointer"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-[#001427] flex items-center justify-center">
+              {profileImage ? (
+                <img
+                  src={profileImage}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    console.error("Error loading profile image");
+                    setProfileImage(null);
+                  }}
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
+                  <div className="w-8 h-8 bg-yellow-300 rounded-full flex items-center justify-center">
+                    <div className="w-6 h-6 bg-orange-400 rounded-full"></div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          {/* Camera Icon Overlay */}
+          <div 
+            className="absolute -bottom-1 -right-1 w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center cursor-pointer shadow-lg"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <Camera className="w-3 h-3 text-white" />
+          </div>
+        </div>
+        
+        {isUploading && (
+          <div className="mb-2 text-xs text-gray-500 dark:text-gray-400">
+            Enviando...
+          </div>
+        )}
+        
+        {/* Hidden File Input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleImageChange}
+          className="hidden"
+        />
+      </div>
+
+      {/* User Profile Component - Greeting and progress only */}
+      <div className="bg-white dark:bg-[#001427] p-3 mb-4 flex flex-col items-center relative group">
         {!isCollapsed && (
           <div className="text-[#001427] dark:text-white text-center">
             <h3 className="font-semibold text-base mb-2 flex items-center justify-center">
@@ -517,7 +571,7 @@ export function SidebarNav({
         )}
       </div>
 
-      <ScrollArea className="h-[calc(100%-180px)] py-2">
+      <ScrollArea className="h-[calc(100%-250px)] py-2">
         <nav className="grid gap-1 px-2">
           {navItems.map((item, index) => (
             <div key={index} className="relative">
