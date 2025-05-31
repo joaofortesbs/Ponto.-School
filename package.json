@@ -89,6 +89,7 @@
     "reactflow": "^11.11.4",
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.1",
+    "sonner": "^2.0.4",
     "starter": "file:",
     "tailwind-merge": "^2.3.0",
     "tailwindcss-animate": "^1.0.7",
