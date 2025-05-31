@@ -1495,6 +1495,33 @@ export default function ProfileHeader({
           </Button>
         </motion.div>
 
+        {/* Botão Adicionar Parceiros */}
+        <motion.div
+          className="mt-2"
+          initial={{ y: 10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 1.4, duration: 0.3 }}
+        >
+          <Button
+            className="w-full bg-gradient-to-r from-[#0A2540] to-[#1E3A5F] hover:from-[#0F2D4A] hover:to-[#2A4A6F] text-white text-xs h-8 shadow-sm hover:shadow hover:shadow-[#0A2540]/30 transition-all duration-300 group flex items-center justify-center relative overflow-hidden border border-[#0A2540]/20"
+            onClick={() => {
+              // Função para adicionar parceiros - será implementada posteriormente
+              console.log("Adicionar parceiros clicked");
+              toast({
+                title: "Adicionar Parceiros",
+                description: "Funcionalidade em desenvolvimento",
+              });
+            }}
+            disabled={isUploading}
+          >
+            {/* Efeito de brilho no hover */}
+            <span className="absolute w-32 h-32 -mt-12 -ml-12 bg-white rotate-12 opacity-0 group-hover:opacity-10 transition-opacity duration-1000 transform group-hover:translate-x-40 group-hover:translate-y-10 pointer-events-none"></span>
+
+            <UserPlus className="h-3 w-3 mr-1.5 group-hover:scale-110 transition-transform" />
+            <span className="relative z-10">Adicionar Parceiros</span>
+          </Button>
+        </motion.div>
+
         {/* Carousel de conquistas recentes - reduzido */}
         <motion.div
           className="mt-3"
