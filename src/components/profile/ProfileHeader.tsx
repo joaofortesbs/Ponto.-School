@@ -1247,7 +1247,7 @@ export default function ProfileHeader({
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 1.1, duration: 0.3 }}
         >
-          {/* Seguidores - agora é o primeiro componente */}
+          {/* Parceiros/Seguidores - exibe 0 para novos usuários */}
           <motion.div
             whileHover={{ y: -3, scale: 1.03 }}
             className="text-center group/stat bg-slate-50 dark:bg-slate-800/30 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/30 transition-all duration-300 shadow-sm hover:shadow border border-transparent hover:border-[#FF6B00]/10 relative"
@@ -1258,87 +1258,30 @@ export default function ProfileHeader({
               <div className="w-6 h-6 bg-[#FF6B00]/10 rounded-full flex items-center justify-center mb-0.5 group-hover/stat:bg-[#FF6B00]/20 transition-all duration-300">
                 <UserPlus className="h-3.5 w-3.5 text-[#FF6B00] group-hover/stat:scale-110 transition-transform" />
               </div>
-              <p className="text-base font-bold text-[#29335C] dark:text-white">24</p>
-              <p className="text-[10px] text-[#64748B] dark:text-white/60">Seguidores</p>
+              <p className="text-base font-bold text-[#29335C] dark:text-white">{userProfile?.followers_count || 0}</p>
+              <p className="text-[10px] text-[#64748B] dark:text-white/60">Parceiros</p>
             </div>
             
-            {/* Tooltip com detalhes dos seguidores */}
+            {/* Tooltip quando não há parceiros */}
             {showFollowersTooltip && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
-                className="absolute -top-24 left-1/2 transform -translate-x-1/2 bg-white dark:bg-[#1E293B] p-2 rounded-lg shadow-lg text-xs z-30 w-48 border border-[#E0E1DD] dark:border-white/10"
+                className="absolute -top-16 left-1/2 transform -translate-x-1/2 bg-white dark:bg-[#1E293B] p-2 rounded-lg shadow-lg text-xs z-30 w-48 border border-[#E0E1DD] dark:border-white/10"
               >
-                <div className="flex justify-between items-center mb-1">
-                  <div className="font-medium text-[#29335C] dark:text-white">
-                    {showFollowingInTooltip ? "Seguindo (18)" : "Seguidores (24)"}
-                  </div>
-                  <div 
-                    className="flex items-center gap-1 bg-slate-100 dark:bg-slate-700 rounded-full px-1.5 py-0.5 cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
-                    onClick={() => setShowFollowingInTooltip(!showFollowingInTooltip)}
-                  >
-                    {showFollowingInTooltip ? 
-                      <UserPlus className="h-3 w-3 text-[#FF6B00]" /> : 
-                      <UserCheck className="h-3 w-3 text-[#FF6B00]" />
-                    }
-                    <span className="text-[9px] text-[#29335C] dark:text-white">
-                      {showFollowingInTooltip ? "Ver seguidores" : "Ver seguindo"}
-                    </span>
-                  </div>
-                </div>
-                
-                <div className="max-h-20 overflow-y-auto">
-                  {!showFollowingInTooltip ? (
-                    // Conteúdo de seguidores
-                    <>
-                      <div className="flex items-center gap-1.5 mb-1">
-                        <div className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden">
-                          <span className="text-[9px] font-medium">ML</span>
-                        </div>
-                        <span className="text-[#29335C] dark:text-white">Maria Lima</span>
+                <div className="text-center text-[#29335C] dark:text-white">
+                  {(userProfile?.followers_count || 0) === 0 ? (
+                    <div className="space-y-1">
+                      <div className="font-medium">Nenhum parceiro ainda</div>
+                      <div className="text-[#64748B] dark:text-white/60">
+                        Use o botão "Adicionar Parceiros" para conectar-se com outros usuários
                       </div>
-                      <div className="flex items-center gap-1.5 mb-1">
-                        <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center overflow-hidden">
-                          <span className="text-[9px] font-medium">PS</span>
-                        </div>
-                        <span className="text-[#29335C] dark:text-white">Pedro Silva</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 mb-1">
-                        <div className="w-5 h-5 rounded-full bg-yellow-100 flex items-center justify-center overflow-hidden">
-                          <span className="text-[9px] font-medium">AS</span>
-                        </div>
-                        <span className="text-[#29335C] dark:text-white">Ana Santos</span>
-                      </div>
-                      <div className="text-center text-[#FF6B00] text-[10px] mt-1 cursor-pointer hover:underline">
-                        Ver todos os 24 seguidores
-                      </div>
-                    </>
+                    </div>
                   ) : (
-                    // Conteúdo de quem o usuário segue
-                    <>
-                      <div className="flex items-center gap-1.5 mb-1">
-                        <div className="w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center overflow-hidden">
-                          <span className="text-[9px] font-medium">JC</span>
-                        </div>
-                        <span className="text-[#29335C] dark:text-white">João Costa</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 mb-1">
-                        <div className="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center overflow-hidden">
-                          <span className="text-[9px] font-medium">CM</span>
-                        </div>
-                        <span className="text-[#29335C] dark:text-white">Carlos Mendes</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 mb-1">
-                        <div className="w-5 h-5 rounded-full bg-pink-100 flex items-center justify-center overflow-hidden">
-                          <span className="text-[9px] font-medium">LC</span>
-                        </div>
-                        <span className="text-[#29335C] dark:text-white">Lucia Campos</span>
-                      </div>
-                      <div className="text-center text-[#FF6B00] text-[10px] mt-1 cursor-pointer hover:underline">
-                        Ver todos os 18 perfis
-                      </div>
-                    </>
+                    <div className="font-medium">
+                      {userProfile?.followers_count} Parceiros
+                    </div>
                   )}
                 </div>
               </motion.div>
@@ -1361,7 +1304,7 @@ export default function ProfileHeader({
               <p className="text-[10px] text-[#64748B] dark:text-white/60">Nível</p>
             </div>
 
-            {/* Tooltip com detalhes */}
+            {/* Tooltip com detalhes do nível */}
             {showStatsDetails && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
@@ -1372,11 +1315,11 @@ export default function ProfileHeader({
                 <div className="text-center mb-1 font-medium text-[#29335C] dark:text-white">Detalhes do Nível</div>
                 <div className="flex justify-between items-center">
                   <span className="text-[#64748B] dark:text-white/60">XP Atual:</span>
-                  <span className="font-medium text-[#29335C] dark:text-white">720/1000</span>
+                  <span className="font-medium text-[#29335C] dark:text-white">{userProfile?.experience_points || 0}/{((userProfile?.level || 1) * 1000)}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-[#64748B] dark:text-white/60">Próximo Nível:</span>
-                  <span className="font-medium text-[#FF6B00]">Nível 2</span>
+                  <span className="font-medium text-[#FF6B00]">Nível {(userProfile?.level || 1) + 1}</span>
                 </div>
               </motion.div>
             )}
@@ -1390,7 +1333,7 @@ export default function ProfileHeader({
               <div className="w-6 h-6 bg-[#FF6B00]/10 rounded-full flex items-center justify-center mb-0.5 group-hover/stat:bg-[#FF6B00]/20 transition-all duration-300">
                 <Users className="h-3.5 w-3.5 text-[#FF6B00] group-hover/stat:scale-110 transition-transform" />
               </div>
-              <p className="text-base font-bold text-[#29335C] dark:text-white">8</p>
+              <p className="text-base font-bold text-[#29335C] dark:text-white">{userProfile?.classes_count || 0}</p>
               <p className="text-[10px] text-[#64748B] dark:text-white/60">Turmas</p>
             </div>
           </motion.div>
@@ -1403,7 +1346,7 @@ export default function ProfileHeader({
               <div className="w-6 h-6 bg-[#FF6B00]/10 rounded-full flex items-center justify-center mb-0.5 group-hover/stat:bg-[#FF6B00]/20 transition-all duration-300">
                 <Award className="h-3.5 w-3.5 text-[#FF6B00] group-hover/stat:scale-110 transition-transform" />
               </div>
-              <p className="text-base font-bold text-[#29335C] dark:text-white">12</p>
+              <p className="text-base font-bold text-[#29335C] dark:text-white">{userProfile?.achievements_count || 0}</p>
               <p className="text-[10px] text-[#64748B] dark:text-white/60">Conquistas</p>
             </div>
           </motion.div>
@@ -1428,18 +1371,27 @@ export default function ProfileHeader({
               onMouseEnter={() => setShowTooltip(true)}
               onMouseLeave={() => setShowTooltip(false)}
             >
-              72%
+              {(() => {
+                const currentXP = userProfile?.experience_points || 0;
+                const currentLevel = userProfile?.level || 1;
+                const xpForNextLevel = currentLevel * 1000;
+                const previousLevelXP = (currentLevel - 1) * 1000;
+                const xpInCurrentLevel = currentXP - previousLevelXP;
+                const xpNeededForLevel = xpForNextLevel - previousLevelXP;
+                const progressPercentage = xpNeededForLevel > 0 ? Math.round((xpInCurrentLevel / xpNeededForLevel) * 100) : 0;
+                return `${progressPercentage}%`;
+              })()}
               <AnimatePresence>
                 {showTooltip && (
                   <motion.div
                     initial={{ opacity: 0, y: 5 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 5 }}
-                    className="absolute right-6 -mt-10 px-2py-1.5 bg-black/80 text-white text-[10px] rounded-lg shadow-lg backdrop-blur-sm z-50 w-32 text-center"
+                    className="absolute right-6 -mt-10 px-2 py-1.5 bg-black/80 text-white text-[10px] rounded-lg shadow-lg backdrop-blur-sm z-50 w-32 text-center"
                   >
                     <div className="font-medium mb-0.5">Progresso</div>
-                    <div className="text-white/80">720/1000 XP</div>
-                    <div className="text-white/80">Faltam 280 XP</div>
+                    <div className="text-white/80">{userProfile?.experience_points || 0}/{(userProfile?.level || 1) * 1000} XP</div>
+                    <div className="text-white/80">Faltam {((userProfile?.level || 1) * 1000) - (userProfile?.experience_points || 0)} XP</div>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -1448,7 +1400,17 @@ export default function ProfileHeader({
           <div className="h-2 w-full bg-slate-100 dark:bg-slate-800/50 rounded-full overflow-hidden shadow-inner">
             <div
               className="h-full bg-gradient-to-r from-[#FF6B00] via-[#FF9B50] to-[#FF6B00] rounded-full progress-animation relative"
-              style={{ width: '72%' }}
+              style={{ 
+                width: `${(() => {
+                  const currentXP = userProfile?.experience_points || 0;
+                  const currentLevel = userProfile?.level || 1;
+                  const xpForNextLevel = currentLevel * 1000;
+                  const previousLevelXP = (currentLevel - 1) * 1000;
+                  const xpInCurrentLevel = currentXP - previousLevelXP;
+                  const xpNeededForLevel = xpForNextLevel - previousLevelXP;
+                  return xpNeededForLevel > 0 ? Math.round((xpInCurrentLevel / xpNeededForLevel) * 100) : 0;
+                })()}%` 
+              }}
             >
               {/* Animação de brilho */}
               <div className="absolute inset-0 animate-shimmer" style={{
@@ -1497,7 +1459,7 @@ export default function ProfileHeader({
 
         
 
-        {/* Carousel de conquistas recentes - reduzido */}
+        {/* Conquistas recentes ou estado vazio - reduzido */}
         <motion.div
           className="mt-3"
           initial={{ y: 10, opacity: 0 }}
@@ -1510,38 +1472,27 @@ export default function ProfileHeader({
               <span className="font-medium">Conquistas Recentes</span>
             </div>
 
-            {/* Animação de carrossel para conquistas */}
+            {/* Estado baseado nas conquistas reais do usuário */}
             <div className="h-5 w-full relative overflow-hidden">
-              {recentAchievements.map((achievement, index) => (
-                <motion.div
-                  key={index}
-                  className="absolute inset-0 flex items-center justify-center gap-1.5"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{
-                    opacity: activeAchievement === index ? 1 : 0,
-                    y: activeAchievement === index ? 0 : 20
-                  }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <span className="text-[#FF6B00]">{achievement.icon}</span>
-                  <span className="text-[#29335C] dark:text-white font-medium">{achievement.name}</span>
-                  <span className="text-[#64748B] dark:text-white/60 text-[9px]">• {achievement.date}</span>
-                </motion.div>
-              ))}
+              {(userProfile?.achievements_count || 0) === 0 ? (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-[#64748B] dark:text-white/60 text-[10px] text-center">
+                    Suas conquistas aparecerão aqui conforme você progride
+                  </span>
+                </div>
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center gap-1.5">
+                  <Star className="h-3 w-3 text-[#FF6B00]" />
+                  <span className="text-[#29335C] dark:text-white font-medium text-[10px]">
+                    {userProfile?.achievements_count} conquista{(userProfile?.achievements_count || 0) > 1 ? 's' : ''} obtida{(userProfile?.achievements_count || 0) > 1 ? 's' : ''}
+                  </span>
+                </div>
+              )}
             </div>
 
-            {/* Indicadores de navegação */}
+            {/* Indicador simples */}
             <div className="flex gap-0.5">
-              {recentAchievements.map((_, index) => (
-                <div
-                  key={index}
-                  className={`w-1 h-1 rounded-full transition-all duration-300 ${
-                    activeAchievement === index
-                      ? 'bg-[#FF6B00] scale-110'
-                      : 'bg-[#64748B]/30 dark:bg-white/30'
-                  }`}
-                />
-              ))}
+              <div className="w-1 h-1 rounded-full bg-[#64748B]/30 dark:bg-white/30"></div>
             </div>
           </div>
         </motion.div>

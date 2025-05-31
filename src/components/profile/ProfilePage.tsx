@@ -326,7 +326,7 @@ export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
               <div className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 overflow-hidden shadow-sm p-6" style={{ minHeight: "420px" }}>
                 <h3 className="text-lg font-semibold text-[#29335C] dark:text-white mb-4">Conquistas</h3>
                 <div className="h-[calc(100%-3rem)] overflow-auto">
-                  <Achievements />
+                  <Achievements userProfile={userProfile} />
                 </div>
               </div>
             </div>

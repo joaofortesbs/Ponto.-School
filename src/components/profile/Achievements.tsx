@@ -1,178 +1,203 @@
 import React from "react";
-import { Button } from "@/components/ui/button";
-import { Trophy, Zap, Award, ChevronRight, Star, Clock } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import { motion } from "framer-motion";
+import { Trophy, Star, Zap, Award, Medal, Target } from "lucide-react";
 
-export default function Achievements() {
-  const navigate = useNavigate();
+interface AchievementsProps {
+  userProfile?: {
+    achievements_count?: number;
+    achievements?: Array<{
+      id: number;
+      title: string;
+      description: string;
+      date: string;
+      rarity: string;
+      progress: number;
+      icon_type: string;
+    }>;
+  } | null;
+}
 
-  const achievements = [
-    {
-      id: 1,
-      name: "Mestre em Matemática",
-      icon: <Trophy className="h-6 w-6" />,
-      progress: 100,
-      unlocked: true,
-      date: "10/03/2024",
-      category: "Acadêmico",
-      points: 200
-    },
-    {
-      id: 2,
-      name: "Estudante Dedicado",
-      icon: <Zap className="h-6 w-6" />,
-      progress: 100,
-      unlocked: true,
-      date: "15/03/2024",
-      category: "Dedicação",
-      points: 150
-    },
-    {
-      id: 3,
-      name: "Velocista",
-      icon: <Clock className="h-6 w-6" />,
-      progress: 45,
-      unlocked: false,
-      category: "Tempo",
-      points: 100
-    },
-    {
-      id: 4,
-      name: "Colaborador Premium",
-      icon: <Star className="h-6 w-6" />,
-      progress: 75,
-      unlocked: false,
-      category: "Social",
-      points: 250
-    }
-  ];
+export default function Achievements({ userProfile }: AchievementsProps) {
+  // Se o usuário não tem conquistas, mostrar estado vazio
+  if (!userProfile?.achievements || userProfile.achievements.length === 0) {
+    return (
+      <div className="space-y-4">
+        <div className="text-center py-8">
+          <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 rounded-full flex items-center justify-center">
+            <Trophy className="h-8 w-8 text-gray-400 dark:text-gray-500" />
+          </div>
+          <h3 className="text-lg font-medium text-[#29335C] dark:text-white mb-2">
+            Nenhuma conquista ainda
+          </h3>
+          <p className="text-sm text-[#64748B] dark:text-white/60 max-w-xs mx-auto">
+            Continue usando a plataforma para desbloquear suas primeiras conquistas e marcos especiais.
+          </p>
+        </div>
 
-  const handleViewAll = () => {
-    navigate("/conquistas");
-  };
+        {/* Conquistas futuras em preview */}
+        <div className="space-y-3">
+          <h4 className="text-sm font-medium text-[#29335C] dark:text-white mb-3">
+            Conquistas Disponíveis
+          </h4>
 
-  const container = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
-  };
-
-  const item = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0 }
-  };
-
-  return (
-    <div className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 p-2 shadow-sm w-full overflow-hidden">
-      <div className="flex justify-between items-center mb-2">
-        <h3 className="text-base font-bold text-[#29335C] dark:text-white flex items-center gap-2">
-          <Trophy className="h-4 w-4 text-[#FF6B00]" />
-          Conquistas
-        </h3>
-        <Button
-          variant="ghost"
-          className="text-[#FF6B00] text-xs flex items-center gap-1 hover:bg-[#FF6B00]/10"
-          onClick={handleViewAll}
-        >
-          Ver Todas <ChevronRight className="h-4 w-4" />
-        </Button>
-      </div>
-
-      <motion.div 
-        className="grid grid-cols-2 gap-2 h-full"
-        variants={container}
-        initial="hidden"
-        animate="show"
-      >
-        {achievements.map((achievement) => (
-          <motion.div 
-            key={achievement.id}
-            className="relative overflow-hidden group"
-            variants={item}
-          >
-            <div className={`bg-gradient-to-br rounded-lg p-1.5 border transition-all duration-300 ${
-              achievement.unlocked 
-                ? "from-[#FF6B00]/5 to-[#FF6B00]/10 border-[#FF6B00]/20 hover:border-[#FF6B00]/40" 
-                : "from-gray-100 to-gray-200 border-gray-200 dark:from-gray-800/30 dark:to-gray-800/50 dark:border-gray-700"
-            }`}>
+          {[
+            {
+              title: "Primeiro Login",
+              description: "Faça seu primeiro login na plataforma",
+              icon: <Star className="h-5 w-5" />,
+              rarity: "common"
+            },
+            {
+              title: "Explorador",
+              description: "Visite todas as seções da plataforma",
+              icon: <Zap className="h-5 w-5" />,
+              rarity: "uncommon"
+            },
+            {
+              title: "Estudante Dedicado",
+              description: "Complete 7 dias consecutivos de estudo",
+              icon: <Trophy className="h-5 w-5" />,
+              rarity: "rare"
+            }
+          ].map((achievement, index) => (
+            <div
+              key={index}
+              className="p-3 rounded-lg border bg-gray-50 dark:bg-gray-800/30 border-gray-200 dark:border-gray-700 opacity-60"
+            >
               <div className="flex items-start gap-3">
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                  achievement.unlocked 
-                    ? "bg-[#FF6B00]/20 text-[#FF6B00]" 
-                    : "bg-gray-200 text-gray-400 dark:bg-gray-700 dark:text-gray-500"
-                }`}>
-                  <div className="scale-75">{achievement.icon}</div>
+                <div className="p-2 rounded-lg bg-gradient-to-br from-gray-300 to-gray-400 dark:from-gray-600 dark:to-gray-700 text-gray-600 dark:text-gray-300">
+                  {achievement.icon}
                 </div>
-
                 <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-medium truncate ${
-                    achievement.unlocked 
-                      ? "text-[#29335C] dark:text-white" 
-                      : "text-gray-500 dark:text-gray-400"
-                  }`}>
-                    {achievement.name}
-                  </p>
-
-                  <div className="mt-1">
-                    <div className="flex justify-between items-center text-xs mb-1">
-                      <Badge variant={achievement.unlocked ? "default" : "outline"} className={`px-1 py-0 text-[10px] ${
-                        achievement.unlocked ? "bg-[#FF6B00]" : "text-gray-400"
-                      }`}>
-                        {achievement.category}
-                      </Badge>
-                      <span className={`text-xs ${
-                        achievement.unlocked 
-                          ? "text-[#FF6B00]" 
-                          : "text-gray-400"
-                      }`}>
-                        {achievement.unlocked ? "Concluído" : `${achievement.progress}%`}
-                      </span>
-                    </div>
-                    <Progress 
-                      value={achievement.progress} 
-                      className={`h-1 ${
-                        achievement.unlocked 
-                          ? "bg-[#FF6B00]/20" 
-                          : "bg-gray-200 dark:bg-gray-700"
-                      }`}
-                      indicatorClassName={achievement.unlocked ? "bg-[#FF6B00]" : "bg-gray-400"}
-                    />
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium text-[#29335C] dark:text-white text-sm">
+                      {achievement.title}
+                    </h4>
+                    <span className="text-xs px-2 py-1 rounded-full bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-300">
+                      Bloqueado
+                    </span>
                   </div>
-
-                  {achievement.unlocked && (
-                    <div className="mt-1 flex justify-between items-center">
-                      <div className="flex items-center gap-1">
-                        <Trophy className="h-3 w-3 text-[#FFD700]" />
-                        <span className="text-xs font-semibold text-[#29335C] dark:text-white/70">
-                          {achievement.points} pts
-                        </span>
-                      </div>
-                      <span className="text-[10px] text-gray-400">
-                        {achievement.date}
-                      </span>
-                    </div>
-                  )}
+                  <p className="text-xs text-[#64748B] dark:text-white/60 mt-1">
+                    {achievement.description}
+                  </p>
                 </div>
               </div>
             </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
-            {/* Efeito de brilho para conquistas desbloqueadas */}
-            {achievement.unlocked && (
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-1000">
-                <div className="absolute inset-0 bg-[#FF6B00]/5 animate-pulse"></div>
-                <div className="absolute -inset-1 bg-gradient-to-r from-transparent via-[#FF6B00]/20 to-transparent skew-x-15 -translate-x-full group-hover:translate-x-full transition-all duration-1000 ease-in-out"></div>
+  const getRarityColor = (rarity: string) => {
+    switch (rarity) {
+      case "common":
+        return "from-gray-400 to-gray-600";
+      case "uncommon":
+        return "from-green-400 to-green-600";
+      case "rare":
+        return "from-blue-400 to-blue-600";
+      case "epic":
+        return "from-purple-400 to-purple-600";
+      case "legendary":
+        return "from-yellow-400 to-yellow-600";
+      default:
+        return "from-gray-400 to-gray-600";
+    }
+  };
+
+  const getRarityName = (rarity: string) => {
+    switch (rarity) {
+      case "common":
+        return "Comum";
+      case "uncommon":
+        return "Incomum";
+      case "rare":
+        return "Raro";
+      case "epic":
+        return "Épico";
+      case "legendary":
+        return "Lendário";
+      default:
+        return "Comum";
+    }
+  };
+
+  const getIcon = (iconType: string) => {
+    switch (iconType) {
+      case "star":
+        return <Star className="h-6 w-6" />;
+      case "trophy":
+        return <Trophy className="h-6 w-6" />;
+      case "zap":
+        return <Zap className="h-6 w-6" />;
+      case "award":
+        return <Award className="h-6 w-6" />;
+      case "medal":
+        return <Medal className="h-6 w-6" />;
+      case "target":
+        return <Target className="h-6 w-6" />;
+      default:
+        return <Star className="h-6 w-6" />;
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      {userProfile.achievements.map((achievement) => (
+        <div
+          key={achievement.id}
+          className={`p-3 rounded-lg border transition-all duration-300 hover:shadow-md ${
+            achievement.progress === 100
+              ? "bg-white dark:bg-[#0A2540] border-[#E0E1DD] dark:border-white/10"
+              : "bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700"
+          }`}
+        >
+          <div className="flex items-start gap-3">
+            <div
+              className={`p-2 rounded-lg bg-gradient-to-br ${getRarityColor(
+                achievement.rarity
+              )} text-white shadow-lg`}
+            >
+              {getIcon(achievement.icon_type)}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between">
+                <h4 className="font-medium text-[#29335C] dark:text-white text-sm">
+                  {achievement.title}
+                </h4>
+                <span
+                  className={`text-xs px-2 py-1 rounded-full bg-gradient-to-r ${getRarityColor(
+                    achievement.rarity
+                  )} text-white shadow-sm`}
+                >
+                  {getRarityName(achievement.rarity)}
+                </span>
               </div>
-            )}
-          </motion.div>
-        ))}
-      </motion.div>
+              <p className="text-xs text-[#64748B] dark:text-white/60 mt-1">
+                {achievement.description}
+              </p>
+              <div className="flex items-center justify-between mt-2">
+                <span className="text-xs text-[#64748B] dark:text-white/60">
+                  {achievement.date}
+                </span>
+                {achievement.progress < 100 && (
+                  <div className="flex items-center gap-2">
+                    <div className="w-16 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] transition-all duration-300"
+                        style={{ width: `${achievement.progress}%` }}
+                      />
+                    </div>
+                    <span className="text-xs text-[#64748B] dark:text-white/60">
+                      {achievement.progress}%
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
