@@ -192,6 +192,24 @@ export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
                 />
               </div>
 
+              {/* Botão Adicionar Parceiros */}
+              <div className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 shadow-sm p-4">
+                <button
+                  className="w-full bg-gradient-to-r from-[#0A2540] to-[#1E3A5F] hover:from-[#0F2D4A] hover:to-[#2A4A6F] text-white text-sm h-10 shadow-sm hover:shadow hover:shadow-[#0A2540]/30 transition-all duration-300 group flex items-center justify-center relative overflow-hidden border border-[#0A2540]/20 rounded-lg"
+                  onClick={() => {
+                    console.log("Adicionar parceiros clicked");
+                  }}
+                >
+                  {/* Efeito de brilho no hover */}
+                  <span className="absolute w-32 h-32 -mt-12 -ml-12 bg-white rotate-12 opacity-0 group-hover:opacity-10 transition-opacity duration-1000 transform group-hover:translate-x-40 group-hover:translate-y-10 pointer-events-none"></span>
+
+                  <svg className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  <span className="relative z-10 font-medium">Adicionar Parceiros</span>
+                </button>
+              </div>
+
               {/* Contact Info - Full width */}
               <div className="flex-1">
                 <ContactInfo
