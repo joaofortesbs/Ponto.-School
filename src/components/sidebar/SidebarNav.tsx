@@ -43,6 +43,7 @@ import {
   GraduationCap,
   CalendarClock,
   Upload,
+  Camera,
 } from "lucide-react";
 import MentorAI from "@/components/mentor/MentorAI";
 import AgendaNav from "./AgendaNav";
@@ -485,8 +486,64 @@ export function SidebarNav({
         </div>
       )}
 
-      {/* User Profile Component - Removed the circular profile image, keeping only greeting and progress */}
-      <div className="bg-white dark:bg-[#001427] p-3 mb-4 mt-2 flex flex-col items-center relative group">
+      {/* User Profile Component - With circular profile image above greeting */}
+      <div className="bg-white dark:bg-[#001427] p-3 mb-4 mt-2 flex flex-col items-center relative">
+        {/* Profile Image with Orange Gradient Border */}
+        <div className="flex flex-col items-center mb-3">
+          <div className="relative">
+            <div 
+              className="w-16 h-16 rounded-full p-0.5 cursor-pointer"
+              style={{
+                background: "linear-gradient(45deg, #FF6B00, #FF8736, #FFB366, #FF6B00)"
+              }}
+              onClick={handleImageUploadClick}
+            >
+              <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-[#001427] flex items-center justify-center">
+                {profileImage ? (
+                  <img
+                    src={profileImage}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      console.error("Error loading profile image");
+                      setProfileImage(null);
+                    }}
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
+                    <div className="w-8 h-8 bg-yellow-300 rounded-full flex items-center justify-center">
+                      <div className="w-6 h-6 bg-orange-400 rounded-full"></div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Camera Icon Overlay */}
+            <div 
+              className="absolute -bottom-1 -right-1 w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center cursor-pointer shadow-lg"
+              onClick={handleImageUploadClick}
+            >
+              <Camera className="w-3 h-3 text-white" />
+            </div>
+          </div>
+          
+          {uploading && (
+            <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+              Enviando...
+            </div>
+          )}
+          
+          {/* Hidden File Input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            className="hidden"
+          />
+        </div>
+
         {!isCollapsed && (
           <div className="text-[#001427] dark:text-white text-center">
             <h3 className="font-semibold text-base mb-2 flex items-center justify-center">
