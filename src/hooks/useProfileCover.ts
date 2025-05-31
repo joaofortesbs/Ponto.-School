@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/use-toast';
 
 export const useProfileCover = () => {
   const [isUploading, setIsUploading] = useState(false);
