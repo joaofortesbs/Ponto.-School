@@ -1,4 +1,5 @@
-import { supabase } from "@/lib/supabase";
+
+import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from 'uuid';
 
 export interface CalendarEvent {
@@ -76,20 +77,28 @@ const formatDBEventForApp = (dbEvent: any): CalendarEvent => {
 // Adicionar um novo evento
 export const addEvent = async (event: Omit<CalendarEvent, "id" | "createdAt">): Promise<CalendarEvent | null> => {
   try {
-    // Garantir um userId válido
-    if (!event.userId) {
-      console.error("userId é obrigatório ao adicionar um evento");
-      return null;
+    // Verificar autenticação
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      console.error("Usuário não autenticado");
+      // Fallback para armazenamento local
+      const eventWithMeta = {
+        ...event,
+        id: uuidv4(),
+        createdAt: new Date().toISOString(),
+      };
+      return saveEventLocally(eventWithMeta);
     }
 
     const eventWithMeta = {
       ...event,
       id: uuidv4(),
+      userId: user.id,
       createdAt: new Date().toISOString(),
     };
 
     const dbEvent = formatEventForDB(eventWithMeta);
-    console.log("Tentando salvar evento no DB:", dbEvent);
 
     const { data, error } = await supabase
       .from("calendar_events")
@@ -99,26 +108,18 @@ export const addEvent = async (event: Omit<CalendarEvent, "id" | "createdAt">): 
 
     if (error) {
       console.error("Erro ao adicionar evento no DB:", error);
-      // Fallback para armazenamento local em caso de erro
-      const savedLocally = saveEventLocally(eventWithMeta);
-      console.log("Evento salvo localmente como fallback:", savedLocally);
-      return eventWithMeta;
+      // Fallback para armazenamento local
+      return saveEventLocally(eventWithMeta);
     }
 
     const formattedEvent = formatDBEventForApp(data);
-    console.log("Evento salvo com sucesso no DB:", formattedEvent);
 
     // Notificar a interface sobre o novo evento
     try {
-      // Disparar evento específico para "Eventos do Dia"
       window.dispatchEvent(new CustomEvent('event-added', { 
         detail: { event: formattedEvent }
       }));
-
-      // Disparar evento geral de atualização da agenda
       window.dispatchEvent(new CustomEvent('agenda-events-updated'));
-
-      console.log("Eventos de atualização disparados com sucesso");
     } catch (e) {
       console.warn("Não foi possível emitir evento de atualização:", e);
     }
@@ -126,82 +127,43 @@ export const addEvent = async (event: Omit<CalendarEvent, "id" | "createdAt">): 
     return formattedEvent;
   } catch (error) {
     console.error("Erro ao adicionar evento:", error);
-    // Fallback para armazenamento local em caso de erro
+    // Fallback para armazenamento local
     const eventWithMeta = {
       ...event,
       id: uuidv4(),
       createdAt: new Date().toISOString(),
     };
-    const savedEvent = saveEventLocally(eventWithMeta);
-
-    // Notificar a interface sobre o novo evento
-    try {
-      // Disparar evento específico para "Eventos do Dia"
-      window.dispatchEvent(new CustomEvent('event-added', { 
-        detail: { event: formattedEvent }
-      }));
-
-      // Disparar evento geral de atualização da agenda
-      window.dispatchEvent(new CustomEvent('agenda-events-updated'));
-
-      console.log("Eventos de atualização disparados com sucesso");
-    } catch (e) {
-      console.warn("Não foi possível emitir evento de atualização:", e);
-    }
-
-    return savedEvent || eventWithMeta;
-  }
-};
-
-// Obter todos os eventos
-export const getAllEvents = async (): Promise<CalendarEvent[]> => {
-  try {
-    const { data, error } = await supabase
-      .from("calendar_events")
-      .select("*")
-      .order("start_date", { ascending: true });
-
-    if (error) {
-      console.error("Erro ao buscar todos os eventos:", error);
-      return getAllLocalEvents();
-    }
-
-    return (data || []).map(formatDBEventForApp);
-  } catch (error) {
-    console.error("Erro ao buscar todos os eventos:", error);
-    return getAllLocalEvents();
+    return saveEventLocally(eventWithMeta);
   }
 };
 
 // Obter todos os eventos de um usuário
-export const getEventsByUserId = async (userId: string): Promise<CalendarEvent[]> => {
-  if (!userId) {
-    console.error("UserId inválido:", userId);
-    return [];
-  }
-
+export const getEventsByUserId = async (userId?: string): Promise<CalendarEvent[]> => {
   try {
-    console.log("Buscando eventos para o usuário:", userId);
+    // Verificar autenticação
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      console.log("Usuário não autenticado, carregando eventos locais");
+      return getLocalEvents('anonymous');
+    }
 
     const { data, error } = await supabase
       .from("calendar_events")
       .select("*")
-      .eq("user_id", userId)
+      .eq("user_id", user.id)
       .order("start_date", { ascending: true });
 
     if (error) {
       console.error("Erro ao buscar eventos do usuário no DB:", error);
-      // Fallback para armazenamento local em caso de erro
-      const localEvents = getLocalEvents(userId);
-      console.log("Eventos obtidos localmente:", localEvents.length);
-      return localEvents;
+      // Fallback para armazenamento local
+      return getLocalEvents(user.id);
     }
 
     const formattedEvents = (data || []).map(formatDBEventForApp);
-    console.log(`${formattedEvents.length} eventos encontrados para o usuário ${userId}`);
 
-    // Mesclar com eventos locais
-    const localEvents = getLocalEvents(userId);
+    // Mesclar com eventos locais se existirem
+    const localEvents = getLocalEvents(user.id);
     const localOnlyEvents = localEvents.filter(le => 
       !formattedEvents.some(fe => fe.id === le.id)
     );
@@ -209,14 +171,26 @@ export const getEventsByUserId = async (userId: string): Promise<CalendarEvent[]
     return [...formattedEvents, ...localOnlyEvents];
   } catch (error) {
     console.error("Erro ao buscar eventos do usuário:", error);
-    // Fallback para armazenamento local em caso de erro
-    return getLocalEvents(userId);
+    return getLocalEvents('anonymous');
   }
+};
+
+// Obter todos os eventos
+export const getAllEvents = async (): Promise<CalendarEvent[]> => {
+  return getEventsByUserId();
 };
 
 // Atualizar um evento existente
 export const updateEvent = async (event: CalendarEvent): Promise<CalendarEvent | null> => {
   try {
+    // Verificar autenticação
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      console.error("Usuário não autenticado");
+      return updateEventLocally(event);
+    }
+
     if (!event.id) {
       console.error("ID é obrigatório para atualizar um evento");
       return null;
@@ -224,12 +198,12 @@ export const updateEvent = async (event: CalendarEvent): Promise<CalendarEvent |
 
     if (event.id.startsWith('local-')) {
       // Para eventos locais, atualizar apenas no localStorage
-      updateEventLocally(event);
-      return event;
+      return updateEventLocally(event);
     }
 
     const dbEvent = formatEventForDB({
       ...event,
+      userId: user.id,
       updatedAt: new Date().toISOString()
     });
 
@@ -237,28 +211,34 @@ export const updateEvent = async (event: CalendarEvent): Promise<CalendarEvent |
       .from("calendar_events")
       .update(dbEvent)
       .eq("id", event.id)
+      .eq("user_id", user.id)
       .select()
       .single();
 
     if (error) {
       console.error("Erro ao atualizar evento:", error);
-      // Fallback para armazenamento local em caso de erro
-      updateEventLocally(event);
-      return event;
+      // Fallback para armazenamento local
+      return updateEventLocally(event);
     }
 
     return formatDBEventForApp(data);
   } catch (error) {
     console.error("Erro ao atualizar evento:", error);
-    // Fallback para armazenamento local em caso de erro
-    updateEventLocally(event);
-    return event;
+    return updateEventLocally(event);
   }
 };
 
 // Remover um evento
 export const deleteEvent = async (eventId: string): Promise<boolean> => {
   try {
+    // Verificar autenticação
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      console.error("Usuário não autenticado");
+      return deleteEventLocally(eventId);
+    }
+
     if (!eventId) {
       console.error("ID é obrigatório para excluir um evento");
       return false;
@@ -272,21 +252,19 @@ export const deleteEvent = async (eventId: string): Promise<boolean> => {
     const { error } = await supabase
       .from("calendar_events")
       .delete()
-      .eq("id", eventId);
+      .eq("id", eventId)
+      .eq("user_id", user.id);
 
     if (error) {
       console.error("Erro ao remover evento:", error);
-      // Fallback para armazenamento local em caso de erro
-      deleteEventLocally(eventId);
-      return true; // Retornar sucesso mesmo em caso de erro no DB, já que o evento foi removido localmente
+      // Fallback para armazenamento local
+      return deleteEventLocally(eventId);
     }
 
     return true;
   } catch (error) {
     console.error("Erro ao remover evento:", error);
-    // Fallback para armazenamento local em caso de erro
-    deleteEventLocally(eventId);
-    return true; // Consideramos sucesso já que removemos localmente
+    return deleteEventLocally(eventId);
   }
 };
 
@@ -297,7 +275,6 @@ const EVENTS_STORAGE_KEY = "calendar_events";
 const saveEventsLocally = (events: CalendarEvent[]) => {
   try {
     localStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(events));
-    console.log("Eventos salvos localmente com sucesso", events.length);
     return true;
   } catch (error) {
     console.error("Erro ao salvar eventos localmente:", error);
@@ -309,9 +286,6 @@ const saveEventsLocally = (events: CalendarEvent[]) => {
 export const initLocalStorage = () => {
   if (!localStorage.getItem(EVENTS_STORAGE_KEY)) {
     saveEventsLocally([]);
-    console.log("Armazenamento local de eventos inicializado");
-  } else {
-    console.log("Armazenamento local de eventos já existe");
   }
 };
 
@@ -320,23 +294,19 @@ export const getAllLocalEvents = (): CalendarEvent[] => {
   try {
     const eventsJson = localStorage.getItem(EVENTS_STORAGE_KEY);
     if (!eventsJson) return [];
-
-    const events: CalendarEvent[] = JSON.parse(eventsJson);
-    return events;
+    return JSON.parse(eventsJson);
   } catch (error) {
     console.error("Erro ao obter todos os eventos locais:", error);
     return [];
   }
 };
 
-// Obter todos os eventos armazenados localmente para um usuário específico
+// Obter eventos locais para um usuário específico
 const getLocalEvents = (userId: string): CalendarEvent[] => {
   try {
     if (!userId) return [];
-
     const eventsJson = localStorage.getItem(EVENTS_STORAGE_KEY);
     if (!eventsJson) return [];
-
     const events: CalendarEvent[] = JSON.parse(eventsJson);
     return events.filter(event => event.userId === userId);
   } catch (error) {
@@ -349,7 +319,6 @@ const getLocalEvents = (userId: string): CalendarEvent[] => {
 const saveEventLocally = (event: any) => {
   try {
     const allEvents = getAllLocalEvents();
-
     const newEvent = {
       ...event,
       id: event.id || `local-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -358,10 +327,7 @@ const saveEventLocally = (event: any) => {
 
     // Remover qualquer duplicata
     const filteredEvents = allEvents.filter(e => e.id !== newEvent.id);
-
     saveEventsLocally([...filteredEvents, newEvent]);
-
-    console.log("Evento salvo localmente com ID:", newEvent.id);
     return newEvent;
   } catch (error) {
     console.error("Erro ao salvar evento localmente:", error);
@@ -376,9 +342,7 @@ const updateEventLocally = (event: CalendarEvent) => {
     const updatedEvents = allEvents.map(e => 
       e.id === event.id ? { ...event, updatedAt: new Date().toISOString() } : e
     );
-
     saveEventsLocally(updatedEvents);
-    console.log("Evento atualizado localmente:", event.id);
     return event;
   } catch (error) {
     console.error("Erro ao atualizar evento localmente:", error);
@@ -391,9 +355,7 @@ const deleteEventLocally = (eventId: string) => {
   try {
     const allEvents = getAllLocalEvents();
     const updatedEvents = allEvents.filter(e => e.id !== eventId);
-
     saveEventsLocally(updatedEvents);
-    console.log("Evento removido localmente:", eventId);
     return true;
   } catch (error) {
     console.error("Erro ao remover evento localmente:", error);
@@ -402,34 +364,31 @@ const deleteEventLocally = (eventId: string) => {
 };
 
 // Sincronizar eventos locais com o banco de dados
-export const syncLocalEvents = async (userId: string): Promise<void> => {
+export const syncLocalEvents = async (): Promise<void> => {
   try {
-    if (!userId) {
-      console.error("UserId é necessário para sincronizar eventos");
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      console.log("Usuário não autenticado para sincronização");
       return;
     }
 
-    console.log("Iniciando sincronização de eventos locais para o usuário:", userId);
-    const localEvents = getLocalEvents(userId);
+    const localEvents = getLocalEvents(user.id);
     const localOnlyEvents = localEvents.filter(e => e.id.startsWith('local-'));
-
-    console.log(`${localOnlyEvents.length} eventos locais encontrados para sincronização`);
 
     for (const event of localOnlyEvents) {
       const { id, ...eventData } = event;
-      const result = await addEvent({ ...eventData, userId });
-
+      const result = await addEvent({ ...eventData, userId: user.id });
       if (result) {
-        console.log("Evento sincronizado com sucesso:", id, "->", result.id);
+        console.log("Evento sincronizado:", id, "->", result.id);
       }
     }
 
-    // Limpar eventos locais que foram sincronizados
+    // Limpar eventos locais sincronizados
     if (localOnlyEvents.length > 0) {
       const allEvents = getAllLocalEvents();
-      const remainingEvents = allEvents.filter(e => !e.id.startsWith('local-') || e.userId !== userId);
+      const remainingEvents = allEvents.filter(e => !e.id.startsWith('local-') || e.userId !== user.id);
       saveEventsLocally(remainingEvents);
-      console.log("Eventos locais sincronizados foram removidos do armazenamento local");
     }
   } catch (error) {
     console.error("Erro ao sincronizar eventos locais:", error);

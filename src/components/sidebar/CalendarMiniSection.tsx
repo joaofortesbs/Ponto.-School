@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -17,6 +17,7 @@ import { ptBR } from "date-fns/locale";
 import { Calendar, ChevronLeft, ChevronRight, Clock, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+import { getEventsByUserId, CalendarEvent } from "@/services/calendarEventService";
 
 // Sample events data
 const events = [
@@ -69,8 +70,42 @@ export default function CalendarMiniSection() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showEventDetails, setShowEventDetails] = useState(false);
-  const [selectedDayEvents, setSelectedDayEvents] = useState([]);
+  const [selectedDayEvents, setSelectedDayEvents] = useState<CalendarEvent[]>([]);
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [isMobile, setIsMobile] = useState(false);
+
+  // Carregar eventos do banco de dados
+  useEffect(() => {
+    const loadEvents = async () => {
+      try {
+        const userEvents = await getEventsByUserId();
+        setEvents(userEvents.map(event => ({
+          ...event,
+          date: new Date(event.startDate),
+          time: event.startTime || "Sem horário",
+          color: getEventTypeColor(event.type || 'evento'),
+          subject: event.discipline
+        })));
+      } catch (error) {
+        console.error("Erro ao carregar eventos:", error);
+      }
+    };
+
+    loadEvents();
+
+    // Escutar eventos de atualização
+    const handleEventUpdate = () => {
+      loadEvents();
+    };
+
+    window.addEventListener('event-added', handleEventUpdate);
+    window.addEventListener('agenda-events-updated', handleEventUpdate);
+
+    return () => {
+      window.removeEventListener('event-added', handleEventUpdate);
+      window.removeEventListener('agenda-events-updated', handleEventUpdate);
+    };
+  }, []);
 
   // Add resize event listener
   React.useEffect(() => {
@@ -123,25 +158,25 @@ export default function CalendarMiniSection() {
   };
 
   // Check if a day has events
-  const hasEvents = (day) => {
+  const hasEvents = (day: Date | null) => {
     if (!day) return false;
     return events.some((event) => isSameDay(event.date, day));
   };
 
   // Get number of events for a day
-  const getEventCountForDay = (day) => {
+  const getEventCountForDay = (day: Date | null) => {
     if (!day) return 0;
     return events.filter((event) => isSameDay(event.date, day)).length;
   };
 
   // Get events for a specific day
-  const getEventsForDay = (day) => {
+  const getEventsForDay = (day: Date | null): CalendarEvent[] => {
     if (!day) return [];
     return events.filter((event) => isSameDay(event.date, day));
   };
 
   // Handle day click
-  const handleDayClick = (day) => {
+  const handleDayClick = (day: Date | null) => {
     if (!day) return;
     setSelectedDate(day);
     const dayEvents = getEventsForDay(day);
@@ -150,7 +185,7 @@ export default function CalendarMiniSection() {
   };
 
   // Get event type icon color
-  const getEventTypeColor = (type) => {
+  const getEventTypeColor = (type: string) => {
     switch (type) {
       case "aula_ao_vivo":
         return "#4F46E5";
@@ -208,7 +243,7 @@ export default function CalendarMiniSection() {
         <div className="space-y-2">
           {events
             .filter((event) => isSameMonth(event.date, currentMonth))
-            .sort((a, b) => a.date - b.date)
+            .sort((a, b) => a.date.getTime() - b.date.getTime())
             .map((event) => (
               <div
                 key={event.id}
@@ -398,7 +433,7 @@ export default function CalendarMiniSection() {
         <div className="space-y-2 max-h-[120px] overflow-y-auto custom-scrollbar pr-1">
           {events
             .filter((event) => event.date >= new Date())
-            .sort((a, b) => a.date - b.date)
+            .sort((a, b) => a.date.getTime() - b.date.getTime())
             .slice(0, 3)
             .map((event) => (
               <div
