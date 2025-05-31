@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/lib/supabase";
 import { AddFriendsModal } from "@/components/friends/AddFriendsModal";
 import {
@@ -326,15 +326,13 @@ export default function ProfileHeader({ userProfile, onEditClick }: ProfileHeade
               </div>
 
               <div className="flex items-center gap-6 text-sm text-[#64748B] dark:text-white/60">
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-1">
-                    <Crown className="h-4 w-4 text-[#FF6B00]" />
-                    <span className="font-medium">{userProfile?.level || 1}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Star className="h-4 w-4 text-yellow-500" />
-                    <span>{userProfile?.rank || "Aprendiz"}</span>
-                  </div>
+                <div className="flex items-center gap-1">
+                  <Crown className="h-4 w-4 text-[#FF6B00]" />
+                  <span className="font-medium">{userProfile?.level || 1}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Star className="h-4 w-4 text-yellow-500" />
+                  <span>{userProfile?.rank || "Aprendiz"}</span>
                 </div>
               </div>
 
