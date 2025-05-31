@@ -1,10 +1,9 @@
+
 import { cn } from "@/lib/utils";
 import { SidebarNav } from "@/components/sidebar/SidebarNav";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X, ChevronLeft, ChevronRight, Camera, User } from "lucide-react";
-import { supabase } from "@/lib/supabase";
-import { useToast } from "@/components/ui/use-toast";
+import { Menu, X, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   isCollapsed?: boolean;
@@ -20,146 +19,6 @@ export default function Sidebar({
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(isCollapsed);
   const [customLogo, setCustomLogo] = useState<string | null>(null);
-  const [profile, setProfile] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const { toast } = useToast();
-
-  // Get greeting based on time of day
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return "Bom dia";
-    if (hour < 18) return "Boa tarde";
-    return "Boa noite";
-  };
-
-  const getUserDisplayName = () => {
-    if (loading) return "Carregando...";
-    if (!profile) return "Usuário";
-    return profile.display_name || profile.email?.split('@')[0] || "Usuário";
-  };
-
-  const fetchProfile = async () => {
-    try {
-      setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        setProfile(null);
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (error) {
-        console.error('Error fetching user profile:', error);
-        return;
-      }
-
-      if (data) {
-        const userProfile = {
-          ...data,
-          level: data.level || 1,
-          rank: data.rank || "Aprendiz",
-        };
-        setProfile(userProfile);
-      }
-    } catch (err: any) {
-      console.error('Error:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const uploadAvatar = async (file: File) => {
-    try {
-      setUploading(true);
-
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error('Usuário não autenticado');
-      }
-
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        throw new Error('Por favor, selecione apenas arquivos de imagem');
-      }
-
-      // Validate file size (5MB max)
-      if (file.size > 5 * 1024 * 1024) {
-        throw new Error('A imagem deve ter menos de 5MB');
-      }
-
-      // Generate unique filename
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/avatar.${fileExt}`;
-
-      // Upload to Supabase storage
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('profile-images')
-        .upload(fileName, file, {
-          upsert: true // This will replace the existing file
-        });
-
-      if (uploadError) {
-        throw uploadError;
-      }
-
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('profile-images')
-        .getPublicUrl(fileName);
-
-      // Update user profile in database
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ avatar_url: publicUrl })
-        .eq('id', user.id);
-
-      if (updateError) {
-        throw updateError;
-      }
-
-      // Update local state
-      setProfile(prev => prev ? { ...prev, avatar_url: publicUrl } : null);
-
-      toast({
-        title: "Sucesso!",
-        description: "Foto de perfil atualizada com sucesso"
-      });
-
-    } catch (error: any) {
-      console.error('Erro ao fazer upload da imagem:', error);
-      toast({
-        title: "Erro",
-        description: error.message || 'Erro ao fazer upload da imagem',
-        variant: "destructive"
-      });
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      uploadAvatar(file);
-    }
-  };
-
-  const triggerFileInput = () => {
-    fileInputRef.current?.click();
-  };
-
-  useEffect(() => {
-    fetchProfile();
-  }, []);
 
   useEffect(() => {
     // Obter a imagem padrão da configuração global ou usar o valor padrão
@@ -288,20 +147,6 @@ export default function Sidebar({
     }
   };
 
-  const sizeClasses = {
-    sm: 'w-8 h-8',
-    md: 'w-12 h-12', 
-    lg: 'w-24 h-24'
-  };
-
-  const iconSizes = {
-    sm: 'w-3 h-3',
-    md: 'w-4 h-4',
-    lg: 'w-6 h-6'
-  };
-
-  const size = sidebarCollapsed ? "sm" : "md";
-
   return (
     <>
       {/* Mobile Menu Button */}
@@ -337,7 +182,7 @@ export default function Sidebar({
         key="sidebar-container"
         {...props}
       >
-        {/* Header Section with Logo and Profile */}
+        {/* Header Section with Logo */}
         <div className="flex h-[72px] items-center justify-between px-4 border-b border-gray-200 dark:border-gray-800 relative">
           <div
             className={cn(
@@ -391,56 +236,6 @@ export default function Sidebar({
               <ChevronLeft className="h-5 w-5" />
             )}
           </Button>
-        </div>
-
-        {/* Profile Section */}
-        <div className="p-4 border-b border-gray-200 dark:border-gray-800">
-          <div className="flex items-center gap-3">
-            <div className="relative group">
-              <div 
-                className={`${sizeClasses[size]} rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center overflow-hidden cursor-pointer relative`}
-                onClick={triggerFileInput}
-              >
-                {profile?.avatar_url ? (
-                  <img 
-                    src={profile.avatar_url} 
-                    alt="Avatar" 
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <User className={`${iconSizes[size]} text-white`} />
-                )}
-                
-                {/* Hover overlay */}
-                <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                  {uploading ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
-                  ) : (
-                    <Camera className={`${iconSizes[size]} text-white`} />
-                  )}
-                </div>
-              </div>
-              
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleFileSelect}
-                className="hidden"
-                disabled={uploading}
-              />
-            </div>
-            {!sidebarCollapsed && (
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate text-gray-900 dark:text-white">
-                  {getGreeting()}!
-                </p>
-                <p className="text-xs truncate text-gray-600 dark:text-gray-400">
-                  {getUserDisplayName()}
-                </p>
-              </div>
-            )}
-          </div>
         </div>
 
         <SidebarNav
