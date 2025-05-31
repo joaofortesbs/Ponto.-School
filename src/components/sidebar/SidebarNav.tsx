@@ -1,4 +1,3 @@
-
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -44,6 +43,7 @@ import {
   GraduationCap,
   CalendarClock,
   Upload,
+  UserRound,
 } from "lucide-react";
 import MentorAI from "@/components/mentor/MentorAI";
 import AgendaNav from "./AgendaNav";
@@ -68,6 +68,7 @@ export function SidebarNav({
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [firstName, setFirstName] = useState<string | null>(null);
+  const [userAvatar, setUserAvatar] = useState<string | null>(null);
 
   useEffect(() => {
     // Listener para atualizações de nome de usuário
@@ -142,6 +143,17 @@ export function SidebarNav({
                 username: data.username
               } 
             }));
+          }
+
+          // Buscar avatar do usuário
+          const { data: avatarData, error: avatarError } = await supabase
+            .from("user_avatars")
+            .select("avatar_url")
+            .eq("user_id", user.id)
+            .single();
+
+          if (!avatarError && avatarData?.avatar_url) {
+            setUserAvatar(avatarData.avatar_url);
           }
         } else {
           if (!firstName) setFirstName("Usuário"); // Fallback if user is not authenticated
@@ -384,10 +396,29 @@ export function SidebarNav({
         </div>
       )}
 
-      {/* User Profile Component - Sem a imagem de perfil circular */}
+      {/* User Profile Component - Com imagem de perfil circular */}
       <div className="bg-white dark:bg-[#001427] p-3 mb-4 mt-2 flex flex-col items-center relative group">
         {!isCollapsed && (
           <div className="text-[#001427] dark:text-white text-center">
+            {/* Componente circular da imagem de perfil */}
+            <div className="mb-3 flex justify-center">
+              <div className="relative">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-r from-[#FFD700] via-[#FF6B00] to-[#FFD700] p-0.5">
+                  <div className="w-full h-full rounded-full bg-white dark:bg-[#001427] flex items-center justify-center">
+                    <Avatar className="w-14 h-14">
+                      {userAvatar ? (
+                        <AvatarImage src={userAvatar} alt="Avatar do usuário" />
+                      ) : (
+                        <AvatarFallback className="bg-gray-100 dark:bg-gray-800">
+                          <UserRound className="h-8 w-8 text-gray-400" />
+                        </AvatarFallback>
+                      )}
+                    </Avatar>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <h3 className="font-semibold text-base mb-2 flex items-center justify-center">
               <span className="mr-1">👋</span> Olá, {(() => {
                 // Obter o primeiro nome com a mesma lógica do Dashboard
