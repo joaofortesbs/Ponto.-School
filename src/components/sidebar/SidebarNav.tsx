@@ -481,7 +481,10 @@ export function SidebarNav({
       )}
 
       {/* User Profile Component - Greeting and progress section */}
-      <div className="bg-white dark:bg-[#001427] p-4 mb-4 flex flex-col items-center relative group">
+      <div className={cn(
+        "bg-white dark:bg-[#001427] p-4 mb-4 flex flex-col items-center relative group",
+        isCollapsed ? "mt-6" : ""
+      )}>
         {/* Profile Image Component - Responsive avatar */}
         <div className="relative mb-4 flex justify-center">
           <div 
@@ -564,7 +567,10 @@ export function SidebarNav({
         )}
       </div>
 
-      <ScrollArea className="h-[calc(100%-300px)] py-2">
+      <ScrollArea className={cn(
+        "py-2",
+        isCollapsed ? "h-[calc(100%-220px)]" : "h-[calc(100%-300px)]"
+      )}>
         <nav className="grid gap-1 px-2">
           {navItems.map((item, index) => (
             <div key={index} className="relative">

@@ -222,7 +222,10 @@ export default function Sidebar({
           <SidebarNav
             isCollapsed={sidebarCollapsed}
             onToggleCollapse={handleToggleCollapse}
-            className="p-2"
+            className={cn(
+              "p-2",
+              sidebarCollapsed ? "pt-8" : "pt-4"
+            )}
           />
 
           {/* Toggle Button - positioned next to profile image area but more to the corner */}
@@ -246,4 +249,3 @@ export default function Sidebar({
     </>
   );
 }
-
