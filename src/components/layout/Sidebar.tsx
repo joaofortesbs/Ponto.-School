@@ -187,14 +187,17 @@ export default function Sidebar({
           <div
             className={cn(
               "flex items-center justify-center w-full transition-all duration-300",
-              sidebarCollapsed ? "opacity-0 w-0" : "opacity-100",
+              sidebarCollapsed ? "opacity-100" : "opacity-100",
             )}
           >
             <div className="h-16 flex items-center justify-center w-full">
               <img
-                src="/lovable-uploads/9db37eca-4284-4678-97fd-984c12eb0f30.png"
+                src={sidebarCollapsed ? "/lovable-uploads/6c3ba385-d8cf-41ec-a21d-6b59107a234b.png" : "/lovable-uploads/9db37eca-4284-4678-97fd-984c12eb0f30.png"}
                 alt="Logo Ponto School"
-                className="h-12 w-auto object-contain mx-auto"
+                className={cn(
+                  "object-contain mx-auto transition-all duration-300",
+                  sidebarCollapsed ? "h-8 w-8" : "h-16 w-auto"
+                )}
                 loading="eager"
                 fetchpriority="high"
                 onError={(e) => {
