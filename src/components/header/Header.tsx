@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -46,7 +47,11 @@ export function Header() {
           </Badge>
         </Button>
         <Avatar className="h-9 w-9 cursor-pointer">
-          <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=John" />
+          <AvatarImage 
+            src="/lovable-uploads/f63b8eff-b232-405f-8a3d-8ec22516deef.png" 
+            alt="Mascote Ponto School"
+            className="object-cover"
+          />
           <AvatarFallback>
             <User className="h-5 w-5" />
           </AvatarFallback>
