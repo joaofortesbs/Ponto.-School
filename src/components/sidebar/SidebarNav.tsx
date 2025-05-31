@@ -1,4 +1,3 @@
-
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -8,6 +7,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import type { UserProfile } from "@/types/user-profile";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { ProfileImageUpload } from "@/components/profile/ProfileImageUpload";
 import {
   Home,
   BookOpen,
@@ -68,6 +68,7 @@ export function SidebarNav({
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [firstName, setFirstName] = useState<string | null>(null);
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
     // Listener para atualizações de nome de usuário
@@ -121,6 +122,7 @@ export function SidebarNav({
             if (!firstName) setFirstName("Usuário"); // Fallback if profile fetch fails
           } else if (data) {
             setUserProfile(data as UserProfile);
+            setProfileImageUrl(data.avatar_url || null);
 
             // Determinar o primeiro nome com a mesma lógica do Dashboard
             // Prioridade: primeiro nome do full_name > display_name > username
@@ -175,6 +177,10 @@ export function SidebarNav({
 
   const toggleSection = (section: string) => {
     setExpandedSection(expandedSection === section ? null : section);
+  };
+
+  const handleImageUpdate = (newImageUrl: string) => {
+    setProfileImageUrl(newImageUrl);
   };
 
   const navItems = [
@@ -384,10 +390,19 @@ export function SidebarNav({
         </div>
       )}
 
-      {/* User Profile Component - Sem a imagem de perfil circular */}
+      {/* User Profile Component - COM imagem de perfil circular */}
       <div className="bg-white dark:bg-[#001427] p-3 mb-4 mt-2 flex flex-col items-center relative group">
         {!isCollapsed && (
           <div className="text-[#001427] dark:text-white text-center">
+            {/* Profile Image Upload Component */}
+            <div className="mb-3 flex justify-center">
+              <ProfileImageUpload 
+                currentImageUrl={profileImageUrl}
+                onImageUpdate={handleImageUpdate}
+                size={80}
+              />
+            </div>
+            
             <h3 className="font-semibold text-base mb-2 flex items-center justify-center">
               <span className="mr-1">👋</span> Olá, {(() => {
                 // Obter o primeiro nome com a mesma lógica do Dashboard
