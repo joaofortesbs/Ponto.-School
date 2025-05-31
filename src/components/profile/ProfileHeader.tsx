@@ -106,14 +106,14 @@ export default function ProfileHeader({ userProfile, onEditClick }: ProfileHeade
           });
 
           // Obter o nome de usuário para exibição - este é o mesmo nome que aparece no cabeçalho
-          const headerUsername = userProfile?.username || '';
+          const profileUsername = userProfile?.username || '';
           
           // Obter o nome para a parte principal da exibição
           let displayedName = '';
           
           // Prioridade de exibição: username > display_name > full_name > fallback
-          if (headerUsername) {
-            displayedName = headerUsername;
+          if (profileUsername) {
+            displayedName = profileUsername;
           } else if (userProfile?.display_name) {
             displayedName = userProfile.display_name;
           } else if (userProfile?.full_name) {
@@ -127,7 +127,7 @@ export default function ProfileHeader({ userProfile, onEditClick }: ProfileHeade
           const storedUsername = localStorage.getItem('username');
           
           console.log("Dados do perfil para exibição de username:", {
-            headerUsername: headerUsername,
+            profileUsername: profileUsername,
             storedUsername: storedUsername,
             displayedName: displayedName,
             profile_username: userProfile?.username,
@@ -135,11 +135,8 @@ export default function ProfileHeader({ userProfile, onEditClick }: ProfileHeade
             profile_full_name: userProfile?.full_name
           });
 
-          // Buscar o nome de usuário do localStorage (usado no cabeçalho)
-          const headerUsername = localStorage.getItem('username');
-          
-          // Usar o nome de usuário do cabeçalho (prioridade máxima)
-          const usernameToDisplay = headerUsername || storedUsername || 'joaofortes';
+          // Usar o nome de usuário do localStorage com fallback (prioridade máxima)
+          const usernameToDisplay = storedUsername || profileUsername || 'joaofortes';
 
           // Atualizar os estados com os dados obtidos
           setDisplayName(displayedName);
