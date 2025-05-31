@@ -32,7 +32,7 @@ import type { UserProfile } from "@/types/user-profile";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 import { profileService } from "@/services/profileService";
-from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { usePartners } from "@/hooks/usePartners";
 
 interface ProfileHeaderProps {
