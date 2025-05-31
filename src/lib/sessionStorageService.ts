@@ -1,4 +1,3 @@
-
 import { supabase } from './supabase';
 
 export interface FlowSession {
@@ -17,49 +16,65 @@ export interface FlowSession {
 const STORAGE_KEY = 'flowSessions';
 
 const SessionStorageService = {
-  // Obter sessões do Supabase com fallback para localStorage
+  // Obter sessões do localStorage com fallback para supabase
   getSessions: async (): Promise<FlowSession[]> => {
     try {
       // Verificar autenticação
       const { data: { user } } = await supabase.auth.getUser();
-      
+      const userId = user?.id || 'anonymous';
+
+      // Primeiro tentar carregar do localStorage
+      const localSessions = localStorage.getItem(`${STORAGE_KEY}_${userId}`);
+      let sessions: FlowSession[] = localSessions ? JSON.parse(localSessions) : [];
+
+      // Se o usuário estiver autenticado, tentar sincronizar com Supabase
       if (user) {
-        // Se usuário autenticado, buscar do Supabase
-        const { data, error } = await supabase
-          .from('flow_sessions')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
+        try {
+          const { data, error } = await supabase
+            .from('flow_sessions')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('date', { ascending: false });
 
-        if (data && !error) {
-          // Converter dados do Supabase para formato de FlowSession
-          const remoteSessions: FlowSession[] = data.map(session => ({
-            id: session.id,
-            timestamp: new Date(session.start_time).getTime(),
-            date: new Date(session.start_time).toLocaleDateString('pt-BR'),
-            duration: session.duration_formatted,
-            elapsedTimeSeconds: session.duration_seconds,
-            subjects: session.subjects || [],
-            progress: session.progress,
-            notes: session.notes,
-            xp: session.xp_earned,
-            session_title: session.session_title || 'Sessão de estudo'
-          }));
+          if (data && !error) {
+            // Converter dados do Supabase para formato de FlowSession
+            const remoteSessions: FlowSession[] = data.map(session => ({
+              id: session.id,
+              timestamp: new Date(session.date).getTime(),
+              date: new Date(session.date).toLocaleDateString('pt-BR'),
+              duration: session.duration_formatted,
+              elapsedTimeSeconds: session.duration_seconds,
+              subjects: session.subjects || [],
+              progress: session.progress,
+              notes: session.notes,
+              xp: Math.floor(session.duration_seconds / 60),
+              session_title: session.session_title || 'Sessão de estudo'
+            }));
 
-          // Sincronizar com localStorage
-          localStorage.setItem(`${STORAGE_KEY}_${user.id}`, JSON.stringify(remoteSessions));
-          
-          return remoteSessions;
-        } else {
-          console.error('Erro ao buscar sessões do Supabase:', error);
+            // Mesclar sessões remotas com locais, mantendo as mais recentes
+            const mergedSessions = [...remoteSessions];
+
+            // Adicionar sessões locais que ainda não estão no Supabase
+            sessions.forEach(localSession => {
+              if (!remoteSessions.some(rs => rs.id === localSession.id)) {
+                mergedSessions.push(localSession);
+              }
+            });
+
+            // Ordenar por data (mais recente primeiro)
+            mergedSessions.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+            // Atualizar localStorage com dados mesclados
+            localStorage.setItem(`${STORAGE_KEY}_${userId}`, JSON.stringify(mergedSessions));
+
+            return mergedSessions;
+          }
+        } catch (error) {
+          console.error('Erro ao sincronizar sessões com Supabase:', error);
         }
       }
 
-      // Fallback para localStorage se não autenticado ou erro
-      const userId = user?.id || 'anonymous';
-      const localSessions = localStorage.getItem(`${STORAGE_KEY}_${userId}`);
-      return localSessions ? JSON.parse(localSessions) : [];
-      
+      return sessions;
     } catch (error) {
       console.error('Erro ao obter sessões:', error);
       return [];
@@ -73,40 +88,45 @@ const SessionStorageService = {
       const { data: { user } } = await supabase.auth.getUser();
       const userId = user?.id || 'anonymous';
 
-      // Salvar localmente primeiro
+      // Obter sessões existentes
       const localSessions = localStorage.getItem(`${STORAGE_KEY}_${userId}`);
       const sessions: FlowSession[] = localSessions ? JSON.parse(localSessions) : [];
+
+      // Adicionar nova sessão
       const updatedSessions = [session, ...sessions];
+
+      // Salvar localmente
       localStorage.setItem(`${STORAGE_KEY}_${userId}`, JSON.stringify(updatedSessions));
-
-      // Se usuário autenticado, salvar no Supabase
-      if (user) {
-        const { error } = await supabase
-          .from('flow_sessions')
-          .insert({
-            user_id: user.id,
-            session_title: session.session_title || 'Sessão de estudo',
-            start_time: new Date(session.timestamp).toISOString(),
-            end_time: new Date(session.timestamp + (session.elapsedTimeSeconds * 1000)).toISOString(),
-            duration_seconds: session.elapsedTimeSeconds,
-            duration_formatted: session.duration,
-            subjects: session.subjects,
-            progress: session.progress,
-            notes: session.notes || null,
-            xp_earned: session.xp || Math.floor(session.elapsedTimeSeconds / 60),
-            status: 'completed'
-          });
-
-        if (error) {
-          console.error('Erro ao salvar sessão no Supabase:', error);
-          // Mesmo com erro no Supabase, mantemos salvo localmente
-        }
-      }
 
       // Disparar evento para atualizar componentes
       document.dispatchEvent(new CustomEvent('flow-session-updated', { 
         detail: { userId, session } 
       }));
+
+      // Se o usuário estiver autenticado, salvar no Supabase
+      if (user) {
+        try {
+          const { error } = await supabase
+            .from('flow_sessions')
+            .insert({
+              user_id: user.id,
+              date: new Date(session.timestamp).toISOString(),
+              duration_seconds: session.elapsedTimeSeconds,
+              duration_formatted: session.duration,
+              subjects: session.subjects,
+              progress: session.progress,
+              notes: session.notes || null,
+              session_title: session.session_title || 'Sessão de estudo',
+              created_at: new Date().toISOString()
+            });
+
+          if (error) {
+            console.error('Erro ao salvar sessão no Supabase:', error);
+          }
+        } catch (error) {
+          console.error('Erro ao salvar sessão no Supabase:', error);
+        }
+      }
 
       return true;
     } catch (error) {
@@ -122,21 +142,29 @@ const SessionStorageService = {
       const { data: { user } } = await supabase.auth.getUser();
       const userId = user?.id || 'anonymous';
 
-      // Remover localmente
+      // Obter sessões existentes
       const localSessions = localStorage.getItem(`${STORAGE_KEY}_${userId}`);
       const sessions: FlowSession[] = localSessions ? JSON.parse(localSessions) : [];
+
+      // Remover a sessão
       const updatedSessions = sessions.filter(s => s.id !== sessionId);
+
+      // Salvar localmente
       localStorage.setItem(`${STORAGE_KEY}_${userId}`, JSON.stringify(updatedSessions));
 
-      // Se usuário autenticado, excluir do Supabase
+      // Se o usuário estiver autenticado, excluir do Supabase
       if (user) {
-        const { error } = await supabase
-          .from('flow_sessions')
-          .delete()
-          .eq('id', sessionId)
-          .eq('user_id', user.id);
+        try {
+          const { error } = await supabase
+            .from('flow_sessions')
+            .delete()
+            .eq('id', sessionId)
+            .eq('user_id', user.id);
 
-        if (error) {
+          if (error) {
+            console.error('Erro ao excluir sessão do Supabase:', error);
+          }
+        } catch (error) {
           console.error('Erro ao excluir sessão do Supabase:', error);
         }
       }

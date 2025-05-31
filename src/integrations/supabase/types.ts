@@ -9,60 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      flow_sessions: {
-        Row: {
-          created_at: string
-          duration_formatted: string
-          duration_seconds: number
-          end_time: string | null
-          id: string
-          notes: string | null
-          progress: number
-          session_goal: string | null
-          session_title: string | null
-          start_time: string
-          status: string
-          subjects: string[]
-          updated_at: string
-          user_id: string
-          xp_earned: number
-        }
-        Insert: {
-          created_at?: string
-          duration_formatted?: string
-          duration_seconds?: number
-          end_time?: string | null
-          id?: string
-          notes?: string | null
-          progress?: number
-          session_goal?: string | null
-          session_title?: string | null
-          start_time: string
-          status?: string
-          subjects?: string[]
-          updated_at?: string
-          user_id: string
-          xp_earned?: number
-        }
-        Update: {
-          created_at?: string
-          duration_formatted?: string
-          duration_seconds?: number
-          end_time?: string | null
-          id?: string
-          notes?: string | null
-          progress?: number
-          session_goal?: string | null
-          session_title?: string | null
-          start_time?: string
-          status?: string
-          subjects?: string[]
-          updated_at?: string
-          user_id?: string
-          xp_earned?: number
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
           avatar_url: string | null

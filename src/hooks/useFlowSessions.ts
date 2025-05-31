@@ -3,21 +3,20 @@ import { useState, useEffect } from 'react';
 import SessionStorageService, { FlowSession } from '@/lib/sessionStorageService';
 
 /**
- * Hook para gerenciar as sessões de Flow com sincronização Supabase
+ * Hook para gerenciar as sessões de Flow
  */
 export const useFlowSessions = () => {
   const [sessions, setSessions] = useState<FlowSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Carregar sessões do Supabase/localStorage
+  // Carregar sessões
   const loadSessions = async () => {
     try {
       setLoading(true);
       const data = await SessionStorageService.getSessions();
       setSessions(data);
       setError(null);
-      console.log(`Carregadas ${data.length} sessões de Flow`);
     } catch (err) {
       setError('Erro ao carregar sessões');
       console.error('Erro ao carregar sessões:', err);
@@ -29,12 +28,9 @@ export const useFlowSessions = () => {
   // Adicionar nova sessão
   const addSession = async (session: FlowSession) => {
     try {
-      const success = await SessionStorageService.saveSession(session);
-      if (success) {
-        setSessions(prev => [session, ...prev]);
-        console.log('Sessão salva com sucesso:', session.session_title);
-      }
-      return success;
+      await SessionStorageService.saveSession(session);
+      setSessions(prev => [session, ...prev]);
+      return true;
     } catch (err) {
       console.error('Erro ao adicionar sessão:', err);
       return false;
@@ -44,12 +40,9 @@ export const useFlowSessions = () => {
   // Excluir sessão
   const deleteSession = async (sessionId: string | number) => {
     try {
-      const success = await SessionStorageService.deleteSession(sessionId);
-      if (success) {
-        setSessions(prev => prev.filter(s => s.id !== sessionId));
-        console.log('Sessão excluída com sucesso:', sessionId);
-      }
-      return success;
+      await SessionStorageService.deleteSession(sessionId);
+      setSessions(prev => prev.filter(s => s.id !== sessionId));
+      return true;
     } catch (err) {
       console.error('Erro ao excluir sessão:', err);
       return false;
