@@ -1,7 +1,6 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
   Search,
@@ -46,11 +45,6 @@ export function Header() {
             2
           </Badge>
         </Button>
-        <Avatar className="h-9 w-9 cursor-pointer border border-gray-300 dark:border-gray-600">
-          <AvatarFallback className="bg-gray-50 dark:bg-gray-700">
-            {/* Avatar vazio - sem conteúdo */}
-          </AvatarFallback>
-        </Avatar>
       </div>
     </header>
   );
