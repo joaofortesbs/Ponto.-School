@@ -10,7 +10,7 @@ import {
   User,
   Menu,
 } from "lucide-react";
-import Sidebar from "../sidebar/sidebar";
+import HeaderActions from "./HeaderActions";
 
 export function Header() {
   return (
@@ -28,8 +28,8 @@ export function Header() {
         />
       </div>
       <div className="flex items-center gap-4">
-        {/* Sidebar com Adicionar Parceiros e Login Diário */}
-        <Sidebar />
+        {/* Botões de Adicionar Parceiros e Login Diário */}
+        <HeaderActions />
         
         <Button variant="ghost" size="icon" className="relative hidden md:flex">
           <ShoppingCart className="h-5 w-5" />

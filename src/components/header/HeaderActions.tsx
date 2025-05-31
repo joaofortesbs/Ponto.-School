@@ -10,11 +10,11 @@ import {
 import { UserPlus } from "lucide-react";
 import LoginDiario from "../logindiario/LoginDiario";
 
-interface SidebarProps {
+interface HeaderActionsProps {
   onAdicionarParceirosClick?: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ onAdicionarParceirosClick }) => {
+const HeaderActions: React.FC<HeaderActionsProps> = ({ onAdicionarParceirosClick }) => {
   const handleAdicionarParceirosClick = () => {
     console.log("Adicionar Parceiros clicado!");
     if (onAdicionarParceirosClick) {
@@ -61,4 +61,4 @@ const Sidebar: React.FC<SidebarProps> = ({ onAdicionarParceirosClick }) => {
   );
 };
 
-export default Sidebar;
+export default HeaderActions;
