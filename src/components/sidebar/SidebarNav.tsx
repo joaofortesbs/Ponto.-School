@@ -67,19 +67,9 @@ export function SidebarNav({
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [profileImage, setProfileImage] = useState<string | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
   const [firstName, setFirstName] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    // Listener para atualizações de avatar feitas em outros componentes
-    const handleAvatarUpdate = (event: CustomEvent) => {
-      if (event.detail && event.detail.url) {
-        setProfileImage(event.detail.url);
-      }
-    };
-
     // Listener para atualizações de nome de usuário
     const handleUsernameUpdate = (event: CustomEvent) => {
       if (event.detail?.displayName) {
@@ -90,14 +80,12 @@ export function SidebarNav({
     };
 
     // Adicionar os listeners
-    document.addEventListener('userAvatarUpdated', handleAvatarUpdate as EventListener);
     document.addEventListener('usernameUpdated', handleUsernameUpdate as EventListener);
     document.addEventListener('usernameReady', handleUsernameUpdate as EventListener);
     document.addEventListener('usernameSynchronized', handleUsernameUpdate as EventListener);
 
     // Remover os listeners quando o componente for desmontado
     return () => {
-      document.removeEventListener('userAvatarUpdated', handleAvatarUpdate as EventListener);
       document.removeEventListener('usernameUpdated', handleUsernameUpdate as EventListener);
       document.removeEventListener('usernameReady', handleUsernameUpdate as EventListener);
       document.removeEventListener('usernameSynchronized', handleUsernameUpdate as EventListener);
@@ -133,12 +121,6 @@ export function SidebarNav({
             if (!firstName) setFirstName("Usuário"); // Fallback if profile fetch fails
           } else if (data) {
             setUserProfile(data as UserProfile);
-            // Se o perfil tiver um avatar_url, usar ele
-            if (data.avatar_url) {
-              setProfileImage(data.avatar_url);
-              // Também salvar no localStorage para uso em outros componentes
-              localStorage.setItem('userAvatarUrl', data.avatar_url);
-            }
 
             // Determinar o primeiro nome com a mesma lógica do Dashboard
             // Prioridade: primeiro nome do full_name > display_name > username
@@ -156,7 +138,7 @@ export function SidebarNav({
             document.dispatchEvent(new CustomEvent('usernameUpdated', { 
               detail: { 
                 displayName: data.display_name,
-                firstName: bestName,
+                firstName: firstName,
                 username: data.username
               } 
             }));
@@ -174,90 +156,6 @@ export function SidebarNav({
 
     fetchUserProfile();
   }, []);
-
-  const handleImageUploadClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      try {
-        setIsUploading(true);
-        // Exibir a prévia da imagem imediatamente para feedback
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          setProfileImage(e.target?.result as string);
-        };
-        reader.readAsDataURL(file);
-
-        // Upload da imagem para o Supabase Storage
-        const fileExt = file.name.split('.').pop();
-        const fileName = `avatar-${Date.now()}.${fileExt}`;
-        const filePath = `avatars/${fileName}`;
-
-        // Fazer upload para o storage do Supabase
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('profile-images')
-          .upload(filePath, file);
-
-        if (uploadError) {
-          console.error('Erro ao fazer upload da imagem:', uploadError);
-          throw new Error(uploadError.message);
-        }
-
-        // Obter a URL pública da imagem
-        const { data: publicUrlData } = supabase.storage
-          .from('profile-images')
-          .getPublicUrl(filePath);
-
-        if (!publicUrlData.publicUrl) {
-          throw new Error('Não foi possível obter a URL pública da imagem');
-        }
-
-        // Atualizar o perfil do usuário com a URL da imagem
-        const { data: currentUser } = await supabase.auth.getUser();
-        if (!currentUser.user) {
-          throw new Error('Usuário não autenticado');
-        }
-
-        const { data: updateData, error: updateError } = await supabase
-          .from('profiles')
-          .update({ 
-            avatar_url: publicUrlData.publicUrl,
-            updated_at: new Date().toISOString()
-          })
-          .eq('email', currentUser.user.email)
-          .select()
-          .single();
-
-        if (updateError) {
-          console.error('Erro ao atualizar perfil com avatar:', updateError);
-          throw new Error(updateError.message);
-        }
-
-        // Atualizar o estado
-        setProfileImage(publicUrlData.publicUrl);
-
-        // Salvar também no localStorage para uso em outros componentes
-        try {
-          localStorage.setItem('userAvatarUrl', publicUrlData.publicUrl);
-          // Disparar evento para outros componentes saberem que o avatar foi atualizado
-          document.dispatchEvent(new CustomEvent('userAvatarUpdated', { 
-            detail: { url: publicUrlData.publicUrl } 
-          }));
-        } catch (e) {
-          console.warn("Erro ao salvar avatar no localStorage", e);
-        }
-
-        console.log('Avatar atualizado com sucesso!');
-      } catch (error) {
-        console.error('Erro ao processar upload de avatar:', error);
-      } finally {
-        setIsUploading(false);
-      }
-    }
-  };
 
   const handleNavigation = (path: string, isSpecial?: boolean) => {
     if (path === "/mentor-ia") {
@@ -486,53 +384,8 @@ export function SidebarNav({
         </div>
       )}
 
-      {/* User Profile Component - Exactly like the image */}
+      {/* User Profile Component - Sem a imagem de perfil circular */}
       <div className="bg-white dark:bg-[#001427] p-3 mb-4 mt-2 flex flex-col items-center relative group">
-        <div className="relative mb-2">
-          <div
-            className="rounded-full overflow-hidden mx-auto relative group"
-            style={{
-              width: isCollapsed ? "40px" : "60px",
-              height: isCollapsed ? "40px" : "60px",
-              background: "linear-gradient(45deg, #FFD700, #FF6B00, #FF0000)",
-              padding: "2px",
-            }}
-          >
-            <div
-              className="cursor-pointer w-full h-full rounded-full overflow-hidden relative"
-              style={{
-                background: "#001427",
-                padding: "2px",
-              }}
-            >
-              <img
-                src={
-                  profileImage ||
-                  "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&mouth=smile&eyes=happy"
-                }
-                alt="Perfil do Usuário"
-                className="w-full h-full object-cover rounded-full"
-              />
-              <div
-                className="absolute inset-0 bg-black/50 opacity-0 group-hover/avatar:opacity-100 transition-opacity flex items-center justify-center"
-                onClick={handleImageUploadClick}
-              >
-                {isUploading ? (
-                  <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                ) : (
-                  <Upload className="h-5 w-5 text-white" />
-                )}
-              </div>
-              <input
-                type="file"
-                ref={fileInputRef}
-                className="hidden"
-                accept="image/*"
-                onChange={handleImageChange}
-              />
-            </div>
-          </div>
-        </div>
         {!isCollapsed && (
           <div className="text-[#001427] dark:text-white text-center">
             <h3 className="font-semibold text-base mb-2 flex items-center justify-center">
