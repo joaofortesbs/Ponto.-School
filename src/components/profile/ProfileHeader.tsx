@@ -25,11 +25,13 @@ import {
   UserPlus,
   UserCheck
 } from "lucide-react";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 
 import type { UserProfile } from "@/types/user-profile";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 import { profileService } from "@/services/profileService";
+import { useFriendship } from "@/hooks/useFriendship";
 import { toast } from "@/components/ui/use-toast";
 
 interface ProfileHeaderProps {
@@ -56,7 +58,7 @@ export default function ProfileHeader({
   const [showFollowersTooltip, setShowFollowersTooltip] = useState(false);
   const [showFollowingTooltip, setShowFollowingTooltip] = useState(false);
   const [showFollowingInTooltip, setShowFollowingInTooltip] = useState(false);
-  
+
 
 
   // Array de conquistas recentes para animação
@@ -1261,7 +1263,7 @@ export default function ProfileHeader({
               <p className="text-base font-bold text-[#29335C] dark:text-white">{userProfile?.followers_count || 0}</p>
               <p className="text-[10px] text-[#64748B] dark:text-white/60">Parceiros</p>
             </div>
-            
+
             {/* Tooltip quando não há parceiros */}
             {showFollowersTooltip && (
               <motion.div
@@ -1457,7 +1459,7 @@ export default function ProfileHeader({
           </Button>
         </motion.div>
 
-        
+
 
         {/* Conquistas recentes ou estado vazio - reduzido */}
         <motion.div
@@ -1510,8 +1512,33 @@ export default function ProfileHeader({
           </div>
         </motion.div>
       </div>
-      
-      
+        {/* Mini-card de Parceiros com HoverCard */}
+        <HoverCard>
+          <HoverCardTrigger asChild>
+            <motion.div
+              whileHover={{ y: -3, scale: 1.03 }}
+              className="text-center group/stat bg-slate-50 dark:bg-slate-800/30 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/30 transition-all duration-300 shadow-sm hover:shadow border border-transparent hover:border-[#FF6B00]/10 relative mt-3 cursor-pointer"
+            >
+              <div className="flex flex-col items-center justify-center">
+                <div className="w-6 h-6 bg-[#FF6B00]/10 rounded-full flex items-center justify-center mb-0.5 group-hover/stat:bg-[#FF6B00]/20 transition-all duration-300">
+                  <UserCheck className="h-3.5 w-3.5 text-[#FF6B00] group-hover/stat:scale-110 transition-transform" />
+                </div>
+                <p className="text-base font-bold text-[#29335C] dark:text-white">{userProfile?.followers_count || 0}</p>
+                <p className="text-[10px] text-[#64748B] dark:text-white/60">Seus Parceiros</p>
+              </div>
+            </motion.div>
+          </HoverCardTrigger>
+          <HoverCardContent className="w-80">
+            <div className="grid gap-2">
+              <p className="text-sm font-medium leading-none">
+                Seus Parceiros
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Estes são os parceiros que você adicionou.
+              </p>
+            </div>
+          </HoverCardContent>
+        </HoverCard>
     </div>
   );
 }
