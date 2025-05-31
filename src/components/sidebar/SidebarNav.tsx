@@ -110,10 +110,16 @@ export function SidebarNav({
         // Primeiro tentar obter do localStorage para display rápido
         const storedFirstName = localStorage.getItem('userFirstName');
         const storedDisplayName = localStorage.getItem('userDisplayName');
+        const storedAvatarUrl = localStorage.getItem('userAvatarUrl');
+        
         if (storedDisplayName) {
           setFirstName(storedDisplayName);
         } else if (storedFirstName) {
           setFirstName(storedFirstName);
+        }
+        
+        if (storedAvatarUrl) {
+          setProfileImage(storedAvatarUrl);
         }
         
         // Depois buscar do Supabase para dados atualizados
@@ -125,7 +131,7 @@ export function SidebarNav({
           const { data, error } = await supabase
             .from("profiles")
             .select("*")
-            .eq("user_id", user.id)
+            .eq("id", user.id)
             .single();
 
           if (error) {
@@ -133,23 +139,20 @@ export function SidebarNav({
             if (!firstName) setFirstName("Usuário"); // Fallback if profile fetch fails
           } else if (data) {
             setUserProfile(data as UserProfile);
-            // Se o perfil tiver um avatar_url, usar ele
+            
+            // Se o perfil tiver um avatar_url, usar ele e atualizar localStorage
             if (data.avatar_url) {
               setProfileImage(data.avatar_url);
-              // Também salvar no localStorage para uso em outros componentes
               localStorage.setItem('userAvatarUrl', data.avatar_url);
             }
 
             // Determinar o primeiro nome com a mesma lógica do Dashboard
-            // Prioridade: primeiro nome do full_name > display_name > username
             const firstName = data.full_name?.split(' ')[0] || 
                            data.display_name || 
                            data.username || 
                            "";
             
             setFirstName(firstName);
-
-            // Salvar para manter consistência entre componentes
             localStorage.setItem('userFirstName', firstName);
             
             // Disparar evento para outros componentes
@@ -184,22 +187,25 @@ export function SidebarNav({
     if (file) {
       try {
         setIsUploading(true);
-        // Exibir a prévia da imagem imediatamente para feedback
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          setProfileImage(e.target?.result as string);
-        };
-        reader.readAsDataURL(file);
+        
+        // Obter o usuário atual
+        const { data: currentUser } = await supabase.auth.getUser();
+        if (!currentUser.user) {
+          throw new Error('Usuário não autenticado');
+        }
 
         // Upload da imagem para o Supabase Storage
         const fileExt = file.name.split('.').pop();
-        const fileName = `avatar-${Date.now()}.${fileExt}`;
+        const fileName = `avatar-${currentUser.user.id}-${Date.now()}.${fileExt}`;
         const filePath = `avatars/${fileName}`;
 
         // Fazer upload para o storage do Supabase
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('profile-images')
-          .upload(filePath, file);
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: true
+          });
 
         if (uploadError) {
           console.error('Erro ao fazer upload da imagem:', uploadError);
@@ -216,39 +222,29 @@ export function SidebarNav({
         }
 
         // Atualizar o perfil do usuário com a URL da imagem
-        const { data: currentUser } = await supabase.auth.getUser();
-        if (!currentUser.user) {
-          throw new Error('Usuário não autenticado');
-        }
-
-        const { data: updateData, error: updateError } = await supabase
+        const { error: updateError } = await supabase
           .from('profiles')
           .update({ 
             avatar_url: publicUrlData.publicUrl,
             updated_at: new Date().toISOString()
           })
-          .eq('email', currentUser.user.email)
-          .select()
-          .single();
+          .eq('id', currentUser.user.id);
 
         if (updateError) {
           console.error('Erro ao atualizar perfil com avatar:', updateError);
           throw new Error(updateError.message);
         }
 
-        // Atualizar o estado
+        // Atualizar o estado local
         setProfileImage(publicUrlData.publicUrl);
-
-        // Salvar também no localStorage para uso em outros componentes
-        try {
-          localStorage.setItem('userAvatarUrl', publicUrlData.publicUrl);
-          // Disparar evento para outros componentes saberem que o avatar foi atualizado
-          document.dispatchEvent(new CustomEvent('userAvatarUpdated', { 
-            detail: { url: publicUrlData.publicUrl } 
-          }));
-        } catch (e) {
-          console.warn("Erro ao salvar avatar no localStorage", e);
-        }
+        
+        // Salvar no localStorage para persistência
+        localStorage.setItem('userAvatarUrl', publicUrlData.publicUrl);
+        
+        // Disparar evento para outros componentes saberem que o avatar foi atualizado
+        document.dispatchEvent(new CustomEvent('userAvatarUpdated', { 
+          detail: { url: publicUrlData.publicUrl } 
+        }));
 
         console.log('Avatar atualizado com sucesso!');
       } catch (error) {
@@ -390,7 +386,6 @@ export function SidebarNav({
         },
       ],
     },
-
     {
       icon: <ShoppingCart className="h-5 w-5" />,
       label: "Mercado",
@@ -486,63 +481,61 @@ export function SidebarNav({
         </div>
       )}
 
-      {/* Profile Image Component - Moved above greeting */}
-      <div className="p-4 flex flex-col items-center">
-        <div className="relative mb-4">
-          <div 
-            className="w-16 h-16 rounded-full overflow-hidden bg-gradient-to-r from-[#FF6B00] via-[#FF8736] to-[#FFB366] p-0.5 cursor-pointer"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-[#001427] flex items-center justify-center">
-              {profileImage ? (
-                <img
-                  src={profileImage}
-                  alt="Profile"
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    console.error("Error loading profile image");
-                    setProfileImage(null);
-                  }}
-                />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
-                  <div className="w-8 h-8 bg-yellow-300 rounded-full flex items-center justify-center">
-                    <div className="w-6 h-6 bg-orange-400 rounded-full"></div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-          
-          {/* Camera Icon Overlay */}
-          <div 
-            className="absolute -bottom-1 -right-1 w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center cursor-pointer shadow-lg"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <Camera className="w-3 h-3 text-white" />
-          </div>
-        </div>
-        
-        {isUploading && (
-          <div className="mb-2 text-xs text-gray-500 dark:text-gray-400">
-            Enviando...
-          </div>
-        )}
-        
-        {/* Hidden File Input */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          onChange={handleImageChange}
-          className="hidden"
-        />
-      </div>
-
-      {/* User Profile Component - Greeting and progress only */}
-      <div className="bg-white dark:bg-[#001427] p-3 mb-4 flex flex-col items-center relative group">
+      {/* User Profile Component - Greeting and progress section */}
+      <div className="bg-white dark:bg-[#001427] p-4 mb-4 flex flex-col items-center relative group">
         {!isCollapsed && (
-          <div className="text-[#001427] dark:text-white text-center">
+          <div className="text-[#001427] dark:text-white text-center w-full">
+            {/* Profile Image Component - Moved above greeting */}
+            <div className="relative mb-6 flex justify-center">
+              <div 
+                className="w-20 h-20 rounded-full overflow-hidden bg-gradient-to-r from-[#FF6B00] via-[#FF8736] to-[#FFB366] p-0.5 cursor-pointer"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-[#001427] flex items-center justify-center">
+                  {profileImage ? (
+                    <img
+                      src={profileImage}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        console.error("Error loading profile image");
+                        setProfileImage(null);
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
+                      <div className="w-10 h-10 bg-yellow-300 rounded-full flex items-center justify-center">
+                        <div className="w-8 h-8 bg-orange-400 rounded-full"></div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {/* Camera Icon Overlay */}
+              <div 
+                className="absolute -bottom-1 -right-1 w-8 h-8 bg-[#FF6B00] rounded-full flex items-center justify-center cursor-pointer shadow-lg"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Camera className="w-4 h-4 text-white" />
+              </div>
+            </div>
+            
+            {isUploading && (
+              <div className="mb-3 text-xs text-gray-500 dark:text-gray-400">
+                Enviando...
+              </div>
+            )}
+            
+            {/* Hidden File Input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="hidden"
+            />
+
             <h3 className="font-semibold text-base mb-2 flex items-center justify-center">
               <span className="mr-1">👋</span> Olá, {(() => {
                 // Obter o primeiro nome com a mesma lógica do Dashboard
@@ -571,7 +564,7 @@ export function SidebarNav({
         )}
       </div>
 
-      <ScrollArea className="h-[calc(100%-250px)] py-2">
+      <ScrollArea className="h-[calc(100%-300px)] py-2">
         <nav className="grid gap-1 px-2">
           {navItems.map((item, index) => (
             <div key={index} className="relative">
