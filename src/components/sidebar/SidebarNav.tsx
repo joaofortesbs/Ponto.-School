@@ -43,7 +43,6 @@ import {
   GraduationCap,
   CalendarClock,
   Upload,
-  Camera,
 } from "lucide-react";
 import MentorAI from "@/components/mentor/MentorAI";
 import AgendaNav from "./AgendaNav";
@@ -483,59 +482,60 @@ export function SidebarNav({
 
       {/* User Profile Component - Greeting and progress section */}
       <div className="bg-white dark:bg-[#001427] p-4 mb-4 flex flex-col items-center relative group">
+        {/* Profile Image Component - Responsive avatar */}
+        <div className="relative mb-4 flex justify-center">
+          <div 
+            className={cn(
+              "rounded-full overflow-hidden bg-gradient-to-r from-[#FF6B00] via-[#FF8736] to-[#FFB366] p-0.5 cursor-pointer transition-all duration-300",
+              isCollapsed ? "w-12 h-12" : "w-20 h-20"
+            )}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-[#001427] flex items-center justify-center">
+              {profileImage ? (
+                <img
+                  src={profileImage}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    console.error("Error loading profile image");
+                    setProfileImage(null);
+                  }}
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
+                  <div className={cn(
+                    "bg-yellow-300 rounded-full flex items-center justify-center",
+                    isCollapsed ? "w-6 h-6" : "w-10 h-10"
+                  )}>
+                    <div className={cn(
+                      "bg-orange-400 rounded-full",
+                      isCollapsed ? "w-4 h-4" : "w-8 h-8"
+                    )}></div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+        
+        {isUploading && (
+          <div className="mb-3 text-xs text-gray-500 dark:text-gray-400">
+            Enviando...
+          </div>
+        )}
+        
+        {/* Hidden File Input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleImageChange}
+          className="hidden"
+        />
+
         {!isCollapsed && (
           <div className="text-[#001427] dark:text-white text-center w-full">
-            {/* Profile Image Component - Moved above greeting */}
-            <div className="relative mb-6 flex justify-center">
-              <div 
-                className="w-20 h-20 rounded-full overflow-hidden bg-gradient-to-r from-[#FF6B00] via-[#FF8736] to-[#FFB366] p-0.5 cursor-pointer"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-[#001427] flex items-center justify-center">
-                  {profileImage ? (
-                    <img
-                      src={profileImage}
-                      alt="Profile"
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        console.error("Error loading profile image");
-                        setProfileImage(null);
-                      }}
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
-                      <div className="w-10 h-10 bg-yellow-300 rounded-full flex items-center justify-center">
-                        <div className="w-8 h-8 bg-orange-400 rounded-full"></div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-              
-              {/* Camera Icon Overlay */}
-              <div 
-                className="absolute -bottom-1 -right-1 w-8 h-8 bg-[#FF6B00] rounded-full flex items-center justify-center cursor-pointer shadow-lg"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <Camera className="w-4 h-4 text-white" />
-              </div>
-            </div>
-            
-            {isUploading && (
-              <div className="mb-3 text-xs text-gray-500 dark:text-gray-400">
-                Enviando...
-              </div>
-            )}
-            
-            {/* Hidden File Input */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              className="hidden"
-            />
-
             <h3 className="font-semibold text-base mb-2 flex items-center justify-center">
               <span className="mr-1">👋</span> Olá, {(() => {
                 // Obter o primeiro nome com a mesma lógica do Dashboard
