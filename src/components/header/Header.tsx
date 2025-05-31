@@ -46,8 +46,8 @@ export function Header() {
             2
           </Badge>
         </Button>
-        <Avatar className="h-9 w-9 cursor-pointer border border-gray-200 dark:border-gray-700">
-          <AvatarFallback className="bg-gray-100 dark:bg-gray-800">
+        <Avatar className="h-9 w-9 cursor-pointer border border-gray-300 dark:border-gray-600">
+          <AvatarFallback className="bg-gray-50 dark:bg-gray-700">
             {/* Avatar vazio - sem conteúdo */}
           </AvatarFallback>
         </Avatar>
