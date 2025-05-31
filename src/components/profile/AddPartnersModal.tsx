@@ -95,32 +95,22 @@ export default function AddPartnersModal({ isOpen, onClose }: AddPartnersModalPr
 
   const handleSendRequest = async (userId: string) => {
     await sendFriendRequest(userId);
-    // Disparar evento para atualizar outros componentes
-    document.dispatchEvent(new CustomEvent('partnersUpdated'));
   };
 
   const handleAcceptRequest = async (requestId: string) => {
     await acceptFriendRequest(requestId);
-    // Disparar evento para atualizar outros componentes
-    document.dispatchEvent(new CustomEvent('partnersUpdated'));
   };
 
   const handleRejectRequest = async (requestId: string) => {
     await rejectFriendRequest(requestId);
-    // Disparar evento para atualizar outros componentes
-    document.dispatchEvent(new CustomEvent('partnersUpdated'));
   };
 
   const handleCancelRequest = async (userId: string) => {
     await cancelFriendRequest(userId);
-    // Disparar evento para atualizar outros componentes
-    document.dispatchEvent(new CustomEvent('partnersUpdated'));
   };
 
   const handleRemoveFriendship = async (userId: string) => {
     await removeFriendship(userId);
-    // Disparar evento para atualizar outros componentes
-    document.dispatchEvent(new CustomEvent('partnersUpdated'));
   };
 
   const pendingReceivedRequests = getPendingReceivedRequests();

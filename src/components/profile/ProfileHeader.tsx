@@ -23,17 +23,14 @@ import {
   ImageIcon,
   RefreshCw,
   UserPlus,
-  UserCheck,
-  Clock
+  UserCheck
 } from "lucide-react";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 
 import type { UserProfile } from "@/types/user-profile";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 import { profileService } from "@/services/profileService";
-import { useToast } from "@/components/ui/use-toast";
-import { usePartners } from "@/hooks/usePartners";
+import { toast } from "@/components/ui/use-toast";
 
 interface ProfileHeaderProps {
   userProfile: UserProfile | null;
@@ -59,20 +56,8 @@ export default function ProfileHeader({
   const [showFollowersTooltip, setShowFollowersTooltip] = useState(false);
   const [showFollowingTooltip, setShowFollowingTooltip] = useState(false);
   const [showFollowingInTooltip, setShowFollowingInTooltip] = useState(false);
-  const [showAddPartnersModal, setShowAddPartnersModal] = useState(false);
+  
 
-  // Use the usePartners hook to manage partners state
-  const {
-    currentPartners,
-    pendingRequests,
-    fetchPartners,
-  } = usePartners(userProfile?.user_id);
-
-  useEffect(() => {
-    if (userProfile?.user_id) {
-      fetchPartners();
-    }
-  }, [userProfile?.user_id, fetchPartners]);
 
   // Array de conquistas recentes para animação
   const recentAchievements = [
@@ -816,162 +801,248 @@ export default function ProfileHeader({
   }
 
   return (
-    
-      
-      
-      
-
+    <div
+      className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 shadow-lg overflow-hidden relative group hover:shadow-2xl transition-all duration-500"
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseOver={() => setIsHovering(true)}
+      style={{ transition: "all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)" }}
+    >
       {/* Efeitos decorativos */}
-      
-      
-      
+      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-[#FF6B00]/20 to-transparent rounded-bl-full z-0 opacity-60 group-hover:opacity-100 transition-opacity duration-500"></div>
+      <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-[#0A2540]/10 to-transparent rounded-tr-full z-0 opacity-60 group-hover:opacity-100 transition-opacity duration-500"></div>
 
       {/* Partículas animadas (visíveis no hover) */}
-      
-        
-          
-            {/*
+      <AnimatePresence>
+        {isHovering && (
+          <>
             {[...Array(6)].map((_, i) => (
-              
+              <motion.div
+                key={`particle-${i}`}
+                className="absolute w-2 h-2 rounded-full bg-[#FF6B00]/30"
+                initial={{
+                  opacity: 0,
+                  x: Math.random() * 300 - 150,
+                  y: Math.random() * 200 - 100,
+                  scale: 0
+                }}
+                animate={{
+                  opacity: [0, 0.8, 0],
+                  x: Math.random() * 300 - 150,
+                  y: Math.random() * 200 - 100,
+                  scale: [0, 1, 0]
+                }}
+                exit={{ opacity: 0, scale: 0 }}
+                transition={{
+                  duration: 3 + Math.random() * 2,
+                  repeat: Infinity,
+                  delay: Math.random() * 2
+                }}
+              />
             ))}
-            */}
-          
-        
-      
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Cover Photo com gradiente animado e efeito de movimento - altura reduzida */}
-      
+      <div className="h-32 bg-gradient-to-r from-[#001427] via-[#072e4f] to-[#0A2540] relative overflow-hidden group/cover">
         {coverUrl ? (
-          
-            
-              
+          <div className="absolute inset-0 w-full h-full">
+            <img
+              src={coverUrl}
+              alt="Cover"
+              className="absolute inset-0 w-full h-full object-cover"
+              onError={(e) => {
+                console.error("Erro ao carregar imagem de capa", e);
                 // Fallback para padrão em caso de erro
-                //e.currentTarget.className = "absolute inset-0 w-full h-full object-cover opacity-20";
-              
-            
-          
+                e.currentTarget.src = "/images/pattern-grid.svg";
+                e.currentTarget.className = "absolute inset-0 w-full h-full object-cover opacity-20";
+              }}
+            />
+          </div>
         ) : (
-          
-            
-              
-            
-          
+          <motion.div
+            className="absolute inset-0 bg-[url('/images/pattern-grid.svg')] opacity-20"
+            animate={{
+              backgroundPosition: ["0% 0%", "100% 100%"],
+            }}
+            transition={{
+              duration: 20,
+              repeat: Infinity,
+              repeatType: "reverse"
+            }}
+          />
         )}
 
-        
-        
+        <div className="absolute inset-0 bg-gradient-to-t from-[#001427]/90 to-transparent"></div>
 
         {/* Botão de upload da capa (visível no hover) */}
-        
-          
-            
-              
-              
-              Alterar imagem de capa
-            
-          
-          
-            
-              Upload de imagem de capa
-            
-          
-        
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/cover:opacity-100 transition-opacity duration-300 z-10">
+          <div
+            onClick={handleCoverPhotoClick}
+            className="bg-black/50 hover:bg-black/70 p-2 rounded-full cursor-pointer transition-all duration-300 backdrop-blur-sm"
+          >
+            <Camera className="h-5 w-5 text-white" />
+            <span className="sr-only">Alterar imagem de capa</span>
+          </div>
+        </div>
+        <input
+          type="file"
+          ref={coverPhotoRef}
+          className="hidden"
+          accept="image/*"
+          onChange={handleCoverPhotoChange}
+          aria-label="Upload de imagem de capa"
+        />
 
         {/* Efeitos de luz */}
-        
-          
-            
-          
-        
+        <motion.div
+          className="absolute top-5 right-8 w-12 h-12 rounded-full bg-[#FF6B00]/20 blur-xl"
+          animate={{
+            opacity: [0.2, 0.6, 0.2],
+            scale: [1, 1.2, 1]
+          }}
+          transition={{
+            duration: 4,
+            repeat: Infinity,
+            repeatType: "reverse"
+          }}
+        />
 
-        
-          
-            
-          
-        
+        <motion.div
+          className="absolute bottom-5 left-10 w-16 h-16 rounded-full bg-[#0064FF]/20 blur-xl"
+          animate={{
+            opacity: [0.1, 0.4, 0.1],
+            scale: [1, 1.3, 1]
+          }}
+          transition={{
+            duration: 5,
+            repeat: Infinity,
+            repeatType: "reverse",
+            delay: 1
+          }}
+        />
 
         {/* Status badge animado */}
-        
-          
-            
-              
-              
-              Online
-            
-          
-        
+        <div className="absolute top-3 right-3 z-10">
+          <motion.div
+            className="bg-[#00b894]/90 text-white text-xs py-0.5 px-2 rounded-full flex items-center shadow-lg backdrop-blur-sm"
+            initial={{ y: -10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.5, duration: 0.3 }}
+          >
+            <motion.span
+              className="w-1.5 h-1.5 rounded-full bg-white mr-1.5"
+              animate={{ scale: [1, 1.5, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            />
+            Online
+          </motion.div>
+        </div>
 
         {/* Nível destacado */}
-        
-          
-            
-              
-              Nível {userProfile?.level || 1}
-            
-          
-        
-      
+        <div className="absolute top-3 left-3 z-10 flex items-center gap-2">
+          <motion.div
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.6, duration: 0.3 }}
+            className="bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] text-white text-xs py-0.5 px-2 rounded-full flex items-center shadow-lg"
+          >
+            <Zap className="h-3 w-3 mr-1" />
+            Nível {userProfile?.level || 1}
+          </motion.div>
+        </div>
+      </div>
 
       {/* Avatar com animação avançada - movido para fora da capa */}
-      
-        
-          
-            
-              
-                
-                  
-                    
-                      
-                        
-                        
-                          {displayName?.charAt(0) || userProfile?.display_name?.charAt(0) || "U"}
-                        
-                      
-                    
+      <div className="flex justify-center -mt-10 mb-2 relative z-20">
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.3, type: "spring", stiffness: 100 }}
+        >
+          <div className="relative group/avatar">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] rounded-full opacity-75 group-hover/avatar:opacity-100 blur-sm group-hover/avatar:blur transition duration-1000"></div>
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              className="profile-avatar relative cursor-pointer"
+              onClick={handleProfilePictureClick}
+            >
+              <Avatar className="w-20 h-20 border-4 border-white dark:border-[#0A2540] shadow-xl group-hover/avatar:border-[#FF6B00]/20 transition-all duration-300 relative overflow-hidden">
+                <AvatarImage
+                  src={avatarUrl || "https://api.dicebear.com/7.x/avataaars/svg?seed=John"}
+                  alt="Avatar"
+                  className="object-cover z-10"
+                  onError={(e) => {
+                    console.error("Erro ao carregar avatar", e);
+                    // Esconder a imagem com erro
+                    e.currentTarget.style.display = 'none';
+                    // Será mostrado o AvatarFallback automaticamente
+                  }}
+                />
+                <AvatarFallback className="bg-gradient-to-br from-[#FF6B00] to-[#FF9B50] text-xl font-bold text-white">
+                  {displayName?.charAt(0) || userProfile?.display_name?.charAt(0) || "U"}
+                </AvatarFallback>
+              </Avatar>
 
-                    {/* Anel de progresso ao redor do avatar */}
-                    
-                      
-                        
-                        
-                        
-                        
-                        
-                      
-                    
+              {/* Anel de progresso ao redor do avatar */}
+              <svg className="absolute -inset-1 w-[calc(100%+8px)] h-[calc(100%+8px)] rotate-90">
+                <circle
+                  cx="50%"
+                  cy="50%"
+                  r="49%"
+                  fill="none"
+                  stroke="#FF6B00"
+                  strokeWidth="2"
+                  strokeDasharray="308"
+                  strokeDashoffset="85"
+                  className="opacity-70 group-hover/avatar:opacity-100 transition-opacity"
+                  strokeLinecap="round"
+                />
+              </svg>
 
-                    {/* Ícone de câmera para upload (visível no hover) */}
-                    
-                      
-                        
-                          
-                          Alterar
-                        
-                      
-                    
-                    
-                      Upload de foto de perfil
-                    
-                  
+              {/* Ícone de câmera para upload (visível no hover) */}
+              <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover/avatar:opacity-100 transition-opacity duration-300 z-20">
+                <div className="flex flex-col items-center">
+                  <Camera className="h-6 w-6 text-white" />
+                  <span className="text-white text-xs mt-1">Alterar</span>
+                </div>
+              </div>
+            </motion.div>
+            <input
+              type="file"
+              ref={profilePictureRef}
+              className="hidden"
+              accept="image/*"
+              onChange={handleProfilePictureChange}
+              aria-label="Upload de foto de perfil"
+            />
 
-                  {/* Indicador de status premium */}
-                  
-                    
-                      
-                        
-                      
-                    
-                  
-                
-              
-            
-          
-        
-      
+            {/* Indicador de status premium */}
+            <motion.div
+              className="absolute -bottom-1 -right-1"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 1, type: "spring", stiffness: 200 }}
+            >
+              <div className="bg-[#FF6B00] text-white p-1 rounded-full w-7 h-7 flex items-center justify-center shadow-lg group-hover/avatar:shadow-[#FF6B00]/40 transition-all duration-300">
+                <Trophy className="h-4 w-4" />
+              </div>
+            </motion.div>
+          </div>
+        </motion.div>
+      </div>
 
       {/* Profile Info - padding reduzido */}
-      
-        
+      <div className="pt-1 pb-4 px-4 text-center relative z-10">
+        <motion.h2
+          ref={profileNameRef}
+          className="text-lg font-bold text-[#29335C] dark:text-white profile-3d-text"
+          initial={{ y: 10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.7, duration: 0.3 }}
+        >
           {(() => {
             // Informações para depuração
             console.log("Perfil carregado para exibição:", {
@@ -1117,151 +1188,189 @@ export default function ProfileHeader({
 
                   return (
                     <>
-                      {firstName}  |  @{usernameToDisplay}
+                      {firstName} <span className="text-gray-400 dark:text-gray-400">|</span> <span className="text-[#FF6B00]">@{usernameToDisplay}</span>
                     </>
                   );
                 })()}
               </>
             );
           })()}
-        
+        </motion.h2>
 
         {/* User ID block */}
         {userProfile?.user_id ? (
-          
-            
-            
-              ID: 
-            
-          
+          <div className="mt-2 bg-gradient-to-r from-[#FF6B00]/10 to-[#FF8C40]/5 dark:from-[#FF6B00]/20 dark:to-[#FF8C40]/10 backdrop-blur-sm px-3 py-1.5 rounded-full inline-flex items-center border border-[#FF6B00]/20">
+            <div className="w-2 h-2 rounded-full bg-[#FF6B00] mr-2"></div>
+            <span className="text-xs font-medium text-gray-800 dark:text-white">
+              ID: <span className="font-mono">{userProfile.user_id}</span>
+            </span>
+          </div>
         ) : (
-          
-            
-            
+          <div className="mt-2 bg-gray-100 dark:bg-gray-800/40 backdrop-blur-sm px-3 py-1.5 rounded-full inline-flex items-center cursor-help" title="ID será gerado automaticamente logo após a criação da conta">
+            <div className="w-2 h-2 rounded-full bg-gray-400 animate-pulse mr-2"></div>
+            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
               ID: Gerando...
-            
-          
+            </span>
+          </div>
         )}
 
-        
-          
-            
-              
-                Plano {userProfile?.plan_type === "full" 
-                ? "Full" 
+        <motion.div
+          className="flex items-center justify-center gap-1 mt-1"
+          initial={{ y: 10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.9, duration: 0.3 }}
+        >
+          <span className="bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] text-white text-xs font-medium px-3 py-1 rounded-full flex items-center gap-1.5 shadow-sm hover:shadow hover:shadow-[#FF6B00]/20 transition-all duration-300 cursor-pointer">
+            <Diamond className="h-3.5 w-3.5" />
+            {userProfile?.plan_type === "full" 
+                ? "Plano Full" 
                 : userProfile?.plan_type === "premium" 
-                  ? "Premium" 
-                  : "Lite"}
-              
-            
-          
-        
+                  ? "Plano Premium" 
+                  : "Plano Lite"}
+          </span>
+        </motion.div>
 
-        
-          
-            
-              
-              Estudante de Engenharia de Software
-            
-          
-        
+        <motion.p
+          className="text-[#64748B] dark:text-white/60 text-xs mt-1.5 bg-slate-50 dark:bg-slate-800/30 py-0.5 px-2 rounded-full inline-block backdrop-blur-sm"
+          initial={{ y: 10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 1, duration: 0.3 }}
+        >
+          <BookOpen className="w-3 h-3 inline-block mr-1 text-[#FF6B00]" />
+          Estudante de Engenharia de Software
+        </motion.p>
 
         {/* Stats com ícones e hover effects - reduzido */}
-        
+        <motion.div
+          className="flex justify-center gap-2 mt-3"
+          initial={{ y: 10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 1.1, duration: 0.3 }}
+        >
           {/* Parceiros/Seguidores - exibe 0 para novos usuários */}
-          
+          <motion.div
+            whileHover={{ y: -3, scale: 1.03 }}
+            className="text-center group/stat bg-slate-50 dark:bg-slate-800/30 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/30 transition-all duration-300 shadow-sm hover:shadow border border-transparent hover:border-[#FF6B00]/10 relative"
+            onMouseEnter={() => setShowFollowersTooltip(true)}
+            onMouseLeave={() => setShowFollowersTooltip(false)}
+          >
+            <div className="flex flex-col items-center justify-center">
+              <div className="w-6 h-6 bg-[#FF6B00]/10 rounded-full flex items-center justify-center mb-0.5 group-hover/stat:bg-[#FF6B00]/20 transition-all duration-300">
+                <UserPlus className="h-3.5 w-3.5 text-[#FF6B00] group-hover/stat:scale-110 transition-transform" />
+              </div>
+              <p className="text-base font-bold text-[#29335C] dark:text-white">{userProfile?.followers_count || 0}</p>
+              <p className="text-[10px] text-[#64748B] dark:text-white/60">Parceiros</p>
+            </div>
             
-              
-                
-                
-
-                  
-                    {pendingRequests.length > 0 && (
-                      
-                        {pendingRequests.length}
-                      
-                    )}
-                  
-
-                  {userProfile?.followers_count || 0}
-                
-                Parceiros
-              
-            
-            
-              {/* Tooltip quando não há parceiros */}
-              {showFollowersTooltip && (
-                
+            {/* Tooltip quando não há parceiros */}
+            {showFollowersTooltip && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="absolute -top-16 left-1/2 transform -translate-x-1/2 bg-white dark:bg-[#1E293B] p-2 rounded-lg shadow-lg text-xs z-30 w-48 border border-[#E0E1DD] dark:border-white/10"
+              >
+                <div className="text-center text-[#29335C] dark:text-white">
                   {(userProfile?.followers_count || 0) === 0 ? (
-                    
-                      
-                        Nenhum parceiro ainda
-                      
-                      
+                    <div className="space-y-1">
+                      <div className="font-medium">Nenhum parceiro ainda</div>
+                      <div className="text-[#64748B] dark:text-white/60">
                         Use o botão "Adicionar Parceiros" para conectar-se com outros usuários
-                      
-                    
+                      </div>
+                    </div>
                   ) : (
-                    
+                    <div className="font-medium">
                       {userProfile?.followers_count} Parceiros
-                    
+                    </div>
                   )}
-                
-              )}
-            
-          
+                </div>
+              </motion.div>
+            )}
+          </motion.div>
 
-          
-            
-              
-                
-                  {userProfile?.level || 1}
-                
-                Nível
-              
-            
-            
-              {/* Tooltip com detalhes do nível */}
-              {showStatsDetails && (
-                
-                  Detalhes do Nível
-                  
-                    XP Atual:
-                    {userProfile?.experience_points || 0}/{((userProfile?.level || 1) * 1000)}
-                  
-                  
-                    Próximo Nível:
-                    Nível {(userProfile?.level || 1) + 1}
-                  
-                
-              )}
-            
-          
+          <motion.div
+            whileHover={{ y: -3, scale: 1.03 }}
+            className="text-center group/stat bg-slate-50 dark:bg-slate-800/30 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/30 transition-all duration-300 shadow-sm hover:shadow border border-transparent hover:border-[#FF6B00]/10 relative"
+            onMouseEnter={() => setShowStatsDetails(true)}
+            onMouseLeave={() => setShowStatsDetails(false)}
+          >
+            <div className="flex flex-col items-center justify-center">
+              <div className="w-6 h-6 bg-[#FF6B00]/10 rounded-full flex items-center justify-center mb-0.5 group-hover/stat:bg-[#FF6B00]/20 transition-all duration-300">
+                <Zap className="h-3.5 w-3.5 text-[#FF6B00] group-hover/stat:scale-110 transition-transform" />
+              </div>
+              <p className="text-base font-bold text-[#29335C] dark:text-white">
+                {userProfile?.level || 1}
+              </p>
+              <p className="text-[10px] text-[#64748B] dark:text-white/60">Nível</p>
+            </div>
 
-          
-            
-              
-                {userProfile?.classes_count || 0}
-              
-            Turmas
-          
+            {/* Tooltip com detalhes do nível */}
+            {showStatsDetails && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="absolute -top-20 left-1/2 transform -translate-x-1/2 bg-white dark:bg-[#1E293B] p-2 rounded-lg shadow-lg text-xs z-20 w-40 border border-[#E0E1DD] dark:border-white/10"
+              >
+                <div className="text-center mb-1 font-medium text-[#29335C] dark:text-white">Detalhes do Nível</div>
+                <div className="flex justify-between items-center">
+                  <span className="text-[#64748B] dark:text-white/60">XP Atual:</span>
+                  <span className="font-medium text-[#29335C] dark:text-white">{userProfile?.experience_points || 0}/{((userProfile?.level || 1) * 1000)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-[#64748B] dark:text-white/60">Próximo Nível:</span>
+                  <span className="font-medium text-[#FF6B00]">Nível {(userProfile?.level || 1) + 1}</span>
+                </div>
+              </motion.div>
+            )}
+          </motion.div>
 
-          
-            
-              
-                {userProfile?.achievements_count || 0}
-              
-            Conquistas
-          
-        
+          <motion.div
+            whileHover={{ y: -3, scale: 1.03 }}
+            className="text-center group/stat bg-slate-50 dark:bg-slate-800/30 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/30 transition-all duration-300 shadow-sm hover:shadow border border-transparent hover:border-[#FF6B00]/10"
+          >
+            <div className="flex flex-col items-center justify-center">
+              <div className="w-6 h-6 bg-[#FF6B00]/10 rounded-full flex items-center justify-center mb-0.5 group-hover/stat:bg-[#FF6B00]/20 transition-all duration-300">
+                <Users className="h-3.5 w-3.5 text-[#FF6B00] group-hover/stat:scale-110 transition-transform" />
+              </div>
+              <p className="text-base font-bold text-[#29335C] dark:text-white">{userProfile?.classes_count || 0}</p>
+              <p className="text-[10px] text-[#64748B] dark:text-white/60">Turmas</p>
+            </div>
+          </motion.div>
+
+          <motion.div
+            whileHover={{ y: -3, scale: 1.03 }}
+            className="text-center group/stat bg-slate-50 dark:bg-slate-800/30 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/30 transition-all duration-300 shadow-sm hover:shadow border border-transparent hover:border-[#FF6B00]/10"
+          >
+            <div className="flex flex-col items-center justify-center">
+              <div className="w-6 h-6 bg-[#FF6B00]/10 rounded-full flex items-center justify-center mb-0.5 group-hover/stat:bg-[#FF6B00]/20 transition-all duration-300">
+                <Award className="h-3.5 w-3.5 text-[#FF6B00] group-hover/stat:scale-110 transition-transform" />
+              </div>
+              <p className="text-base font-bold text-[#29335C] dark:text-white">{userProfile?.achievements_count || 0}</p>
+              <p className="text-[10px] text-[#64748B] dark:text-white/60">Conquistas</p>
+            </div>
+          </motion.div>
+        </motion.div>
 
         {/* Barra de progresso melhorada - reduzida */}
-        
-          
-            
-              Progresso para o próximo nível
-            
-            
+        <motion.div
+          className="mt-3"
+          initial={{ y: 10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 1.2, duration: 0.3 }}
+        >
+          <div className="flex justify-between items-center mb-1">
+            <div className="flex items-center">
+              <ChevronUp className="h-2.5 w-2.5 text-[#FF6B00] mr-0.5" />
+              <span className="text-[10px] text-[#64748B] dark:text-white/60">
+                Progresso para o próximo nível
+              </span>
+            </div>
+            <div
+              className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20 transition-all duration-300 cursor-pointer"
+              onMouseEnter={() => setShowTooltip(true)}
+              onMouseLeave={() => setShowTooltip(false)}
+            >
               {(() => {
                 const currentXP = userProfile?.experience_points || 0;
                 const currentLevel = userProfile?.level || 1;
@@ -1272,86 +1381,137 @@ export default function ProfileHeader({
                 const progressPercentage = xpNeededForLevel > 0 ? Math.round((xpInCurrentLevel / xpNeededForLevel) * 100) : 0;
                 return `${progressPercentage}%`;
               })()}
-            
-            
-              
-                Progresso
-              
-              {userProfile?.experience_points || 0}/{(userProfile?.level || 1) * 1000} XP
-              Faltam {((userProfile?.level || 1) * 1000) - (userProfile?.experience_points || 0)} XP
-            
-          
-        
+              <AnimatePresence>
+                {showTooltip && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 5 }}
+                    className="absolute right-6 -mt-10 px-2 py-1.5 bg-black/80 text-white text-[10px] rounded-lg shadow-lg backdrop-blur-sm z-50 w-32 text-center"
+                  >
+                    <div className="font-medium mb-0.5">Progresso</div>
+                    <div className="text-white/80">{userProfile?.experience_points || 0}/{(userProfile?.level || 1) * 1000} XP</div>
+                    <div className="text-white/80">Faltam {((userProfile?.level || 1) * 1000) - (userProfile?.experience_points || 0)} XP</div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+          <div className="h-2 w-full bg-slate-100 dark:bg-slate-800/50 rounded-full overflow-hidden shadow-inner">
+            <div
+              className="h-full bg-gradient-to-r from-[#FF6B00] via-[#FF9B50] to-[#FF6B00] rounded-full progress-animation relative"
+              style={{ 
+                width: `${(() => {
+                  const currentXP = userProfile?.experience_points || 0;
+                  const currentLevel = userProfile?.level || 1;
+                  const xpForNextLevel = currentLevel * 1000;
+                  const previousLevelXP = (currentLevel - 1) * 1000;
+                  const xpInCurrentLevel = currentXP - previousLevelXP;
+                  const xpNeededForLevel = xpForNextLevel - previousLevelXP;
+                  return xpNeededForLevel > 0 ? Math.round((xpInCurrentLevel / xpNeededForLevel) * 100) : 0;
+                })()}%` 
+              }}
+            >
+              {/* Animação de brilho */}
+              <div className="absolute inset-0 animate-shimmer" style={{
+                background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent)',
+                backgroundSize: '200% 100%',
+                animation: 'shimmer 2s infinite'
+              }}></div>
+            </div>
+          </div>
+        </motion.div>
 
         {/* Botões modernizados - reduzidos */}
-        
-          
-            
-              
-              Editar Perfil
-            
-          
-          
-            
-              
-              Compartilhar
-            
-          
-          
-            
-              
-              Adicionar Parceiros
-            
-          
-        
+        <motion.div
+          className="mt-3 flex gap-2"
+          initial={{ y: 10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 1.3, duration: 0.3 }}
+        >
+          <Button
+            className="flex-1 bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] hover:from-[#FF5B00] hover:to-[#FF8B40] text-white text-xs h-8 shadow-sm hover:shadow hover:shadow-[#FF6B00]/20 transition-all duration-300 group flex items-center justify-center relative overflow-hidden"
+            onClick={onEditClick}
+            disabled={isUploading}
+          >
+            {/* Efeito de brilho no hover */}
+            <span className="absolute w-32 h-32 -mt-12 -ml-12 bg-white rotate-12 opacity-0 group-hover:opacity-10 transition-opacity duration-1000 transform group-hover:translate-x-40 group-hover:translate-y-10 pointer-events-none"></span>
 
-        {/* Conquistas recentes animadas - reduzido */}
-        
-          
-            
-              
-                
-                  
-                    
-                      {recentAchievements[activeAchievement]?.icon}
-                    
-                    
-                      
-                        {recentAchievements[activeAchievement]?.name}
-                      
-                      
-                        {recentAchievements[activeAchievement]?.date}
-                      
-                    
-                  
-                
-              
-            
-          
-        
-
-        {/* Mini tooltip de conquistas */}
-        
-          
-            {(userProfile?.achievements_count || 0) === 0 ? (
-              "Suas conquistas aparecerão aqui conforme você progride"
+            {isUploading ? (
+              <div className="h-3 w-3 rounded-full border-2 border-white border-t-transparent animate-spin mr-1.5"></div>
             ) : (
-              `${userProfile?.achievements_count} conquista${(userProfile?.achievements_count || 0) > 1 ? 's' : ''} obtida${(userProfile?.achievements_count || 0) > 1 ? 's' : ''}`
+              <Edit className="h-3 w-3 mr-1.5 group-hover:scale-110 transition-transform" />
             )}
-          
-          {/* Indicador simples */}
-        
+            <span className="relative z-10">Editar Perfil</span>
+          </Button>
+          <Button
+            variant="outline"
+            className="w-8 h-8 p-0 border-[#E0E1DD] dark:border-white/10 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 group/share transition-all duration-300 relative overflow-hidden"
+            onClick={shareProfile}
+            disabled={isUploading}
+          >
+            <Share2 className="h-3.5 w-3.5 text-[#64748B] dark:text-white/60 group-hover/share:text-[#FF6B00] transition-colors duration-300" />
+
+            {/* Efeito de onda ao clicar */}
+            <span className="absolute w-0 h-0 rounded-full bg-[#FF6B00]/10 opacity-0 group-active/share:w-16 group-active/share:h-16 group-active/share:opacity-100 transition-all duration-500 -z-10"></span>
+          </Button>
+        </motion.div>
 
         
-          
-            
-              
-                Ativo há 3 horas
-              
-            
-          
-        
+
+        {/* Conquistas recentes ou estado vazio - reduzido */}
+        <motion.div
+          className="mt-3"
+          initial={{ y: 10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 1.4, duration: 0.3 }}
+        >
+          <div className="px-2 py-1 bg-slate-50 dark:bg-slate-800/30 rounded-lg text-[10px] text-[#64748B] dark:text-white/60 flex flex-col items-center gap-1 group/achievements relative overflow-hidden border border-transparent hover:border-[#FF6B00]/10 transition-all duration-300 shadow-sm hover:shadow">
+            <div className="flex items-center gap-1 w-full justify-center">
+              <Sparkles className="h-3 w-3 text-yellow-500" />
+              <span className="font-medium">Conquistas Recentes</span>
+            </div>
+
+            {/* Estado baseado nas conquistas reais do usuário */}
+            <div className="h-5 w-full relative overflow-hidden">
+              {(userProfile?.achievements_count || 0) === 0 ? (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-[#64748B] dark:text-white/60 text-[10px] text-center">
+                    Suas conquistas aparecerão aqui conforme você progride
+                  </span>
+                </div>
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center gap-1.5">
+                  <Star className="h-3 w-3 text-[#FF6B00]" />
+                  <span className="text-[#29335C] dark:text-white font-medium text-[10px]">
+                    {userProfile?.achievements_count} conquista{(userProfile?.achievements_count || 0) > 1 ? 's' : ''} obtida{(userProfile?.achievements_count || 0) > 1 ? 's' : ''}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Indicador simples */}
+            <div className="flex gap-0.5">
+              <div className="w-1 h-1 rounded-full bg-[#64748B]/30 dark:bg-white/30"></div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Indicador de atividade recente - reduzido */}
+        <motion.div
+          className="mt-2 flex justify-center"
+          initial={{ y: 10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 1.5, duration: 0.3 }}
+        >
+          <div className="px-2 py-0.5 bg-slate-50 dark:bg-slate-800/30 rounded-full text-[10px] text-[#64748B] dark:text-white/60 flex items-center gap-1 hover:bg-slate-100 dark:hover:bg-slate-700/30 transition-all duration-300 cursor-pointer group/activity">
+            <BellRing className="h-2.5 w-2.5 text-[#FF6B00] group-hover/activity:animate-ping" />
+            <span>Ativo há 3 horas</span>
+          </div>
+        </motion.div>
+      </div>
       
-    
+      
+    </div>
   );
 }

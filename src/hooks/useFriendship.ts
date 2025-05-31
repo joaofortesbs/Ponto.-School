@@ -1,10 +1,9 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, FriendRequest, FriendshipStatus } from '@/types/friendship';
-import { useToast } from '@/components/ui/use-toast';
 
 export const useFriendship = () => {
-  const { toast } = useToast();
   const [users, setUsers] = useState<User[]>([]);
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
   const [loading, setLoading] = useState(false);
@@ -95,7 +94,7 @@ export const useFriendship = () => {
     if (!request) return 'none';
 
     if (request.status === 'accepted') return 'friends';
-
+    
     if (request.status === 'pending') {
       return request.sender_id === currentUserId ? 'sent' : 'received';
     }
@@ -120,7 +119,7 @@ export const useFriendship = () => {
         return;
       }
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('friend_requests')
         .insert({
           sender_id: user.id,
@@ -134,16 +133,6 @@ export const useFriendship = () => {
       }
 
       await loadFriendRequests();
-      // Atualizar estado local
-        setFriendRequests(prev => [...prev, { sender_id: user.id, receiver_id: receiverId, status: 'pending' }]);
-
-        // Disparar evento para outros componentes
-        document.dispatchEvent(new CustomEvent('friendshipUpdated', { detail: { type: 'sent', userId: receiverId } }));
-
-        toast({
-          title: "Solicitação enviada",
-          description: "Sua solicitação de parceria foi enviada com sucesso!",
-        });
     } catch (error) {
       console.error('Erro ao enviar solicitação:', error);
     }
@@ -163,18 +152,6 @@ export const useFriendship = () => {
       }
 
       await loadFriendRequests();
-      // Atualizar estado local
-        setFriendRequests(prev => 
-          prev.map(req => req.id === requestId ? { ...req, status: 'accepted' } : req)
-        );
-
-        // Disparar evento para outros componentes
-        document.dispatchEvent(new CustomEvent('friendshipUpdated', { detail: { type: 'accepted', requestId } }));
-
-        toast({
-          title: "Solicitação aceita",
-          description: "Novo parceiro adicionado com sucesso!",
-        });
     } catch (error) {
       console.error('Erro ao aceitar solicitação:', error);
     }
@@ -194,16 +171,6 @@ export const useFriendship = () => {
       }
 
       await loadFriendRequests();
-      // Atualizar estado local
-        setFriendRequests(prev => prev.filter(req => req.id !== requestId));
-
-        // Disparar evento para outros componentes
-        document.dispatchEvent(new CustomEvent('friendshipUpdated', { detail: { type: 'rejected', requestId } }));
-
-        toast({
-          title: "Solicitação rejeitada",
-          description: "A solicitação foi rejeitada.",
-        });
     } catch (error) {
       console.error('Erro ao recusar solicitação:', error);
     }
@@ -290,39 +257,6 @@ export const useFriendship = () => {
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
 
-    // Função para remover amizade
-  const removeFriendshipNew = async (userId: string) => {
-    try {
-      setLoading(true);
-
-      // Encontrar a amizade existente
-      const existingFriendship = friendRequests.find(req => 
-        req.status === 'accepted' && 
-        ((req.sender_id === currentUserId && req.receiver_id === userId) ||
-         (req.receiver_id === currentUserId && req.sender_id === userId))
-      );
-
-      if (existingFriendship) {
-        const { error } = await supabase
-          .from('friendship_requests')
-          .delete()
-          .eq('id', existingFriendship.id);
-
-        if (error) throw error;
-
-        // Atualizar estado local
-        setFriendRequests(prev => prev.filter(req => req.id !== existingFriendship.id));
-
-        // Disparar evento para outros componentes
-        document.dispatchEvent(new CustomEvent('friendshipUpdated', { detail: { type: 'removed', userId } }));
-      }
-    } catch (error) {
-      console.error('Erro ao remover amizade:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return {
     users,
     friendRequests,
@@ -339,7 +273,6 @@ export const useFriendship = () => {
     loadFriendRequests,
     getPendingReceivedRequests,
     getCurrentPartners,
-    getReceivedRequestId,
-    removeFriendshipNew
+    getReceivedRequestId
   };
 };
