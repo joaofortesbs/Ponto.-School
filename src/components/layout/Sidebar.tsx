@@ -1,3 +1,4 @@
+
 import { cn } from "@/lib/utils";
 import { SidebarNav } from "@/components/sidebar/SidebarNav";
 import { useState, useEffect } from "react";
@@ -5,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Menu, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { profileService } from "@/services/profileService";
 import { UserProfile } from "@/types/user-profile";
-import { Brain, MessageSquare } from "lucide-react"; // Import missing icons
+import AvatarUpload from "@/components/profile/AvatarUpload";
+import { useUserProfile } from "@/hooks/useUserProfile";
 
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   isCollapsed?: boolean;
@@ -21,7 +23,21 @@ export default function Sidebar({
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(isCollapsed);
   const [customLogo, setCustomLogo] = useState<string | null>(null);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const { profile, loading, updateAvatarUrl } = useUserProfile();
+
+  // Get greeting based on time of day
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Bom dia";
+    if (hour < 18) return "Boa tarde";
+    return "Boa noite";
+  };
+
+  const getUserDisplayName = () => {
+    if (loading) return "Carregando...";
+    if (!profile) return "Usuário";
+    return profile.display_name || profile.email?.split('@')[0] || "Usuário";
+  };
 
   useEffect(() => {
     // Obter a imagem padrão da configuração global ou usar o valor padrão
@@ -29,19 +45,15 @@ export default function Sidebar({
       window.PONTO_SCHOOL_CONFIG?.defaultLogo ||
       "/images/ponto-school-logo.png";
 
-    // Definir logo imediatamente para evitar atraso na renderização
     setCustomLogo(defaultLogo);
 
-    // Função para carregar e configurar a logo
     const loadAndConfigureLogo = (logoUrl = null) => {
       try {
-        // Se recebemos uma URL específica do evento, usá-la
         if (logoUrl) {
           setCustomLogo(logoUrl);
           return;
         }
 
-        // Verificar primeiro a logo específica da Ponto School
         const pontoSchoolLogo = localStorage.getItem("pontoSchoolLogo");
         if (
           pontoSchoolLogo &&
@@ -56,7 +68,6 @@ export default function Sidebar({
           return;
         }
 
-        // Verificar se já existe uma logo personalizada no localStorage
         const savedLogo = localStorage.getItem("sidebarCustomLogo");
         if (savedLogo && savedLogo !== "null" && savedLogo !== "undefined") {
           setCustomLogo(savedLogo);
@@ -64,7 +75,6 @@ export default function Sidebar({
             window.PONTO_SCHOOL_CONFIG.logoLoaded = true;
           }
         } else {
-          // Se não existir, usar a logo padrão e salvar no localStorage
           setCustomLogo(defaultLogo);
           localStorage.setItem("sidebarCustomLogo", defaultLogo);
           localStorage.setItem("pontoSchoolLogo", defaultLogo);
@@ -72,12 +82,10 @@ export default function Sidebar({
         }
       } catch (e) {
         console.warn("Erro ao acessar localStorage no Sidebar", e);
-        // Usar a logo padrão mesmo se não conseguir acessar o localStorage
         setCustomLogo(defaultLogo);
       }
     };
 
-    // Pré-carregar a imagem com alta prioridade para garantir que esteja disponível
     const preloadImg = new Image();
     preloadImg.src = defaultLogo;
     preloadImg.fetchPriority = "high";
@@ -91,11 +99,9 @@ export default function Sidebar({
       );
     };
 
-    // Garantir que a imagem seja carregada mesmo se houver erro
     preloadImg.onerror = () => {
       console.error("Erro ao carregar logo no Sidebar, tentando novamente...");
 
-      // Tentar novamente com um timestamp para evitar cache
       setTimeout(() => {
         const retryImg = new Image();
         retryImg.src = defaultLogo + "?retry=" + Date.now();
@@ -114,19 +120,16 @@ export default function Sidebar({
 
         retryImg.onerror = () => {
           console.error("Falha definitiva ao carregar logo no Sidebar");
-          // Usar texto como fallback (null indica para usar o texto)
           setCustomLogo(null);
           document.dispatchEvent(new CustomEvent("logoLoadFailed"));
         };
       }, 1000);
     };
 
-    // Verificar se a logo já foi carregada por outro componente
     if (window.PONTO_SCHOOL_CONFIG?.logoLoaded) {
       loadAndConfigureLogo(window.PONTO_SCHOOL_CONFIG.defaultLogo);
     }
 
-    // Adicionar listeners para eventos de carregamento da logo
     const handleLogoLoaded = (event) => {
       console.log("Logo loaded event received in Sidebar", event.detail);
       loadAndConfigureLogo(event.detail);
@@ -148,16 +151,6 @@ export default function Sidebar({
 
     handleResize();
     window.addEventListener("resize", handleResize);
-
-    // Carregar perfil do usuário
-    const loadUserProfile = async () => {
-      const profile = await profileService.getCurrentUserProfile();
-      if (profile) {
-        setUserProfile(profile);
-      }
-    };
-
-    loadUserProfile();
 
     return () => {
       document.removeEventListener("logoLoaded", handleLogoLoaded);
@@ -205,9 +198,10 @@ export default function Sidebar({
           isMobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
           className,
         )}
-        key="sidebar-container" // Added key prop here
+        key="sidebar-container"
         {...props}
       >
+        {/* Header Section with Logo and Profile */}
         <div className="flex h-[72px] items-center justify-between px-4 border-b border-gray-200 dark:border-gray-800 relative">
           <div
             className={cn(
@@ -225,12 +219,9 @@ export default function Sidebar({
                   fetchpriority="high"
                   onError={(e) => {
                     console.error("Erro ao renderizar logo no Sidebar");
-                    // Tentar carregar a logo diretamente do caminho padrão
                     e.currentTarget.src = "/images/ponto-school-logo.png?retry=" + Date.now();
                     
-                    // Se ainda falhar, remover a imagem e mostrar o texto
                     e.currentTarget.onerror = () => {
-                      // Verificar se o elemento ainda existe antes de acessar style
                       if (e.currentTarget && e.currentTarget.style) {
                         e.currentTarget.style.display = "none";
                       }
@@ -265,16 +256,33 @@ export default function Sidebar({
             )}
           </Button>
         </div>
+
+        {/* Profile Section */}
+        <div className="p-4 border-b border-gray-200 dark:border-gray-800">
+          <div className="flex items-center gap-3">
+            <AvatarUpload
+              currentAvatarUrl={profile?.avatar_url}
+              onAvatarUpdate={updateAvatarUrl}
+              size={sidebarCollapsed ? "sm" : "md"}
+            />
+            {!sidebarCollapsed && (
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate text-gray-900 dark:text-white">
+                  {getGreeting()}!
+                </p>
+                <p className="text-xs truncate text-gray-600 dark:text-gray-400">
+                  {getUserDisplayName()}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
         <SidebarNav
           isCollapsed={sidebarCollapsed}
           onToggleCollapse={handleToggleCollapse}
           className="p-2"
         />
-        {userProfile && (
-          <div className="text-sm font-medium mt-4 ml-4">
-            {userProfile?.display_name || userProfile?.username || "Usuário"}
-          </div>
-        )}
       </aside>
     </>
   );
