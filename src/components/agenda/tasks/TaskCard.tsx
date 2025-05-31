@@ -1,208 +1,256 @@
-import React from "react";
-import { useDrag } from "react-dnd";
-import { Task } from "./TasksView";
-import { Progress } from "@/components/ui/progress";
-import { Checkbox } from "@/components/ui/checkbox";
+
+import React, { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { MoreHorizontal, Edit2, Trash2, Calendar, Clock, User, Check, X } from "lucide-react";
 import {
-  Calendar,
-  Clock,
-  FileText,
-  CheckSquare,
-  BookOpen,
-  Presentation,
-  FileEdit,
-  AlertCircle,
-  Users,
-  Beaker,
-  Lightbulb,
-  Paperclip,
-  MessageSquare,
-} from "lucide-react";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Task } from "./TasksView";
 
 interface TaskCardProps {
   task: Task;
-  onClick: () => void;
-  onComplete: (completed: boolean) => void;
+  onUpdate: (taskId: string, updates: Partial<Task>) => void;
+  onDelete: (taskId: string) => void;
 }
 
-const TaskCard: React.FC<TaskCardProps> = ({ task, onClick, onComplete }) => {
-  const [{ isDragging }, drag] = useDrag(() => ({
-    type: "TASK",
-    item: { id: task.id },
-    collect: (monitor) => ({
-      isDragging: !!monitor.isDragging(),
-    }),
-  }));
+const TaskCard = ({ task, onUpdate, onDelete }: TaskCardProps) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editData, setEditData] = useState({
+    title: task?.title || '',
+    description: task?.description || '',
+    priority: task?.priority || 'medium',
+    status: task?.status || 'todo',
+    dueDate: task?.dueDate || ''
+  });
 
-  const getTaskTypeIcon = () => {
-    switch (task.type.toLowerCase()) {
-      case "exercício":
-        return <CheckSquare className="h-3.5 w-3.5 text-blue-500" />;
-      case "relatório":
-        return <FileEdit className="h-3.5 w-3.5 text-amber-500" />;
-      case "estudo":
-        return <BookOpen className="h-3.5 w-3.5 text-purple-500" />;
-      case "apresentação":
-        return <Presentation className="h-3.5 w-3.5 text-green-500" />;
-      case "leitura":
-        return <FileText className="h-3.5 w-3.5 text-teal-500" />;
-      case "projeto":
-        return <Lightbulb className="h-3.5 w-3.5 text-yellow-500" />;
-      case "resumo":
-        return <FileText className="h-3.5 w-3.5 text-indigo-500" />;
-      case "prova":
-        return <AlertCircle className="h-3.5 w-3.5 text-red-500" />;
-      case "laboratório":
-        return <Beaker className="h-3.5 w-3.5 text-pink-500" />;
+  // Verificação de segurança para task
+  if (!task || !task.id) {
+    console.warn('TaskCard: tarefa inválida ou sem ID');
+    return null;
+  }
+
+  const getPriorityColor = (priority?: string) => {
+    const safePriority = priority || 'medium';
+    switch (safePriority) {
+      case 'high':
+        return 'bg-red-100 text-red-800 border-red-200';
+      case 'medium':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'low':
+        return 'bg-green-100 text-green-800 border-green-200';
       default:
-        return <CheckSquare className="h-3.5 w-3.5 text-gray-500" />;
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
-  const getPriorityColor = () => {
-    switch (task.priority) {
-      case "alta":
-        return "border-l-red-500";
-      case "média":
-        return "border-l-yellow-500";
-      case "baixa":
-        return "border-l-green-500";
+  const getStatusColor = (status?: string) => {
+    const safeStatus = status || 'todo';
+    switch (safeStatus) {
+      case 'completed':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'in-progress':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'todo':
+        return 'bg-gray-100 text-gray-800 border-gray-200';
       default:
-        return "border-l-gray-500";
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
-  const formatDueDate = (dateString: string) => {
-    const dueDate = new Date(dateString);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    const isToday =
-      dueDate.getDate() === today.getDate() &&
-      dueDate.getMonth() === today.getMonth() &&
-      dueDate.getFullYear() === today.getFullYear();
-
-    const isTomorrow =
-      dueDate.getDate() === tomorrow.getDate() &&
-      dueDate.getMonth() === tomorrow.getMonth() &&
-      dueDate.getFullYear() === tomorrow.getFullYear();
-
-    if (isToday) {
-      return `Hoje, ${dueDate.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      })}`;
-    } else if (isTomorrow) {
-      return `Amanhã, ${dueDate.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      })}`;
-    } else {
-      return (
-        dueDate.toLocaleDateString() +
-        ", " +
-        dueDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-      );
+  const handleSave = () => {
+    if (!task || !task.id) {
+      console.error('TaskCard: não é possível salvar - tarefa ou ID inválido');
+      return;
     }
-  };
-
-  const isOverdue = () => {
+    
     try {
-      const now = new Date();
-      const dueDate = new Date(task.dueDate);
-      return dueDate < now && task.status !== "concluido";
+      onUpdate(task.id, editData);
+      setIsEditing(false);
     } catch (error) {
-      console.error("Error checking if task is overdue:", error);
-      return false;
+      console.error('Erro ao salvar tarefa:', error);
     }
   };
 
-  return (
-    <div
-      ref={drag}
-      className={`bg-white dark:bg-[#29335C]/30 rounded-lg p-3 shadow-sm border-l-4 ${getPriorityColor()} hover:shadow-md transition-all duration-300 cursor-grab ${isDragging ? "opacity-50 scale-95" : "hover:scale-[1.02]"} ${task.status === "concluido" ? "opacity-70" : ""}`}
-      onClick={onClick}
-      data-task-id={task.id}
-      data-task-status={task.status}
-    >
-      <div className="flex items-start gap-2">
-        <Checkbox
-          checked={task.status === "concluido"}
-          onCheckedChange={(checked) => {
-            onComplete(checked as boolean);
-          }}
-          onClick={(e) => e.stopPropagation()}
-          className="mt-0.5 h-4 w-4 rounded-sm border-gray-300 data-[state=checked]:bg-[#FF6B00] data-[state=checked]:text-white"
-        />
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between">
-            <h4
-              className={`text-sm font-medium truncate ${task.status === "concluido" ? "line-through text-gray-500 dark:text-gray-400" : "text-gray-900 dark:text-white"}`}
+  const handleCancel = () => {
+    setEditData({
+      title: task?.title || '',
+      description: task?.description || '',
+      priority: task?.priority || 'medium',
+      status: task?.status || 'todo',
+      dueDate: task?.dueDate || ''
+    });
+    setIsEditing(false);
+  };
+
+  const handleDelete = () => {
+    if (!task || !task.id) {
+      console.error('TaskCard: não é possível deletar - tarefa ou ID inválido');
+      return;
+    }
+    
+    try {
+      onDelete(task.id);
+    } catch (error) {
+      console.error('Erro ao deletar tarefa:', error);
+    }
+  };
+
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return '';
+    try {
+      return new Date(dateString).toLocaleDateString('pt-BR');
+    } catch (error) {
+      console.warn('Erro ao formatar data:', error);
+      return dateString;
+    }
+  };
+
+  if (isEditing) {
+    return (
+      <Card className="p-4 border border-gray-200 hover:border-orange-300 transition-colors">
+        <div className="space-y-3">
+          <Input
+            value={editData.title}
+            onChange={(e) => setEditData(prev => ({ ...prev, title: e.target.value }))}
+            placeholder="Título da tarefa"
+            className="font-medium"
+          />
+          
+          <Textarea
+            value={editData.description}
+            onChange={(e) => setEditData(prev => ({ ...prev, description: e.target.value }))}
+            placeholder="Descrição (opcional)"
+            className="min-h-[60px]"
+          />
+
+          <div className="grid grid-cols-2 gap-2">
+            <Select
+              value={editData.priority}
+              onValueChange={(value) => setEditData(prev => ({ ...prev, priority: value as any }))}
             >
-              {task.title}
-            </h4>
+              <SelectTrigger>
+                <SelectValue placeholder="Prioridade" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="low">Baixa</SelectItem>
+                <SelectItem value="medium">Média</SelectItem>
+                <SelectItem value="high">Alta</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={editData.status}
+              onValueChange={(value) => setEditData(prev => ({ ...prev, status: value as any }))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todo">A Fazer</SelectItem>
+                <SelectItem value="in-progress">Em Progresso</SelectItem>
+                <SelectItem value="completed">Concluído</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
-          <div className="mt-2 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-            <span className="inline-flex items-center gap-1 bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">
-              {getTaskTypeIcon()}
-              <span>{task.type}</span>
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <Calendar className="h-3 w-3 text-[#FF6B00]" />
-              <span className={isOverdue() ? "text-red-500 font-medium" : ""}>
-                {formatDueDate(task.dueDate)}
-              </span>
-            </span>
-          </div>
+          <Input
+            type="date"
+            value={editData.dueDate}
+            onChange={(e) => setEditData(prev => ({ ...prev, dueDate: e.target.value }))}
+            className="w-full"
+          />
 
-          {task.progress > 0 && task.progress < 100 && (
-            <div className="mt-2">
-              <Progress
-                value={task.progress}
-                className="h-1.5 bg-gray-100 dark:bg-gray-800"
-              />
-              <div className="flex justify-between mt-1 text-xs text-gray-500 dark:text-gray-400">
-                <span>{task.progress}%</span>
-                {task.subtasks && (
-                  <span>
-                    {task.subtasks.filter((st) => st.completed).length}/
-                    {task.subtasks.length} subtarefas
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
-
-          <div className="mt-2 flex items-center justify-between">
-            <span className="text-xs font-medium px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-              {task.discipline}
-            </span>
-
-            <div className="flex -space-x-1">
-              {task.attachments && task.attachments.length > 0 && (
-                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-700">
-                  <Paperclip className="h-3 w-3 text-gray-600 dark:text-gray-300" />
-                </span>
-              )}
-              {task.comments && task.comments.length > 0 && (
-                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-700">
-                  <MessageSquare className="h-3 w-3 text-gray-600 dark:text-gray-300" />
-                </span>
-              )}
-              {task.reminderSet && (
-                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-700">
-                  <Clock className="h-3 w-3 text-gray-600 dark:text-gray-300" />
-                </span>
-              )}
-            </div>
+          <div className="flex justify-end space-x-2">
+            <Button variant="outline" size="sm" onClick={handleCancel}>
+              <X className="h-4 w-4 mr-1" />
+              Cancelar
+            </Button>
+            <Button size="sm" onClick={handleSave} className="bg-orange-500 hover:bg-orange-600">
+              <Check className="h-4 w-4 mr-1" />
+              Salvar
+            </Button>
           </div>
         </div>
-      </div>
-    </div>
+      </Card>
+    );
+  }
+
+  // Valores seguros para exibição
+  const taskTitle = task.title || 'Tarefa sem título';
+  const taskDescription = task.description || '';
+  const taskPriority = task.priority || 'medium';
+  const taskStatus = task.status || 'todo';
+  const taskDueDate = task.dueDate || '';
+  const taskCreatedAt = task.createdAt || '';
+
+  return (
+    <Card className="p-4 border border-gray-200 hover:border-orange-300 transition-colors cursor-pointer group">
+      <CardContent className="p-0">
+        <div className="flex items-start justify-between mb-3">
+          <h4 className="font-medium text-gray-900 leading-tight group-hover:text-orange-600 transition-colors">
+            {taskTitle}
+          </h4>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setIsEditing(true)}>
+                <Edit2 className="h-4 w-4 mr-2" />
+                Editar
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={handleDelete}
+                className="text-red-600 focus:text-red-600"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Excluir
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        {taskDescription && (
+          <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+            {taskDescription}
+          </p>
+        )}
+
+        <div className="flex flex-wrap gap-2 mb-3">
+          <Badge className={getPriorityColor(taskPriority)}>
+            {taskPriority === 'high' ? 'Alta' : 
+             taskPriority === 'medium' ? 'Média' : 'Baixa'}
+          </Badge>
+          <Badge className={getStatusColor(taskStatus)}>
+            {taskStatus === 'completed' ? 'Concluído' : 
+             taskStatus === 'in-progress' ? 'Em Progresso' : 'A Fazer'}
+          </Badge>
+        </div>
+
+        <div className="flex items-center justify-between text-xs text-gray-500">
+          {taskDueDate && (
+            <div className="flex items-center">
+              <Calendar className="h-3 w-3 mr-1" />
+              {formatDate(taskDueDate)}
+            </div>
+          )}
+          <div className="flex items-center">
+            <Clock className="h-3 w-3 mr-1" />
+            {formatDate(taskCreatedAt)}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
