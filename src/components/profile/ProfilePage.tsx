@@ -1,11 +1,8 @@
-
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/lib/supabase";
 import type { UserProfile } from "@/types/user-profile";
-import { useProfileData } from "@/hooks/useProfileData";
-import { useProfileCover } from "@/hooks/useProfileCover";
 import "@/styles/typewriter-loader.css";
 
 // Import profile components
@@ -30,6 +27,8 @@ export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
   const [activeTab, setActiveTab] = useState("perfil");
   const [isEditing, setIsEditing] = useState(false);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
   const [contactInfo, setContactInfo] = useState({
     email: "",
     phone: "Adicionar telefone",
@@ -40,19 +39,63 @@ export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
     "Olá! Sou estudante de Engenharia de Software na Universidade de São Paulo. Apaixonado por tecnologia, programação e matemática. Busco constantemente novos conhecimentos e desafios para aprimorar minhas habilidades. Nas horas vagas, gosto de jogar xadrez, ler livros de ficção científica e praticar esportes.",
   );
 
-  // Use the new hooks
-  const { profileData, loading, refreshProfileData } = useProfileData();
-  const { uploadCoverImage, removeCoverImage, isUploading } = useProfileCover();
-
-  // Update local state when profile data changes
   useEffect(() => {
-    if (profileData) {
-      setContactInfo(profileData.contactInfo);
-      if (profileData.aboutMe) {
-        setAboutMe(profileData.aboutMe);
+    // Função para buscar o perfil do usuário
+    const fetchProfile = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+          setLoading(false);
+          return;
+        }
+        
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .single();
+          
+        if (error) {
+          console.error("Error fetching user profile:", error);
+          setLoading(false);
+          return;
+        }
+        
+        if (data) {
+          // Ensure level and rank are set with defaults if not present
+          const profile = {
+            ...data,
+            level: data.level || 1,
+            rank: data.rank || "Aprendiz",
+          };
+          
+          setUserProfile(profile);
+          
+          // Set contact info from user data
+          setContactInfo({
+            email: data.email || user.email || "",
+            phone: data.phone || "Adicionar telefone",
+            location: data.location || "Adicionar localização",
+            birthDate: data.birth_date || 
+              (user.user_metadata?.birth_date) || 
+              (user.raw_user_meta_data?.birth_date) || 
+              "Adicionar data de nascimento",
+          });
+          
+          if (data.bio) {
+            setAboutMe(data.bio);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      } finally {
+        setLoading(false);
       }
-    }
-  }, [profileData]);
+    };
+
+    fetchProfile();
+  }, []);
 
   const toggleSection = (section: string | null) => {
     if (expandedSection === section) {
@@ -120,22 +163,6 @@ export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
     setIsEditing(false);
   };
 
-  const handleCoverUpload = async (file: File) => {
-    const result = await uploadCoverImage(file);
-    if (result) {
-      // Refresh profile data to get the new cover URL
-      refreshProfileData();
-    }
-  };
-
-  const handleCoverRemove = async () => {
-    const result = await removeCoverImage();
-    if (result) {
-      // Refresh profile data to remove the cover URL
-      refreshProfileData();
-    }
-  };
-
   if (loading) {
     return (
       <div className="w-full h-full relative">
@@ -160,12 +187,8 @@ export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
               {/* Profile Card */}
               <div className="flex-1">
                 <ProfileHeader
-                  userProfile={profileData?.userProfile}
-                  coverUrl={profileData?.coverUrl}
+                  userProfile={userProfile}
                   onEditClick={() => setExpandedSection("account")}
-                  onCoverUpload={handleCoverUpload}
-                  onCoverRemove={handleCoverRemove}
-                  isUploadingCover={isUploading}
                 />
               </div>
 
@@ -267,14 +290,14 @@ export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
                       className="p-6 focus:outline-none"
                     >
                       <SettingsTab
-                        userProfile={profileData?.userProfile}
+                        userProfile={userProfile}
                         contactInfo={contactInfo}
                         aboutMe={aboutMe}
                         expandedSection={expandedSection}
                         toggleSection={toggleSection}
                         setContactInfo={setContactInfo}
                         setAboutMe={setAboutMe}
-                        setUserProfile={() => {}}
+                        setUserProfile={setUserProfile}
                       />
                     </TabsContent>
                   </ScrollArea>
