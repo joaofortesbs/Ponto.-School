@@ -46,14 +46,9 @@ export function Header() {
             2
           </Badge>
         </Button>
-        <Avatar className="h-9 w-9 cursor-pointer">
-          <AvatarImage 
-            src="/lovable-uploads/f63b8eff-b232-405f-8a3d-8ec22516deef.png" 
-            alt="Mascote Ponto School"
-            className="object-cover"
-          />
-          <AvatarFallback>
-            <User className="h-5 w-5" />
+        <Avatar className="h-9 w-9 cursor-pointer border border-gray-200 dark:border-gray-700">
+          <AvatarFallback className="bg-gray-100 dark:bg-gray-800">
+            {/* Avatar vazio - sem conteúdo */}
           </AvatarFallback>
         </Avatar>
       </div>
