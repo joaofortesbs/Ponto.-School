@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -7,7 +8,7 @@ import { Clock, Calendar, CheckCircle, Plus } from "lucide-react";
 import { useState } from "react";
 import AddTaskModal from "../agenda/modals/add-task-modal";
 import { useTaskCompletion } from "@/hooks/useTaskCompletion";
-import { taskService } from "@/services/taskService";
+import { getTasksByUserId, updateTask, syncLocalTasks } from "@/services/taskService";
 import { useAuth } from "@/hooks/useAuth";
 
 interface Task {
@@ -35,6 +36,8 @@ interface Task {
   reminderSet?: boolean;
   reminderTime?: string;
   associatedClass?: string;
+  userId?: string;
+  category?: string;
 }
 
 interface PendingTasksCardProps {
@@ -83,93 +86,78 @@ const PendingTasksCard = ({
   const { tasks, setTasks, toggleTaskCompletion } = useTaskCompletion<Task>(
     initialTasks,
     {
-      onCompleteTask: (taskId) => {
+      onCompleteTask: async (taskId) => {
         console.log(`Tarefa ${taskId} marcada como concluída`);
+        // Atualizar no banco de dados
+        const taskToUpdate = tasks.find(t => t.id === taskId);
+        if (taskToUpdate && user) {
+          await updateTask({
+            ...taskToUpdate,
+            completed: true,
+            status: 'concluido',
+            userId: user.id
+          });
+        }
       },
-      onUncompleteTask: (taskId) => {
+      onUncompleteTask: async (taskId) => {
         console.log(`Tarefa ${taskId} desmarcada como concluída`);
+        // Atualizar no banco de dados
+        const taskToUpdate = tasks.find(t => t.id === taskId);
+        if (taskToUpdate && user) {
+          await updateTask({
+            ...taskToUpdate,
+            completed: false,
+            status: 'todo',
+            userId: user.id
+          });
+        }
       },
     }
   );
   
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
 
-  // Carrega as tarefas do serviço quando o componente é montado
+  // Carregar tarefas do banco de dados
   useEffect(() => {
+    const loadTasks = async () => {
+      try {
+        const userTasks = await getTasksByUserId();
+        if (userTasks && userTasks.length > 0) {
+          const mappedTasks = userTasks.map(task => ({
+            ...task,
+            subject: task.category || "Geral",
+            discipline: task.category || "Geral",
+            completed: task.status === 'completed',
+          }));
+          setTasks(mappedTasks);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar tarefas:", error);
+      }
+    };
+
     if (user) {
-      const loadTasks = async () => {
-        try {
-          const userTasks = await taskService.loadTasks(user.id);
-          if (userTasks && userTasks.length > 0) {
-            setTasks(userTasks);
-          }
-        } catch (error) {
-          console.error("Erro ao carregar tarefas:", error);
-        }
-      };
-      
       loadTasks();
-      
-      // Configurar listener para atualizações de tarefas
-      const unsubscribeFromTasksUpdated = taskService.onTasksUpdated((userId) => {
-        if (userId === user.id) {
-          loadTasks();
-        }
-      });
-      
-      // Configurar listener para adição de tarefas
-      const unsubscribeFromTaskAdded = taskService.onTaskAdded((newTask) => {
-        setTasks(currentTasks => {
-          // Verificar se a tarefa já existe para evitar duplicação
-          const taskExists = currentTasks.some(task => task.id === newTask.id);
-          if (taskExists) {
-            return currentTasks;
-          }
-          return [...currentTasks, newTask];
-        });
-      });
-      
-      // Escutar evento DOM para suporte a atualizações entre componentes
-      const handleTaskAddedDOMEvent = (event: any) => {
-        if (event.detail) {
-          setTasks(currentTasks => {
-            const newTask = event.detail;
-            // Verificar se a tarefa já existe para evitar duplicação
-            const taskExists = currentTasks.some(task => task.id === newTask.id);
-            if (taskExists) {
-              return currentTasks;
-            }
-            return [...currentTasks, newTask];
-          });
-        }
-      };
-      
-      document.addEventListener('refresh-tasks', handleTaskAddedDOMEvent);
-      
-      return () => {
-        unsubscribeFromTasksUpdated();
-        unsubscribeFromTaskAdded();
-        document.removeEventListener('refresh-tasks', handleTaskAddedDOMEvent);
-      };
+      // Sincronizar tarefas locais quando usuário faz login
+      syncLocalTasks();
     }
+
+    // Escutar eventos de atualização de tarefas
+    const handleTaskUpdate = () => {
+      loadTasks();
+    };
+
+    window.addEventListener('task-added', handleTaskUpdate);
+    window.addEventListener('tasks-updated', handleTaskUpdate);
+
+    return () => {
+      window.removeEventListener('task-added', handleTaskUpdate);
+      window.removeEventListener('tasks-updated', handleTaskUpdate);
+    };
   }, [user, setTasks]);
 
-  // Salva as tarefas quando são atualizadas
-  useEffect(() => {
-    if (user && tasks !== initialTasks) {
-      taskService.saveTasks(user.id, tasks)
-        .catch(err => console.error("Erro ao salvar tarefas:", err));
-    }
-  }, [tasks, user]);
-
-  const handleAddTask = (newTask: any) => {
+  const handleAddTask = async (newTask: any) => {
     try {
-      // Verificar se a tarefa já existe pelo ID
-      if (newTask.id && tasks.some(task => task.id === newTask.id)) {
-        console.log("Tarefa já existe, ignorando duplicação:", newTask.id);
-        return;
-      }
-      
       console.log("Adicionando tarefa no PendingTasksCard:", newTask);
       
       // Format the due date for display
@@ -199,14 +187,15 @@ const PendingTasksCard = ({
         }
       }
 
-      // Criando uma tarefa compatível com ambos os componentes
+      // Criando uma tarefa compatível com o novo serviço
       const task: Task = {
         id: newTask.id || `task-${Date.now()}`,
         title: newTask.title,
         description: newTask.description || "",
-        dueDate: originalDueDate, // Manter a data original para compatibilidade
+        dueDate: originalDueDate,
         subject: newTask.discipline || newTask.subject || "Geral",
         discipline: newTask.discipline || newTask.subject || "Geral",
+        category: newTask.discipline || newTask.subject || "Geral",
         completed: newTask.completed || false,
         status: newTask.status || "a-fazer",
         priority: newTask.priority || "média",
@@ -224,20 +213,34 @@ const PendingTasksCard = ({
         reminderSet: newTask.reminderSet || false,
         reminderTime: newTask.reminderTime,
         associatedClass: newTask.associatedClass || "",
+        userId: user?.id || 'anonymous',
       };
 
-      // Adicionar a nova tarefa sem duplicar
-      setTasks(currentTasks => {
-        const updatedTasks = [...currentTasks, task];
-        
-        // Se o usuário estiver autenticado, salva as tarefas
-        if (user) {
-          taskService.saveTasks(user.id, updatedTasks)
-            .catch(err => console.error("Erro ao salvar nova tarefa:", err));
-        }
-        
-        return updatedTasks;
-      });
+      // Adicionar a nova tarefa diretamente usando o serviço
+      const savedTask = await import('@/services/taskService').then(({ addTask }) => 
+        addTask({
+          title: task.title,
+          description: task.description,
+          priority: task.priority === 'alta' ? 'high' : task.priority === 'baixa' ? 'low' : 'medium',
+          status: task.status === 'a-fazer' ? 'todo' : task.status === 'em-andamento' ? 'in-progress' : 'completed',
+          dueDate: task.dueDate,
+          category: task.category,
+          userId: user?.id || 'anonymous'
+        })
+      );
+
+      if (savedTask) {
+        // Atualizar estado local
+        setTasks(currentTasks => {
+          const mappedTask = {
+            ...savedTask,
+            subject: savedTask.category || "Geral",
+            discipline: savedTask.category || "Geral",
+            completed: savedTask.status === 'completed',
+          };
+          return [...currentTasks, mappedTask];
+        });
+      }
       
       console.log("Tarefa adicionada com sucesso no PendingTasksCard");
     } catch (error) {
