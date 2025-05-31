@@ -28,9 +28,11 @@ export const useFlowSessions = () => {
   // Adicionar nova sessão
   const addSession = async (session: FlowSession) => {
     try {
-      await SessionStorageService.saveSession(session);
-      setSessions(prev => [session, ...prev]);
-      return true;
+      const success = await SessionStorageService.saveSession(session);
+      if (success) {
+        setSessions(prev => [session, ...prev]);
+      }
+      return success;
     } catch (err) {
       console.error('Erro ao adicionar sessão:', err);
       return false;
@@ -40,9 +42,11 @@ export const useFlowSessions = () => {
   // Excluir sessão
   const deleteSession = async (sessionId: string | number) => {
     try {
-      await SessionStorageService.deleteSession(sessionId);
-      setSessions(prev => prev.filter(s => s.id !== sessionId));
-      return true;
+      const success = await SessionStorageService.deleteSession(sessionId);
+      if (success) {
+        setSessions(prev => prev.filter(s => s.id !== sessionId));
+      }
+      return success;
     } catch (err) {
       console.error('Erro ao excluir sessão:', err);
       return false;
