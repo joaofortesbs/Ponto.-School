@@ -43,7 +43,11 @@ const TasksView = ({ className }: TasksViewProps) => {
 
   // Carregar tarefas do Supabase
   const loadTasks = async () => {
-    if (!user) return;
+    if (!user) {
+      console.log('Usuário não autenticado');
+      setLoading(false);
+      return;
+    }
     
     try {
       const { data, error } = await supabase
@@ -58,23 +62,28 @@ const TasksView = ({ className }: TasksViewProps) => {
         return;
       }
 
-      const formattedTasks: Task[] = (data || []).map(task => ({
-        id: task.id || '',
-        title: task.title || '',
-        description: task.description || '',
-        priority: (task.priority && ['low', 'medium', 'high'].includes(task.priority)) ? task.priority : 'medium',
-        status: (task.status && ['todo', 'in-progress', 'completed'].includes(task.status)) ? task.status : 'todo',
-        dueDate: task.due_date || '',
-        category: task.category || '',
-        userId: task.user_id || '',
-        createdAt: task.created_at || new Date().toISOString(),
-        updatedAt: task.updated_at || ''
-      }));
+      if (data) {
+        const formattedTasks: Task[] = data.map(task => ({
+          id: task.id || '',
+          title: task.title || '',
+          description: task.description || '',
+          priority: (task.priority && ['low', 'medium', 'high'].includes(task.priority)) ? task.priority : 'medium',
+          status: (task.status && ['todo', 'in-progress', 'completed'].includes(task.status)) ? task.status : 'todo',
+          dueDate: task.due_date || '',
+          category: task.category || '',
+          userId: task.user_id || '',
+          createdAt: task.created_at || new Date().toISOString(),
+          updatedAt: task.updated_at || ''
+        }));
 
-      setTasks(formattedTasks);
+        setTasks(formattedTasks);
+      } else {
+        setTasks([]);
+      }
     } catch (error) {
       console.error('Erro ao carregar tarefas:', error);
       toast.error('Erro ao carregar tarefas');
+      setTasks([]);
     } finally {
       setLoading(false);
     }
@@ -86,7 +95,10 @@ const TasksView = ({ className }: TasksViewProps) => {
 
   // Adicionar nova tarefa
   const handleAddTask = async (newTaskData: any) => {
-    if (!user) return;
+    if (!user) {
+      toast.error('Usuário não autenticado');
+      return;
+    }
 
     try {
       const taskToInsert = {
@@ -136,7 +148,10 @@ const TasksView = ({ className }: TasksViewProps) => {
 
   // Atualizar tarefa
   const handleUpdateTask = async (taskId: string, updates: Partial<Task>) => {
-    if (!user || !taskId) return;
+    if (!user || !taskId) {
+      toast.error('Dados insuficientes para atualizar tarefa');
+      return;
+    }
 
     try {
       const updateData: any = {};
@@ -171,7 +186,10 @@ const TasksView = ({ className }: TasksViewProps) => {
 
   // Deletar tarefa
   const handleDeleteTask = async (taskId: string) => {
-    if (!user || !taskId) return;
+    if (!user || !taskId) {
+      toast.error('Dados insuficientes para deletar tarefa');
+      return;
+    }
 
     try {
       const { error } = await supabase

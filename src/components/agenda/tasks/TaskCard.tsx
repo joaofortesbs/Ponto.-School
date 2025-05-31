@@ -33,6 +33,7 @@ const TaskCard = ({ task, onUpdate, onDelete }: TaskCardProps) => {
 
   // Verificação de segurança para task
   if (!task || !task.id) {
+    console.warn('TaskCard: tarefa inválida ou sem ID');
     return null;
   }
 
@@ -65,9 +66,17 @@ const TaskCard = ({ task, onUpdate, onDelete }: TaskCardProps) => {
   };
 
   const handleSave = () => {
-    if (!task.id) return;
-    onUpdate(task.id, editData);
-    setIsEditing(false);
+    if (!task || !task.id) {
+      console.error('TaskCard: não é possível salvar - tarefa ou ID inválido');
+      return;
+    }
+    
+    try {
+      onUpdate(task.id, editData);
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Erro ao salvar tarefa:', error);
+    }
   };
 
   const handleCancel = () => {
@@ -81,11 +90,25 @@ const TaskCard = ({ task, onUpdate, onDelete }: TaskCardProps) => {
     setIsEditing(false);
   };
 
+  const handleDelete = () => {
+    if (!task || !task.id) {
+      console.error('TaskCard: não é possível deletar - tarefa ou ID inválido');
+      return;
+    }
+    
+    try {
+      onDelete(task.id);
+    } catch (error) {
+      console.error('Erro ao deletar tarefa:', error);
+    }
+  };
+
   const formatDate = (dateString?: string) => {
     if (!dateString) return '';
     try {
       return new Date(dateString).toLocaleDateString('pt-BR');
-    } catch {
+    } catch (error) {
+      console.warn('Erro ao formatar data:', error);
       return dateString;
     }
   };
@@ -160,6 +183,7 @@ const TaskCard = ({ task, onUpdate, onDelete }: TaskCardProps) => {
     );
   }
 
+  // Valores seguros para exibição
   const taskTitle = task.title || 'Tarefa sem título';
   const taskDescription = task.description || '';
   const taskPriority = task.priority || 'medium';
@@ -186,7 +210,7 @@ const TaskCard = ({ task, onUpdate, onDelete }: TaskCardProps) => {
                 Editar
               </DropdownMenuItem>
               <DropdownMenuItem 
-                onClick={() => task.id && onDelete(task.id)}
+                onClick={handleDelete}
                 className="text-red-600 focus:text-red-600"
               >
                 <Trash2 className="h-4 w-4 mr-2" />
