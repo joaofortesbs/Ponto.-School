@@ -2,7 +2,7 @@
 import React, { useState, useRef } from 'react';
 import { Camera, Upload, User } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/use-toast';
 
 interface AvatarUploadProps {
   currentAvatarUrl?: string | null;
