@@ -59,16 +59,16 @@ const TasksView = ({ className }: TasksViewProps) => {
       }
 
       const formattedTasks: Task[] = (data || []).map(task => ({
-        id: task.id,
-        title: task.title,
-        description: task.description,
+        id: task.id || '',
+        title: task.title || '',
+        description: task.description || '',
         priority: task.priority || 'medium',
         status: task.status || 'todo',
-        dueDate: task.due_date,
-        category: task.category,
-        userId: task.user_id,
-        createdAt: task.created_at,
-        updatedAt: task.updated_at
+        dueDate: task.due_date || '',
+        category: task.category || '',
+        userId: task.user_id || '',
+        createdAt: task.created_at || new Date().toISOString(),
+        updatedAt: task.updated_at || ''
       }));
 
       setTasks(formattedTasks);
@@ -90,12 +90,12 @@ const TasksView = ({ className }: TasksViewProps) => {
 
     try {
       const taskToInsert = {
-        title: newTaskData.title,
-        description: newTaskData.description,
+        title: newTaskData.title || '',
+        description: newTaskData.description || '',
         priority: newTaskData.priority || 'medium',
         status: 'todo',
-        due_date: newTaskData.dueDate,
-        category: newTaskData.category,
+        due_date: newTaskData.dueDate || null,
+        category: newTaskData.category || '',
         user_id: user.id
       };
 
@@ -111,21 +111,23 @@ const TasksView = ({ className }: TasksViewProps) => {
         return;
       }
 
-      const newTask: Task = {
-        id: data.id,
-        title: data.title,
-        description: data.description,
-        priority: data.priority,
-        status: data.status,
-        dueDate: data.due_date,
-        category: data.category,
-        userId: data.user_id,
-        createdAt: data.created_at,
-        updatedAt: data.updated_at
-      };
+      if (data) {
+        const newTask: Task = {
+          id: data.id,
+          title: data.title,
+          description: data.description || '',
+          priority: data.priority || 'medium',
+          status: data.status || 'todo',
+          dueDate: data.due_date || '',
+          category: data.category || '',
+          userId: data.user_id,
+          createdAt: data.created_at,
+          updatedAt: data.updated_at || ''
+        };
 
-      setTasks(prev => [newTask, ...prev]);
-      toast.success('Tarefa adicionada com sucesso!');
+        setTasks(prev => [newTask, ...prev]);
+        toast.success('Tarefa adicionada com sucesso!');
+      }
     } catch (error) {
       console.error('Erro ao adicionar tarefa:', error);
       toast.error('Erro ao adicionar tarefa');
@@ -134,7 +136,7 @@ const TasksView = ({ className }: TasksViewProps) => {
 
   // Atualizar tarefa
   const handleUpdateTask = async (taskId: string, updates: Partial<Task>) => {
-    if (!user) return;
+    if (!user || !taskId) return;
 
     try {
       const updateData: any = {};
@@ -169,7 +171,7 @@ const TasksView = ({ className }: TasksViewProps) => {
 
   // Deletar tarefa
   const handleDeleteTask = async (taskId: string) => {
-    if (!user) return;
+    if (!user || !taskId) return;
 
     try {
       const { error } = await supabase
@@ -192,20 +194,22 @@ const TasksView = ({ className }: TasksViewProps) => {
     }
   };
 
-  // Filtrar tarefas
+  // Filtrar tarefas com verificações de segurança
   const filteredTasks = tasks.filter(task => {
-    const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         task.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    if (!task) return false;
     
-    const matchesStatus = statusFilter === "all" || task.status === statusFilter;
-    const matchesPriority = priorityFilter === "all" || task.priority === priorityFilter;
+    const matchesSearch = (task.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         (task.description || '').toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesStatus = statusFilter === "all" || (task.status || 'todo') === statusFilter;
+    const matchesPriority = priorityFilter === "all" || (task.priority || 'medium') === priorityFilter;
     
     return matchesSearch && matchesStatus && matchesPriority;
   });
 
-  const todoTasks = filteredTasks.filter(task => task.status === 'todo');
-  const inProgressTasks = filteredTasks.filter(task => task.status === 'in-progress');
-  const completedTasks = filteredTasks.filter(task => task.status === 'completed');
+  const todoTasks = filteredTasks.filter(task => task && (task.status || 'todo') === 'todo');
+  const inProgressTasks = filteredTasks.filter(task => task && (task.status || 'todo') === 'in-progress');
+  const completedTasks = filteredTasks.filter(task => task && (task.status || 'todo') === 'completed');
 
   if (loading) {
     return (
@@ -317,12 +321,14 @@ const TasksView = ({ className }: TasksViewProps) => {
                     </div>
                     <div className="space-y-2">
                       {todoTasks.map((task) => (
-                        <TaskCard 
-                          key={task.id} 
-                          task={task} 
-                          onUpdate={handleUpdateTask}
-                          onDelete={handleDeleteTask}
-                        />
+                        task && (
+                          <TaskCard 
+                            key={task.id} 
+                            task={task} 
+                            onUpdate={handleUpdateTask}
+                            onDelete={handleDeleteTask}
+                          />
+                        )
                       ))}
                     </div>
                   </div>
@@ -335,12 +341,14 @@ const TasksView = ({ className }: TasksViewProps) => {
                     </div>
                     <div className="space-y-2">
                       {inProgressTasks.map((task) => (
-                        <TaskCard 
-                          key={task.id} 
-                          task={task} 
-                          onUpdate={handleUpdateTask}
-                          onDelete={handleDeleteTask}
-                        />
+                        task && (
+                          <TaskCard 
+                            key={task.id} 
+                            task={task} 
+                            onUpdate={handleUpdateTask}
+                            onDelete={handleDeleteTask}
+                          />
+                        )
                       ))}
                     </div>
                   </div>
@@ -353,12 +361,14 @@ const TasksView = ({ className }: TasksViewProps) => {
                     </div>
                     <div className="space-y-2">
                       {completedTasks.map((task) => (
-                        <TaskCard 
-                          key={task.id} 
-                          task={task} 
-                          onUpdate={handleUpdateTask}
-                          onDelete={handleDeleteTask}
-                        />
+                        task && (
+                          <TaskCard 
+                            key={task.id} 
+                            task={task} 
+                            onUpdate={handleUpdateTask}
+                            onDelete={handleDeleteTask}
+                          />
+                        )
                       ))}
                     </div>
                   </div>

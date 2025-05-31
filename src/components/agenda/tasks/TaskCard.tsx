@@ -24,12 +24,17 @@ interface TaskCardProps {
 const TaskCard = ({ task, onUpdate, onDelete }: TaskCardProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({
-    title: task.title,
-    description: task.description || '',
-    priority: task.priority,
-    status: task.status,
-    dueDate: task.dueDate || ''
+    title: task?.title || '',
+    description: task?.description || '',
+    priority: task?.priority || 'medium',
+    status: task?.status || 'todo',
+    dueDate: task?.dueDate || ''
   });
+
+  // Verificação de segurança para task
+  if (!task || !task.id) {
+    return null;
+  }
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -58,17 +63,18 @@ const TaskCard = ({ task, onUpdate, onDelete }: TaskCardProps) => {
   };
 
   const handleSave = () => {
+    if (!task.id) return;
     onUpdate(task.id, editData);
     setIsEditing(false);
   };
 
   const handleCancel = () => {
     setEditData({
-      title: task.title,
-      description: task.description || '',
-      priority: task.priority,
-      status: task.status,
-      dueDate: task.dueDate || ''
+      title: task?.title || '',
+      description: task?.description || '',
+      priority: task?.priority || 'medium',
+      status: task?.status || 'todo',
+      dueDate: task?.dueDate || ''
     });
     setIsEditing(false);
   };
@@ -157,7 +163,7 @@ const TaskCard = ({ task, onUpdate, onDelete }: TaskCardProps) => {
       <CardContent className="p-0">
         <div className="flex items-start justify-between mb-3">
           <h4 className="font-medium text-gray-900 leading-tight group-hover:text-orange-600 transition-colors">
-            {task.title}
+            {task.title || 'Tarefa sem título'}
           </h4>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -171,7 +177,7 @@ const TaskCard = ({ task, onUpdate, onDelete }: TaskCardProps) => {
                 Editar
               </DropdownMenuItem>
               <DropdownMenuItem 
-                onClick={() => onDelete(task.id)}
+                onClick={() => task.id && onDelete(task.id)}
                 className="text-red-600 focus:text-red-600"
               >
                 <Trash2 className="h-4 w-4 mr-2" />
@@ -188,12 +194,13 @@ const TaskCard = ({ task, onUpdate, onDelete }: TaskCardProps) => {
         )}
 
         <div className="flex flex-wrap gap-2 mb-3">
-          <Badge className={getPriorityColor(task.priority)}>
-            {task.priority === 'high' ? 'Alta' : task.priority === 'medium' ? 'Média' : 'Baixa'}
+          <Badge className={getPriorityColor(task.priority || 'medium')}>
+            {(task.priority || 'medium') === 'high' ? 'Alta' : 
+             (task.priority || 'medium') === 'medium' ? 'Média' : 'Baixa'}
           </Badge>
-          <Badge className={getStatusColor(task.status)}>
-            {task.status === 'completed' ? 'Concluído' : 
-             task.status === 'in-progress' ? 'Em Progresso' : 'A Fazer'}
+          <Badge className={getStatusColor(task.status || 'todo')}>
+            {(task.status || 'todo') === 'completed' ? 'Concluído' : 
+             (task.status || 'todo') === 'in-progress' ? 'Em Progresso' : 'A Fazer'}
           </Badge>
         </div>
 
