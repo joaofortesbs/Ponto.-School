@@ -1,4 +1,5 @@
 
+
 import { cn } from "@/lib/utils";
 import { SidebarNav } from "@/components/sidebar/SidebarNav";
 import { useState, useEffect, useRef } from "react";
@@ -199,7 +200,7 @@ export default function Sidebar({
                 alt="Logo Ponto School"
                 className={cn(
                   "object-contain mx-auto transition-all duration-300",
-                  sidebarCollapsed ? "h-12 w-12" : "h-16 w-auto"
+                  sidebarCollapsed ? "h-14 w-14" : "h-16 w-auto"
                 )}
                 loading="eager"
                 fetchpriority="high"
@@ -224,13 +225,13 @@ export default function Sidebar({
             className="p-2"
           />
 
-          {/* Toggle Button - positioned next to profile image but more to the corner */}
+          {/* Toggle Button - positioned next to profile image area but more to the corner */}
           <Button
             variant="outline"
             size="icon"
             onClick={handleToggleCollapse}
             className={cn(
-              "h-6 w-6 rounded-full bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20 border-[#FF6B00]/30 transition-all duration-300 absolute top-[120px] right-1 shadow-sm hover:shadow-md z-10",
+              "h-6 w-6 rounded-full bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20 border-[#FF6B00]/30 transition-all duration-300 absolute top-[80px] right-1 shadow-sm hover:shadow-md z-10",
               isHovered ? "opacity-100" : "opacity-0"
             )}
           >
@@ -245,3 +246,4 @@ export default function Sidebar({
     </>
   );
 }
+
