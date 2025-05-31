@@ -36,8 +36,9 @@ const TaskCard = ({ task, onUpdate, onDelete }: TaskCardProps) => {
     return null;
   }
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
+  const getPriorityColor = (priority?: string) => {
+    const safePriority = priority || 'medium';
+    switch (safePriority) {
       case 'high':
         return 'bg-red-100 text-red-800 border-red-200';
       case 'medium':
@@ -49,8 +50,9 @@ const TaskCard = ({ task, onUpdate, onDelete }: TaskCardProps) => {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
+  const getStatusColor = (status?: string) => {
+    const safeStatus = status || 'todo';
+    switch (safeStatus) {
       case 'completed':
         return 'bg-green-100 text-green-800 border-green-200';
       case 'in-progress':
@@ -158,12 +160,19 @@ const TaskCard = ({ task, onUpdate, onDelete }: TaskCardProps) => {
     );
   }
 
+  const taskTitle = task.title || 'Tarefa sem título';
+  const taskDescription = task.description || '';
+  const taskPriority = task.priority || 'medium';
+  const taskStatus = task.status || 'todo';
+  const taskDueDate = task.dueDate || '';
+  const taskCreatedAt = task.createdAt || '';
+
   return (
     <Card className="p-4 border border-gray-200 hover:border-orange-300 transition-colors cursor-pointer group">
       <CardContent className="p-0">
         <div className="flex items-start justify-between mb-3">
           <h4 className="font-medium text-gray-900 leading-tight group-hover:text-orange-600 transition-colors">
-            {task.title || 'Tarefa sem título'}
+            {taskTitle}
           </h4>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -187,33 +196,33 @@ const TaskCard = ({ task, onUpdate, onDelete }: TaskCardProps) => {
           </DropdownMenu>
         </div>
 
-        {task.description && (
+        {taskDescription && (
           <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-            {task.description}
+            {taskDescription}
           </p>
         )}
 
         <div className="flex flex-wrap gap-2 mb-3">
-          <Badge className={getPriorityColor(task.priority || 'medium')}>
-            {(task.priority || 'medium') === 'high' ? 'Alta' : 
-             (task.priority || 'medium') === 'medium' ? 'Média' : 'Baixa'}
+          <Badge className={getPriorityColor(taskPriority)}>
+            {taskPriority === 'high' ? 'Alta' : 
+             taskPriority === 'medium' ? 'Média' : 'Baixa'}
           </Badge>
-          <Badge className={getStatusColor(task.status || 'todo')}>
-            {(task.status || 'todo') === 'completed' ? 'Concluído' : 
-             (task.status || 'todo') === 'in-progress' ? 'Em Progresso' : 'A Fazer'}
+          <Badge className={getStatusColor(taskStatus)}>
+            {taskStatus === 'completed' ? 'Concluído' : 
+             taskStatus === 'in-progress' ? 'Em Progresso' : 'A Fazer'}
           </Badge>
         </div>
 
         <div className="flex items-center justify-between text-xs text-gray-500">
-          {task.dueDate && (
+          {taskDueDate && (
             <div className="flex items-center">
               <Calendar className="h-3 w-3 mr-1" />
-              {formatDate(task.dueDate)}
+              {formatDate(taskDueDate)}
             </div>
           )}
           <div className="flex items-center">
             <Clock className="h-3 w-3 mr-1" />
-            {formatDate(task.createdAt)}
+            {formatDate(taskCreatedAt)}
           </div>
         </div>
       </CardContent>

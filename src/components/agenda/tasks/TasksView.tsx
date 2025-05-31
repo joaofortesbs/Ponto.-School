@@ -62,8 +62,8 @@ const TasksView = ({ className }: TasksViewProps) => {
         id: task.id || '',
         title: task.title || '',
         description: task.description || '',
-        priority: task.priority || 'medium',
-        status: task.status || 'todo',
+        priority: (task.priority && ['low', 'medium', 'high'].includes(task.priority)) ? task.priority : 'medium',
+        status: (task.status && ['todo', 'in-progress', 'completed'].includes(task.status)) ? task.status : 'todo',
         dueDate: task.due_date || '',
         category: task.category || '',
         userId: task.user_id || '',
@@ -92,7 +92,7 @@ const TasksView = ({ className }: TasksViewProps) => {
       const taskToInsert = {
         title: newTaskData.title || '',
         description: newTaskData.description || '',
-        priority: newTaskData.priority || 'medium',
+        priority: (newTaskData.priority && ['low', 'medium', 'high'].includes(newTaskData.priority)) ? newTaskData.priority : 'medium',
         status: 'todo',
         due_date: newTaskData.dueDate || null,
         category: newTaskData.category || '',
@@ -116,8 +116,8 @@ const TasksView = ({ className }: TasksViewProps) => {
           id: data.id,
           title: data.title,
           description: data.description || '',
-          priority: data.priority || 'medium',
-          status: data.status || 'todo',
+          priority: (data.priority && ['low', 'medium', 'high'].includes(data.priority)) ? data.priority : 'medium',
+          status: (data.status && ['todo', 'in-progress', 'completed'].includes(data.status)) ? data.status : 'todo',
           dueDate: data.due_date || '',
           category: data.category || '',
           userId: data.user_id,
@@ -196,13 +196,18 @@ const TasksView = ({ className }: TasksViewProps) => {
 
   // Filtrar tarefas com verificações de segurança
   const filteredTasks = tasks.filter(task => {
-    if (!task) return false;
+    if (!task || !task.id) return false;
     
-    const matchesSearch = (task.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         (task.description || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const taskTitle = task.title || '';
+    const taskDescription = task.description || '';
+    const taskStatus = task.status || 'todo';
+    const taskPriority = task.priority || 'medium';
     
-    const matchesStatus = statusFilter === "all" || (task.status || 'todo') === statusFilter;
-    const matchesPriority = priorityFilter === "all" || (task.priority || 'medium') === priorityFilter;
+    const matchesSearch = taskTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         taskDescription.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesStatus = statusFilter === "all" || taskStatus === statusFilter;
+    const matchesPriority = priorityFilter === "all" || taskPriority === priorityFilter;
     
     return matchesSearch && matchesStatus && matchesPriority;
   });
@@ -321,7 +326,7 @@ const TasksView = ({ className }: TasksViewProps) => {
                     </div>
                     <div className="space-y-2">
                       {todoTasks.map((task) => (
-                        task && (
+                        task && task.id && (
                           <TaskCard 
                             key={task.id} 
                             task={task} 
@@ -341,7 +346,7 @@ const TasksView = ({ className }: TasksViewProps) => {
                     </div>
                     <div className="space-y-2">
                       {inProgressTasks.map((task) => (
-                        task && (
+                        task && task.id && (
                           <TaskCard 
                             key={task.id} 
                             task={task} 
@@ -361,7 +366,7 @@ const TasksView = ({ className }: TasksViewProps) => {
                     </div>
                     <div className="space-y-2">
                       {completedTasks.map((task) => (
-                        task && (
+                        task && task.id && (
                           <TaskCard 
                             key={task.id} 
                             task={task} 
