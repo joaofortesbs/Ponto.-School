@@ -359,7 +359,7 @@ export default function Sidebar({
           </Button>
         </div>
 
-        {/* Profile Image Section */}
+        {/* Profile Image Section - Moved from bottom to here */}
         <div className="p-4 border-b border-gray-200 dark:border-gray-800">
           <div className="flex flex-col items-center">
             <div className="relative">
