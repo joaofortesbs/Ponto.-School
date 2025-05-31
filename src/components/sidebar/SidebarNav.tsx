@@ -156,7 +156,7 @@ export function SidebarNav({
             document.dispatchEvent(new CustomEvent('usernameUpdated', { 
               detail: { 
                 displayName: data.display_name,
-                firstName: firstName,
+                firstName: bestName,
                 username: data.username
               } 
             }));
@@ -528,7 +528,7 @@ export function SidebarNav({
             </div>
           </div>
           
-          {isUploading && (
+          {uploading && (
             <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
               Enviando...
             </div>
