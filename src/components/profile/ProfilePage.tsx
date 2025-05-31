@@ -13,6 +13,7 @@ import AboutMe from "./AboutMe";
 import Education from "./Education";
 import Skills from "./Skills";
 import Interests from "./Interests";
+import AddPartnersModal from "./AddPartnersModal";
 
 // Import tabs content
 import ActivitiesTab from "../tabs/ActivitiesTab";
@@ -29,6 +30,7 @@ export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showAddPartnersModal, setShowAddPartnersModal] = useState(false);
   const [contactInfo, setContactInfo] = useState({
     email: "",
     phone: "Adicionar telefone",
@@ -196,9 +198,7 @@ export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
               <div className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 shadow-sm p-4">
                 <button
                   className="w-full bg-gradient-to-r from-[#0A2540] to-[#1E3A5F] hover:from-[#0F2D4A] hover:to-[#2A4A6F] text-white text-sm h-10 shadow-sm hover:shadow hover:shadow-[#0A2540]/30 transition-all duration-300 group flex items-center justify-center relative overflow-hidden border border-[#0A2540]/20 rounded-lg"
-                  onClick={() => {
-                    console.log("Adicionar parceiros clicked");
-                  }}
+                  onClick={() => setShowAddPartnersModal(true)}
                 >
                   {/* Efeito de brilho no hover */}
                   <span className="absolute w-32 h-32 -mt-12 -ml-12 bg-white rotate-12 opacity-0 group-hover:opacity-10 transition-opacity duration-1000 transform group-hover:translate-x-40 group-hover:translate-y-10 pointer-events-none"></span>
@@ -333,6 +333,12 @@ export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
           </div>
         </div>
       </div>
+      
+      {/* Modal de Adicionar Parceiros */}
+      <AddPartnersModal
+        isOpen={showAddPartnersModal}
+        onClose={() => setShowAddPartnersModal(false)}
+      />
     </div>
   );
 }
