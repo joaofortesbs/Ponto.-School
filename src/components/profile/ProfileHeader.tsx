@@ -31,6 +31,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 import { profileService } from "@/services/profileService";
 import { toast } from "@/components/ui/use-toast";
+import { useFriendship } from "@/hooks/useFriendship";
+import AddPartnersModal from "./AddPartnersModal";
 
 interface ProfileHeaderProps {
   userProfile: UserProfile | null;
@@ -56,6 +58,12 @@ export default function ProfileHeader({
   const [showFollowersTooltip, setShowFollowersTooltip] = useState(false);
   const [showFollowingTooltip, setShowFollowingTooltip] = useState(false);
   const [showFollowingInTooltip, setShowFollowingInTooltip] = useState(false);
+  const [showAddPartnersModal, setShowAddPartnersModal] = useState(false);
+  const [partnersData, setPartnersData] = useState<any[]>([]);
+  const [partnersCount, setPartnersCount] = useState(0);
+  
+  // Hook de parceiros
+  const { getCurrentPartners, friendRequests, currentUserId } = useFriendship();
   
 
 
@@ -199,6 +207,60 @@ export default function ProfileHeader({
       usernameSyncEvent?: boolean;
     }
   }
+
+  // Função para carregar dados dos parceiros
+  const loadPartnersData = async () => {
+    try {
+      const partners = getCurrentPartners();
+      setPartnersCount(partners.length);
+
+      if (partners.length > 0) {
+        const partnerIds = partners.map(p => 
+          p.sender_id === currentUserId ? p.receiver_id : p.sender_id
+        );
+        
+        const { data: partnersProfileData } = await supabase
+          .from('profiles')
+          .select('id, full_name, display_name, avatar_url')
+          .in('id', partnerIds);
+
+        if (partnersProfileData) {
+          const formattedPartners = partnersProfileData.map(profile => ({
+            id: profile.id,
+            name: profile.display_name || profile.full_name?.split(' ')[0] || 'Usuário',
+            full_name: profile.full_name,
+            avatar_url: profile.avatar_url
+          }));
+          
+          setPartnersData(formattedPartners);
+        }
+      } else {
+        setPartnersData([]);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar dados dos parceiros:', error);
+    }
+  };
+
+  useEffect(() => {
+    // Carregar dados dos parceiros quando o hook estiver pronto
+    if (currentUserId && friendRequests) {
+      loadPartnersData();
+    }
+  }, [currentUserId, friendRequests]);
+
+  useEffect(() => {
+    // Listener para atualizações de parceiros
+    const handlePartnersUpdate = () => {
+      loadPartnersData();
+    };
+
+    document.addEventListener('partnersUpdated', handlePartnersUpdate);
+    
+    return () => {
+      document.removeEventListener('partnersUpdated', handlePartnersUpdate);
+    };
+  }, []);
 
   useEffect(() => {
     // Verificar se temos um username no cabeçalho e configurar um padrão se não tiver
@@ -1247,40 +1309,76 @@ export default function ProfileHeader({
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 1.1, duration: 0.3 }}
         >
-          {/* Parceiros/Seguidores - exibe 0 para novos usuários */}
+          {/* Parceiros - com dados reais do sistema de parceiros */}
           <motion.div
             whileHover={{ y: -3, scale: 1.03 }}
-            className="text-center group/stat bg-slate-50 dark:bg-slate-800/30 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/30 transition-all duration-300 shadow-sm hover:shadow border border-transparent hover:border-[#FF6B00]/10 relative"
+            className="text-center group/stat bg-slate-50 dark:bg-slate-800/30 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/30 transition-all duration-300 shadow-sm hover:shadow border border-transparent hover:border-[#FF6B00]/10 relative cursor-pointer"
             onMouseEnter={() => setShowFollowersTooltip(true)}
             onMouseLeave={() => setShowFollowersTooltip(false)}
+            onClick={() => setShowAddPartnersModal(true)}
           >
             <div className="flex flex-col items-center justify-center">
               <div className="w-6 h-6 bg-[#FF6B00]/10 rounded-full flex items-center justify-center mb-0.5 group-hover/stat:bg-[#FF6B00]/20 transition-all duration-300">
                 <UserPlus className="h-3.5 w-3.5 text-[#FF6B00] group-hover/stat:scale-110 transition-transform" />
               </div>
-              <p className="text-base font-bold text-[#29335C] dark:text-white">{userProfile?.followers_count || 0}</p>
+              <p className="text-base font-bold text-[#29335C] dark:text-white">{partnersCount}</p>
               <p className="text-[10px] text-[#64748B] dark:text-white/60">Parceiros</p>
             </div>
             
-            {/* Tooltip quando não há parceiros */}
+            {/* Tooltip com lista de parceiros */}
             {showFollowersTooltip && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
-                className="absolute -top-16 left-1/2 transform -translate-x-1/2 bg-white dark:bg-[#1E293B] p-2 rounded-lg shadow-lg text-xs z-30 w-48 border border-[#E0E1DD] dark:border-white/10"
+                className="absolute -top-20 left-1/2 transform -translate-x-1/2 bg-white dark:bg-[#1E293B] p-3 rounded-lg shadow-lg text-xs z-30 w-64 border border-[#E0E1DD] dark:border-white/10 max-h-48 overflow-y-auto"
               >
                 <div className="text-center text-[#29335C] dark:text-white">
-                  {(userProfile?.followers_count || 0) === 0 ? (
-                    <div className="space-y-1">
+                  {partnersCount === 0 ? (
+                    <div className="space-y-2">
                       <div className="font-medium">Nenhum parceiro ainda</div>
                       <div className="text-[#64748B] dark:text-white/60">
-                        Use o botão "Adicionar Parceiros" para conectar-se com outros usuários
+                        Clique para adicionar parceiros e conectar-se com outros usuários
+                      </div>
+                      <div className="mt-2 p-2 bg-[#FF6B00]/10 rounded-lg">
+                        <UserPlus className="h-4 w-4 mx-auto text-[#FF6B00] mb-1" />
+                        <div className="text-[#FF6B00] font-medium text-xs">Adicionar Parceiros</div>
                       </div>
                     </div>
                   ) : (
-                    <div className="font-medium">
-                      {userProfile?.followers_count} Parceiros
+                    <div className="space-y-2">
+                      <div className="font-medium flex items-center justify-center gap-1">
+                        <Users className="h-3 w-3 text-[#FF6B00]" />
+                        {partnersCount} Parceiro{partnersCount > 1 ? 's' : ''}
+                      </div>
+                      
+                      {/* Lista de parceiros */}
+                      <div className="space-y-1.5 max-h-32 overflow-y-auto">
+                        {partnersData.slice(0, 6).map((partner, index) => (
+                          <div key={partner.id} className="flex items-center gap-2 p-1.5 bg-slate-50 dark:bg-slate-700/30 rounded-lg">
+                            <div className="w-6 h-6 rounded-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] flex items-center justify-center text-white text-xs font-medium">
+                              {partner.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="flex-1 text-left">
+                              <div className="font-medium text-[#29335C] dark:text-white text-xs truncate">
+                                {partner.name}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                        
+                        {partnersData.length > 6 && (
+                          <div className="text-[#64748B] dark:text-white/60 text-xs mt-1">
+                            +{partnersData.length - 6} mais
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="mt-2 pt-2 border-t border-[#E0E1DD] dark:border-white/10">
+                        <div className="text-[#64748B] dark:text-white/60 text-xs">
+                          Clique para gerenciar parceiros
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1512,6 +1610,19 @@ export default function ProfileHeader({
       </div>
       
       
+    {/* Modal de Adicionar Parceiros */}
+      {showAddPartnersModal && (
+        <AddPartnersModal
+          isOpen={showAddPartnersModal}
+          onClose={() => {
+            setShowAddPartnersModal(false);
+            // Recarregar dados dos parceiros quando o modal fechar
+            setTimeout(() => {
+              loadPartnersData();
+            }, 500);
+          }}
+        />
+      )}
     </div>
   );
 }

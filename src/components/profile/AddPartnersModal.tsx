@@ -99,6 +99,8 @@ export default function AddPartnersModal({ isOpen, onClose }: AddPartnersModalPr
 
   const handleAcceptRequest = async (requestId: string) => {
     await acceptFriendRequest(requestId);
+    // Disparar evento para atualizar o ProfileHeader
+    document.dispatchEvent(new CustomEvent('partnersUpdated'));
   };
 
   const handleRejectRequest = async (requestId: string) => {
@@ -111,6 +113,8 @@ export default function AddPartnersModal({ isOpen, onClose }: AddPartnersModalPr
 
   const handleRemoveFriendship = async (userId: string) => {
     await removeFriendship(userId);
+    // Disparar evento para atualizar o ProfileHeader
+    document.dispatchEvent(new CustomEvent('partnersUpdated'));
   };
 
   const pendingReceivedRequests = getPendingReceivedRequests();
