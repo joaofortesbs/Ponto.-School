@@ -24,10 +24,10 @@ interface TaskCardProps {
   task: Task;
   onClick: () => void;
   onComplete: (completed: boolean) => void;
-  index?: number;
+  index: number;
 }
 
-const TaskCard: React.FC<TaskCardProps> = ({ task, onClick, onComplete, index = 0 }) => {
+const TaskCard: React.FC<TaskCardProps> = ({ task, onClick, onComplete, index }) => {
   const getTaskTypeIcon = () => {
     switch (task.type.toLowerCase()) {
       case "exercício":

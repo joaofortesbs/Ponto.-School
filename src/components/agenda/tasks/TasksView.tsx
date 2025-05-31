@@ -149,43 +149,44 @@ const TasksView: React.FC = () => {
   }
 
   return (
-    <DragDropContext onDragEnd={handleDragEnd}>
-      <div className="h-full flex flex-col" data-testid="tasks-view">
-        {/* Header com controles */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              placeholder="Buscar tarefas..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          <div className="flex gap-2">
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md text-sm"
-            >
-              <option value="all">Todas</option>
-              <option value="pending">Pendentes</option>
-              <option value="completed">Concluídas</option>
-            </select>
-            <Button onClick={() => setIsAddTaskModalOpen(true)} className="bg-[#FF6B00] hover:bg-[#E5590A]">
-              <Plus className="h-4 w-4 mr-2" />
-              Nova Tarefa
-            </Button>
-          </div>
+    <div className="h-full flex flex-col" data-testid="tasks-view">
+      {/* Header com controles */}
+      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <div className="flex-1 relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input
+            placeholder="Buscar tarefas..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
         </div>
+        <div className="flex gap-2">
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+          >
+            <option value="all">Todas</option>
+            <option value="pending">Pendentes</option>
+            <option value="completed">Concluídas</option>
+          </select>
+          <Button onClick={() => setIsAddTaskModalOpen(true)} className="bg-[#FF6B00] hover:bg-[#E5590A]">
+            <Plus className="h-4 w-4 mr-2" />
+            Nova Tarefa
+          </Button>
+        </div>
+      </div>
 
-        {/* Lista de tarefas */}
+      {/* Lista de tarefas com DragDropContext */}
+      <DragDropContext onDragEnd={handleDragEnd}>
         <div className="flex-1 overflow-y-auto">
           <div className="grid gap-4">
-            {filteredTasks.map((task) => (
+            {filteredTasks.map((task, index) => (
               <TaskCard
                 key={task.id}
                 task={task}
+                index={index}
                 onClick={() => handleTaskClick(task.id)}
                 onComplete={(completed) => handleTaskComplete(task.id, completed)}
               />
@@ -202,14 +203,14 @@ const TasksView: React.FC = () => {
             )}
           </div>
         </div>
+      </DragDropContext>
 
-        <AddTaskModal
-          open={isAddTaskModalOpen}
-          onOpenChange={setIsAddTaskModalOpen}
-          onAddTask={handleAddTask}
-        />
-      </div>
-    </DragDropContext>
+      <AddTaskModal
+        open={isAddTaskModalOpen}
+        onOpenChange={setIsAddTaskModalOpen}
+        onAddTask={handleAddTask}
+      />
+    </div>
   );
 };
 
