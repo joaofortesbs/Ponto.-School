@@ -816,248 +816,162 @@ export default function ProfileHeader({
   }
 
   return (
-    <div
-      className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 shadow-lg overflow-hidden relative group hover:shadow-2xl transition-all duration-500"
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      onMouseEnter={() => setIsHovering(true)}
-      onMouseOver={() => setIsHovering(true)}
-      style={{ transition: "all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)" }}
-    >
+    
+      
+      
+      
+
       {/* Efeitos decorativos */}
-      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-[#FF6B00]/20 to-transparent rounded-bl-full z-0 opacity-60 group-hover:opacity-100 transition-opacity duration-500"></div>
-      <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-[#0A2540]/10 to-transparent rounded-tr-full z-0 opacity-60 group-hover:opacity-100 transition-opacity duration-500"></div>
+      
+      
+      
 
       {/* Partículas animadas (visíveis no hover) */}
-      <AnimatePresence>
-        {isHovering && (
-          <>
+      
+        
+          
+            {/*
             {[...Array(6)].map((_, i) => (
-              <motion.div
-                key={`particle-${i}`}
-                className="absolute w-2 h-2 rounded-full bg-[#FF6B00]/30"
-                initial={{
-                  opacity: 0,
-                  x: Math.random() * 300 - 150,
-                  y: Math.random() * 200 - 100,
-                  scale: 0
-                }}
-                animate={{
-                  opacity: [0, 0.8, 0],
-                  x: Math.random() * 300 - 150,
-                  y: Math.random() * 200 - 100,
-                  scale: [0, 1, 0]
-                }}
-                exit={{ opacity: 0, scale: 0 }}
-                transition={{
-                  duration: 3 + Math.random() * 2,
-                  repeat: Infinity,
-                  delay: Math.random() * 2
-                }}
-              />
+              
             ))}
-          </>
-        )}
-      </AnimatePresence>
+            */}
+          
+        
+      
 
       {/* Cover Photo com gradiente animado e efeito de movimento - altura reduzida */}
-      <div className="h-32 bg-gradient-to-r from-[#001427] via-[#072e4f] to-[#0A2540] relative overflow-hidden group/cover">
+      
         {coverUrl ? (
-          <div className="absolute inset-0 w-full h-full">
-            <img
-              src={coverUrl}
-              alt="Cover"
-              className="absolute inset-0 w-full h-full object-cover"
-              onError={(e) => {
-                console.error("Erro ao carregar imagem de capa", e);
+          
+            
+              
                 // Fallback para padrão em caso de erro
-                e.currentTarget.src = "/images/pattern-grid.svg";
-                e.currentTarget.className = "absolute inset-0 w-full h-full object-cover opacity-20";
-              }}
-            />
-          </div>
+                //e.currentTarget.className = "absolute inset-0 w-full h-full object-cover opacity-20";
+              
+            
+          
         ) : (
-          <motion.div
-            className="absolute inset-0 bg-[url('/images/pattern-grid.svg')] opacity-20"
-            animate={{
-              backgroundPosition: ["0% 0%", "100% 100%"],
-            }}
-            transition={{
-              duration: 20,
-              repeat: Infinity,
-              repeatType: "reverse"
-            }}
-          />
+          
+            
+              
+            
+          
         )}
 
-        <div className="absolute inset-0 bg-gradient-to-t from-[#001427]/90 to-transparent"></div>
+        
+        
 
         {/* Botão de upload da capa (visível no hover) */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/cover:opacity-100 transition-opacity duration-300 z-10">
-          <div
-            onClick={handleCoverPhotoClick}
-            className="bg-black/50 hover:bg-black/70 p-2 rounded-full cursor-pointer transition-all duration-300 backdrop-blur-sm"
-          >
-            <Camera className="h-5 w-5 text-white" />
-            <span className="sr-only">Alterar imagem de capa</span>
-          </div>
-        </div>
-        <input
-          type="file"
-          ref={coverPhotoRef}
-          className="hidden"
-          accept="image/*"
-          onChange={handleCoverPhotoChange}
-          aria-label="Upload de imagem de capa"
-        />
+        
+          
+            
+              
+              
+              Alterar imagem de capa
+            
+          
+          
+            
+              Upload de imagem de capa
+            
+          
+        
 
         {/* Efeitos de luz */}
-        <motion.div
-          className="absolute top-5 right-8 w-12 h-12 rounded-full bg-[#FF6B00]/20 blur-xl"
-          animate={{
-            opacity: [0.2, 0.6, 0.2],
-            scale: [1, 1.2, 1]
-          }}
-          transition={{
-            duration: 4,
-            repeat: Infinity,
-            repeatType: "reverse"
-          }}
-        />
+        
+          
+            
+          
+        
 
-        <motion.div
-          className="absolute bottom-5 left-10 w-16 h-16 rounded-full bg-[#0064FF]/20 blur-xl"
-          animate={{
-            opacity: [0.1, 0.4, 0.1],
-            scale: [1, 1.3, 1]
-          }}
-          transition={{
-            duration: 5,
-            repeat: Infinity,
-            repeatType: "reverse",
-            delay: 1
-          }}
-        />
+        
+          
+            
+          
+        
 
         {/* Status badge animado */}
-        <div className="absolute top-3 right-3 z-10">
-          <motion.div
-            className="bg-[#00b894]/90 text-white text-xs py-0.5 px-2 rounded-full flex items-center shadow-lg backdrop-blur-sm"
-            initial={{ y: -10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.5, duration: 0.3 }}
-          >
-            <motion.span
-              className="w-1.5 h-1.5 rounded-full bg-white mr-1.5"
-              animate={{ scale: [1, 1.5, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            />
-            Online
-          </motion.div>
-        </div>
+        
+          
+            
+              
+              
+              Online
+            
+          
+        
 
         {/* Nível destacado */}
-        <div className="absolute top-3 left-3 z-10 flex items-center gap-2">
-          <motion.div
-            initial={{ x: -20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: 0.6, duration: 0.3 }}
-            className="bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] text-white text-xs py-0.5 px-2 rounded-full flex items-center shadow-lg"
-          >
-            <Zap className="h-3 w-3 mr-1" />
-            Nível {userProfile?.level || 1}
-          </motion.div>
-        </div>
-      </div>
+        
+          
+            
+              
+              Nível {userProfile?.level || 1}
+            
+          
+        
+      
 
       {/* Avatar com animação avançada - movido para fora da capa */}
-      <div className="flex justify-center -mt-10 mb-2 relative z-20">
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.3, type: "spring", stiffness: 100 }}
-        >
-          <div className="relative group/avatar">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] rounded-full opacity-75 group-hover/avatar:opacity-100 blur-sm group-hover/avatar:blur transition duration-1000"></div>
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="profile-avatar relative cursor-pointer"
-              onClick={handleProfilePictureClick}
-            >
-              <Avatar className="w-20 h-20 border-4 border-white dark:border-[#0A2540] shadow-xl group-hover/avatar:border-[#FF6B00]/20 transition-all duration-300 relative overflow-hidden">
-                <AvatarImage
-                  src={avatarUrl || "https://api.dicebear.com/7.x/avataaars/svg?seed=John"}
-                  alt="Avatar"
-                  className="object-cover z-10"
-                  onError={(e) => {
-                    console.error("Erro ao carregar avatar", e);
-                    // Esconder a imagem com erro
-                    e.currentTarget.style.display = 'none';
-                    // Será mostrado o AvatarFallback automaticamente
-                  }}
-                />
-                <AvatarFallback className="bg-gradient-to-br from-[#FF6B00] to-[#FF9B50] text-xl font-bold text-white">
-                  {displayName?.charAt(0) || userProfile?.display_name?.charAt(0) || "U"}
-                </AvatarFallback>
-              </Avatar>
+      
+        
+          
+            
+              
+                
+                  
+                    
+                      
+                        
+                        
+                          {displayName?.charAt(0) || userProfile?.display_name?.charAt(0) || "U"}
+                        
+                      
+                    
 
-              {/* Anel de progresso ao redor do avatar */}
-              <svg className="absolute -inset-1 w-[calc(100%+8px)] h-[calc(100%+8px)] rotate-90">
-                <circle
-                  cx="50%"
-                  cy="50%"
-                  r="49%"
-                  fill="none"
-                  stroke="#FF6B00"
-                  strokeWidth="2"
-                  strokeDasharray="308"
-                  strokeDashoffset="85"
-                  className="opacity-70 group-hover/avatar:opacity-100 transition-opacity"
-                  strokeLinecap="round"
-                />
-              </svg>
+                    {/* Anel de progresso ao redor do avatar */}
+                    
+                      
+                        
+                        
+                        
+                        
+                        
+                      
+                    
 
-              {/* Ícone de câmera para upload (visível no hover) */}
-              <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover/avatar:opacity-100 transition-opacity duration-300 z-20">
-                <div className="flex flex-col items-center">
-                  <Camera className="h-6 w-6 text-white" />
-                  <span className="text-white text-xs mt-1">Alterar</span>
-                </div>
-              </div>
-            </motion.div>
-            <input
-              type="file"
-              ref={profilePictureRef}
-              className="hidden"
-              accept="image/*"
-              onChange={handleProfilePictureChange}
-              aria-label="Upload de foto de perfil"
-            />
+                    {/* Ícone de câmera para upload (visível no hover) */}
+                    
+                      
+                        
+                          
+                          Alterar
+                        
+                      
+                    
+                    
+                      Upload de foto de perfil
+                    
+                  
 
-            {/* Indicador de status premium */}
-            <motion.div
-              className="absolute -bottom-1 -right-1"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 1, type: "spring", stiffness: 200 }}
-            >
-              <div className="bg-[#FF6B00] text-white p-1 rounded-full w-7 h-7 flex items-center justify-center shadow-lg group-hover/avatar:shadow-[#FF6B00]/40 transition-all duration-300">
-                <Trophy className="h-4 w-4" />
-              </div>
-            </motion.div>
-          </div>
-        </motion.div>
-      </div>
+                  {/* Indicador de status premium */}
+                  
+                    
+                      
+                        
+                      
+                    
+                  
+                
+              
+            
+          
+        
+      
 
       {/* Profile Info - padding reduzido */}
-      <div className="pt-1 pb-4 px-4 text-center relative z-10">
-        <motion.h2
-          ref={profileNameRef}
-          className="text-lg font-bold text-[#29335C] dark:text-white profile-3d-text"
-          initial={{ y: 10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.7, duration: 0.3 }}
-        >
+      
+        
           {(() => {
             // Informações para depuração
             console.log("Perfil carregado para exibição:", {
@@ -1203,75 +1117,64 @@ export default function ProfileHeader({
 
                   return (
                     <>
-                      {firstName} <span className="text-gray-400 dark:text-gray-400">|</span> <span className="text-[#FF6B00]">@{usernameToDisplay}</span>
+                      {firstName}  |  @{usernameToDisplay}
                     </>
                   );
                 })()}
               </>
             );
           })()}
-        </motion.h2>
+        
 
         {/* User ID block */}
         {userProfile?.user_id ? (
-          <div className="mt-2 bg-gradient-to-r from-[#FF6B00]/10 to-[#FF8C40]/5 dark:from-[#FF6B00]/20 dark:to-[#FF8C40]/10 backdrop-blur-sm px-3 py-1.5 rounded-full inline-flex items-center border border-[#FF6B00]/20">
-            <div className="w-2 h-2 rounded-full bg-[#FF6B00] mr-2"></div>
-            <span className="text-xs font-medium text-gray-800 dark:text-white">
-              ID: <span className="font-mono">{userProfile.user_id}</span>
-            </span>
-          </div>
+          
+            
+            
+              ID: 
+            
+          
         ) : (
-          <div className="mt-2 bg-gray-100 dark:bg-gray-800/40 backdrop-blur-sm px-3 py-1.5 rounded-full inline-flex items-center cursor-help" title="ID será gerado automaticamente logo após a criação da conta">
-            <div className="w-2 h-2 rounded-full bg-gray-400 animate-pulse mr-2"></div>
-            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+          
+            
+            
               ID: Gerando...
-            </span>
-          </div>
+            
+          
         )}
 
-        <motion.div
-          className="flex items-center justify-center gap-1 mt-1"
-          initial={{ y: 10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.9, duration: 0.3 }}
-        >
-          <span className="bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] text-white text-xs font-medium px-3 py-1 rounded-full flex items-center gap-1.5 shadow-sm hover:shadow hover:shadow-[#FF6B00]/20 transition-all duration-300 cursor-pointer">
-            <Diamond className="h-3.5 w-3.5" />
-            {userProfile?.plan_type === "full" 
-                ? "Plano Full" 
+        
+          
+            
+              
+                Plano {userProfile?.plan_type === "full" 
+                ? "Full" 
                 : userProfile?.plan_type === "premium" 
-                  ? "Plano Premium" 
-                  : "Plano Lite"}
-          </span>
-        </motion.div>
+                  ? "Premium" 
+                  : "Lite"}
+              
+            
+          
+        
 
-        <motion.p
-          className="text-[#64748B] dark:text-white/60 text-xs mt-1.5 bg-slate-50 dark:bg-slate-800/30 py-0.5 px-2 rounded-full inline-block backdrop-blur-sm"
-          initial={{ y: 10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 1, duration: 0.3 }}
-        >
-          <BookOpen className="w-3 h-3 inline-block mr-1 text-[#FF6B00]" />
-          Estudante de Engenharia de Software
-        </motion.p>
+        
+          
+            
+              
+              Estudante de Engenharia de Software
+            
+          
+        
 
         {/* Stats com ícones e hover effects - reduzido */}
-        <motion.div
-          className="flex justify-center gap-2 mt-3"
-          initial={{ y: 10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 1.1, duration: 0.3 }}
-        >
+        
           {/* Parceiros/Seguidores - exibe 0 para novos usuários */}
-          <HoverCard openDelay={200}>
-            <HoverCardTrigger asChild>
-              <motion.div
-                className="flex flex-col items-center justify-center cursor-pointer hover:scale-105 transition-transform duration-300"
-                onMouseEnter={() => setShowFollowersTooltip(true)}
-                onMouseLeave={() => setShowFollowersTooltip(false)}
-              >
+          
+            
+              
                 
                 
+
                   
                     {pendingRequests.length > 0 && (
                       
@@ -1279,19 +1182,13 @@ export default function ProfileHeader({
                       
                     )}
                   
-                
-                
+
                   {userProfile?.followers_count || 0}
                 
                 Parceiros
               
-            </HoverCardTrigger>
-            <HoverCardContent
-              className="w-64 text-center"
-              side="bottom"
-              align="center"
-              sideOffset={10}
-            >
+            
+            
               {/* Tooltip quando não há parceiros */}
               {showFollowersTooltip && (
                 
@@ -1311,28 +1208,19 @@ export default function ProfileHeader({
                   )}
                 
               )}
-            </HoverCardContent>
-          </HoverCard>
+            
+          
 
-          <HoverCard openDelay={200}>
-            <HoverCardTrigger asChild>
-              <motion.div
-                className="flex flex-col items-center justify-center cursor-help hover:scale-105 transition-transform duration-300"
-                onMouseEnter={() => setShowStatsDetails(true)}
-                onMouseLeave={() => setShowStatsDetails(false)}
-              >
+          
+            
+              
                 
                   {userProfile?.level || 1}
                 
                 Nível
               
-            </HoverCardTrigger>
-            <HoverCardContent
-              className="w-64 text-center"
-              side="bottom"
-              align="center"
-              sideOffset={10}
-            >
+            
+            
               {/* Tooltip com detalhes do nível */}
               {showStatsDetails && (
                 
@@ -1347,31 +1235,28 @@ export default function ProfileHeader({
                   
                 
               )}
-            </HoverCardContent>
-          </HoverCard>
+            
+          
 
-          <motion.div className="flex flex-col items-center justify-center cursor-default">
+          
             
-              {userProfile?.classes_count || 0}
-            
+              
+                {userProfile?.classes_count || 0}
+              
             Turmas
-          </motion.div>
+          
 
-          <motion.div className="flex flex-col items-center justify-center cursor-default">
+          
             
-              {userProfile?.achievements_count || 0}
-            
+              
+                {userProfile?.achievements_count || 0}
+              
             Conquistas
-          </motion.div>
-        </motion.div>
+          
+        
 
         {/* Barra de progresso melhorada - reduzida */}
-        <motion.div
-          className="mt-3"
-          initial={{ y: 10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 1.2, duration: 0.3 }}
-        >
+        
           
             
               Progresso para o próximo nível
@@ -1396,36 +1281,77 @@ export default function ProfileHeader({
               Faltam {((userProfile?.level || 1) * 1000) - (userProfile?.experience_points || 0)} XP
             
           
-        </motion.div>
+        
 
         {/* Botões modernizados - reduzidos */}
-        <motion.div
-          className="flex justify-center gap-2 mt-4"
-          initial={{ y: 10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 1.3, duration: 0.3 }}
-        >
+        
           
             
+              
               Editar Perfil
             
           
           
             
-              Suas conquistas aparecerão aqui conforme você progride
+              
+              Compartilhar
+            
+          
+          
+            
+              
+              Adicionar Parceiros
+            
+          
+        
+
+        {/* Conquistas recentes animadas - reduzido */}
+        
+          
+            
+              
+                
+                  
+                    
+                      {recentAchievements[activeAchievement]?.icon}
+                    
+                    
+                      
+                        {recentAchievements[activeAchievement]?.name}
+                      
+                      
+                        {recentAchievements[activeAchievement]?.date}
+                      
+                    
+                  
+                
+              
+            
+          
+        
+
+        {/* Mini tooltip de conquistas */}
+        
+          
+            {(userProfile?.achievements_count || 0) === 0 ? (
+              "Suas conquistas aparecerão aqui conforme você progride"
             ) : (
-              
-                {userProfile?.achievements_count} conquista{(userProfile?.achievements_count || 0) > 1 ? 's' : ''} obtida{(userProfile?.achievements_count || 0) > 1 ? 's' : ''}
-              
+              `${userProfile?.achievements_count} conquista${(userProfile?.achievements_count || 0) > 1 ? 's' : ''} obtida${(userProfile?.achievements_count || 0) > 1 ? 's' : ''}`
             )}
           
           {/* Indicador simples */}
-        </motion.div>
+        
 
         
-          Ativo há 3 horas
+          
+            
+              
+                Ativo há 3 horas
+              
+            
+          
         
-      </div>
-    </div>
+      
+    
   );
 }
