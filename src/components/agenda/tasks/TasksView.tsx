@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Plus, Filter, Search } from "lucide-react";
-import { DragDropContext, DropResult } from "react-beautiful-dnd";
+import { DragDropContext, Droppable, DropResult } from "react-beautiful-dnd";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import TaskCard from "./TaskCard";
@@ -181,27 +181,36 @@ const TasksView: React.FC = () => {
       {/* Lista de tarefas com DragDropContext */}
       <DragDropContext onDragEnd={handleDragEnd}>
         <div className="flex-1 overflow-y-auto">
-          <div className="grid gap-4">
-            {filteredTasks.map((task, index) => (
-              <TaskCard
-                key={task.id}
-                task={task}
-                index={index}
-                onClick={() => handleTaskClick(task.id)}
-                onComplete={(completed) => handleTaskComplete(task.id, completed)}
-              />
-            ))}
-            {filteredTasks.length === 0 && (
-              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                <h3 className="text-lg font-medium mb-2">Nenhuma tarefa encontrada</h3>
-                <p className="text-sm">
-                  {searchTerm || filterStatus !== "all" 
-                    ? "Tente ajustar os filtros ou termo de busca."
-                    : "Comece adicionando uma nova tarefa."}
-                </p>
+          <Droppable droppableId="tasks-list">
+            {(provided, snapshot) => (
+              <div
+                ref={provided.innerRef}
+                {...provided.droppableProps}
+                className="grid gap-4"
+              >
+                {filteredTasks.map((task, index) => (
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    index={index}
+                    onClick={() => handleTaskClick(task.id)}
+                    onComplete={(completed) => handleTaskComplete(task.id, completed)}
+                  />
+                ))}
+                {provided.placeholder}
+                {filteredTasks.length === 0 && (
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                    <h3 className="text-lg font-medium mb-2">Nenhuma tarefa encontrada</h3>
+                    <p className="text-sm">
+                      {searchTerm || filterStatus !== "all" 
+                        ? "Tente ajustar os filtros ou termo de busca."
+                        : "Comece adicionando uma nova tarefa."}
+                    </p>
+                  </div>
+                )}
               </div>
             )}
-          </div>
+          </Droppable>
         </div>
       </DragDropContext>
 
