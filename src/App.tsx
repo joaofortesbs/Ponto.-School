@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, Suspense } from "react";
 import {
   Routes,
@@ -49,6 +48,9 @@ import PlanSelectionPage from "@/pages/plan-selection";
 import ProfilePage from "@/pages/profile";
 import WelcomeModal from "./components/auth/WelcomeModal";
 import { TypewriterLoader } from "./components/ui/typewriter-loader";
+
+// Nova página em branco
+import BlankPage from "@/pages/BlankPage";
 
 // Componente para proteger rotas
 function ProtectedRoute({ children }) {
@@ -269,6 +271,9 @@ function App() {
                 <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
                 <Route path="/select-plan" element={<PlanSelectionPage />} />
+
+                {/* Página em branco - Pública para teste */}
+                <Route path="/blank" element={<BlankPage />} />
 
                 {/* Main App Routes - Protegidas */}
                 <Route path="/" element={
