@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { UserPlus, Search, Users, Clock, X, HandHeart, Verified } from "lucide-react";
+import { UserPlus, Search, Users, Clock, X, HandHeart, Verified, UserMinus } from "lucide-react";
 import { useFriendship } from "@/hooks/useFriendship";
 import { UserCard } from "./UserCard";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,32 +20,78 @@ export default function AddPartnersModal({ isOpen, onClose }: AddPartnersModalPr
     loading,
     searchQuery,
     setSearchQuery,
+    currentUserId,
     getFriendshipStatus,
     sendFriendRequest,
     acceptFriendRequest,
     rejectFriendRequest,
-    cancelFriendRequest
+    cancelFriendRequest,
+    removeFriendship,
+    getPendingReceivedRequests,
+    getCurrentPartners,
+    getReceivedRequestId
   } = useFriendship();
 
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [partnerUsers, setPartnerUsers] = useState<any[]>([]);
+  const [requestSenderUsers, setRequestSenderUsers] = useState<any[]>([]);
 
+  // Carregar dados dos usuários parceiros e remetentes de solicitações
   useEffect(() => {
-    const getCurrentUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setCurrentUserId(user?.id || null);
+    const loadUsersData = async () => {
+      const partners = getCurrentPartners();
+      const pendingRequests = getPendingReceivedRequests();
+
+      // Buscar dados dos parceiros
+      if (partners.length > 0) {
+        const partnerIds = partners.map(p => 
+          p.sender_id === currentUserId ? p.receiver_id : p.sender_id
+        );
+        
+        const { data: partnersData } = await supabase
+          .from('profiles')
+          .select('id, full_name, display_name, avatar_url')
+          .in('id', partnerIds);
+
+        if (partnersData) {
+          setPartnerUsers(partnersData.map(profile => ({
+            id: profile.id,
+            username: profile.display_name || profile.full_name?.split(' ')[0] || 'usuario',
+            full_name: profile.full_name,
+            display_name: profile.display_name,
+            avatar_url: profile.avatar_url,
+            followers_count: Math.floor(Math.random() * 100),
+            following_count: Math.floor(Math.random() * 50)
+          })));
+        }
+      }
+
+      // Buscar dados dos remetentes de solicitações
+      if (pendingRequests.length > 0) {
+        const senderIds = pendingRequests.map(req => req.sender_id);
+        
+        const { data: sendersData } = await supabase
+          .from('profiles')
+          .select('id, full_name, display_name, avatar_url')
+          .in('id', senderIds);
+
+        if (sendersData) {
+          setRequestSenderUsers(sendersData.map(profile => ({
+            id: profile.id,
+            username: profile.display_name || profile.full_name?.split(' ')[0] || 'usuario',
+            full_name: profile.full_name,
+            display_name: profile.display_name,
+            avatar_url: profile.avatar_url,
+            followers_count: Math.floor(Math.random() * 100),
+            following_count: Math.floor(Math.random() * 50)
+          })));
+        }
+      }
     };
-    getCurrentUser();
-  }, []);
 
-  // Obter solicitações recebidas pendentes
-  const pendingReceivedRequests = friendRequests.filter(
-    req => req.receiver_id === currentUserId && req.status === 'pending'
-  );
-
-  // Obter parceiros atuais (amizades aceitas)
-  const currentPartners = friendRequests.filter(
-    req => (req.receiver_id === currentUserId || req.sender_id === currentUserId) && req.status === 'accepted'
-  );
+    if (isOpen) {
+      loadUsersData();
+    }
+  }, [isOpen, friendRequests, currentUserId]);
 
   const handleSendRequest = async (userId: string) => {
     await sendFriendRequest(userId);
@@ -63,12 +109,12 @@ export default function AddPartnersModal({ isOpen, onClose }: AddPartnersModalPr
     await cancelFriendRequest(userId);
   };
 
-  const getReceivedRequestId = (userId: string) => {
-    const request = friendRequests.find(
-      req => req.sender_id === userId && req.receiver_id === currentUserId && req.status === 'pending'
-    );
-    return request?.id;
+  const handleRemoveFriendship = async (userId: string) => {
+    await removeFriendship(userId);
   };
+
+  const pendingReceivedRequests = getPendingReceivedRequests();
+  const currentPartners = getCurrentPartners();
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -128,14 +174,14 @@ export default function AddPartnersModal({ isOpen, onClose }: AddPartnersModalPr
                 </h3>
               </div>
               <div className="space-y-3 max-h-40 overflow-y-auto">
-                {pendingReceivedRequests.map((request) => {
-                  const senderUser = users.find(u => u.id === request.sender_id);
-                  if (!senderUser) return null;
+                {requestSenderUsers.map((user) => {
+                  const request = pendingReceivedRequests.find(req => req.sender_id === user.id);
+                  if (!request) return null;
                   
                   return (
                     <UserCard
-                      key={request.id}
-                      user={senderUser}
+                      key={user.id}
+                      user={user}
                       friendshipStatus="received"
                       onSendRequest={handleSendRequest}
                       onAcceptRequest={handleAcceptRequest}
@@ -161,37 +207,41 @@ export default function AddPartnersModal({ isOpen, onClose }: AddPartnersModalPr
             </div>
             {currentPartners.length > 0 ? (
               <div className="grid grid-cols-1 gap-3 max-h-32 overflow-y-auto">
-                {currentPartners.map((partnership) => {
-                  const partnerId = partnership.sender_id === currentUserId ? partnership.receiver_id : partnership.sender_id;
-                  const partnerUser = users.find(u => u.id === partnerId);
-                  if (!partnerUser) return null;
-                  
-                  return (
-                    <div key={partnership.id} className="flex items-center justify-between p-3 border border-[#E0E1DD] dark:border-white/10 rounded-xl bg-green-50 dark:bg-green-900/10">
-                      <div className="flex items-center space-x-3">
-                        <div className="relative">
-                          <div className="h-10 w-10 rounded-full bg-[#FF6B00] flex items-center justify-center text-white font-medium">
-                            {(partnerUser.full_name || partnerUser.username || '?').charAt(0).toUpperCase()}
-                          </div>
-                          <div className="absolute -bottom-1 -right-1 h-4 w-4 bg-green-500 rounded-full border-2 border-white dark:border-[#0A2540] flex items-center justify-center">
-                            <Verified className="h-2.5 w-2.5 text-white" />
-                          </div>
+                {partnerUsers.map((user) => (
+                  <div key={user.id} className="flex items-center justify-between p-3 border border-[#E0E1DD] dark:border-white/10 rounded-xl bg-green-50 dark:bg-green-900/10">
+                    <div className="flex items-center space-x-3">
+                      <div className="relative">
+                        <div className="h-10 w-10 rounded-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] flex items-center justify-center text-white font-medium">
+                          {(user.full_name || user.username || '?').charAt(0).toUpperCase()}
                         </div>
-                        <div>
-                          <h4 className="font-medium text-[#29335C] dark:text-white">
-                            {partnerUser.full_name || partnerUser.username || 'Usuário'}
-                          </h4>
-                          <p className="text-sm text-[#64748B] dark:text-white/60">
-                            @{partnerUser.username || 'usuario'}
-                          </p>
+                        <div className="absolute -bottom-1 -right-1 h-4 w-4 bg-green-500 rounded-full border-2 border-white dark:border-[#0A2540] flex items-center justify-center">
+                          <Verified className="h-2.5 w-2.5 text-white" />
                         </div>
                       </div>
+                      <div>
+                        <h4 className="font-medium text-[#29335C] dark:text-white">
+                          {user.full_name || user.username || 'Usuário'}
+                        </h4>
+                        <p className="text-sm text-[#64748B] dark:text-white/60">
+                          @{user.username || 'usuario'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
                       <div className="text-xs text-green-600 dark:text-green-400 font-medium bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded-full">
                         Parceiro
                       </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleRemoveFriendship(user.id)}
+                        className="h-8 w-8 p-0 border-red-300 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                      >
+                        <UserMinus className="h-3 w-3" />
+                      </Button>
                     </div>
-                  );
-                })}
+                  </div>
+                ))}
               </div>
             ) : (
               <div className="text-center py-8 border-2 border-dashed border-[#E0E1DD] dark:border-white/10 rounded-2xl">

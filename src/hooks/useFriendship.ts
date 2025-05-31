@@ -8,6 +8,16 @@ export const useFriendship = () => {
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  // Obter ID do usuário atual
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUserId(user?.id || null);
+    };
+    getCurrentUser();
+  }, []);
 
   // Buscar usuários
   const searchUsers = async (query: string) => {
@@ -23,8 +33,8 @@ export const useFriendship = () => {
 
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, username, full_name, display_name, avatar_url')
-        .or(`username.ilike.%${query}%,full_name.ilike.%${query}%,display_name.ilike.%${query}%`)
+        .select('id, full_name, display_name, avatar_url')
+        .or(`full_name.ilike.%${query}%,display_name.ilike.%${query}%`)
         .neq('id', user.id)
         .limit(10);
 
@@ -33,7 +43,18 @@ export const useFriendship = () => {
         return;
       }
 
-      setUsers(data || []);
+      // Mapear dados para incluir username do display_name
+      const mappedUsers = (data || []).map(profile => ({
+        id: profile.id,
+        username: profile.display_name || profile.full_name?.split(' ')[0] || 'usuario',
+        full_name: profile.full_name,
+        display_name: profile.display_name,
+        avatar_url: profile.avatar_url,
+        followers_count: Math.floor(Math.random() * 100), // Temporário até ter dados reais
+        following_count: Math.floor(Math.random() * 50)   // Temporário até ter dados reais
+      }));
+
+      setUsers(mappedUsers);
     } catch (error) {
       console.error('Erro ao buscar usuários:', error);
     } finally {
@@ -65,10 +86,9 @@ export const useFriendship = () => {
 
   // Verificar status de amizade
   const getFriendshipStatus = (userId: string): FriendshipStatus => {
-    const currentUserId = supabase.auth.getUser().then(({ data }) => data.user?.id);
-    
     const request = friendRequests.find(req => 
-      (req.sender_id === userId || req.receiver_id === userId)
+      (req.sender_id === currentUserId && req.receiver_id === userId) ||
+      (req.sender_id === userId && req.receiver_id === currentUserId)
     );
 
     if (!request) return 'none';
@@ -76,7 +96,7 @@ export const useFriendship = () => {
     if (request.status === 'accepted') return 'friends';
     
     if (request.status === 'pending') {
-      return request.sender_id === userId ? 'received' : 'sent';
+      return request.sender_id === currentUserId ? 'sent' : 'received';
     }
 
     return 'none';
@@ -87,6 +107,17 @@ export const useFriendship = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+
+      // Verificar se já existe uma solicitação
+      const existingRequest = friendRequests.find(req => 
+        (req.sender_id === user.id && req.receiver_id === receiverId) ||
+        (req.sender_id === receiverId && req.receiver_id === user.id)
+      );
+
+      if (existingRequest) {
+        console.log('Solicitação já existe');
+        return;
+      }
 
       const { error } = await supabase
         .from('friend_requests')
@@ -169,6 +200,51 @@ export const useFriendship = () => {
     }
   };
 
+  // Remover parceria (cancelar amizade aceita)
+  const removeFriendship = async (friendId: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from('friend_requests')
+        .update({ status: 'cancelled' })
+        .or(`and(sender_id.eq.${user.id},receiver_id.eq.${friendId}),and(sender_id.eq.${friendId},receiver_id.eq.${user.id})`)
+        .eq('status', 'accepted');
+
+      if (error) {
+        console.error('Erro ao remover parceria:', error);
+        return;
+      }
+
+      await loadFriendRequests();
+    } catch (error) {
+      console.error('Erro ao remover parceria:', error);
+    }
+  };
+
+  // Obter solicitações recebidas pendentes
+  const getPendingReceivedRequests = () => {
+    return friendRequests.filter(
+      req => req.receiver_id === currentUserId && req.status === 'pending'
+    );
+  };
+
+  // Obter parceiros atuais (amizades aceitas)
+  const getCurrentPartners = () => {
+    return friendRequests.filter(
+      req => (req.receiver_id === currentUserId || req.sender_id === currentUserId) && req.status === 'accepted'
+    );
+  };
+
+  // Obter ID da solicitação recebida
+  const getReceivedRequestId = (userId: string) => {
+    const request = friendRequests.find(
+      req => req.sender_id === userId && req.receiver_id === currentUserId && req.status === 'pending'
+    );
+    return request?.id;
+  };
+
   useEffect(() => {
     loadFriendRequests();
   }, []);
@@ -187,11 +263,16 @@ export const useFriendship = () => {
     loading,
     searchQuery,
     setSearchQuery,
+    currentUserId,
     getFriendshipStatus,
     sendFriendRequest,
     acceptFriendRequest,
     rejectFriendRequest,
     cancelFriendRequest,
-    loadFriendRequests
+    removeFriendship,
+    loadFriendRequests,
+    getPendingReceivedRequests,
+    getCurrentPartners,
+    getReceivedRequestId
   };
 };
