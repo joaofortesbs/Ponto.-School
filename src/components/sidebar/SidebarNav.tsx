@@ -69,6 +69,7 @@ export function SidebarNav({
   const [loading, setLoading] = useState(true);
   const [firstName, setFirstName] = useState<string | null>(null);
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     // Listener para atualizações de nome de usuário
@@ -168,6 +169,68 @@ export function SidebarNav({
 
     fetchUserProfile();
   }, []);
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        console.error("Usuário não autenticado");
+        return;
+      }
+
+      // Upload da imagem para o storage
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, {
+          upsert: true
+        });
+
+      if (uploadError) {
+        console.error("Erro no upload:", uploadError);
+        return;
+      }
+
+      // Obter a URL pública da imagem
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      // Salvar/atualizar a URL no banco de dados
+      const { error: dbError } = await supabase
+        .from('user_avatars')
+        .upsert({
+          user_id: user.id,
+          avatar_url: publicUrl,
+          updated_at: new Date().toISOString()
+        });
+
+      if (dbError) {
+        console.error("Erro ao salvar no banco:", dbError);
+        return;
+      }
+
+      // Atualizar o estado local
+      setUserAvatar(publicUrl);
+      console.log("Avatar atualizado com sucesso!");
+
+    } catch (error) {
+      console.error("Erro geral:", error);
+    }
+  };
 
   const handleNavigation = (path: string, isSpecial?: boolean) => {
     if (path === "/mentor-ia") {
@@ -403,7 +466,10 @@ export function SidebarNav({
             {/* Componente circular da imagem de perfil */}
             <div className="mb-3 flex justify-center">
               <div className="relative">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-r from-[#FFD700] via-[#FF6B00] to-[#FFD700] p-0.5">
+                <div 
+                  className="w-16 h-16 rounded-full bg-gradient-to-r from-[#FF8C00] via-[#FF6B00] to-[#FF4500] p-0.5 cursor-pointer hover:scale-105 transition-transform duration-200"
+                  onClick={handleAvatarClick}
+                >
                   <div className="w-full h-full rounded-full bg-white dark:bg-[#001427] flex items-center justify-center">
                     <Avatar className="w-14 h-14">
                       {userAvatar ? (
@@ -416,6 +482,13 @@ export function SidebarNav({
                     </Avatar>
                   </div>
                 </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
               </div>
             </div>
 
