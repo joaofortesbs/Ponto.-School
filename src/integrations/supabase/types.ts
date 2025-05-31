@@ -66,7 +66,6 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
-          cover_url: string | null
           created_at: string
           display_name: string | null
           email: string
@@ -78,7 +77,6 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
-          cover_url?: string | null
           created_at?: string
           display_name?: string | null
           email: string
@@ -90,7 +88,6 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
-          cover_url?: string | null
           created_at?: string
           display_name?: string | null
           email?: string
@@ -117,45 +114,6 @@ export type Database = {
           created_at?: string | null
           id?: string
           last_id?: number
-        }
-        Relationships: []
-      }
-      user_tasks: {
-        Row: {
-          category: string | null
-          created_at: string | null
-          description: string | null
-          due_date: string | null
-          id: string
-          priority: string | null
-          status: string | null
-          title: string
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          category?: string | null
-          created_at?: string | null
-          description?: string | null
-          due_date?: string | null
-          id?: string
-          priority?: string | null
-          status?: string | null
-          title: string
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          category?: string | null
-          created_at?: string | null
-          description?: string | null
-          due_date?: string | null
-          id?: string
-          priority?: string | null
-          status?: string | null
-          title?: string
-          updated_at?: string | null
-          user_id?: string
         }
         Relationships: []
       }
