@@ -1,10 +1,11 @@
 
 import React, { useState, useEffect } from "react";
-import { Plus, Filter, Search } from "lucide-react";
-import { DragDropContext, Droppable, DropResult } from "react-beautiful-dnd";
+import { Plus, Filter, Search, Calendar, BarChart3, BookOpen, Clock, List, Kanban } from "lucide-react";
+import { DragDropContext, Droppable, Draggable, DropResult } from "react-beautiful-dnd";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import TaskCard from "./TaskCard";
+import TaskColumn from "./TaskColumn";
 import AddTaskModal from "../modals/add-task-modal";
 import { useSupabaseTasks } from "@/hooks/useSupabaseTasks";
 import { useAuth } from "@/hooks/useAuth";
@@ -52,15 +53,19 @@ const TasksView: React.FC = () => {
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterPriority, setFilterPriority] = useState<string>("all");
+  const [filterDiscipline, setFilterDiscipline] = useState<string>("all");
+  const [filterDeadline, setFilterDeadline] = useState<string>("all");
+  const [viewMode, setViewMode] = useState<"kanban" | "list">("kanban");
 
-  // Converter tarefas do Supabase para o formato esperado pelo TaskCard
+  // Converter tarefas do Supabase para o formato esperado
   const convertToTaskFormat = (supabaseTask: any): Task => ({
     id: supabaseTask.id,
     title: supabaseTask.title,
     description: supabaseTask.description || "",
     discipline: "Geral",
     subject: "Geral",
-    dueDate: supabaseTask.createdAt,
+    dueDate: new Date().toISOString(),
     priority: "média" as const,
     status: supabaseTask.completed ? "concluido" as const : "a-fazer" as const,
     progress: supabaseTask.completed ? 100 : 0,
@@ -120,12 +125,16 @@ const TasksView: React.FC = () => {
   };
 
   const handleDragEnd = (result: DropResult) => {
-    if (!result.destination) {
-      return;
-    }
+    if (!result.destination) return;
 
-    // Aqui você pode implementar a lógica de reordenação se necessário
-    console.log("Drag end:", result);
+    const { source, destination, draggableId } = result;
+    
+    if (source.droppableId !== destination.droppableId) {
+      // Mover tarefa entre colunas - atualizar status
+      const newStatus = destination.droppableId as TaskStatus;
+      // Aqui você pode implementar a lógica para atualizar o status no Supabase
+      console.log(`Mover tarefa ${draggableId} para ${newStatus}`);
+    }
   };
 
   // Filtrar tarefas
@@ -133,12 +142,20 @@ const TasksView: React.FC = () => {
     const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (task.description && task.description.toLowerCase().includes(searchTerm.toLowerCase()));
     
-    const matchesFilter = filterStatus === "all" || 
-                         (filterStatus === "pending" && !task.completed) ||
-                         (filterStatus === "completed" && task.completed);
+    const matchesStatusFilter = filterStatus === "all" || 
+                               (filterStatus === "pending" && !task.completed) ||
+                               (filterStatus === "completed" && task.completed);
     
-    return matchesSearch && matchesFilter;
+    return matchesSearch && matchesStatusFilter;
   });
+
+  // Organizar tarefas por status para o Kanban
+  const tasksByStatus = {
+    "a-fazer": filteredTasks.filter(task => task.status === "a-fazer"),
+    "em-andamento": filteredTasks.filter(task => task.status === "em-andamento"),
+    "concluido": filteredTasks.filter(task => task.status === "concluido"),
+    "atrasado": filteredTasks.filter(task => task.status === "atrasado")
+  };
 
   if (loading) {
     return (
@@ -149,70 +166,171 @@ const TasksView: React.FC = () => {
   }
 
   return (
-    <div className="h-full flex flex-col" data-testid="tasks-view">
-      {/* Header com controles */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <Input
-            placeholder="Buscar tarefas..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+    <div className="h-full flex flex-col bg-gray-50 dark:bg-gray-900" data-testid="tasks-view">
+      {/* Header com título */}
+      <div className="bg-[#FF6B00] text-white p-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-white/20 rounded-lg">
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
+              <path d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+          <h1 className="text-xl font-bold">Gerenciamento de Tarefas</h1>
         </div>
-        <div className="flex gap-2">
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md text-sm"
-          >
-            <option value="all">Todas</option>
-            <option value="pending">Pendentes</option>
-            <option value="completed">Concluídas</option>
-          </select>
-          <Button onClick={() => setIsAddTaskModalOpen(true)} className="bg-[#FF6B00] hover:bg-[#E5590A]">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" className="text-white hover:bg-white/20">
+            <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none">
+              <path d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Sugestões IA
+          </Button>
+          <Button onClick={() => setIsAddTaskModalOpen(true)} className="bg-white text-[#FF6B00] hover:bg-gray-100">
             <Plus className="h-4 w-4 mr-2" />
-            Nova Tarefa
+            Adicionar Tarefas
           </Button>
         </div>
       </div>
 
-      {/* Lista de tarefas com DragDropContext */}
-      <DragDropContext onDragEnd={handleDragEnd}>
-        <div className="flex-1 overflow-y-auto">
-          <Droppable droppableId="tasks-list">
-            {(provided, snapshot) => (
-              <div
-                ref={provided.innerRef}
-                {...provided.droppableProps}
-                className="grid gap-4"
-              >
-                {filteredTasks.map((task, index) => (
-                  <TaskCard
-                    key={task.id}
-                    task={task}
-                    index={index}
-                    onClick={() => handleTaskClick(task.id)}
-                    onComplete={(completed) => handleTaskComplete(task.id, completed)}
+      {/* Filtros */}
+      <div className="bg-white dark:bg-gray-800 p-4 border-b">
+        <div className="flex flex-col sm:flex-row gap-4 mb-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              placeholder="Buscar tarefas..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" className="gap-2">
+              <Filter className="h-4 w-4" />
+              Status
+            </Button>
+            <Button variant="outline" size="sm" className="gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Prioridade
+            </Button>
+            <Button variant="outline" size="sm" className="gap-2">
+              <BookOpen className="h-4 w-4" />
+              Disciplina
+            </Button>
+            <Button variant="outline" size="sm" className="gap-2">
+              <Clock className="h-4 w-4" />
+              Prazo
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Suas Tarefas */}
+      <div className="bg-white dark:bg-gray-800 p-4 border-b">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Suas Tarefas</h2>
+            <span className="bg-[#FF6B00] text-white text-xs px-2 py-1 rounded-full">
+              {filteredTasks.length}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant={viewMode === "kanban" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("kanban")}
+              className="gap-2"
+            >
+              <Kanban className="h-4 w-4" />
+              Kanban
+            </Button>
+            <Button
+              variant={viewMode === "list" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("list")}
+              className="gap-2"
+            >
+              <List className="h-4 w-4" />
+              Lista
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Conteúdo principal */}
+      <div className="flex-1 p-4">
+        {viewMode === "kanban" ? (
+          <DragDropContext onDragEnd={handleDragEnd}>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 h-full">
+              <TaskColumn
+                title="A Fazer"
+                tasks={tasksByStatus["a-fazer"]}
+                status="a-fazer"
+                onTaskClick={handleTaskClick}
+                onMoveTask={() => {}}
+                onCompleteTask={handleTaskComplete}
+              />
+              <TaskColumn
+                title="Em Andamento"
+                tasks={tasksByStatus["em-andamento"]}
+                status="em-andamento"
+                onTaskClick={handleTaskClick}
+                onMoveTask={() => {}}
+                onCompleteTask={handleTaskComplete}
+              />
+              <TaskColumn
+                title="Concluído"
+                tasks={tasksByStatus["concluido"]}
+                status="concluido"
+                onTaskClick={handleTaskClick}
+                onMoveTask={() => {}}
+                onCompleteTask={handleTaskComplete}
+              />
+              <TaskColumn
+                title="Atrasado"
+                tasks={tasksByStatus["atrasado"]}
+                status="atrasado"
+                onTaskClick={handleTaskClick}
+                onMoveTask={() => {}}
+                onCompleteTask={handleTaskComplete}
+              />
+            </div>
+          </DragDropContext>
+        ) : (
+          <div className="space-y-2">
+            {filteredTasks.map((task, index) => (
+              <div key={task.id} className="bg-white dark:bg-gray-800 p-4 rounded-lg border flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <input 
+                    type="checkbox" 
+                    checked={task.completed}
+                    onChange={(e) => handleTaskComplete(task.id, e.target.checked)}
+                    className="rounded border-gray-300"
                   />
-                ))}
-                {provided.placeholder}
-                {filteredTasks.length === 0 && (
-                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                    <h3 className="text-lg font-medium mb-2">Nenhuma tarefa encontrada</h3>
-                    <p className="text-sm">
-                      {searchTerm || filterStatus !== "all" 
-                        ? "Tente ajustar os filtros ou termo de busca."
-                        : "Comece adicionando uma nova tarefa."}
-                    </p>
-                  </div>
-                )}
+                  <span className="font-medium">{task.title}</span>
+                  <span className="text-sm text-gray-500">
+                    {new Date(task.dueDate).toLocaleDateString()} às {new Date(task.dueDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-1 text-xs rounded bg-orange-100 text-orange-800">Geral</span>
+                  <span className="px-2 py-1 text-xs rounded bg-yellow-100 text-yellow-800">{task.priority}</span>
+                  <span className="px-2 py-1 text-xs rounded bg-blue-100 text-blue-800">{task.status}</span>
+                </div>
+              </div>
+            ))}
+            {filteredTasks.length === 0 && (
+              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                <h3 className="text-lg font-medium mb-2">Nenhuma tarefa encontrada</h3>
+                <p className="text-sm">
+                  {searchTerm || filterStatus !== "all" 
+                    ? "Tente ajustar os filtros ou termo de busca."
+                    : "Comece adicionando uma nova tarefa."}
+                </p>
               </div>
             )}
-          </Droppable>
-        </div>
-      </DragDropContext>
+          </div>
+        )}
+      </div>
 
       <AddTaskModal
         open={isAddTaskModalOpen}
