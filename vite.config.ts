@@ -3,12 +3,13 @@ import path from "path";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import { tempo } from "tempo-devtools/dist/vite";
+import { componentTagger } from "lovable-tagger";
 
 const conditionalPlugins: [string, Record<string, any>][] = [];
 conditionalPlugins.push(["tempo-devtools/swc", {}]);
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   base:
     process.env.NODE_ENV === "development"
       ? "/"
@@ -21,7 +22,8 @@ export default defineConfig({
       plugins: conditionalPlugins,
     }),
     tempo(),
-  ],
+    mode === 'development' && componentTagger(),
+  ].filter(Boolean),
   resolve: {
     preserveSymlinks: true,
     alias: {
@@ -29,9 +31,7 @@ export default defineConfig({
     },
   },
   server: {
+    host: "::",
     port: 8080,
-    host: true,
-    // @ts-ignore
-    allowedHosts: true,
   },
-});
+}));

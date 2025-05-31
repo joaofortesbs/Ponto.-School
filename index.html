@@ -1,117 +1,15 @@
+
 <!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link
-      rel="icon"
-      type="image/svg+xml"
-      href="/images/ponto-school-logo.png"
-    />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="google" content="notranslate" />
-    <title>Ponto.School</title>
-    <link
-      rel="preload"
-      href="/images/ponto-school-logo.png"
-      as="image"
-      fetchpriority="high"
-      crossorigin="anonymous"
-    />
-    <style>
-      .logo-fallback {
-        font-family:
-          system-ui,
-          -apple-system,
-          BlinkMacSystemFont,
-          "Segoe UI",
-          Roboto,
-          sans-serif;
-        font-weight: bold;
-        font-size: 1.5rem;
-      }
-      .logo-fallback span.orange {
-        color: #ff6b00;
-        font-size: 1.8rem;
-      }
-      .logo-fallback span.blue {
-        color: #0d00f5;
-      }
-    </style>
+    <title>Vite + React + TS</title>
   </head>
   <body>
     <div id="root"></div>
-    <script>
-      // Configuração global da logo
-      window.PONTO_SCHOOL_CONFIG = {
-        defaultLogo: "/images/ponto-school-logo.png",
-        logoLoaded: false,
-      };
-
-      // Inline script para pré-carregar e garantir que a logo esteja disponível
-      (function () {
-        // Função para salvar a logo no localStorage
-        function saveLogo(logoPath) {
-          try {
-            localStorage.setItem("customLogo", logoPath);
-            localStorage.setItem("sidebarCustomLogo", logoPath);
-            localStorage.setItem("pontoSchoolLogo", logoPath);
-            localStorage.setItem("logoPreloaded", "true");
-            window.PONTO_SCHOOL_CONFIG.logoLoaded = true;
-            console.log("Logo salva no localStorage com sucesso");
-          } catch (e) {
-            console.warn("Não foi possível salvar a logo no localStorage", e);
-          }
-        }
-
-        // Pré-carregar a logo com alta prioridade
-        var img = new Image();
-        img.src = window.PONTO_SCHOOL_CONFIG.defaultLogo;
-        img.fetchPriority = "high";
-        img.crossOrigin = "anonymous";
-
-        // Quando a imagem carregar, salvar no localStorage
-        img.onload = function () {
-          saveLogo(window.PONTO_SCHOOL_CONFIG.defaultLogo);
-          document.dispatchEvent(new CustomEvent("logoLoaded", { detail: window.PONTO_SCHOOL_CONFIG.defaultLogo }));
-        };
-
-        // Se houver erro, tentar novamente com um fallback
-        img.onerror = function () {
-          console.warn("Erro ao carregar a logo, tentando novamente...");
-          setTimeout(function () {
-            var retryImg = new Image();
-            retryImg.src =
-              window.PONTO_SCHOOL_CONFIG.defaultLogo +
-              "?retry=" +
-              new Date().getTime();
-            retryImg.onload = function () {
-              saveLogo(retryImg.src);
-              document.dispatchEvent(new CustomEvent("logoLoaded"));
-            };
-            retryImg.onerror = function () {
-              console.error("Falha definitiva ao carregar a logo");
-              // Usar texto como fallback
-              saveLogo(null);
-              document.dispatchEvent(new CustomEvent("logoLoadFailed"));
-            };
-          }, 1000);
-        };
-
-        // Verificar se já existe no localStorage
-        try {
-          var savedLogo = localStorage.getItem("customLogo");
-          if (savedLogo && savedLogo !== "null" && savedLogo !== "undefined") {
-            window.PONTO_SCHOOL_CONFIG.logoLoaded = true;
-          } else {
-            saveLogo(window.PONTO_SCHOOL_CONFIG.defaultLogo);
-          }
-        } catch (e) {
-          console.warn("Erro ao acessar localStorage", e);
-        }
-      })();
-    </script>
+    <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="/src/main.tsx"></script>
-    <script src="/preload.js"></script>
-    <script src="https://api.tempolabs.ai/proxy-asset?url=https://storage.googleapis.com/tempo-public-assets/error-handling.js"></script>
   </body>
 </html>
