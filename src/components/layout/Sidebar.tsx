@@ -190,36 +190,24 @@ export default function Sidebar({
               sidebarCollapsed ? "opacity-0 w-0" : "opacity-100",
             )}
           >
-            {customLogo ? (
-              <div className="h-16 flex items-center justify-center w-full">
-                <img
-                  src={customLogo + "?v=" + Date.now()}
-                  alt="Logo Ponto School"
-                  className="h-12 w-auto object-contain"
-                  loading="eager"
-                  fetchpriority="high"
-                  onError={(e) => {
-                    console.error("Erro ao renderizar logo no Sidebar");
-                    e.currentTarget.src = "/images/ponto-school-logo.png?retry=" + Date.now();
-                    
-                    e.currentTarget.onerror = () => {
-                      if (e.currentTarget && e.currentTarget.style) {
-                        e.currentTarget.style.display = "none";
-                      }
-                      setCustomLogo(null);
-                      document.dispatchEvent(new CustomEvent("logoLoadFailed"));
-                    };
-                  }}
-                />
-              </div>
-            ) : (
-              <>
-                <span className="font-bold text-lg text-[#001427] dark:text-white logo-fallback">
-                  Ponto<span className="orange">.</span>
-                  <span className="blue">School</span>
-                </span>
-              </>
-            )}
+            <div className="h-16 flex items-center justify-center w-full">
+              <img
+                src="/lovable-uploads/4ee4f5e3-84ac-4cd3-8ac0-671ed8e7fcea.png"
+                alt="Logo Ponto School"
+                className="h-12 w-auto object-contain"
+                loading="eager"
+                fetchpriority="high"
+                onError={(e) => {
+                  console.error("Erro ao renderizar logo no Sidebar");
+                  // Fallback para o texto caso a imagem falhe
+                  e.currentTarget.style.display = "none";
+                  const fallbackText = document.createElement("span");
+                  fallbackText.className = "font-bold text-lg text-[#001427] dark:text-white logo-fallback";
+                  fallbackText.innerHTML = 'Ponto<span class="orange">.</span><span class="blue">School</span>';
+                  e.currentTarget.parentNode?.appendChild(fallbackText);
+                }}
+              />
+            </div>
           </div>
           <Button
             variant="outline"
