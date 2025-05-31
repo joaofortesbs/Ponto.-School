@@ -186,15 +186,15 @@ export default function Sidebar({
         <div className="flex h-[72px] items-center justify-between px-4 border-b border-gray-200 dark:border-gray-800 relative">
           <div
             className={cn(
-              "flex items-center gap-2 transition-all duration-300",
+              "flex items-center justify-center w-full transition-all duration-300",
               sidebarCollapsed ? "opacity-0 w-0" : "opacity-100",
             )}
           >
             <div className="h-16 flex items-center justify-center w-full">
               <img
-                src="/lovable-uploads/4ee4f5e3-84ac-4cd3-8ac0-671ed8e7fcea.png"
+                src="/lovable-uploads/9db37eca-4284-4678-97fd-984c12eb0f30.png"
                 alt="Logo Ponto School"
-                className="h-12 w-auto object-contain"
+                className="h-12 w-auto object-contain mx-auto"
                 loading="eager"
                 fetchpriority="high"
                 onError={(e) => {
@@ -202,8 +202,8 @@ export default function Sidebar({
                   // Fallback para o texto caso a imagem falhe
                   e.currentTarget.style.display = "none";
                   const fallbackText = document.createElement("span");
-                  fallbackText.className = "font-bold text-lg text-[#001427] dark:text-white logo-fallback";
-                  fallbackText.innerHTML = 'Ponto<span class="orange">.</span><span class="blue">School</span>';
+                  fallbackText.className = "font-bold text-lg text-[#001427] dark:text-white logo-fallback mx-auto";
+                  fallbackText.innerHTML = 'Ponto<span class="text-[#FF6B00]">.</span><span class="text-[#29335C]">School</span>';
                   e.currentTarget.parentNode?.appendChild(fallbackText);
                 }}
               />
