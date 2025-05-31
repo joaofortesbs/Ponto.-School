@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Clock } from "lucide-react";
 import useFlowSessions from "@/hooks/useFlowSessions";
@@ -24,35 +25,49 @@ const TempoEstudoCard: React.FC<TempoEstudoCardProps> = ({ className, theme }) =
   const metaHorasSemanal = 20;
 
   useEffect(() => {
-    // Obter estatísticas da semana atual
-    const stats = getStats('semana');
+    if (!loading) {
+      // Obter estatísticas da semana atual
+      const stats = getStats('semana');
 
-    // Calcular horas e minutos de estudo
-    const totalSeconds = stats.totalTimeInSeconds;
-    const horasEstudo = Math.floor(totalSeconds / 3600);
-    const minutosEstudo = Math.floor((totalSeconds % 3600) / 60);
+      // Calcular horas e minutos de estudo
+      const totalSeconds = stats.totalTimeInSeconds;
+      const horasEstudo = Math.floor(totalSeconds / 3600);
+      const minutosEstudo = Math.floor((totalSeconds % 3600) / 60);
 
-    setTotalHoras(horasEstudo);
-    setTotalMinutos(minutosEstudo);
+      setTotalHoras(horasEstudo);
+      setTotalMinutos(minutosEstudo);
 
-    // Calcular progresso em relação à meta (em porcentagem)
-    const totalHorasDecimal = horasEstudo + (minutosEstudo / 60);
-    const progresso = Math.min(Math.round((totalHorasDecimal / metaHorasSemanal) * 100), 100);
-    setProgressoMeta(progresso);
+      // Calcular progresso em relação à meta (em porcentagem)
+      const totalHorasDecimal = horasEstudo + (minutosEstudo / 60);
+      const progresso = Math.min(Math.round((totalHorasDecimal / metaHorasSemanal) * 100), 100);
+      setProgressoMeta(progresso);
 
-    // Determinar tendência com base nos dados de comparação
-    setPercentualMudanca(Math.abs(stats.trends.timeChangePct) || 0);
-    setTendenciaPositiva(stats.trends.timeChangePct >= 0);
+      // Determinar tendência com base nos dados de comparação
+      setPercentualMudanca(Math.abs(stats.trends.timeChangePct) || 0);
+      setTendenciaPositiva(stats.trends.timeChangePct >= 0);
 
-    console.log("Dados do card de Tempo de Estudos atualizados:", {
-      totalHoras: horasEstudo,
-      totalMinutos: minutosEstudo,
-      totalSegundos: stats.totalTimeInSeconds,
-      tendencia: stats.trends.timeChangePct,
-      sessoes: sessions.length,
-      progressoMeta: progresso
-    });
-  }, [sessions, getStats]);
+      console.log("Dados do card de Tempo de Estudos atualizados:", {
+        totalHoras: horasEstudo,
+        totalMinutos: minutosEstudo,
+        totalSegundos: stats.totalTimeInSeconds,
+        tendencia: stats.trends.timeChangePct,
+        sessoes: sessions.length,
+        progressoMeta: progresso
+      });
+    }
+  }, [sessions, getStats, loading]);
+
+  if (loading) {
+    return (
+      <div className={`group backdrop-blur-md ${isLightMode ? 'bg-white/90' : 'bg-[#001e3a]'} rounded-xl p-3 ${isLightMode ? 'border border-gray-200' : 'border border-white/20'} shadow-lg relative overflow-hidden ${className || ""}`}>
+        <div className="animate-pulse">
+          <div className="h-4 bg-gray-300 rounded mb-2"></div>
+          <div className="h-8 bg-gray-300 rounded mb-2"></div>
+          <div className="h-2 bg-gray-300 rounded"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`group backdrop-blur-md ${isLightMode ? 'bg-white/90' : 'bg-[#001e3a]'} rounded-xl p-3 ${isLightMode ? 'border border-gray-200' : 'border border-white/20'} shadow-lg relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-[#FF6B00]/30 hover:translate-y-[-4px] ${className || ""}`}>
