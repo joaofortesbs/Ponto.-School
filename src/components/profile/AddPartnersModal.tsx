@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -28,7 +29,8 @@ export default function AddPartnersModal({ isOpen, onClose }: AddPartnersModalPr
     removeFriendship,
     getPendingReceivedRequests,
     getCurrentPartners,
-    getReceivedRequestId
+    getReceivedRequestId,
+    loadFriendRequests
   } = useFriendship();
 
   const [partnerUsers, setPartnerUsers] = useState<any[]>([]);
@@ -119,7 +121,7 @@ export default function AddPartnersModal({ isOpen, onClose }: AddPartnersModalPr
     document.dispatchEvent(new CustomEvent('partnersUpdated'));
   };
 
-  // Nova função para confirmar remoção de parceiro
+  // Função corrigida para confirmar remoção de parceiro
   const handleConfirmRemovePartner = async (userId: string) => {
     if (!currentUserId) return;
     
@@ -130,32 +132,45 @@ export default function AddPartnersModal({ isOpen, onClose }: AddPartnersModalPr
       const partnerToRemove = partnerUsers.find(p => p.id === userId);
       const partnerName = partnerToRemove?.full_name || partnerToRemove?.username || 'este parceiro';
       
+      console.log('Iniciando remoção do parceiro:', partnerName, 'ID:', userId);
+      
       // Atualizar o status da parceria para 'cancelled' no banco de dados
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('friend_requests')
         .update({ 
           status: 'cancelled',
           updated_at: new Date().toISOString()
         })
         .or(`and(sender_id.eq.${currentUserId},receiver_id.eq.${userId}),and(sender_id.eq.${userId},receiver_id.eq.${currentUserId})`)
-        .eq('status', 'accepted');
+        .eq('status', 'accepted')
+        .select();
+
+      console.log('Resultado da atualização:', { data, error });
 
       if (error) {
         console.error('Erro ao remover parceria:', error);
         setRemoveMessage(`Erro ao remover parceria com ${partnerName}. Tente novamente.`);
-      } else {
-        // Remover da lista local
+      } else if (data && data.length > 0) {
+        // Remoção bem-sucedida
+        console.log('Parceria removida com sucesso:', data);
+        
+        // Remover da lista local imediatamente
         setPartnerUsers(prev => prev.filter(p => p.id !== userId));
+        
+        // Atualizar o hook useFriendship
+        await loadFriendRequests();
+        
         setRemoveMessage(`Parceria com ${partnerName} removida com sucesso!`);
         
         // Disparar evento para atualizar o ProfileHeader
         document.dispatchEvent(new CustomEvent('partnersUpdated'));
-        
-        // Atualizar o hook useFriendship
-        await handleRemoveFriendship(userId);
+      } else {
+        // Nenhuma linha foi afetada
+        console.log('Nenhuma parceria encontrada para remover');
+        setRemoveMessage(`Erro: Parceria com ${partnerName} não encontrada ou já foi removida.`);
       }
     } catch (error) {
-      console.error('Erro ao remover parceria:', error);
+      console.error('Erro inesperado ao remover parceria:', error);
       setRemoveMessage('Erro inesperado ao remover parceria. Tente novamente.');
     } finally {
       setRemovingPartner(null);
