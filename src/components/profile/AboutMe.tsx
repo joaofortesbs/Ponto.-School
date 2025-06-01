@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,7 +18,9 @@ export default function AboutMe({
   setAboutMe,
   saveAboutMe,
 }: AboutMeProps) {
-  const hasContent = aboutMe && aboutMe.trim() !== "";
+  const hasContent = aboutMe && aboutMe.trim() !== "" && 
+    !aboutMe.includes("Olá! Sou estudante de Engenharia de Software") && 
+    !aboutMe.includes("Apaixonado por tecnologia, programação");
 
   return (
     <div className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 p-6 shadow-sm">
@@ -47,7 +48,7 @@ export default function AboutMe({
       {isEditing ? (
         <div className="space-y-4">
           <Textarea
-            value={aboutMe}
+            value={hasContent ? aboutMe : ""}
             onChange={(e) => setAboutMe(e.target.value)}
             className="min-h-[120px] border-[#E0E1DD] dark:border-white/10 focus:border-[#FF6B00] focus:ring-[#FF6B00]/10 resize-none"
             placeholder="Conte um pouco sobre você, seus interesses, objetivos de estudo..."
@@ -63,7 +64,10 @@ export default function AboutMe({
             </Button>
             <Button
               size="sm"
-              onClick={saveAboutMe}
+              onClick={() => {
+                saveAboutMe();
+                setIsEditing(false);
+              }}
               className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
             >
               Salvar

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,13 +10,13 @@ interface Interest {
   category: string;
 }
 
-interface InterestsProps {
-  interests: Interest[];
-  onSaveInterests: (interests: Interest[]) => void;
-}
-
-export default function Interests({ interests, onSaveInterests }: InterestsProps) {
+export default function Interests() {
+  const [interests, setInterests] = useState<Interest[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleSaveInterests = (newInterests: Interest[]) => {
+    setInterests(newInterests);
+  };
 
   const getCategoryColor = (category: string) => {
     const colors = {
@@ -127,7 +126,7 @@ export default function Interests({ interests, onSaveInterests }: InterestsProps
       <AddInterestsModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSave={onSaveInterests}
+        onSave={handleSaveInterests}
         existingInterests={interests}
       />
     </div>

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, FriendRequest, FriendshipStatus } from '@/types/friendship';
@@ -18,7 +19,7 @@ export const useFriendship = () => {
     getCurrentUser();
   }, []);
 
-  // Buscar usuários com contagem real de parcerias
+  // Buscar usuários
   const searchUsers = async (query: string) => {
     if (!query.trim()) {
       setUsers([]);
@@ -42,19 +43,15 @@ export const useFriendship = () => {
         return;
       }
 
-      // Mapear dados e buscar contagem de parcerias para cada usuário
-      const mappedUsers = await Promise.all((data || []).map(async (profile) => {
-        const partnershipsCount = await getPartnershipsCount(profile.id);
-        
-        return {
-          id: profile.id,
-          username: profile.display_name || profile.full_name?.split(' ')[0] || 'usuario',
-          full_name: profile.full_name,
-          display_name: profile.display_name,
-          avatar_url: profile.avatar_url,
-          followers_count: partnershipsCount, // Usando a contagem real de parcerias
-          following_count: 0 // Não usado mais, mas mantido para compatibilidade
-        };
+      // Mapear dados para incluir username do display_name
+      const mappedUsers = (data || []).map(profile => ({
+        id: profile.id,
+        username: profile.display_name || profile.full_name?.split(' ')[0] || 'usuario',
+        full_name: profile.full_name,
+        display_name: profile.display_name,
+        avatar_url: profile.avatar_url,
+        followers_count: Math.floor(Math.random() * 100), // Temporário até ter dados reais
+        following_count: Math.floor(Math.random() * 50)   // Temporário até ter dados reais
       }));
 
       setUsers(mappedUsers);
@@ -62,28 +59,6 @@ export const useFriendship = () => {
       console.error('Erro ao buscar usuários:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  // Função para contar parcerias ativas de um usuário
-  const getPartnershipsCount = async (userId: string): Promise<number> => {
-    try {
-      const { count, error } = await supabase
-        .from('friend_requests')
-        .select('*', { count: 'exact', head: true })
-        .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
-        .eq('status', 'accepted')
-        .eq('categoria', 'Parceiro');
-
-      if (error) {
-        console.error('Erro ao contar parcerias:', error);
-        return 0;
-      }
-
-      return count || 0;
-    } catch (error) {
-      console.error('Erro ao contar parcerias:', error);
-      return 0;
     }
   };
 
@@ -225,35 +200,26 @@ export const useFriendship = () => {
     }
   };
 
-  // Atualizar categoria da parceria
-  const updatePartnershipCategory = async (partnerId: string, newCategory: 'Parceiro' | 'Ex-Parceiro') => {
+  // Remover parceria (cancelar amizade aceita)
+  const removeFriendship = async (friendId: string) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error('Usuário não autenticado');
-      }
+      if (!user) return;
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('friend_requests')
-        .update({ categoria: newCategory })
-        .or(`and(sender_id.eq.${user.id},receiver_id.eq.${partnerId}),and(sender_id.eq.${partnerId},receiver_id.eq.${user.id})`)
-        .eq('status', 'accepted')
-        .select();
+        .update({ status: 'cancelled' })
+        .or(`and(sender_id.eq.${user.id},receiver_id.eq.${friendId}),and(sender_id.eq.${friendId},receiver_id.eq.${user.id})`)
+        .eq('status', 'accepted');
 
       if (error) {
-        console.error('Erro ao atualizar categoria:', error);
-        throw error;
-      }
-
-      if (!data || data.length === 0) {
-        throw new Error('Nenhuma parceria encontrada para atualizar');
+        console.error('Erro ao remover parceria:', error);
+        return;
       }
 
       await loadFriendRequests();
-      return true;
     } catch (error) {
-      console.error('Erro ao atualizar categoria da parceria:', error);
-      throw error;
+      console.error('Erro ao remover parceria:', error);
     }
   };
 
@@ -264,28 +230,11 @@ export const useFriendship = () => {
     );
   };
 
-  // Obter parceiros atuais por categoria
-  const getPartnersByCategory = (categoria: 'Parceiro' | 'Ex-Parceiro') => {
-    return friendRequests.filter(
-      req => (req.receiver_id === currentUserId || req.sender_id === currentUserId) && 
-             req.status === 'accepted' && 
-             req.categoria === categoria
-    );
-  };
-
-  // Obter todos os parceiros (mantendo compatibilidade)
+  // Obter parceiros atuais (amizades aceitas)
   const getCurrentPartners = () => {
-    return getPartnersByCategory('Parceiro');
-  };
-
-  // Obter categoria atual de um parceiro
-  const getPartnerCategory = (partnerId: string): 'Parceiro' | 'Ex-Parceiro' | null => {
-    const partnership = friendRequests.find(
-      req => (req.receiver_id === currentUserId || req.sender_id === currentUserId) && 
-             (req.receiver_id === partnerId || req.sender_id === partnerId) &&
-             req.status === 'accepted'
+    return friendRequests.filter(
+      req => (req.receiver_id === currentUserId || req.sender_id === currentUserId) && req.status === 'accepted'
     );
-    return partnership?.categoria || null;
   };
 
   // Obter ID da solicitação recebida
@@ -320,13 +269,10 @@ export const useFriendship = () => {
     acceptFriendRequest,
     rejectFriendRequest,
     cancelFriendRequest,
-    updatePartnershipCategory,
+    removeFriendship,
     loadFriendRequests,
     getPendingReceivedRequests,
     getCurrentPartners,
-    getPartnersByCategory,
-    getPartnerCategory,
-    getReceivedRequestId,
-    getPartnershipsCount
+    getReceivedRequestId
   };
 };

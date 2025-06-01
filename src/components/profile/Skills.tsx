@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,13 +11,13 @@ interface Skill {
   category: string;
 }
 
-interface SkillsProps {
-  skills: Skill[];
-  onSaveSkills: (skills: Skill[]) => void;
-}
-
-export default function Skills({ skills, onSaveSkills }: SkillsProps) {
+export default function Skills() {
+  const [skills, setSkills] = useState<Skill[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleSaveSkills = (newSkills: Skill[]) => {
+    setSkills(newSkills);
+  };
 
   const getLevelText = (level: number) => {
     if (level <= 1) return "Iniciante";
@@ -165,7 +164,7 @@ export default function Skills({ skills, onSaveSkills }: SkillsProps) {
       <AddSkillsModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSave={onSaveSkills}
+        onSave={handleSaveSkills}
         existingSkills={skills}
       />
     </div>

@@ -3,7 +3,6 @@ import React from "react";
 import ProfilePage from "@/components/profile/ProfilePage";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
-import { Toaster } from "@/components/ui/toaster";
 
 const Profile = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(false);
@@ -20,7 +19,6 @@ const Profile = () => {
           <ProfilePage isOwnProfile={true} />
         </main>
       </div>
-      <Toaster />
     </div>
   );
 };
