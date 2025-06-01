@@ -1,25 +1,15 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Search, Filter, GraduationCap, Users2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
-import { gruposEstudo } from "@/components/estudos/data/gruposEstudo";
+import { GrupoEstudo } from "@/hooks/useGruposEstudo";
 
 interface GruposEstudoInterfaceProps {
   className?: string;
-}
-
-interface GrupoEstudo {
-  id: string;
-  nome: string;
-  descricao: string;
-  materia: string;
-  membros: number;
-  proximoEncontro?: string;
-  imagem?: string;
-  isPublico: boolean;
-  criador: string;
-  tags: string[];
+  grupos: GrupoEstudo[];
+  loading: boolean;
 }
 
 const GrupoEstudoCard = ({ 
@@ -36,15 +26,18 @@ const GrupoEstudoCard = ({
       onClick={() => onClick(grupo.id)}
     >
       <div className="flex items-start gap-3">
-        <div className="h-12 w-12 bg-gradient-to-br from-[#FF6B00]/20 to-[#FF8C40]/20 rounded-lg flex items-center justify-center">
-          <GraduationCap className="h-6 w-6 text-[#FF6B00]" />
+        <div 
+          className="h-12 w-12 rounded-lg flex items-center justify-center"
+          style={{ backgroundColor: `${grupo.cor}20` }}
+        >
+          <GraduationCap className="h-6 w-6" style={{ color: grupo.cor }} />
         </div>
         <div className="flex-1">
           <h3 className="font-semibold text-gray-900 dark:text-white font-montserrat">
             {grupo.nome}
           </h3>
           <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mt-1">
-            {grupo.descricao}
+            {grupo.descricao || 'Sem descrição'}
           </p>
           <div className="flex items-center justify-between mt-3">
             <div className="flex items-center gap-1">
@@ -52,57 +45,65 @@ const GrupoEstudoCard = ({
               <span className="text-xs text-gray-600 dark:text-gray-400">{grupo.membros} membros</span>
             </div>
             <div className="text-xs text-[#FF6B00]">
-              {grupo.materia}
+              {grupo.topico || 'Geral'}
             </div>
           </div>
-          {grupo.proximoEncontro && (
-            <div className="mt-2 text-xs text-gray-600 dark:text-gray-400">
-              Próximo encontro: {grupo.proximoEncontro}
-            </div>
-          )}
+          <div className="mt-2 text-xs text-gray-600 dark:text-gray-400">
+            Código: {grupo.codigo_unico}
+          </div>
         </div>
       </div>
     </motion.div>
   );
 };
 
-const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className }) => {
+const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ 
+  className, 
+  grupos, 
+  loading 
+}) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedFilter, setSelectedFilter] = useState("todos");
-  const [displayedGroups, setDisplayedGroups] = useState(gruposEstudo);
+  const [displayedGroups, setDisplayedGroups] = useState<GrupoEstudo[]>([]);
   const [isAnimating, setIsAnimating] = useState(false);
 
   useEffect(() => {
-    let filtered = gruposEstudo;
+    let filtered = grupos;
 
-    // Filtrar por termo de busca
+    // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter(
         (grupo) =>
           grupo.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          grupo.materia.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (grupo.topico && grupo.topico.toLowerCase().includes(searchTerm.toLowerCase())) ||
           grupo.descricao.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
-
     setDisplayedGroups(filtered);
-  }, [searchTerm, selectedFilter]);
+  }, [searchTerm, grupos]);
 
-  // Função para lidar com clique no grupo com debounce para evitar múltiplos cliques
+  // Function to handle group click with debounce to avoid multiple clicks
   const handleGroupClick = (id: string) => {
-    if (isAnimating) return; // Evita múltiplos cliques durante animação
+    if (isAnimating) return; // Avoid multiple clicks during animation
 
     setIsAnimating(true);
-    console.log(`Grupo clicado: ${id}`);
+    console.log(`Group clicked: ${id}`);
 
-    // Reset do estado de animação após 300ms
+    // Reset animation state after 300ms
     setTimeout(() => {
       setIsAnimating(false);
     }, 300);
 
-    // Implementar navegação ou abertura de modal aqui
+    // Implement navigation or modal opening here
   };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF6B00]"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -127,16 +128,10 @@ const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className
             </span>
             <span className="interface-selector-text">Filtrar</span>
           </Button>
-          <Button className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white h-9 interface-selector">
-            <span className="interface-selector-icon">
-              <Plus className="h-4 w-4" />
-            </span>
-            <span className="interface-selector-text">Criar Grupo</span>
-          </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4 mt-4 overflow-x-auto">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-4">
         {displayedGroups.map((grupo, index) => (
           <motion.div
             key={grupo.id}
@@ -145,7 +140,7 @@ const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className
             transition={{ 
               duration: 0.25, 
               ease: "easeOut", 
-              delay: index * 0.05, // Escalonar a animação para cada card
+              delay: index * 0.05, // Stagger animation for each card
               staggerChildren: 0.05 
             }}
             className="animate-smooth-hover"
@@ -156,19 +151,30 @@ const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className
           </motion.div>
         ))}
 
-        {displayedGroups.length === 0 && (
+        {displayedGroups.length === 0 && !loading && (
           <motion.div 
-            className="col-span-3 text-center py-8 text-gray-500"
+            className="col-span-full text-center py-12"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
           >
-            Nenhum grupo encontrado com os filtros selecionados.
+            <div className="w-16 h-16 mx-auto mb-4 bg-[#FF6B00]/10 rounded-full flex items-center justify-center">
+              <GraduationCap className="h-8 w-8 text-[#FF6B00]" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              {searchTerm ? 'Nenhum grupo encontrado' : 'Nenhum grupo criado ainda'}
+            </h3>
+            <p className="text-gray-500 dark:text-gray-400 mb-4">
+              {searchTerm 
+                ? 'Tente ajustar sua busca ou criar um novo grupo.'
+                : 'Crie seu primeiro grupo de estudos para começar.'
+              }
+            </p>
           </motion.div>
         )}
       </div>
 
-      {displayedGroups.length > 6 && (
+      {displayedGroups.length > 8 && (
         <div className="flex justify-center mt-6">
           <Button variant="outline" className="text-[#FF6B00] border-[#FF6B00] hover:bg-[#FF6B00]/10">
             Ver todos os grupos
