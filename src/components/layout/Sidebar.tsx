@@ -236,7 +236,7 @@ export default function Sidebar({
             className={cn(
               "h-6 w-6 rounded-full bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20 border-[#FF6B00]/30 transition-all duration-300 shadow-sm hover:shadow-md z-10 mx-auto",
               sidebarCollapsed 
-                ? "mb-4 opacity-100" // Sempre visível quando minimizado, na parte inferior
+                ? cn("mb-4", isHovered ? "opacity-100" : "opacity-0") // Só aparece no hover quando minimizado
                 : cn("absolute top-4 right-2", isHovered ? "opacity-100" : "opacity-0") // No topo quando expandido, apenas no hover
             )}
           >

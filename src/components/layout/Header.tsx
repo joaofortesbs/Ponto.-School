@@ -1083,7 +1083,7 @@ export default function Header() {
           <div className="absolute inset-0 bg-gradient-to-br from-[#FF6B00] via-[#FF8C40] to-[#FFD700] rounded-full opacity-70 blur-[6px] group-hover:opacity-100 group-hover:blur-[8px] transition-all duration-500"></div>
           <Avatar className="h-11 w-11 border-[1.5px] border-white dark:border-[#001427] shadow-lg relative z-10 transition-all duration-500 group-hover:scale-105">
             <AvatarImage
-              src="/images/ponto-school-avatar.png"
+              src={userProfile?.profile_image || "/images/ponto-school-avatar.png"}
               alt="Ponto School Avatar"
               className="scale-90 group-hover:scale-95 transition-all duration-500"
               onError={(e) => {
@@ -1817,7 +1817,7 @@ export default function Header() {
                   >
                     <Avatar className="h-9 w-9 border-2 border-transparent group-hover:border-[#FF6B00] transition-all duration-300">
                       <AvatarImage
-                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${userProfile?.username || "user"}`}
+                        src={userProfile?.profile_image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userProfile?.username || "user"}`}
                         alt={
                           userProfile?.display_name ||
                           userProfile?.full_name ||
@@ -1886,15 +1886,6 @@ export default function Header() {
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#FF6B00]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                         <User className="mr-3.5 h-4 w-4 relative z-10 text-white/60 group-hover:text-[#FF6B00] transition-colors duration-300" />
                         <span className="relative z-10 font-normal text-sm">Perfil</span>
-                      </DropdownMenuItem>
-
-                      <DropdownMenuItem 
-                        className="mx-2 my-1.5 rounded-lg cursor-pointer transition-all duration-300 group relative overflow-hidden hover:bg-white/5 text-white/80 hover:text-white focus:bg-white/5 focus:text-white border border-transparent hover:border-white/10"
-                        onClick={() => window.location.href = '/configuracoes'}
-                      >
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#FF6B00]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        <Settings className="mr-3.5 h-4 w-4 relative z-10 text-white/60 group-hover:text-[#FF6B00] transition-colors duration-300" />
-                        <span className="relative z-10 font-normal text-sm">Configurações</span>
                       </DropdownMenuItem>
 
                       <DropdownMenuItem 
