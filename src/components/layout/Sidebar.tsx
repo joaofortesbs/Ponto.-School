@@ -228,13 +228,16 @@ export default function Sidebar({
             )}
           />
 
-          {/* Toggle Button - positioned at the top */}
+          {/* Toggle Button - positioned over profile image when collapsed */}
           <Button
             variant="outline"
             size="icon"
             onClick={handleToggleCollapse}
             className={cn(
-              "h-6 w-6 rounded-full bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20 border-[#FF6B00]/30 transition-all duration-300 absolute top-4 right-2 shadow-sm hover:shadow-md z-10",
+              "h-6 w-6 rounded-full bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20 border-[#FF6B00]/30 transition-all duration-300 absolute shadow-sm hover:shadow-md z-10",
+              sidebarCollapsed 
+                ? "bottom-4 right-2" // Posicionado sobre a imagem de perfil quando minimizado
+                : "top-4 right-2",   // Posicionado no topo quando expandido
               isHovered ? "opacity-100" : "opacity-0"
             )}
           >
