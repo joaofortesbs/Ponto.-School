@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -65,7 +64,7 @@ export default function SettingsTab({
 }: SettingsTabProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // Estados para configurações reais do usuário
   const [accountSettings, setAccountSettings] = useState({
     displayName: userProfile?.display_name || "",
@@ -158,9 +157,9 @@ export default function SettingsTab({
         const { error: passwordError } = await supabase.auth.updateUser({
           password: accountSettings.newPassword
         });
-        
+
         if (passwordError) throw passwordError;
-        
+
         setAccountSettings(prev => ({
           ...prev,
           currentPassword: "",
@@ -207,6 +206,16 @@ export default function SettingsTab({
       ...prev,
       paymentMethods: prev.paymentMethods.filter(method => method.id !== id)
     }));
+  };
+
+  const setAsDefaultPaymentMethod = (id: string) => {
+    setPaymentSettings(prev => {
+      const updatedMethods = prev.paymentMethods.map(method => ({
+        ...method,
+        is_default: method.id === id
+      }));
+      return { ...prev, paymentMethods: updatedMethods };
+    });
   };
 
   return (
@@ -606,7 +615,7 @@ export default function SettingsTab({
                     Adicionar
                   </Button>
                 </div>
-                
+
                 {paymentSettings.paymentMethods.length === 0 ? (
                   <div className="text-center py-6 border-2 border-dashed border-[#E0E1DD] dark:border-white/10 rounded-lg">
                     <CreditCard className="h-8 w-8 mx-auto mb-2 text-[#64748B] dark:text-white/60" />
@@ -628,21 +637,45 @@ export default function SettingsTab({
                       <div key={method.id} className="flex items-center justify-between p-3 bg-white dark:bg-[#0A2540] rounded-lg border">
                         <div className="flex items-center gap-3">
                           <CreditCard className="h-4 w-4" />
-                          <div>
-                            <p className="font-medium">**** {method.last4}</p>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium">**** {method.last4}</p>
+                              {method.is_default && (
+                                <Badge variant="secondary" className="text-xs">
+                                  Padrão
+                                </Badge>
+                              )}
+                            </div>
                             <p className="text-xs text-[#64748B] dark:text-white/60">
                               {method.brand} • Expira em {method.exp_month}/{method.exp_year}
                             </p>
+                            {method.holder_name && (
+                              <p className="text-xs text-[#64748B] dark:text-white/60">
+                                {method.holder_name}
+                              </p>
+                            )}
                           </div>
                         </div>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => removePaymentMethod(method.id)}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          {!method.is_default && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setAsDefaultPaymentMethod(method.id)}
+                              className="text-xs"
+                            >
+                              Definir como Padrão
+                            </Button>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => removePaymentMethod(method.id)}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -832,7 +865,7 @@ export default function SettingsTab({
               <p className="text-xs text-[#64748B] dark:text-white/60">
                 Gerencie sua carteira e moedas
               </p>
-            </div>
+</div>
           </div>
           {expandedSection === "wallet" ? (
             <ChevronUp className="h-5 w-5 text-[#64748B] dark:text-white/60" />
@@ -857,7 +890,7 @@ export default function SettingsTab({
                     })}
                   </p>
                 </div>
-                
+
                 <div className="p-4 bg-white dark:bg-[#0A2540] rounded-lg border">
                   <div className="flex items-center gap-2 mb-2">
                     <Wallet className="h-4 w-4 text-[#FF6B00]" />
