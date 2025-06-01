@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from "react";
+
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Search, Filter, GraduationCap, Users2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
-import { gruposEstudo } from "@/components/estudos/data/gruposEstudo";
+import { useGruposEstudo } from "@/hooks/useGruposEstudo";
+import CreateGroupModal from "@/components/turmas/CreateGroupModal";
 
 interface GruposEstudoInterfaceProps {
   className?: string;
@@ -12,14 +14,12 @@ interface GruposEstudoInterfaceProps {
 interface GrupoEstudo {
   id: string;
   nome: string;
-  descricao: string;
-  materia: string;
+  descricao?: string;
+  user_id: string;
+  codigo_unico: string;
+  is_publico: boolean;
+  created_at: string;
   membros: number;
-  proximoEncontro?: string;
-  imagem?: string;
-  isPublico: boolean;
-  criador: string;
-  tags: string[];
 }
 
 const GrupoEstudoCard = ({ 
@@ -43,23 +43,23 @@ const GrupoEstudoCard = ({
           <h3 className="font-semibold text-gray-900 dark:text-white font-montserrat">
             {grupo.nome}
           </h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mt-1">
-            {grupo.descricao}
-          </p>
+          {grupo.descricao && (
+            <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mt-1">
+              {grupo.descricao}
+            </p>
+          )}
           <div className="flex items-center justify-between mt-3">
             <div className="flex items-center gap-1">
               <Users2 className="h-4 w-4 text-[#FF6B00]" />
               <span className="text-xs text-gray-600 dark:text-gray-400">{grupo.membros} membros</span>
             </div>
             <div className="text-xs text-[#FF6B00]">
-              {grupo.materia}
+              {grupo.codigo_unico}
             </div>
           </div>
-          {grupo.proximoEncontro && (
-            <div className="mt-2 text-xs text-gray-600 dark:text-gray-400">
-              Próximo encontro: {grupo.proximoEncontro}
-            </div>
-          )}
+          <div className="mt-2 text-xs text-gray-600 dark:text-gray-400">
+            Criado em: {new Date(grupo.created_at).toLocaleDateString('pt-BR')}
+          </div>
         </div>
       </div>
     </motion.div>
@@ -68,26 +68,18 @@ const GrupoEstudoCard = ({
 
 const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className }) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedFilter, setSelectedFilter] = useState("todos");
-  const [displayedGroups, setDisplayedGroups] = useState(gruposEstudo);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  
+  const { grupos, loading, reloadGrupos } = useGruposEstudo();
 
-  useEffect(() => {
-    let filtered = gruposEstudo;
-
-    // Filtrar por termo de busca
-    if (searchTerm) {
-      filtered = filtered.filter(
-        (grupo) =>
-          grupo.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          grupo.materia.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          grupo.descricao.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-
-    setDisplayedGroups(filtered);
-  }, [searchTerm, selectedFilter]);
+  // Filtrar grupos por termo de busca
+  const displayedGroups = grupos.filter(
+    (grupo) =>
+      grupo.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (grupo.descricao && grupo.descricao.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      grupo.codigo_unico.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   // Função para lidar com clique no grupo com debounce para evitar múltiplos cliques
   const handleGroupClick = (id: string) => {
@@ -103,6 +95,52 @@ const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className
 
     // Implementar navegação ou abertura de modal aqui
   };
+
+  const handleCreateGroup = async (formData: any) => {
+    console.log('Novo grupo criado:', formData);
+    setIsCreateModalOpen(false);
+    // Recarregar grupos após criação
+    await reloadGrupos();
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="relative w-full sm:w-auto flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Buscar grupo de estudos..."
+              className="pl-9 bg-white dark:bg-[#1E293B] border-[#FF6B00]/10 dark:border-[#FF6B00]/20"
+              disabled
+            />
+          </div>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled
+              className="text-gray-600 dark:text-gray-400 border-[#FF6B00]/10 dark:border-[#FF6B00]/20 h-9"
+            >
+              <Filter className="h-4 w-4" />
+              <span>Filtrar</span>
+            </Button>
+            <Button 
+              disabled
+              className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white h-9"
+            >
+              <Plus className="h-4 w-4" />
+              <span>Criar Grupo</span>
+            </Button>
+          </div>
+        </div>
+        <div className="text-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF6B00] mx-auto"></div>
+          <p className="mt-2 text-gray-500">Carregando grupos...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -127,7 +165,10 @@ const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className
             </span>
             <span className="interface-selector-text">Filtrar</span>
           </Button>
-          <Button className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white h-9 interface-selector">
+          <Button 
+            onClick={() => setIsCreateModalOpen(true)}
+            className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white h-9 interface-selector"
+          >
             <span className="interface-selector-icon">
               <Plus className="h-4 w-4" />
             </span>
@@ -156,14 +197,14 @@ const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className
           </motion.div>
         ))}
 
-        {displayedGroups.length === 0 && (
+        {displayedGroups.length === 0 && !loading && (
           <motion.div 
             className="col-span-3 text-center py-8 text-gray-500"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
           >
-            Nenhum grupo encontrado com os filtros selecionados.
+            {searchTerm ? "Nenhum grupo encontrado com os filtros selecionados." : "Você ainda não criou nenhum grupo de estudos."}
           </motion.div>
         )}
       </div>
@@ -175,6 +216,12 @@ const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className
           </Button>
         </div>
       )}
+
+      <CreateGroupModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSubmit={handleCreateGroup}
+      />
     </div>
   );
 };
