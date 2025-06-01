@@ -70,7 +70,7 @@ export const useFriendship = () => {
 
       const { data, error } = await supabase
         .from('friend_requests')
-        .select('*')
+        .select('*, categoria')
         .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`);
 
       if (error) {
@@ -124,7 +124,8 @@ export const useFriendship = () => {
         .insert({
           sender_id: user.id,
           receiver_id: receiverId,
-          status: 'pending'
+          status: 'pending',
+          categoria: 'Parceiro'
         });
 
       if (error) {
@@ -143,7 +144,10 @@ export const useFriendship = () => {
     try {
       const { error } = await supabase
         .from('friend_requests')
-        .update({ status: 'accepted' })
+        .update({ 
+          status: 'accepted',
+          categoria: 'Parceiro'
+        })
         .eq('id', requestId);
 
       if (error) {
@@ -200,29 +204,6 @@ export const useFriendship = () => {
     }
   };
 
-  // Remover parceria (cancelar amizade aceita)
-  const removeFriendship = async (friendId: string) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { error } = await supabase
-        .from('friend_requests')
-        .update({ status: 'cancelled' })
-        .or(`and(sender_id.eq.${user.id},receiver_id.eq.${friendId}),and(sender_id.eq.${friendId},receiver_id.eq.${user.id})`)
-        .eq('status', 'accepted');
-
-      if (error) {
-        console.error('Erro ao remover parceria:', error);
-        return;
-      }
-
-      await loadFriendRequests();
-    } catch (error) {
-      console.error('Erro ao remover parceria:', error);
-    }
-  };
-
   // Obter solicitações recebidas pendentes
   const getPendingReceivedRequests = () => {
     return friendRequests.filter(
@@ -269,7 +250,6 @@ export const useFriendship = () => {
     acceptFriendRequest,
     rejectFriendRequest,
     cancelFriendRequest,
-    removeFriendship,
     loadFriendRequests,
     getPendingReceivedRequests,
     getCurrentPartners,
