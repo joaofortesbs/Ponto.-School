@@ -1077,22 +1077,24 @@ export default function Header() {
     <header className="w-full h-[72px] px-6 bg-white dark:bg-[#0A2540] border-b border-brand-border dark:border-white/10 flex items-center justify-between">
       {/* Hidden audio element for notification sounds */}
       <audio ref={audioRef} src="/message-sound.mp3" preload="auto" />
-      {/* Modern Platform Avatar */}
+      {/* User Profile Avatar */}
       <div className="flex items-center">
         <div className="relative group cursor-pointer">
           <div className="absolute inset-0 bg-gradient-to-br from-[#FF6B00] via-[#FF8C40] to-[#FFD700] rounded-full opacity-70 blur-[6px] group-hover:opacity-100 group-hover:blur-[8px] transition-all duration-500"></div>
           <Avatar className="h-11 w-11 border-[1.5px] border-white dark:border-[#001427] shadow-lg relative z-10 transition-all duration-500 group-hover:scale-105">
             <AvatarImage
-              src={userProfile?.profile_image || "/images/ponto-school-avatar.png"}
-              alt="Ponto School Avatar"
-              className="scale-90 group-hover:scale-95 transition-all duration-500"
+              src={userProfile?.profile_image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userProfile?.username || userProfile?.display_name || "user"}`}
+              alt={userProfile?.display_name || userProfile?.username || "Avatar do usuário"}
+              className="scale-90 group-hover:scale-95 transition-all duration-500 object-cover"
               onError={(e) => {
-                e.currentTarget.src =
-                  "https://api.dicebear.com/7.x/avataaars/svg?seed=PontoSchool&backgroundColor=ff6b00";
+                e.currentTarget.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${userProfile?.username || userProfile?.display_name || "user"}&backgroundColor=ff6b00`;
               }}
             />
             <AvatarFallback className="bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] text-white font-bold">
-              PS
+              {userProfile?.display_name?.substring(0, 2) ||
+               userProfile?.username?.substring(0, 2) ||
+               userProfile?.full_name?.substring(0, 2) ||
+               "U"}
             </AvatarFallback>
           </Avatar>
           <div className="absolute -bottom-1 -right-1 bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] text-white text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-lg z-20 transform transition-all duration-500 group-hover:scale-110 group-hover:rotate-12">
