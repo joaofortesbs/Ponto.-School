@@ -1,3 +1,5 @@
+
+
 import { cn } from "@/lib/utils";
 import { SidebarNav } from "@/components/sidebar/SidebarNav";
 import { useState, useEffect, useRef } from "react";
@@ -213,66 +215,6 @@ export default function Sidebar({
                 }}
               />
             </div>
-          </div>
-        </div>
-
-        {/* Seção de Perfil e Progresso */}
-        <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center space-x-3 mb-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-full flex items-center justify-center text-white font-semibold text-sm">
-              {(userProfile?.display_name || localStorage.getItem('userFirstName') || 'U').charAt(0).toUpperCase()}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                {userProfile?.display_name || localStorage.getItem('userFirstName') || 'Usuário'}
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                {userProfile?.plan_type || 'Plano Básico'}
-              </p>
-            </div></div>
-          </div>
-
-          {/* Nível e XP */}
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-gray-600 dark:text-gray-400">
-                Nível {userProfile?.level || 1}
-              </span>
-              <span className="text-xs text-[#FF6B00] font-medium">
-                {(() => {
-                  const currentXP = userProfile?.experience_points || 0;
-                  const currentLevel = userProfile?.level || 1;
-                  const xpForCurrentLevel = currentLevel * 100; // 100 XP por nível
-                  return `${currentXP}/${xpForCurrentLevel} XP`;
-                })()}
-              </span>
-            </div>
-            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-              <div 
-                className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] h-2 rounded-full transition-all duration-300" 
-                style={{ 
-                  width: `${(() => {
-                    const currentXP = userProfile?.experience_points || 0;
-                    const currentLevel = userProfile?.level || 1;
-                    const xpForCurrentLevel = currentLevel * 100; // 100 XP por nível
-                    const previousLevelXP = (currentLevel - 1) * 100;
-                    const xpInCurrentLevel = currentXP - previousLevelXP;
-                    const xpNeededForLevel = xpForCurrentLevel - previousLevelXP;
-
-                    // Para novos usuários (nível 1 com 0 XP), mostrar 0%
-                    if (currentLevel === 1 && currentXP === 0) return 0;
-
-                    return xpNeededForLevel > 0 ? Math.min(Math.round((xpInCurrentLevel / xpNeededForLevel) * 100), 100) : 0;
-                  })()}%` 
-                }}
-              ></div>
-            </div>
-            {/* Texto motivacional para novos usuários */}
-            {(userProfile?.level || 1) === 1 && (userProfile?.experience_points || 0) === 0 && (
-              <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-1">
-                Complete atividades para ganhar XP!
-              </p>
-            )}
           </div>
         </div>
 

@@ -52,12 +52,10 @@ export const useProfileData = () => {
         }
 
         // Ensure level and rank are set with defaults if not present
-        // Para novos usuários, inicializar com valores realistas
         const userProfile: UserProfile = {
           ...(data as unknown as UserProfile),
           level: data.level || 1,
-          rank: data.rank || "Novato",
-          experience_points: data.experience_points || 0,
+          rank: data.rank || "Aprendiz",
         };
 
         // Set contact info from user data
