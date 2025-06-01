@@ -1,0 +1,67 @@
+[plugin:vite:react-swc] × the name `paymentInfo` is defined multiple times
+     ╭─[/home/runner/workspace/src/components/tabs/SettingsTab.tsx:171:1]
+ 171 │       }
+ 172 │ 
+ 173 │       // Carregar configurações de pagamento
+ 174 │       const { data: paymentInfo } = await supabase
+     ·                     ─────┬─────
+     ·                          ╰── previous definition of `paymentInfo` here
+ 175 │         .from('user_settings')
+ 176 │         .select('auto_renewal, invoice_emails')
+ 177 │         .eq('user_id', user.id)
+ 178 │         .single();
+ 179 │ 
+ 180 │       if (paymentInfo) {
+ 181 │         setPaymentData({
+ 182 │           renovacao_automatica: paymentInfo.auto_renewal !== false,
+ 183 │           email_faturas: paymentInfo.invoice_emails !== false,
+ 184 │         });
+ 185 │       }
+ 186 │ 
+ 187 │       // Carregar configurações de privacidade
+ 188 │       const { data: privacyInfo } = await supabase
+ 189 │         .from('user_settings')
+ 190 │         .select('profile_visibility, show_email, show_phone, allow_messages, data_collection')
+ 191 │         .eq('user_id', user.id)
+ 192 │         .single();
+ 193 │ 
+ 194 │       if (privacyInfo) {
+ 195 │         setPrivacyData({
+ 196 │           visibilidade_perfil: privacyInfo.profile_visibility || "publico",
+ 197 │           mostrar_email: privacyInfo.show_email || false,
+ 198 │           mostrar_telefone: privacyInfo.show_phone || false,
+ 199 │           permitir_mensagens: privacyInfo.allow_messages !== false,
+ 200 │           coleta_dados_melhorias: privacyInfo.data_collection !== false,
+ 201 │         });
+ 202 │       }
+ 203 │ 
+ 204 │       // Carregar dados da carteira
+ 205 │       const { data: walletInfo } = await supabase
+ 206 │         .from('profiles')
+ 207 │         .select('wallet_balance, school_points')
+ 208 │         .eq('id', user.id)
+ 209 │         .single();
+ 210 │ 
+ 211 │       if (walletInfo) {
+ 212 │         setWalletData(prev => ({
+ 213 │           ...prev,
+ 214 │           saldo_atual: walletInfo.wallet_balance || 0,
+ 215 │           school_points: walletInfo.school_points || 0,
+ 216 │         }));
+ 217 │       }
+ 218 │ 
+ 219 │       // Carregar métodos de pagamento
+ 220 │       const { data: paymentInfo } = await supabase
+     ·                     ─────┬─────
+     ·                          ╰── `paymentInfo` redefined here
+ 221 │         .from('user_settings')
+ 222 │         .select('payment_settings')
+ 223 │         .eq('user_id', user.id)
+     ╰────
+/home/runner/workspace/src/components/tabs/SettingsTab.tsx:171:1
+1296|                        Recarregar automaticamente quando o saldo for baixo
+1297|                      </p>
+1298|                    </div>
+   |                      ^
+1299|                    <Switch 
+1300|                      checked={walletData.recarga_automatica}
