@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -136,7 +137,8 @@ export default function AddPartnersModal({ isOpen, onClose }: AddPartnersModalPr
       
       console.log('Iniciando remoção do parceiro:', partnerName, 'ID:', userId);
       
-      // Primeiro, verificar se a parceria existe e está ativa
+      // ETAPA 1: Verificar se a parceria existe e está ativa
+      console.log('Verificando parceria existente...');
       const { data: existingPartnership, error: checkError } = await supabase
         .from('friend_requests')
         .select('id, status, sender_id, receiver_id')
@@ -144,11 +146,17 @@ export default function AddPartnersModal({ isOpen, onClose }: AddPartnersModalPr
         .eq('status', 'accepted')
         .maybeSingle();
 
-      console.log('Verificação da parceria existente:', { existingPartnership, checkError });
+      console.log('Resultado da verificação:', { existingPartnership, checkError });
 
       if (checkError) {
         console.error('Erro ao verificar parceria:', checkError);
-        setRemoveMessage(`Erro ao conectar com o banco de dados. Tente novamente mais tarde.`);
+        if (checkError.code === 'PGRST301') {
+          setRemoveMessage(`Erro: Funcionalidade não disponível. Tente mais tarde.`);
+        } else if (checkError.code === 'PGRST116') {
+          setRemoveMessage(`Erro: Permissões insuficientes para acessar os dados.`);
+        } else {
+          setRemoveMessage(`Erro ao conectar com o banco de dados. Tente novamente mais tarde.`);
+        }
         return;
       }
 
@@ -156,7 +164,7 @@ export default function AddPartnersModal({ isOpen, onClose }: AddPartnersModalPr
         console.log('Parceria não encontrada ou já foi removida');
         // Remover da lista local
         setPartnerUsers(prev => prev.filter(p => p.id !== userId));
-        setRemoveMessage(`Parceria não encontrada ou já foi removida. Atualize a página e tente novamente.`);
+        setRemoveMessage(`Parceria não encontrada ou já foi removida. A lista foi atualizada.`);
         
         // Atualizar o hook useFriendship
         await loadFriendRequests();
@@ -166,7 +174,7 @@ export default function AddPartnersModal({ isOpen, onClose }: AddPartnersModalPr
         return;
       }
 
-      // Verificar se o usuário atual tem permissão para cancelar
+      // ETAPA 2: Verificar permissões do usuário
       const hasPermission = existingPartnership.sender_id === currentUserId || existingPartnership.receiver_id === currentUserId;
       
       if (!hasPermission) {
@@ -175,7 +183,9 @@ export default function AddPartnersModal({ isOpen, onClose }: AddPartnersModalPr
         return;
       }
       
-      // Atualizar o status da parceria para 'cancelled' no banco de dados
+      console.log('Permissões verificadas. Prosseguindo com a remoção...');
+      
+      // ETAPA 3: Atualizar o status da parceria para 'cancelled'
       const { data: updateData, error: updateError } = await supabase
         .from('friend_requests')
         .update({ 
@@ -190,20 +200,23 @@ export default function AddPartnersModal({ isOpen, onClose }: AddPartnersModalPr
       if (updateError) {
         console.error('Erro ao remover parceria:', updateError);
         
-        // Verificar tipos específicos de erro
+        // Tratamento específico de erros do Supabase
         if (updateError.code === 'PGRST301') {
-          setRemoveMessage(`Erro: Funcionalidade não encontrada no banco de dados.`);
+          setRemoveMessage(`Erro: Operação não permitida pelo banco de dados.`);
         } else if (updateError.code === 'PGRST116') {
+          setRemoveMessage(`Erro: Você não tem permissão para remover esta parceria.`);
+        } else if (updateError.code === '42501') {
           setRemoveMessage(`Erro: Permissões insuficientes para remover a parceria.`);
+        } else if (updateError.message.includes('row-level security')) {
+          setRemoveMessage(`Erro: Política de segurança impediu a remoção. Contate o suporte.`);
         } else {
-          setRemoveMessage(`Erro ao remover parceria com ${partnerName}. Tente novamente.`);
+          setRemoveMessage(`Erro ao remover parceria: ${updateError.message}. Contate o suporte com o código ${updateError.code || 'UNKNOWN'}.`);
         }
         return;
       }
 
-      // Verificar se a atualização foi bem-sucedida
+      // ETAPA 4: Verificar se a atualização foi bem-sucedida
       if (updateData && updateData.length > 0) {
-        // Remoção bem-sucedida
         console.log('Parceria removida com sucesso:', updateData);
         
         // Remover da lista local imediatamente
@@ -216,16 +229,19 @@ export default function AddPartnersModal({ isOpen, onClose }: AddPartnersModalPr
         
         // Disparar evento para atualizar o ProfileHeader
         document.dispatchEvent(new CustomEvent('partnersUpdated'));
-      } else {
-        // Nenhuma linha foi afetada - pode ser que o registro já tenha sido alterado
-        console.log('Nenhuma linha foi atualizada - verificando novamente');
         
-        // Fazer uma segunda verificação para ver se o registro ainda existe
+        console.log('Remoção concluída com sucesso');
+      } else {
+        console.log('Nenhuma linha foi atualizada - verificando estado atual...');
+        
+        // ETAPA 5: Verificação dupla para confirmar o estado
         const { data: recheckData } = await supabase
           .from('friend_requests')
           .select('id, status')
           .eq('id', existingPartnership.id)
           .maybeSingle();
+        
+        console.log('Verificação dupla:', recheckData);
         
         if (!recheckData) {
           // Registro foi removido por outro processo
@@ -240,12 +256,18 @@ export default function AddPartnersModal({ isOpen, onClose }: AddPartnersModalPr
           await loadFriendRequests();
           document.dispatchEvent(new CustomEvent('partnersUpdated'));
         } else {
-          setRemoveMessage(`Erro inesperado ao remover parceria com ${partnerName}. Contate o suporte.`);
+          setRemoveMessage(`Erro inesperado: Não foi possível confirmar a remoção da parceria com ${partnerName}. Contate o suporte com o código UPD_FAILED.`);
         }
       }
     } catch (error) {
       console.error('Erro inesperado ao remover parceria:', error);
-      setRemoveMessage('Erro inesperado ao remover parceria. Contate o suporte.');
+      const partnerName = partnerUsers.find(p => p.id === userId)?.full_name || 'este parceiro';
+      
+      if (error instanceof Error) {
+        setRemoveMessage(`Erro inesperado: ${error.message}. Contate o suporte.`);
+      } else {
+        setRemoveMessage(`Erro inesperado ao remover parceria com ${partnerName}. Contate o suporte com o código CATCH_ERROR.`);
+      }
     } finally {
       setRemovingPartner(null);
       setShowRemoveConfirm(null);
