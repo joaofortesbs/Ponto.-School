@@ -1,9 +1,11 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Zap, Star } from "lucide-react";
 import AddSkillsModal from "./modals/AddSkillsModal";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 interface Skill {
   id: string;
@@ -15,9 +17,99 @@ interface Skill {
 export default function Skills() {
   const [skills, setSkills] = useState<Skill[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { toast } = useToast();
 
-  const handleSaveSkills = (newSkills: Skill[]) => {
-    setSkills(newSkills);
+  // Carregar habilidades ao montar o componente
+  useEffect(() => {
+    const loadSkills = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data, error } = await supabase
+          .from('user_skills')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Erro ao carregar habilidades:', error);
+          return;
+        }
+
+        if (data) {
+          const formattedSkills = data.map(skill => ({
+            id: skill.id,
+            name: skill.name,
+            level: skill.level || 1,
+            category: skill.category
+          }));
+          setSkills(formattedSkills);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar habilidades:', error);
+      }
+    };
+
+    loadSkills();
+  }, []);
+
+  const handleSaveSkills = async (newSkills: Skill[]) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Erro",
+          description: "Usuário não autenticado.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Deletar habilidades existentes do usuário
+      await supabase
+        .from('user_skills')
+        .delete()
+        .eq('user_id', user.id);
+
+      // Inserir novas habilidades
+      if (newSkills.length > 0) {
+        const skillsToInsert = newSkills.map(skill => ({
+          user_id: user.id,
+          name: skill.name,
+          level: skill.level,
+          category: skill.category
+        }));
+
+        const { error } = await supabase
+          .from('user_skills')
+          .insert(skillsToInsert);
+
+        if (error) {
+          console.error('Erro ao salvar habilidades:', error);
+          toast({
+            title: "Erro",
+            description: "Erro ao salvar habilidades. Tente novamente.",
+            variant: "destructive"
+          });
+          return;
+        }
+      }
+
+      setSkills(newSkills);
+      toast({
+        title: "Sucesso",
+        description: "Habilidades salvas com sucesso!",
+        className: "bg-green-50 border-green-200 text-green-800"
+      });
+    } catch (error) {
+      console.error('Erro ao salvar habilidades:', error);
+      toast({
+        title: "Erro",
+        description: "Erro inesperado ao salvar habilidades.",
+        variant: "destructive"
+      });
+    }
   };
 
   const getLevelText = (level: number) => {
@@ -140,7 +232,7 @@ export default function Skills() {
             className="w-full mt-4 border-[#E0E1DD] dark:border-white/10 hover:border-[#FF6B00] hover:bg-[#FF6B00]/10 hover:text-[#FF6B00]"
           >
             <Plus className="h-4 w-4 mr-2" />
-            Adicionar Mais Habilidades
+            Editar Habilidades
           </Button>
         </div>
       ) : (
@@ -149,7 +241,7 @@ export default function Skills() {
             <Zap className="h-6 w-6 text-[#FF6B00]" />
           </div>
           <p className="text-[#64748B] dark:text-white/60 mb-3">
-            Adicione suas habilidades e conhecimentos para que outros possam conhecer suas competências
+            Adicione suas habilidades e competências
           </p>
           <Button
             size="sm"

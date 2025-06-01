@@ -1,11 +1,13 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, GraduationCap, Building2, Calendar, Edit, Trash2 } from "lucide-react";
+import { Plus, GraduationCap, Building2, Calendar, Trash2 } from "lucide-react";
 import AddEducationModal from "./modals/AddEducationModal";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 interface Education {
   id: string;
@@ -22,13 +24,151 @@ interface Education {
 export default function Education() {
   const [educations, setEducations] = useState<Education[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { toast } = useToast();
 
-  const handleAddEducation = (education: Education) => {
-    setEducations([...educations, education]);
+  // Carregar dados de educação ao montar o componente
+  useEffect(() => {
+    const loadEducations = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data, error } = await supabase
+          .from('user_education')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Erro ao carregar educação:', error);
+          return;
+        }
+
+        if (data) {
+          const formattedEducations = data.map(edu => ({
+            id: edu.id,
+            institution: edu.institution,
+            degree: edu.degree,
+            field: edu.field || '',
+            startDate: edu.start_date ? new Date(edu.start_date) : null,
+            endDate: edu.end_date ? new Date(edu.end_date) : null,
+            current: edu.current || false,
+            description: edu.description || '',
+            grade: edu.grade || ''
+          }));
+          setEducations(formattedEducations);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar educação:', error);
+      }
+    };
+
+    loadEducations();
+  }, []);
+
+  const handleAddEducation = async (education: Education) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Erro",
+          description: "Usuário não autenticado.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('user_education')
+        .insert({
+          user_id: user.id,
+          institution: education.institution,
+          degree: education.degree,
+          field: education.field,
+          start_date: education.startDate?.toISOString().split('T')[0],
+          end_date: education.endDate?.toISOString().split('T')[0],
+          current: education.current,
+          description: education.description,
+          grade: education.grade
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Erro ao salvar educação:', error);
+        toast({
+          title: "Erro",
+          description: "Erro ao salvar educação. Tente novamente.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (data) {
+        const newEducation = {
+          id: data.id,
+          institution: data.institution,
+          degree: data.degree,
+          field: data.field || '',
+          startDate: data.start_date ? new Date(data.start_date) : null,
+          endDate: data.end_date ? new Date(data.end_date) : null,
+          current: data.current || false,
+          description: data.description || '',
+          grade: data.grade || ''
+        };
+        setEducations([newEducation, ...educations]);
+        
+        toast({
+          title: "Sucesso",
+          description: "Educação adicionada com sucesso!",
+          className: "bg-green-50 border-green-200 text-green-800"
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao adicionar educação:', error);
+      toast({
+        title: "Erro",
+        description: "Erro inesperado ao salvar educação.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleRemoveEducation = (id: string) => {
-    setEducations(educations.filter(edu => edu.id !== id));
+  const handleRemoveEducation = async (id: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from('user_education')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Erro ao remover educação:', error);
+        toast({
+          title: "Erro",
+          description: "Erro ao remover educação. Tente novamente.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      setEducations(educations.filter(edu => edu.id !== id));
+      toast({
+        title: "Sucesso",
+        description: "Educação removida com sucesso!",
+        className: "bg-green-50 border-green-200 text-green-800"
+      });
+    } catch (error) {
+      console.error('Erro ao remover educação:', error);
+      toast({
+        title: "Erro",
+        description: "Erro inesperado ao remover educação.",
+        variant: "destructive"
+      });
+    }
   };
 
   const formatDateRange = (startDate: Date | null, endDate: Date | null, current: boolean) => {

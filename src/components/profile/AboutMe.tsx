@@ -1,8 +1,10 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Edit3, User } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 interface AboutMeProps {
   aboutMe: string;
@@ -19,6 +21,84 @@ export default function AboutMe({
   setAboutMe,
   saveAboutMe,
 }: AboutMeProps) {
+  const { toast } = useToast();
+
+  // Carregar biografia do usuário ao montar o componente
+  useEffect(() => {
+    const loadUserBio = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('bio')
+          .eq('id', user.id)
+          .single();
+
+        if (error && error.code !== 'PGRST116') {
+          console.error('Erro ao carregar biografia:', error);
+          return;
+        }
+
+        if (data?.bio) {
+          setAboutMe(data.bio);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar biografia:', error);
+      }
+    };
+
+    loadUserBio();
+  }, [setAboutMe]);
+
+  const handleSaveBio = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Erro",
+          description: "Usuário não autenticado.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ 
+          bio: aboutMe,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
+
+      if (error) {
+        console.error('Erro ao salvar biografia:', error);
+        toast({
+          title: "Erro",
+          description: "Erro ao salvar biografia. Tente novamente.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      toast({
+        title: "Sucesso",
+        description: "Biografia salva com sucesso!",
+        className: "bg-green-50 border-green-200 text-green-800"
+      });
+
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Erro ao salvar biografia:', error);
+      toast({
+        title: "Erro",
+        description: "Erro inesperado ao salvar biografia.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const hasContent = aboutMe && aboutMe.trim() !== "" && 
     !aboutMe.includes("Olá! Sou estudante de Engenharia de Software") && 
     !aboutMe.includes("Apaixonado por tecnologia, programação");
@@ -65,10 +145,7 @@ export default function AboutMe({
             </Button>
             <Button
               size="sm"
-              onClick={() => {
-                saveAboutMe();
-                setIsEditing(false);
-              }}
+              onClick={handleSaveBio}
               className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
             >
               Salvar

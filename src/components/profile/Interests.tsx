@@ -1,9 +1,11 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Heart, Sparkles } from "lucide-react";
 import AddInterestsModal from "./modals/AddInterestsModal";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 interface Interest {
   id: string;
@@ -14,9 +16,97 @@ interface Interest {
 export default function Interests() {
   const [interests, setInterests] = useState<Interest[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { toast } = useToast();
 
-  const handleSaveInterests = (newInterests: Interest[]) => {
-    setInterests(newInterests);
+  // Carregar interesses ao montar o componente
+  useEffect(() => {
+    const loadInterests = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data, error } = await supabase
+          .from('user_interests')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Erro ao carregar interesses:', error);
+          return;
+        }
+
+        if (data) {
+          const formattedInterests = data.map(interest => ({
+            id: interest.id,
+            name: interest.name,
+            category: interest.category
+          }));
+          setInterests(formattedInterests);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar interesses:', error);
+      }
+    };
+
+    loadInterests();
+  }, []);
+
+  const handleSaveInterests = async (newInterests: Interest[]) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Erro",
+          description: "Usuário não autenticado.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Deletar interesses existentes do usuário
+      await supabase
+        .from('user_interests')
+        .delete()
+        .eq('user_id', user.id);
+
+      // Inserir novos interesses
+      if (newInterests.length > 0) {
+        const interestsToInsert = newInterests.map(interest => ({
+          user_id: user.id,
+          name: interest.name,
+          category: interest.category
+        }));
+
+        const { error } = await supabase
+          .from('user_interests')
+          .insert(interestsToInsert);
+
+        if (error) {
+          console.error('Erro ao salvar interesses:', error);
+          toast({
+            title: "Erro",
+            description: "Erro ao salvar interesses. Tente novamente.",
+            variant: "destructive"
+          });
+          return;
+        }
+      }
+
+      setInterests(newInterests);
+      toast({
+        title: "Sucesso",
+        description: "Interesses salvos com sucesso!",
+        className: "bg-green-50 border-green-200 text-green-800"
+      });
+    } catch (error) {
+      console.error('Erro ao salvar interesses:', error);
+      toast({
+        title: "Erro",
+        description: "Erro inesperado ao salvar interesses.",
+        variant: "destructive"
+      });
+    }
   };
 
   const getCategoryColor = (category: string) => {
@@ -102,7 +192,7 @@ export default function Interests() {
             className="w-full mt-4 border-[#E0E1DD] dark:border-white/10 hover:border-[#FF6B00] hover:bg-[#FF6B00]/10 hover:text-[#FF6B00]"
           >
             <Plus className="h-4 w-4 mr-2" />
-            Adicionar Mais Interesses
+            Editar Interesses
           </Button>
         </div>
       ) : (
