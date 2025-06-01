@@ -2,12 +2,10 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/lib/supabase";
-import { Edit, Save, X } from "lucide-react";
+import { Edit, Save, X, User, Award, Share2, Sparkles } from "lucide-react";
 import type { UserProfile } from "@/types/user-profile";
 
 interface EditProfileModalProps {
@@ -27,19 +25,13 @@ export default function EditProfileModal({
   const [formData, setFormData] = useState({
     display_name: "",
     full_name: "",
-    bio: "",
-    location: "",
-    birth_date: "",
-    phone: "",
-    occupation: "",
-    education: "",
-    interests: "",
+    student_title: "",
     website: "",
     social_links: {
-      linkedin: "",
+      tiktok: "",
       instagram: "",
       twitter: "",
-      github: ""
+      youtube: ""
     }
   });
 
@@ -48,19 +40,13 @@ export default function EditProfileModal({
       setFormData({
         display_name: userProfile.display_name || "",
         full_name: userProfile.full_name || "",
-        bio: userProfile.bio || "",
-        location: userProfile.location || "",
-        birth_date: userProfile.birth_date || "",
-        phone: userProfile.phone || "",
-        occupation: userProfile.occupation || "",
-        education: userProfile.education || "",
-        interests: userProfile.interests || "",
+        student_title: userProfile.student_title || "",
         website: userProfile.website || "",
         social_links: {
-          linkedin: userProfile.social_links?.linkedin || "",
+          tiktok: userProfile.social_links?.tiktok || "",
           instagram: userProfile.social_links?.instagram || "",
           twitter: userProfile.social_links?.twitter || "",
-          github: userProfile.social_links?.github || ""
+          youtube: userProfile.social_links?.youtube || ""
         }
       });
     }
@@ -91,13 +77,7 @@ export default function EditProfileModal({
         .update({
           display_name: formData.display_name,
           full_name: formData.full_name,
-          bio: formData.bio,
-          location: formData.location,
-          birth_date: formData.birth_date || null,
-          phone: formData.phone,
-          occupation: formData.occupation,
-          education: formData.education,
-          interests: formData.interests,
+          student_title: formData.student_title,
           website: formData.website,
           social_links: formData.social_links,
           updated_at: new Date().toISOString()
@@ -130,217 +110,215 @@ export default function EditProfileModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Edit className="h-5 w-5" />
-            Editar Perfil
-          </DialogTitle>
-        </DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-white via-gray-50/80 to-blue-50/30 dark:from-gray-900 dark:via-gray-800/90 dark:to-blue-900/20 backdrop-blur-xl border border-white/20 dark:border-gray-700/30 shadow-2xl">
+        {/* Background Effects */}
+        <div className="absolute -inset-10 opacity-20">
+          <div className="absolute top-0 -left-4 w-72 h-72 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
+          <div className="absolute top-0 -right-4 w-72 h-72 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse delay-1000"></div>
+          <div className="absolute -bottom-8 left-20 w-72 h-72 bg-gradient-to-r from-orange-400 to-red-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse delay-500"></div>
+        </div>
 
-        <div className="space-y-6">
-          {/* Informações Básicas */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium text-[#29335C] dark:text-white">
-              Informações Básicas
-            </h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="display_name">Nome de Exibição</Label>
-                <Input
-                  id="display_name"
-                  value={formData.display_name}
-                  onChange={(e) => handleInputChange("display_name", e.target.value)}
-                  placeholder="Como você quer ser chamado"
-                  className="mt-1"
-                />
+        <div className="relative z-10">
+          <DialogHeader className="pb-6 border-b border-gray-200/60 dark:border-gray-700/60">
+            <DialogTitle className="flex items-center gap-3 text-2xl font-bold bg-gradient-to-r from-[#FF6B00] to-[#FF8533] bg-clip-text text-transparent">
+              <div className="p-2 bg-gradient-to-r from-[#FF6B00] to-[#FF8533] rounded-xl shadow-lg">
+                <Edit className="h-6 w-6 text-white" />
               </div>
-              <div>
-                <Label htmlFor="full_name">Nome Completo</Label>
-                <Input
-                  id="full_name"
-                  value={formData.full_name}
-                  onChange={(e) => handleInputChange("full_name", e.target.value)}
-                  placeholder="Seu nome completo"
-                  className="mt-1"
-                />
+              Editar Perfil
+            </DialogTitle>
+            <p className="text-gray-600 dark:text-gray-300 mt-2">
+              Personalize suas informações e conecte suas redes sociais
+            </p>
+          </DialogHeader>
+
+          <div className="space-y-8 py-6">
+            {/* Informações Pessoais */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg shadow-md">
+                  <User className="h-5 w-5 text-white" />
+                </div>
+                <h3 className="text-xl font-semibold bg-gradient-to-r from-gray-800 to-gray-600 dark:from-white dark:to-gray-200 bg-clip-text text-transparent">
+                  Informações Pessoais
+                </h3>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="display_name" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Nome de Exibição
+                  </Label>
+                  <Input
+                    id="display_name"
+                    value={formData.display_name}
+                    onChange={(e) => handleInputChange("display_name", e.target.value)}
+                    placeholder="Como você quer ser chamado"
+                    className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border-gray-200 dark:border-gray-600 focus:border-[#FF6B00] focus:ring-[#FF6B00] transition-all duration-300"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="full_name" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Nome Completo
+                  </Label>
+                  <Input
+                    id="full_name"
+                    value={formData.full_name}
+                    onChange={(e) => handleInputChange("full_name", e.target.value)}
+                    placeholder="Seu nome completo"
+                    className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border-gray-200 dark:border-gray-600 focus:border-[#FF6B00] focus:ring-[#FF6B00] transition-all duration-300"
+                  />
+                </div>
               </div>
             </div>
 
-            <div>
-              <Label htmlFor="bio">Biografia</Label>
-              <Textarea
-                id="bio"
-                value={formData.bio}
-                onChange={(e) => handleInputChange("bio", e.target.value)}
-                placeholder="Conte um pouco sobre você..."
-                className="mt-1"
-                rows={3}
-              />
-            </div>
-          </div>
+            {/* Título de Estudante */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg shadow-md">
+                  <Award className="h-5 w-5 text-white" />
+                </div>
+                <h3 className="text-xl font-semibold bg-gradient-to-r from-gray-800 to-gray-600 dark:from-white dark:to-gray-200 bg-clip-text text-transparent">
+                  Título de Estudante
+                </h3>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="student_title" className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-[#FF6B00]" />
+                  Tipo de Estudante
+                </Label>
+                <Input
+                  id="student_title"
+                  value={formData.student_title}
+                  onChange={(e) => handleInputChange("student_title", e.target.value)}
+                  placeholder="Ex: Estudante de Engenharia, Vestibulanda, Estudante de Medicina..."
+                  className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border-gray-200 dark:border-gray-600 focus:border-[#FF6B00] focus:ring-[#FF6B00] transition-all duration-300"
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  🎯 Isso nos ajuda a sugerir conteúdos personalizados para você!
+                </p>
+              </div>
 
-          {/* Informações de Contato */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium text-[#29335C] dark:text-white">
-              Informações de Contato
-            </h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="phone">Telefone</Label>
-                <Input
-                  id="phone"
-                  value={formData.phone}
-                  onChange={(e) => handleInputChange("phone", e.target.value)}
-                  placeholder="(11) 99999-9999"
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="location">Localização</Label>
-                <Input
-                  id="location"
-                  value={formData.location}
-                  onChange={(e) => handleInputChange("location", e.target.value)}
-                  placeholder="Cidade, Estado"
-                  className="mt-1"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="birth_date">Data de Nascimento</Label>
-                <Input
-                  id="birth_date"
-                  type="date"
-                  value={formData.birth_date}
-                  onChange={(e) => handleInputChange("birth_date", e.target.value)}
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="website">Website</Label>
+              <div className="space-y-2">
+                <Label htmlFor="website" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Website Pessoal
+                </Label>
                 <Input
                   id="website"
                   value={formData.website}
                   onChange={(e) => handleInputChange("website", e.target.value)}
                   placeholder="https://seusite.com"
-                  className="mt-1"
+                  className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border-gray-200 dark:border-gray-600 focus:border-[#FF6B00] focus:ring-[#FF6B00] transition-all duration-300"
                 />
+              </div>
+            </div>
+
+            {/* Redes Sociais */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 bg-gradient-to-r from-pink-500 to-rose-500 rounded-lg shadow-md">
+                  <Share2 className="h-5 w-5 text-white" />
+                </div>
+                <h3 className="text-xl font-semibold bg-gradient-to-r from-gray-800 to-gray-600 dark:from-white dark:to-gray-200 bg-clip-text text-transparent">
+                  Redes Sociais
+                </h3>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="tiktok" className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                    <div className="w-4 h-4 bg-black dark:bg-white rounded-sm flex items-center justify-center">
+                      <span className="text-white dark:text-black text-xs font-bold">T</span>
+                    </div>
+                    TikTok
+                  </Label>
+                  <Input
+                    id="tiktok"
+                    value={formData.social_links.tiktok}
+                    onChange={(e) => handleInputChange("social_links.tiktok", e.target.value)}
+                    placeholder="https://tiktok.com/@seuusuario"
+                    className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border-gray-200 dark:border-gray-600 focus:border-[#FF6B00] focus:ring-[#FF6B00] transition-all duration-300"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="youtube" className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                    <div className="w-4 h-4 bg-red-600 rounded-sm flex items-center justify-center">
+                      <span className="text-white text-xs font-bold">▶</span>
+                    </div>
+                    YouTube
+                  </Label>
+                  <Input
+                    id="youtube"
+                    value={formData.social_links.youtube}
+                    onChange={(e) => handleInputChange("social_links.youtube", e.target.value)}
+                    placeholder="https://youtube.com/@seucanal"
+                    className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border-gray-200 dark:border-gray-600 focus:border-[#FF6B00] focus:ring-[#FF6B00] transition-all duration-300"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="instagram" className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                    <div className="w-4 h-4 bg-gradient-to-tr from-purple-600 via-pink-600 to-orange-400 rounded-sm"></div>
+                    Instagram
+                  </Label>
+                  <Input
+                    id="instagram"
+                    value={formData.social_links.instagram}
+                    onChange={(e) => handleInputChange("social_links.instagram", e.target.value)}
+                    placeholder="https://instagram.com/seuusuario"
+                    className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border-gray-200 dark:border-gray-600 focus:border-[#FF6B00] focus:ring-[#FF6B00] transition-all duration-300"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="twitter" className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                    <div className="w-4 h-4 bg-black dark:bg-white rounded-sm flex items-center justify-center">
+                      <span className="text-white dark:text-black text-xs font-bold">𝕏</span>
+                    </div>
+                    X (Twitter)
+                  </Label>
+                  <Input
+                    id="twitter"
+                    value={formData.social_links.twitter}
+                    onChange={(e) => handleInputChange("social_links.twitter", e.target.value)}
+                    placeholder="https://x.com/seuusuario"
+                    className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border-gray-200 dark:border-gray-600 focus:border-[#FF6B00] focus:ring-[#FF6B00] transition-all duration-300"
+                  />
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Informações Profissionais */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium text-[#29335C] dark:text-white">
-              Informações Profissionais
-            </h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="occupation">Profissão</Label>
-                <Input
-                  id="occupation"
-                  value={formData.occupation}
-                  onChange={(e) => handleInputChange("occupation", e.target.value)}
-                  placeholder="Sua profissão atual"
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="education">Educação</Label>
-                <Input
-                  id="education"
-                  value={formData.education}
-                  onChange={(e) => handleInputChange("education", e.target.value)}
-                  placeholder="Sua formação acadêmica"
-                  className="mt-1"
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="interests">Interesses</Label>
-              <Input
-                id="interests"
-                value={formData.interests}
-                onChange={(e) => handleInputChange("interests", e.target.value)}
-                placeholder="Tecnologia, Programação, Design..."
-                className="mt-1"
-              />
-            </div>
-          </div>
-
-          {/* Redes Sociais */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium text-[#29335C] dark:text-white">
-              Redes Sociais
-            </h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="linkedin">LinkedIn</Label>
-                <Input
-                  id="linkedin"
-                  value={formData.social_links.linkedin}
-                  onChange={(e) => handleInputChange("social_links.linkedin", e.target.value)}
-                  placeholder="https://linkedin.com/in/seuperfil"
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="github">GitHub</Label>
-                <Input
-                  id="github"
-                  value={formData.social_links.github}
-                  onChange={(e) => handleInputChange("social_links.github", e.target.value)}
-                  placeholder="https://github.com/seuusuario"
-                  className="mt-1"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="instagram">Instagram</Label>
-                <Input
-                  id="instagram"
-                  value={formData.social_links.instagram}
-                  onChange={(e) => handleInputChange("social_links.instagram", e.target.value)}
-                  placeholder="https://instagram.com/seuusuario"
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="twitter">Twitter</Label>
-                <Input
-                  id="twitter"
-                  value={formData.social_links.twitter}
-                  onChange={(e) => handleInputChange("social_links.twitter", e.target.value)}
-                  placeholder="https://twitter.com/seuusuario"
-                  className="mt-1"
-                />
-              </div>
-            </div>
-          </div>
+          <DialogFooter className="pt-6 border-t border-gray-200/60 dark:border-gray-700/60 flex gap-3">
+            <Button 
+              variant="outline" 
+              onClick={handleClose} 
+              disabled={isLoading}
+              className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300"
+            >
+              <X className="h-4 w-4 mr-2" />
+              Cancelar
+            </Button>
+            <Button 
+              onClick={handleSave} 
+              disabled={isLoading}
+              className="bg-gradient-to-r from-[#FF6B00] to-[#FF8533] hover:from-[#FF5500] hover:to-[#FF7333] text-white shadow-lg hover:shadow-xl transition-all duration-300 min-w-[140px]"
+            >
+              {isLoading ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  Salvando...
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Save className="h-4 w-4" />
+                  Salvar Alterações
+                </div>
+              )}
+            </Button>
+          </DialogFooter>
         </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={handleClose} disabled={isLoading}>
-            Cancelar
-          </Button>
-          <Button 
-            onClick={handleSave} 
-            disabled={isLoading}
-            className="bg-[#FF6B00] hover:bg-[#FF6B00]/90"
-          >
-            {isLoading ? "Salvando..." : "Salvar Alterações"}
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
