@@ -1,0 +1,219 @@
+Com base no problema relatado, analisei que o botão "Salvar Configurações" nos cards de "Informações da Conta", "Segurança", "Notificações", "Pagamento e Assinatura", "Privacidade" e "Carteira" não está funcionando como esperado. Os dados não estão sendo salvos no banco de dados Supabase, e não há feedback ao usuário indicando que as alterações foram salvas. O objetivo é corrigir essa falha, garantindo que ao clicar em "Salvar Configurações", os dados sejam persistidos corretamente e uma mensagem de sucesso seja exibida. Vou ajustar o prompt para abordar esses erros especificamente, mantendo a estrutura existente e focando na correção da lógica de salvamento.
+
+Análise do Problema
+Sintoma: Ao clicar em "Salvar Configurações", não há feedback (ex.: "Configurações salvas com sucesso!") e os dados não são salvos no Supabase.
+Causa Provável:
+A lógica de salvamento pode não estar sendo disparada corretamente (ex.: evento de clique não associado ou função mal implementada).
+Falta de tratamento de sucesso/erro na interação com o Supabase.
+Possível erro na estrutura SQL ou nas políticas RLS que impede a inserção/atualização.
+Solução:
+Garantir que o evento de clique em "Salvar Configurações" dispare a função de salvamento.
+Adicionar feedback visual (mensagem de sucesso ou erro) após a execução da query.
+Validar a conexão com o Supabase e corrigir eventuais erros nas consultas SQL ou RLS.
+Prompt Corrigido para Resolver os Erros
+Vamos corrigir a funcionalidade de salvamento nos componentes "Informações da Conta", "Segurança", "Notificações", "Pagamento e Assinatura", "Privacidade" e "Carteira" na página de Configurações. O problema atual é que ao clicar em "Salvar Configurações", os dados não são salvos no banco de dados Supabase, e não há feedback ao usuário. A correção deve garantir que os dados sejam persistidos corretamente e que uma mensagem de sucesso ("Configurações salvas com sucesso!") ou erro seja exibida.
+
+⚠️ Instrução Principal e Mais Importante (Prioridade Absoluta)
+❗ ATENÇÃO:
+
+➕ Este desenvolvimento se refere exclusivamente à correção da lógica de salvamento nos componentes "Informações da Conta", "Segurança", "Notificações", "Pagamento e Assinatura", "Privacidade" e "Carteira" na página de Configurações.
+
+🔥 NÃO ALTERE o design geral, layout, cores, tipografia ou qualquer outro componente fora da lógica de salvamento.
+
+⚙️ As alterações devem se limitar à correção da implementação de salvamento e adição de feedback ao usuário.
+
+🛠️ Estrutura do Processo
+Diagnóstico Inicial
+Verifique se o evento de clique no botão "Salvar Configurações" está corretamente associado a uma função de salvamento.
+Inspecione as consultas SQL e a integração com o Supabase para identificar falhas (ex.: erros de sintaxe, permissões RLS, ou conexão).
+Correção da Lógica de Salvamento
+Certifique-se de que as queries SQL sejam executadas corretamente ao clicar em "Salvar Configurações".
+Adicione tratamento de sucesso e erro com mensagens visuais.
+Testes Pós-Correção
+Valide o salvamento em cada componente com dados preenchidos e sem dados, verificando se a mensagem de sucesso aparece e os dados são persistidos.
+🏗️ Objetivo do Desenvolvimento
+Corrigir a funcionalidade de salvamento para que ao clicar em "Salvar Configurações" nos componentes "Informações da Conta", "Segurança", "Notificações", "Pagamento e Assinatura", "Privacidade" e "Carteira", os dados sejam salvos no Supabase associados ao auth.uid() do usuário.
+Exibir uma mensagem de sucesso ("Configurações salvas com sucesso!") com fundo verde (#10B981) após o salvamento bem-sucedido.
+Exibir uma mensagem de erro (ex.: "Erro ao salvar configurações. Tente novamente.") com fundo rosa e borda vermelha (#EF4444) caso ocorra falha.
+Garantir que os dados sejam recuperados corretamente ao carregar a página.
+Manter o design atual da interface, incluindo cores e layout.
+🔗 Integração com o Banco de Dados (Supabase)
+🔸 Estrutura das Tabelas (Revisão)
+As tabelas existentes (contas, seguranca, notificacoes, pagamento_assinatura, privacidade, carteira) estão corretas. Verifique se:
+
+As políticas RLS permitem INSERT e UPDATE apenas para auth.uid() = user_id.
+Exemplo de política (já definida):
+sql
+
+Copiar
+CREATE POLICY "User can manage own account"  
+ON contas  
+FOR ALL  
+TO authenticated  
+USING (auth.uid() = user_id);  
+Aplique a mesma verificação para todas as tabelas.
+🔸 Correção da Lógica de Salvamento
+1. Componente "Informações da Conta"
+Ao Carregar:
+Consulte:
+sql
+
+Copiar
+SELECT nome_exibicao, nome_completo, email  
+FROM contas  
+WHERE user_id = '{auth.uid()}';  
+Ao Salvar:
+Associe o evento de clique em "Salvar Alterações" a:
+sql
+
+Copiar
+INSERT INTO contas (user_id, nome_exibicao, nome_completo, email, created_at, updated_at)  
+VALUES ('{auth.uid()}', '{nome_exibicao}', '{nome_completo}', '{email}', NOW(), NOW())  
+ON CONFLICT (user_id) DO UPDATE SET  
+  nome_exibicao = EXCLUDED.nome_exibicao,  
+  nome_completo = EXCLUDED.nome_completo,  
+  updated_at = NOW()  
+RETURNING *;  
+Se sucesso, exiba: "Alterações salvas com sucesso!" (fundo verde).
+Se erro, exiba: "Erro ao salvar configurações. Tente novamente." (fundo rosa).
+2. Componente "Segurança"
+Ao Carregar:
+Consulte:
+sql
+
+Copiar
+SELECT autenticacao_2fa, notificacoes_login, timeout_sessao  
+FROM seguranca  
+WHERE user_id = '{auth.uid()}';  
+Ao Salvar:
+Associe o evento de clique em "Salvar Configurações" a:
+sql
+
+Copiar
+INSERT INTO seguranca (user_id, autenticacao_2fa, notificacoes_login, timeout_sessao, created_at, updated_at)  
+VALUES ('{auth.uid()}', '{autenticacao_2fa}', '{notificacoes_login}', '{timeout_sessao}', NOW(), NOW())  
+ON CONFLICT (user_id) DO UPDATE SET  
+  autenticacao_2fa = EXCLUDED.autenticacao_2fa,  
+  notificacoes_login = EXCLUDED.notificacoes_login,  
+  timeout_sessao = EXCLUDED.timeout_sessao,  
+  updated_at = NOW()  
+RETURNING *;  
+Feedback: Sucesso ou erro como acima.
+3. Componente "Notificações"
+Ao Carregar:
+Consulte:
+sql
+
+Copiar
+SELECT email, push, lembretes_estudo, relatorios_semanais, som_notificacoes  
+FROM notificacoes  
+WHERE user_id = '{auth.uid()}';  
+Ao Salvar:
+Associe o evento de clique em "Salvar Configurações" a:
+sql
+
+Copiar
+INSERT INTO notificacoes (user_id, email, push, lembretes_estudo, relatorios_semanais, som_notificacoes, created_at, updated_at)  
+VALUES ('{auth.uid()}', '{email}', '{push}', '{lembretes_estudo}', '{relatorios_semanais}', '{som_notificacoes}', NOW(), NOW())  
+ON CONFLICT (user_id) DO UPDATE SET  
+  email = EXCLUDED.email,  
+  push = EXCLUDED.push,  
+  lembretes_estudo = EXCLUDED.lembretes_estudo,  
+  relatorios_semanais = EXCLUDED.relatorios_semanais,  
+  som_notificacoes = EXCLUDED.som_notificacoes,  
+  updated_at = NOW()  
+RETURNING *;  
+Feedback: Sucesso ou erro como acima.
+4. Componente "Pagamento e Assinatura"
+Ao Carregar:
+Consulte:
+sql
+
+Copiar
+SELECT renovacao_automatica, email_faturas  
+FROM pagamento_assinatura  
+WHERE user_id = '{auth.uid()}';  
+Ao Salvar:
+Associe o evento de clique em "Salvar Configurações" a:
+sql
+
+Copiar
+INSERT INTO pagamento_assinatura (user_id, renovacao_automatica, email_faturas, created_at, updated_at)  
+VALUES ('{auth.uid()}', '{renovacao_automatica}', '{email_faturas}', NOW(), NOW())  
+ON CONFLICT (user_id) DO UPDATE SET  
+  renovacao_automatica = EXCLUDED.renovacao_automatica,  
+  email_faturas = EXCLUDED.email_faturas,  
+  updated_at = NOW()  
+RETURNING *;  
+Feedback: Sucesso ou erro como acima.
+5. Componente "Privacidade"
+Ao Carregar:
+Consulte:
+sql
+
+Copiar
+SELECT visibilidade_perfil, mostrar_email, mostrar_telefone, permitir_mensagens, coleta_dados_melhorias  
+FROM privacidade  
+WHERE user_id = '{auth.uid()}';  
+Ao Salvar:
+Associe o evento de clique em "Salvar Configurações" a:
+sql
+
+Copiar
+INSERT INTO privacidade (user_id, visibilidade_perfil, mostrar_email, mostrar_telefone, permitir_mensagens, coleta_dados_melhorias, created_at, updated_at)  
+VALUES ('{auth.uid()}', '{visibilidade_perfil}', '{mostrar_email}', '{mostrar_telefone}', '{permitir_mensagens}', '{coleta_dados_melhorias}', NOW(), NOW())  
+ON CONFLICT (user_id) DO UPDATE SET  
+  visibilidade_perfil = EXCLUDED.visibilidade_perfil,  
+  mostrar_email = EXCLUDED.mostrar_email,  
+  mostrar_telefone = EXCLUDED.mostrar_telefone,  
+  permitir_mensagens = EXCLUDED.permitir_mensagens,  
+  coleta_dados_melhorias = EXCLUDED.coleta_dados_melhorias,  
+  updated_at = NOW()  
+RETURNING *;  
+Feedback: Sucesso ou erro como acima.
+6. Componente "Carteira"
+Ao Carregar:
+Consulte:
+sql
+
+Copiar
+SELECT saldo_atual, school_points, limite_gastos, recarga_automatica  
+FROM carteira  
+WHERE user_id = '{auth.uid()}';  
+Ao Salvar:
+Associe o evento de clique em "Salvar Configurações" a:
+sql
+
+Copiar
+INSERT INTO carteira (user_id, saldo_atual, school_points, limite_gastos, recarga_automatica, created_at, updated_at)  
+VALUES ('{auth.uid()}', '{saldo_atual}', '{school_points}', '{limite_gastos}', '{recarga_automatica}', NOW(), NOW())  
+ON CONFLICT (user_id) DO UPDATE SET  
+  saldo_atual = EXCLUDED.saldo_atual,  
+  school_points = EXCLUDED.school_points,  
+  limite_gastos = EXCLUDED.limite_gastos,  
+  recarga_automatica = EXCLUDED.recarga_automatica,  
+  updated_at = NOW()  
+RETURNING *;  
+Feedback: Sucesso ou erro como acima.
+7. Validação e Tratamento de Erros
+Verificação do Evento: Confirme que o botão "Salvar Configurações" tem um evento onclick ou equivalente associado.
+Tratamento de Erro: Use try-catch ou equivalente para capturar falhas na conexão ou query, exibindo a mensagem de erro.
+Teste RLS: Certifique-se de que as políticas RLS estão corretas e que o usuário autenticado tem permissão.
+8. Manutenção do Design Atual
+Mantenha o estilo atual:
+Cores: Azul escuro (#1E3A8A) para títulos, laranja (#F97316) para botões, verde (#10B981) para sucesso, vermelho (#EF4444) para erros.
+Mensagens de feedback como pop-ups ou banners temporários.
+🏗 Regras e Considerações Técnicas
+🚫 NÃO fazer:
+❌ Não altere o design ou layout fora do feedback de salvamento.
+❌ Não remova ou modifique funcionalidades existentes além do salvamento.
+✅ DEVE fazer:
+✔️ Corrigir a associação do evento de clique em "Salvar Configurações".
+✔️ Garantir que as queries SQL sejam executadas e os dados salvos no Supabase.
+✔️ Adicionar feedback visual de sucesso ou erro.
+✔️ Validar a integridade das tabelas e RLS no Supabase.
+💡 Considerações Finais
+Teste cada componente individualmente após a correção, inserindo e editando dados.
+Verifique os logs do Supabase para identificar erros específicos (ex.: permissões, sintaxe).
+Se persistir, inspecione a implementação frontend para garantir que os dados estão sendo enviados corretamente.
+Após entender o problema, corrija o código e as modificações necessárias no backend (Supabase) e frontend para que os dados sejam salvos corretamente ao clicar em "Salvar Configurações" com feedback apropriado.
