@@ -45,7 +45,7 @@ export default function ProfileHeader({
   onEditClick,
   onProfileUpdate
 }: ProfileHeaderProps) {
-  const [profileNameRef] = useRef<HTMLHeadingElement>(null);
+  const profileNameRef = useRef<HTMLHeadingElement>(null);
   const profilePictureRef = useRef<HTMLInputElement>(null);
   const coverPhotoRef = useRef<HTMLInputElement>(null);
   const [displayName, setDisplayName] = useState<string | null>(null);
