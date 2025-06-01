@@ -8,7 +8,7 @@ interface GruposEstudoViewProps {
 const GruposEstudoView: React.FC<GruposEstudoViewProps> = ({ className }) => {
   return (
     <div className={`w-full h-full ${className || ""}`}>
-      {/* Mini-seção de Grupos de Estudos - Completamente vazia e preparada para novos componentes */}
+      {/* Mini-seção de Grupos de Estudos - Interface completamente vazia */}
     </div>
   );
 };

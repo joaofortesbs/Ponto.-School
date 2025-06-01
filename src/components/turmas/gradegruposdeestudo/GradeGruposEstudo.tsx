@@ -11,7 +11,7 @@ interface GradeGruposEstudoProps {
 const GradeGruposEstudo: React.FC<GradeGruposEstudoProps> = ({ className }) => {
   return (
     <div className={`w-full ${className || ""}`}>
-      {/* Grade de Grupos de Estudos - Completamente vazia */}
+      {/* Grade completamente vazia */}
     </div>
   );
 };
