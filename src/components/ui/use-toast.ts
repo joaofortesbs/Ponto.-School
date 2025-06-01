@@ -1,10 +1,4 @@
-// Inspired by react-hot-toast library
-import * as React from "react"
-
-import type {
-  ToastActionElement,
-  ToastProps,
-} from "@/components/ui/toast"
+import { useState } from "react"
 
 const TOAST_LIMIT = 1
 const TOAST_REMOVE_DELAY = 1000000
@@ -13,7 +7,7 @@ type ToasterToast = ToastProps & {
   id: string
   title?: React.ReactNode
   description?: React.ReactNode
-  action?: ToastActionElement
+  action?: React.ReactElement
 }
 
 const actionTypes = {
@@ -170,7 +164,7 @@ function toast({ ...props }: Toast) {
 }
 
 function useToast() {
-  const [state, setState] = React.useState<State>(memoryState)
+  const [state, setState] = useState<State>(memoryState)
 
   React.useEffect(() => {
     listeners.push(setState)
@@ -190,3 +184,16 @@ function useToast() {
 }
 
 export { useToast, toast }
+
+// Types
+import * as React from "react"
+import type { VariantProps } from "class-variance-authority"
+import { toastVariants } from "@/components/ui/toast"
+
+type ToastProps = React.ComponentPropsWithoutRef<"div"> &
+  VariantProps<typeof toastVariants> & {
+    onOpenChange?: (open: boolean) => void
+    open?: boolean
+  }
+
+export type { ToastProps }

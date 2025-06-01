@@ -1,3 +1,4 @@
+
 // Serviço para gerenciamento de perfis de usuário
 import { supabase } from '@/lib/supabase';
 import { UserProfile } from '@/types/user-profile';
