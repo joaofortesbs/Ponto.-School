@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -124,7 +122,10 @@ export default function AddPartnersModal({ isOpen, onClose }: AddPartnersModalPr
 
   // Função corrigida para confirmar remoção de parceiro
   const handleConfirmRemovePartner = async (userId: string) => {
-    if (!currentUserId) return;
+    if (!currentUserId) {
+      setRemoveMessage("Erro: Usuário não autenticado.");
+      return;
+    }
     
     setRemovingPartner(userId);
     
@@ -138,7 +139,7 @@ export default function AddPartnersModal({ isOpen, onClose }: AddPartnersModalPr
       // Primeiro, verificar se a parceria existe e está ativa
       const { data: existingPartnership, error: checkError } = await supabase
         .from('friend_requests')
-        .select('id, status')
+        .select('id, status, sender_id, receiver_id')
         .or(`and(sender_id.eq.${currentUserId},receiver_id.eq.${userId}),and(sender_id.eq.${userId},receiver_id.eq.${currentUserId})`)
         .eq('status', 'accepted')
         .maybeSingle();
@@ -147,21 +148,30 @@ export default function AddPartnersModal({ isOpen, onClose }: AddPartnersModalPr
 
       if (checkError) {
         console.error('Erro ao verificar parceria:', checkError);
-        setRemoveMessage(`Erro ao verificar parceria com ${partnerName}. Tente novamente.`);
+        setRemoveMessage(`Erro ao conectar com o banco de dados. Tente novamente mais tarde.`);
         return;
       }
 
       if (!existingPartnership) {
         console.log('Parceria não encontrada ou já foi removida');
-        // Remover da lista local mesmo se não encontrar no banco
+        // Remover da lista local
         setPartnerUsers(prev => prev.filter(p => p.id !== userId));
-        setRemoveMessage(`Parceria com ${partnerName} já foi removida anteriormente.`);
+        setRemoveMessage(`Parceria não encontrada ou já foi removida. Atualize a página e tente novamente.`);
         
         // Atualizar o hook useFriendship
         await loadFriendRequests();
         
         // Disparar evento para atualizar o ProfileHeader
         document.dispatchEvent(new CustomEvent('partnersUpdated'));
+        return;
+      }
+
+      // Verificar se o usuário atual tem permissão para cancelar
+      const hasPermission = existingPartnership.sender_id === currentUserId || existingPartnership.receiver_id === currentUserId;
+      
+      if (!hasPermission) {
+        console.error('Usuário não tem permissão para remover esta parceria');
+        setRemoveMessage(`Você não tem permissão para remover esta parceria.`);
         return;
       }
       
@@ -179,8 +189,20 @@ export default function AddPartnersModal({ isOpen, onClose }: AddPartnersModalPr
 
       if (updateError) {
         console.error('Erro ao remover parceria:', updateError);
-        setRemoveMessage(`Erro ao remover parceria com ${partnerName}. Tente novamente.`);
-      } else if (updateData && updateData.length > 0) {
+        
+        // Verificar tipos específicos de erro
+        if (updateError.code === 'PGRST301') {
+          setRemoveMessage(`Erro: Funcionalidade não encontrada no banco de dados.`);
+        } else if (updateError.code === 'PGRST116') {
+          setRemoveMessage(`Erro: Permissões insuficientes para remover a parceria.`);
+        } else {
+          setRemoveMessage(`Erro ao remover parceria com ${partnerName}. Tente novamente.`);
+        }
+        return;
+      }
+
+      // Verificar se a atualização foi bem-sucedida
+      if (updateData && updateData.length > 0) {
         // Remoção bem-sucedida
         console.log('Parceria removida com sucesso:', updateData);
         
@@ -195,21 +217,43 @@ export default function AddPartnersModal({ isOpen, onClose }: AddPartnersModalPr
         // Disparar evento para atualizar o ProfileHeader
         document.dispatchEvent(new CustomEvent('partnersUpdated'));
       } else {
-        // Nenhuma linha foi afetada (não deveria acontecer se chegamos até aqui)
-        console.log('Nenhuma linha foi atualizada');
-        setRemoveMessage(`Erro inesperado ao remover parceria com ${partnerName}.`);
+        // Nenhuma linha foi afetada - pode ser que o registro já tenha sido alterado
+        console.log('Nenhuma linha foi atualizada - verificando novamente');
+        
+        // Fazer uma segunda verificação para ver se o registro ainda existe
+        const { data: recheckData } = await supabase
+          .from('friend_requests')
+          .select('id, status')
+          .eq('id', existingPartnership.id)
+          .maybeSingle();
+        
+        if (!recheckData) {
+          // Registro foi removido por outro processo
+          setPartnerUsers(prev => prev.filter(p => p.id !== userId));
+          setRemoveMessage(`Parceria com ${partnerName} já foi removida por outro processo.`);
+          await loadFriendRequests();
+          document.dispatchEvent(new CustomEvent('partnersUpdated'));
+        } else if (recheckData.status === 'cancelled') {
+          // Registro já foi cancelado por outro processo
+          setPartnerUsers(prev => prev.filter(p => p.id !== userId));
+          setRemoveMessage(`Parceria com ${partnerName} já foi removida anteriormente.`);
+          await loadFriendRequests();
+          document.dispatchEvent(new CustomEvent('partnersUpdated'));
+        } else {
+          setRemoveMessage(`Erro inesperado ao remover parceria com ${partnerName}. Contate o suporte.`);
+        }
       }
     } catch (error) {
       console.error('Erro inesperado ao remover parceria:', error);
-      setRemoveMessage('Erro inesperado ao remover parceria. Tente novamente.');
+      setRemoveMessage('Erro inesperado ao remover parceria. Contate o suporte.');
     } finally {
       setRemovingPartner(null);
       setShowRemoveConfirm(null);
       
-      // Limpar mensagem após 3 segundos
+      // Limpar mensagem após 5 segundos
       setTimeout(() => {
         setRemoveMessage("");
-      }, 3000);
+      }, 5000);
     }
   };
 
@@ -489,4 +533,3 @@ export default function AddPartnersModal({ isOpen, onClose }: AddPartnersModalPr
     </Dialog>
   );
 }
-
