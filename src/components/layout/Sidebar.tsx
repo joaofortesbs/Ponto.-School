@@ -220,16 +220,16 @@ export default function Sidebar({
         <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center space-x-3 mb-3">
             <div className="w-10 h-10 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-full flex items-center justify-center text-white font-semibold text-sm">
-              {displayName ? displayName.charAt(0).toUpperCase() : 'U'}
+              {(userProfile?.display_name || localStorage.getItem('userFirstName') || 'U').charAt(0).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                {displayName || 'Usuário'}
+                {userProfile?.display_name || localStorage.getItem('userFirstName') || 'Usuário'}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
                 {userProfile?.plan_type || 'Plano Básico'}
               </p>
-            </div>
+            </div></div>
           </div>
 
           {/* Nível e XP */}
