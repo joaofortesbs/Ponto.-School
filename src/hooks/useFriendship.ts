@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, FriendRequest, FriendshipStatus } from '@/types/friendship';
@@ -18,6 +17,28 @@ export const useFriendship = () => {
     };
     getCurrentUser();
   }, []);
+
+  // Função para contar parcerias ativas de um usuário
+  const getPartnershipCount = async (userId: string): Promise<number> => {
+    try {
+      const { count, error } = await supabase
+        .from('friend_requests')
+        .select('*', { count: 'exact', head: true })
+        .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
+        .eq('status', 'accepted')
+        .eq('categoria', 'Parceiro');
+
+      if (error) {
+        console.error('Erro ao contar parcerias:', error);
+        return 0;
+      }
+
+      return count || 0;
+    } catch (error) {
+      console.error('Erro ao contar parcerias:', error);
+      return 0;
+    }
+  };
 
   // Buscar usuários
   const searchUsers = async (query: string) => {
@@ -43,15 +64,19 @@ export const useFriendship = () => {
         return;
       }
 
-      // Mapear dados para incluir username do display_name
-      const mappedUsers = (data || []).map(profile => ({
-        id: profile.id,
-        username: profile.display_name || profile.full_name?.split(' ')[0] || 'usuario',
-        full_name: profile.full_name,
-        display_name: profile.display_name,
-        avatar_url: profile.avatar_url,
-        followers_count: Math.floor(Math.random() * 100), // Temporário até ter dados reais
-        following_count: Math.floor(Math.random() * 50)   // Temporário até ter dados reais
+      // Mapear dados e buscar contagem real de parcerias para cada usuário
+      const mappedUsers = await Promise.all((data || []).map(async (profile) => {
+        const partnershipCount = await getPartnershipCount(profile.id);
+        
+        return {
+          id: profile.id,
+          username: profile.display_name || profile.full_name?.split(' ')[0] || 'usuario',
+          full_name: profile.full_name,
+          display_name: profile.display_name,
+          avatar_url: profile.avatar_url,
+          followers_count: partnershipCount, // Usando o campo existente para armazenar a contagem de parcerias
+          following_count: 0 // Não usado mais, mas mantido para compatibilidade
+        };
       }));
 
       setUsers(mappedUsers);

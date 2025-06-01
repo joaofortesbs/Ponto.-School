@@ -90,6 +90,9 @@ export const UserCard: React.FC<UserCardProps> = ({
     }
   };
 
+  // Determinar o texto a ser exibido para parcerias
+  const partnershipText = user.followers_count === 1 ? '1 Parceria' : `${user.followers_count} Parcerias`;
+
   return (
     <div className="flex items-center justify-between p-5 border-2 border-[#E0E1DD] dark:border-white/10 rounded-2xl bg-white dark:bg-[#0A2540]/30 hover:border-[#FF6B00]/30 dark:hover:border-[#FF6B00]/30 transition-all duration-300 hover:shadow-lg group">
       <div className="flex items-center space-x-4">
@@ -102,7 +105,7 @@ export const UserCard: React.FC<UserCardProps> = ({
           </Avatar>
           
           {/* Badge de Verificação/Premium (Preparado para o futuro) */}
-          {user.followers_count && user.followers_count > 100 && (
+          {user.followers_count && user.followers_count > 10 && (
             <div className="absolute -top-1 -right-1 h-6 w-6 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full border-2 border-white dark:border-[#0A2540] flex items-center justify-center">
               <Crown className="h-3 w-3 text-white" />
             </div>
@@ -114,7 +117,7 @@ export const UserCard: React.FC<UserCardProps> = ({
             <h3 className="font-semibold text-[#29335C] dark:text-white text-lg truncate">
               {user.full_name || user.display_name || user.username || 'Usuário'}
             </h3>
-            {user.followers_count && user.followers_count > 50 && (
+            {user.followers_count && user.followers_count > 5 && (
               <Verified className="h-4 w-4 text-blue-500 flex-shrink-0" />
             )}
           </div>
@@ -123,19 +126,11 @@ export const UserCard: React.FC<UserCardProps> = ({
             @{user.username || 'usuario'}
           </p>
           
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-1 text-xs">
-              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              <span className="text-[#64748B] dark:text-white/60 font-medium">
-                {user.followers_count || 0} seguidores
-              </span>
-            </div>
-            <div className="flex items-center space-x-1 text-xs">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span className="text-[#64748B] dark:text-white/60 font-medium">
-                {user.following_count || 0} seguindo
-              </span>
-            </div>
+          <div className="flex items-center space-x-1 text-xs">
+            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+            <span className="text-[#64748B] dark:text-white/60 font-medium">
+              {partnershipText}
+            </span>
           </div>
         </div>
       </div>
