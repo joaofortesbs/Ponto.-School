@@ -137,17 +137,47 @@ export default function AddPaymentMethodModal({
         is_verified: false
       };
 
-      // Salvar no Supabase
+      // Primeiro, buscar configurações existentes
+      const { data: existingSettings, error: fetchError } = await supabase
+        .from("user_settings")
+        .select("*")
+        .eq("user_id", userProfile?.id)
+        .single();
+
+      let currentPaymentMethods = [];
+      
+      if (!fetchError && existingSettings?.payment_settings?.paymentMethods) {
+        currentPaymentMethods = existingSettings.payment_settings.paymentMethods;
+      }
+
+      // Se este é o primeiro método ou foi marcado como padrão, definir como padrão
+      if (currentPaymentMethods.length === 0 || paymentMethod.is_default) {
+        currentPaymentMethods.forEach((method: any) => {
+          method.is_default = false;
+        });
+        paymentMethod.is_default = true;
+      }
+
+      const updatedPaymentMethods = [...currentPaymentMethods, paymentMethod];
+
+      // Criar objeto de configurações completo
+      const paymentSettings = {
+        paymentMethods: updatedPaymentMethods,
+        billingAddress: formData.billingAddress,
+        autoRenewal: true,
+        invoiceEmail: userProfile?.email || ""
+      };
+
+      // Salvar ou atualizar configurações
       const { error } = await supabase
         .from("user_settings")
         .upsert({
           user_id: userProfile?.id,
-          payment_settings: {
-            paymentMethods: [paymentMethod],
-            billingAddress: formData.billingAddress,
-            autoRenewal: true,
-            invoiceEmail: userProfile?.email || ""
-          },
+          payment_settings: paymentSettings,
+          security_settings: existingSettings?.security_settings || {},
+          notification_settings: existingSettings?.notification_settings || {},
+          privacy_settings: existingSettings?.privacy_settings || {},
+          wallet_settings: existingSettings?.wallet_settings || {},
           updated_at: new Date().toISOString()
         }, {
           onConflict: "user_id"

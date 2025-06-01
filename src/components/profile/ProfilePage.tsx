@@ -190,7 +190,7 @@ export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
               <div className="flex-1">
                 <ProfileHeader
                   userProfile={userProfile}
-                  onEditClick={() => setExpandedSection("account")}
+                  onProfileUpdate={setUserProfile}
                 />
               </div>
 

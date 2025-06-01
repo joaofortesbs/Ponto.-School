@@ -70,7 +70,6 @@ export default function SettingsTab({
   // Estados para configurações reais do usuário
   const [accountSettings, setAccountSettings] = useState({
     displayName: userProfile?.display_name || "",
-    username: userProfile?.username || "",
     email: contactInfo.email,
     currentPassword: "",
     newPassword: "",
@@ -159,11 +158,20 @@ export default function SettingsTab({
         .from("profiles")
         .update({
           display_name: accountSettings.displayName,
-          username: accountSettings.username,
+          full_name: accountSettings.displayName,
         })
         .eq("id", userProfile?.id);
 
       if (error) throw error;
+
+      // Atualizar perfil local
+      if (setUserProfile) {
+        setUserProfile(prev => prev ? {
+          ...prev,
+          display_name: accountSettings.displayName,
+          full_name: accountSettings.displayName
+        } : null);
+      }
 
       // Atualizar senha se fornecida
       if (accountSettings.newPassword && accountSettings.currentPassword) {
@@ -395,14 +403,17 @@ export default function SettingsTab({
                   />
                 </div>
                 <div>
-                  <Label htmlFor="username">Nome de Usuário</Label>
+                  <Label htmlFor="fullName">Nome Completo</Label>
                   <Input
-                    id="username"
-                    value={accountSettings.username}
-                    onChange={(e) => setAccountSettings(prev => ({ ...prev, username: e.target.value }))}
-                    placeholder="Digite seu username"
+                    id="fullName"
+                    value={accountSettings.displayName}
+                    onChange={(e) => setAccountSettings(prev => ({ ...prev, displayName: e.target.value }))}
+                    placeholder="Digite seu nome completo"
                     className="mt-1"
                   />
+                  <p className="text-xs text-[#64748B] dark:text-white/60 mt-1">
+                    Este será seu nome público na plataforma
+                  </p>
                 </div>
               </div>
 

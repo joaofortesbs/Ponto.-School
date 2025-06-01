@@ -25,7 +25,7 @@ import {
   UserPlus,
   UserCheck
 } from "lucide-react";
-
+import EditProfileModal from "./EditProfileModal";
 import type { UserProfile } from "@/types/user-profile";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabase";
@@ -37,13 +37,15 @@ import AddPartnersModal from "./AddPartnersModal";
 interface ProfileHeaderProps {
   userProfile: UserProfile | null;
   onEditClick: () => void;
+  onProfileUpdate: (updatedProfile: UserProfile) => void;
 }
 
 export default function ProfileHeader({
   userProfile,
   onEditClick,
+  onProfileUpdate
 }: ProfileHeaderProps) {
-  const profileNameRef = useRef<HTMLHeadingElement>(null);
+  const [profileNameRef] = useRef<HTMLHeadingElement>(null);
   const profilePictureRef = useRef<HTMLInputElement>(null);
   const coverPhotoRef = useRef<HTMLInputElement>(null);
   const [displayName, setDisplayName] = useState<string | null>(null);
@@ -61,11 +63,10 @@ export default function ProfileHeader({
   const [showAddPartnersModal, setShowAddPartnersModal] = useState(false);
   const [partnersData, setPartnersData] = useState<any[]>([]);
   const [partnersCount, setPartnersCount] = useState(0);
-  
+  const [showEditModal, setShowEditModal] = useState(false);
+
   // Hook de parceiros
   const { getCurrentPartners, friendRequests, currentUserId } = useFriendship();
-  
-
 
   // Array de conquistas recentes para animação
   const recentAchievements = [
@@ -218,7 +219,7 @@ export default function ProfileHeader({
         const partnerIds = partners.map(p => 
           p.sender_id === currentUserId ? p.receiver_id : p.sender_id
         );
-        
+
         const { data: partnersProfileData } = await supabase
           .from('profiles')
           .select('id, full_name, display_name, avatar_url')
@@ -231,7 +232,7 @@ export default function ProfileHeader({
             full_name: profile.full_name,
             avatar_url: profile.avatar_url
           }));
-          
+
           setPartnersData(formattedPartners);
         }
       } else {
@@ -256,7 +257,7 @@ export default function ProfileHeader({
     };
 
     document.addEventListener('partnersUpdated', handlePartnersUpdate);
-    
+
     return () => {
       document.removeEventListener('partnersUpdated', handlePartnersUpdate);
     };
@@ -862,6 +863,20 @@ export default function ProfileHeader({
     //Implementation for updating the component's state with new profile data.  This is a placeholder.
   }
 
+  const handleEditClick = () => {
+    if (onEditClick) {
+      onEditClick();
+    } else {
+      setShowEditModal(true);
+    }
+  };
+
+  const handleProfileUpdate = (updatedProfile: UserProfile) => {
+    if (onProfileUpdate) {
+      onProfileUpdate(updatedProfile);
+    }
+  };
+
   return (
     <div
       className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 shadow-lg overflow-hidden relative group hover:shadow-2xl transition-all duration-500"
@@ -877,7 +892,7 @@ export default function ProfileHeader({
 
       {/* Partículas animadas (visíveis no hover) */}
       <AnimatePresence>
-        {isHovering && (
+The code has been modified to include the EditProfileModal and the functionality to handle the edit profile button.        {isHovering && (
           <>
             {[...Array(6)].map((_, i) => (
               <motion.div
@@ -1324,7 +1339,7 @@ export default function ProfileHeader({
               <p className="text-base font-bold text-[#29335C] dark:text-white">{partnersCount}</p>
               <p className="text-[10px] text-[#64748B] dark:text-white/60">Parceiros</p>
             </div>
-            
+
             {/* Tooltip com lista de parceiros */}
             {showFollowersTooltip && (
               <motion.div
@@ -1351,7 +1366,7 @@ export default function ProfileHeader({
                         <Users className="h-3 w-3 text-[#FF6B00]" />
                         {partnersCount} Parceiro{partnersCount > 1 ? 's' : ''}
                       </div>
-                      
+
                       {/* Lista de parceiros */}
                       <div className="space-y-1.5 max-h-32 overflow-y-auto">
                         {partnersData.slice(0, 6).map((partner, index) => (
@@ -1366,14 +1381,14 @@ export default function ProfileHeader({
                             </div>
                           </div>
                         ))}
-                        
+
                         {partnersData.length > 6 && (
                           <div className="text-[#64748B] dark:text-white/60 text-xs mt-1">
                             +{partnersData.length - 6} mais
                           </div>
                         )}
                       </div>
-                      
+
                       <div className="mt-2 pt-2 border-t border-[#E0E1DD] dark:border-white/10">
                         <div className="text-[#64748B] dark:text-white/60 text-xs">
                           Clique para gerenciar parceiros
@@ -1493,8 +1508,7 @@ export default function ProfileHeader({
                   </motion.div>
                 )}
               </AnimatePresence>
-            </div>
-          </div>
+            </div>          </div>
           <div className="h-2 w-full bg-slate-100 dark:bg-slate-800/50 rounded-full overflow-hidden shadow-inner">
             <div
               className="h-full bg-gradient-to-r from-[#FF6B00] via-[#FF9B50] to-[#FF6B00] rounded-full progress-animation relative"
@@ -1529,7 +1543,7 @@ export default function ProfileHeader({
         >
           <Button
             className="flex-1 bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] hover:from-[#FF5B00] hover:to-[#FF8B40] text-white text-xs h-8 shadow-sm hover:shadow hover:shadow-[#FF6B00]/20 transition-all duration-300 group flex items-center justify-center relative overflow-hidden"
-            onClick={onEditClick}
+            onClick={handleEditClick}
             disabled={isUploading}
           >
             {/* Efeito de brilho no hover */}
@@ -1554,8 +1568,6 @@ export default function ProfileHeader({
             <span className="absolute w-0 h-0 rounded-full bg-[#FF6B00]/10 opacity-0 group-active/share:w-16 group-active/share:h-16 group-active/share:opacity-100 transition-all duration-500 -z-10"></span>
           </Button>
         </motion.div>
-
-        
 
         {/* Conquistas recentes ou estado vazio - reduzido */}
         <motion.div
@@ -1608,9 +1620,8 @@ export default function ProfileHeader({
           </div>
         </motion.div>
       </div>
-      
-      
-    {/* Modal de Adicionar Parceiros */}
+
+      {/* Modal de Adicionar Parceiros */}
       {showAddPartnersModal && (
         <AddPartnersModal
           isOpen={showAddPartnersModal}
@@ -1623,6 +1634,14 @@ export default function ProfileHeader({
           }}
         />
       )}
+
+      {/* Modal de Edição de Perfil */}
+      <EditProfileModal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        userProfile={userProfile}
+        onProfileUpdate={handleProfileUpdate}
+      />
     </div>
   );
 }
