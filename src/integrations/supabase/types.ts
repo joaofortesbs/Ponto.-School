@@ -162,6 +162,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_account_info: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          nome_completo: string
+          nome_exibicao: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: string
+          nome_completo: string
+          nome_exibicao: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          nome_completo?: string
+          nome_exibicao?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_education: {
         Row: {
           created_at: string | null
@@ -246,6 +276,156 @@ export type Database = {
         }
         Relationships: []
       }
+      user_notification_settings: {
+        Row: {
+          created_at: string | null
+          email: boolean | null
+          id: string
+          lembretes_estudo: boolean | null
+          push: boolean | null
+          relatorios_semanais: boolean | null
+          som_notificacoes: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          email?: boolean | null
+          id?: string
+          lembretes_estudo?: boolean | null
+          push?: boolean | null
+          relatorios_semanais?: boolean | null
+          som_notificacoes?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: boolean | null
+          id?: string
+          lembretes_estudo?: boolean | null
+          push?: boolean | null
+          relatorios_semanais?: boolean | null
+          som_notificacoes?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_payment_methods: {
+        Row: {
+          ano_validade: number
+          brand: string | null
+          cpf_portador: string
+          created_at: string | null
+          endereco_cobranca: string | null
+          id: string
+          mes_validade: number
+          metodo_padrao: boolean | null
+          nome_portador: string
+          numero_cartao_last4: string
+          telefone: string | null
+          tipo_cartao: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          ano_validade: number
+          brand?: string | null
+          cpf_portador: string
+          created_at?: string | null
+          endereco_cobranca?: string | null
+          id?: string
+          mes_validade: number
+          metodo_padrao?: boolean | null
+          nome_portador: string
+          numero_cartao_last4: string
+          telefone?: string | null
+          tipo_cartao: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          ano_validade?: number
+          brand?: string | null
+          cpf_portador?: string
+          created_at?: string | null
+          endereco_cobranca?: string | null
+          id?: string
+          mes_validade?: number
+          metodo_padrao?: boolean | null
+          nome_portador?: string
+          numero_cartao_last4?: string
+          telefone?: string | null
+          tipo_cartao?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_payment_subscription: {
+        Row: {
+          created_at: string | null
+          email_faturas: string
+          id: string
+          renovacao_automatica: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          email_faturas: string
+          id?: string
+          renovacao_automatica?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          email_faturas?: string
+          id?: string
+          renovacao_automatica?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_privacy_settings: {
+        Row: {
+          coleta_dados_melhorias: boolean | null
+          created_at: string | null
+          id: string
+          mostrar_email: boolean | null
+          mostrar_telefone: boolean | null
+          permitir_mensagens: boolean | null
+          updated_at: string | null
+          user_id: string
+          visibilidade_perfil: string
+        }
+        Insert: {
+          coleta_dados_melhorias?: boolean | null
+          created_at?: string | null
+          id?: string
+          mostrar_email?: boolean | null
+          mostrar_telefone?: boolean | null
+          permitir_mensagens?: boolean | null
+          updated_at?: string | null
+          user_id: string
+          visibilidade_perfil?: string
+        }
+        Update: {
+          coleta_dados_melhorias?: boolean | null
+          created_at?: string | null
+          id?: string
+          mostrar_email?: boolean | null
+          mostrar_telefone?: boolean | null
+          permitir_mensagens?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+          visibilidade_perfil?: string
+        }
+        Relationships: []
+      }
       user_profiles_bio: {
         Row: {
           bio: string | null
@@ -265,6 +445,36 @@ export type Database = {
           bio?: string | null
           created_at?: string | null
           id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_security_settings: {
+        Row: {
+          autenticacao_2fa: boolean | null
+          created_at: string | null
+          id: string
+          notificacoes_login: boolean | null
+          timeout_sessao: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          autenticacao_2fa?: boolean | null
+          created_at?: string | null
+          id?: string
+          notificacoes_login?: boolean | null
+          timeout_sessao?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          autenticacao_2fa?: boolean | null
+          created_at?: string | null
+          id?: string
+          notificacoes_login?: boolean | null
+          timeout_sessao?: number | null
           updated_at?: string | null
           user_id?: string
         }
@@ -331,6 +541,39 @@ export type Database = {
           priority?: string | null
           status?: string | null
           title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_wallet_settings: {
+        Row: {
+          created_at: string | null
+          id: string
+          limite_gastos: number | null
+          recarga_automatica: boolean | null
+          saldo_atual: number | null
+          school_points: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          limite_gastos?: number | null
+          recarga_automatica?: boolean | null
+          saldo_atual?: number | null
+          school_points?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          limite_gastos?: number | null
+          recarga_automatica?: boolean | null
+          saldo_atual?: number | null
+          school_points?: number | null
           updated_at?: string | null
           user_id?: string
         }
