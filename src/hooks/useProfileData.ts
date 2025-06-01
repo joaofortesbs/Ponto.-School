@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { toast } from '@/hooks/use-toast';
 
 interface Education {
   id: string;
@@ -108,7 +108,11 @@ export const useProfileData = () => {
 
     } catch (error) {
       console.error('Erro ao carregar dados do perfil:', error);
-      toast.error('Erro ao carregar dados do perfil');
+      toast({
+        title: "Erro",
+        description: "Erro ao carregar dados do perfil",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
@@ -130,16 +134,27 @@ export const useProfileData = () => {
 
       if (error) {
         console.error('Erro ao salvar biografia:', error);
-        toast.error('Erro ao salvar biografia');
+        toast({
+          title: "Erro",
+          description: "Erro ao salvar biografia",
+          variant: "destructive"
+        });
         return false;
       }
 
       setBio(newBio);
-      toast.success('Biografia salva com sucesso!');
+      toast({
+        title: "Sucesso",
+        description: "Biografia salva com sucesso!"
+      });
       return true;
     } catch (error) {
       console.error('Erro ao salvar biografia:', error);
-      toast.error('Erro ao salvar biografia');
+      toast({
+        title: "Erro",
+        description: "Erro ao salvar biografia",
+        variant: "destructive"
+      });
       return false;
     }
   };
@@ -168,7 +183,11 @@ export const useProfileData = () => {
 
       if (error) {
         console.error('Erro ao adicionar educação:', error);
-        toast.error('Erro ao adicionar educação');
+        toast({
+          title: "Erro",
+          description: "Erro ao adicionar educação",
+          variant: "destructive"
+        });
         return false;
       }
 
@@ -178,11 +197,18 @@ export const useProfileData = () => {
       };
 
       setEducation(prev => [educationWithId, ...prev]);
-      toast.success('Educação adicionada com sucesso!');
+      toast({
+        title: "Sucesso",
+        description: "Educação adicionada com sucesso!"
+      });
       return true;
     } catch (error) {
       console.error('Erro ao adicionar educação:', error);
-      toast.error('Erro ao adicionar educação');
+      toast({
+        title: "Erro",
+        description: "Erro ao adicionar educação",
+        variant: "destructive"
+      });
       return false;
     }
   };
@@ -201,16 +227,27 @@ export const useProfileData = () => {
 
       if (error) {
         console.error('Erro ao remover educação:', error);
-        toast.error('Erro ao remover educação');
+        toast({
+          title: "Erro",
+          description: "Erro ao remover educação",
+          variant: "destructive"
+        });
         return false;
       }
 
       setEducation(prev => prev.filter(edu => edu.id !== educationId));
-      toast.success('Educação removida com sucesso!');
+      toast({
+        title: "Sucesso",
+        description: "Educação removida com sucesso!"
+      });
       return true;
     } catch (error) {
       console.error('Erro ao remover educação:', error);
-      toast.error('Erro ao remover educação');
+      toast({
+        title: "Erro",
+        description: "Erro ao remover educação",
+        variant: "destructive"
+      });
       return false;
     }
   };
@@ -234,7 +271,11 @@ export const useProfileData = () => {
 
       if (error) {
         console.error('Erro ao adicionar habilidade:', error);
-        toast.error('Erro ao adicionar habilidade');
+        toast({
+          title: "Erro",
+          description: "Erro ao adicionar habilidade",
+          variant: "destructive"
+        });
         return false;
       }
 
@@ -244,11 +285,18 @@ export const useProfileData = () => {
       };
 
       setSkills(prev => [...prev, skillWithId]);
-      toast.success('Habilidade adicionada com sucesso!');
+      toast({
+        title: "Sucesso",
+        description: "Habilidade adicionada com sucesso!"
+      });
       return true;
     } catch (error) {
       console.error('Erro ao adicionar habilidade:', error);
-      toast.error('Erro ao adicionar habilidade');
+      toast({
+        title: "Erro",
+        description: "Erro ao adicionar habilidade",
+        variant: "destructive"
+      });
       return false;
     }
   };
@@ -267,16 +315,27 @@ export const useProfileData = () => {
 
       if (error) {
         console.error('Erro ao remover habilidade:', error);
-        toast.error('Erro ao remover habilidade');
+        toast({
+          title: "Erro",
+          description: "Erro ao remover habilidade",
+          variant: "destructive"
+        });
         return false;
       }
 
       setSkills(prev => prev.filter(skill => skill.id !== skillId));
-      toast.success('Habilidade removida com sucesso!');
+      toast({
+        title: "Sucesso",
+        description: "Habilidade removida com sucesso!"
+      });
       return true;
     } catch (error) {
       console.error('Erro ao remover habilidade:', error);
-      toast.error('Erro ao remover habilidade');
+      toast({
+        title: "Erro",
+        description: "Erro ao remover habilidade",
+        variant: "destructive"
+      });
       return false;
     }
   };
@@ -299,7 +358,11 @@ export const useProfileData = () => {
 
       if (error) {
         console.error('Erro ao adicionar interesse:', error);
-        toast.error('Erro ao adicionar interesse');
+        toast({
+          title: "Erro",
+          description: "Erro ao adicionar interesse",
+          variant: "destructive"
+        });
         return false;
       }
 
@@ -309,11 +372,18 @@ export const useProfileData = () => {
       };
 
       setInterests(prev => [...prev, interestWithId]);
-      toast.success('Interesse adicionado com sucesso!');
+      toast({
+        title: "Sucesso",
+        description: "Interesse adicionado com sucesso!"
+      });
       return true;
     } catch (error) {
       console.error('Erro ao adicionar interesse:', error);
-      toast.error('Erro ao adicionar interesse');
+      toast({
+        title: "Erro",
+        description: "Erro ao adicionar interesse",
+        variant: "destructive"
+      });
       return false;
     }
   };
@@ -332,16 +402,27 @@ export const useProfileData = () => {
 
       if (error) {
         console.error('Erro ao remover interesse:', error);
-        toast.error('Erro ao remover interesse');
+        toast({
+          title: "Erro",
+          description: "Erro ao remover interesse",
+          variant: "destructive"
+        });
         return false;
       }
 
       setInterests(prev => prev.filter(interest => interest.id !== interestId));
-      toast.success('Interesse removido com sucesso!');
+      toast({
+        title: "Sucesso",
+        description: "Interesse removido com sucesso!"
+      });
       return true;
     } catch (error) {
       console.error('Erro ao remover interesse:', error);
-      toast.error('Erro ao remover interesse');
+      toast({
+        title: "Erro",
+        description: "Erro ao remover interesse",
+        variant: "destructive"
+      });
       return false;
     }
   };
