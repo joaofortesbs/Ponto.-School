@@ -218,15 +218,33 @@ export default function Sidebar({
           </div>
         </div>
 
-        <SidebarNav
-          isCollapsed={sidebarCollapsed}
-          onToggleCollapse={handleToggleCollapse}
-          className={cn(
-            "p-2",
-            sidebarCollapsed ? "pt-8" : "pt-4"
-          )}
-          showToggleButton={isHovered}
-        />
+        <div className="relative">
+          <SidebarNav
+            isCollapsed={sidebarCollapsed}
+            onToggleCollapse={handleToggleCollapse}
+            className={cn(
+              "p-2",
+              sidebarCollapsed ? "pt-8" : "pt-4"
+            )}
+          />
+
+          {/* Toggle Button - positioned at the top */}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleToggleCollapse}
+            className={cn(
+              "h-6 w-6 rounded-full bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20 border-[#FF6B00]/30 transition-all duration-300 absolute top-4 right-2 shadow-sm hover:shadow-md z-10",
+              isHovered ? "opacity-100" : "opacity-0"
+            )}
+          >
+            {sidebarCollapsed ? (
+              <ChevronRight className="h-3 w-3" />
+            ) : (
+              <ChevronLeft className="h-3 w-3" />
+            )}
+          </Button>
+        </div>
       </aside>
     </>
   );
