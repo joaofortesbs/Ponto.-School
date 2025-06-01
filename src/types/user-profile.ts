@@ -16,6 +16,7 @@ export interface UserProfile {
   location?: string;
   state?: string;
   student_title?: string;
+  activity_status?: string;
   website?: string;
   level?: number;
   rank?: string;

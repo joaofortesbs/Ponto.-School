@@ -1001,22 +1001,36 @@ The code has been modified to include the EditProfileModal and the functionality
           }}
         />
 
-        {/* Status badge animado */}
-        <div className="absolute top-3 right-3 z-10">
-          <motion.div
-            className="bg-[#00b894]/90 text-white text-xs py-0.5 px-2 rounded-full flex items-center shadow-lg backdrop-blur-sm"
-            initial={{ y: -10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.5, duration: 0.3 }}
-          >
-            <motion.span
-              className="w-1.5 h-1.5 rounded-full bg-white mr-1.5"
-              animate={{ scale: [1, 1.5, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            />
-            Online
-          </motion.div>
-        </div>
+        {/* Status indicator */}
+        <motion.div
+          className="absolute top-3 right-3 flex items-center gap-2"
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.3, duration: 0.3 }}
+        >
+          {userProfile?.activity_status && (
+            <div className={`px-2 py-1 rounded-full text-[10px] font-medium flex items-center gap-1 ${
+              userProfile.activity_status === 'online' ? 'bg-green-500/20 border border-green-500/30 text-green-400' :
+              userProfile.activity_status === 'ocupado' ? 'bg-red-500/20 border border-red-500/30 text-red-400' :
+              userProfile.activity_status === 'estudando' ? 'bg-blue-500/20 border border-blue-500/30 text-blue-400' :
+              userProfile.activity_status === 'trabalhando' ? 'bg-yellow-500/20 border border-yellow-500/30 text-yellow-400' :
+              'bg-green-500/20 border border-green-500/30 text-green-400'
+            }`}>
+              <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${
+                userProfile.activity_status === 'online' ? 'bg-green-400' :
+                userProfile.activity_status === 'ocupado' ? 'bg-red-400' :
+                userProfile.activity_status === 'estudando' ? 'bg-blue-400' :
+                userProfile.activity_status === 'trabalhando' ? 'bg-yellow-400' :
+                'bg-green-400'
+              }`}></div>
+              {userProfile.activity_status === 'online' ? 'Online' :
+               userProfile.activity_status === 'ocupado' ? 'Ocupado' :
+               userProfile.activity_status === 'estudando' ? 'Estudando' :
+               userProfile.activity_status === 'trabalhando' ? 'Trabalhando' :
+               'Online'}
+            </div>
+          )}
+        </motion.div>
 
         {/* Nível destacado */}
         <div className="absolute top-3 left-3 z-10 flex items-center gap-2">
