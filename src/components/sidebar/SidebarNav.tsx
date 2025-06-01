@@ -70,6 +70,7 @@ export function SidebarNav({
   const [isUploading, setIsUploading] = useState(false);
   const [firstName, setFirstName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showToggleButton, setShowToggleButton] = useState(true);
 
   useEffect(() => {
     // Listener para atualizações de avatar feitas em outros componentes
@@ -110,17 +111,17 @@ export function SidebarNav({
         const storedFirstName = localStorage.getItem('userFirstName');
         const storedDisplayName = localStorage.getItem('userDisplayName');
         const storedAvatarUrl = localStorage.getItem('userAvatarUrl');
-        
+
         if (storedDisplayName) {
           setFirstName(storedDisplayName);
         } else if (storedFirstName) {
           setFirstName(storedFirstName);
         }
-        
+
         if (storedAvatarUrl) {
           setProfileImage(storedAvatarUrl);
         }
-        
+
         // Depois buscar do Supabase para dados atualizados
         const {
           data: { user },
@@ -138,7 +139,7 @@ export function SidebarNav({
             if (!firstName) setFirstName("Usuário"); // Fallback if profile fetch fails
           } else if (data) {
             setUserProfile(data as UserProfile);
-            
+
             // Se o perfil tiver um avatar_url, usar ele e atualizar localStorage
             if (data.avatar_url) {
               setProfileImage(data.avatar_url);
@@ -150,10 +151,10 @@ export function SidebarNav({
                            data.display_name || 
                            data.username || 
                            "";
-            
+
             setFirstName(firstName);
             localStorage.setItem('userFirstName', firstName);
-            
+
             // Disparar evento para outros componentes
             document.dispatchEvent(new CustomEvent('usernameUpdated', { 
               detail: { 
@@ -186,7 +187,7 @@ export function SidebarNav({
     if (file) {
       try {
         setIsUploading(true);
-        
+
         // Obter o usuário atual
         const { data: currentUser } = await supabase.auth.getUser();
         if (!currentUser.user) {
@@ -236,10 +237,10 @@ export function SidebarNav({
 
         // Atualizar o estado local
         setProfileImage(publicUrlData.publicUrl);
-        
+
         // Salvar no localStorage para persistência
         localStorage.setItem('userAvatarUrl', publicUrlData.publicUrl);
-        
+
         // Disparar evento para outros componentes saberem que o avatar foi atualizado
         document.dispatchEvent(new CustomEvent('userAvatarUpdated', { 
           detail: { url: publicUrlData.publicUrl } 
@@ -521,13 +522,13 @@ export function SidebarNav({
             </div>
           </div>
         </div>
-        
+
         {isUploading && (
           <div className="mb-3 text-xs text-gray-500 dark:text-gray-400">
             Enviando...
           </div>
         )}
-        
+
         {/* Hidden File Input */}
         <input
           ref={fileInputRef}
@@ -564,11 +565,11 @@ export function SidebarNav({
                       const previousLevelXP = (currentLevel - 1) * 1000;
                       const xpInCurrentLevel = currentXP - previousLevelXP;
                       const xpNeededForLevel = xpForNextLevel - previousLevelXP;
-                      
+
                       if (currentLevel === 1 && currentXP === 0) {
                         return 0; // Usuário novo sem XP
                       }
-                      
+
                       return xpNeededForLevel > 0 ? Math.round((xpInCurrentLevel / xpNeededForLevel) * 100) : 0;
                     })()}%` 
                   }}
@@ -579,11 +580,11 @@ export function SidebarNav({
                   const currentXP = userProfile?.experience_points || 0;
                   const currentLevel = userProfile?.level || 1;
                   const xpForNextLevel = currentLevel * 1000;
-                  
+
                   if (currentLevel === 1 && currentXP === 0) {
                     return "0 XP / 1.000 XP"; // Usuário novo
                   }
-                  
+
                   return `${currentXP.toLocaleString()} XP / ${xpForNextLevel.toLocaleString()} XP`;
                 })()}
               </span>
@@ -766,7 +767,28 @@ export function SidebarNav({
                 )}
             </div>
           ))}
-        </nav>
+        
+      {/* Toggle Button - positioned as last component */}
+      {showToggleButton && (
+        <div className="px-2 pb-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={onToggleCollapse}
+            className={cn(
+              "h-6 w-6 rounded-full bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20 border-[#FF6B00]/30 transition-all duration-300 shadow-sm hover:shadow-md w-full",
+              isCollapsed ? "mx-auto" : ""
+            )}
+          >
+            {isCollapsed ? (
+              <ChevronRight className="h-3 w-3" />
+            ) : (
+              <ChevronLeft className="h-3 w-3" />
+            )}
+          </Button>
+        </div>
+      )}
+    </nav>
       </ScrollArea>
     </div>
   );
