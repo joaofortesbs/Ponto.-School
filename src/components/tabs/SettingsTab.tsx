@@ -217,15 +217,15 @@ export default function SettingsTab({
       }
 
       // Carregar métodos de pagamento
-      const { data: paymentInfo } = await supabase
+      const { data: paymentMethodsInfo } = await supabase
         .from('user_settings')
         .select('payment_settings')
         .eq('user_id', user.id)
         .single();
 
-      if (paymentInfo?.payment_settings?.paymentMethods) {
+      if (paymentMethodsInfo?.payment_settings?.paymentMethods) {
         setPaymentSettings({
-          paymentMethods: paymentInfo.payment_settings.paymentMethods
+          paymentMethods: paymentMethodsInfo.payment_settings.paymentMethods
         });
       }
 
