@@ -33,11 +33,11 @@ export default function PortalPage() {
         <div className="p-6">
           <div className="flex items-center gap-2 mb-4">
             <Construction className="h-5 w-5 text-[#FF6B00]" />
-            <h2 className="text-xl font-bold text-[#29335C] dark:text-white">Mercado em Desenvolvimento</h2>
+            <h2 className="text-xl font-bold text-[#29335C] dark:text-white">Portal em Desenvolvimento</h2>
           </div>
 
           <p className="text-gray-600 dark:text-gray-300 mb-6">
-            Estamos trabalhando para criar um espaço onde você poderá adquirir cursos, materiais educacionais e recursos exclusivos para impulsionar seus estudos.
+            Estamos trabalhando para criar um espaço onde você poderá organizar todo o seu conhecimento, materiais educacionais e recursos exclusivos para impulsionar seus estudos.
           </p>
 
           <div className="bg-[#F8F9FA] dark:bg-[#051a33] rounded-lg p-4 mb-6 border border-gray-100 dark:border-gray-800">
@@ -79,7 +79,7 @@ export default function PortalPage() {
               animate={{ opacity: 1, height: "auto" }}
               className="text-xs text-center text-green-600 dark:text-green-400 mt-2"
             >
-              Você receberá um aviso quando o Mercado estiver disponível!
+              Você receberá um aviso quando o Portal estiver disponível!
             </motion.p>
           )}
         </div>
