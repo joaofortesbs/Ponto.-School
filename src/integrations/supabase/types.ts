@@ -65,6 +65,7 @@ export type Database = {
       }
       friend_requests: {
         Row: {
+          categoria: string
           created_at: string | null
           id: string
           receiver_id: string
@@ -73,6 +74,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          categoria?: string
           created_at?: string | null
           id?: string
           receiver_id: string
@@ -81,6 +83,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          categoria?: string
           created_at?: string | null
           id?: string
           receiver_id?: string

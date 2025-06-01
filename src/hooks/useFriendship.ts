@@ -200,26 +200,35 @@ export const useFriendship = () => {
     }
   };
 
-  // Remover parceria (cancelar amizade aceita)
-  const removeFriendship = async (friendId: string) => {
+  // Atualizar categoria da parceria
+  const updatePartnershipCategory = async (partnerId: string, newCategory: 'Parceiro' | 'Ex-Parceiro') => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        throw new Error('Usuário não autenticado');
+      }
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('friend_requests')
-        .update({ status: 'cancelled' })
-        .or(`and(sender_id.eq.${user.id},receiver_id.eq.${friendId}),and(sender_id.eq.${friendId},receiver_id.eq.${user.id})`)
-        .eq('status', 'accepted');
+        .update({ categoria: newCategory })
+        .or(`and(sender_id.eq.${user.id},receiver_id.eq.${partnerId}),and(sender_id.eq.${partnerId},receiver_id.eq.${user.id})`)
+        .eq('status', 'accepted')
+        .select();
 
       if (error) {
-        console.error('Erro ao remover parceria:', error);
-        return;
+        console.error('Erro ao atualizar categoria:', error);
+        throw error;
+      }
+
+      if (!data || data.length === 0) {
+        throw new Error('Nenhuma parceria encontrada para atualizar');
       }
 
       await loadFriendRequests();
+      return true;
     } catch (error) {
-      console.error('Erro ao remover parceria:', error);
+      console.error('Erro ao atualizar categoria da parceria:', error);
+      throw error;
     }
   };
 
@@ -230,11 +239,28 @@ export const useFriendship = () => {
     );
   };
 
-  // Obter parceiros atuais (amizades aceitas)
-  const getCurrentPartners = () => {
+  // Obter parceiros atuais por categoria
+  const getPartnersByCategory = (categoria: 'Parceiro' | 'Ex-Parceiro') => {
     return friendRequests.filter(
-      req => (req.receiver_id === currentUserId || req.sender_id === currentUserId) && req.status === 'accepted'
+      req => (req.receiver_id === currentUserId || req.sender_id === currentUserId) && 
+             req.status === 'accepted' && 
+             req.categoria === categoria
     );
+  };
+
+  // Obter todos os parceiros (mantendo compatibilidade)
+  const getCurrentPartners = () => {
+    return getPartnersByCategory('Parceiro');
+  };
+
+  // Obter categoria atual de um parceiro
+  const getPartnerCategory = (partnerId: string): 'Parceiro' | 'Ex-Parceiro' | null => {
+    const partnership = friendRequests.find(
+      req => (req.receiver_id === currentUserId || req.sender_id === currentUserId) && 
+             (req.receiver_id === partnerId || req.sender_id === partnerId) &&
+             req.status === 'accepted'
+    );
+    return partnership?.categoria || null;
   };
 
   // Obter ID da solicitação recebida
@@ -269,10 +295,12 @@ export const useFriendship = () => {
     acceptFriendRequest,
     rejectFriendRequest,
     cancelFriendRequest,
-    removeFriendship,
+    updatePartnershipCategory,
     loadFriendRequests,
     getPendingReceivedRequests,
     getCurrentPartners,
+    getPartnersByCategory,
+    getPartnerCategory,
     getReceivedRequestId
   };
 };
