@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/lib/supabase";
 import type { UserProfile } from "@/types/user-profile";
+import AddPaymentMethodModal from "./AddPaymentMethodModal";
 import {
   User,
   Lock,
@@ -64,6 +65,7 @@ export default function SettingsTab({
 }: SettingsTabProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showAddPaymentModal, setShowAddPaymentModal] = useState(false);
 
   // Estados para configurações reais do usuário
   const [accountSettings, setAccountSettings] = useState({
@@ -133,6 +135,17 @@ export default function SettingsTab({
         setNotificationSettings(prev => ({ ...prev, ...settings.notification_settings }));
         setPrivacySettings(prev => ({ ...prev, ...settings.privacy_settings }));
         setWalletSettings(prev => ({ ...prev, ...settings.wallet_settings }));
+        
+        // Carregar métodos de pagamento
+        if (settings.payment_settings?.paymentMethods) {
+          setPaymentSettings(prev => ({
+            ...prev,
+            paymentMethods: settings.payment_settings.paymentMethods,
+            billingAddress: settings.payment_settings.billingAddress || "",
+            autoRenewal: settings.payment_settings.autoRenewal ?? true,
+            invoiceEmail: settings.payment_settings.invoiceEmail || contactInfo.email
+          }));
+        }
       }
     } catch (error) {
       console.error("Erro ao carregar configurações:", error);
@@ -179,13 +192,24 @@ export default function SettingsTab({
   const saveSettings = async (settingsType: string, settings: any) => {
     setIsLoading(true);
     try {
+      const updateData: any = {
+        user_id: userProfile?.id,
+        updated_at: new Date().toISOString(),
+      };
+
+      // Para configurações de pagamento, manter os métodos existentes
+      if (settingsType === "payment_settings") {
+        updateData[settingsType] = {
+          ...settings,
+          paymentMethods: paymentSettings.paymentMethods
+        };
+      } else {
+        updateData[settingsType] = settings;
+      }
+
       const { error } = await supabase
         .from("user_settings")
-        .upsert({
-          user_id: userProfile?.id,
-          [settingsType]: settings,
-          updated_at: new Date().toISOString(),
-        });
+        .upsert(updateData);
 
       if (error) throw error;
       toggleSection(null);
@@ -197,25 +221,135 @@ export default function SettingsTab({
   };
 
   const addPaymentMethod = () => {
-    // Implementar modal para adicionar método de pagamento
-    console.log("Adicionar método de pagamento");
+    setShowAddPaymentModal(true);
   };
 
-  const removePaymentMethod = (id: string) => {
-    setPaymentSettings(prev => ({
-      ...prev,
-      paymentMethods: prev.paymentMethods.filter(method => method.id !== id)
-    }));
+  const handleAddPaymentMethod = async (newMethod: any) => {
+    try {
+      // Obter configurações existentes
+      const { data: existingSettings } = await supabase
+        .from("user_settings")
+        .select("payment_settings")
+        .eq("user_id", userProfile?.id)
+        .single();
+
+      const currentPaymentMethods = existingSettings?.payment_settings?.paymentMethods || [];
+      
+      // Se este é o primeiro método ou foi marcado como padrão, definir como padrão
+      if (currentPaymentMethods.length === 0 || newMethod.is_default) {
+        // Remover flag de padrão de outros métodos
+        currentPaymentMethods.forEach((method: any) => {
+          method.is_default = false;
+        });
+        newMethod.is_default = true;
+      }
+
+      const updatedPaymentMethods = [...currentPaymentMethods, newMethod];
+
+      // Atualizar configurações de pagamento no estado local
+      setPaymentSettings(prev => ({
+        ...prev,
+        paymentMethods: updatedPaymentMethods
+      }));
+
+      // Salvar no banco de dados
+      const { error } = await supabase
+        .from("user_settings")
+        .upsert({
+          user_id: userProfile?.id,
+          payment_settings: {
+            ...paymentSettings,
+            paymentMethods: updatedPaymentMethods
+          },
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: "user_id"
+        });
+
+      if (error) {
+        console.error("Erro ao salvar método de pagamento:", error);
+        // Reverter mudança local
+        setPaymentSettings(prev => ({
+          ...prev,
+          paymentMethods: currentPaymentMethods
+        }));
+      }
+    } catch (error) {
+      console.error("Erro ao adicionar método de pagamento:", error);
+    }
   };
 
-  const setAsDefaultPaymentMethod = (id: string) => {
-    setPaymentSettings(prev => {
-      const updatedMethods = prev.paymentMethods.map(method => ({
+  const removePaymentMethod = async (id: string) => {
+    try {
+      const updatedMethods = paymentSettings.paymentMethods.filter(method => method.id !== id);
+      
+      // Se o método removido era o padrão e existem outros métodos, definir o primeiro como padrão
+      if (updatedMethods.length > 0) {
+        const removedMethod = paymentSettings.paymentMethods.find(method => method.id === id);
+        if (removedMethod?.is_default) {
+          updatedMethods[0].is_default = true;
+        }
+      }
+
+      setPaymentSettings(prev => ({
+        ...prev,
+        paymentMethods: updatedMethods
+      }));
+
+      // Salvar no banco de dados
+      const { error } = await supabase
+        .from("user_settings")
+        .upsert({
+          user_id: userProfile?.id,
+          payment_settings: {
+            ...paymentSettings,
+            paymentMethods: updatedMethods
+          },
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: "user_id"
+        });
+
+      if (error) {
+        console.error("Erro ao remover método de pagamento:", error);
+      }
+    } catch (error) {
+      console.error("Erro ao remover método de pagamento:", error);
+    }
+  };
+
+  const setAsDefaultPaymentMethod = async (id: string) => {
+    try {
+      const updatedMethods = paymentSettings.paymentMethods.map(method => ({
         ...method,
         is_default: method.id === id
       }));
-      return { ...prev, paymentMethods: updatedMethods };
-    });
+
+      setPaymentSettings(prev => ({
+        ...prev,
+        paymentMethods: updatedMethods
+      }));
+
+      // Salvar no banco de dados
+      const { error } = await supabase
+        .from("user_settings")
+        .upsert({
+          user_id: userProfile?.id,
+          payment_settings: {
+            ...paymentSettings,
+            paymentMethods: updatedMethods
+          },
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: "user_id"
+        });
+
+      if (error) {
+        console.error("Erro ao definir método padrão:", error);
+      }
+    } catch (error) {
+      console.error("Erro ao definir método padrão:", error);
+    }
   };
 
   return (
@@ -947,6 +1081,14 @@ export default function SettingsTab({
           </div>
         )}
       </div>
+
+      {/* Modal para Adicionar Método de Pagamento */}
+      <AddPaymentMethodModal
+        isOpen={showAddPaymentModal}
+        onClose={() => setShowAddPaymentModal(false)}
+        onAddPaymentMethod={handleAddPaymentMethod}
+        userProfile={userProfile}
+      />
     </div>
   );
 }
