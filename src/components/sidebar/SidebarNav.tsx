@@ -110,17 +110,17 @@ export function SidebarNav({
         const storedFirstName = localStorage.getItem('userFirstName');
         const storedDisplayName = localStorage.getItem('userDisplayName');
         const storedAvatarUrl = localStorage.getItem('userAvatarUrl');
-        
+
         if (storedDisplayName) {
           setFirstName(storedDisplayName);
         } else if (storedFirstName) {
           setFirstName(storedFirstName);
         }
-        
+
         if (storedAvatarUrl) {
           setProfileImage(storedAvatarUrl);
         }
-        
+
         // Depois buscar do Supabase para dados atualizados
         const {
           data: { user },
@@ -138,7 +138,7 @@ export function SidebarNav({
             if (!firstName) setFirstName("Usuário"); // Fallback if profile fetch fails
           } else if (data) {
             setUserProfile(data as UserProfile);
-            
+
             // Se o perfil tiver um avatar_url, usar ele e atualizar localStorage
             if (data.avatar_url) {
               setProfileImage(data.avatar_url);
@@ -150,10 +150,10 @@ export function SidebarNav({
                            data.display_name || 
                            data.username || 
                            "";
-            
+
             setFirstName(firstName);
             localStorage.setItem('userFirstName', firstName);
-            
+
             // Disparar evento para outros componentes
             document.dispatchEvent(new CustomEvent('usernameUpdated', { 
               detail: { 
@@ -186,7 +186,7 @@ export function SidebarNav({
     if (file) {
       try {
         setIsUploading(true);
-        
+
         // Obter o usuário atual
         const { data: currentUser } = await supabase.auth.getUser();
         if (!currentUser.user) {
@@ -236,10 +236,10 @@ export function SidebarNav({
 
         // Atualizar o estado local
         setProfileImage(publicUrlData.publicUrl);
-        
+
         // Salvar no localStorage para persistência
         localStorage.setItem('userAvatarUrl', publicUrlData.publicUrl);
-        
+
         // Disparar evento para outros componentes saberem que o avatar foi atualizado
         document.dispatchEvent(new CustomEvent('userAvatarUpdated', { 
           detail: { url: publicUrlData.publicUrl } 
@@ -521,13 +521,13 @@ export function SidebarNav({
             </div>
           </div>
         </div>
-        
+
         {isUploading && (
           <div className="mb-3 text-xs text-gray-500 dark:text-gray-400">
             Enviando...
           </div>
         )}
-        
+
         {/* Hidden File Input */}
         <input
           ref={fileInputRef}
@@ -564,29 +564,30 @@ export function SidebarNav({
                       const previousLevelXP = (currentLevel - 1) * 1000;
                       const xpInCurrentLevel = currentXP - previousLevelXP;
                       const xpNeededForLevel = xpForNextLevel - previousLevelXP;
-                      
+
                       if (currentLevel === 1 && currentXP === 0) {
                         return 0; // Usuário novo sem XP
                       }
-                      
+
                       return xpNeededForLevel > 0 ? Math.round((xpInCurrentLevel / xpNeededForLevel) * 100) : 0;
                     })()}%` 
                   }}
-                ></div>
+                />
               </div>
-              <span className="text-[10px] text-[#FF6B00] mt-0.5">
+              <p className="text-[10px] text-[#001427]/50 dark:text-white/50 mt-0.5">
                 {(() => {
                   const currentXP = userProfile?.experience_points || 0;
                   const currentLevel = userProfile?.level || 1;
                   const xpForNextLevel = currentLevel * 1000;
-                  
-                  if (currentLevel === 1 && currentXP === 0) {
-                    return "0 XP / 1.000 XP"; // Usuário novo
+
+                  // Para novos usuários, mostrar incentivo
+                  if (currentXP === 0 && currentLevel === 1) {
+                    return "Comece sua jornada!";
                   }
-                  
-                  return `${currentXP.toLocaleString()} XP / ${xpForNextLevel.toLocaleString()} XP`;
+
+                  return `${currentXP} / ${xpForNextLevel} XP`;
                 })()}
-              </span>
+              </p>
             </div>
           </div>
         )}

@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/lib/supabase";
 import type { UserProfile } from "@/types/user-profile";
 import AddPaymentMethodModal from "./AddPaymentMethodModal";
+import { useToast } from "@/components/ui/use-toast";
 import {
   User,
   Lock,
@@ -32,25 +33,13 @@ import {
 
 interface SettingsTabProps {
   userProfile: UserProfile | null;
-  contactInfo: {
-    email: string;
-    phone: string;
-    location: string;
-    birthDate: string;
-  };
+  contactInfo: any;
   aboutMe: string;
   expandedSection: string | null;
   toggleSection: (section: string | null) => void;
-  setContactInfo: React.Dispatch<
-    React.SetStateAction<{
-      email: string;
-      phone: string;
-      location: string;
-      birthDate: string;
-    }>
-  >;
-  setAboutMe: React.Dispatch<React.SetStateAction<string>>;
-  setUserProfile: React.Dispatch<React.SetStateAction<UserProfile | null>>;
+  setContactInfo: (info: any) => void;
+  setAboutMe: (about: string) => void;
+  setUserProfile: (profile: UserProfile | null) => void;
 }
 
 export default function SettingsTab({
@@ -63,298 +52,407 @@ export default function SettingsTab({
   setAboutMe,
   setUserProfile,
 }: SettingsTabProps) {
+  const { toast } = useToast();
+
+  // Estados para armazenar dados de cada seção
+  const [accountData, setAccountData] = useState({
+    nome_exibicao: "",
+    nome_completo: "",
+    email: "",
+  });
+
+  const [securityData, setSecurityData] = useState({
+    autenticacao_2fa: false,
+    notificacoes_login: true,
+    timeout_sessao: "30",
+  });
+
+  const [notificationData, setNotificationData] = useState({
+    email: true,
+    push: true,
+    lembretes_estudo: true,
+    relatorios_semanais: true,
+    som_notificacoes: true,
+  });
+
+  const [paymentData, setPaymentData] = useState({
+    renovacao_automatica: true,
+    email_faturas: true,
+  });
+
+  const [privacyData, setPrivacyData] = useState({
+    visibilidade_perfil: "publico",
+    mostrar_email: false,
+    mostrar_telefone: false,
+    permitir_mensagens: true,
+    coleta_dados_melhorias: true,
+  });
+
+  const [walletData, setWalletData] = useState({
+    saldo_atual: 0,
+    school_points: 0,
+    limite_gastos: 1000,
+    recarga_automatica: false,
+  });
+
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [showAddPaymentModal, setShowAddPaymentModal] = useState(false);
+  const [paymentMethods, setPaymentMethods] = useState([
+    { id: 1, type: "card", number: "**** **** **** 1234", default: true },
+    { id: 2, type: "pix", number: "joao@email.com", default: false },
+  ]);
+  const [isEditingPayment, setIsEditingPayment] = useState<number | null>(null);
 
-  // Estados para configurações reais do usuário
-  const [accountSettings, setAccountSettings] = useState({
-    displayName: userProfile?.display_name || "",
-    email: contactInfo.email,
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
+  // Estados de loading para cada seção
+  const [loadingStates, setLoadingStates] = useState({
+    account: false,
+    security: false,
+    notifications: false,
+    payment: false,
+    privacy: false,
+    wallet: false,
   });
 
-  const [securitySettings, setSecuritySettings] = useState({
-    twoFactorEnabled: false,
-    loginNotifications: true,
-    sessionTimeout: "30",
-    trustedDevices: [] as string[],
-  });
-
-  const [notificationSettings, setNotificationSettings] = useState({
-    emailNotifications: true,
-    pushNotifications: true,
-    studyReminders: true,
-    weeklyReports: false,
-    marketingEmails: false,
-    soundEnabled: true,
-  });
-
-  const [paymentSettings, setPaymentSettings] = useState({
-    paymentMethods: [] as any[],
-    billingAddress: "",
-    autoRenewal: true,
-    invoiceEmail: contactInfo.email,
-  });
-
-  const [privacySettings, setPrivacySettings] = useState({
-    profileVisibility: "public",
-    showEmail: false,
-    showPhone: false,
-    allowMessages: true,
-    dataCollection: true,
-  });
-
-  const [walletSettings, setWalletSettings] = useState({
-    balance: 0,
-    currency: "BRL",
-    autoTopUp: false,
-    spendingLimit: 0,
-  });
-
+  // Carregar dados do usuário
   useEffect(() => {
     loadUserSettings();
-  }, [userProfile]);
+  }, []);
 
   const loadUserSettings = async () => {
-    if (!userProfile) return;
-
     try {
-      // Carregar configurações do usuário do banco de dados
-      const { data: settings } = await supabase
-        .from("user_settings")
-        .select("*")
-        .eq("user_id", userProfile.id)
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Carregar dados da conta
+      const { data: accountInfo } = await supabase
+        .from('profiles')
+        .select('full_name, display_name, email')
+        .eq('id', user.id)
         .single();
 
-      if (settings) {
-        setSecuritySettings(prev => ({ ...prev, ...settings.security_settings }));
-        setNotificationSettings(prev => ({ ...prev, ...settings.notification_settings }));
-        setPrivacySettings(prev => ({ ...prev, ...settings.privacy_settings }));
-        setWalletSettings(prev => ({ ...prev, ...settings.wallet_settings }));
-        
-        // Carregar métodos de pagamento
-        if (settings.payment_settings?.paymentMethods) {
-          setPaymentSettings(prev => ({
-            ...prev,
-            paymentMethods: settings.payment_settings.paymentMethods,
-            billingAddress: settings.payment_settings.billingAddress || "",
-            autoRenewal: settings.payment_settings.autoRenewal ?? true,
-            invoiceEmail: settings.payment_settings.invoiceEmail || contactInfo.email
-          }));
-        }
+      if (accountInfo) {
+        setAccountData({
+          nome_exibicao: accountInfo.display_name || "",
+          nome_completo: accountInfo.full_name || "",
+          email: accountInfo.email || user.email || "",
+        });
       }
+
+      // Carregar configurações de segurança
+      const { data: securityInfo } = await supabase
+        .from('user_settings')
+        .select('two_factor_enabled, login_notifications, session_timeout')
+        .eq('user_id', user.id)
+        .single();
+
+      if (securityInfo) {
+        setSecurityData({
+          autenticacao_2fa: securityInfo.two_factor_enabled || false,
+          notificacoes_login: securityInfo.login_notifications !== false,
+          timeout_sessao: securityInfo.session_timeout || "30",
+        });
+      }
+
+      // Carregar configurações de notificação
+      const { data: notificationInfo } = await supabase
+        .from('user_settings')
+        .select('email_notifications, push_notifications, study_reminders, weekly_reports, notification_sound')
+        .eq('user_id', user.id)
+        .single();
+
+      if (notificationInfo) {
+        setNotificationData({
+          email: notificationInfo.email_notifications !== false,
+          push: notificationInfo.push_notifications !== false,
+          lembretes_estudo: notificationInfo.study_reminders !== false,
+          relatorios_semanais: notificationInfo.weekly_reports !== false,
+          som_notificacoes: notificationInfo.notification_sound !== false,
+        });
+      }
+
+      // Carregar configurações de pagamento
+      const { data: paymentInfo } = await supabase
+        .from('user_settings')
+        .select('auto_renewal, invoice_emails')
+        .eq('user_id', user.id)
+        .single();
+
+      if (paymentInfo) {
+        setPaymentData({
+          renovacao_automatica: paymentInfo.auto_renewal !== false,
+          email_faturas: paymentInfo.invoice_emails !== false,
+        });
+      }
+
+      // Carregar configurações de privacidade
+      const { data: privacyInfo } = await supabase
+        .from('user_settings')
+        .select('profile_visibility, show_email, show_phone, allow_messages, data_collection')
+        .eq('user_id', user.id)
+        .single();
+
+      if (privacyInfo) {
+        setPrivacyData({
+          visibilidade_perfil: privacyInfo.profile_visibility || "publico",
+          mostrar_email: privacyInfo.show_email || false,
+          mostrar_telefone: privacyInfo.show_phone || false,
+          permitir_mensagens: privacyInfo.allow_messages !== false,
+          coleta_dados_melhorias: privacyInfo.data_collection !== false,
+        });
+      }
+
+      // Carregar dados da carteira
+      const { data: walletInfo } = await supabase
+        .from('profiles')
+        .select('wallet_balance, school_points')
+        .eq('id', user.id)
+        .single();
+
+      if (walletInfo) {
+        setWalletData(prev => ({
+          ...prev,
+          saldo_atual: walletInfo.wallet_balance || 0,
+          school_points: walletInfo.school_points || 0,
+        }));
+      }
+
     } catch (error) {
       console.error("Erro ao carregar configurações:", error);
     }
   };
 
+  // Funções de salvamento para cada seção
   const saveAccountSettings = async () => {
-    setIsLoading(true);
+    setLoadingStates(prev => ({ ...prev, account: true }));
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Usuário não autenticado");
+
       const { error } = await supabase
-        .from("profiles")
+        .from('profiles')
         .update({
-          display_name: accountSettings.displayName,
-          full_name: accountSettings.displayName,
+          display_name: accountData.nome_exibicao,
+          full_name: accountData.nome_completo,
+          updated_at: new Date().toISOString(),
         })
-        .eq("id", userProfile?.id);
+        .eq('id', user.id);
 
       if (error) throw error;
 
-      // Atualizar perfil local
-      if (setUserProfile) {
-        setUserProfile(prev => prev ? {
-          ...prev,
-          display_name: accountSettings.displayName,
-          full_name: accountSettings.displayName
-        } : null);
-      }
-
-      // Atualizar senha se fornecida
-      if (accountSettings.newPassword && accountSettings.currentPassword) {
-        const { error: passwordError } = await supabase.auth.updateUser({
-          password: accountSettings.newPassword
-        });
-
-        if (passwordError) throw passwordError;
-
-        setAccountSettings(prev => ({
-          ...prev,
-          currentPassword: "",
-          newPassword: "",
-          confirmPassword: "",
-        }));
-      }
+      toast({
+        title: "Sucesso",
+        description: "Informações da conta salvas com sucesso!",
+        className: "bg-green-50 border-green-200",
+      });
 
       toggleSection(null);
     } catch (error) {
-      console.error("Erro ao salvar configurações da conta:", error);
+      console.error("Erro ao salvar informações da conta:", error);
+      toast({
+        title: "Erro",
+        description: "Erro ao salvar configurações. Tente novamente.",
+        variant: "destructive",
+      });
     } finally {
-      setIsLoading(false);
+      setLoadingStates(prev => ({ ...prev, account: false }));
     }
   };
 
-  const saveSettings = async (settingsType: string, settings: any) => {
-    setIsLoading(true);
+  const saveSecuritySettings = async () => {
+    setLoadingStates(prev => ({ ...prev, security: true }));
     try {
-      const updateData: any = {
-        user_id: userProfile?.id,
-        updated_at: new Date().toISOString(),
-      };
-
-      // Para configurações de pagamento, manter os métodos existentes
-      if (settingsType === "payment_settings") {
-        updateData[settingsType] = {
-          ...settings,
-          paymentMethods: paymentSettings.paymentMethods
-        };
-      } else {
-        updateData[settingsType] = settings;
-      }
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Usuário não autenticado");
 
       const { error } = await supabase
-        .from("user_settings")
-        .upsert(updateData);
+        .from('user_settings')
+        .upsert({
+          user_id: user.id,
+          two_factor_enabled: securityData.autenticacao_2fa,
+          login_notifications: securityData.notificacoes_login,
+          session_timeout: securityData.timeout_sessao,
+          updated_at: new Date().toISOString(),
+        });
 
       if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: "Configurações de segurança salvas com sucesso!",
+        className: "bg-green-50 border-green-200",
+      });
+
       toggleSection(null);
     } catch (error) {
-      console.error(`Erro ao salvar ${settingsType}:`, error);
+      console.error("Erro ao salvar configurações de segurança:", error);
+      toast({
+        title: "Erro",
+        description: "Erro ao salvar configurações. Tente novamente.",
+        variant: "destructive",
+      });
     } finally {
-      setIsLoading(false);
+      setLoadingStates(prev => ({ ...prev, security: false }));
     }
   };
 
-  const addPaymentMethod = () => {
-    setShowAddPaymentModal(true);
-  };
-
-  const handleAddPaymentMethod = async (newMethod: any) => {
+  const saveNotificationSettings = async () => {
+    setLoadingStates(prev => ({ ...prev, notifications: true }));
     try {
-      // Obter configurações existentes
-      const { data: existingSettings } = await supabase
-        .from("user_settings")
-        .select("payment_settings")
-        .eq("user_id", userProfile?.id)
-        .single();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Usuário não autenticado");
 
-      const currentPaymentMethods = existingSettings?.payment_settings?.paymentMethods || [];
-      
-      // Se este é o primeiro método ou foi marcado como padrão, definir como padrão
-      if (currentPaymentMethods.length === 0 || newMethod.is_default) {
-        // Remover flag de padrão de outros métodos
-        currentPaymentMethods.forEach((method: any) => {
-          method.is_default = false;
-        });
-        newMethod.is_default = true;
-      }
-
-      const updatedPaymentMethods = [...currentPaymentMethods, newMethod];
-
-      // Atualizar configurações de pagamento no estado local
-      setPaymentSettings(prev => ({
-        ...prev,
-        paymentMethods: updatedPaymentMethods
-      }));
-
-      // Salvar no banco de dados
       const { error } = await supabase
-        .from("user_settings")
+        .from('user_settings')
         .upsert({
-          user_id: userProfile?.id,
-          payment_settings: {
-            ...paymentSettings,
-            paymentMethods: updatedPaymentMethods
-          },
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: "user_id"
+          user_id: user.id,
+          email_notifications: notificationData.email,
+          push_notifications: notificationData.push,
+          study_reminders: notificationData.lembretes_estudo,
+          weekly_reports: notificationData.relatorios_semanais,
+          notification_sound: notificationData.som_notificacoes,
+          updated_at: new Date().toISOString(),
         });
 
-      if (error) {
-        console.error("Erro ao salvar método de pagamento:", error);
-        // Reverter mudança local
-        setPaymentSettings(prev => ({
-          ...prev,
-          paymentMethods: currentPaymentMethods
-        }));
-      }
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: "Configurações de notificação salvas com sucesso!",
+        className: "bg-green-50 border-green-200",
+      });
+
+      toggleSection(null);
     } catch (error) {
-      console.error("Erro ao adicionar método de pagamento:", error);
+      console.error("Erro ao salvar configurações de notificação:", error);
+      toast({
+        title: "Erro",
+        description: "Erro ao salvar configurações. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingStates(prev => ({ ...prev, notifications: false }));
     }
   };
 
-  const removePaymentMethod = async (id: string) => {
+  const savePaymentSettings = async () => {
+    setLoadingStates(prev => ({ ...prev, payment: true }));
     try {
-      const updatedMethods = paymentSettings.paymentMethods.filter(method => method.id !== id);
-      
-      // Se o método removido era o padrão e existem outros métodos, definir o primeiro como padrão
-      if (updatedMethods.length > 0) {
-        const removedMethod = paymentSettings.paymentMethods.find(method => method.id === id);
-        if (removedMethod?.is_default) {
-          updatedMethods[0].is_default = true;
-        }
-      }
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Usuário não autenticado");
 
-      setPaymentSettings(prev => ({
-        ...prev,
-        paymentMethods: updatedMethods
-      }));
-
-      // Salvar no banco de dados
       const { error } = await supabase
-        .from("user_settings")
+        .from('user_settings')
         .upsert({
-          user_id: userProfile?.id,
-          payment_settings: {
-            ...paymentSettings,
-            paymentMethods: updatedMethods
-          },
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: "user_id"
+          user_id: user.id,
+          auto_renewal: paymentData.renovacao_automatica,
+          invoice_emails: paymentData.email_faturas,
+          updated_at: new Date().toISOString(),
         });
 
-      if (error) {
-        console.error("Erro ao remover método de pagamento:", error);
-      }
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: "Configurações de pagamento salvas com sucesso!",
+        className: "bg-green-50 border-green-200",
+      });
+
+      toggleSection(null);
     } catch (error) {
-      console.error("Erro ao remover método de pagamento:", error);
+      console.error("Erro ao salvar configurações de pagamento:", error);
+      toast({
+        title: "Erro",
+        description: "Erro ao salvar configurações. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingStates(prev => ({ ...prev, payment: false }));
     }
   };
 
-  const setAsDefaultPaymentMethod = async (id: string) => {
+  const savePrivacySettings = async () => {
+    setLoadingStates(prev => ({ ...prev, privacy: true }));
     try {
-      const updatedMethods = paymentSettings.paymentMethods.map(method => ({
-        ...method,
-        is_default: method.id === id
-      }));
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Usuário não autenticado");
 
-      setPaymentSettings(prev => ({
-        ...prev,
-        paymentMethods: updatedMethods
-      }));
-
-      // Salvar no banco de dados
       const { error } = await supabase
-        .from("user_settings")
+        .from('user_settings')
         .upsert({
-          user_id: userProfile?.id,
-          payment_settings: {
-            ...paymentSettings,
-            paymentMethods: updatedMethods
-          },
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: "user_id"
+          user_id: user.id,
+          profile_visibility: privacyData.visibilidade_perfil,
+          show_email: privacyData.mostrar_email,
+          show_phone: privacyData.mostrar_telefone,
+          allow_messages: privacyData.permitir_mensagens,
+          data_collection: privacyData.coleta_dados_melhorias,
+          updated_at: new Date().toISOString(),
         });
 
-      if (error) {
-        console.error("Erro ao definir método padrão:", error);
-      }
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: "Configurações de privacidade salvas com sucesso!",
+        className: "bg-green-50 border-green-200",
+      });
+
+      toggleSection(null);
+    } catch (error) {
+      console.error("Erro ao salvar configurações de privacidade:", error);
+      toast({
+        title: "Erro",
+        description: "Erro ao salvar configurações. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingStates(prev => ({ ...prev, privacy: false }));
+    }
+  };
+
+  const saveWalletSettings = async () => {
+    setLoadingStates(prev => ({ ...prev, wallet: true }));
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Usuário não autenticado");
+
+      const { error } = await supabase
+        .from('user_settings')
+        .upsert({
+          user_id: user.id,
+          spending_limit: walletData.limite_gastos,
+          auto_recharge: walletData.recarga_automatica,
+          updated_at: new Date().toISOString(),
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: "Configurações da carteira salvas com sucesso!",
+        className: "bg-green-50 border-green-200",
+      });
+
+      toggleSection(null);
+    } catch (error) {
+      console.error("Erro ao salvar configurações da carteira:", error);
+      toast({
+        title: "Erro",
+        description: "Erro ao salvar configurações. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingStates(prev => ({ ...prev, wallet: false }));
+    }
+  };
+
+  const setPaymentAsDefault = async (paymentId: number) => {
+    try {
+      setPaymentMethods(prev => 
+        prev.map(method => ({
+          ...method,
+          default: method.id === paymentId
+        }))
+      );
     } catch (error) {
       console.error("Erro ao definir método padrão:", error);
     }
@@ -390,115 +488,64 @@ export default function SettingsTab({
 
         {expandedSection === "account" && (
           <div className="mt-4 p-4 bg-gray-50 dark:bg-[#29335C]/20 rounded-lg border border-[#E0E1DD] dark:border-white/10">
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-4">
                 <div>
-                  <Label htmlFor="displayName">Nome de Exibição</Label>
+                  <Label htmlFor="displayName" className="text-sm text-[#29335C] dark:text-white">
+                    Nome de Exibição
+                  </Label>
                   <Input
                     id="displayName"
-                    value={accountSettings.displayName}
-                    onChange={(e) => setAccountSettings(prev => ({ ...prev, displayName: e.target.value }))}
-                    placeholder="Digite seu nome"
+                    value={accountData.nome_exibicao}
+                    onChange={(e) => setAccountData(prev => ({ ...prev, nome_exibicao: e.target.value }))}
                     className="mt-1"
+                    placeholder="Como você quer ser chamado"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="fullName">Nome Completo</Label>
+                  <Label htmlFor="fullName" className="text-sm text-[#29335C] dark:text-white">
+                    Nome Completo
+                  </Label>
                   <Input
                     id="fullName"
-                    value={accountSettings.displayName}
-                    onChange={(e) => setAccountSettings(prev => ({ ...prev, displayName: e.target.value }))}
-                    placeholder="Digite seu nome completo"
+                    value={accountData.nome_completo}
+                    onChange={(e) => setAccountData(prev => ({ ...prev, nome_completo: e.target.value }))}
                     className="mt-1"
+                    placeholder="Seu nome completo"
                   />
-                  <p className="text-xs text-[#64748B] dark:text-white/60 mt-1">
-                    Este será seu nome público na plataforma
-                  </p>
+                </div>
+                <div>
+                  <Label htmlFor="email" className="text-sm text-[#29335C] dark:text-white">
+                    Email
+                  </Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={accountData.email}
+                    onChange={(e) => setAccountData(prev => ({ ...prev, email: e.target.value }))}
+                    className="mt-1"
+                    placeholder="seu@email.com"
+                  />
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <Button
+                    size="sm"
+                    onClick={saveAccountSettings}
+                    disabled={loadingStates.account}
+                    className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    {loadingStates.account ? "Salvando..." : "Salvar Alterações"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => toggleSection(null)}
+                    disabled={loadingStates.account}
+                  >
+                    Cancelar
+                  </Button>
                 </div>
               </div>
-
-              <div>
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={accountSettings.email}
-                  onChange={(e) => setAccountSettings(prev => ({ ...prev, email: e.target.value }))}
-                  className="mt-1"
-                  disabled
-                />
-                <p className="text-xs text-[#64748B] dark:text-white/60 mt-1">
-                  Para alterar o email, entre em contato com o suporte
-                </p>
-              </div>
-
-              <div className="border-t pt-4">
-                <h5 className="font-medium text-[#29335C] dark:text-white mb-3">Alterar Senha</h5>
-                <div className="space-y-3">
-                  <div>
-                    <Label htmlFor="currentPassword">Senha Atual</Label>
-                    <div className="relative">
-                      <Input
-                        id="currentPassword"
-                        type={showPassword ? "text" : "password"}
-                        value={accountSettings.currentPassword}
-                        onChange={(e) => setAccountSettings(prev => ({ ...prev, currentPassword: e.target.value }))}
-                        placeholder="Digite sua senha atual"
-                        className="mt-1 pr-10"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2"
-                      >
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div>
-                      <Label htmlFor="newPassword">Nova Senha</Label>
-                      <Input
-                        id="newPassword"
-                        type="password"
-                        value={accountSettings.newPassword}
-                        onChange={(e) => setAccountSettings(prev => ({ ...prev, newPassword: e.target.value }))}
-                        placeholder="Digite a nova senha"
-                        className="mt-1"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="confirmPassword">Confirmar Senha</Label>
-                      <Input
-                        id="confirmPassword"
-                        type="password"
-                        value={accountSettings.confirmPassword}
-                        onChange={(e) => setAccountSettings(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                        placeholder="Confirme a nova senha"
-                        className="mt-1"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-2 pt-4 border-t">
-                <Button
-                  variant="outline"
-                  onClick={() => toggleSection(null)}
-                  disabled={isLoading}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  onClick={saveAccountSettings}
-                  disabled={isLoading}
-                  className="bg-[#FF6B00] hover:bg-[#FF6B00]/90"
-                >
-                  {isLoading ? "Salvando..." : "Salvar Alterações"}
-                </Button>
-              </div>
-            </div>
           </div>
         )}
       </div>
@@ -529,71 +576,74 @@ export default function SettingsTab({
 
         {expandedSection === "security" && (
           <div className="mt-4 p-4 bg-gray-50 dark:bg-[#29335C]/20 rounded-lg border border-[#E0E1DD] dark:border-white/10">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label>Autenticação de Dois Fatores</Label>
-                  <p className="text-xs text-[#64748B] dark:text-white/60">
-                    Adicione uma camada extra de segurança
-                  </p>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-sm text-[#29335C] dark:text-white">
+                      Autenticação de Dois Fatores
+                    </Label>
+                    <p className="text-xs text-[#64748B] dark:text-white/60">
+                      Adicione uma camada extra de segurança
+                    </p>
+                  </div>
+                  <Switch 
+                    checked={securityData.autenticacao_2fa}
+                    onCheckedChange={(checked) => setSecurityData(prev => ({ ...prev, autenticacao_2fa: checked }))}
+                  />
                 </div>
-                <Switch
-                  checked={securitySettings.twoFactorEnabled}
-                  onCheckedChange={(checked) => 
-                    setSecuritySettings(prev => ({ ...prev, twoFactorEnabled: checked }))
-                  }
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label>Notificações de Login</Label>
-                  <p className="text-xs text-[#64748B] dark:text-white/60">
-                    Receba alertas sobre novos logins
-                  </p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-sm text-[#29335C] dark:text-white">
+                      Notificações de Login
+                    </Label>
+                    <p className="text-xs text-[#64748B] dark:text-white/60">
+                      Receba alertas quando alguém acessar sua conta
+                    </p>
+                  </div>
+                  <Switch 
+                    checked={securityData.notificacoes_login}
+                    onCheckedChange={(checked) => setSecurityData(prev => ({ ...prev, notificacoes_login: checked }))}
+                  />
                 </div>
-                <Switch
-                  checked={securitySettings.loginNotifications}
-                  onCheckedChange={(checked) => 
-                    setSecuritySettings(prev => ({ ...prev, loginNotifications: checked }))
-                  }
-                />
+                <div>
+                  <Label className="text-sm text-[#29335C] dark:text-white">
+                    Timeout da Sessão
+                  </Label>
+                  <Select 
+                    value={securityData.timeout_sessao}
+                    onValueChange={(value) => setSecurityData(prev => ({ ...prev, timeout_sessao: value }))}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="15">15 minutos</SelectItem>
+                      <SelectItem value="30">30 minutos</SelectItem>
+                      <SelectItem value="60">1 hora</SelectItem>
+                      <SelectItem value="120">2 horas</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <Button
+                    size="sm"
+                    onClick={saveSecuritySettings}
+                    disabled={loadingStates.security}
+                    className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    {loadingStates.security ? "Salvando..." : "Salvar Configurações"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => toggleSection(null)}
+                    disabled={loadingStates.security}
+                  >
+                    Cancelar
+                  </Button>
+                </div>
               </div>
-
-              <div>
-                <Label htmlFor="sessionTimeout">Timeout da Sessão (minutos)</Label>
-                <Select 
-                  value={securitySettings.sessionTimeout} 
-                  onValueChange={(value) => setSecuritySettings(prev => ({ ...prev, sessionTimeout: value }))}
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="15">15 minutos</SelectItem>
-                    <SelectItem value="30">30 minutos</SelectItem>
-                    <SelectItem value="60">1 hora</SelectItem>
-                    <SelectItem value="120">2 horas</SelectItem>
-                    <SelectItem value="0">Nunca</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex justify-end gap-2 pt-4 border-t">
-                <Button
-                  variant="outline"
-                  onClick={() => toggleSection(null)}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  onClick={() => saveSettings("security_settings", securitySettings)}
-                  className="bg-[#FF6B00] hover:bg-[#FF6B00]/90"
-                >
-                  Salvar Configurações
-                </Button>
-              </div>
-            </div>
           </div>
         )}
       </div>
@@ -624,97 +674,97 @@ export default function SettingsTab({
 
         {expandedSection === "notifications" && (
           <div className="mt-4 p-4 bg-gray-50 dark:bg-[#29335C]/20 rounded-lg border border-[#E0E1DD] dark:border-white/10">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label>Notificações por Email</Label>
-                  <p className="text-xs text-[#64748B] dark:text-white/60">
-                    Receba atualizações importantes por email
-                  </p>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-sm text-[#29335C] dark:text-white">
+                      Notificações por Email
+                    </Label>
+                    <p className="text-xs text-[#64748B] dark:text-white/60">
+                      Receba atualizações importantes por email
+                    </p>
+                  </div>
+                  <Switch 
+                    checked={notificationData.email}
+                    onCheckedChange={(checked) => setNotificationData(prev => ({ ...prev, email: checked }))}
+                  />
                 </div>
-                <Switch
-                  checked={notificationSettings.emailNotifications}
-                  onCheckedChange={(checked) => 
-                    setNotificationSettings(prev => ({ ...prev, emailNotifications: checked }))
-                  }
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label>Notificações Push</Label>
-                  <p className="text-xs text-[#64748B] dark:text-white/60">
-                    Receba notificações no navegador
-                  </p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-sm text-[#29335C] dark:text-white">
+                      Notificações Push
+                    </Label>
+                    <p className="text-xs text-[#64748B] dark:text-white/60">
+                      Receba notificações no navegador
+                    </p>
+                  </div>
+                  <Switch 
+                    checked={notificationData.push}
+                    onCheckedChange={(checked) => setNotificationData(prev => ({ ...prev, push: checked }))}
+                  />
                 </div>
-                <Switch
-                  checked={notificationSettings.pushNotifications}
-                  onCheckedChange={(checked) => 
-                    setNotificationSettings(prev => ({ ...prev, pushNotifications: checked }))
-                  }
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label>Lembretes de Estudo</Label>
-                  <p className="text-xs text-[#64748B] dark:text-white/60">
-                    Receba lembretes para manter sua rotina
-                  </p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-sm text-[#29335C] dark:text-white">
+                      Lembretes de Estudo
+                    </Label>
+                    <p className="text-xs text-[#64748B] dark:text-white/60">
+                      Receba lembretes para manter sua rotina
+                    </p>
+                  </div>
+                  <Switch 
+                    checked={notificationData.lembretes_estudo}
+                    onCheckedChange={(checked) => setNotificationData(prev => ({ ...prev, lembretes_estudo: checked }))}
+                  />
                 </div>
-                <Switch
-                  checked={notificationSettings.studyReminders}
-                  onCheckedChange={(checked) => 
-                    setNotificationSettings(prev => ({ ...prev, studyReminders: checked }))
-                  }
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label>Relatórios Semanais</Label>
-                  <p className="text-xs text-[#64748B] dark:text-white/60">
-                    Receba resumos do seu progresso
-                  </p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-sm text-[#29335C] dark:text-white">
+                      Relatórios Semanais
+                    </Label>
+                    <p className="text-xs text-[#64748B] dark:text-white/60">
+                      Receba um resumo do seu progresso semanal
+                    </p>
+                  </div>
+                  <Switch 
+                    checked={notificationData.relatorios_semanais}
+                    onCheckedChange={(checked) => setNotificationData(prev => ({ ...prev, relatorios_semanais: checked }))}
+                  />
                 </div>
-                <Switch
-                  checked={notificationSettings.weeklyReports}
-                  onCheckedChange={(checked) => 
-                    setNotificationSettings(prev => ({ ...prev, weeklyReports: checked }))
-                  }
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label>Som das Notificações</Label>
-                  <p className="text-xs text-[#64748B] dark:text-white/60">
-                    Reproduzir som ao receber notificações
-                  </p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-sm text-[#29335C] dark:text-white">
+                      Som das Notificações
+                    </Label>
+                    <p className="text-xs text-[#64748B] dark:text-white/60">
+                      Reproduzir som ao receber notificações
+                    </p>
+                  </div>
+                  <Switch 
+                    checked={notificationData.som_notificacoes}
+                    onCheckedChange={(checked) => setNotificationData(prev => ({ ...prev, som_notificacoes: checked }))}
+                  />
                 </div>
-                <Switch
-                  checked={notificationSettings.soundEnabled}
-                  onCheckedChange={(checked) => 
-                    setNotificationSettings(prev => ({ ...prev, soundEnabled: checked }))
-                  }
-                />
+                <div className="flex gap-2 pt-2">
+                  <Button
+                    size="sm"
+                    onClick={saveNotificationSettings}
+                    disabled={loadingStates.notifications}
+                    className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    {loadingStates.notifications ? "Salvando..." : "Salvar Configurações"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => toggleSection(null)}
+                    disabled={loadingStates.notifications}
+                  >
+                    Cancelar
+                  </Button>
+                </div>
               </div>
-
-              <div className="flex justify-end gap-2 pt-4 border-t">
-                <Button
-                  variant="outline"
-                  onClick={() => toggleSection(null)}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  onClick={() => saveSettings("notification_settings", notificationSettings)}
-                  className="bg-[#FF6B00] hover:bg-[#FF6B00]/90"
-                >
-                  Salvar Configurações
-                </Button>
-              </div>
-            </div>
           </div>
         )}
       </div>
@@ -827,46 +877,54 @@ export default function SettingsTab({
                 )}
               </div>
 
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label>Renovação Automática</Label>
-                  <p className="text-xs text-[#64748B] dark:text-white/60">
-                    Renovar automaticamente sua assinatura
-                  </p>
+<div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-sm text-[#29335C] dark:text-white">
+                      Renovação Automática
+                    </Label>
+                    <p className="text-xs text-[#64748B] dark:text-white/60">
+                      Renove automaticamente sua assinatura
+                    </p>
+                  </div>
+                  <Switch 
+                    checked={paymentData.renovacao_automatica}
+                    onCheckedChange={(checked) => setPaymentData(prev => ({ ...prev, renovacao_automatica: checked }))}
+                  />
                 </div>
-                <Switch
-                  checked={paymentSettings.autoRenewal}
-                  onCheckedChange={(checked) => 
-                    setPaymentSettings(prev => ({ ...prev, autoRenewal: checked }))
-                  }
-                />
-              </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-sm text-[#29335C] dark:text-white">
+                      Email de Faturas
+                    </Label>
+                    <p className="text-xs text-[#64748B] dark:text-white/60">
+                      Receba faturas por email
+                    </p>
+                  </div>
+                  <Switch 
+                    checked={paymentData.email_faturas}
+                    onCheckedChange={(checked) => setPaymentData(prev => ({ ...prev, email_faturas: checked }))}
+                  />
+                </div>
 
-              <div>
-                <Label htmlFor="invoiceEmail">Email para Faturas</Label>
-                <Input
-                  id="invoiceEmail"
-                  type="email"
-                  value={paymentSettings.invoiceEmail}
-                  onChange={(e) => setPaymentSettings(prev => ({ ...prev, invoiceEmail: e.target.value }))}
-                  className="mt-1"
-                />
-              </div>
-
-              <div className="flex justify-end gap-2 pt-4 border-t">
-                <Button
-                  variant="outline"
-                  onClick={() => toggleSection(null)}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  onClick={() => saveSettings("payment_settings", paymentSettings)}
-                  className="bg-[#FF6B00] hover:bg-[#FF6B00]/90"
-                >
-                  Salvar Configurações
-                </Button>
-              </div>
+                <div className="flex gap-2 pt-2">
+                  <Button
+                    size="sm"
+                    onClick={savePaymentSettings}
+                    disabled={loadingStates.payment}
+                    className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    {loadingStates.payment ? "Salvando..." : "Salvar Configurações"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => toggleSection(null)}
+                    disabled={loadingStates.payment}
+                  >
+                    Cancelar
+                  </Button>
+                </div>
             </div>
           </div>
         )}
@@ -898,99 +956,101 @@ export default function SettingsTab({
 
         {expandedSection === "privacy" && (
           <div className="mt-4 p-4 bg-gray-50 dark:bg-[#29335C]/20 rounded-lg border border-[#E0E1DD] dark:border-white/10">
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="profileVisibility">Visibilidade do Perfil</Label>
-                <Select 
-                  value={privacySettings.profileVisibility} 
-                  onValueChange={(value) => setPrivacySettings(prev => ({ ...prev, profileVisibility: value }))}
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="public">Público</SelectItem>
-                    <SelectItem value="friends">Apenas Amigos</SelectItem>
-                    <SelectItem value="private">Privado</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex items-center justify-between">
+              <div className="space-y-4">
                 <div>
-                  <Label>Mostrar Email no Perfil</Label>
-                  <p className="text-xs text-[#64748B] dark:text-white/60">
-                    Permitir que outros vejam seu email
-                  </p>
+                  <Label className="text-sm text-[#29335C] dark:text-white">
+                    Visibilidade do Perfil
+                  </Label>
+                  <Select 
+                    value={privacyData.visibilidade_perfil}
+                    onValueChange={(value) => setPrivacyData(prev => ({ ...prev, visibilidade_perfil: value }))}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="publico">Público</SelectItem>
+                      <SelectItem value="amigos">Apenas Amigos</SelectItem>
+                      <SelectItem value="privado">Privado</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-                <Switch
-                  checked={privacySettings.showEmail}
-                  onCheckedChange={(checked) => 
-                    setPrivacySettings(prev => ({ ...prev, showEmail: checked }))
-                  }
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label>Mostrar Telefone no Perfil</Label>
-                  <p className="text-xs text-[#64748B] dark:text-white/60">
-                    Permitir que outros vejam seu telefone
-                  </p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-sm text-[#29335C] dark:text-white">
+                      Mostrar Email no Perfil
+                    </Label>
+                    <p className="text-xs text-[#64748B] dark:text-white/60">
+                      Outros usuários podem ver seu email
+                    </p>
+                  </div>
+                  <Switch 
+                    checked={privacyData.mostrar_email}
+                    onCheckedChange={(checked) => setPrivacyData(prev => ({ ...prev, mostrar_email: checked }))}
+                  />
                 </div>
-                <Switch
-                  checked={privacySettings.showPhone}
-                  onCheckedChange={(checked) => 
-                    setPrivacySettings(prev => ({ ...prev, showPhone: checked }))
-                  }
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label>Permitir Mensagens</Label>
-                  <p className="text-xs text-[#64748B] dark:text-white/60">
-                    Permitir que outros usuários enviem mensagens
-                  </p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-sm text-[#29335C] dark:text-white">
+                      Mostrar Telefone no Perfil
+                    </Label>
+                    <p className="text-xs text-[#64748B] dark:text-white/60">
+                      Outros usuários podem ver seu telefone
+                    </p>
+                  </div>
+                  <Switch 
+                    checked={privacyData.mostrar_telefone}
+                    onCheckedChange={(checked) => setPrivacyData(prev => ({ ...prev, mostrar_telefone: checked }))}
+                  />
                 </div>
-                <Switch
-                  checked={privacySettings.allowMessages}
-                  onCheckedChange={(checked) => 
-                    setPrivacySettings(prev => ({ ...prev, allowMessages: checked }))
-                  }
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label>Coleta de Dados para Melhorias</Label>
-                  <p className="text-xs text-[#64748B] dark:text-white/60">
-                    Ajudar a melhorar a plataforma compartilhando dados anônimos
-                  </p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-sm text-[#29335C] dark:text-white">
+                      Permitir Mensagens
+                    </Label>
+                    <p className="text-xs text-[#64748B] dark:text-white/60">
+                      Outros usuários podem te enviar mensagens
+                    </p>
+                  </div>
+                  <Switch 
+                    checked={privacyData.permitir_mensagens}
+                    onCheckedChange={(checked) => setPrivacyData(prev => ({ ...prev, permitir_mensagens: checked }))}
+                  />
                 </div>
-                <Switch
-                  checked={privacySettings.dataCollection}
-                  onCheckedChange={(checked) => 
-                    setPrivacySettings(prev => ({ ...prev, dataCollection: checked }))
-                  }
-                />
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-sm text-[#29335C] dark:text-white">
+                      Coleta de Dados para Melhorias
+                    </Label>
+                    <p className="text-xs text-[#64748B] dark:text-white/60">
+                      Ajude-nos a melhorar a plataforma
+                    </p>
+                  </div>
+                  <Switch 
+                    checked={privacyData.coleta_dados_melhorias}
+                    onCheckedChange={(checked) => setPrivacyData(prev => ({ ...prev, coleta_dados_melhorias: checked }))}
+                  />
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <Button
+                    size="sm"
+                    onClick={savePrivacySettings}
+                    disabled={loadingStates.privacy}
+                    className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    {loadingStates.privacy ? "Salvando..." : "Salvar Configurações"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => toggleSection(null)}
+                    disabled={loadingStates.privacy}
+                  >
+                    Cancelar
+                  </Button>
+                </div>
               </div>
-
-              <div className="flex justify-end gap-2 pt-4 border-t">
-                <Button
-                  variant="outline"
-                  onClick={() => toggleSection(null)}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  onClick={() => saveSettings("privacy_settings", privacySettings)}
-                  className="bg-[#FF6B00] hover:bg-[#FF6B00]/90"
-                >
-                  Salvar Configurações
-                </Button>
-              </div>
-            </div>
           </div>
         )}
       </div>
@@ -1021,74 +1081,77 @@ export default function SettingsTab({
 
         {expandedSection === "wallet" && (
           <div className="mt-4 p-4 bg-gray-50 dark:bg-[#29335C]/20 rounded-lg border border-[#E0E1DD] dark:border-white/10">
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-4 bg-white dark:bg-[#0A2540] rounded-lg border">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Diamond className="h-4 w-4 text-[#FF6B00]" />
-                    <span className="font-medium">Saldo Atual</span>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                    <div className="flex items-center gap-2">
+                      <Wallet className="h-4 w-4 text-green-600" />
+                      <span className="text-sm font-medium text-green-800 dark:text-green-400">
+                        Saldo Atual
+                      </span>
+                    </div>
+                    <p className="text-lg font-bold text-green-900 dark:text-green-300 mt-1">
+                      R$ {walletData.saldo_atual.toFixed(2)}
+                    </p>
                   </div>
-                  <p className="text-2xl font-bold text-[#29335C] dark:text-white">
-                    {walletSettings.balance.toLocaleString('pt-BR', {
-                      style: 'currency',
-                      currency: walletSettings.currency
-                    })}
-                  </p>
-                </div>
-
-                <div className="p-4 bg-white dark:bg-[#0A2540] rounded-lg border">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Wallet className="h-4 w-4 text-[#FF6B00]" />
-                    <span className="font-medium">School Points</span>
+                  <div className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
+                    <div className="flex items-center gap-2">
+                      <Diamond className="h-4 w-4 text-orange-600" />
+                      <span className="text-sm font-medium text-orange-800 dark:text-orange-400">
+                        School Points
+                      </span>
+                    </div>
+                    <p className="text-lg font-bold text-orange-900 dark:text-orange-300 mt-1">
+                      {walletData.school_points.toLocaleString()} pts
+                    </p>
                   </div>
-                  <p className="text-2xl font-bold text-[#29335C] dark:text-white">
-                    {userProfile?.points || 0}
-                  </p>
                 </div>
-              </div>
-
-              <div>
-                <Label htmlFor="spendingLimit">Limite de Gastos (R$)</Label>
-                <Input
-                  id="spendingLimit"
-                  type="number"
-                  value={walletSettings.spendingLimit}
-                  onChange={(e) => setWalletSettings(prev => ({ ...prev, spendingLimit: Number(e.target.value) }))}
-                  className="mt-1"
-                  placeholder="0 = Sem limite"
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
                 <div>
-                  <Label>Recarga Automática</Label>
-                  <p className="text-xs text-[#64748B] dark:text-white/60">
-                    Recarregar automaticamente quando o saldo for baixo
-                  </p>
+                  <Label className="text-sm text-[#29335C] dark:text-white">
+                    Limite de Gastos Mensal
+                  </Label>
+                  <Input
+                    type="number"
+                    value={walletData.limite_gastos}
+                    onChange={(e) => setWalletData(prev => ({ ...prev, limite_gastos: Number(e.target.value) }))}
+                    className="mt-1"
+                    placeholder="R$ 0,00"
+                  />
                 </div>
-                <Switch
-                  checked={walletSettings.autoTopUp}
-                  onCheckedChange={(checked) => 
-                    setWalletSettings(prev => ({ ...prev, autoTopUp: checked }))
-                  }
-                />
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-sm text-[#29335C] dark:text-white">
+                      Recarga Automática
+                    </Label>
+                    <p className="text-xs text-[#64748B] dark:text-white/60">
+                      Recarregar automaticamente quando o saldo for baixo
+                    </p>
+                  </div>
+                  <Switch 
+                    checked={walletData.recarga_automatica}
+                    onCheckedChange={(checked) => setWalletData(prev => ({ ...prev, recarga_automatica: checked }))}
+                  />
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <Button
+                    size="sm"
+                    onClick={saveWalletSettings}
+                    disabled={loadingStates.wallet}
+                    className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    {loadingStates.wallet ? "Salvando..." : "Salvar Configurações"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => toggleSection(null)}
+                    disabled={loadingStates.wallet}
+                  >
+                    Cancelar
+                  </Button>
+                </div>
               </div>
-
-              <div className="flex justify-end gap-2 pt-4 border-t">
-                <Button
-                  variant="outline"
-                  onClick={() => toggleSection(null)}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  onClick={() => saveSettings("wallet_settings", walletSettings)}
-                  className="bg-[#FF6B00] hover:bg-[#FF6B00]/90"
-                >
-                  Salvar Configurações
-                </Button>
-              </div>
-            </div>
           </div>
         )}
       </div>
