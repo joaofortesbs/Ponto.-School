@@ -1,93 +1,55 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Plus } from "lucide-react";
+import { Plus, Zap } from "lucide-react";
 
 export default function Skills() {
+  const [expanded, setExpanded] = useState(false);
+  const [hasSkills] = useState(false); // Para novos usuários
+
   return (
-    <div className="w-full"> {/* Added w-full class to match profile card width */}
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-bold text-[#29335C] dark:text-white">
-          Habilidades
-        </h3>
+    <div className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 p-6 shadow-sm">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full bg-[#FF6B00]/10 flex items-center justify-center">
+            <Zap className="h-4 w-4 text-[#FF6B00]" />
+          </div>
+          <h3 className="text-lg font-semibold text-[#29335C] dark:text-white">
+            Habilidades
+          </h3>
+        </div>
         <Button
           variant="ghost"
-          size="icon"
-          className="h-8 w-8 text-[#64748B] dark:text-white/60 hover:text-[#FF6B00] hover:bg-[#FF6B00]/10"
+          size="sm"
+          onClick={() => setExpanded(!expanded)}
+          className="text-[#64748B] dark:text-white/60 hover:text-[#FF6B00] hover:bg-[#FF6B00]/10 h-8 w-8 p-0"
         >
           <Plus className="h-4 w-4" />
         </Button>
       </div>
 
-      <div className="space-y-4">
-        <div>
-          <div className="flex justify-between items-center mb-1">
-            <span className="text-sm text-[#29335C] dark:text-white">
-              Programação
-            </span>
-            <span className="text-xs text-[#FF6B00]">Avançado</span>
-          </div>
-          <Progress value={90} className="h-2 bg-gray-200" />
+      {hasSkills ? (
+        <div className="space-y-4">
+          {/* Habilidades reais apareceriam aqui */}
         </div>
-
-        <div>
-          <div className="flex justify-between items-center mb-1">
-            <span className="text-sm text-[#29335C] dark:text-white">
-              Matemática
-            </span>
-            <span className="text-xs text-[#FF6B00]">Avançado</span>
+      ) : (
+        <div className="text-center py-6">
+          <div className="w-12 h-12 mx-auto mb-3 bg-[#FF6B00]/10 rounded-full flex items-center justify-center">
+            <Zap className="h-6 w-6 text-[#FF6B00]" />
           </div>
-          <Progress value={85} className="h-2 bg-gray-200" />
+          <p className="text-[#64748B] dark:text-white/60 mb-3">
+            Adicione suas habilidades e conhecimentos para que outros possam conhecer suas competências
+          </p>
+          <Button
+            size="sm"
+            onClick={() => setExpanded(true)}
+            className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Adicionar Habilidades
+          </Button>
         </div>
-
-        <div>
-          <div className="flex justify-between items-center mb-1">
-            <span className="text-sm text-[#29335C] dark:text-white">
-              Física
-            </span>
-            <span className="text-xs text-[#FF6B00]">Intermediário</span>
-          </div>
-          <Progress value={75} className="h-2 bg-gray-200" />
-        </div>
-
-        <div>
-          <div className="flex justify-between items-center mb-1">
-            <span className="text-sm text-[#29335C] dark:text-white">
-              Química
-            </span>
-            <span className="text-xs text-[#FF6B00]">Intermediário</span>
-          </div>
-          <Progress value={70} className="h-2 bg-gray-200" />
-        </div>
-      </div>
-
-      <div className="flex flex-wrap gap-2 mt-4">
-        <Badge className="bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20">
-          JavaScript
-        </Badge>
-        <Badge className="bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20">
-          Python
-        </Badge>
-        <Badge className="bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20">
-          React
-        </Badge>
-        <Badge className="bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20">
-          Node.js
-        </Badge>
-        <Badge className="bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20">
-          SQL
-        </Badge>
-        <Badge className="bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20">
-          Git
-        </Badge>
-        <Badge className="bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20">
-          Docker
-        </Badge>
-        <Badge className="bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20">
-          AWS
-        </Badge>
-      </div>
+      )}
     </div>
   );
 }

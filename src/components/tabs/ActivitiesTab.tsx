@@ -14,9 +14,18 @@ import {
   FileText,
   BookOpen,
   Bookmark,
+  Plus,
+  TrendingUp,
+  Target,
+  Star,
 } from "lucide-react";
 
 export default function ActivitiesTab() {
+  // Simular dados baseados no perfil real do usuário
+  const hasActivities = false; // Para novos usuários
+  const hasStudyTime = false;
+  const hasSavedContent = false;
+
   return (
     <div className="space-y-6">
       {/* Recent Activity */}
@@ -42,54 +51,27 @@ export default function ActivitiesTab() {
           </div>
         </div>
 
-        <div className="space-y-4">
-          {[
-            {
-              type: "lesson",
-              title: "Completou a aula de Cálculo Diferencial",
-              time: "Hoje, 10:30",
-              icon: <CheckCircle className="h-5 w-5 text-green-500" />,
-            },
-            {
-              type: "comment",
-              title: "Comentou na discussão sobre Física Quântica",
-              time: "Ontem, 15:45",
-              icon: <MessageSquare className="h-5 w-5 text-blue-500" />,
-            },
-            {
-              type: "achievement",
-              title: "Conquistou o troféu 'Mestre em Matemática'",
-              time: "3 dias atrás",
-              icon: <Trophy className="h-5 w-5 text-[#FF6B00]" />,
-            },
-            {
-              type: "join",
-              title: "Entrou na turma de Física Avançada",
-              time: "1 semana atrás",
-              icon: <Users className="h-5 w-5 text-purple-500" />,
-            },
-          ].map((activity, index) => (
-            <div
-              key={index}
-              className="flex items-start gap-3 p-3 bg-[#f7f9fa] dark:bg-[#0A2540]/50 rounded-lg"
-            >
-              <div className="w-10 h-10 rounded-full bg-white dark:bg-[#29335C]/50 flex items-center justify-center flex-shrink-0">
-                {activity.icon}
-              </div>
-              <div className="flex-1">
-                <p className="text-[#29335C] dark:text-white">
-                  {activity.title}
-                </p>
-                <div className="flex items-center gap-1 mt-1">
-                  <Clock className="h-3 w-3 text-[#64748B] dark:text-white/60" />
-                  <span className="text-xs text-[#64748B] dark:text-white/60">
-                    {activity.time}
-                  </span>
-                </div>
-              </div>
+        {hasActivities ? (
+          <div className="space-y-4">
+            {/* Atividades reais apareceriam aqui */}
+          </div>
+        ) : (
+          <div className="bg-[#f7f9fa] dark:bg-[#0A2540]/50 rounded-lg p-8 text-center border border-[#E0E1DD] dark:border-white/10">
+            <div className="w-16 h-16 mx-auto mb-4 bg-[#FF6B00]/10 rounded-full flex items-center justify-center">
+              <TrendingUp className="h-8 w-8 text-[#FF6B00]" />
             </div>
-          ))}
-        </div>
+            <h4 className="text-lg font-semibold text-[#29335C] dark:text-white mb-2">
+              Suas atividades aparecerão aqui
+            </h4>
+            <p className="text-[#64748B] dark:text-white/60 mb-4 max-w-md mx-auto">
+              Quando você começar a estudar, completar aulas e interagir com a plataforma, suas atividades serão exibidas aqui.
+            </p>
+            <Button className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white">
+              <Plus className="h-4 w-4 mr-2" />
+              Começar a Estudar
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Study Progress */}
@@ -106,95 +88,47 @@ export default function ActivitiesTab() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-white dark:bg-[#0A2540] p-4 rounded-lg border border-[#E0E1DD] dark:border-white/10">
-            <h4 className="text-base font-medium text-[#29335C] dark:text-white mb-3">
-              Disciplinas
-            </h4>
-            <div className="space-y-3">
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-sm text-[#29335C] dark:text-white">
-                    Matemática
-                  </span>
-                  <span className="text-xs text-[#FF6B00]">85%</span>
+        {hasStudyTime ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Progresso real apareceria aqui */}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-white dark:bg-[#0A2540] p-6 rounded-lg border border-[#E0E1DD] dark:border-white/10">
+              <div className="text-center">
+                <div className="w-12 h-12 mx-auto mb-3 bg-[#FF6B00]/10 rounded-full flex items-center justify-center">
+                  <BookOpen className="h-6 w-6 text-[#FF6B00]" />
                 </div>
-                <Progress value={85} className="h-2 bg-gray-200" />
+                <h4 className="text-base font-medium text-[#29335C] dark:text-white mb-2">
+                  Disciplinas
+                </h4>
+                <p className="text-sm text-[#64748B] dark:text-white/60 mb-4">
+                  Você ainda não começou a estudar nenhuma disciplina
+                </p>
+                <Button size="sm" className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white">
+                  Escolher Disciplinas
+                </Button>
               </div>
+            </div>
 
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-sm text-[#29335C] dark:text-white">
-                    Física
-                  </span>
-                  <span className="text-xs text-[#FF6B00]">72%</span>
+            <div className="bg-white dark:bg-[#0A2540] p-6 rounded-lg border border-[#E0E1DD] dark:border-white/10">
+              <div className="text-center">
+                <div className="w-12 h-12 mx-auto mb-3 bg-[#FF6B00]/10 rounded-full flex items-center justify-center">
+                  <Clock className="h-6 w-6 text-[#FF6B00]" />
                 </div>
-                <Progress value={72} className="h-2 bg-gray-200" />
-              </div>
-
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-sm text-[#29335C] dark:text-white">
-                    Química
-                  </span>
-                  <span className="text-xs text-[#FF6B00]">63%</span>
-                </div>
-                <Progress value={63} className="h-2 bg-gray-200" />
-              </div>
-
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-sm text-[#29335C] dark:text-white">
-                    Biologia
-                  </span>
-                  <span className="text-xs text-[#FF6B00]">78%</span>
-                </div>
-                <Progress value={78} className="h-2 bg-gray-200" />
+                <h4 className="text-base font-medium text-[#29335C] dark:text-white mb-2">
+                  Tempo de Estudo
+                </h4>
+                <p className="text-sm text-[#64748B] dark:text-white/60 mb-4">
+                  Comece a estudar para acompanhar seu progresso
+                </p>
+                <Button size="sm" className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white">
+                  Iniciar Estudos
+                </Button>
               </div>
             </div>
           </div>
-
-          <div className="bg-white dark:bg-[#0A2540] p-4 rounded-lg border border-[#E0E1DD] dark:border-white/10">
-            <h4 className="text-base font-medium text-[#29335C] dark:text-white mb-3">
-              Tempo de Estudo
-            </h4>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center p-2 bg-[#f7f9fa] dark:bg-[#29335C]/20 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-[#FF6B00]" />
-                  <span className="text-sm text-[#29335C] dark:text-white">
-                    Esta semana
-                  </span>
-                </div>
-                <span className="text-[#FF6B00] font-medium">12h 30min</span>
-              </div>
-
-              <div className="flex justify-between items-center p-2 bg-[#f7f9fa] dark:bg-[#29335C]/20 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-[#64748B] dark:text-white/60" />
-                  <span className="text-sm text-[#29335C] dark:text-white">
-                    Semana passada
-                  </span>
-                </div>
-                <span className="text-[#64748B] dark:text-white/60">
-                  10h 45min
-                </span>
-              </div>
-
-              <div className="flex justify-between items-center p-2 bg-[#f7f9fa] dark:bg-[#29335C]/20 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-[#64748B] dark:text-white/60" />
-                  <span className="text-sm text-[#29335C] dark:text-white">
-                    Este mês
-                  </span>
-                </div>
-                <span className="text-[#64748B] dark:text-white/60">
-                  42h 15min
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Saved Content */}
@@ -211,51 +145,27 @@ export default function ActivitiesTab() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {[
-            {
-              title: "Introdução à Física Quântica",
-              type: "Artigo",
-              date: "Salvo em 22/06/2024",
-              icon: <FileText className="h-5 w-5 text-[#FF6B00]" />,
-            },
-            {
-              title: "Cálculo Diferencial e Integral",
-              type: "Vídeo",
-              date: "Salvo em 20/06/2024",
-              icon: <BookOpen className="h-5 w-5 text-[#FF6B00]" />,
-            },
-          ].map((content, index) => (
-            <div
-              key={index}
-              className="flex items-start gap-3 p-3 bg-white dark:bg-[#0A2540] rounded-lg border border-[#E0E1DD] dark:border-white/10"
-            >
-              <div className="w-10 h-10 rounded-lg bg-[#FF6B00]/10 flex items-center justify-center flex-shrink-0">
-                {content.icon}
-              </div>
-              <div className="flex-1">
-                <h4 className="text-[#29335C] dark:text-white font-medium">
-                  {content.title}
-                </h4>
-                <div className="flex items-center gap-2 mt-1">
-                  <Badge className="bg-[#29335C]/10 text-[#29335C] dark:bg-white/10 dark:text-white text-xs">
-                    {content.type}
-                  </Badge>
-                  <span className="text-xs text-[#64748B] dark:text-white/60">
-                    {content.date}
-                  </span>
-                </div>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-[#64748B] dark:text-white/60 hover:text-[#FF6B00] hover:bg-[#FF6B00]/10"
-              >
-                <Bookmark className="h-4 w-4" />
-              </Button>
+        {hasSavedContent ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Conteúdos salvos apareceriam aqui */}
+          </div>
+        ) : (
+          <div className="bg-[#f7f9fa] dark:bg-[#0A2540]/50 rounded-lg p-8 text-center border border-[#E0E1DD] dark:border-white/10">
+            <div className="w-16 h-16 mx-auto mb-4 bg-[#FF6B00]/10 rounded-full flex items-center justify-center">
+              <Bookmark className="h-8 w-8 text-[#FF6B00]" />
             </div>
-          ))}
-        </div>
+            <h4 className="text-lg font-semibold text-[#29335C] dark:text-white mb-2">
+              Nenhum conteúdo salvo ainda
+            </h4>
+            <p className="text-[#64748B] dark:text-white/60 mb-4 max-w-md mx-auto">
+              Quando você salvar artigos, vídeos ou outros materiais de estudo, eles aparecerão aqui para fácil acesso.
+            </p>
+            <Button variant="outline" className="border-[#FF6B00] text-[#FF6B00] hover:bg-[#FF6B00]/10">
+              <Star className="h-4 w-4 mr-2" />
+              Explorar Biblioteca
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
