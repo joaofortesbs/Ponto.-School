@@ -1,21 +1,83 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Heart, Sparkles } from "lucide-react";
 import AddInterestsModal from "./modals/AddInterestsModal";
+import { ProfileDataService, UserInterest } from "@/services/profileDataService";
+import { useToast } from "@/components/ui/toast";
 
-interface Interest {
-  id: string;
-  name: string;
-  category: string;
+interface InterestsProps {
+  isOwnProfile?: boolean;
 }
 
-export default function Interests() {
-  const [interests, setInterests] = useState<Interest[]>([]);
+export default function Interests({ isOwnProfile = true }: InterestsProps) {
+  const [interests, setInterests] = useState<UserInterest[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const { showToast } = useToast();
 
-  const handleSaveInterests = (newInterests: Interest[]) => {
-    setInterests(newInterests);
+  // Carregar interesses ao montar o componente
+  useEffect(() => {
+    const loadInterests = async () => {
+      try {
+        setIsLoading(true);
+        const data = await ProfileDataService.getUserInterests();
+        setInterests(data);
+      } catch (error) {
+        console.error('Erro ao carregar interesses:', error);
+        showToast('Erro ao carregar interesses', 'error');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (isOwnProfile) {
+      loadInterests();
+    }
+  }, [isOwnProfile, showToast]);
+
+  const handleSaveInterests = async (newInterests: UserInterest[]) => {
+    try {
+      // Encontrar quais interesses foram adicionados
+      const currentInterestNames = interests.map(i => i.name);
+      const interestsToAdd = newInterests.filter(i => !currentInterestNames.includes(i.name));
+      
+      // Adicionar cada novo interesse
+      for (const interest of interestsToAdd) {
+        const result = await ProfileDataService.addUserInterest(interest);
+        if (!result.success) {
+          showToast(result.message, 'error');
+          return;
+        }
+      }
+
+      if (interestsToAdd.length > 0) {
+        showToast(`${interestsToAdd.length} interesse(s) adicionado(s) com sucesso!`, 'success');
+        // Recarregar interesses
+        const data = await ProfileDataService.getUserInterests();
+        setInterests(data);
+      }
+    } catch (error) {
+      console.error('Erro ao salvar interesses:', error);
+      showToast('Erro ao salvar interesses', 'error');
+    }
+  };
+
+  const handleRemoveInterest = async (id: string) => {
+    try {
+      const result = await ProfileDataService.removeUserInterest(id);
+      
+      if (result.success) {
+        showToast(result.message, 'success');
+        setInterests(interests.filter(interest => interest.id !== id));
+      } else {
+        showToast(result.message, 'error');
+      }
+    } catch (error) {
+      console.error('Erro ao remover interesse:', error);
+      showToast('Erro ao remover interesse', 'error');
+    }
   };
 
   const getCategoryColor = (category: string) => {
@@ -44,7 +106,17 @@ export default function Interests() {
     }
     acc[interest.category].push(interest);
     return acc;
-  }, {} as Record<string, Interest[]>);
+  }, {} as Record<string, UserInterest[]>);
+
+  if (isLoading) {
+    return (
+      <div className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 p-6 shadow-sm">
+        <div className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF6B00]"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 p-6 shadow-sm">
@@ -62,14 +134,16 @@ export default function Interests() {
             </Badge>
           )}
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsModalOpen(true)}
-          className="text-[#64748B] dark:text-white/60 hover:text-[#FF6B00] hover:bg-[#FF6B00]/10 h-8 w-8 p-0"
-        >
-          <Plus className="h-4 w-4" />
-        </Button>
+        {isOwnProfile && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsModalOpen(true)}
+            className="text-[#64748B] dark:text-white/60 hover:text-[#FF6B00] hover:bg-[#FF6B00]/10 h-8 w-8 p-0"
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        )}
       </div>
 
       {interests.length > 0 ? (
@@ -84,25 +158,37 @@ export default function Interests() {
                 {categoryInterests.map((interest) => (
                   <Badge
                     key={interest.id}
-                    className={`${getCategoryColor(interest.category)} transition-all hover:scale-105 cursor-default`}
+                    className={`${getCategoryColor(interest.category)} transition-all hover:scale-105 cursor-default group relative`}
                   >
                     <Heart className="h-3 w-3 mr-1" />
                     {interest.name}
+                    {isOwnProfile && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveInterest(interest.id)}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-1 -right-1 h-4 w-4 p-0 text-red-500 hover:text-red-700 bg-white rounded-full border border-red-300"
+                      >
+                        ×
+                      </Button>
+                    )}
                   </Badge>
                 ))}
               </div>
             </div>
           ))}
           
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsModalOpen(true)}
-            className="w-full mt-4 border-[#E0E1DD] dark:border-white/10 hover:border-[#FF6B00] hover:bg-[#FF6B00]/10 hover:text-[#FF6B00]"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Adicionar Mais Interesses
-          </Button>
+          {isOwnProfile && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsModalOpen(true)}
+              className="w-full mt-4 border-[#E0E1DD] dark:border-white/10 hover:border-[#FF6B00] hover:bg-[#FF6B00]/10 hover:text-[#FF6B00]"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Adicionar Mais Interesses
+            </Button>
+          )}
         </div>
       ) : (
         <div className="text-center py-6">
@@ -110,25 +196,32 @@ export default function Interests() {
             <Heart className="h-6 w-6 text-[#FF6B00]" />
           </div>
           <p className="text-[#64748B] dark:text-white/60 mb-3">
-            Compartilhe seus interesses para conectar-se com pessoas que têm gostos similares
+            {isOwnProfile 
+              ? "Compartilhe seus interesses para conectar-se com pessoas que têm gostos similares"
+              : "Este usuário ainda não adicionou interesses."
+            }
           </p>
-          <Button
-            size="sm"
-            onClick={() => setIsModalOpen(true)}
-            className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Adicionar Interesses
-          </Button>
+          {isOwnProfile && (
+            <Button
+              size="sm"
+              onClick={() => setIsModalOpen(true)}
+              className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Adicionar Interesses
+            </Button>
+          )}
         </div>
       )}
 
-      <AddInterestsModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSave={handleSaveInterests}
-        existingInterests={interests}
-      />
+      {isOwnProfile && (
+        <AddInterestsModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSave={handleSaveInterests}
+          existingInterests={interests}
+        />
+      )}
     </div>
   );
 }

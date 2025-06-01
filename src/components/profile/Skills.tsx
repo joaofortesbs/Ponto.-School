@@ -1,22 +1,83 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Zap, Star } from "lucide-react";
 import AddSkillsModal from "./modals/AddSkillsModal";
+import { ProfileDataService, UserSkill } from "@/services/profileDataService";
+import { useToast } from "@/components/ui/toast";
 
-interface Skill {
-  id: string;
-  name: string;
-  level: number;
-  category: string;
+interface SkillsProps {
+  isOwnProfile?: boolean;
 }
 
-export default function Skills() {
-  const [skills, setSkills] = useState<Skill[]>([]);
+export default function Skills({ isOwnProfile = true }: SkillsProps) {
+  const [skills, setSkills] = useState<UserSkill[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const { showToast } = useToast();
 
-  const handleSaveSkills = (newSkills: Skill[]) => {
-    setSkills(newSkills);
+  // Carregar habilidades ao montar o componente
+  useEffect(() => {
+    const loadSkills = async () => {
+      try {
+        setIsLoading(true);
+        const data = await ProfileDataService.getUserSkills();
+        setSkills(data);
+      } catch (error) {
+        console.error('Erro ao carregar habilidades:', error);
+        showToast('Erro ao carregar habilidades', 'error');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (isOwnProfile) {
+      loadSkills();
+    }
+  }, [isOwnProfile, showToast]);
+
+  const handleSaveSkills = async (newSkills: UserSkill[]) => {
+    try {
+      // Encontrar quais skills foram adicionadas
+      const currentSkillNames = skills.map(s => s.name);
+      const skillsToAdd = newSkills.filter(s => !currentSkillNames.includes(s.name));
+      
+      // Adicionar cada nova skill
+      for (const skill of skillsToAdd) {
+        const result = await ProfileDataService.addUserSkill(skill);
+        if (!result.success) {
+          showToast(result.message, 'error');
+          return;
+        }
+      }
+
+      if (skillsToAdd.length > 0) {
+        showToast(`${skillsToAdd.length} habilidade(s) adicionada(s) com sucesso!`, 'success');
+        // Recarregar habilidades
+        const data = await ProfileDataService.getUserSkills();
+        setSkills(data);
+      }
+    } catch (error) {
+      console.error('Erro ao salvar habilidades:', error);
+      showToast('Erro ao salvar habilidades', 'error');
+    }
+  };
+
+  const handleRemoveSkill = async (id: string) => {
+    try {
+      const result = await ProfileDataService.removeUserSkill(id);
+      
+      if (result.success) {
+        showToast(result.message, 'success');
+        setSkills(skills.filter(skill => skill.id !== id));
+      } else {
+        showToast(result.message, 'error');
+      }
+    } catch (error) {
+      console.error('Erro ao remover habilidade:', error);
+      showToast('Erro ao remover habilidade', 'error');
+    }
   };
 
   const getLevelText = (level: number) => {
@@ -54,7 +115,17 @@ export default function Skills() {
     }
     acc[skill.category].push(skill);
     return acc;
-  }, {} as Record<string, Skill[]>);
+  }, {} as Record<string, UserSkill[]>);
+
+  if (isLoading) {
+    return (
+      <div className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 p-6 shadow-sm">
+        <div className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF6B00]"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 p-6 shadow-sm">
@@ -72,14 +143,16 @@ export default function Skills() {
             </Badge>
           )}
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsModalOpen(true)}
-          className="text-[#64748B] dark:text-white/60 hover:text-[#FF6B00] hover:bg-[#FF6B00]/10 h-8 w-8 p-0"
-        >
-          <Plus className="h-4 w-4" />
-        </Button>
+        {isOwnProfile && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsModalOpen(true)}
+            className="text-[#64748B] dark:text-white/60 hover:text-[#FF6B00] hover:bg-[#FF6B00]/10 h-8 w-8 p-0"
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        )}
       </div>
 
       {skills.length > 0 ? (
@@ -92,7 +165,7 @@ export default function Skills() {
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {categorySkills.map((skill) => (
-                  <div key={skill.id} className="p-3 bg-gray-50 dark:bg-[#29335C]/20 rounded-lg border border-[#E0E1DD] dark:border-white/10">
+                  <div key={skill.id} className="p-3 bg-gray-50 dark:bg-[#29335C]/20 rounded-lg border border-[#E0E1DD] dark:border-white/10 group">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <span className="font-medium text-[#29335C] dark:text-white text-sm">
@@ -113,6 +186,16 @@ export default function Skills() {
                             }`}
                           />
                         ))}
+                        {isOwnProfile && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRemoveSkill(skill.id)}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 ml-2"
+                          >
+                            ×
+                          </Button>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -132,15 +215,17 @@ export default function Skills() {
             </div>
           ))}
           
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsModalOpen(true)}
-            className="w-full mt-4 border-[#E0E1DD] dark:border-white/10 hover:border-[#FF6B00] hover:bg-[#FF6B00]/10 hover:text-[#FF6B00]"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Adicionar Mais Habilidades
-          </Button>
+          {isOwnProfile && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsModalOpen(true)}
+              className="w-full mt-4 border-[#E0E1DD] dark:border-white/10 hover:border-[#FF6B00] hover:bg-[#FF6B00]/10 hover:text-[#FF6B00]"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Adicionar Mais Habilidades
+            </Button>
+          )}
         </div>
       ) : (
         <div className="text-center py-6">
@@ -148,25 +233,32 @@ export default function Skills() {
             <Zap className="h-6 w-6 text-[#FF6B00]" />
           </div>
           <p className="text-[#64748B] dark:text-white/60 mb-3">
-            Adicione suas habilidades e conhecimentos para que outros possam conhecer suas competências
+            {isOwnProfile 
+              ? "Adicione suas habilidades e conhecimentos para que outros possam conhecer suas competências"
+              : "Este usuário ainda não adicionou habilidades."
+            }
           </p>
-          <Button
-            size="sm"
-            onClick={() => setIsModalOpen(true)}
-            className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Adicionar Habilidades
-          </Button>
+          {isOwnProfile && (
+            <Button
+              size="sm"
+              onClick={() => setIsModalOpen(true)}
+              className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Adicionar Habilidades
+            </Button>
+          )}
         </div>
       )}
 
-      <AddSkillsModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSave={handleSaveSkills}
-        existingSkills={skills}
-      />
+      {isOwnProfile && (
+        <AddSkillsModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSave={handleSaveSkills}
+          existingSkills={skills}
+        />
+      )}
     </div>
   );
 }

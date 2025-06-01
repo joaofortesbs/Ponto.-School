@@ -8,36 +8,24 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, GraduationCap, Plus, Save } from "lucide-react";
+import { CalendarIcon, GraduationCap, Save } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-
-interface Education {
-  id: string;
-  institution: string;
-  degree: string;
-  field: string;
-  startDate: Date | null;
-  endDate: Date | null;
-  current: boolean;
-  description: string;
-  grade?: string;
-}
+import { UserEducation } from "@/services/profileDataService";
 
 interface AddEducationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (education: Education) => void;
+  onSave: (education: Omit<UserEducation, 'id'>) => void;
 }
 
 export default function AddEducationModal({ isOpen, onClose, onSave }: AddEducationModalProps) {
-  const [formData, setFormData] = useState<Education>({
-    id: Date.now().toString(),
+  const [formData, setFormData] = useState<Omit<UserEducation, 'id'>>({
     institution: "",
     degree: "",
     field: "",
-    startDate: null,
-    endDate: null,
+    start_date: null,
+    end_date: null,
     current: false,
     description: "",
     grade: ""
@@ -62,17 +50,24 @@ export default function AddEducationModal({ isOpen, onClose, onSave }: AddEducat
     
     onSave(formData);
     setFormData({
-      id: Date.now().toString(),
       institution: "",
       degree: "",
       field: "",
-      startDate: null,
-      endDate: null,
+      start_date: null,
+      end_date: null,
       current: false,
       description: "",
       grade: ""
     });
     onClose();
+  };
+
+  const handleStartDateSelect = (date: Date | undefined) => {
+    setFormData({ ...formData, start_date: date ? date.toISOString().split('T')[0] : null });
+  };
+
+  const handleEndDateSelect = (date: Date | undefined) => {
+    setFormData({ ...formData, end_date: date ? date.toISOString().split('T')[0] : null });
   };
 
   return (
@@ -144,14 +139,14 @@ export default function AddEducationModal({ isOpen, onClose, onSave }: AddEducat
                     className="w-full justify-start text-left border-[#E0E1DD] dark:border-white/10 hover:border-[#FF6B00]"
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.startDate ? format(formData.startDate, "PPP", { locale: ptBR }) : "Selecionar data"}
+                    {formData.start_date ? format(new Date(formData.start_date), "PPP", { locale: ptBR }) : "Selecionar data"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
                   <Calendar
                     mode="single"
-                    selected={formData.startDate || undefined}
-                    onSelect={(date) => setFormData({ ...formData, startDate: date || null })}
+                    selected={formData.start_date ? new Date(formData.start_date) : undefined}
+                    onSelect={handleStartDateSelect}
                     initialFocus
                   />
                 </PopoverContent>
@@ -168,7 +163,7 @@ export default function AddEducationModal({ isOpen, onClose, onSave }: AddEducat
                     type="checkbox"
                     id="current"
                     checked={formData.current}
-                    onChange={(e) => setFormData({ ...formData, current: e.target.checked, endDate: e.target.checked ? null : formData.endDate })}
+                    onChange={(e) => setFormData({ ...formData, current: e.target.checked, end_date: e.target.checked ? null : formData.end_date })}
                     className="rounded border-[#E0E1DD] focus:ring-[#FF6B00]"
                   />
                   <Label htmlFor="current" className="text-sm text-[#64748B] dark:text-white/60">
@@ -183,14 +178,14 @@ export default function AddEducationModal({ isOpen, onClose, onSave }: AddEducat
                         className="w-full justify-start text-left border-[#E0E1DD] dark:border-white/10 hover:border-[#FF6B00]"
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {formData.endDate ? format(formData.endDate, "PPP", { locale: ptBR }) : "Selecionar data"}
+                        {formData.end_date ? format(new Date(formData.end_date), "PPP", { locale: ptBR }) : "Selecionar data"}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
                       <Calendar
                         mode="single"
-                        selected={formData.endDate || undefined}
-                        onSelect={(date) => setFormData({ ...formData, endDate: date || null })}
+                        selected={formData.end_date ? new Date(formData.end_date) : undefined}
+                        onSelect={handleEndDateSelect}
                         initialFocus
                       />
                     </PopoverContent>
