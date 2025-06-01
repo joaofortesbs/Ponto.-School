@@ -545,22 +545,47 @@ export function SidebarNav({
                 const firstName = userProfile?.full_name?.split(' ')[0] || 
                                 userProfile?.display_name || 
                                 localStorage.getItem('userFirstName') || 
-                                "";
+                                "Estudante";
                 return firstName;
               })()}!
             </h3>
             <div className="flex flex-col items-center mt-1">
               <p className="text-xs text-[#001427]/70 dark:text-white/70 mb-0.5">
-                Nível 37
+                Nível {userProfile?.level || 1}
               </p>
               <div className="w-24 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-[#FFD700] via-[#FF6B00] to-[#FF0000] rounded-full"
-                  style={{ width: "60%" }}
+                  className="h-full bg-gradient-to-r from-[#FFD700] via-[#FF6B00] to-[#FF0000] rounded-full transition-all duration-300"
+                  style={{ 
+                    width: `${(() => {
+                      const currentXP = userProfile?.experience_points || 0;
+                      const currentLevel = userProfile?.level || 1;
+                      const xpForNextLevel = currentLevel * 1000;
+                      const previousLevelXP = (currentLevel - 1) * 1000;
+                      const xpInCurrentLevel = currentXP - previousLevelXP;
+                      const xpNeededForLevel = xpForNextLevel - previousLevelXP;
+                      
+                      if (currentLevel === 1 && currentXP === 0) {
+                        return 0; // Usuário novo sem XP
+                      }
+                      
+                      return xpNeededForLevel > 0 ? Math.round((xpInCurrentLevel / xpNeededForLevel) * 100) : 0;
+                    })()}%` 
+                  }}
                 ></div>
               </div>
               <span className="text-[10px] text-[#FF6B00] mt-0.5">
-                1.500 XP / 3.000 XP
+                {(() => {
+                  const currentXP = userProfile?.experience_points || 0;
+                  const currentLevel = userProfile?.level || 1;
+                  const xpForNextLevel = currentLevel * 1000;
+                  
+                  if (currentLevel === 1 && currentXP === 0) {
+                    return "0 XP / 1.000 XP"; // Usuário novo
+                  }
+                  
+                  return `${currentXP.toLocaleString()} XP / ${xpForNextLevel.toLocaleString()} XP`;
+                })()}
               </span>
             </div>
           </div>
