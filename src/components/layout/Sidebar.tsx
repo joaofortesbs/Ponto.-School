@@ -218,24 +218,26 @@ export default function Sidebar({
           </div>
         </div>
 
-        <div className="relative">
+        <div className="relative flex-1 flex flex-col">
           <SidebarNav
             isCollapsed={sidebarCollapsed}
             onToggleCollapse={handleToggleCollapse}
             className={cn(
-              "p-2",
+              "p-2 flex-1",
               sidebarCollapsed ? "pt-8" : "pt-4"
             )}
           />
 
-          {/* Toggle Button - positioned at the top */}
+          {/* Toggle Button - positioned at bottom when collapsed, at top when expanded */}
           <Button
             variant="outline"
             size="icon"
             onClick={handleToggleCollapse}
             className={cn(
-              "h-6 w-6 rounded-full bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20 border-[#FF6B00]/30 transition-all duration-300 absolute top-4 right-2 shadow-sm hover:shadow-md z-10",
-              isHovered ? "opacity-100" : "opacity-0"
+              "h-6 w-6 rounded-full bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20 border-[#FF6B00]/30 transition-all duration-300 shadow-sm hover:shadow-md z-10 mx-auto",
+              sidebarCollapsed 
+                ? "mb-4 opacity-100" // Sempre visível quando minimizado, na parte inferior
+                : cn("absolute top-4 right-2", isHovered ? "opacity-100" : "opacity-0") // No topo quando expandido, apenas no hover
             )}
           >
             {sidebarCollapsed ? (
