@@ -1501,11 +1501,15 @@ The code has been modified to include the EditProfileModal and the functionality
               {(() => {
                 const currentXP = userProfile?.experience_points || 0;
                 const currentLevel = userProfile?.level || 1;
-                const xpForNextLevel = currentLevel * 1000;
-                const previousLevelXP = (currentLevel - 1) * 1000;
+                const xpForCurrentLevel = currentLevel * 100; // 100 XP por nível
+                const previousLevelXP = (currentLevel - 1) * 100;
                 const xpInCurrentLevel = currentXP - previousLevelXP;
-                const xpNeededForLevel = xpForNextLevel - previousLevelXP;
-                const progressPercentage = xpNeededForLevel > 0 ? Math.round((xpInCurrentLevel / xpNeededForLevel) * 100) : 0;
+                const xpNeededForLevel = xpForCurrentLevel - previousLevelXP;
+                
+                // Para novos usuários (nível 1 com 0 XP), mostrar 0%
+                if (currentLevel === 1 && currentXP === 0) return "0%";
+                
+                const progressPercentage = xpNeededForLevel > 0 ? Math.min(Math.round((xpInCurrentLevel / xpNeededForLevel) * 100), 100) : 0;
                 return `${progressPercentage}%`;
               })()}
               <AnimatePresence>
@@ -1517,8 +1521,8 @@ The code has been modified to include the EditProfileModal and the functionality
                     className="absolute right-6 -mt-10 px-2 py-1.5 bg-black/80 text-white text-[10px] rounded-lg shadow-lg backdrop-blur-sm z-50 w-32 text-center"
                   >
                     <div className="font-medium mb-0.5">Progresso</div>
-                    <div className="text-white/80">{userProfile?.experience_points || 0}/{(userProfile?.level || 1) * 1000} XP</div>
-                    <div className="text-white/80">Faltam {((userProfile?.level || 1) * 1000) - (userProfile?.experience_points || 0)} XP</div>
+                    <div className="text-white/80">{userProfile?.experience_points || 0}/{(userProfile?.level || 1) * 100} XP</div>
+                    <div className="text-white/80">Faltam {((userProfile?.level || 1) * 100) - (userProfile?.experience_points || 0)} XP</div>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -1530,11 +1534,15 @@ The code has been modified to include the EditProfileModal and the functionality
                 width: `${(() => {
                   const currentXP = userProfile?.experience_points || 0;
                   const currentLevel = userProfile?.level || 1;
-                  const xpForNextLevel = currentLevel * 1000;
-                  const previousLevelXP = (currentLevel - 1) * 1000;
+                  const xpForCurrentLevel = currentLevel * 100; // 100 XP por nível
+                  const previousLevelXP = (currentLevel - 1) * 100;
                   const xpInCurrentLevel = currentXP - previousLevelXP;
-                  const xpNeededForLevel = xpForNextLevel - previousLevelXP;
-                  return xpNeededForLevel > 0 ? Math.round((xpInCurrentLevel / xpNeededForLevel) * 100) : 0;
+                  const xpNeededForLevel = xpForCurrentLevel - previousLevelXP;
+                  
+                  // Para novos usuários (nível 1 com 0 XP), mostrar 0%
+                  if (currentLevel === 1 && currentXP === 0) return 0;
+                  
+                  return xpNeededForLevel > 0 ? Math.min(Math.round((xpInCurrentLevel / xpNeededForLevel) * 100), 100) : 0;
                 })()}%` 
               }}
             >
