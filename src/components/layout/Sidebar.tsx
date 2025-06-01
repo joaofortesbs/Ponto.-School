@@ -228,13 +228,13 @@ export default function Sidebar({
             )}
           />
 
-          {/* Toggle Button - positioned next to profile image area but more to the corner */}
+          {/* Toggle Button - positioned below the logo separator line */}
           <Button
             variant="outline"
             size="icon"
             onClick={handleToggleCollapse}
             className={cn(
-              "h-6 w-6 rounded-full bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20 border-[#FF6B00]/30 transition-all duration-300 absolute top-[80px] right-1 shadow-sm hover:shadow-md z-10",
+              "h-6 w-6 rounded-full bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20 border-[#FF6B00]/30 transition-all duration-300 absolute top-[72px] right-2 shadow-sm hover:shadow-md z-10",
               isHovered ? "opacity-100" : "opacity-0"
             )}
           >
