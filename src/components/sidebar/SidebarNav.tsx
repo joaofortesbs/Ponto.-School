@@ -483,7 +483,7 @@ export function SidebarNav({
       {/* User Profile Component - Greeting and progress section */}
       <div className={cn(
         "bg-white dark:bg-[#001427] p-4 mb-4 flex flex-col items-center relative group",
-        isCollapsed ? "mt-12" : "mt-8"
+        isCollapsed ? "mt-6" : "mt-4"
       )}>
         {/* Profile Image Component - Responsive avatar */}
         <div className="relative mb-4 flex justify-center">
