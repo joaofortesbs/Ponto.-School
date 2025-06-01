@@ -5,12 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, GraduationCap, Plus, Save } from "lucide-react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { Checkbox } from "@/components/ui/checkbox";
+import { X, GraduationCap } from "lucide-react";
 
 interface Education {
   id: string;
@@ -27,200 +23,200 @@ interface Education {
 interface AddEducationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (education: Education) => void;
+  onSave: (education: Omit<Education, 'id'>) => Promise<boolean>;
 }
 
 export default function AddEducationModal({ isOpen, onClose, onSave }: AddEducationModalProps) {
-  const [formData, setFormData] = useState<Education>({
-    id: Date.now().toString(),
-    institution: "",
-    degree: "",
-    field: "",
-    startDate: null,
-    endDate: null,
+  const [formData, setFormData] = useState({
+    institution: '',
+    degree: '',
+    field: '',
+    startDate: '',
+    endDate: '',
     current: false,
-    description: "",
-    grade: ""
+    description: '',
+    grade: ''
   });
+  const [saving, setSaving] = useState(false);
 
-  const degreeTypes = [
-    "Ensino Fundamental",
-    "Ensino Médio",
-    "Técnico",
-    "Tecnólogo",
-    "Bacharelado",
-    "Licenciatura",
-    "Especialização",
-    "MBA",
-    "Mestrado",
-    "Doutorado",
-    "Pós-Doutorado"
-  ];
-
-  const handleSave = () => {
-    if (!formData.institution || !formData.degree) return;
-    
-    onSave(formData);
+  const resetForm = () => {
     setFormData({
-      id: Date.now().toString(),
-      institution: "",
-      degree: "",
-      field: "",
-      startDate: null,
-      endDate: null,
+      institution: '',
+      degree: '',
+      field: '',
+      startDate: '',
+      endDate: '',
       current: false,
-      description: "",
-      grade: ""
+      description: '',
+      grade: ''
     });
+  };
+
+  const handleClose = () => {
+    resetForm();
     onClose();
   };
 
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl bg-white dark:bg-[#0A2540] border border-[#E0E1DD] dark:border-white/10">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-3 text-xl font-semibold text-[#29335C] dark:text-white">
-            <div className="w-10 h-10 rounded-full bg-[#FF6B00]/10 flex items-center justify-center">
-              <GraduationCap className="h-5 w-5 text-[#FF6B00]" />
-            </div>
-            Adicionar Educação
-          </DialogTitle>
-        </DialogHeader>
+  const handleSave = async () => {
+    if (!formData.institution.trim() || !formData.degree.trim()) {
+      return;
+    }
 
-        <div className="space-y-6 py-4">
+    setSaving(true);
+    
+    const educationData = {
+      institution: formData.institution.trim(),
+      degree: formData.degree.trim(),
+      field: formData.field.trim(),
+      startDate: formData.startDate ? new Date(formData.startDate) : null,
+      endDate: formData.current ? null : (formData.endDate ? new Date(formData.endDate) : null),
+      current: formData.current,
+      description: formData.description.trim(),
+      grade: formData.grade.trim() || undefined
+    };
+
+    const success = await onSave(educationData);
+    
+    if (success) {
+      handleClose();
+    }
+    
+    setSaving(false);
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-[600px] bg-white dark:bg-[#0A2540] border-0 shadow-2xl">
+        <DialogHeader className="pb-4 border-b border-[#E0E1DD] dark:border-white/10">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] shadow-lg">
+                <GraduationCap className="h-6 w-6 text-white" />
+              </div>
+              <DialogTitle className="text-xl font-bold text-[#29335C] dark:text-white">
+                Adicionar Educação
+              </DialogTitle>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleClose}
+              className="h-8 w-8 p-0 rounded-full hover:bg-[#E0E1DD] dark:hover:bg-white/10"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </DialogHeader>
+        
+        <div className="space-y-6 py-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label className="text-[#29335C] dark:text-white font-medium">
+              <Label htmlFor="institution" className="text-sm font-medium text-[#29335C] dark:text-white">
                 Instituição *
               </Label>
               <Input
+                id="institution"
                 value={formData.institution}
-                onChange={(e) => setFormData({ ...formData, institution: e.target.value })}
-                placeholder="Ex: Universidade de São Paulo"
+                onChange={(e) => setFormData(prev => ({ ...prev, institution: e.target.value }))}
+                placeholder="ex: Universidade Federal de Pernambuco"
                 className="border-[#E0E1DD] dark:border-white/10 focus:border-[#FF6B00] focus:ring-[#FF6B00]/10"
               />
             </div>
-
+            
             <div className="space-y-2">
-              <Label className="text-[#29335C] dark:text-white font-medium">
-                Tipo de Curso *
+              <Label htmlFor="degree" className="text-sm font-medium text-[#29335C] dark:text-white">
+                Grau *
               </Label>
-              <Select value={formData.degree} onValueChange={(value) => setFormData({ ...formData, degree: value })}>
-                <SelectTrigger className="border-[#E0E1DD] dark:border-white/10 focus:border-[#FF6B00]">
-                  <SelectValue placeholder="Selecione o tipo" />
-                </SelectTrigger>
-                <SelectContent>
-                  {degreeTypes.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {type}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Input
+                id="degree"
+                value={formData.degree}
+                onChange={(e) => setFormData(prev => ({ ...prev, degree: e.target.value }))}
+                placeholder="ex: Bacharelado, Mestrado"
+                className="border-[#E0E1DD] dark:border-white/10 focus:border-[#FF6B00] focus:ring-[#FF6B00]/10"
+              />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label className="text-[#29335C] dark:text-white font-medium">
+            <Label htmlFor="field" className="text-sm font-medium text-[#29335C] dark:text-white">
               Área de Estudo
             </Label>
             <Input
+              id="field"
               value={formData.field}
-              onChange={(e) => setFormData({ ...formData, field: e.target.value })}
-              placeholder="Ex: Engenharia de Software, Medicina, Administração..."
+              onChange={(e) => setFormData(prev => ({ ...prev, field: e.target.value }))}
+              placeholder="ex: Ciência da Computação"
               className="border-[#E0E1DD] dark:border-white/10 focus:border-[#FF6B00] focus:ring-[#FF6B00]/10"
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label className="text-[#29335C] dark:text-white font-medium">
+              <Label htmlFor="startDate" className="text-sm font-medium text-[#29335C] dark:text-white">
                 Data de Início
               </Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start text-left border-[#E0E1DD] dark:border-white/10 hover:border-[#FF6B00]"
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.startDate ? format(formData.startDate, "PPP", { locale: ptBR }) : "Selecionar data"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={formData.startDate || undefined}
-                    onSelect={(date) => setFormData({ ...formData, startDate: date || null })}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+              <Input
+                id="startDate"
+                type="date"
+                value={formData.startDate}
+                onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
+                className="border-[#E0E1DD] dark:border-white/10 focus:border-[#FF6B00] focus:ring-[#FF6B00]/10"
+              />
             </div>
-
+            
             <div className="space-y-2">
-              <Label className="text-[#29335C] dark:text-white font-medium">
+              <Label htmlFor="endDate" className="text-sm font-medium text-[#29335C] dark:text-white">
                 Data de Conclusão
               </Label>
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="current"
-                    checked={formData.current}
-                    onChange={(e) => setFormData({ ...formData, current: e.target.checked, endDate: e.target.checked ? null : formData.endDate })}
-                    className="rounded border-[#E0E1DD] focus:ring-[#FF6B00]"
-                  />
-                  <Label htmlFor="current" className="text-sm text-[#64748B] dark:text-white/60">
-                    Estou cursando atualmente
-                  </Label>
-                </div>
-                {!formData.current && (
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start text-left border-[#E0E1DD] dark:border-white/10 hover:border-[#FF6B00]"
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {formData.endDate ? format(formData.endDate, "PPP", { locale: ptBR }) : "Selecionar data"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={formData.endDate || undefined}
-                        onSelect={(date) => setFormData({ ...formData, endDate: date || null })}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                )}
-              </div>
+              <Input
+                id="endDate"
+                type="date"
+                value={formData.endDate}
+                onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
+                disabled={formData.current}
+                className="border-[#E0E1DD] dark:border-white/10 focus:border-[#FF6B00] focus:ring-[#FF6B00]/10 disabled:opacity-50"
+              />
             </div>
           </div>
 
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="current"
+              checked={formData.current}
+              onCheckedChange={(checked) => setFormData(prev => ({ 
+                ...prev, 
+                current: checked as boolean,
+                endDate: checked ? '' : prev.endDate
+              }))}
+            />
+            <Label htmlFor="current" className="text-sm text-[#64748B] dark:text-white/60">
+              Atualmente estudando aqui
+            </Label>
+          </div>
+
           <div className="space-y-2">
-            <Label className="text-[#29335C] dark:text-white font-medium">
-              Nota/CRA (opcional)
+            <Label htmlFor="grade" className="text-sm font-medium text-[#29335C] dark:text-white">
+              Nota/GPA
             </Label>
             <Input
+              id="grade"
               value={formData.grade}
-              onChange={(e) => setFormData({ ...formData, grade: e.target.value })}
-              placeholder="Ex: 8.5, A, Summa Cum Laude..."
+              onChange={(e) => setFormData(prev => ({ ...prev, grade: e.target.value }))}
+              placeholder="ex: 8.5, 3.7 GPA"
               className="border-[#E0E1DD] dark:border-white/10 focus:border-[#FF6B00] focus:ring-[#FF6B00]/10"
             />
           </div>
 
           <div className="space-y-2">
-            <Label className="text-[#29335C] dark:text-white font-medium">
-              Descrição (opcional)
+            <Label htmlFor="description" className="text-sm font-medium text-[#29335C] dark:text-white">
+              Descrição
             </Label>
             <Textarea
+              id="description"
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="Descreva atividades relevantes, projetos, conquistas..."
-              className="min-h-[100px] border-[#E0E1DD] dark:border-white/10 focus:border-[#FF6B00] focus:ring-[#FF6B00]/10 resize-none"
+              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              placeholder="Descreva atividades, projetos ou conquistas relevantes..."
+              className="min-h-[80px] border-[#E0E1DD] dark:border-white/10 focus:border-[#FF6B00] focus:ring-[#FF6B00]/10 resize-none"
             />
           </div>
         </div>
@@ -228,18 +224,18 @@ export default function AddEducationModal({ isOpen, onClose, onSave }: AddEducat
         <div className="flex justify-end gap-3 pt-4 border-t border-[#E0E1DD] dark:border-white/10">
           <Button
             variant="outline"
-            onClick={onClose}
-            className="border-[#E0E1DD] dark:border-white/10 text-[#64748B] dark:text-white/60 hover:border-[#29335C] hover:text-[#29335C]"
+            onClick={handleClose}
+            disabled={saving}
+            className="border-[#E0E1DD] dark:border-white/10 text-[#64748B] dark:text-white/60"
           >
             Cancelar
           </Button>
           <Button
             onClick={handleSave}
-            disabled={!formData.institution || !formData.degree}
-            className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white disabled:opacity-50"
+            disabled={!formData.institution.trim() || !formData.degree.trim() || saving}
+            className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
           >
-            <Save className="h-4 w-4 mr-2" />
-            Salvar Educação
+            {saving ? 'Salvando...' : 'Salvar'}
           </Button>
         </div>
       </DialogContent>

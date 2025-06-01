@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -20,6 +21,9 @@ import ActivitiesTab from "../tabs/ActivitiesTab";
 import ClassesTab from "../tabs/ClassesTab";
 import SettingsTab from "../tabs/SettingsTab";
 
+// Import profile data hook
+import { useProfileData } from "@/hooks/useProfileData";
+
 interface ProfilePageProps {
   isOwnProfile?: boolean;
 }
@@ -37,9 +41,29 @@ export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
     location: "Adicionar localização",
     birthDate: "Adicionar data de nascimento",
   });
-  const [aboutMe, setAboutMe] = useState(
-    "Olá! Sou estudante de Engenharia de Software na Universidade de São Paulo. Apaixonado por tecnologia, programação e matemática. Busco constantemente novos conhecimentos e desafios para aprimorar minhas habilidades. Nas horas vagas, gosto de jogar xadrez, ler livros de ficção científica e praticar esportes.",
-  );
+
+  // Use the profile data hook
+  const {
+    bio,
+    education,
+    skills,
+    interests,
+    loading: profileDataLoading,
+    saveBio,
+    addEducation,
+    removeEducation,
+    addSkill,
+    removeSkill,
+    addInterest,
+    removeInterest
+  } = useProfileData();
+
+  const [aboutMe, setAboutMe] = useState(bio);
+
+  // Update aboutMe when bio changes
+  useEffect(() => {
+    setAboutMe(bio);
+  }, [bio]);
 
   useEffect(() => {
     // Função para buscar o perfil do usuário
@@ -84,10 +108,6 @@ export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
               (user.raw_user_meta_data?.birth_date) || 
               "Adicionar data de nascimento",
           });
-          
-          if (data.bio) {
-            setAboutMe(data.bio);
-          }
         }
       } catch (error) {
         console.error("Error fetching profile:", error);
@@ -143,29 +163,37 @@ export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
   };
 
   const saveAboutMe = async () => {
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) {
-        const { error } = await supabase
-          .from("profiles")
-          .update({
-            bio: aboutMe,
-          })
-          .eq("id", user.id);
-
-        if (error) {
-          console.error("Error updating bio:", error);
-        }
-      }
-    } catch (error) {
-      console.error("Error:", error);
+    const success = await saveBio(aboutMe);
+    if (success) {
+      setIsEditing(false);
     }
-    setIsEditing(false);
   };
 
-  if (loading) {
+  // Skills handlers
+  const handleSaveSkills = async (newSkills: any[]) => {
+    // Remove existing skills and add new ones
+    for (const skill of skills) {
+      await removeSkill(skill.id);
+    }
+    
+    for (const skill of newSkills) {
+      await addSkill(skill);
+    }
+  };
+
+  // Interests handlers
+  const handleSaveInterests = async (newInterests: any[]) => {
+    // Remove existing interests and add new ones
+    for (const interest of interests) {
+      await removeInterest(interest.id);
+    }
+    
+    for (const interest of newInterests) {
+      await addInterest(interest);
+    }
+  };
+
+  if (loading || profileDataLoading) {
     return (
       <div className="w-full h-full relative">
         <div className="typewriter-container">
@@ -279,13 +307,23 @@ export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
                         />
 
                         {/* Education */}
-                        <Education />
+                        <Education
+                          education={education}
+                          onAddEducation={addEducation}
+                          onRemoveEducation={removeEducation}
+                        />
 
                         {/* Skills */}
-                        <Skills />
+                        <Skills
+                          skills={skills}
+                          onSaveSkills={handleSaveSkills}
+                        />
 
                         {/* Interests */}
-                        <Interests />
+                        <Interests
+                          interests={interests}
+                          onSaveInterests={handleSaveInterests}
+                        />
                       </div>
                     </TabsContent>
 

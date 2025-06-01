@@ -162,6 +162,48 @@ export type Database = {
         }
         Relationships: []
       }
+      user_education: {
+        Row: {
+          created_at: string | null
+          current: boolean | null
+          degree: string
+          description: string | null
+          end_date: string | null
+          field: string | null
+          grade: string | null
+          id: string
+          institution: string
+          start_date: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          current?: boolean | null
+          degree: string
+          description?: string | null
+          end_date?: string | null
+          field?: string | null
+          grade?: string | null
+          id?: string
+          institution: string
+          start_date?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          current?: boolean | null
+          degree?: string
+          description?: string | null
+          end_date?: string | null
+          field?: string | null
+          grade?: string | null
+          id?: string
+          institution?: string
+          start_date?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_id_control: {
         Row: {
           created_at: string | null
@@ -177,6 +219,81 @@ export type Database = {
           created_at?: string | null
           id?: string
           last_id?: number
+        }
+        Relationships: []
+      }
+      user_interests: {
+        Row: {
+          category: string
+          created_at: string | null
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_profiles_bio: {
+        Row: {
+          bio: string | null
+          created_at: string | null
+          id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_skills: {
+        Row: {
+          category: string
+          created_at: string | null
+          id: string
+          level: number | null
+          name: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          id?: string
+          level?: number | null
+          name: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          id?: string
+          level?: number | null
+          name?: string
+          user_id?: string
         }
         Relationships: []
       }

@@ -1,7 +1,8 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, GraduationCap, Building2, Calendar, Edit, Trash2 } from "lucide-react";
+import { Plus, GraduationCap, Building2, Calendar, Trash2 } from "lucide-react";
 import AddEducationModal from "./modals/AddEducationModal";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -18,17 +19,14 @@ interface Education {
   grade?: string;
 }
 
-export default function Education() {
-  const [educations, setEducations] = useState<Education[]>([]);
+interface EducationProps {
+  education: Education[];
+  onAddEducation: (education: Omit<Education, 'id'>) => Promise<boolean>;
+  onRemoveEducation: (id: string) => Promise<boolean>;
+}
+
+export default function Education({ education, onAddEducation, onRemoveEducation }: EducationProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const handleAddEducation = (education: Education) => {
-    setEducations([...educations, education]);
-  };
-
-  const handleRemoveEducation = (id: string) => {
-    setEducations(educations.filter(edu => edu.id !== id));
-  };
 
   const formatDateRange = (startDate: Date | null, endDate: Date | null, current: boolean) => {
     const start = startDate ? format(startDate, "MMM yyyy", { locale: ptBR }) : "";
@@ -57,49 +55,49 @@ export default function Education() {
         </Button>
       </div>
 
-      {educations.length > 0 ? (
+      {education.length > 0 ? (
         <div className="space-y-4">
-          {educations.map((education) => (
-            <div key={education.id} className="p-4 bg-gray-50 dark:bg-[#29335C]/20 rounded-lg border border-[#E0E1DD] dark:border-white/10">
+          {education.map((edu) => (
+            <div key={edu.id} className="p-4 bg-gray-50 dark:bg-[#29335C]/20 rounded-lg border border-[#E0E1DD] dark:border-white/10">
               <div className="flex justify-between items-start mb-2">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <Building2 className="h-4 w-4 text-[#FF6B00]" />
                     <h4 className="font-semibold text-[#29335C] dark:text-white">
-                      {education.institution}
+                      {edu.institution}
                     </h4>
                   </div>
                   <div className="flex items-center gap-2 mb-2">
                     <Badge className="bg-[#FF6B00]/10 text-[#FF6B00] border-[#FF6B00]/20">
-                      {education.degree}
+                      {edu.degree}
                     </Badge>
-                    {education.field && (
+                    {edu.field && (
                       <span className="text-[#64748B] dark:text-white/60 text-sm">
-                        em {education.field}
+                        em {edu.field}
                       </span>
                     )}
                   </div>
                   <div className="flex items-center gap-4 text-sm text-[#64748B] dark:text-white/60 mb-2">
                     <div className="flex items-center gap-1">
                       <Calendar className="h-3 w-3" />
-                      {formatDateRange(education.startDate, education.endDate, education.current)}
+                      {formatDateRange(edu.startDate, edu.endDate, edu.current)}
                     </div>
-                    {education.grade && (
+                    {edu.grade && (
                       <div>
-                        Nota: {education.grade}
+                        Nota: {edu.grade}
                       </div>
                     )}
                   </div>
-                  {education.description && (
+                  {edu.description && (
                     <p className="text-sm text-[#64748B] dark:text-white/60 mt-2">
-                      {education.description}
+                      {edu.description}
                     </p>
                   )}
                 </div>
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => handleRemoveEducation(education.id)}
+                  onClick={() => onRemoveEducation(edu.id)}
                   className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -130,7 +128,7 @@ export default function Education() {
       <AddEducationModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSave={handleAddEducation}
+        onSave={onAddEducation}
       />
     </div>
   );
