@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { UserPlus, Search, Users, Clock, X, HandHeart, Verified, UserMinus } from "lucide-react";
+import { UserPlus, Search, Users, Clock, X, HandHeart, Verified, UserMinus, AlertTriangle } from "lucide-react";
 import { useFriendship } from "@/hooks/useFriendship";
 import { UserCard } from "./UserCard";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,6 +33,9 @@ export default function AddPartnersModal({ isOpen, onClose }: AddPartnersModalPr
 
   const [partnerUsers, setPartnerUsers] = useState<any[]>([]);
   const [requestSenderUsers, setRequestSenderUsers] = useState<any[]>([]);
+  const [showRemoveConfirm, setShowRemoveConfirm] = useState<string | null>(null);
+  const [removingPartner, setRemovingPartner] = useState<string | null>(null);
+  const [removeMessage, setRemoveMessage] = useState<string>("");
 
   // Carregar dados dos usuários parceiros e remetentes de solicitações
   useEffect(() => {
@@ -117,6 +119,55 @@ export default function AddPartnersModal({ isOpen, onClose }: AddPartnersModalPr
     document.dispatchEvent(new CustomEvent('partnersUpdated'));
   };
 
+  // Nova função para confirmar remoção de parceiro
+  const handleConfirmRemovePartner = async (userId: string) => {
+    if (!currentUserId) return;
+    
+    setRemovingPartner(userId);
+    
+    try {
+      // Buscar o nome do parceiro para a mensagem
+      const partnerToRemove = partnerUsers.find(p => p.id === userId);
+      const partnerName = partnerToRemove?.full_name || partnerToRemove?.username || 'este parceiro';
+      
+      // Atualizar o status da parceria para 'cancelled' no banco de dados
+      const { error } = await supabase
+        .from('friend_requests')
+        .update({ 
+          status: 'cancelled',
+          updated_at: new Date().toISOString()
+        })
+        .or(`and(sender_id.eq.${currentUserId},receiver_id.eq.${userId}),and(sender_id.eq.${userId},receiver_id.eq.${currentUserId})`)
+        .eq('status', 'accepted');
+
+      if (error) {
+        console.error('Erro ao remover parceria:', error);
+        setRemoveMessage(`Erro ao remover parceria com ${partnerName}. Tente novamente.`);
+      } else {
+        // Remover da lista local
+        setPartnerUsers(prev => prev.filter(p => p.id !== userId));
+        setRemoveMessage(`Parceria com ${partnerName} removida com sucesso!`);
+        
+        // Disparar evento para atualizar o ProfileHeader
+        document.dispatchEvent(new CustomEvent('partnersUpdated'));
+        
+        // Atualizar o hook useFriendship
+        await handleRemoveFriendship(userId);
+      }
+    } catch (error) {
+      console.error('Erro ao remover parceria:', error);
+      setRemoveMessage('Erro inesperado ao remover parceria. Tente novamente.');
+    } finally {
+      setRemovingPartner(null);
+      setShowRemoveConfirm(null);
+      
+      // Limpar mensagem após 3 segundos
+      setTimeout(() => {
+        setRemoveMessage("");
+      }, 3000);
+    }
+  };
+
   const pendingReceivedRequests = getPendingReceivedRequests();
   const currentPartners = getCurrentPartners();
 
@@ -151,6 +202,17 @@ export default function AddPartnersModal({ isOpen, onClose }: AddPartnersModalPr
         </DialogHeader>
         
         <div className="flex-1 overflow-hidden flex flex-col space-y-6 py-6">
+          {/* Mensagem de sucesso/erro */}
+          {removeMessage && (
+            <div className={`p-3 rounded-xl border-l-4 ${
+              removeMessage.includes('sucesso') 
+                ? 'bg-green-50 dark:bg-green-900/20 border-green-500 text-green-700 dark:text-green-400' 
+                : 'bg-red-50 dark:bg-red-900/20 border-red-500 text-red-700 dark:text-red-400'
+            }`}>
+              <p className="text-sm font-medium">{removeMessage}</p>
+            </div>
+          )}
+
           {/* Campo de Busca Destacado */}
           <div className="space-y-3">
             <div className="relative">
@@ -206,10 +268,10 @@ export default function AddPartnersModal({ isOpen, onClose }: AddPartnersModalPr
                 <Users className="h-4 w-4 text-green-600 dark:text-green-400" />
               </div>
               <h3 className="text-lg font-semibold text-[#29335C] dark:text-white">
-                Seus Parceiros ({currentPartners.length})
+                Seus Parceiros ({partnerUsers.length})
               </h3>
             </div>
-            {currentPartners.length > 0 ? (
+            {partnerUsers.length > 0 ? (
               <div className="grid grid-cols-1 gap-3 max-h-32 overflow-y-auto">
                 {partnerUsers.map((user) => (
                   <div key={user.id} className="flex items-center justify-between p-3 border border-[#E0E1DD] dark:border-white/10 rounded-xl bg-green-50 dark:bg-green-900/10">
@@ -238,10 +300,15 @@ export default function AddPartnersModal({ isOpen, onClose }: AddPartnersModalPr
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleRemoveFriendship(user.id)}
-                        className="h-8 w-8 p-0 border-red-300 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                        onClick={() => setShowRemoveConfirm(user.id)}
+                        disabled={removingPartner === user.id}
+                        className="h-8 w-8 p-0 border-red-300 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                       >
-                        <UserMinus className="h-3 w-3" />
+                        {removingPartner === user.id ? (
+                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-red-600"></div>
+                        ) : (
+                          <UserMinus className="h-3 w-3" />
+                        )}
                       </Button>
                     </div>
                   </div>
@@ -256,6 +323,48 @@ export default function AddPartnersModal({ isOpen, onClose }: AddPartnersModalPr
               </div>
             )}
           </div>
+
+          {/* Modal de Confirmação de Remoção */}
+          {showRemoveConfirm && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowRemoveConfirm(null)}>
+              <div className="bg-white dark:bg-[#0A2540] rounded-2xl p-6 max-w-md mx-4 border border-[#E0E1DD] dark:border-white/10" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 rounded-full bg-red-100 dark:bg-red-900/30">
+                    <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-[#29335C] dark:text-white">
+                    Confirmar Remoção
+                  </h3>
+                </div>
+                <p className="text-[#64748B] dark:text-white/60 mb-6">
+                  Tem certeza que deseja remover <strong>{partnerUsers.find(p => p.id === showRemoveConfirm)?.full_name || 'este parceiro'}</strong> como parceiro? Esta ação não pode ser desfeita.
+                </p>
+                <div className="flex gap-3 justify-end">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowRemoveConfirm(null)}
+                    className="border-[#E0E1DD] dark:border-white/10"
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    onClick={() => handleConfirmRemovePartner(showRemoveConfirm)}
+                    className="bg-red-600 hover:bg-red-700 text-white"
+                    disabled={removingPartner === showRemoveConfirm}
+                  >
+                    {removingPartner === showRemoveConfirm ? (
+                      <div className="flex items-center gap-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Removendo...
+                      </div>
+                    ) : (
+                      'Confirmar'
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Resultados da Busca */}
           {searchQuery && (
