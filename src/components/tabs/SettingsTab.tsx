@@ -216,6 +216,19 @@ export default function SettingsTab({
         }));
       }
 
+      // Carregar métodos de pagamento
+      const { data: paymentInfo } = await supabase
+        .from('user_settings')
+        .select('payment_settings')
+        .eq('user_id', user.id)
+        .single();
+
+      if (paymentInfo?.payment_settings?.paymentMethods) {
+        setPaymentSettings({
+          paymentMethods: paymentInfo.payment_settings.paymentMethods
+        });
+      }
+
     } catch (error) {
       console.error("Erro ao carregar configurações:", error);
     }
@@ -445,16 +458,172 @@ export default function SettingsTab({
     }
   };
 
-  const setPaymentAsDefault = async (paymentId: number) => {
+  // Estados para métodos de pagamento
+  const [paymentSettings, setPaymentSettings] = useState({
+    paymentMethods: [] as any[]
+  });
+
+  // Função para adicionar método de pagamento
+  const addPaymentMethod = () => {
+    setShowAddPaymentModal(true);
+  };
+
+  // Função para lidar com adição de método de pagamento
+  const handleAddPaymentMethod = async (newMethod: any) => {
     try {
-      setPaymentMethods(prev => 
-        prev.map(method => ({
-          ...method,
-          default: method.id === paymentId
-        }))
-      );
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Usuário não autenticado");
+
+      // Buscar configurações existentes
+      const { data: existingSettings } = await supabase
+        .from('user_settings')
+        .select('payment_settings')
+        .eq('user_id', user.id)
+        .single();
+
+      const currentMethods = existingSettings?.payment_settings?.paymentMethods || [];
+      
+      // Se este é o primeiro método, definir como padrão
+      if (currentMethods.length === 0) {
+        newMethod.is_default = true;
+      }
+
+      const updatedMethods = [...currentMethods, newMethod];
+
+      // Salvar no banco
+      const { error } = await supabase
+        .from('user_settings')
+        .upsert({
+          user_id: user.id,
+          payment_settings: {
+            paymentMethods: updatedMethods,
+            billingAddress: '',
+            autoRenewal: true,
+            invoiceEmail: ''
+          },
+          updated_at: new Date().toISOString()
+        });
+
+      if (error) throw error;
+
+      // Atualizar estado local
+      setPaymentSettings(prev => ({
+        ...prev,
+        paymentMethods: updatedMethods
+      }));
+
+      toast({
+        title: "Sucesso",
+        description: "Método de pagamento adicionado com sucesso!",
+        className: "bg-green-50 border-green-200",
+      });
+
+    } catch (error) {
+      console.error("Erro ao adicionar método de pagamento:", error);
+      toast({
+        title: "Erro",
+        description: "Erro ao adicionar método de pagamento. Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Função para definir método como padrão
+  const setAsDefaultPaymentMethod = async (methodId: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Usuário não autenticado");
+
+      const updatedMethods = paymentSettings.paymentMethods.map(method => ({
+        ...method,
+        is_default: method.id === methodId
+      }));
+
+      const { error } = await supabase
+        .from('user_settings')
+        .update({
+          payment_settings: {
+            paymentMethods: updatedMethods,
+            billingAddress: '',
+            autoRenewal: true,
+            invoiceEmail: ''
+          },
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      setPaymentSettings(prev => ({
+        ...prev,
+        paymentMethods: updatedMethods
+      }));
+
+      toast({
+        title: "Sucesso",
+        description: "Método padrão definido com sucesso!",
+        className: "bg-green-50 border-green-200",
+      });
+
     } catch (error) {
       console.error("Erro ao definir método padrão:", error);
+      toast({
+        title: "Erro",
+        description: "Erro ao definir método padrão. Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Função para remover método de pagamento
+  const removePaymentMethod = async (methodId: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Usuário não autenticado");
+
+      const updatedMethods = paymentSettings.paymentMethods.filter(method => method.id !== methodId);
+      
+      // Se o método removido era o padrão e existem outros métodos, definir o primeiro como padrão
+      if (updatedMethods.length > 0) {
+        const removedMethod = paymentSettings.paymentMethods.find(method => method.id === methodId);
+        if (removedMethod?.is_default) {
+          updatedMethods[0].is_default = true;
+        }
+      }
+
+      const { error } = await supabase
+        .from('user_settings')
+        .update({
+          payment_settings: {
+            paymentMethods: updatedMethods,
+            billingAddress: '',
+            autoRenewal: true,
+            invoiceEmail: ''
+          },
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      setPaymentSettings(prev => ({
+        ...prev,
+        paymentMethods: updatedMethods
+      }));
+
+      toast({
+        title: "Sucesso",
+        description: "Método de pagamento removido com sucesso!",
+        className: "bg-green-50 border-green-200",
+      });
+
+    } catch (error) {
+      console.error("Erro ao remover método de pagamento:", error);
+      toast({
+        title: "Erro",
+        description: "Erro ao remover método de pagamento. Tente novamente.",
+        variant: "destructive",
+      });
     }
   };
 
