@@ -69,7 +69,6 @@ export const useProfileData = () => {
             "Adicionar data de nascimento",
         };
 
-        // Usar a bio diretamente do perfil agora que foi adicionada à tabela profiles
         const aboutMe = data.bio || null;
 
         setProfileData({

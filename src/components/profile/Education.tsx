@@ -1,94 +1,40 @@
-
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, GraduationCap, Building2, Calendar, Trash2 } from "lucide-react";
+import { Plus, GraduationCap, Building2, Calendar, Edit, Trash2 } from "lucide-react";
 import AddEducationModal from "./modals/AddEducationModal";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ProfileDataService, UserEducation } from "@/services/profileDataService";
-import { useToast } from "@/components/ui/toast";
 
-interface EducationProps {
-  isOwnProfile?: boolean;
+interface Education {
+  id: string;
+  institution: string;
+  degree: string;
+  field: string;
+  startDate: Date | null;
+  endDate: Date | null;
+  current: boolean;
+  description: string;
+  grade?: string;
 }
 
-export default function Education({ isOwnProfile = true }: EducationProps) {
-  const [educations, setEducations] = useState<UserEducation[]>([]);
+export default function Education() {
+  const [educations, setEducations] = useState<Education[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const { showToast } = useToast();
 
-  // Carregar educações ao montar o componente
-  useEffect(() => {
-    const loadEducations = async () => {
-      try {
-        setIsLoading(true);
-        const data = await ProfileDataService.getUserEducation();
-        setEducations(data);
-      } catch (error) {
-        console.error('Erro ao carregar educações:', error);
-        showToast('Erro ao carregar educações', 'error');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (isOwnProfile) {
-      loadEducations();
-    }
-  }, [isOwnProfile, showToast]);
-
-  const handleAddEducation = async (education: Omit<UserEducation, 'id'>) => {
-    try {
-      const result = await ProfileDataService.addUserEducation(education);
-      
-      if (result.success) {
-        showToast(result.message, 'success');
-        // Recarregar educações
-        const data = await ProfileDataService.getUserEducation();
-        setEducations(data);
-        setIsModalOpen(false);
-      } else {
-        showToast(result.message, 'error');
-      }
-    } catch (error) {
-      console.error('Erro ao adicionar educação:', error);
-      showToast('Erro ao adicionar educação', 'error');
-    }
+  const handleAddEducation = (education: Education) => {
+    setEducations([...educations, education]);
   };
 
-  const handleRemoveEducation = async (id: string) => {
-    try {
-      const result = await ProfileDataService.removeUserEducation(id);
-      
-      if (result.success) {
-        showToast(result.message, 'success');
-        setEducations(educations.filter(edu => edu.id !== id));
-      } else {
-        showToast(result.message, 'error');
-      }
-    } catch (error) {
-      console.error('Erro ao remover educação:', error);
-      showToast('Erro ao remover educação', 'error');
-    }
+  const handleRemoveEducation = (id: string) => {
+    setEducations(educations.filter(edu => edu.id !== id));
   };
 
-  const formatDateRange = (startDate: string | null, endDate: string | null, current: boolean) => {
-    const start = startDate ? format(new Date(startDate), "MMM yyyy", { locale: ptBR }) : "";
-    const end = current ? "Presente" : endDate ? format(new Date(endDate), "MMM yyyy", { locale: ptBR }) : "";
+  const formatDateRange = (startDate: Date | null, endDate: Date | null, current: boolean) => {
+    const start = startDate ? format(startDate, "MMM yyyy", { locale: ptBR }) : "";
+    const end = current ? "Presente" : endDate ? format(endDate, "MMM yyyy", { locale: ptBR }) : "";
     return `${start} - ${end}`;
   };
-
-  if (isLoading) {
-    return (
-      <div className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 p-6 shadow-sm">
-        <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF6B00]"></div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 p-6 shadow-sm">
@@ -101,16 +47,14 @@ export default function Education({ isOwnProfile = true }: EducationProps) {
             Educação
           </h3>
         </div>
-        {isOwnProfile && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsModalOpen(true)}
-            className="text-[#64748B] dark:text-white/60 hover:text-[#FF6B00] hover:bg-[#FF6B00]/10 h-8 w-8 p-0"
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
-        )}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setIsModalOpen(true)}
+          className="text-[#64748B] dark:text-white/60 hover:text-[#FF6B00] hover:bg-[#FF6B00]/10 h-8 w-8 p-0"
+        >
+          <Plus className="h-4 w-4" />
+        </Button>
       </div>
 
       {educations.length > 0 ? (
@@ -138,7 +82,7 @@ export default function Education({ isOwnProfile = true }: EducationProps) {
                   <div className="flex items-center gap-4 text-sm text-[#64748B] dark:text-white/60 mb-2">
                     <div className="flex items-center gap-1">
                       <Calendar className="h-3 w-3" />
-                      {formatDateRange(education.start_date, education.end_date, education.current)}
+                      {formatDateRange(education.startDate, education.endDate, education.current)}
                     </div>
                     {education.grade && (
                       <div>
@@ -152,16 +96,14 @@ export default function Education({ isOwnProfile = true }: EducationProps) {
                     </p>
                   )}
                 </div>
-                {isOwnProfile && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleRemoveEducation(education.id)}
-                    className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleRemoveEducation(education.id)}
+                  className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
               </div>
             </div>
           ))}
@@ -172,31 +114,24 @@ export default function Education({ isOwnProfile = true }: EducationProps) {
             <GraduationCap className="h-6 w-6 text-[#FF6B00]" />
           </div>
           <p className="text-[#64748B] dark:text-white/60 mb-3">
-            {isOwnProfile 
-              ? "Adicione informações sobre sua formação acadêmica"
-              : "Este usuário ainda não adicionou informações educacionais."
-            }
+            Adicione informações sobre sua formação acadêmica
           </p>
-          {isOwnProfile && (
-            <Button
-              size="sm"
-              onClick={() => setIsModalOpen(true)}
-              className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Adicionar Educação
-            </Button>
-          )}
+          <Button
+            size="sm"
+            onClick={() => setIsModalOpen(true)}
+            className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Adicionar Educação
+          </Button>
         </div>
       )}
 
-      {isOwnProfile && (
-        <AddEducationModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          onSave={handleAddEducation}
-        />
-      )}
+      <AddEducationModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleAddEducation}
+      />
     </div>
   );
 }
