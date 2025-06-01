@@ -47,10 +47,6 @@ import {
 import MentorAI from "@/components/mentor/MentorAI";
 import AgendaNav from "./AgendaNav";
 import TurmasNav from "./TurmasNav";
-import { Badge } from "@/components/ui/badge";
-import { motion, AnimatePresence } from "framer-motion";
-import { useProfileData } from "@/hooks/useProfileData";
-import { useExperience } from "@/hooks/useExperience";
 
 interface SidebarNavProps extends React.HTMLAttributes<HTMLDivElement> {
   isCollapsed?: boolean;
@@ -74,9 +70,6 @@ export function SidebarNav({
   const [isUploading, setIsUploading] = useState(false);
   const [firstName, setFirstName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { userExperience, calculateLevel, calculateProgress } = useExperience();
-  const [showTooltip, setShowTooltip] = useState(false);
-  const { userProfile: userData } = useProfileData();
 
   useEffect(() => {
     // Listener para atualizações de avatar feitas em outros componentes
@@ -117,17 +110,17 @@ export function SidebarNav({
         const storedFirstName = localStorage.getItem('userFirstName');
         const storedDisplayName = localStorage.getItem('userDisplayName');
         const storedAvatarUrl = localStorage.getItem('userAvatarUrl');
-
+        
         if (storedDisplayName) {
           setFirstName(storedDisplayName);
         } else if (storedFirstName) {
           setFirstName(storedFirstName);
         }
-
+        
         if (storedAvatarUrl) {
           setProfileImage(storedAvatarUrl);
         }
-
+        
         // Depois buscar do Supabase para dados atualizados
         const {
           data: { user },
@@ -145,7 +138,7 @@ export function SidebarNav({
             if (!firstName) setFirstName("Usuário"); // Fallback if profile fetch fails
           } else if (data) {
             setUserProfile(data as UserProfile);
-
+            
             // Se o perfil tiver um avatar_url, usar ele e atualizar localStorage
             if (data.avatar_url) {
               setProfileImage(data.avatar_url);
@@ -157,10 +150,10 @@ export function SidebarNav({
                            data.display_name || 
                            data.username || 
                            "";
-
+            
             setFirstName(firstName);
             localStorage.setItem('userFirstName', firstName);
-
+            
             // Disparar evento para outros componentes
             document.dispatchEvent(new CustomEvent('usernameUpdated', { 
               detail: { 
@@ -193,7 +186,7 @@ export function SidebarNav({
     if (file) {
       try {
         setIsUploading(true);
-
+        
         // Obter o usuário atual
         const { data: currentUser } = await supabase.auth.getUser();
         if (!currentUser.user) {
@@ -243,10 +236,10 @@ export function SidebarNav({
 
         // Atualizar o estado local
         setProfileImage(publicUrlData.publicUrl);
-
+        
         // Salvar no localStorage para persistência
         localStorage.setItem('userAvatarUrl', publicUrlData.publicUrl);
-
+        
         // Disparar evento para outros componentes saberem que o avatar foi atualizado
         document.dispatchEvent(new CustomEvent('userAvatarUpdated', { 
           detail: { url: publicUrlData.publicUrl } 
@@ -528,13 +521,13 @@ export function SidebarNav({
             </div>
           </div>
         </div>
-
+        
         {isUploading && (
           <div className="mb-3 text-xs text-gray-500 dark:text-gray-400">
             Enviando...
           </div>
         )}
-
+        
         {/* Hidden File Input */}
         <input
           ref={fileInputRef}
@@ -750,73 +743,6 @@ export function SidebarNav({
           ))}
         </nav>
       </ScrollArea>
-        {/* Seção de Perfil do Usuário */}
-        {!isCollapsed && (
-          <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-            <div className="flex items-center space-x-3 mb-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                {(userData?.display_name || localStorage.getItem('userFirstName') || 'U').charAt(0).toUpperCase()}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                  {userData?.display_name || localStorage.getItem('userFirstName') || 'Usuário'}
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {userData?.plan_type || 'Plano Básico'}
-                </p>
-              </div>
-            </div>
-
-            {/* Nível e XP */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <Star className="h-3 w-3 text-[#FF6B00]" />
-                  <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                    Nível {calculateLevel(userExperience.totalXP)}
-                  </span>
-                </div>
-                <div
-                  className="text-xs text-gray-500 dark:text-gray-400 cursor-pointer hover:text-[#FF6B00] transition-colors"
-                  onMouseEnter={() => setShowTooltip(true)}
-                  onMouseLeave={() => setShowTooltip(false)}
-                >
-                  {userExperience.totalXP} XP
-                </div>
-              </div>
-
-              {/* Barra de Progresso */}
-              <div className="relative">
-                <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
-                  <span>Progresso</span>
-                  <span>{calculateProgress(userExperience.totalXP)}%</span>
-                </div>
-                <Progress 
-                  value={calculateProgress(userExperience.totalXP)} 
-                  className="h-2 bg-gray-200 dark:bg-gray-700"
-                />
-                <AnimatePresence>
-                  {showTooltip && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 5 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 5 }}
-                      className="absolute top-full left-0 mt-2 px-3 py-2 bg-black/80 text-white text-xs rounded-lg shadow-lg backdrop-blur-sm z-50 w-full"
-                    >
-                      <div className="font-medium mb-1">Experiência</div>
-                      <div className="text-white/80">
-                        {userExperience.totalXP} / {calculateLevel(userExperience.totalXP) * 1000} XP
-                      </div>
-                      <div className="text-white/80">
-                        Faltam {(calculateLevel(userExperience.totalXP) * 1000) - userExperience.totalXP} XP para o próximo nível
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </div>
-          </div>
-        )}
     </div>
   );
 }
