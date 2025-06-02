@@ -33,6 +33,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { useTheme } from "@/components/ThemeProvider";
 
 // Tipos e interfaces
 interface Achievement {
@@ -66,6 +67,8 @@ interface UserStats {
 }
 
 export default function ConquistasPage() {
+  const { theme } = useTheme();
+  const isLightMode = theme === "light";
   const [activeTab, setActiveTab] = useState<'overview' | 'all' | 'rewards' | 'ranking'>('overview');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -73,6 +76,15 @@ export default function ConquistasPage() {
   const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null);
   const [showUnlockModal, setShowUnlockModal] = useState(false);
   const [newUnlock, setNewUnlock] = useState<Achievement | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ displayName?: string } | null>(null);
+
+  // Buscar informações do usuário
+  useEffect(() => {
+    const storedUserData = localStorage.getItem('currentUser');
+    if (storedUserData) {
+      setCurrentUser(JSON.parse(storedUserData));
+    }
+  }, []);
 
   // Dados mockados do usuário
   const userStats: UserStats = {
@@ -232,17 +244,23 @@ export default function ConquistasPage() {
       whileTap={{ scale: 0.98 }}
       className={`
         group relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-500
-        backdrop-blur-xl border border-white/10 hover:border-white/20
+        backdrop-blur-xl border hover:border-orange-400/30
         ${achievement.isUnlocked 
           ? `bg-gradient-to-br ${getLevelGradient(achievement.level)} shadow-2xl ${getLevelShadow(achievement.level)} hover:shadow-3xl` 
-          : 'bg-white/5 dark:bg-white/5 shadow-lg hover:shadow-xl hover:bg-white/10 dark:hover:bg-white/10'
+          : isLightMode
+            ? 'bg-white/80 border-gray-200 shadow-lg hover:shadow-xl hover:bg-white'
+            : 'bg-white/5 border-white/10 shadow-lg hover:shadow-xl hover:bg-white/10'
         }
         ${variant === 'compact' ? 'p-4 h-40' : 'p-5 h-44'}
       `}
       onClick={() => setSelectedAchievement(achievement)}
     >
       {/* Efeito de cristal/vidro */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/5 pointer-events-none" />
+      <div className={`absolute inset-0 bg-gradient-to-br pointer-events-none ${
+        isLightMode 
+          ? 'from-white/20 via-transparent to-gray-50/5' 
+          : 'from-white/10 via-transparent to-black/5'
+      }`} />
       
       {/* Efeito de brilho animado para conquistas desbloqueadas */}
       {achievement.isUnlocked && (
@@ -257,7 +275,9 @@ export default function ConquistasPage() {
       <div className={`absolute top-3 right-3 px-2 py-1 rounded-full backdrop-blur-md border text-xs font-semibold flex items-center gap-1 ${
         achievement.isUnlocked 
           ? 'bg-white/20 border-white/30 text-white' 
-          : 'bg-black/20 border-white/10 text-gray-300'
+          : isLightMode
+            ? 'bg-gray-100/80 border-gray-200 text-gray-600'
+            : 'bg-black/20 border-white/10 text-gray-300'
       }`}>
         {getLevelIcon(achievement.level)}
         {achievement.level.charAt(0).toUpperCase() + achievement.level.slice(1)}
@@ -269,7 +289,9 @@ export default function ConquistasPage() {
           flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center mb-3
           ${achievement.isUnlocked 
             ? 'bg-white/20 backdrop-blur-md border border-white/30 text-white' 
-            : 'bg-white/10 backdrop-blur-md border border-white/20 text-gray-300'
+            : isLightMode
+              ? 'bg-gray-100/80 backdrop-blur-md border border-gray-200 text-gray-600'
+              : 'bg-white/10 backdrop-blur-md border border-white/20 text-gray-300'
           }
           group-hover:scale-110 transition-transform duration-300
         `}>
@@ -280,13 +302,21 @@ export default function ConquistasPage() {
         <div className="flex-1 flex flex-col justify-between min-h-0">
           <div>
             <h3 className={`font-bold text-sm mb-1 line-clamp-1 ${
-              achievement.isUnlocked ? 'text-white' : 'text-white/90'
+              achievement.isUnlocked 
+                ? 'text-white' 
+                : isLightMode
+                  ? 'text-gray-800'
+                  : 'text-white/90'
             }`}>
               {achievement.name}
             </h3>
             
             <p className={`text-xs mb-2 line-clamp-2 leading-relaxed ${
-              achievement.isUnlocked ? 'text-white/80' : 'text-white/70'
+              achievement.isUnlocked 
+                ? 'text-white/80' 
+                : isLightMode
+                  ? 'text-gray-600'
+                  : 'text-white/70'
             }`}>
               {achievement.description}
             </p>
@@ -337,62 +367,63 @@ export default function ConquistasPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-900 relative overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.15)_1px,transparent_0)] [background-size:20px_20px]" />
+    <div className={`min-h-screen relative overflow-hidden ${
+      isLightMode 
+        ? 'bg-gradient-to-br from-gray-50 via-white to-gray-100' 
+        : 'bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-900'
+    }`}>
       
       <div className="relative z-10 max-w-7xl mx-auto p-6 space-y-8">
-        {/* Cabeçalho Sofisticado */}
-        <motion.div
-          initial={{ opacity: 0, y: -30 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center space-y-4"
-        >
-          <div className="relative inline-block">
-            <h1 className="text-5xl font-black bg-gradient-to-r from-white via-orange-100 to-orange-200 bg-clip-text text-transparent">
-              🏆 Galeria de Conquistas
-            </h1>
-            <motion.div
-              className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 h-1 bg-gradient-to-r from-orange-400 to-orange-600 rounded-full"
-              initial={{ width: 0 }}
-              animate={{ width: "60%" }}
-              transition={{ duration: 1, delay: 0.5 }}
-            />
-          </div>
-          <p className="text-xl text-white/80 max-w-2xl mx-auto leading-relaxed">
-            Sua jornada épica de crescimento e excelência acadêmica
-          </p>
-        </motion.div>
 
         {/* Card de Resumo Premium */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="relative overflow-hidden rounded-3xl backdrop-blur-xl bg-white/10 border border-white/20 shadow-2xl"
+          className={`relative overflow-hidden rounded-3xl backdrop-blur-xl shadow-2xl ${
+            isLightMode 
+              ? 'bg-white/90 border border-gray-200/50' 
+              : 'bg-white/10 border border-white/20'
+          }`}
         >
-          <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 via-transparent to-purple-500/20" />
+          <div className={`absolute inset-0 ${
+            isLightMode 
+              ? 'bg-gradient-to-br from-orange-100/20 via-transparent to-blue-100/20' 
+              : 'bg-gradient-to-br from-orange-500/20 via-transparent to-purple-500/20'
+          }`} />
           <div className="relative p-8">
             <div className="flex flex-col lg:flex-row items-center gap-8">
               {/* Avatar Premium */}
               <div className="relative">
-                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 border-4 border-white/30 flex items-center justify-center shadow-2xl">
-                  <span className="text-3xl font-bold text-white">U</span>
+                <div className={`w-24 h-24 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 border-4 flex items-center justify-center shadow-2xl ${
+                  isLightMode ? 'border-white/70' : 'border-white/30'
+                }`}>
+                  <span className="text-3xl font-bold text-white">
+                    {currentUser?.displayName ? currentUser.displayName.charAt(0).toUpperCase() : 'U'}
+                  </span>
                 </div>
-                <div className="absolute -bottom-2 -right-2 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full p-2 border-2 border-white/30">
+                <div className={`absolute -bottom-2 -right-2 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full p-2 border-2 ${
+                  isLightMode ? 'border-white/70' : 'border-white/30'
+                }`}>
                   <Crown className="h-5 w-5 text-yellow-900" />
                 </div>
               </div>
 
               {/* Informações do Usuário */}
               <div className="text-center lg:text-left">
-                <h2 className="text-2xl font-bold text-white mb-1">
-                  João Marcelo
+                <h2 className={`text-2xl font-bold mb-1 ${
+                  isLightMode ? 'text-gray-800' : 'text-white'
+                }`}>
+                  {currentUser?.displayName || 'Usuário'}
                 </h2>
-                <p className="text-white/70 mb-3">
+                <p className={`mb-3 ${
+                  isLightMode ? 'text-gray-600' : 'text-white/70'
+                }`}>
                   {userStats.currentLevel}
                 </p>
-                <div className="flex items-center gap-4 text-sm text-white/60">
+                <div className={`flex items-center gap-4 text-sm ${
+                  isLightMode ? 'text-gray-500' : 'text-white/60'
+                }`}>
                   <span>Ranking: #{userStats.rankingPosition}</span>
                   <span>•</span>
                   <span>Sequência: {userStats.focusStreak} dias 🔥</span>
@@ -401,13 +432,17 @@ export default function ConquistasPage() {
 
               {/* Barra de Progresso XP */}
               <div className="flex-1 max-w-md space-y-3">
-                <div className="flex justify-between text-sm text-white/80">
+                <div className={`flex justify-between text-sm ${
+                  isLightMode ? 'text-gray-700' : 'text-white/80'
+                }`}>
                   <span>Progresso para próximo nível</span>
-                  <span className="font-medium text-orange-300">
+                  <span className="font-medium text-orange-500">
                     {userStats.totalXP} / {userStats.nextLevelXP} XP
                   </span>
                 </div>
-                <div className="h-3 bg-black/20 rounded-full overflow-hidden backdrop-blur-md">
+                <div className={`h-3 rounded-full overflow-hidden backdrop-blur-md ${
+                  isLightMode ? 'bg-gray-200' : 'bg-black/20'
+                }`}>
                   <motion.div 
                     className="h-full bg-gradient-to-r from-orange-400 to-orange-600 rounded-full"
                     initial={{ width: 0 }}
@@ -431,13 +466,23 @@ export default function ConquistasPage() {
                     transition={{ delay: 0.7 + index * 0.1 }}
                     className="text-center"
                   >
-                    <div className={`w-12 h-12 mx-auto mb-2 rounded-full bg-${stat.color}-500/20 backdrop-blur-md border border-${stat.color}-400/30 flex items-center justify-center`}>
-                      <stat.icon className={`h-6 w-6 text-${stat.color}-300`} />
+                    <div className={`w-12 h-12 mx-auto mb-2 rounded-full backdrop-blur-md border flex items-center justify-center ${
+                      isLightMode 
+                        ? 'bg-orange-100/50 border-orange-200' 
+                        : 'bg-orange-500/20 border-orange-400/30'
+                    }`}>
+                      <stat.icon className={`h-6 w-6 ${
+                        isLightMode ? 'text-orange-600' : 'text-orange-300'
+                      }`} />
                     </div>
-                    <div className="text-xl font-bold text-white">
+                    <div className={`text-xl font-bold ${
+                      isLightMode ? 'text-gray-800' : 'text-white'
+                    }`}>
                       {stat.value}
                     </div>
-                    <div className="text-xs text-white/60">{stat.label}</div>
+                    <div className={`text-xs ${
+                      isLightMode ? 'text-gray-500' : 'text-white/60'
+                    }`}>{stat.label}</div>
                   </motion.div>
                 ))}
               </div>
@@ -452,7 +497,11 @@ export default function ConquistasPage() {
           transition={{ delay: 0.4 }}
           className="flex justify-center"
         >
-          <div className="inline-flex rounded-2xl backdrop-blur-xl bg-white/10 border border-white/20 p-1">
+          <div className={`inline-flex rounded-2xl backdrop-blur-xl border p-1 ${
+            isLightMode 
+              ? 'bg-white/80 border-gray-200' 
+              : 'bg-white/10 border-white/20'
+          }`}>
             {[
               { id: 'overview', label: 'Visão Geral', icon: <Star className="h-4 w-4" /> },
               { id: 'all', label: 'Todas', icon: <Trophy className="h-4 w-4" /> },
@@ -466,7 +515,9 @@ export default function ConquistasPage() {
                   flex items-center gap-2 px-6 py-3 rounded-xl font-medium text-sm transition-all duration-300
                   ${activeTab === tab.id
                     ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/25'
-                    : 'text-white/70 hover:text-white hover:bg-white/5'
+                    : isLightMode 
+                      ? 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                      : 'text-white/70 hover:text-white hover:bg-white/5'
                   }
                 `}
               >
@@ -490,7 +541,9 @@ export default function ConquistasPage() {
               {/* Quase Lá */}
               <div>
                 <motion.h2 
-                  className="text-2xl font-bold text-white mb-6 flex items-center gap-3"
+                  className={`text-2xl font-bold mb-6 flex items-center gap-3 ${
+                    isLightMode ? 'text-gray-800' : 'text-white'
+                  }`}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                 >
@@ -516,7 +569,9 @@ export default function ConquistasPage() {
               {/* Últimas Medalhas */}
               <div>
                 <motion.h2 
-                  className="text-2xl font-bold text-white mb-6 flex items-center gap-3"
+                  className={`text-2xl font-bold mb-6 flex items-center gap-3 ${
+                    isLightMode ? 'text-gray-800' : 'text-white'
+                  }`}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                 >
@@ -550,16 +605,26 @@ export default function ConquistasPage() {
               className="space-y-6"
             >
               {/* Filtros Premium */}
-              <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-6">
+              <div className={`backdrop-blur-xl border rounded-2xl p-6 ${
+                isLightMode 
+                  ? 'bg-white/80 border-gray-200' 
+                  : 'bg-white/10 border-white/20'
+              }`}>
                 <div className="flex flex-col lg:flex-row gap-4">
                   {/* Busca */}
                   <div className="flex-1 relative">
-                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/40" />
+                    <Search className={`absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 ${
+                      isLightMode ? 'text-gray-400' : 'text-white/40'
+                    }`} />
                     <input
                       placeholder="Buscar conquistas..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-white/40 focus:outline-none focus:border-orange-400/50 backdrop-blur-md"
+                      className={`w-full pl-12 pr-4 py-3 border rounded-xl backdrop-blur-md focus:outline-none focus:border-orange-400/50 ${
+                        isLightMode 
+                          ? 'bg-white/80 border-gray-200 text-gray-800 placeholder:text-gray-400' 
+                          : 'bg-white/10 border-white/20 text-white placeholder:text-white/40'
+                      }`}
                     />
                   </div>
 
@@ -568,10 +633,14 @@ export default function ConquistasPage() {
                     <select
                       value={selectedCategory}
                       onChange={(e) => setSelectedCategory(e.target.value)}
-                      className="px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white backdrop-blur-md focus:outline-none focus:border-orange-400/50"
+                      className={`px-4 py-3 border rounded-xl backdrop-blur-md focus:outline-none focus:border-orange-400/50 ${
+                        isLightMode 
+                          ? 'bg-white/80 border-gray-200 text-gray-800' 
+                          : 'bg-white/10 border-white/20 text-white'
+                      }`}
                     >
                       {categories.map((category) => (
-                        <option key={category} value={category} className="bg-slate-800 text-white">
+                        <option key={category} value={category} className={isLightMode ? 'bg-white text-gray-800' : 'bg-slate-800 text-white'}>
                           {category === 'all' ? 'Todas as Categorias' : category}
                         </option>
                       ))}
@@ -580,11 +649,15 @@ export default function ConquistasPage() {
                     <select
                       value={selectedStatus}
                       onChange={(e) => setSelectedStatus(e.target.value)}
-                      className="px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white backdrop-blur-md focus:outline-none focus:border-orange-400/50"
+                      className={`px-4 py-3 border rounded-xl backdrop-blur-md focus:outline-none focus:border-orange-400/50 ${
+                        isLightMode 
+                          ? 'bg-white/80 border-gray-200 text-gray-800' 
+                          : 'bg-white/10 border-white/20 text-white'
+                      }`}
                     >
-                      <option value="all" className="bg-slate-800 text-white">Todos os Status</option>
-                      <option value="unlocked" className="bg-slate-800 text-white">Desbloqueadas</option>
-                      <option value="pending" className="bg-slate-800 text-white">Pendentes</option>
+                      <option value="all" className={isLightMode ? 'bg-white text-gray-800' : 'bg-slate-800 text-white'}>Todos os Status</option>
+                      <option value="unlocked" className={isLightMode ? 'bg-white text-gray-800' : 'bg-slate-800 text-white'}>Desbloqueadas</option>
+                      <option value="pending" className={isLightMode ? 'bg-white text-gray-800' : 'bg-slate-800 text-white'}>Pendentes</option>
                     </select>
                   </div>
                 </div>
@@ -606,13 +679,21 @@ export default function ConquistasPage() {
 
               {filteredAchievements.length === 0 && (
                 <div className="text-center py-16">
-                  <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center">
-                    <Trophy className="h-10 w-10 text-white/40" />
+                  <div className={`w-20 h-20 mx-auto mb-4 rounded-full backdrop-blur-md border flex items-center justify-center ${
+                    isLightMode 
+                      ? 'bg-gray-100 border-gray-200' 
+                      : 'bg-white/10 border-white/20'
+                  }`}>
+                    <Trophy className={`h-10 w-10 ${
+                      isLightMode ? 'text-gray-400' : 'text-white/40'
+                    }`} />
                   </div>
-                  <h3 className="text-xl font-medium text-white/70 mb-2">
+                  <h3 className={`text-xl font-medium mb-2 ${
+                    isLightMode ? 'text-gray-600' : 'text-white/70'
+                  }`}>
                     Nenhuma conquista encontrada
                   </h3>
-                  <p className="text-white/50">
+                  <p className={isLightMode ? 'text-gray-500' : 'text-white/50'}>
                     Tente ajustar seus filtros ou termo de busca
                   </p>
                 </div>
@@ -663,7 +744,11 @@ export default function ConquistasPage() {
 
         {/* Modal de Detalhes Premium */}
         <Dialog open={!!selectedAchievement} onOpenChange={() => setSelectedAchievement(null)}>
-          <DialogContent className="max-w-2xl bg-slate-900/95 backdrop-blur-xl border border-white/20 text-white">
+          <DialogContent className={`max-w-2xl backdrop-blur-xl border ${
+            isLightMode 
+              ? 'bg-white/95 border-gray-200 text-gray-800' 
+              : 'bg-slate-900/95 border-white/20 text-white'
+          }`}>
             {selectedAchievement && (
               <div className="p-6">
                 <div className="flex items-start gap-6 mb-6">
