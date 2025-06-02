@@ -77,6 +77,23 @@ interface UserStats {
   rankingPosition: number;
 }
 
+interface Reward {
+  id: string;
+  name: string;
+  description?: string;
+  type: 'coins' | 'badges' | 'profile_items' | 'physical' | 'digital';
+  dateReceived: Date;
+  status?: 'pending' | 'shipped' | 'delivered' | 'redeemed';
+  trackingCode?: string;
+  value?: number;
+  action?: {
+    type: 'primary' | 'secondary';
+    label: string;
+    icon?: React.ComponentType<{ className?: string }>;
+    onClick: () => void;
+  };
+}
+
 export default function ConquistasPage() {
   const { theme } = useTheme();
   const isLightMode = theme === "light";
@@ -88,6 +105,9 @@ export default function ConquistasPage() {
   const [showUnlockModal, setShowUnlockModal] = useState(false);
   const [newUnlock, setNewUnlock] = useState<Achievement | null>(null);
   const [currentUser, setCurrentUser] = useState<{ displayName?: string } | null>(null);
+  const [selectedRewardType, setSelectedRewardType] = useState('all');
+  const [selectedRewardStatus, setSelectedRewardStatus] = useState('all');
+  const [selectedDateFilter, setSelectedDateFilter] = useState('all');
 
   // Buscar informações do usuário
   useEffect(() => {
@@ -107,6 +127,185 @@ export default function ConquistasPage() {
     focusStreak: 7,
     rankingPosition: 1847
   };
+
+  // Dados de recompensas mockadas
+  const userRewards: Reward[] = [
+    {
+      id: '1',
+      name: 'Badge Mestre da Matemática',
+      description: 'Conquista por atingir 85% de progresso em Matemática',
+      type: 'badges',
+      dateReceived: new Date('2024-01-20'),
+      status: 'redeemed'
+    },
+    {
+      id: '2',
+      name: '+300 Ponto Coins',
+      description: 'Recompensa por completar sequência de 30 dias',
+      type: 'coins',
+      dateReceived: new Date('2024-01-18'),
+      value: 300,
+      status: 'redeemed'
+    },
+    {
+      id: '3',
+      name: 'Kit Estudante Dedicado',
+      description: 'Kit físico com materiais escolares premium',
+      type: 'physical',
+      dateReceived: new Date('2024-01-15'),
+      status: 'shipped',
+      trackingCode: 'BR123456789',
+      action: {
+        type: 'secondary',
+        label: 'Rastrear Envio',
+        icon: Search,
+        onClick: () => window.open('https://www.correios.com.br/precisa-de-ajuda/rastrea-objeto-correios?rastreio=BR123456789', '_blank')
+      }
+    },
+    {
+      id: '4',
+      name: 'Acesso ao Curso de Python',
+      description: 'Curso completo de programação em Python',
+      type: 'digital',
+      dateReceived: new Date('2024-01-10'),
+      status: 'redeemed',
+      action: {
+        type: 'primary',
+        label: 'Acessar Curso',
+        icon: Play,
+        onClick: () => alert('Redirecionando para o curso...')
+      }
+    },
+    {
+      id: '5',
+      name: 'Moldura Dourada de Perfil',
+      description: 'Moldura especial para avatar',
+      type: 'profile_items',
+      dateReceived: new Date('2024-01-08'),
+      status: 'redeemed',
+      action: {
+        type: 'secondary',
+        label: 'Aplicar ao Perfil',
+        icon: Settings,
+        onClick: () => alert('Aplicando moldura ao perfil...')
+      }
+    },
+    {
+      id: '6',
+      name: 'Desconto de 20% na Loja',
+      description: 'Cupom de desconto válido por 30 dias',
+      type: 'digital',
+      dateReceived: new Date('2024-01-05'),
+      status: 'pending',
+      action: {
+        type: 'primary',
+        label: 'Usar Agora',
+        icon: Gift,
+        onClick: () => alert('Aplicando desconto...')
+      }
+    }
+  ];
+
+  // Funções auxiliares para recompensas
+  const getRewardIcon = (type: string) => {
+    switch (type) {
+      case 'coins': return <Gift className="h-8 w-8 text-orange-500" />;
+      case 'badges': return <Award className="h-8 w-8 text-yellow-500" />;
+      case 'profile_items': return <Users className="h-8 w-8 text-purple-500" />;
+      case 'physical': return <Trophy className="h-8 w-8 text-blue-500" />;
+      case 'digital': return <BookOpen className="h-8 w-8 text-green-500" />;
+      default: return <Gift className="h-8 w-8 text-gray-500" />;
+    }
+  };
+
+  const getRewardIconBg = (type: string) => {
+    switch (type) {
+      case 'coins': return 'bg-orange-100 border border-orange-200 dark:bg-orange-500/20 dark:border-orange-400/30';
+      case 'badges': return 'bg-yellow-100 border border-yellow-200 dark:bg-yellow-500/20 dark:border-yellow-400/30';
+      case 'profile_items': return 'bg-purple-100 border border-purple-200 dark:bg-purple-500/20 dark:border-purple-400/30';
+      case 'physical': return 'bg-blue-100 border border-blue-200 dark:bg-blue-500/20 dark:border-blue-400/30';
+      case 'digital': return 'bg-green-100 border border-green-200 dark:bg-green-500/20 dark:border-green-400/30';
+      default: return 'bg-gray-100 border border-gray-200 dark:bg-gray-500/20 dark:border-gray-400/30';
+    }
+  };
+
+  const getRewardTypeBadge = (type: string) => {
+    switch (type) {
+      case 'coins': return 'bg-orange-100 text-orange-800 dark:bg-orange-500/20 dark:text-orange-300';
+      case 'badges': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-500/20 dark:text-yellow-300';
+      case 'profile_items': return 'bg-purple-100 text-purple-800 dark:bg-purple-500/20 dark:text-purple-300';
+      case 'physical': return 'bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-300';
+      case 'digital': return 'bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-300';
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-500/20 dark:text-gray-300';
+    }
+  };
+
+  const getRewardTypeLabel = (type: string) => {
+    switch (type) {
+      case 'coins': return 'Ponto Coins';
+      case 'badges': return 'Badge';
+      case 'profile_items': return 'Item de Perfil';
+      case 'physical': return 'Física';
+      case 'digital': return 'Digital';
+      default: return 'Outro';
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return 'bg-yellow-500';
+      case 'shipped': return 'bg-blue-500';
+      case 'delivered': return 'bg-green-500';
+      case 'redeemed': return 'bg-purple-500';
+      default: return 'bg-gray-500';
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'pending': return 'Aguardando Envio';
+      case 'shipped': return 'Enviado';
+      case 'delivered': return 'Entregue';
+      case 'redeemed': return 'Resgatado';
+      default: return 'Indefinido';
+    }
+  };
+
+  const handleRewardAction = (reward: Reward) => {
+    if (reward.action) {
+      reward.action.onClick();
+    }
+  };
+
+  // Filtrar recompensas
+  const filteredRewards = userRewards.filter(reward => {
+    const matchesType = selectedRewardType === 'all' || reward.type === selectedRewardType;
+    const matchesStatus = selectedRewardStatus === 'all' || reward.status === selectedRewardStatus;
+    
+    let matchesDate = true;
+    if (selectedDateFilter !== 'all') {
+      const now = new Date();
+      const rewardDate = reward.dateReceived;
+      
+      switch (selectedDateFilter) {
+        case '7days':
+          matchesDate = (now.getTime() - rewardDate.getTime()) / (1000 * 60 * 60 * 24) <= 7;
+          break;
+        case '30days':
+          matchesDate = (now.getTime() - rewardDate.getTime()) / (1000 * 60 * 60 * 24) <= 30;
+          break;
+        case 'thisMonth':
+          matchesDate = rewardDate.getMonth() === now.getMonth() && rewardDate.getFullYear() === now.getFullYear();
+          break;
+        case 'lastMonth':
+          const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1);
+          matchesDate = rewardDate.getMonth() === lastMonth.getMonth() && rewardDate.getFullYear() === lastMonth.getFullYear();
+          break;
+      }
+    }
+    
+    return matchesType && matchesStatus && matchesDate;
+  });
 
   // Novas conquistas baseadas na sua lista detalhada
   const achievements: Achievement[] = [
@@ -926,25 +1125,235 @@ export default function ConquistasPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="text-center py-16"
+              className="space-y-6"
             >
-              <div className={`w-20 h-20 mx-auto mb-4 rounded-full backdrop-blur-md border flex items-center justify-center ${
+              {/* Cabeçalho da Aba */}
+              <div className="text-center mb-8">
+                <h2 className={`text-3xl font-bold mb-2 ${
+                  isLightMode ? 'text-gray-800' : 'text-white'
+                }`}>
+                  Minhas Recompensas
+                </h2>
+                <p className={`text-lg ${
+                  isLightMode ? 'text-gray-600' : 'text-white/70'
+                }`}>
+                  Acompanhe todos os prêmios que você já conquistou!
+                </p>
+              </div>
+
+              {/* Filtros */}
+              <div className={`backdrop-blur-xl border rounded-2xl p-6 ${
                 isLightMode 
-                  ? 'bg-gray-100 border-gray-200' 
+                  ? 'bg-white/80 border-gray-200' 
                   : 'bg-white/10 border-white/20'
               }`}>
-                <Gift className={`h-10 w-10 ${
-                  isLightMode ? 'text-gray-400' : 'text-white/40'
-                }`} />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Filtro por Tipo */}
+                  <div>
+                    <label className={`block text-sm font-medium mb-2 ${
+                      isLightMode ? 'text-gray-700' : 'text-white/80'
+                    }`}>
+                      Tipo de Recompensa
+                    </label>
+                    <select
+                      value={selectedRewardType}
+                      onChange={(e) => setSelectedRewardType(e.target.value)}
+                      className={`w-full px-4 py-3 border rounded-xl backdrop-blur-md focus:outline-none focus:border-orange-400/50 ${
+                        isLightMode 
+                          ? 'bg-white/80 border-gray-200 text-gray-800' 
+                          : 'bg-white/10 border-white/20 text-white'
+                      }`}
+                    >
+                      <option value="all" className={isLightMode ? 'bg-white text-gray-800' : 'bg-slate-800 text-white'}>Todas</option>
+                      <option value="coins" className={isLightMode ? 'bg-white text-gray-800' : 'bg-slate-800 text-white'}>Ponto Coins</option>
+                      <option value="badges" className={isLightMode ? 'bg-white text-gray-800' : 'bg-slate-800 text-white'}>Badges</option>
+                      <option value="profile_items" className={isLightMode ? 'bg-white text-gray-800' : 'bg-slate-800 text-white'}>Itens de Perfil</option>
+                      <option value="physical" className={isLightMode ? 'bg-white text-gray-800' : 'bg-slate-800 text-white'}>Físicas</option>
+                      <option value="digital" className={isLightMode ? 'bg-white text-gray-800' : 'bg-slate-800 text-white'}>Digitais</option>
+                    </select>
+                  </div>
+
+                  {/* Filtro por Status */}
+                  <div>
+                    <label className={`block text-sm font-medium mb-2 ${
+                      isLightMode ? 'text-gray-700' : 'text-white/80'
+                    }`}>
+                      Status
+                    </label>
+                    <select
+                      value={selectedRewardStatus}
+                      onChange={(e) => setSelectedRewardStatus(e.target.value)}
+                      className={`w-full px-4 py-3 border rounded-xl backdrop-blur-md focus:outline-none focus:border-orange-400/50 ${
+                        isLightMode 
+                          ? 'bg-white/80 border-gray-200 text-gray-800' 
+                          : 'bg-white/10 border-white/20 text-white'
+                      }`}
+                    >
+                      <option value="all" className={isLightMode ? 'bg-white text-gray-800' : 'bg-slate-800 text-white'}>Todas</option>
+                      <option value="pending" className={isLightMode ? 'bg-white text-gray-800' : 'bg-slate-800 text-white'}>Aguardando Envio</option>
+                      <option value="shipped" className={isLightMode ? 'bg-white text-gray-800' : 'bg-slate-800 text-white'}>Enviado</option>
+                      <option value="delivered" className={isLightMode ? 'bg-white text-gray-800' : 'bg-slate-800 text-white'}>Entregue</option>
+                      <option value="redeemed" className={isLightMode ? 'bg-white text-gray-800' : 'bg-slate-800 text-white'}>Resgatado</option>
+                    </select>
+                  </div>
+
+                  {/* Filtro por Data */}
+                  <div>
+                    <label className={`block text-sm font-medium mb-2 ${
+                      isLightMode ? 'text-gray-700' : 'text-white/80'
+                    }`}>
+                      Data de Recebimento
+                    </label>
+                    <select
+                      value={selectedDateFilter}
+                      onChange={(e) => setSelectedDateFilter(e.target.value)}
+                      className={`w-full px-4 py-3 border rounded-xl backdrop-blur-md focus:outline-none focus:border-orange-400/50 ${
+                        isLightMode 
+                          ? 'bg-white/80 border-gray-200 text-gray-800' 
+                          : 'bg-white/10 border-white/20 text-white'
+                      }`}
+                    >
+                      <option value="all" className={isLightMode ? 'bg-white text-gray-800' : 'bg-slate-800 text-white'}>Todas</option>
+                      <option value="7days" className={isLightMode ? 'bg-white text-gray-800' : 'bg-slate-800 text-white'}>Últimos 7 dias</option>
+                      <option value="30days" className={isLightMode ? 'bg-white text-gray-800' : 'bg-slate-800 text-white'}>Últimos 30 dias</option>
+                      <option value="thisMonth" className={isLightMode ? 'bg-white text-gray-800' : 'bg-slate-800 text-white'}>Este Mês</option>
+                      <option value="lastMonth" className={isLightMode ? 'bg-white text-gray-800' : 'bg-slate-800 text-white'}>Mês Anterior</option>
+                    </select>
+                  </div>
+                </div>
               </div>
-              <h3 className={`text-xl font-medium mb-2 ${
-                isLightMode ? 'text-gray-600' : 'text-white/70'
-              }`}>
-                Seção em Desenvolvimento
-              </h3>
-              <p className={isLightMode ? 'text-gray-500' : 'text-white/50'}>
-                Suas recompensas aparecerão aqui em breve
-              </p>
+
+              {/* Lista de Recompensas */}
+              {filteredRewards.length === 0 ? (
+                <div className="text-center py-16">
+                  <div className={`w-20 h-20 mx-auto mb-4 rounded-full backdrop-blur-md border flex items-center justify-center ${
+                    isLightMode 
+                      ? 'bg-gray-100 border-gray-200' 
+                      : 'bg-white/10 border-white/20'
+                  }`}>
+                    <Gift className={`h-10 w-10 ${
+                      isLightMode ? 'text-gray-400' : 'text-white/40'
+                    }`} />
+                  </div>
+                  <h3 className={`text-xl font-medium mb-2 ${
+                    isLightMode ? 'text-gray-600' : 'text-white/70'
+                  }`}>
+                    Suas Recompensas Aparecerão Aqui!
+                  </h3>
+                  <p className={isLightMode ? 'text-gray-500' : 'text-white/50'}>
+                    Continue estudando e completando conquistas para desbloquear prêmios incríveis!
+                  </p>
+                </div>
+              ) : (
+                <div className="grid gap-4">
+                  {filteredRewards.map((reward, index) => (
+                    <motion.div
+                      key={reward.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className={`
+                        rounded-2xl overflow-hidden backdrop-blur-xl border p-6 hover:shadow-lg transition-all duration-300
+                        ${isLightMode 
+                          ? 'bg-white/90 border-gray-200 hover:shadow-gray-200/50' 
+                          : 'bg-white/10 border-white/20 hover:shadow-white/10'
+                        }
+                      `}
+                    >
+                      <div className="flex items-start gap-4">
+                        {/* Ícone/Imagem da Recompensa */}
+                        <div className={`
+                          flex-shrink-0 w-16 h-16 rounded-xl flex items-center justify-center
+                          ${getRewardIconBg(reward.type)}
+                        `}>
+                          {getRewardIcon(reward.type)}
+                        </div>
+
+                        {/* Informações da Recompensa */}
+                        <div className="flex-1">
+                          <div className="flex items-start justify-between mb-2">
+                            <div>
+                              <h3 className={`text-lg font-bold ${
+                                isLightMode ? 'text-gray-800' : 'text-white'
+                              }`}>
+                                {reward.name}
+                              </h3>
+                              {reward.description && (
+                                <p className={`text-sm ${
+                                  isLightMode ? 'text-gray-600' : 'text-white/70'
+                                }`}>
+                                  {reward.description}
+                                </p>
+                              )}
+                            </div>
+                            
+                            {/* Badge de Tipo */}
+                            <div className={`
+                              px-3 py-1 rounded-full text-xs font-semibold
+                              ${getRewardTypeBadge(reward.type)}
+                            `}>
+                              {getRewardTypeLabel(reward.type)}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <div className="space-y-1">
+                              {/* Data de Recebimento */}
+                              <div className={`flex items-center gap-2 text-sm ${
+                                isLightMode ? 'text-gray-600' : 'text-white/70'
+                              }`}>
+                                <Calendar className="h-4 w-4" />
+                                Conquistado em: {reward.dateReceived.toLocaleDateString('pt-BR')}
+                              </div>
+
+                              {/* Status (se aplicável) */}
+                              {reward.status && (
+                                <div className={`flex items-center gap-2 text-sm ${
+                                  isLightMode ? 'text-gray-600' : 'text-white/70'
+                                }`}>
+                                  <div className={`w-2 h-2 rounded-full ${getStatusColor(reward.status)}`} />
+                                  Status: {getStatusLabel(reward.status)}
+                                </div>
+                              )}
+
+                              {/* Código de Rastreio (se aplicável) */}
+                              {reward.trackingCode && (
+                                <div className={`flex items-center gap-2 text-sm ${
+                                  isLightMode ? 'text-gray-600' : 'text-white/70'
+                                }`}>
+                                  <span>Rastreio:</span>
+                                  <button
+                                    onClick={() => window.open(`https://www.correios.com.br/precisa-de-ajuda/rastrea-objeto-correios?rastreio=${reward.trackingCode}`, '_blank')}
+                                    className="text-orange-500 hover:text-orange-600 underline font-medium"
+                                  >
+                                    {reward.trackingCode}
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Botão de Ação */}
+                            {reward.action && (
+                              <Button
+                                onClick={() => handleRewardAction(reward)}
+                                className={`
+                                  ${reward.action.type === 'primary' 
+                                    ? 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white' 
+                                    : 'bg-transparent border border-orange-400 text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-500/10'
+                                  }
+                                `}
+                              >
+                                {reward.action.icon && <reward.action.icon className="h-4 w-4 mr-2" />}
+                                {reward.action.label}
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
             </motion.div>
           )}
 
