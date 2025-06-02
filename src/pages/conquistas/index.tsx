@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -58,12 +57,7 @@ interface Achievement {
   maxProgress: number;
   isUnlocked: boolean;
   unlockedAt?: Date;
-  rewards: {
-    pontoCoins: number;
-    xp: number;
-    badge?: string;
-    physical?: string;
-  };
+  rewards: { pontoSchools: number; xp: number; badge?: string; physical?: string; };
   criteria: string[];
 }
 
@@ -242,7 +236,7 @@ export default function ConquistasPage() {
 
   const getRewardTypeLabel = (type: string) => {
     switch (type) {
-      case 'coins': return 'Ponto Coins';
+      case 'coins': return 'Ponto Schools';
       case 'badges': return 'Badge';
       case 'profile_items': return 'Item de Perfil';
       case 'physical': return 'Física';
@@ -281,12 +275,12 @@ export default function ConquistasPage() {
   const filteredRewards = userRewards.filter(reward => {
     const matchesType = selectedRewardType === 'all' || reward.type === selectedRewardType;
     const matchesStatus = selectedRewardStatus === 'all' || reward.status === selectedRewardStatus;
-    
+
     let matchesDate = true;
     if (selectedDateFilter !== 'all') {
       const now = new Date();
       const rewardDate = reward.dateReceived;
-      
+
       switch (selectedDateFilter) {
         case '7days':
           matchesDate = (now.getTime() - rewardDate.getTime()) / (1000 * 60 * 60 * 24) <= 7;
@@ -303,7 +297,7 @@ export default function ConquistasPage() {
           break;
       }
     }
-    
+
     return matchesType && matchesStatus && matchesDate;
   });
 
@@ -321,7 +315,7 @@ export default function ConquistasPage() {
       maxProgress: 1,
       isUnlocked: true,
       unlockedAt: new Date('2024-01-15'),
-      rewards: { pontoCoins: 20, xp: 10, badge: 'Explorador Iniciante' },
+      rewards: { pontoSchools: 20, xp: 10, badge: 'Explorador Iniciante' },
       criteria: ['Completar tour guiado']
     },
     {
@@ -334,7 +328,7 @@ export default function ConquistasPage() {
       progress: 85,
       maxProgress: 100,
       isUnlocked: false,
-      rewards: { pontoCoins: 30, xp: 15, badge: 'Identidade Revelada' },
+      rewards: { pontoSchools: 30, xp: 15, badge: 'Identidade Revelada' },
       criteria: ['Adicionar foto', 'Completar bio', 'Definir interesses']
     },
     {
@@ -348,7 +342,7 @@ export default function ConquistasPage() {
       maxProgress: 1,
       isUnlocked: true,
       unlockedAt: new Date('2024-01-16'),
-      rewards: { pontoCoins: 10, xp: 5 },
+      rewards: { pontoSchools: 10, xp: 5 },
       criteria: ['Acessar primeira turma']
     },
     {
@@ -362,7 +356,7 @@ export default function ConquistasPage() {
       maxProgress: 1,
       isUnlocked: true,
       unlockedAt: new Date('2024-01-17'),
-      rewards: { pontoCoins: 20, xp: 10, badge: 'Amigo da IA' },
+      rewards: { pontoSchools: 20, xp: 10, badge: 'Amigo da IA' },
       criteria: ['Usar primeira ferramenta IA']
     },
 
@@ -377,7 +371,7 @@ export default function ConquistasPage() {
       progress: 8,
       maxProgress: 10,
       isUnlocked: false,
-      rewards: { pontoCoins: 50, xp: 25, badge: 'Cartógrafo da Ponto. School' },
+      rewards: { pontoSchools: 50, xp: 25, badge: 'Cartógrafo da Ponto. School' },
       criteria: ['Visitar 10 seções principais']
     },
     {
@@ -390,7 +384,7 @@ export default function ConquistasPage() {
       progress: 0,
       maxProgress: 1,
       isUnlocked: false,
-      rewards: { pontoCoins: 15, xp: 10 },
+      rewards: { pontoSchools: 15, xp: 10 },
       criteria: ['Personalizar atalhos rápidos']
     },
     {
@@ -403,7 +397,7 @@ export default function ConquistasPage() {
       progress: 6,
       maxProgress: 10,
       isUnlocked: false,
-      rewards: { pontoCoins: 25, xp: 15, badge: 'Bibliotecário Júnior' },
+      rewards: { pontoSchools: 25, xp: 15, badge: 'Bibliotecário Júnior' },
       criteria: ['Acessar 10 materiais diferentes']
     },
     {
@@ -416,7 +410,7 @@ export default function ConquistasPage() {
       progress: 6,
       maxProgress: 50,
       isUnlocked: false,
-      rewards: { pontoCoins: 75, xp: 40, badge: 'Bibliotecário Pleno' },
+      rewards: { pontoSchools: 75, xp: 40, badge: 'Bibliotecário Pleno' },
       criteria: ['Acessar 50 materiais diferentes']
     },
 
@@ -432,7 +426,7 @@ export default function ConquistasPage() {
       maxProgress: 7,
       isUnlocked: true,
       unlockedAt: new Date('2024-01-20'),
-      rewards: { pontoCoins: 100, xp: 50, badge: 'Fogo da Dedicação Nv. 1' },
+      rewards: { pontoSchools: 100, xp: 50, badge: 'Fogo da Dedicação Nv. 1' },
       criteria: ['7 dias consecutivos', 'Login diário']
     },
     {
@@ -445,7 +439,7 @@ export default function ConquistasPage() {
       progress: 7,
       maxProgress: 30,
       isUnlocked: false,
-      rewards: { pontoCoins: 300, xp: 150, badge: 'Fogo da Dedicação Nv. 2' },
+      rewards: { pontoSchools: 300, xp: 150, badge: 'Fogo da Dedicação Nv. 2' },
       criteria: ['30 dias consecutivos', 'Giro especial +25% sorte']
     },
     {
@@ -458,7 +452,7 @@ export default function ConquistasPage() {
       progress: 6,
       maxProgress: 10,
       isUnlocked: false,
-      rewards: { pontoCoins: 80, xp: 40, badge: 'Resistência de Bronze' },
+      rewards: { pontoSchools: 80, xp: 40, badge: 'Resistência de Bronze' },
       criteria: ['10 horas de estudo rastreadas']
     },
     {
@@ -471,7 +465,7 @@ export default function ConquistasPage() {
       progress: 1,
       maxProgress: 4,
       isUnlocked: false,
-      rewards: { pontoCoins: 60, xp: 30, badge: 'Arquiteto dos Estudos' },
+      rewards: { pontoSchools: 60, xp: 30, badge: 'Arquiteto dos Estudos' },
       criteria: ['4 semanas de planejamento consecutivo']
     },
 
@@ -486,7 +480,7 @@ export default function ConquistasPage() {
       progress: 72,
       maxProgress: 85,
       isUnlocked: false,
-      rewards: { pontoCoins: 120, xp: 60, badge: 'Mestre da Matemática' },
+      rewards: { pontoSchools: 120, xp: 60, badge: 'Mestre da Matemática' },
       criteria: ['85% de progresso em Matemática']
     },
     {
@@ -499,7 +493,7 @@ export default function ConquistasPage() {
       progress: 1,
       maxProgress: 3,
       isUnlocked: false,
-      rewards: { pontoCoins: 200, xp: 100, badge: 'Destruidor de Provas' },
+      rewards: { pontoSchools: 200, xp: 100, badge: 'Destruidor de Provas' },
       criteria: ['Nota máxima em 3 simulados']
     },
 
@@ -514,7 +508,7 @@ export default function ConquistasPage() {
       progress: 8,
       maxProgress: 20,
       isUnlocked: false,
-      rewards: { pontoCoins: 40, xp: 20, badge: 'Comunicador Ativo' },
+      rewards: { pontoSchools: 40, xp: 20, badge: 'Comunicador Ativo' },
       criteria: ['20 mensagens enviadas em grupos']
     },
     {
@@ -527,7 +521,7 @@ export default function ConquistasPage() {
       progress: 2,
       maxProgress: 5,
       isUnlocked: false,
-      rewards: { pontoCoins: 150, xp: 75, badge: 'Mentor da Comunidade' },
+      rewards: { pontoSchools: 150, xp: 75, badge: 'Mentor da Comunidade' },
       criteria: ['5 respostas com avaliação positiva']
     },
 
@@ -542,7 +536,7 @@ export default function ConquistasPage() {
       progress: 4,
       maxProgress: 10,
       isUnlocked: false,
-      rewards: { pontoCoins: 50, xp: 25, badge: 'Resumista Profissional' },
+      rewards: { pontoSchools: 50, xp: 25, badge: 'Resumista Profissional' },
       criteria: ['10 resumos gerados']
     },
     {
@@ -555,7 +549,7 @@ export default function ConquistasPage() {
       progress: 2,
       maxProgress: 5,
       isUnlocked: false,
-      rewards: { pontoCoins: 60, xp: 30, badge: 'Arquiteto Mental' },
+      rewards: { pontoSchools: 60, xp: 30, badge: 'Arquiteto Mental' },
       criteria: ['5 mapas mentais criados']
     },
 
@@ -570,7 +564,7 @@ export default function ConquistasPage() {
       progress: 1,
       maxProgress: 3,
       isUnlocked: false,
-      rewards: { pontoCoins: 90, xp: 45, badge: 'Participante Ativo' },
+      rewards: { pontoSchools: 90, xp: 45, badge: 'Participante Ativo' },
       criteria: ['3 eventos ao vivo']
     },
 
@@ -585,7 +579,7 @@ export default function ConquistasPage() {
       progress: 2,
       maxProgress: 5,
       isUnlocked: false,
-      rewards: { pontoCoins: 1000, xp: 500, badge: 'Polímata Supremo', physical: 'Troféu Ponto. School Personalizado' },
+      rewards: { pontoSchools: 1000, xp: 500, badge: 'Polímata Supremo', physical: 'Troféu Ponto. School Personalizado' },
       criteria: ['85% em 5 disciplinas', 'Excelência acadêmica', 'Dedicação excepcional']
     },
     {
@@ -598,7 +592,7 @@ export default function ConquistasPage() {
       progress: 1,
       maxProgress: 3,
       isUnlocked: false,
-      rewards: { pontoCoins: 2000, xp: 1000, badge: 'Guardião Supremo', physical: 'Kit Material Escolar Premium' },
+      rewards: { pontoSchools: 2000, xp: 1000, badge: 'Guardião Supremo', physical: 'Kit Material Escolar Premium' },
       criteria: ['3 meses como Expert', 'Avaliação excepcional', 'Múltiplas respostas aceitas']
     }
   ];
@@ -645,7 +639,7 @@ export default function ConquistasPage() {
     const matchesStatus = selectedStatus === 'all' || 
                          (selectedStatus === 'unlocked' && achievement.isUnlocked) ||
                          (selectedStatus === 'pending' && !achievement.isUnlocked);
-    
+
     return matchesSearch && matchesCategory && matchesStatus;
   });
 
@@ -683,7 +677,7 @@ export default function ConquistasPage() {
           ? 'from-white/20 via-transparent to-gray-50/5' 
           : 'from-white/10 via-transparent to-black/5'
       }`} />
-      
+
       {/* Efeito de brilho animado para conquistas desbloqueadas */}
       {achievement.isUnlocked && (
         <motion.div 
@@ -692,7 +686,7 @@ export default function ConquistasPage() {
           transition={{ duration: 3, repeat: Infinity, repeatDelay: 2 }}
         />
       )}
-      
+
       {/* Badge de nível sofisticado */}
       <div className={`absolute top-3 right-3 px-2 py-1 rounded-full backdrop-blur-md border text-xs font-semibold flex items-center gap-1 ${
         achievement.isUnlocked 
@@ -732,7 +726,7 @@ export default function ConquistasPage() {
             }`}>
               {achievement.name}
             </h3>
-            
+
             <p className={`text-xs mb-2 line-clamp-2 leading-relaxed ${
               achievement.isUnlocked 
                 ? 'text-white/80' 
@@ -746,9 +740,9 @@ export default function ConquistasPage() {
 
           {/* Recompensas compactas */}
           <div className="flex items-center gap-1 mb-2">
-            {achievement.rewards.pontoCoins > 0 && (
+            {achievement.rewards.pontoSchools > 0 && (
               <div className="bg-orange-500/20 backdrop-blur-md border border-orange-400/30 rounded-full px-2 py-0.5 text-xs text-orange-200 font-medium">
-                +{achievement.rewards.pontoCoins}
+                +{achievement.rewards.pontoSchools}
               </div>
             )}
             {achievement.rewards.xp > 0 && (
@@ -790,7 +784,7 @@ export default function ConquistasPage() {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      
+
       <div className="relative z-10 max-w-7xl mx-auto p-6 space-y-8">
 
         {/* Card de Resumo Premium */}
@@ -873,7 +867,7 @@ export default function ConquistasPage() {
               {/* Métricas Premium */}
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
                 {[
-                  { icon: Gift, value: userStats.totalPontoCoins, label: "Ponto Coins", color: "orange" },
+                  { icon: Gift, value: userStats.totalPontoCoins, label: "Ponto Schools", color: "orange" },
                   { icon: Trophy, value: userStats.unlockedBadges, label: "Badges", color: "yellow" },
                   { icon: TrendingUp, value: `#${userStats.rankingPosition}`, label: "Ranking", color: "green" }
                 ].map((stat, index) => (
@@ -1128,18 +1122,7 @@ export default function ConquistasPage() {
               className="space-y-6"
             >
               {/* Cabeçalho da Aba */}
-              <div className="text-center mb-8">
-                <h2 className={`text-3xl font-bold mb-2 ${
-                  isLightMode ? 'text-gray-800' : 'text-white'
-                }`}>
-                  Minhas Recompensas
-                </h2>
-                <p className={`text-lg ${
-                  isLightMode ? 'text-gray-600' : 'text-white/70'
-                }`}>
-                  Acompanhe todos os prêmios que você já conquistou!
-                </p>
-              </div>
+              {/* Removed header texts as requested */}
 
               {/* Filtros */}
               <div className={`backdrop-blur-xl border rounded-2xl p-6 ${
@@ -1165,7 +1148,7 @@ export default function ConquistasPage() {
                       }`}
                     >
                       <option value="all" className={isLightMode ? 'bg-white text-gray-800' : 'bg-slate-800 text-white'}>Todas</option>
-                      <option value="coins" className={isLightMode ? 'bg-white text-gray-800' : 'bg-slate-800 text-white'}>Ponto Coins</option>
+                      <option value="coins" className={isLightMode ? 'bg-white text-gray-800' : 'bg-slate-800 text-white'}>Ponto Schools</option>
                       <option value="badges" className={isLightMode ? 'bg-white text-gray-800' : 'bg-slate-800 text-white'}>Badges</option>
                       <option value="profile_items" className={isLightMode ? 'bg-white text-gray-800' : 'bg-slate-800 text-white'}>Itens de Perfil</option>
                       <option value="physical" className={isLightMode ? 'bg-white text-gray-800' : 'bg-slate-800 text-white'}>Físicas</option>
@@ -1286,7 +1269,7 @@ export default function ConquistasPage() {
                                 </p>
                               )}
                             </div>
-                            
+
                             {/* Badge de Tipo */}
                             <div className={`
                               px-3 py-1 rounded-full text-xs font-semibold
@@ -1447,11 +1430,11 @@ export default function ConquistasPage() {
                     Recompensas:
                   </h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {selectedAchievement.rewards.pontoCoins > 0 && (
+                    {selectedAchievement.rewards.pontoSchools > 0 && (
                       <div className="text-center p-3 rounded-lg bg-orange-500/10 border border-orange-500/20">
                         <Gift className="h-6 w-6 mx-auto mb-2 text-orange-500" />
-                        <div className="font-semibold text-orange-500">+{selectedAchievement.rewards.pontoCoins}</div>
-                        <div className="text-xs text-orange-400">Ponto Coins</div>
+                        <div className="font-semibold text-orange-500">+{selectedAchievement.rewards.pontoSchools}</div>
+                        <div className="text-xs text-orange-400">Ponto Schools</div>
                       </div>
                     )}
                     {selectedAchievement.rewards.xp > 0 && (
