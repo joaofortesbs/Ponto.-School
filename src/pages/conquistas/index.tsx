@@ -337,10 +337,7 @@ export default function ConquistasPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-900 relative overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.15)_1px,transparent_0)] [background-size:20px_20px]" />
-      
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 relative overflow-hidden">
       <div className="relative z-10 max-w-7xl mx-auto p-6 space-y-8">
         {/* Cabeçalho Sofisticado */}
         <motion.div
@@ -349,8 +346,8 @@ export default function ConquistasPage() {
           className="text-center space-y-4"
         >
           <div className="relative inline-block">
-            <h1 className="text-5xl font-black bg-gradient-to-r from-white via-orange-100 to-orange-200 bg-clip-text text-transparent">
-              🏆 Galeria de Conquistas
+            <h1 className="text-5xl font-black bg-gradient-to-r from-gray-800 via-orange-600 to-orange-700 bg-clip-text text-transparent">
+              Minhas Conquistas
             </h1>
             <motion.div
               className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 h-1 bg-gradient-to-r from-orange-400 to-orange-600 rounded-full"
@@ -359,9 +356,6 @@ export default function ConquistasPage() {
               transition={{ duration: 1, delay: 0.5 }}
             />
           </div>
-          <p className="text-xl text-white/80 max-w-2xl mx-auto leading-relaxed">
-            Sua jornada épica de crescimento e excelência acadêmica
-          </p>
         </motion.div>
 
         {/* Card de Resumo Premium */}
@@ -369,30 +363,31 @@ export default function ConquistasPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="relative overflow-hidden rounded-3xl backdrop-blur-xl bg-white/10 border border-white/20 shadow-2xl"
+          className="relative overflow-hidden rounded-3xl bg-white border border-gray-200 shadow-xl"
         >
-          <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 via-transparent to-purple-500/20" />
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-50/50 via-transparent to-blue-50/50" />
           <div className="relative p-8">
             <div className="flex flex-col lg:flex-row items-center gap-8">
               {/* Avatar Premium */}
               <div className="relative">
-                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 border-4 border-white/30 flex items-center justify-center shadow-2xl">
+                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 border-4 border-orange-200 flex items-center justify-center shadow-lg">
                   <span className="text-3xl font-bold text-white">U</span>
                 </div>
-                <div className="absolute -bottom-2 -right-2 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full p-2 border-2 border-white/30">
+                <div className="absolute -bottom-2 -right-2 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full p-2 border-2 border-yellow-200">
                   <Crown className="h-5 w-5 text-yellow-900" />
                 </div>
               </div>
 
               {/* Informações do Usuário */}
               <div className="text-center lg:text-left">
-                <h2 className="text-2xl font-bold text-white mb-1">
-                  João Marcelo
+                <h2 className="text-2xl font-bold text-gray-800 mb-1">
+                  {/* Nome do usuário será preenchido dinamicamente */}
+                  Usuário
                 </h2>
-                <p className="text-white/70 mb-3">
+                <p className="text-gray-600 mb-3">
                   {userStats.currentLevel}
                 </p>
-                <div className="flex items-center gap-4 text-sm text-white/60">
+                <div className="flex items-center gap-4 text-sm text-gray-500">
                   <span>Ranking: #{userStats.rankingPosition}</span>
                   <span>•</span>
                   <span>Sequência: {userStats.focusStreak} dias 🔥</span>
@@ -401,13 +396,13 @@ export default function ConquistasPage() {
 
               {/* Barra de Progresso XP */}
               <div className="flex-1 max-w-md space-y-3">
-                <div className="flex justify-between text-sm text-white/80">
+                <div className="flex justify-between text-sm text-gray-600">
                   <span>Progresso para próximo nível</span>
-                  <span className="font-medium text-orange-300">
+                  <span className="font-medium text-orange-600">
                     {userStats.totalXP} / {userStats.nextLevelXP} XP
                   </span>
                 </div>
-                <div className="h-3 bg-black/20 rounded-full overflow-hidden backdrop-blur-md">
+                <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
                   <motion.div 
                     className="h-full bg-gradient-to-r from-orange-400 to-orange-600 rounded-full"
                     initial={{ width: 0 }}
@@ -431,13 +426,13 @@ export default function ConquistasPage() {
                     transition={{ delay: 0.7 + index * 0.1 }}
                     className="text-center"
                   >
-                    <div className={`w-12 h-12 mx-auto mb-2 rounded-full bg-${stat.color}-500/20 backdrop-blur-md border border-${stat.color}-400/30 flex items-center justify-center`}>
-                      <stat.icon className={`h-6 w-6 text-${stat.color}-300`} />
+                    <div className={`w-12 h-12 mx-auto mb-2 rounded-full ${stat.color === 'orange' ? 'bg-orange-100 border border-orange-200' : stat.color === 'yellow' ? 'bg-yellow-100 border border-yellow-200' : 'bg-green-100 border border-green-200'} flex items-center justify-center`}>
+                      <stat.icon className={`h-6 w-6 ${stat.color === 'orange' ? 'text-orange-600' : stat.color === 'yellow' ? 'text-yellow-600' : 'text-green-600'}`} />
                     </div>
-                    <div className="text-xl font-bold text-white">
+                    <div className="text-xl font-bold text-gray-800">
                       {stat.value}
                     </div>
-                    <div className="text-xs text-white/60">{stat.label}</div>
+                    <div className="text-xs text-gray-500">{stat.label}</div>
                   </motion.div>
                 ))}
               </div>
@@ -452,7 +447,7 @@ export default function ConquistasPage() {
           transition={{ delay: 0.4 }}
           className="flex justify-center"
         >
-          <div className="inline-flex rounded-2xl backdrop-blur-xl bg-white/10 border border-white/20 p-1">
+          <div className="inline-flex rounded-2xl bg-gray-100 border border-gray-200 p-1 shadow-sm">
             {[
               { id: 'overview', label: 'Visão Geral', icon: <Star className="h-4 w-4" /> },
               { id: 'all', label: 'Todas', icon: <Trophy className="h-4 w-4" /> },
@@ -466,7 +461,7 @@ export default function ConquistasPage() {
                   flex items-center gap-2 px-6 py-3 rounded-xl font-medium text-sm transition-all duration-300
                   ${activeTab === tab.id
                     ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/25'
-                    : 'text-white/70 hover:text-white hover:bg-white/5'
+                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
                   }
                 `}
               >
@@ -490,7 +485,7 @@ export default function ConquistasPage() {
               {/* Quase Lá */}
               <div>
                 <motion.h2 
-                  className="text-2xl font-bold text-white mb-6 flex items-center gap-3"
+                  className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                 >
@@ -516,7 +511,7 @@ export default function ConquistasPage() {
               {/* Últimas Medalhas */}
               <div>
                 <motion.h2 
-                  className="text-2xl font-bold text-white mb-6 flex items-center gap-3"
+                  className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                 >
@@ -550,16 +545,16 @@ export default function ConquistasPage() {
               className="space-y-6"
             >
               {/* Filtros Premium */}
-              <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-6">
+              <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
                 <div className="flex flex-col lg:flex-row gap-4">
                   {/* Busca */}
                   <div className="flex-1 relative">
-                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/40" />
+                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <input
                       placeholder="Buscar conquistas..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-white/40 focus:outline-none focus:border-orange-400/50 backdrop-blur-md"
+                      className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 placeholder:text-gray-400 focus:outline-none focus:border-orange-400 focus:bg-white transition-colors"
                     />
                   </div>
 
@@ -568,10 +563,10 @@ export default function ConquistasPage() {
                     <select
                       value={selectedCategory}
                       onChange={(e) => setSelectedCategory(e.target.value)}
-                      className="px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white backdrop-blur-md focus:outline-none focus:border-orange-400/50"
+                      className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 focus:outline-none focus:border-orange-400 focus:bg-white transition-colors"
                     >
                       {categories.map((category) => (
-                        <option key={category} value={category} className="bg-slate-800 text-white">
+                        <option key={category} value={category} className="bg-white text-gray-800">
                           {category === 'all' ? 'Todas as Categorias' : category}
                         </option>
                       ))}
@@ -580,11 +575,11 @@ export default function ConquistasPage() {
                     <select
                       value={selectedStatus}
                       onChange={(e) => setSelectedStatus(e.target.value)}
-                      className="px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white backdrop-blur-md focus:outline-none focus:border-orange-400/50"
+                      className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 focus:outline-none focus:border-orange-400 focus:bg-white transition-colors"
                     >
-                      <option value="all" className="bg-slate-800 text-white">Todos os Status</option>
-                      <option value="unlocked" className="bg-slate-800 text-white">Desbloqueadas</option>
-                      <option value="pending" className="bg-slate-800 text-white">Pendentes</option>
+                      <option value="all" className="bg-white text-gray-800">Todos os Status</option>
+                      <option value="unlocked" className="bg-white text-gray-800">Desbloqueadas</option>
+                      <option value="pending" className="bg-white text-gray-800">Pendentes</option>
                     </select>
                   </div>
                 </div>
@@ -606,13 +601,13 @@ export default function ConquistasPage() {
 
               {filteredAchievements.length === 0 && (
                 <div className="text-center py-16">
-                  <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center">
-                    <Trophy className="h-10 w-10 text-white/40" />
+                  <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center">
+                    <Trophy className="h-10 w-10 text-gray-400" />
                   </div>
-                  <h3 className="text-xl font-medium text-white/70 mb-2">
+                  <h3 className="text-xl font-medium text-gray-600 mb-2">
                     Nenhuma conquista encontrada
                   </h3>
-                  <p className="text-white/50">
+                  <p className="text-gray-500">
                     Tente ajustar seus filtros ou termo de busca
                   </p>
                 </div>
@@ -628,13 +623,13 @@ export default function ConquistasPage() {
               exit={{ opacity: 0, y: -20 }}
               className="text-center py-16"
             >
-              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center">
-                <Gift className="h-10 w-10 text-white/40" />
+              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center">
+                <Gift className="h-10 w-10 text-gray-400" />
               </div>
-              <h3 className="text-xl font-medium text-white/70 mb-2">
+              <h3 className="text-xl font-medium text-gray-600 mb-2">
                 Seção em Desenvolvimento
               </h3>
-              <p className="text-white/50">
+              <p className="text-gray-500">
                 Suas recompensas aparecerão aqui em breve
               </p>
             </motion.div>
@@ -648,13 +643,13 @@ export default function ConquistasPage() {
               exit={{ opacity: 0, y: -20 }}
               className="text-center py-16"
             >
-              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center">
-                <Medal className="h-10 w-10 text-white/40" />
+              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center">
+                <Medal className="h-10 w-10 text-gray-400" />
               </div>
-              <h3 className="text-xl font-medium text-white/70 mb-2">
+              <h3 className="text-xl font-medium text-gray-600 mb-2">
                 Ranking em Desenvolvimento
               </h3>
-              <p className="text-white/50">
+              <p className="text-gray-500">
                 O ranking de conquistas estará disponível em breve
               </p>
             </motion.div>
@@ -663,7 +658,7 @@ export default function ConquistasPage() {
 
         {/* Modal de Detalhes Premium */}
         <Dialog open={!!selectedAchievement} onOpenChange={() => setSelectedAchievement(null)}>
-          <DialogContent className="max-w-2xl bg-slate-900/95 backdrop-blur-xl border border-white/20 text-white">
+          <DialogContent className="max-w-2xl bg-white border border-gray-200 text-gray-800">
             {selectedAchievement && (
               <div className="p-6">
                 <div className="flex items-start gap-6 mb-6">
@@ -674,14 +669,14 @@ export default function ConquistasPage() {
                     {selectedAchievement.icon}
                   </div>
                   <div className="flex-1">
-                    <h2 className="text-2xl font-bold text-white mb-2">
+                    <h2 className="text-2xl font-bold text-gray-800 mb-2">
                       {selectedAchievement.name}
                     </h2>
-                    <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-semibold bg-gradient-to-r ${getLevelGradient(selectedAchievement.level)}`}>
+                    <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-semibold bg-gradient-to-r ${getLevelGradient(selectedAchievement.level)} text-white`}>
                       {getLevelIcon(selectedAchievement.level)}
                       {selectedAchievement.level.charAt(0).toUpperCase() + selectedAchievement.level.slice(1)}
                     </div>
-                    <p className="text-white/80 text-lg mt-3">
+                    <p className="text-gray-600 text-lg mt-3">
                       {selectedAchievement.description}
                     </p>
                   </div>
@@ -698,7 +693,7 @@ export default function ConquistasPage() {
                   <Button
                     variant="outline"
                     onClick={() => setSelectedAchievement(null)}
-                    className="flex-1 bg-white/10 border-white/20 text-white hover:bg-white/20"
+                    className="flex-1 bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
                   >
                     Fechar
                   </Button>
