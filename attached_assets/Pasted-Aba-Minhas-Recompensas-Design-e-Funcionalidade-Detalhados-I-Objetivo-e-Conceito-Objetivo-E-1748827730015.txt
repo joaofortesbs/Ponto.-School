@@ -1,0 +1,120 @@
+Aba "Minhas Recompensas" – Design e Funcionalidade Detalhados
+I. Objetivo e Conceito:
+Objetivo:
+Exibir todas as recompensas que o aluno já desbloqueou (sejam elas virtuais ou físicas).
+Fornecer informações claras sobre cada recompensa (tipo, status, como usar/resgatar).
+Criar uma sensação de valor e reconhecimento pelas conquistas do aluno.
+Design:
+Manter a consistência visual com o restante da seção "Conquistas" (cores, fontes, ícones).
+Foco na clareza, organização e facilidade de uso.
+Design e interações com foco no responsivo
+Responsividade Total.
+II. Estrutura da Página (Aba "Minhas Recompensas"):
+Cabeçalho da Aba:
+Título: "Minhas Recompensas" (ou "Prêmios e Recompensas").
+Opcional: Subtítulo curto (ex: "Acompanhe todos os prêmios que você já conquistou!").
+Filtros (Topo da Lista – Importante):
+Design:
+Dropdowns e/ou botões de alternância (estilo Ponto. School).
+Posição: Alinhados horizontalmente, acima da lista de recompensas.
+Opções de Filtro:
+"Tipo de Recompensa":
+Opções: "Todas", "Ponto Coins", "Badges", "Itens de Perfil" (ex: molduras, avatares), "Físicas" (ex: kits, placas), "Digitais" (ex: acesso a cursos, descontos).
+Padrão: "Todas".
+"Status" (para Recompensas Físicas):
+Opções: "Todas", "Aguardando Envio", "Enviado", "Entregue", "Resgatado" (se for um voucher/cupom).
+Padrão: "Todas".
+"Data de Recebimento":
+Opções: "Todas", "Últimos 7 dias", "Últimos 30 dias", "Este Mês", "Mês Anterior".
+Opcional: Selecionar um intervalo de datas (calendário).
+Lista de Recompensas (Cards ou Itens de Lista – Layout Detalhado Abaixo):
+Se o Aluno NÃO Tiver Nenhuma Recompensa:
+Exibir a mensagem que está na imagem atual:
+Ícone: Presente (cinza escuro).
+Título: "Seção em Desenvolvimento" (ou "Suas Recompensas Aparecerão Aqui!"). Mudar este título.
+Texto: "Continue estudando e completando conquistas para desbloquear prêmios incríveis!" (ou similar).
+Se o Aluno Tiver Recompensas:
+A lista de recompensas é exibida, ordenada por:
+Padrão: Data de recebimento (mais recentes primeiro).
+Opcional: Permitir que o usuário altere a ordenação (ex: por tipo, por status).
+III. Design dos Cards/Itens de Recompensa:
+Opção 1 (Cards – Recomendado para um visual mais atraente):
+Formato: Retangular.
+Fundo: Branco (ou cinza claríssimo).
+Cantos: Arredondados.
+Sombra: Sutil.
+Layout Interno (Flexbox ou Grid):
+Imagem/Ícone da Recompensa (Esquerda):
+Tamanho: Médio (ex: 64px x 64px).
+Conteúdo:
+Badge: O próprio ícone da badge.
+Ponto Coins: Ícone da moeda Ponto Coin.
+Item de Perfil: Miniatura do item (ex: moldura).
+Recompensa Física: Foto genérica do tipo de recompensa (ex: foto de um kit escolar, placa). Se possível, usar uma imagem mais específica do item.
+Acesso a Curso/Desconto: Ícone representativo (ex: livro aberto, etiqueta de preço).
+Informações (Centro/Direita):
+Nome da Recompensa: (ex: "Badge Mestre da Matemática", "+100 Ponto Coins", "Kit Estudante Dedicado").
+Fonte: Montserrat, SemiBold, tamanho médio.
+Cor: Azul escuro.
+Descrição Curta (Opcional): Explicando brevemente a recompensa.
+Data de Recebimento: (ex: "Conquistado em: 15/03/2024").
+Status (Se Aplicável – Especialmente para Recompensas Físicas):
+Texto: "Status: Aguardando Envio".
+Cor: Diferente para cada status (ex: amarelo para "Aguardando", azul para "Enviado", verde para "Entregue").
+Código de Rastreio (Se Aplicável):
+Texto: "Rastreio: [CÓDIGO]".
+Link: Ao clicar no código, abrir o site da transportadora (em nova aba).
+Botão de Ação (Canto Inferior Direito – Contextual):
+Depende do tipo de recompensa:
+"Usar Agora": Para recompensas digitais que podem ser ativadas (ex: acesso a curso, desconto).
+"Ver Detalhes": Se houver mais informações sobre a recompensa (ex: regras para usar um desconto).
+"Rastrear Envio": Se for uma recompensa física enviada.
+Nenhum botão: Se for uma recompensa que não requer ação (ex: Ponto Coins já creditados, badge já exibida).
+Design: Laranja (para ações principais) ou transparente/borda (para ações secundárias).
+Efeito Hover: Leve elevação do card.
+Responsividade dos Cards: Otimizar para visualização mobile, ajustando tamanho de fontes, ícones e disposição dos elementos, mantendo todas as funcionalidades intactas e a interface limpa.
+Opção 2 (Lista Detalhada – Alternativa mais compacta):
+Semelhante ao modo lista da "Biblioteca".
+Cada item: Ícone/imagem, nome, data, status, botão de ação.
+IV. Funcionalidades e Interações:
+Filtros:
+Ação: Usuário seleciona um filtro (ex: "Tipo de Recompensa: Físicas").
+Reação: A lista de recompensas é atualizada dinamicamente para mostrar apenas os itens que correspondem ao filtro.
+Feedback Visual: Os filtros selecionados ficam destacados.
+Botões de Ação nos Cards/Itens:
+"Usar Agora":
+Exemplo: Se for um acesso a curso, leva o usuário para a página do curso. Se for um desconto, pode abrir um modal com um código de cupom e instruções.
+"Ver Detalhes":
+Abre um modal com todas as informações sobre a recompensa (descrição completa, regras, validade, etc.).
+"Rastrear Envio":
+Abre o site da transportadora (em nova aba) com o código de rastreio.
+Paginação:
+Se houver muitas recompensas, usar paginação na parte inferior da lista.
+Notificações:
+Quando uma recompensa física é enviada ou entregue, o aluno recebe uma notificação.
+Integração com Outras Seções:
+Carteira: O saldo de Ponto Coins ganho como recompensa é automaticamente atualizado na Carteira.
+Perfil: Badges e itens de personalização ganhos são automaticamente aplicados (ou disponibilizados para o aluno aplicar) no perfil.
+Loja (Se Houver): Descontos ganhos podem ser usados na loja.
+V. Fluxo do Usuário (Exemplos):
+Cenário 1: Aluno Quer Ver o Status de um Kit Escolar:
+Acessa "Minhas Conquistas".
+Clica na aba "Minhas Recompensas".
+Opcional: Usa o filtro "Tipo de Recompensa: Físicas".
+Localiza o card do "Kit Estudante Dedicado".
+Vê o status (ex: "Enviado (Código: XX123456789BR)").
+Clica no botão "Rastrear Envio" (abre o site dos Correios/transportadora).
+Cenário 2: Aluno Quer Usar um Desconto Ganho:
+Acessa "Minhas Conquistas".
+Clica na aba "Minhas Recompensas".
+Opcional: Usa o filtro "Tipo de Recompensa: Digitais".
+Localiza o card "Desconto de 20% no Curso de Programação".
+Clica no botão "Usar Agora".
+É direcionado para a página do curso de programação, com o desconto já aplicado (ou um modal aparece com o código de cupom e instruções).
+Este detalhamento da aba "Minhas Recompensas" garante que ela seja:
+Informativa: Mostra todas as informações relevantes sobre cada recompensa.
+Funcional: Permite que o aluno gerencie suas recompensas (ex: rastrear envios, usar descontos).
+Organizada: Filtros e ordenação facilitam a navegação.
+Motivadora: Reforça a sensação de conquista e valoriza o esforço do aluno.
+Integrada: Conectada a outras seções da plataforma.
+Responsiva: Os elementos, e as funções da aba, se adaptam perfeitamente aos tamanhos de telas e de dispositivos.
