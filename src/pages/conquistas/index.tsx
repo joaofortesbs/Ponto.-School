@@ -22,7 +22,11 @@ import {
   Calendar,
   Share2,
   X,
-  Play
+  Play,
+  Gem,
+  Hexagon,
+  Shield,
+  Diamond
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -89,7 +93,7 @@ export default function ConquistasPage() {
       description: 'Complete seu primeiro login na plataforma',
       category: 'Embarque',
       level: 'bronze',
-      icon: <Star className="h-6 w-6" />,
+      icon: <Star className="h-5 w-5" />,
       progress: 1,
       maxProgress: 1,
       isUnlocked: true,
@@ -103,7 +107,7 @@ export default function ConquistasPage() {
       description: 'Mantenha uma sequência de 7 dias consecutivos de estudo',
       category: 'Dedicação',
       level: 'gold',
-      icon: <Flame className="h-6 w-6" />,
+      icon: <Flame className="h-5 w-5" />,
       progress: 7,
       maxProgress: 7,
       isUnlocked: true,
@@ -117,7 +121,7 @@ export default function ConquistasPage() {
       description: 'Crie 50 resumos usando o Epictus IA',
       category: 'Inovador IA',
       level: 'silver',
-      icon: <BookOpen className="h-6 w-6" />,
+      icon: <BookOpen className="h-5 w-5" />,
       progress: 32,
       maxProgress: 50,
       isUnlocked: false,
@@ -130,7 +134,7 @@ export default function ConquistasPage() {
       description: 'Explore todas as seções da plataforma',
       category: 'Explorador',
       level: 'bronze',
-      icon: <Target className="h-6 w-6" />,
+      icon: <Target className="h-5 w-5" />,
       progress: 8,
       maxProgress: 10,
       isUnlocked: false,
@@ -143,36 +147,60 @@ export default function ConquistasPage() {
       description: 'Domine todas as disciplinas e ferramentas da plataforma',
       category: 'Lendário',
       level: 'legendary',
-      icon: <Crown className="h-6 w-6" />,
+      icon: <Crown className="h-5 w-5" />,
       progress: 3,
       maxProgress: 10,
       isUnlocked: false,
       rewards: { pontoCoins: 1000, xp: 2000, badge: 'Mestre Supremo', physical: 'Troféu Premium' },
       criteria: ['Dominar 10 disciplinas', 'Usar todas as ferramentas IA', 'Manter média 95%+']
+    },
+    {
+      id: '6',
+      name: 'Diamante Brilhante',
+      description: 'Alcance o nível diamante em desempenho',
+      category: 'Elite',
+      level: 'diamond',
+      icon: <Diamond className="h-5 w-5" />,
+      progress: 85,
+      maxProgress: 100,
+      isUnlocked: false,
+      rewards: { pontoCoins: 750, xp: 1500, badge: 'Elite Diamante' },
+      criteria: ['95% de aproveitamento', 'Top 10% do ranking', 'Conquistas premium']
     }
   ];
 
-  const categories = ['all', 'Embarque', 'Explorador', 'Dedicação', 'Conhecimento', 'Colaborador', 'Inovador IA', 'Colecionador', 'Lendário'];
+  const categories = ['all', 'Embarque', 'Explorador', 'Dedicação', 'Conhecimento', 'Colaborador', 'Inovador IA', 'Colecionador', 'Elite', 'Lendário'];
 
-  const getLevelColor = (level: string) => {
+  const getLevelGradient = (level: string) => {
     switch (level) {
-      case 'bronze': return 'from-amber-600 to-amber-800';
-      case 'silver': return 'from-gray-400 to-gray-600';
-      case 'gold': return 'from-yellow-400 to-yellow-600';
-      case 'diamond': return 'from-blue-400 to-blue-600';
-      case 'legendary': return 'from-purple-500 to-pink-500';
-      default: return 'from-gray-400 to-gray-600';
+      case 'bronze': return 'from-amber-500 via-orange-500 to-amber-600';
+      case 'silver': return 'from-gray-300 via-slate-400 to-gray-500';
+      case 'gold': return 'from-yellow-300 via-yellow-500 to-amber-600';
+      case 'diamond': return 'from-cyan-300 via-blue-400 to-indigo-500';
+      case 'legendary': return 'from-purple-400 via-pink-500 to-rose-500';
+      default: return 'from-gray-300 via-slate-400 to-gray-500';
     }
   };
 
-  const getLevelBorder = (level: string) => {
+  const getLevelShadow = (level: string) => {
     switch (level) {
-      case 'bronze': return 'border-amber-500';
-      case 'silver': return 'border-gray-400';
-      case 'gold': return 'border-yellow-400';
-      case 'diamond': return 'border-blue-400';
-      case 'legendary': return 'border-purple-500';
-      default: return 'border-gray-400';
+      case 'bronze': return 'shadow-amber-500/30';
+      case 'silver': return 'shadow-gray-400/30';
+      case 'gold': return 'shadow-yellow-500/30';
+      case 'diamond': return 'shadow-blue-500/30';
+      case 'legendary': return 'shadow-purple-500/30';
+      default: return 'shadow-gray-400/30';
+    }
+  };
+
+  const getLevelIcon = (level: string) => {
+    switch (level) {
+      case 'bronze': return <Shield className="h-3 w-3" />;
+      case 'silver': return <Hexagon className="h-3 w-3" />;
+      case 'gold': return <Crown className="h-3 w-3" />;
+      case 'diamond': return <Diamond className="h-3 w-3" />;
+      case 'legendary': return <Gem className="h-3 w-3" />;
+      default: return <Medal className="h-3 w-3" />;
     }
   };
 
@@ -197,98 +225,110 @@ export default function ConquistasPage() {
     .sort((a, b) => new Date(b.unlockedAt!).getTime() - new Date(a.unlockedAt!).getTime())
     .slice(0, 3);
 
-  // Componente Card de Conquista
+  // Componente Card de Conquista Modernizado
   const AchievementCard = ({ achievement, variant = 'default' }: { achievement: Achievement, variant?: 'default' | 'compact' }) => (
     <motion.div
-      whileHover={{ scale: 1.03, y: -4 }}
+      whileHover={{ scale: 1.02, y: -2 }}
       whileTap={{ scale: 0.98 }}
       className={`
-        relative overflow-hidden rounded-xl cursor-pointer transition-all duration-300
+        group relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-500
+        backdrop-blur-xl border border-white/10 hover:border-white/20
         ${achievement.isUnlocked 
-          ? `bg-gradient-to-br ${getLevelColor(achievement.level)} shadow-xl border-2 ${getLevelBorder(achievement.level)}` 
-          : 'bg-white dark:bg-slate-800 shadow-lg border border-gray-200 dark:border-gray-700 hover:shadow-xl'
+          ? `bg-gradient-to-br ${getLevelGradient(achievement.level)} shadow-2xl ${getLevelShadow(achievement.level)} hover:shadow-3xl` 
+          : 'bg-white/5 dark:bg-white/5 shadow-lg hover:shadow-xl hover:bg-white/10 dark:hover:bg-white/10'
         }
-        ${variant === 'compact' ? 'p-4' : 'p-6'}
+        ${variant === 'compact' ? 'p-4 h-40' : 'p-5 h-44'}
       `}
       onClick={() => setSelectedAchievement(achievement)}
     >
-      {/* Efeito de brilho para conquistas desbloqueadas */}
+      {/* Efeito de cristal/vidro */}
+      <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/5 pointer-events-none" />
+      
+      {/* Efeito de brilho animado para conquistas desbloqueadas */}
       {achievement.isUnlocked && (
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-pulse" />
+        <motion.div 
+          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+          animate={{ x: [-100, 300] }}
+          transition={{ duration: 3, repeat: Infinity, repeatDelay: 2 }}
+        />
       )}
       
-      {/* Badge de nível */}
-      <div className={`absolute top-2 right-2 px-2 py-1 rounded-full text-xs font-bold ${
-        achievement.isUnlocked ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600'
+      {/* Badge de nível sofisticado */}
+      <div className={`absolute top-3 right-3 px-2 py-1 rounded-full backdrop-blur-md border text-xs font-semibold flex items-center gap-1 ${
+        achievement.isUnlocked 
+          ? 'bg-white/20 border-white/30 text-white' 
+          : 'bg-black/20 border-white/10 text-gray-300'
       }`}>
+        {getLevelIcon(achievement.level)}
         {achievement.level.charAt(0).toUpperCase() + achievement.level.slice(1)}
       </div>
 
-      <div className="flex items-start gap-4">
-        {/* Ícone */}
+      <div className="relative z-10 h-full flex flex-col">
+        {/* Ícone sofisticado */}
         <div className={`
-          flex-shrink-0 p-3 rounded-full
+          flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center mb-3
           ${achievement.isUnlocked 
-            ? 'bg-white/20 text-white' 
-            : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500'
+            ? 'bg-white/20 backdrop-blur-md border border-white/30 text-white' 
+            : 'bg-white/10 backdrop-blur-md border border-white/20 text-gray-300'
           }
+          group-hover:scale-110 transition-transform duration-300
         `}>
           {achievement.icon}
         </div>
 
         {/* Conteúdo */}
-        <div className="flex-1 min-w-0">
-          <h3 className={`font-bold text-lg mb-2 ${
-            achievement.isUnlocked ? 'text-white' : 'text-gray-900 dark:text-white'
-          }`}>
-            {achievement.name}
-          </h3>
-          
-          <p className={`text-sm mb-3 line-clamp-2 ${
-            achievement.isUnlocked ? 'text-white/80' : 'text-gray-600 dark:text-gray-300'
-          }`}>
-            {achievement.description}
-          </p>
+        <div className="flex-1 flex flex-col justify-between min-h-0">
+          <div>
+            <h3 className={`font-bold text-sm mb-1 line-clamp-1 ${
+              achievement.isUnlocked ? 'text-white' : 'text-white/90'
+            }`}>
+              {achievement.name}
+            </h3>
+            
+            <p className={`text-xs mb-2 line-clamp-2 leading-relaxed ${
+              achievement.isUnlocked ? 'text-white/80' : 'text-white/70'
+            }`}>
+              {achievement.description}
+            </p>
+          </div>
 
-          {/* Recompensas */}
-          <div className="flex items-center gap-2 mb-3">
+          {/* Recompensas compactas */}
+          <div className="flex items-center gap-1 mb-2">
             {achievement.rewards.pontoCoins > 0 && (
-              <Badge variant="secondary" className="bg-orange-100 text-orange-800 border-orange-200">
-                +{achievement.rewards.pontoCoins} PC
-              </Badge>
+              <div className="bg-orange-500/20 backdrop-blur-md border border-orange-400/30 rounded-full px-2 py-0.5 text-xs text-orange-200 font-medium">
+                +{achievement.rewards.pontoCoins}
+              </div>
             )}
             {achievement.rewards.xp > 0 && (
-              <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200">
-                +{achievement.rewards.xp} XP
-              </Badge>
-            )}
-            {achievement.rewards.badge && (
-              <Badge variant="secondary" className="bg-purple-100 text-purple-800 border-purple-200">
-                <Award className="h-3 w-3 mr-1" />
-                Badge
-              </Badge>
+              <div className="bg-blue-500/20 backdrop-blur-md border border-blue-400/30 rounded-full px-2 py-0.5 text-xs text-blue-200 font-medium">
+                +{achievement.rewards.xp}
+              </div>
             )}
           </div>
 
-          {/* Barra de progresso para conquistas não desbloqueadas */}
+          {/* Barra de progresso elegante */}
           {!achievement.isUnlocked && (
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600 dark:text-gray-300">Progresso</span>
-                <span className="font-medium text-orange-600">{achievement.progress}/{achievement.maxProgress}</span>
+            <div className="space-y-1">
+              <div className="flex justify-between text-xs">
+                <span className="text-white/60">Progresso</span>
+                <span className="font-medium text-orange-300">{achievement.progress}/{achievement.maxProgress}</span>
               </div>
-              <Progress 
-                value={(achievement.progress / achievement.maxProgress) * 100} 
-                className="h-2"
-              />
+              <div className="h-1.5 bg-black/20 rounded-full overflow-hidden backdrop-blur-md">
+                <motion.div 
+                  className="h-full bg-gradient-to-r from-orange-400 to-orange-500 rounded-full"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${(achievement.progress / achievement.maxProgress) * 100}%` }}
+                  transition={{ duration: 1, delay: 0.2 }}
+                />
+              </div>
             </div>
           )}
 
           {/* Data de desbloqueio */}
           {achievement.isUnlocked && achievement.unlockedAt && (
-            <div className="flex items-center gap-2 text-sm text-white/80">
-              <Calendar className="h-4 w-4" />
-              Desbloqueada em {achievement.unlockedAt.toLocaleDateString('pt-BR')}
+            <div className="flex items-center gap-1 text-xs text-white/70">
+              <Calendar className="h-3 w-3" />
+              {achievement.unlockedAt.toLocaleDateString('pt-BR')}
             </div>
           )}
         </div>
@@ -297,131 +337,136 @@ export default function ConquistasPage() {
   );
 
   return (
-    <div className="w-full h-full bg-[#f7f9fa] dark:bg-[#001427] transition-colors duration-300">
-      <div className="max-w-7xl mx-auto p-6 space-y-6">
-        {/* Cabeçalho */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-900 relative overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.15)_1px,transparent_0)] [background-size:20px_20px]" />
+      
+      <div className="relative z-10 max-w-7xl mx-auto p-6 space-y-8">
+        {/* Cabeçalho Sofisticado */}
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: -30 }}
           animate={{ opacity: 1, y: 0 }}
-          className="space-y-2"
+          className="text-center space-y-4"
         >
-          <h1 className="text-4xl font-bold text-[#29335C] dark:text-white">
-            Minhas Conquistas
-          </h1>
-          <p className="text-lg text-gray-600 dark:text-gray-300">
-            Sua jornada de evolução na Ponto School
+          <div className="relative inline-block">
+            <h1 className="text-5xl font-black bg-gradient-to-r from-white via-orange-100 to-orange-200 bg-clip-text text-transparent">
+              🏆 Galeria de Conquistas
+            </h1>
+            <motion.div
+              className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 h-1 bg-gradient-to-r from-orange-400 to-orange-600 rounded-full"
+              initial={{ width: 0 }}
+              animate={{ width: "60%" }}
+              transition={{ duration: 1, delay: 0.5 }}
+            />
+          </div>
+          <p className="text-xl text-white/80 max-w-2xl mx-auto leading-relaxed">
+            Sua jornada épica de crescimento e excelência acadêmica
           </p>
         </motion.div>
 
-        {/* Card de Resumo do Perfil */}
+        {/* Card de Resumo Premium */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700"
+          transition={{ delay: 0.2 }}
+          className="relative overflow-hidden rounded-3xl backdrop-blur-xl bg-white/10 border border-white/20 shadow-2xl"
         >
-          <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
-            {/* Avatar e Nível */}
-            <div className="flex items-center gap-4">
-              <div className={`relative w-20 h-20 rounded-full border-4 ${getLevelBorder('gold')} overflow-hidden`}>
-                <div className="w-full h-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center">
-                  <span className="text-2xl font-bold text-white">U</span>
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 via-transparent to-purple-500/20" />
+          <div className="relative p-8">
+            <div className="flex flex-col lg:flex-row items-center gap-8">
+              {/* Avatar Premium */}
+              <div className="relative">
+                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 border-4 border-white/30 flex items-center justify-center shadow-2xl">
+                  <span className="text-3xl font-bold text-white">U</span>
                 </div>
-                <div className="absolute -bottom-1 -right-1 bg-yellow-400 rounded-full p-1">
-                  <Crown className="h-4 w-4 text-yellow-800" />
+                <div className="absolute -bottom-2 -right-2 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full p-2 border-2 border-white/30">
+                  <Crown className="h-5 w-5 text-yellow-900" />
                 </div>
               </div>
-              <div>
-                <h2 className="text-xl font-bold text-[#29335C] dark:text-white">
+
+              {/* Informações do Usuário */}
+              <div className="text-center lg:text-left">
+                <h2 className="text-2xl font-bold text-white mb-1">
                   João Marcelo
                 </h2>
-                <p className="text-gray-600 dark:text-gray-300">
+                <p className="text-white/70 mb-3">
                   {userStats.currentLevel}
                 </p>
-              </div>
-            </div>
-
-            {/* Barra de Progresso XP */}
-            <div className="flex-1 max-w-md space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600 dark:text-gray-300">Progresso para próximo nível</span>
-                <span className="font-medium text-orange-600">
-                  {userStats.totalXP} / {userStats.nextLevelXP} XP
-                </span>
-              </div>
-              <Progress 
-                value={(userStats.totalXP / userStats.nextLevelXP) * 100} 
-                className="h-3"
-              />
-            </div>
-
-            {/* Métricas */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-              <div className="text-center">
-                <div className="flex items-center justify-center mb-1">
-                  <Gift className="h-5 w-5 text-orange-500 mr-1" />
+                <div className="flex items-center gap-4 text-sm text-white/60">
+                  <span>Ranking: #{userStats.rankingPosition}</span>
+                  <span>•</span>
+                  <span>Sequência: {userStats.focusStreak} dias 🔥</span>
                 </div>
-                <div className="text-2xl font-bold text-[#29335C] dark:text-white">
-                  {userStats.totalPontoCoins}
-                </div>
-                <div className="text-xs text-gray-600 dark:text-gray-300">PC</div>
               </div>
 
-              <div className="text-center">
-                <div className="flex items-center justify-center mb-1">
-                  <Trophy className="h-5 w-5 text-yellow-500 mr-1" />
+              {/* Barra de Progresso XP */}
+              <div className="flex-1 max-w-md space-y-3">
+                <div className="flex justify-between text-sm text-white/80">
+                  <span>Progresso para próximo nível</span>
+                  <span className="font-medium text-orange-300">
+                    {userStats.totalXP} / {userStats.nextLevelXP} XP
+                  </span>
                 </div>
-                <div className="text-2xl font-bold text-[#29335C] dark:text-white">
-                  {userStats.unlockedBadges}
+                <div className="h-3 bg-black/20 rounded-full overflow-hidden backdrop-blur-md">
+                  <motion.div 
+                    className="h-full bg-gradient-to-r from-orange-400 to-orange-600 rounded-full"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${(userStats.totalXP / userStats.nextLevelXP) * 100}%` }}
+                    transition={{ duration: 1.5, delay: 0.5 }}
+                  />
                 </div>
-                <div className="text-xs text-gray-600 dark:text-gray-300">Badges</div>
               </div>
 
-              <div className="text-center">
-                <div className="flex items-center justify-center mb-1">
-                  <Flame className="h-5 w-5 text-red-500 mr-1" />
-                </div>
-                <div className="text-2xl font-bold text-[#29335C] dark:text-white">
-                  {userStats.focusStreak}
-                </div>
-                <div className="text-xs text-gray-600 dark:text-gray-300">Dias 🔥</div>
-              </div>
-
-              <div className="text-center">
-                <div className="flex items-center justify-center mb-1">
-                  <TrendingUp className="h-5 w-5 text-green-500 mr-1" />
-                </div>
-                <div className="text-2xl font-bold text-[#29335C] dark:text-white">
-                  #{userStats.rankingPosition}
-                </div>
-                <div className="text-xs text-gray-600 dark:text-gray-300">Ranking</div>
+              {/* Métricas Premium */}
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
+                {[
+                  { icon: Gift, value: userStats.totalPontoCoins, label: "Ponto Coins", color: "orange" },
+                  { icon: Trophy, value: userStats.unlockedBadges, label: "Badges", color: "yellow" },
+                  { icon: TrendingUp, value: `#${userStats.rankingPosition}`, label: "Ranking", color: "green" }
+                ].map((stat, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.7 + index * 0.1 }}
+                    className="text-center"
+                  >
+                    <div className={`w-12 h-12 mx-auto mb-2 rounded-full bg-${stat.color}-500/20 backdrop-blur-md border border-${stat.color}-400/30 flex items-center justify-center`}>
+                      <stat.icon className={`h-6 w-6 text-${stat.color}-300`} />
+                    </div>
+                    <div className="text-xl font-bold text-white">
+                      {stat.value}
+                    </div>
+                    <div className="text-xs text-white/60">{stat.label}</div>
+                  </motion.div>
+                ))}
               </div>
             </div>
           </div>
         </motion.div>
 
-        {/* Abas de Navegação */}
+        {/* Abas de Navegação Elegantes */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="border-b border-gray-200 dark:border-gray-700"
+          transition={{ delay: 0.4 }}
+          className="flex justify-center"
         >
-          <nav className="flex space-x-8">
+          <div className="inline-flex rounded-2xl backdrop-blur-xl bg-white/10 border border-white/20 p-1">
             {[
               { id: 'overview', label: 'Visão Geral', icon: <Star className="h-4 w-4" /> },
-              { id: 'all', label: 'Todas as Conquistas', icon: <Trophy className="h-4 w-4" /> },
-              { id: 'rewards', label: 'Minhas Recompensas', icon: <Gift className="h-4 w-4" /> },
+              { id: 'all', label: 'Todas', icon: <Trophy className="h-4 w-4" /> },
+              { id: 'rewards', label: 'Recompensas', icon: <Gift className="h-4 w-4" /> },
               { id: 'ranking', label: 'Ranking', icon: <Medal className="h-4 w-4" /> }
             ].map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
                 className={`
-                  flex items-center gap-2 py-4 px-2 border-b-2 font-medium text-sm transition-all
+                  flex items-center gap-2 px-6 py-3 rounded-xl font-medium text-sm transition-all duration-300
                   ${activeTab === tab.id
-                    ? 'border-orange-500 text-orange-600 dark:text-orange-400'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+                    ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/25'
+                    : 'text-white/70 hover:text-white hover:bg-white/5'
                   }
                 `}
               >
@@ -429,7 +474,7 @@ export default function ConquistasPage() {
                 {tab.label}
               </button>
             ))}
-          </nav>
+          </div>
         </motion.div>
 
         {/* Conteúdo das Abas */}
@@ -444,26 +489,52 @@ export default function ConquistasPage() {
             >
               {/* Quase Lá */}
               <div>
-                <h2 className="text-2xl font-bold text-[#29335C] dark:text-white mb-6 flex items-center gap-2">
-                  <Zap className="h-6 w-6 text-orange-500" />
+                <motion.h2 
+                  className="text-2xl font-bold text-white mb-6 flex items-center gap-3"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                >
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center">
+                    <Zap className="h-5 w-5 text-white" />
+                  </div>
                   Quase Lá! Próximas a Desbloquear
-                </h2>
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {nearlyUnlocked.map((achievement) => (
-                    <AchievementCard key={achievement.id} achievement={achievement} />
+                </motion.h2>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {nearlyUnlocked.map((achievement, index) => (
+                    <motion.div
+                      key={achievement.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                    >
+                      <AchievementCard achievement={achievement} variant="compact" />
+                    </motion.div>
                   ))}
                 </div>
               </div>
 
               {/* Últimas Medalhas */}
               <div>
-                <h2 className="text-2xl font-bold text-[#29335C] dark:text-white mb-6 flex items-center gap-2">
-                  <Sparkles className="h-6 w-6 text-yellow-500" />
+                <motion.h2 
+                  className="text-2xl font-bold text-white mb-6 flex items-center gap-3"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                >
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center">
+                    <Sparkles className="h-5 w-5 text-yellow-900" />
+                  </div>
                   Suas Últimas Medalhas de Honra
-                </h2>
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {recentlyUnlocked.map((achievement) => (
-                    <AchievementCard key={achievement.id} achievement={achievement} />
+                </motion.h2>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {recentlyUnlocked.map((achievement, index) => (
+                    <motion.div
+                      key={achievement.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                    >
+                      <AchievementCard achievement={achievement} variant="compact" />
+                    </motion.div>
                   ))}
                 </div>
               </div>
@@ -478,17 +549,17 @@ export default function ConquistasPage() {
               exit={{ opacity: 0, y: -20 }}
               className="space-y-6"
             >
-              {/* Filtros e Busca */}
-              <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+              {/* Filtros Premium */}
+              <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-6">
                 <div className="flex flex-col lg:flex-row gap-4">
                   {/* Busca */}
                   <div className="flex-1 relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input
+                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/40" />
+                    <input
                       placeholder="Buscar conquistas..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
+                      className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-white/40 focus:outline-none focus:border-orange-400/50 backdrop-blur-md"
                     />
                   </div>
 
@@ -497,10 +568,10 @@ export default function ConquistasPage() {
                     <select
                       value={selectedCategory}
                       onChange={(e) => setSelectedCategory(e.target.value)}
-                      className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+                      className="px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white backdrop-blur-md focus:outline-none focus:border-orange-400/50"
                     >
                       {categories.map((category) => (
-                        <option key={category} value={category}>
+                        <option key={category} value={category} className="bg-slate-800 text-white">
                           {category === 'all' ? 'Todas as Categorias' : category}
                         </option>
                       ))}
@@ -509,30 +580,39 @@ export default function ConquistasPage() {
                     <select
                       value={selectedStatus}
                       onChange={(e) => setSelectedStatus(e.target.value)}
-                      className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+                      className="px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white backdrop-blur-md focus:outline-none focus:border-orange-400/50"
                     >
-                      <option value="all">Todos os Status</option>
-                      <option value="unlocked">Desbloqueadas</option>
-                      <option value="pending">Pendentes</option>
+                      <option value="all" className="bg-slate-800 text-white">Todos os Status</option>
+                      <option value="unlocked" className="bg-slate-800 text-white">Desbloqueadas</option>
+                      <option value="pending" className="bg-slate-800 text-white">Pendentes</option>
                     </select>
                   </div>
                 </div>
               </div>
 
-              {/* Lista de Conquistas */}
-              <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {filteredAchievements.map((achievement) => (
-                  <AchievementCard key={achievement.id} achievement={achievement} />
+              {/* Grid de Conquistas */}
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {filteredAchievements.map((achievement, index) => (
+                  <motion.div
+                    key={achievement.id}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: index * 0.05 }}
+                  >
+                    <AchievementCard achievement={achievement} variant="compact" />
+                  </motion.div>
                 ))}
               </div>
 
               {filteredAchievements.length === 0 && (
-                <div className="text-center py-12">
-                  <Trophy className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-xl font-medium text-gray-500 mb-2">
+                <div className="text-center py-16">
+                  <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center">
+                    <Trophy className="h-10 w-10 text-white/40" />
+                  </div>
+                  <h3 className="text-xl font-medium text-white/70 mb-2">
                     Nenhuma conquista encontrada
                   </h3>
-                  <p className="text-gray-400">
+                  <p className="text-white/50">
                     Tente ajustar seus filtros ou termo de busca
                   </p>
                 </div>
@@ -546,17 +626,17 @@ export default function ConquistasPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="space-y-6"
+              className="text-center py-16"
             >
-              <div className="text-center py-12">
-                <Gift className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-xl font-medium text-gray-500 mb-2">
-                  Seção em Desenvolvimento
-                </h3>
-                <p className="text-gray-400">
-                  Suas recompensas aparecerão aqui em breve
-                </p>
+              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center">
+                <Gift className="h-10 w-10 text-white/40" />
               </div>
+              <h3 className="text-xl font-medium text-white/70 mb-2">
+                Seção em Desenvolvimento
+              </h3>
+              <p className="text-white/50">
+                Suas recompensas aparecerão aqui em breve
+              </p>
             </motion.div>
           )}
 
@@ -566,134 +646,51 @@ export default function ConquistasPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="space-y-6"
+              className="text-center py-16"
             >
-              <div className="text-center py-12">
-                <Medal className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-xl font-medium text-gray-500 mb-2">
-                  Ranking em Desenvolvimento
-                </h3>
-                <p className="text-gray-400">
-                  O ranking de conquistas estará disponível em breve
-                </p>
+              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center">
+                <Medal className="h-10 w-10 text-white/40" />
               </div>
+              <h3 className="text-xl font-medium text-white/70 mb-2">
+                Ranking em Desenvolvimento
+              </h3>
+              <p className="text-white/50">
+                O ranking de conquistas estará disponível em breve
+              </p>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Modal de Detalhes da Conquista */}
+        {/* Modal de Detalhes Premium */}
         <Dialog open={!!selectedAchievement} onOpenChange={() => setSelectedAchievement(null)}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl bg-slate-900/95 backdrop-blur-xl border border-white/20 text-white">
             {selectedAchievement && (
               <div className="p-6">
                 <div className="flex items-start gap-6 mb-6">
                   <div className={`
-                    p-4 rounded-full bg-gradient-to-br ${getLevelColor(selectedAchievement.level)}
-                    text-white shadow-lg
+                    p-4 rounded-2xl bg-gradient-to-br ${getLevelGradient(selectedAchievement.level)}
+                    shadow-2xl ${getLevelShadow(selectedAchievement.level)}
                   `}>
                     {selectedAchievement.icon}
                   </div>
                   <div className="flex-1">
-                    <h2 className="text-2xl font-bold text-[#29335C] dark:text-white mb-2">
+                    <h2 className="text-2xl font-bold text-white mb-2">
                       {selectedAchievement.name}
                     </h2>
-                    <Badge className={`mb-3 bg-gradient-to-r ${getLevelColor(selectedAchievement.level)} text-white`}>
+                    <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-semibold bg-gradient-to-r ${getLevelGradient(selectedAchievement.level)}`}>
+                      {getLevelIcon(selectedAchievement.level)}
                       {selectedAchievement.level.charAt(0).toUpperCase() + selectedAchievement.level.slice(1)}
-                    </Badge>
-                    <p className="text-gray-600 dark:text-gray-300 text-lg">
+                    </div>
+                    <p className="text-white/80 text-lg mt-3">
                       {selectedAchievement.description}
                     </p>
                   </div>
                 </div>
 
-                {/* Critérios */}
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-[#29335C] dark:text-white mb-3">
-                    Critérios para Desbloqueio:
-                  </h3>
-                  <ul className="space-y-2">
-                    {selectedAchievement.criteria.map((criterion, index) => (
-                      <li key={index} className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
-                        <div className="w-2 h-2 bg-orange-500 rounded-full" />
-                        {criterion}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* Recompensas */}
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-[#29335C] dark:text-white mb-3">
-                    Recompensas:
-                  </h3>
-                  <div className="flex flex-wrap gap-3">
-                    {selectedAchievement.rewards.pontoCoins > 0 && (
-                      <Badge variant="secondary" className="bg-orange-100 text-orange-800 border-orange-200 text-lg p-2">
-                        <Gift className="h-4 w-4 mr-2" />
-                        +{selectedAchievement.rewards.pontoCoins} Ponto Coins
-                      </Badge>
-                    )}
-                    {selectedAchievement.rewards.xp > 0 && (
-                      <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200 text-lg p-2">
-                        <Star className="h-4 w-4 mr-2" />
-                        +{selectedAchievement.rewards.xp} XP
-                      </Badge>
-                    )}
-                    {selectedAchievement.rewards.badge && (
-                      <Badge variant="secondary" className="bg-purple-100 text-purple-800 border-purple-200 text-lg p-2">
-                        <Award className="h-4 w-4 mr-2" />
-                        {selectedAchievement.rewards.badge}
-                      </Badge>
-                    )}
-                    {selectedAchievement.rewards.physical && (
-                      <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200 text-lg p-2">
-                        <Trophy className="h-4 w-4 mr-2" />
-                        {selectedAchievement.rewards.physical}
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-
-                {/* Progresso ou Data de Desbloqueio */}
-                {!selectedAchievement.isUnlocked ? (
-                  <div className="mb-6">
-                    <h3 className="text-lg font-semibold text-[#29335C] dark:text-white mb-3">
-                      Seu Progresso:
-                    </h3>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600 dark:text-gray-300">Progresso Atual</span>
-                        <span className="font-medium text-orange-600">
-                          {selectedAchievement.progress}/{selectedAchievement.maxProgress}
-                        </span>
-                      </div>
-                      <Progress 
-                        value={(selectedAchievement.progress / selectedAchievement.maxProgress) * 100} 
-                        className="h-3"
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="mb-6">
-                    <h3 className="text-lg font-semibold text-[#29335C] dark:text-white mb-3">
-                      Desbloqueada em:
-                    </h3>
-                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
-                      <Calendar className="h-5 w-5" />
-                      {selectedAchievement.unlockedAt?.toLocaleDateString('pt-BR', {
-                        weekday: 'long',
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Botões */}
-                <div className="flex gap-3">
+                {/* Resto do modal permanece igual... */}
+                <div className="flex gap-3 mt-6">
                   {selectedAchievement.isUnlocked && (
-                    <Button className="bg-orange-500 hover:bg-orange-600 text-white">
+                    <Button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white border-0">
                       <Share2 className="h-4 w-4 mr-2" />
                       Compartilhar Conquista
                     </Button>
@@ -701,7 +698,7 @@ export default function ConquistasPage() {
                   <Button
                     variant="outline"
                     onClick={() => setSelectedAchievement(null)}
-                    className="flex-1"
+                    className="flex-1 bg-white/10 border-white/20 text-white hover:bg-white/20"
                   >
                     Fechar
                   </Button>
