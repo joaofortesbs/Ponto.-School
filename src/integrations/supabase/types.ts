@@ -179,6 +179,38 @@ export type Database = {
           },
         ]
       }
+      mensagens_grupos: {
+        Row: {
+          created_at: string | null
+          grupo_id: string
+          id: string
+          mensagem: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          grupo_id: string
+          id?: string
+          mensagem: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          grupo_id?: string
+          id?: string
+          mensagem?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mensagens_grupos_grupo_id_fkey"
+            columns: ["grupo_id"]
+            isOneToOne: false
+            referencedRelation: "grupos_estudo"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
