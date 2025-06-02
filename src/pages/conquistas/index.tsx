@@ -111,94 +111,45 @@ export default function ConquistasPage() {
     }
   }, []);
 
-  // Dados mockados do usuário
-  const userStats: UserStats = {
-    totalXP: 2847,
-    nextLevelXP: 3000,
-    currentLevel: "Explorador Avançado",
-    totalPontoCoins: 1250,
-    unlockedBadges: 12,
-    focusStreak: 7,
-    rankingPosition: 1847
+  // Obter nome do usuário do localStorage
+  const getUserDisplayName = () => {
+    // Primeiro, tentar pegar do currentUser
+    if (currentUser?.displayName && currentUser.displayName !== 'Usuário') {
+      return currentUser.displayName;
+    }
+    
+    // Depois, tentar do localStorage
+    const userDisplayName = localStorage.getItem('userDisplayName');
+    if (userDisplayName && userDisplayName !== 'Usuário') {
+      return userDisplayName;
+    }
+
+    const userFirstName = localStorage.getItem('userFirstName');
+    if (userFirstName && userFirstName !== 'Usuário') {
+      return userFirstName;
+    }
+
+    const username = localStorage.getItem('username');
+    if (username && username !== 'Usuário' && !username.includes('user_')) {
+      return username;
+    }
+
+    return 'Usuário';
   };
 
-  // Dados de recompensas mockadas
-  const userRewards: Reward[] = [
-    {
-      id: '1',
-      name: 'Badge Mestre da Matemática',
-      description: 'Conquista por atingir 85% de progresso em Matemática',
-      type: 'badges',
-      dateReceived: new Date('2024-01-20'),
-      status: 'redeemed'
-    },
-    {
-      id: '2',
-      name: '+300 Ponto Coins',
-      description: 'Recompensa por completar sequência de 30 dias',
-      type: 'coins',
-      dateReceived: new Date('2024-01-18'),
-      value: 300,
-      status: 'redeemed'
-    },
-    {
-      id: '3',
-      name: 'Kit Estudante Dedicado',
-      description: 'Kit físico com materiais escolares premium',
-      type: 'physical',
-      dateReceived: new Date('2024-01-15'),
-      status: 'shipped',
-      trackingCode: 'BR123456789',
-      action: {
-        type: 'secondary',
-        label: 'Rastrear Envio',
-        icon: Search,
-        onClick: () => window.open('https://www.correios.com.br/precisa-de-ajuda/rastrea-objeto-correios?rastreio=BR123456789', '_blank')
-      }
-    },
-    {
-      id: '4',
-      name: 'Acesso ao Curso de Python',
-      description: 'Curso completo de programação em Python',
-      type: 'digital',
-      dateReceived: new Date('2024-01-10'),
-      status: 'redeemed',
-      action: {
-        type: 'primary',
-        label: 'Acessar Curso',
-        icon: Play,
-        onClick: () => alert('Redirecionando para o curso...')
-      }
-    },
-    {
-      id: '5',
-      name: 'Moldura Dourada de Perfil',
-      description: 'Moldura especial para avatar',
-      type: 'profile_items',
-      dateReceived: new Date('2024-01-08'),
-      status: 'redeemed',
-      action: {
-        type: 'secondary',
-        label: 'Aplicar ao Perfil',
-        icon: Settings,
-        onClick: () => alert('Aplicando moldura ao perfil...')
-      }
-    },
-    {
-      id: '6',
-      name: 'Desconto de 20% na Loja',
-      description: 'Cupom de desconto válido por 30 dias',
-      type: 'digital',
-      dateReceived: new Date('2024-01-05'),
-      status: 'pending',
-      action: {
-        type: 'primary',
-        label: 'Usar Agora',
-        icon: Gift,
-        onClick: () => alert('Aplicando desconto...')
-      }
-    }
-  ];
+  // Dados iniciais do usuário (para novos usuários)
+  const userStats: UserStats = {
+    totalXP: 0,
+    nextLevelXP: 100,
+    currentLevel: "Iniciante",
+    totalPontoCoins: 0,
+    unlockedBadges: 0,
+    focusStreak: 0,
+    rankingPosition: 0
+  };
+
+  // Dados de recompensas para novos usuários (vazio inicialmente)
+  const userRewards: Reward[] = [];
 
   // Funções auxiliares para recompensas
   const getRewardIcon = (type: string) => {
@@ -311,10 +262,9 @@ export default function ConquistasPage() {
       category: 'Embarque',
       level: 'bronze',
       icon: <Star className="h-5 w-5" />,
-      progress: 1,
+      progress: 0,
       maxProgress: 1,
-      isUnlocked: true,
-      unlockedAt: new Date('2024-01-15'),
+      isUnlocked: false,
       rewards: { pontoSchools: 20, xp: 10, badge: 'Explorador Iniciante' },
       criteria: ['Completar tour guiado']
     },
@@ -338,10 +288,9 @@ export default function ConquistasPage() {
       category: 'Embarque',
       level: 'bronze',
       icon: <GraduationCap className="h-5 w-5" />,
-      progress: 1,
+      progress: 0,
       maxProgress: 1,
-      isUnlocked: true,
-      unlockedAt: new Date('2024-01-16'),
+      isUnlocked: false,
       rewards: { pontoSchools: 10, xp: 5 },
       criteria: ['Acessar primeira turma']
     },
@@ -352,10 +301,9 @@ export default function ConquistasPage() {
       category: 'Embarque',
       level: 'bronze',
       icon: <Brain className="h-5 w-5" />,
-      progress: 1,
+      progress: 0,
       maxProgress: 1,
-      isUnlocked: true,
-      unlockedAt: new Date('2024-01-17'),
+      isUnlocked: false,
       rewards: { pontoSchools: 20, xp: 10, badge: 'Amigo da IA' },
       criteria: ['Usar primeira ferramenta IA']
     },
@@ -368,7 +316,7 @@ export default function ConquistasPage() {
       category: 'Explorador',
       level: 'bronze',
       icon: <Compass className="h-5 w-5" />,
-      progress: 8,
+      progress: 0,
       maxProgress: 10,
       isUnlocked: false,
       rewards: { pontoSchools: 50, xp: 25, badge: 'Cartógrafo da Ponto. School' },
@@ -422,10 +370,9 @@ export default function ConquistasPage() {
       category: 'Estudante Dedicado',
       level: 'bronze',
       icon: <Flame className="h-5 w-5" />,
-      progress: 7,
+      progress: 0,
       maxProgress: 7,
-      isUnlocked: true,
-      unlockedAt: new Date('2024-01-20'),
+      isUnlocked: false,
       rewards: { pontoSchools: 100, xp: 50, badge: 'Fogo da Dedicação Nv. 1' },
       criteria: ['7 dias consecutivos', 'Login diário']
     },
@@ -644,13 +591,25 @@ export default function ConquistasPage() {
   });
 
   const nearlyUnlocked = achievements
-    .filter(a => !a.isUnlocked && a.progress / a.maxProgress >= 0.7)
+    .filter(a => !a.isUnlocked && a.progress > 0 && a.progress / a.maxProgress >= 0.3)
     .sort((a, b) => (b.progress / b.maxProgress) - (a.progress / a.maxProgress))
     .slice(0, 3);
 
   const recentlyUnlocked = achievements
     .filter(a => a.isUnlocked)
     .sort((a, b) => new Date(b.unlockedAt!).getTime() - new Date(a.unlockedAt!).getTime())
+    .slice(0, 3);
+
+  // Para novos usuários, mostrar conquistas mais próximas de serem desbloqueadas
+  const availableAchievements = achievements
+    .filter(a => !a.isUnlocked)
+    .sort((a, b) => {
+      // Priorizar conquistas com algum progresso
+      if (a.progress > 0 && b.progress === 0) return -1;
+      if (b.progress > 0 && a.progress === 0) return 1;
+      // Depois por porcentagem de progresso
+      return (b.progress / b.maxProgress) - (a.progress / a.maxProgress);
+    })
     .slice(0, 3);
 
   // Componente Card de Conquista Modernizado
@@ -826,7 +785,7 @@ export default function ConquistasPage() {
                 <h2 className={`text-2xl font-bold mb-1 ${
                   isLightMode ? 'text-gray-800' : 'text-white'
                 }`}>
-                  {currentUser?.displayName || 'Usuário'}
+                  {getUserDisplayName()}
                 </h2>
                 <p className={`mb-3 ${
                   isLightMode ? 'text-gray-600' : 'text-white/70'
@@ -836,9 +795,9 @@ export default function ConquistasPage() {
                 <div className={`flex items-center gap-4 text-sm ${
                   isLightMode ? 'text-gray-500' : 'text-white/60'
                 }`}>
-                  <span>Ranking: #{userStats.rankingPosition}</span>
+                  <span>Ranking: {userStats.rankingPosition > 0 ? `#${userStats.rankingPosition}` : 'Não classificado'}</span>
                   <span>•</span>
-                  <span>Sequência: {userStats.focusStreak} dias 🔥</span>
+                  <span>Sequência: {userStats.focusStreak} dias {userStats.focusStreak > 0 ? '🔥' : '💪'}</span>
                 </div>
               </div>
 
@@ -858,7 +817,7 @@ export default function ConquistasPage() {
                   <motion.div 
                     className="h-full bg-gradient-to-r from-orange-400 to-orange-600 rounded-full"
                     initial={{ width: 0 }}
-                    animate={{ width: `${(userStats.totalXP / userStats.nextLevelXP) * 100}%` }}
+                    animate={{ width: userStats.totalXP > 0 ? `${Math.max(5, (userStats.totalXP / userStats.nextLevelXP) * 100)}%` : "0%" }}
                     transition={{ duration: 1.5, delay: 0.5 }}
                   />
                 </div>
@@ -869,7 +828,7 @@ export default function ConquistasPage() {
                 {[
                   { icon: Gift, value: userStats.totalPontoCoins, label: "Ponto Schools", color: "orange" },
                   { icon: Trophy, value: userStats.unlockedBadges, label: "Badges", color: "yellow" },
-                  { icon: TrendingUp, value: `#${userStats.rankingPosition}`, label: "Ranking", color: "green" }
+                  { icon: TrendingUp, value: userStats.rankingPosition > 0 ? `#${userStats.rankingPosition}` : "Sem ranking", label: "Ranking", color: "green" }
                 ].map((stat, index) => (
                   <motion.div
                     key={index}
@@ -950,7 +909,7 @@ export default function ConquistasPage() {
               exit={{ opacity: 0, y: -20 }}
               className="space-y-8"
             >
-              {/* Quase Lá */}
+              {/* Conquistas Próximas ou Disponíveis */}
               <div>
                 <motion.h2 
                   className={`text-2xl font-bold mb-6 flex items-center gap-3 ${
@@ -962,10 +921,10 @@ export default function ConquistasPage() {
                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center">
                     <Zap className="h-5 w-5 text-white" />
                   </div>
-                  Quase Lá! Próximas a Desbloquear
+                  {nearlyUnlocked.length > 0 ? 'Quase Lá! Próximas a Desbloquear' : 'Conquistas Disponíveis'}
                 </motion.h2>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {nearlyUnlocked.map((achievement, index) => (
+                  {(nearlyUnlocked.length > 0 ? nearlyUnlocked : availableAchievements).map((achievement, index) => (
                     <motion.div
                       key={achievement.id}
                       initial={{ opacity: 0, y: 20 }}
@@ -976,35 +935,58 @@ export default function ConquistasPage() {
                     </motion.div>
                   ))}
                 </div>
+                {nearlyUnlocked.length === 0 && availableAchievements.length === 0 && (
+                  <div className="text-center py-8">
+                    <div className={`w-16 h-16 mx-auto mb-4 rounded-full backdrop-blur-md border flex items-center justify-center ${
+                      isLightMode 
+                        ? 'bg-gray-100 border-gray-200' 
+                        : 'bg-white/10 border-white/20'
+                    }`}>
+                      <Trophy className={`h-8 w-8 ${
+                        isLightMode ? 'text-gray-400' : 'text-white/40'
+                      }`} />
+                    </div>
+                    <h3 className={`text-lg font-medium mb-2 ${
+                      isLightMode ? 'text-gray-600' : 'text-white/70'
+                    }`}>
+                      Comece sua jornada!
+                    </h3>
+                    <p className={isLightMode ? 'text-gray-500' : 'text-white/50'}>
+                      Use a plataforma para começar a desbloquear suas primeiras conquistas
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Últimas Medalhas */}
-              <div>
-                <motion.h2 
-                  className={`text-2xl font-bold mb-6 flex items-center gap-3 ${
-                    isLightMode ? 'text-gray-800' : 'text-white'
-                  }`}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                >
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center">
-                    <Sparkles className="h-5 w-5 text-yellow-900" />
+              {recentlyUnlocked.length > 0 && (
+                <div>
+                  <motion.h2 
+                    className={`text-2xl font-bold mb-6 flex items-center gap-3 ${
+                      isLightMode ? 'text-gray-800' : 'text-white'
+                    }`}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center">
+                      <Sparkles className="h-5 w-5 text-yellow-900" />
+                    </div>
+                    Suas Últimas Medalhas de Honra
+                  </motion.h2>
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {recentlyUnlocked.map((achievement, index) => (
+                      <motion.div
+                        key={achievement.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                      >
+                        <AchievementCard achievement={achievement} variant="compact" />
+                      </motion.div>
+                    ))}
                   </div>
-                  Suas Últimas Medalhas de Honra
-                </motion.h2>
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {recentlyUnlocked.map((achievement, index) => (
-                    <motion.div
-                      key={achievement.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                    >
-                      <AchievementCard achievement={achievement} variant="compact" />
-                    </motion.div>
-                  ))}
                 </div>
-              </div>
+              )}
             </motion.div>
           )}
 
