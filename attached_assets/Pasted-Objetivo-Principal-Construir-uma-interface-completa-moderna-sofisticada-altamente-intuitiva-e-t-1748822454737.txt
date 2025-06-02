@@ -1,0 +1,193 @@
+Objetivo Principal:
+Construir uma interface completa, moderna, sofisticada, altamente intuitiva e totalmente funcional para a seção "Minhas Conquistas" da plataforma Ponto. School. Esta seção será acessada através do item "Conquistas" no menu lateral principal. O objetivo é exibir o progresso do usuário, suas conquistas desbloqueadas, as conquistas pendentes e as recompensas associadas, de forma a motivar e engajar o usuário. Siga rigorosamente as especificações de design e funcionalidade abaixo. Atenção: Não modifique outros componentes da plataforma além dos explicitamente descritos neste prompt.
+Estrutura de Arquivos Sugerida (Organização do Código):
+Por favor, organize o código da seguinte maneira (adapte conforme as convenções do Vibe Code, se necessário):
+/components/achievements/
+AchievementsPage.vue (ou similar, componente principal da seção)
+AchievementSummaryCard.vue (card de resumo do perfil no topo)
+AchievementsTabs.vue (componente para as abas de navegação)
+AchievementsOverviewTab.vue (conteúdo da aba "Visão Geral")
+AllAchievementsTab.vue (conteúdo da aba "Todas as Conquistas")
+MyRewardsTab.vue (conteúdo da aba "Minhas Recompensas")
+AchievementCard.vue (componente para exibir cada conquista individualmente)
+RewardCard.vue (componente para exibir cada recompensa ganha)
+AchievementModal.vue (modal para detalhes da conquista)
+RewardModal.vue (modal para detalhes da recompensa)
+UnlockAchievementModal.vue (modal de celebração ao desbloquear uma conquista)
+AchievementsFilters.vue (componente para os filtros na aba "Todas as Conquistas")
+/store/achievements.js (ou similar, para gerenciamento de estado Vuex/Pinia, se aplicável)
+/services/achievementsService.js (ou similar, para chamadas de API relacionadas a conquistas)
+/assets/icons/achievements/ (pasta para ícones específicos de conquistas)
+/styles/achievements.scss (ou similar, para estilos específicos da seção)
+I. Design e Layout Geral da Seção "Minhas Conquistas":
+Fundo da Seção:
+Usar o fundo padrão da plataforma Ponto. School (azul escuro, conforme definido em outros prompts, ex: #0A192F ou similar).
+Cabeçalho da Seção (Dentro de AchievementsPage.vue):
+Título Principal:
+Texto: "Minhas Conquistas".
+Fonte: Montserrat, Bold.
+Tamanho: 32px (desktop), adaptar para mobile (ex: 24px).
+Cor: Branco (#FFFFFF).
+Alinhamento: Esquerda.
+Subtítulo (Opcional):
+Texto: "Sua jornada de evolução na Ponto. School."
+Fonte: Open Sans, Regular.
+Tamanho: 16px (desktop), adaptar para mobile (ex: 14px).
+Cor: Cinza Claro (ex: #A0AEC0).
+Alinhamento: Esquerda, abaixo do título principal.
+Espaçamento: Margem superior de 8px.
+Card de Resumo do Perfil de Conquistas (AchievementSummaryCard.vue):
+Posição: Abaixo do cabeçalho da seção, ocupando a largura total (com margens laterais).
+Design:
+Fundo: Branco (#FFFFFF) ou Cinza Claríssimo (ex: #F7FAFC).
+Cantos: Arredondados (12px).
+Sombra: Sutil (ex: 0px 4px 12px rgba(0, 0, 0, 0.05)).
+Padding Interno: 24px.
+Layout: Flexbox, horizontal (em desktop), vertical (em mobile).
+Elementos Internos:
+Avatar e Nível (Esquerda):
+Foto do Avatar: Circular, 80px de diâmetro (desktop), 60px (mobile). Borda de 3px (cor laranja Ponto. School, ou a cor do nível atual – ex: bronze, prata, ouro).
+Nome do Aluno: Fonte Montserrat, SemiBold, 20px, cor Azul Escuro Ponto. School.
+Título do Nível Atual: Fonte Open Sans, Regular, 14px, cor Cinza Médio.
+Barra de Progresso de XP (Centro/Direita):
+Design: Barra horizontal grossa (altura: 12px), fundo cinza claro (#E2E8F0), preenchimento com gradiente laranja-amarelo (cores Ponto. School). Cantos arredondados.
+Animação: Preenchimento da barra deve ser animado suavemente ao ganhar XP (transition: width 0.5s ease-in-out;).
+Texto Sobreposto/Abaixo: "[XP Atual] / [XP para Próximo Nível] XP" (Open Sans, SemiBold, 12px, cor Azul Escuro ou branco sobre a barra, dependendo do contraste).
+Métricas Chave (Direita ou Abaixo da Barra de XP em mobile):
+Layout: Ícones alinhados verticalmente com seus textos e valores.
+Ícones: Estilo Ponto. School (contorno fino, cor Azul Escuro ou Laranja), tamanho 18px.
+Textos (Label): Open Sans, Regular, 12px, cor Cinza Médio.
+Valores (Número): Open Sans, Bold, 16px, cor Azul Escuro.
+Itens:
+"Pontuação Total: [Número] PC" (Ícone: Moeda Ponto Coin).
+"Badges Desbloq.: [Número]" (Ícone: Troféu/Estrela).
+"Sequência Foco: [Número] Dias 🔥" (Ícone: Chama).
+Abas de Navegação (AchievementsTabs.vue):
+Posição: Abaixo do AchievementSummaryCard.vue.
+Design:
+Abas Horizontais.
+Fundo (Inativa): Transparente.
+Fundo (Ativa): Branco ou Cinza Claríssimo (mesma do card de resumo).
+Texto (Inativa): Cinza Escuro (#4A5568). Fonte Montserrat, SemiBold, 16px.
+Texto (Ativa): Azul Escuro Ponto. School.
+Indicador de Aba Ativa: Sublinhado Laranja (cor Ponto. School), espessura 3px, curto (apenas sob o texto).
+Hover (Abas Inativas): Texto muda para Azul Escuro, leve fundo cinza claro (#EDF2F7).
+Transição: Animação suave ao mudar de aba (transition: all 0.3s ease;).
+Abas e Conteúdo (Implementar em componentes separados – ex: AchievementsOverviewTab.vue):
+"Visão Geral" (Padrão): Detalhado abaixo.
+"Todas as Conquistas": Detalhado abaixo.
+"Minhas Recompensas": Detalhado abaixo.
+"Ranking" (Opcional): (Se aplicável).
+II. Detalhamento do Conteúdo das Abas:
+A. Aba "Visão Geral" (AchievementsOverviewTab.vue)
+Objetivo: Panorama rápido e motivador.
+Layout: Seções com títulos e cards/listas.
+Seção: "Quase Lá! Próximas a Desbloquear"
+Título: "Quase Lá! Próximas a Desbloquear" (Montserrat, SemiBold, 18px, Azul Escuro). Margem inferior: 16px.
+Conteúdo: Grid responsivo (2-3 colunas em desktop, 1 em mobile) de AchievementCard.vue (versão "pendente"). Mostrar 3-5 conquistas mais próximas.
+Seção: "Suas Últimas Medalhas de Honra"
+Título: "Suas Últimas Medalhas de Honra" (Montserrat, SemiBold, 18px, Azul Escuro). Margem inferior: 16px.
+Conteúdo: Grid responsivo de AchievementCard.vue (versão "desbloqueada"). Mostrar 3-5 últimas.
+B. Aba "Todas as Conquistas" (AllAchievementsTab.vue)
+Objetivo: Listagem completa com filtros e busca.
+Layout:
+Barra de Filtros e Busca (Topo):
+Busca: Campo de texto com ícone de lupa (placeholder: "Buscar conquistas..."). Busca em tempo real.
+Filtros (Dropdowns ou Botões de Alternância – Estilo Ponto. School):
+Categoria: (Iniciante, Aprendizado, Desempenho, Comunidade, Dedicação, Especialização, Exploração, Elite).
+Status: "Todas", "Desbloqueadas", "Pendentes".
+Nível (Opcional): "Todos", "Bronze", "Prata", "Ouro", "Diamante", "Lendário".
+Responsividade: Filtros podem se tornar um botão que abre um modal em telas menores.
+Lista de Conquistas (Grid Responsivo):
+Usar o componente AchievementCard.vue para cada conquista.
+Design dos cards varia conforme status (pendente/desbloqueada) e nível (cores/detalhes).
+Ordenação (Dropdown): Por Categoria (padrão), Status, Nível, Alfabética.
+Paginação: Se muitas conquistas.
+C. Aba "Minhas Recompensas" (MyRewardsTab.vue)
+Objetivo: Listar recompensas ganhas.
+Layout:
+Filtros (Topo):
+Tipo de Recompensa: "Todas", "Ponto Coins", "Badges", "Itens de Perfil", "Físicas", "Digitais".
+Lista de Recompensas (Cards ou Lista Detalhada):
+Usar RewardCard.vue.
+Informações: Ícone/Imagem da recompensa, Nome, Descrição, Data ganha.
+Se Física: Status ("Aguardando Envio", "Enviado (Código: [RASTREIO])", "Entregue"). Link para rastreamento (abre nova aba).
+Se Digital: Botão "Usar Agora" (laranja) ou "Ver Detalhes".
+III. Componente AchievementCard.vue (Design e Interatividade):
+Parâmetros: conquistaData (objeto com todas as infos), isUnlocked (booleano), progress (número 0-100 se pendente).
+Design:
+Fundo:
+Pendente: Cinza claro (#EDF2F7) ou tom suave da cor da categoria.
+Desbloqueada: Cores vibrantes (dourado, prateado, bronze ou cor da categoria) com gradiente sutil ou textura leve. Pode ter uma borda brilhante sutil.
+Cantos: Arredondados (8px).
+Padding: 16px.
+Layout Interno (Flexbox ou Grid):
+Ícone da Conquista (Esquerda/Topo):
+Tamanho: 48px x 48px (desktop), 36px x 36px (mobile).
+Pendente: Ícone em tons de cinza ou desbotado.
+Desbloqueada: Ícone totalmente colorido, com possível efeito de brilho ou animação sutil ao carregar. Crie ícones únicos e memoráveis para cada conquista!
+Conteúdo (Direita/Abaixo):
+Nome da Conquista: Montserrat, SemiBold, 16px, Azul Escuro.
+Descrição (Como Desbloquear): Open Sans, Regular, 12px, Cinza Médio. (Exibir apenas as primeiras linhas, com "Ver Mais..." se for longa).
+Recompensa:
+Ícones pequenos (Moeda Ponto Coin, Estrela XP, Badge) + Texto (ex: "+50 PC", "+100 XP").
+Cor: Laranja ou Verde (para Ponto Coins/XP).
+Barra de Progresso (Se Pendente):
+Design: Fina (altura: 6px), preenchimento laranja.
+Texto: "[ProgressoAtual]/[ProgressoTotal]" (ex: "5/10 aulas").
+Nível (Opcional – Emblema/Tag):
+Pequeno emblema no canto com a cor do nível (Bronze, Prata, etc.).
+Interatividade:
+Hover:
+Leve aumento de escala (transform: scale(1.03);).
+Sombra mais pronunciada.
+Se pendente, o ícone pode ganhar um pouco mais de cor.
+Transição suave (transition: all 0.2s ease-out;).
+Clique:
+Abre o AchievementModal.vue com detalhes completos da conquista.
+Animação de "abertura" do modal (ex: fade-in e scale-up).
+IV. Modal AchievementModal.vue (Detalhes da Conquista):
+Design:
+Fundo: Branco.
+Título: Nome da Conquista (grande, Montserrat Bold).
+Ícone/Imagem da Conquista: Grande, em destaque.
+Descrição Completa.
+Critérios Específicos para Cada Nível (se aplicável).
+Recompensas para Cada Nível.
+Barra de Progresso Detalhada (se pendente).
+Data de Desbloqueio (se desbloqueada).
+Dicas do Mentor IA (Opcional).
+Botão "Compartilhar Conquista" (se desbloqueada – abre opções de compartilhamento).
+Botão "Fechar" ("X").
+Animação: Entrada e saída suaves.
+V. Notificação de Desbloqueio (UnlockAchievementModal.vue):
+Acionamento: Imediato ao desbloquear uma conquista.
+Design (Celebratório e Impactante):
+Modal grande, centralizado.
+Fundo: Cores vibrantes, gradientes, opcional: imagem de fundo temática da conquista.
+Animação de Entrada: Chamativa (ex: surgir com brilho, confetes virtuais, faíscas).
+Ícone/Imagem da Conquista: Muito grande e em destaque, com animação (ex: girar, pulsar).
+Título: "CONQUISTA DESBLOQUEADA!" (letras grandes, festivas, talvez com efeito de texto especial).
+Nome da Conquista.
+Recompensa(s) Recebida(s): Ícones grandes + texto.
+Botões: "Ver Minhas Conquistas" (principal, laranja), "Continuar" (secundário, fecha o modal).
+Som: Efeito sonoro curto, positivo e memorável (configurável pelo usuário).
+VI. Lista de Conquistas (Conteúdo):
+Implementar TODAS as categorias e conquistas descritas no prompt anterior, com seus respectivos níveis e recompensas. Preste atenção aos detalhes de como desbloquear cada uma.
+Embarque: "Primeiros Passos na Ponto. School", "Perfil Completo", "Primeira Turma Acessada", "Conhecendo o Epictus IA".
+Explorador: "Navegador Curioso", "Mestre dos Atalhos", "Bibliotecário (Jr/Pl/Sr)".
+Estudante Dedicado: "Sequência de Foco" (com os Giros Especiais), "Maratonista dos Estudos" (com recompensa física), "Mestre do Planejamento", "Madrugador/Coruja".
+Mestre do Conhecimento: "Expert em [Disciplina]" (com certificado digital), "Detonador de Provas", "Caçador de Erros".
+Colaborador: "Voz Ativa", "Mentor da Comunidade" (com selo e placa física), "Líder de Grupo".
+Inovador IA: Conquistas para cada ferramenta principal do Epictus IA (Resumista, Mapeador, etc.).
+Colecionador: "Participante de Eventos", "Colecionador de [Recompensa da Roleta]", Conquistas Sazonais.
+Lendário: "Polímata da Ponto. School" (com troféu), "Guardião do Conhecimento" (com kit premium), "Arquiteto da Comunidade".
+VII. Fluxos de Interação Principais:
+Visualizar Progresso: Usuário acessa a seção -> Vê resumo no topo -> Navega pelas abas -> Filtra/Busca -> Clica em uma conquista para ver detalhes.
+Desbloquear Conquista: Usuário realiza ação na plataforma -> Sistema detecta -> Modal de celebração é exibido -> Conquista é atualizada como "Desbloqueada".
+Ver Recompensas Físicas: Acessa aba "Minhas Recompensas" -> Vê status de envio.
+Considerações Finais:
+Performance: As animações e o carregamento de dados devem ser rápidos e fluidos.
+Consistência: Manter a consistência visual e de interação em toda a seção e com o restante da Ponto. School.
+Testes Contínuos: Testar cada fluxo e cada elemento com usuários reais para identificar problemas de usabilidade e coletar feedback.
+A IA Não Erra (Idealmente): Instrua a IA programadora para ser meticulosa, seguir exatamente as especificações e implementar validações robustas para evitar bugs. Apenas modificar os elementos descritos.
