@@ -1,0 +1,170 @@
+Lista Completa de Conquistas para Ponto. School (Organizada por Categorias e Níveis):
+Categorias Principais:
+Embarque (Onboarding e Primeiros Passos)
+Explorador (Navegação e Descoberta da Plataforma)
+Estudante Dedicado (Consistência e Hábitos de Estudo)
+Mestre do Conhecimento (Domínio de Conteúdo e Desempenho)
+Colaborador (Interação Social e Ajuda Mútua)
+Inovador IA (Uso das Ferramentas Epictus IA)
+Colecionador (Completar Conjuntos e Eventos Especiais)
+Lendário (Conquistas Raras e de Alto Nível)
+Detalhes das Conquistas (Nome, Como Desbloquear, Níveis e Recompensas Sugeridas):
+1. Embarque (Onboarding e Primeiros Passos)
+* Objetivo: Incentivar o usuário a completar os passos iniciais e se familiarizar com a plataforma.
+*   **Conquista: "Primeiros Passos na Ponto. School"**
+    *   **Como Desbloquear:** Completar o tour guiado da plataforma.
+    *   **Níveis:** Bronze (único)
+    *   **Recompensa:** +20 Ponto Coins, +10 XP, Badge "Explorador Iniciante".
+
+*   **Conquista: "Perfil Completo"**
+    *   **Como Desbloquear:** Preencher 100% das informações do perfil (foto, bio, interesses).
+    *   **Níveis:** Bronze (único)
+    *   **Recompensa:** +30 Ponto Coins, +15 XP, Badge "Identidade Revelada".
+
+*   **Conquista: "Primeira Turma Acessada"**
+    *   **Como Desbloquear:** Acessar a página de conteúdo de qualquer turma pela primeira vez.
+    *   **Níveis:** Bronze (único)
+    *   **Recompensa:** +10 Ponto Coins, +5 XP.
+
+*   **Conquista: "Conhecendo o Epictus IA"**
+    *   **Como Desbloquear:** Usar qualquer ferramenta do Epictus IA pela primeira vez.
+    *   **Níveis:** Bronze (único)
+    *   **Recompensa:** +20 Ponto Coins, +10 XP, Badge "Amigo da IA".
+Use code with caution.
+2. Explorador (Navegação e Descoberta da Plataforma)
+* Objetivo: Incentivar o usuário a explorar todas as seções e funcionalidades.
+*   **Conquista: "Navegador Curioso"**
+    *   **Como Desbloquear:** Visitar todas as seções principais do menu lateral.
+    *   **Níveis:** Bronze (único)
+    *   **Recompensa:** +50 Ponto Coins, +25 XP, Badge "Cartógrafo da Ponto. School".
+
+*   **Conquista: "Mestre dos Atalhos"**
+    *   **Como Desbloquear:** Personalizar os "Atalhos Rápidos" no Painel.
+    *   **Níveis:** Bronze (único)
+    *   **Recompensa:** +15 Ponto Coins, +10 XP.
+
+*   **Conquista: "Bibliotecário Júnior / Pleno / Sênior"**
+    *   **Como Desbloquear:** Acessar X/Y/Z materiais diferentes na Biblioteca.
+    *   **Níveis:** Bronze (X materiais), Prata (Y materiais), Ouro (Z materiais).
+    *   **Recompensa:** Ponto Coins e XP crescentes, Badges temáticas.
+Use code with caution.
+3. Estudante Dedicado (Consistência e Hábitos de Estudo)
+* Objetivo: Incentivar a frequência, a organização e a disciplina nos estudos.
+*   **Conquista: "Sequência de Foco" (Streak de Login Diário na Roleta)**
+    *   **Como Desbloquear:** Girar a roleta de login diário por X dias consecutivos.
+    *   **Níveis:**
+        *   Bronze: 7 dias.
+        *   Prata: 30 dias (Giro Especial +25% sorte).
+        *   Ouro: 60 dias (Giro Especial +45% sorte).
+        *   Diamante: 100 dias (Recompensa Surpresa – ex: Ponto Coins extras, item de personalização raro).
+    *   **Recompensa:** Badges temáticas (ex: "Fogo da Dedicação Nv. X"), Ponto Coins, Giros Especiais.
+
+*   **Conquista: "Maratonista dos Estudos"**
+    *   **Como Desbloquear:** Acumular X horas de estudo na plataforma (rastreado pelo "Modo Foco" ou tempo em materiais).
+    *   **Níveis:** Bronze (ex: 10 horas), Prata (50 horas), Ouro (100 horas), Diamante (200 horas).
+    *   **Recompensa:** Ponto Coins e XP crescentes, Badges temáticas (ex: "Resistência de Aço"). *Recompensa Física (Ouro/Diamante):* Caneca Ponto. School.
+
+*   **Conquista: "Mestre do Planejamento"**
+    *   **Como Desbloquear:** Usar o "Planner de Estudos com IA" (ou a Agenda) para planejar a semana por X semanas consecutivas.
+    *   **Níveis:** Bronze (4 semanas), Prata (12 semanas), Ouro (24 semanas).
+    *   **Recompensa:** Ponto Coins, XP, Badges (ex: "Arquiteto dos Estudos").
+
+*   **Conquista: "Madrugador / Coruja dos Estudos" (Opcional)**
+    *   **Como Desbloquear:** Estudar consistentemente em horários específicos (ex: antes das 7h ou depois das 22h) por X dias.
+    *   **Níveis:** Bronze (único).
+    *   **Recompensa:** Badge divertida (ex: "Coruja Sábia").
+Use code with caution.
+4. Mestre do Conhecimento (Domínio de Conteúdo e Desempenho)
+* Objetivo: Reconhecer o esforço e o sucesso acadêmico.
+*   **Conquista: "Expert em [Disciplina]"**
+    *   **Como Desbloquear:** Atingir X% de progresso (ou nota média alta) em *todos* os materiais/atividades de uma disciplina específica.
+    *   **Níveis:** Bronze (X% em 1 disciplina), Prata (X% em 3 disciplinas), Ouro (X% em 5 disciplinas).
+    *   **Recompensa:** Badges temáticas (ex: "Mestre da Física Quântica"), Ponto Coins, *Opcional (Ouro):* Certificado digital de "Expert em [Disciplina]" pela Ponto. School.
+
+*   **Conquista: "Detonador de Provas"**
+    *   **Como Desbloquear:** Tirar nota máxima (ou acima de X%) em Y simulados/provas.
+    *   **Níveis:** Bronze, Prata, Ouro.
+    *   **Recompensa:** Badges, Ponto Coins, XP.
+
+*   **Conquista: "Caçador de Erros" (Foco na Melhoria)**
+    *   **Como Desbloquear:** Usar a "Revisão Guiada" do Epictus IA para corrigir X erros passados.
+    *   **Níveis:** Bronze, Prata, Ouro.
+    *   **Recompensa:** Badges, Ponto Coins.
+Use code with caution.
+5. Colaborador (Interação Social e Ajuda Mútua)
+* Objetivo: Incentivar a participação na comunidade e o aprendizado colaborativo.
+*   **Conquista: "Voz Ativa"**
+    *   **Como Desbloquear:** Enviar X mensagens/posts em fóruns ou chats de grupos de estudo.
+    *   **Níveis:** Bronze, Prata, Ouro.
+    *   **Recompensa:** Badges, Ponto Coins.
+
+*   **Conquista: "Mentor da Comunidade"**
+    *   **Como Desbloquear:** Responder a X pedidos de ajuda na "Conexão Expert" (com avaliação positiva).
+    *   **Níveis:** Bronze, Prata, Ouro, Diamante.
+    *   **Recompensa:** Badges, Ponto Coins, *Opcional (Ouro/Diamante):* Selo "Mentor Verificado" no perfil, *Recompensa Física (Diamante):* Placa de Reconhecimento "Mentor Ponto. School".
+
+*   **Conquista: "Líder de Grupo"**
+    *   **Como Desbloquear:** Criar e administrar um grupo de estudo ativo (com X membros e Y atividades) por Z tempo.
+    *   **Níveis:** Bronze (único).
+    *   **Recompensa:** Badge "Líder Inspirador", Ponto Coins.
+Use code with caution.
+6. Inovador IA (Uso das Ferramentas Epictus IA)
+* Objetivo: Incentivar a exploração e o uso das diversas ferramentas do Epictus IA.
+*   **Conquista: "Resumista Ágil"** (Usar Gerador de Resumos X vezes).
+*   **Conquista: "Mapeador de Ideias"** (Criar X Mapas Mentais).
+*   **Conquista: "Criador de Flashcards Pro"** (Gerar X conjuntos de Flashcards).
+*   **Conquista: "Arquiteto de Aulas"** (Para Professores – Usar Gerador de Planos de Aula/Slides X vezes).
+*   **Conquista: "Corretor Eficaz"** (Para Professores – Usar ferramentas de Correção Inteligente X vezes).
+    *   *Níveis e Recompensas:* Semelhantes (Bronze, Prata, Ouro com Ponto Coins, XP e Badges temáticas).
+Use code with caution.
+7. Colecionador (Completar Conjuntos e Eventos Especiais)
+* Objetivo: Incentivar a participação em eventos e a coleção de itens.
+*   **Conquista: "Participante de Eventos"**
+    *   **Como Desbloquear:** Participar de X webinars/workshops/eventos ao vivo.
+    *   **Níveis:** Bronze, Prata, Ouro.
+    *   **Recompensa:** Badges, Ponto Coins.
+
+*   **Conquista: "Colecionador de [Tipo de Recompensa da Roleta]"** (Ex: "Colecionador de Molduras")
+    *   **Como Desbloquear:** Obter X itens diferentes de um tipo específico na roleta de login diário.
+    *   **Níveis:** Bronze, Prata, Ouro.
+    *   **Recompensa:** Badge, Ponto Coins, *Opcional (Ouro):* Um item *super raro* daquele tipo.
+
+*   **Conquistas Sazonais/Eventos Especiais:**
+    *   Conquistas *temporárias* relacionadas a datas comemorativas (Natal, Volta às Aulas), eventos da plataforma (lançamento de novas funcionalidades) ou temas específicos (ex: "Mês da Ciência").
+    *   *Recompensas:* Badges e itens de personalização *exclusivos* do evento.
+Use code with caution.
+8. Lendário (Conquistas Raras e de Alto Nível)
+* Objetivo: Reconhecer os usuários mais dedicados e bem-sucedidos da plataforma.
+*   **Conquista: "Polímata da Ponto. School"**
+    *   **Como Desbloquear:** Dominar X% de *múltiplas* disciplinas (ex: 5 ou mais).
+    *   **Níveis:** Ouro, Diamante, Lendário.
+    *   **Recompensa:** Badge prestigiosa, grande quantidade de Ponto Coins, *Recompensa Física (Diamante/Lendário):* Troféu Ponto. School personalizado.
+
+*   **Conquista: "Guardião do Conhecimento"**
+    *   **Como Desbloquear:** Ser um "Expert" na "Conexão Expert" com X respostas resolvidas e avaliação média excepcional por Y tempo.
+    *   **Níveis:** Diamante, Lendário.
+    *   **Recompensa:** Selo permanente "Guardião do Conhecimento" no perfil, benefícios exclusivos na plataforma, *Recompensa Física (Lendário):* Kit de Material Escolar Premium completo e personalizado.
+
+*   **Conquista: "Arquiteto da Comunidade"**
+    *   **Como Desbloquear:** Criar e manter múltiplos grupos de estudo *altamente ativos* e *bem avaliados* pela comunidade.
+    *   **Níveis:** Ouro, Diamante.
+    *   **Recompensa:** Badge, Ponto Coins, destaque para seus grupos.
+Use code with caution.
+Implementação e Design da Seção "Conquistas":
+Aba "Visão Geral":
+Card "Próximas Conquistas": Mostrar as 3-5 conquistas pendentes que o aluno está mais perto de desbloquear (com barra de progresso clara).
+Card "Últimas Desbloqueadas": Mostrar as 3-5 últimas conquistas desbloqueadas (com design diferenciado – brilho, cor especial).
+Aba "Todas as Conquistas":
+Filtros: Categoria, Status (Desbloqueadas/Pendentes), Nível (Bronze/Prata/Ouro).
+Busca por nome.
+Cards de Conquista (Design):
+Ícone grande e único para cada conquista (fundamental!).
+Nome da Conquista.
+Descrição clara de como desbloquear.
+Recompensa(s) (ícones + texto).
+Barra de progresso (para pendentes).
+Cores e design que refletem o nível (Bronze, Prata, Ouro, etc.) e se está desbloqueada ou não.
+Aba "Minhas Recompensas":
+Lista das recompensas físicas e digitais ganhas.
+Status (para físicas: "Aguardando Envio", "Enviado", "Entregue" + código de rastreio).
+Botão "Usar Agora" (para digitais).
