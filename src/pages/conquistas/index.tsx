@@ -26,7 +26,18 @@ import {
   Gem,
   Hexagon,
   Shield,
-  Diamond
+  Diamond,
+  Brain,
+  Map,
+  FileText,
+  MessageSquare,
+  GraduationCap,
+  Coffee,
+  Sun,
+  Moon,
+  Lightbulb,
+  Compass,
+  Settings
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -97,12 +108,13 @@ export default function ConquistasPage() {
     rankingPosition: 1847
   };
 
-  // Dados mockados de conquistas
+  // Novas conquistas baseadas na sua lista detalhada
   const achievements: Achievement[] = [
+    // === EMBARQUE ===
     {
       id: '1',
-      name: 'Primeiros Passos',
-      description: 'Complete seu primeiro login na plataforma',
+      name: 'Primeiros Passos na Ponto. School',
+      description: 'Complete o tour guiado da plataforma',
       category: 'Embarque',
       level: 'bronze',
       icon: <Star className="h-5 w-5" />,
@@ -110,78 +122,289 @@ export default function ConquistasPage() {
       maxProgress: 1,
       isUnlocked: true,
       unlockedAt: new Date('2024-01-15'),
-      rewards: { pontoCoins: 50, xp: 100 },
-      criteria: ['Fazer primeiro login', 'Completar perfil básico']
+      rewards: { pontoCoins: 20, xp: 10, badge: 'Explorador Iniciante' },
+      criteria: ['Completar tour guiado']
     },
     {
       id: '2',
-      name: 'Sequência de Foco',
-      description: 'Mantenha uma sequência de 7 dias consecutivos de estudo',
-      category: 'Dedicação',
-      level: 'gold',
+      name: 'Perfil Completo',
+      description: 'Preencha 100% das informações do seu perfil',
+      category: 'Embarque',
+      level: 'bronze',
+      icon: <Users className="h-5 w-5" />,
+      progress: 85,
+      maxProgress: 100,
+      isUnlocked: false,
+      rewards: { pontoCoins: 30, xp: 15, badge: 'Identidade Revelada' },
+      criteria: ['Adicionar foto', 'Completar bio', 'Definir interesses']
+    },
+    {
+      id: '3',
+      name: 'Primeira Turma Acessada',
+      description: 'Acesse a página de conteúdo de qualquer turma pela primeira vez',
+      category: 'Embarque',
+      level: 'bronze',
+      icon: <GraduationCap className="h-5 w-5" />,
+      progress: 1,
+      maxProgress: 1,
+      isUnlocked: true,
+      unlockedAt: new Date('2024-01-16'),
+      rewards: { pontoCoins: 10, xp: 5 },
+      criteria: ['Acessar primeira turma']
+    },
+    {
+      id: '4',
+      name: 'Conhecendo o Epictus IA',
+      description: 'Use qualquer ferramenta do Epictus IA pela primeira vez',
+      category: 'Embarque',
+      level: 'bronze',
+      icon: <Brain className="h-5 w-5" />,
+      progress: 1,
+      maxProgress: 1,
+      isUnlocked: true,
+      unlockedAt: new Date('2024-01-17'),
+      rewards: { pontoCoins: 20, xp: 10, badge: 'Amigo da IA' },
+      criteria: ['Usar primeira ferramenta IA']
+    },
+
+    // === EXPLORADOR ===
+    {
+      id: '5',
+      name: 'Navegador Curioso',
+      description: 'Visite todas as seções principais do menu lateral',
+      category: 'Explorador',
+      level: 'bronze',
+      icon: <Compass className="h-5 w-5" />,
+      progress: 8,
+      maxProgress: 10,
+      isUnlocked: false,
+      rewards: { pontoCoins: 50, xp: 25, badge: 'Cartógrafo da Ponto. School' },
+      criteria: ['Visitar 10 seções principais']
+    },
+    {
+      id: '6',
+      name: 'Mestre dos Atalhos',
+      description: 'Personalize os "Atalhos Rápidos" no Painel',
+      category: 'Explorador',
+      level: 'bronze',
+      icon: <Settings className="h-5 w-5" />,
+      progress: 0,
+      maxProgress: 1,
+      isUnlocked: false,
+      rewards: { pontoCoins: 15, xp: 10 },
+      criteria: ['Personalizar atalhos rápidos']
+    },
+    {
+      id: '7',
+      name: 'Bibliotecário Júnior',
+      description: 'Acesse 10 materiais diferentes na Biblioteca',
+      category: 'Explorador',
+      level: 'bronze',
+      icon: <BookOpen className="h-5 w-5" />,
+      progress: 6,
+      maxProgress: 10,
+      isUnlocked: false,
+      rewards: { pontoCoins: 25, xp: 15, badge: 'Bibliotecário Júnior' },
+      criteria: ['Acessar 10 materiais diferentes']
+    },
+    {
+      id: '8',
+      name: 'Bibliotecário Pleno',
+      description: 'Acesse 50 materiais diferentes na Biblioteca',
+      category: 'Explorador',
+      level: 'silver',
+      icon: <BookOpen className="h-5 w-5" />,
+      progress: 6,
+      maxProgress: 50,
+      isUnlocked: false,
+      rewards: { pontoCoins: 75, xp: 40, badge: 'Bibliotecário Pleno' },
+      criteria: ['Acessar 50 materiais diferentes']
+    },
+
+    // === ESTUDANTE DEDICADO ===
+    {
+      id: '9',
+      name: 'Sequência de Foco - Iniciante',
+      description: 'Gire a roleta de login diário por 7 dias consecutivos',
+      category: 'Estudante Dedicado',
+      level: 'bronze',
       icon: <Flame className="h-5 w-5" />,
       progress: 7,
       maxProgress: 7,
       isUnlocked: true,
       unlockedAt: new Date('2024-01-20'),
-      rewards: { pontoCoins: 200, xp: 500, badge: 'Chama Dourada' },
-      criteria: ['7 dias consecutivos', 'Mínimo 30min por dia', 'Sem faltas']
+      rewards: { pontoCoins: 100, xp: 50, badge: 'Fogo da Dedicação Nv. 1' },
+      criteria: ['7 dias consecutivos', 'Login diário']
     },
     {
-      id: '3',
-      name: 'Mestre dos Resumos',
-      description: 'Crie 50 resumos usando o Epictus IA',
-      category: 'Inovador IA',
+      id: '10',
+      name: 'Sequência de Foco - Persistente',
+      description: 'Mantenha uma sequência de 30 dias consecutivos',
+      category: 'Estudante Dedicado',
       level: 'silver',
-      icon: <BookOpen className="h-5 w-5" />,
-      progress: 32,
-      maxProgress: 50,
+      icon: <Flame className="h-5 w-5" />,
+      progress: 7,
+      maxProgress: 30,
       isUnlocked: false,
-      rewards: { pontoCoins: 150, xp: 300, badge: 'Resumista Expert' },
-      criteria: ['50 resumos criados', 'Uso da IA', 'Qualidade aprovada']
+      rewards: { pontoCoins: 300, xp: 150, badge: 'Fogo da Dedicação Nv. 2' },
+      criteria: ['30 dias consecutivos', 'Giro especial +25% sorte']
     },
     {
-      id: '4',
-      name: 'Navegador Curioso',
-      description: 'Explore todas as seções da plataforma',
-      category: 'Explorador',
+      id: '11',
+      name: 'Maratonista dos Estudos - Bronze',
+      description: 'Acumule 10 horas de estudo na plataforma',
+      category: 'Estudante Dedicado',
       level: 'bronze',
-      icon: <Target className="h-5 w-5" />,
-      progress: 8,
+      icon: <Clock className="h-5 w-5" />,
+      progress: 6,
       maxProgress: 10,
       isUnlocked: false,
-      rewards: { pontoCoins: 75, xp: 150 },
-      criteria: ['Visitar 10 seções', 'Interagir com ferramentas', 'Completar tour']
+      rewards: { pontoCoins: 80, xp: 40, badge: 'Resistência de Bronze' },
+      criteria: ['10 horas de estudo rastreadas']
     },
     {
-      id: '5',
-      name: 'Polímata da Ponto School',
-      description: 'Domine todas as disciplinas e ferramentas da plataforma',
+      id: '12',
+      name: 'Mestre do Planejamento',
+      description: 'Use o Planner de Estudos por 4 semanas consecutivas',
+      category: 'Estudante Dedicado',
+      level: 'bronze',
+      icon: <Calendar className="h-5 w-5" />,
+      progress: 1,
+      maxProgress: 4,
+      isUnlocked: false,
+      rewards: { pontoCoins: 60, xp: 30, badge: 'Arquiteto dos Estudos' },
+      criteria: ['4 semanas de planejamento consecutivo']
+    },
+
+    // === MESTRE DO CONHECIMENTO ===
+    {
+      id: '13',
+      name: 'Expert em Matemática',
+      description: 'Atinja 85% de progresso em todos os materiais de Matemática',
+      category: 'Mestre do Conhecimento',
+      level: 'bronze',
+      icon: <Award className="h-5 w-5" />,
+      progress: 72,
+      maxProgress: 85,
+      isUnlocked: false,
+      rewards: { pontoCoins: 120, xp: 60, badge: 'Mestre da Matemática' },
+      criteria: ['85% de progresso em Matemática']
+    },
+    {
+      id: '14',
+      name: 'Detonador de Provas',
+      description: 'Tire nota máxima em 3 simulados diferentes',
+      category: 'Mestre do Conhecimento',
+      level: 'silver',
+      icon: <Target className="h-5 w-5" />,
+      progress: 1,
+      maxProgress: 3,
+      isUnlocked: false,
+      rewards: { pontoCoins: 200, xp: 100, badge: 'Destruidor de Provas' },
+      criteria: ['Nota máxima em 3 simulados']
+    },
+
+    // === COLABORADOR ===
+    {
+      id: '15',
+      name: 'Voz Ativa',
+      description: 'Envie 20 mensagens em fóruns ou chats de grupos',
+      category: 'Colaborador',
+      level: 'bronze',
+      icon: <MessageSquare className="h-5 w-5" />,
+      progress: 8,
+      maxProgress: 20,
+      isUnlocked: false,
+      rewards: { pontoCoins: 40, xp: 20, badge: 'Comunicador Ativo' },
+      criteria: ['20 mensagens enviadas em grupos']
+    },
+    {
+      id: '16',
+      name: 'Mentor da Comunidade',
+      description: 'Responda a 5 pedidos de ajuda na Conexão Expert',
+      category: 'Colaborador',
+      level: 'silver',
+      icon: <Users className="h-5 w-5" />,
+      progress: 2,
+      maxProgress: 5,
+      isUnlocked: false,
+      rewards: { pontoCoins: 150, xp: 75, badge: 'Mentor da Comunidade' },
+      criteria: ['5 respostas com avaliação positiva']
+    },
+
+    // === INOVADOR IA ===
+    {
+      id: '17',
+      name: 'Resumista Ágil',
+      description: 'Use o Gerador de Resumos 10 vezes',
+      category: 'Inovador IA',
+      level: 'bronze',
+      icon: <FileText className="h-5 w-5" />,
+      progress: 4,
+      maxProgress: 10,
+      isUnlocked: false,
+      rewards: { pontoCoins: 50, xp: 25, badge: 'Resumista Profissional' },
+      criteria: ['10 resumos gerados']
+    },
+    {
+      id: '18',
+      name: 'Mapeador de Ideias',
+      description: 'Crie 5 Mapas Mentais com o Epictus IA',
+      category: 'Inovador IA',
+      level: 'bronze',
+      icon: <Map className="h-5 w-5" />,
+      progress: 2,
+      maxProgress: 5,
+      isUnlocked: false,
+      rewards: { pontoCoins: 60, xp: 30, badge: 'Arquiteto Mental' },
+      criteria: ['5 mapas mentais criados']
+    },
+
+    // === COLECIONADOR ===
+    {
+      id: '19',
+      name: 'Participante de Eventos',
+      description: 'Participe de 3 webinars ou workshops ao vivo',
+      category: 'Colecionador',
+      level: 'bronze',
+      icon: <Play className="h-5 w-5" />,
+      progress: 1,
+      maxProgress: 3,
+      isUnlocked: false,
+      rewards: { pontoCoins: 90, xp: 45, badge: 'Participante Ativo' },
+      criteria: ['3 eventos ao vivo']
+    },
+
+    // === LENDÁRIO ===
+    {
+      id: '20',
+      name: 'Polímata da Ponto. School',
+      description: 'Domine 85% de progresso em 5 disciplinas diferentes',
       category: 'Lendário',
       level: 'legendary',
       icon: <Crown className="h-5 w-5" />,
-      progress: 3,
-      maxProgress: 10,
+      progress: 2,
+      maxProgress: 5,
       isUnlocked: false,
-      rewards: { pontoCoins: 1000, xp: 2000, badge: 'Mestre Supremo', physical: 'Troféu Premium' },
-      criteria: ['Dominar 10 disciplinas', 'Usar todas as ferramentas IA', 'Manter média 95%+']
+      rewards: { pontoCoins: 1000, xp: 500, badge: 'Polímata Supremo', physical: 'Troféu Ponto. School Personalizado' },
+      criteria: ['85% em 5 disciplinas', 'Excelência acadêmica', 'Dedicação excepcional']
     },
     {
-      id: '6',
-      name: 'Diamante Brilhante',
-      description: 'Alcance o nível diamante em desempenho',
-      category: 'Elite',
-      level: 'diamond',
-      icon: <Diamond className="h-5 w-5" />,
-      progress: 85,
-      maxProgress: 100,
+      id: '21',
+      name: 'Guardião do Conhecimento',
+      description: 'Seja um Expert na Conexão Expert por 3 meses',
+      category: 'Lendário',
+      level: 'legendary',
+      icon: <Shield className="h-5 w-5" />,
+      progress: 1,
+      maxProgress: 3,
       isUnlocked: false,
-      rewards: { pontoCoins: 750, xp: 1500, badge: 'Elite Diamante' },
-      criteria: ['95% de aproveitamento', 'Top 10% do ranking', 'Conquistas premium']
+      rewards: { pontoCoins: 2000, xp: 1000, badge: 'Guardião Supremo', physical: 'Kit Material Escolar Premium' },
+      criteria: ['3 meses como Expert', 'Avaliação excepcional', 'Múltiplas respostas aceitas']
     }
   ];
 
-  const categories = ['all', 'Embarque', 'Explorador', 'Dedicação', 'Conhecimento', 'Colaborador', 'Inovador IA', 'Colecionador', 'Elite', 'Lendário'];
+  const categories = ['all', 'Embarque', 'Explorador', 'Estudante Dedicado', 'Mestre do Conhecimento', 'Colaborador', 'Inovador IA', 'Colecionador', 'Lendário'];
 
   const getLevelGradient = (level: string) => {
     switch (level) {
@@ -367,11 +590,7 @@ export default function ConquistasPage() {
   );
 
   return (
-    <div className={`min-h-screen relative overflow-hidden ${
-      isLightMode 
-        ? 'bg-gradient-to-br from-gray-50 via-white to-gray-100' 
-        : 'bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-900'
-    }`}>
+    <div className="min-h-screen relative overflow-hidden">
       
       <div className="relative z-10 max-w-7xl mx-auto p-6 space-y-8">
 
@@ -709,13 +928,21 @@ export default function ConquistasPage() {
               exit={{ opacity: 0, y: -20 }}
               className="text-center py-16"
             >
-              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center">
-                <Gift className="h-10 w-10 text-white/40" />
+              <div className={`w-20 h-20 mx-auto mb-4 rounded-full backdrop-blur-md border flex items-center justify-center ${
+                isLightMode 
+                  ? 'bg-gray-100 border-gray-200' 
+                  : 'bg-white/10 border-white/20'
+              }`}>
+                <Gift className={`h-10 w-10 ${
+                  isLightMode ? 'text-gray-400' : 'text-white/40'
+                }`} />
               </div>
-              <h3 className="text-xl font-medium text-white/70 mb-2">
+              <h3 className={`text-xl font-medium mb-2 ${
+                isLightMode ? 'text-gray-600' : 'text-white/70'
+              }`}>
                 Seção em Desenvolvimento
               </h3>
-              <p className="text-white/50">
+              <p className={isLightMode ? 'text-gray-500' : 'text-white/50'}>
                 Suas recompensas aparecerão aqui em breve
               </p>
             </motion.div>
@@ -729,13 +956,21 @@ export default function ConquistasPage() {
               exit={{ opacity: 0, y: -20 }}
               className="text-center py-16"
             >
-              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center">
-                <Medal className="h-10 w-10 text-white/40" />
+              <div className={`w-20 h-20 mx-auto mb-4 rounded-full backdrop-blur-md border flex items-center justify-center ${
+                isLightMode 
+                  ? 'bg-gray-100 border-gray-200' 
+                  : 'bg-white/10 border-white/20'
+              }`}>
+                <Medal className={`h-10 w-10 ${
+                  isLightMode ? 'text-gray-400' : 'text-white/40'
+                }`} />
               </div>
-              <h3 className="text-xl font-medium text-white/70 mb-2">
+              <h3 className={`text-xl font-medium mb-2 ${
+                isLightMode ? 'text-gray-600' : 'text-white/70'
+              }`}>
                 Ranking em Desenvolvimento
               </h3>
-              <p className="text-white/50">
+              <p className={isLightMode ? 'text-gray-500' : 'text-white/50'}>
                 O ranking de conquistas estará disponível em breve
               </p>
             </motion.div>
@@ -759,20 +994,105 @@ export default function ConquistasPage() {
                     {selectedAchievement.icon}
                   </div>
                   <div className="flex-1">
-                    <h2 className="text-2xl font-bold text-white mb-2">
+                    <h2 className={`text-2xl font-bold mb-2 ${
+                      isLightMode ? 'text-gray-800' : 'text-white'
+                    }`}>
                       {selectedAchievement.name}
                     </h2>
                     <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-semibold bg-gradient-to-r ${getLevelGradient(selectedAchievement.level)}`}>
                       {getLevelIcon(selectedAchievement.level)}
                       {selectedAchievement.level.charAt(0).toUpperCase() + selectedAchievement.level.slice(1)}
                     </div>
-                    <p className="text-white/80 text-lg mt-3">
+                    <p className={`text-lg mt-3 ${
+                      isLightMode ? 'text-gray-600' : 'text-white/80'
+                    }`}>
                       {selectedAchievement.description}
                     </p>
                   </div>
                 </div>
 
-                {/* Resto do modal permanece igual... */}
+                {/* Critérios */}
+                <div className="mb-6">
+                  <h3 className={`text-lg font-semibold mb-3 ${
+                    isLightMode ? 'text-gray-800' : 'text-white'
+                  }`}>
+                    Critérios para Desbloqueio:
+                  </h3>
+                  <ul className="space-y-2">
+                    {selectedAchievement.criteria.map((criterion, index) => (
+                      <li key={index} className={`flex items-center gap-2 ${
+                        isLightMode ? 'text-gray-600' : 'text-white/70'
+                      }`}>
+                        <div className="w-2 h-2 rounded-full bg-orange-500" />
+                        {criterion}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Recompensas */}
+                <div className="mb-6">
+                  <h3 className={`text-lg font-semibold mb-3 ${
+                    isLightMode ? 'text-gray-800' : 'text-white'
+                  }`}>
+                    Recompensas:
+                  </h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {selectedAchievement.rewards.pontoCoins > 0 && (
+                      <div className="text-center p-3 rounded-lg bg-orange-500/10 border border-orange-500/20">
+                        <Gift className="h-6 w-6 mx-auto mb-2 text-orange-500" />
+                        <div className="font-semibold text-orange-500">+{selectedAchievement.rewards.pontoCoins}</div>
+                        <div className="text-xs text-orange-400">Ponto Coins</div>
+                      </div>
+                    )}
+                    {selectedAchievement.rewards.xp > 0 && (
+                      <div className="text-center p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                        <Zap className="h-6 w-6 mx-auto mb-2 text-blue-500" />
+                        <div className="font-semibold text-blue-500">+{selectedAchievement.rewards.xp}</div>
+                        <div className="text-xs text-blue-400">XP</div>
+                      </div>
+                    )}
+                    {selectedAchievement.rewards.badge && (
+                      <div className="text-center p-3 rounded-lg bg-purple-500/10 border border-purple-500/20">
+                        <Award className="h-6 w-6 mx-auto mb-2 text-purple-500" />
+                        <div className="font-semibold text-purple-500 text-xs">{selectedAchievement.rewards.badge}</div>
+                        <div className="text-xs text-purple-400">Badge</div>
+                      </div>
+                    )}
+                    {selectedAchievement.rewards.physical && (
+                      <div className="text-center p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                        <Trophy className="h-6 w-6 mx-auto mb-2 text-emerald-500" />
+                        <div className="font-semibold text-emerald-500 text-xs">{selectedAchievement.rewards.physical}</div>
+                        <div className="text-xs text-emerald-400">Físico</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Progresso */}
+                {!selectedAchievement.isUnlocked && (
+                  <div className="mb-6">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className={`font-medium ${
+                        isLightMode ? 'text-gray-700' : 'text-white/80'
+                      }`}>
+                        Progresso Atual
+                      </span>
+                      <span className="font-bold text-orange-500">
+                        {selectedAchievement.progress}/{selectedAchievement.maxProgress}
+                      </span>
+                    </div>
+                    <div className={`h-3 rounded-full overflow-hidden ${
+                      isLightMode ? 'bg-gray-200' : 'bg-white/10'
+                    }`}>
+                      <div 
+                        className="h-full bg-gradient-to-r from-orange-400 to-orange-600 rounded-full transition-all duration-500"
+                        style={{ width: `${(selectedAchievement.progress / selectedAchievement.maxProgress) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex gap-3 mt-6">
                   {selectedAchievement.isUnlocked && (
                     <Button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white border-0">
@@ -783,7 +1103,11 @@ export default function ConquistasPage() {
                   <Button
                     variant="outline"
                     onClick={() => setSelectedAchievement(null)}
-                    className="flex-1 bg-white/10 border-white/20 text-white hover:bg-white/20"
+                    className={`flex-1 ${
+                      isLightMode 
+                        ? 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50' 
+                        : 'bg-white/10 border-white/20 text-white hover:bg-white/20'
+                    }`}
                   >
                     Fechar
                   </Button>
