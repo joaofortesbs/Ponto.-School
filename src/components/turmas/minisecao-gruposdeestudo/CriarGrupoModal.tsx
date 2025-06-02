@@ -45,17 +45,6 @@ export default function CriarGrupoModal({ isOpen, onClose, onGrupoCriado }: Cria
     "#10B981", "#F59E0B", "#06B6D4", "#EC4899"
   ];
 
-  const topicosEstudo = [
-    { nome: "Matemática", icon: Calculator, cor: "#3B82F6" },
-    { nome: "Física", icon: Atom, cor: "#8B5CF6" },
-    { nome: "Química", icon: FlaskConical, cor: "#EF4444" },
-    { nome: "Biologia", icon: Dna, cor: "#10B981" },
-    { nome: "História", icon: BookOpen, cor: "#F59E0B" },
-    { nome: "Geografia", icon: Globe, cor: "#06B6D4" },
-    { nome: "Literatura", icon: BookOpen, cor: "#EC4899" },
-    { nome: "Inglês", icon: Languages, cor: "#6366F1" }
-  ];
-
   const gerarCodigoUnico = () => {
     return Math.random().toString(36).substr(2, 8).toUpperCase();
   };
@@ -99,7 +88,10 @@ export default function CriarGrupoModal({ isOpen, onClose, onGrupoCriado }: Cria
         .select()
         .single();
 
-      if (grupoError) throw grupoError;
+      if (grupoError) {
+        console.error('Erro ao criar grupo:', grupoError);
+        throw grupoError;
+      }
 
       // Adicionar criador como membro
       const { error: membroError } = await supabase
@@ -109,7 +101,10 @@ export default function CriarGrupoModal({ isOpen, onClose, onGrupoCriado }: Cria
           user_id: user.id
         });
 
-      if (membroError) throw membroError;
+      if (membroError) {
+        console.error('Erro ao adicionar membro:', membroError);
+        throw membroError;
+      }
 
       toast({
         title: "Sucesso",

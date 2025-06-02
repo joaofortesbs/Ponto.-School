@@ -8,6 +8,7 @@ import { Search, Users, Plus, MessageCircle, Filter, BookOpen, Calculator, Atom,
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import CriarGrupoModal from "./CriarGrupoModal";
+import GrupoInternoView from "./GrupoInternoView";
 
 interface Grupo {
   id: string;
@@ -19,6 +20,7 @@ interface Grupo {
   topico?: string;
   topico_icon?: string;
   created_at: string;
+  user_id: string;
 }
 
 export default function GruposEstudoView() {
@@ -26,6 +28,7 @@ export default function GruposEstudoView() {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [grupoSelecionado, setGrupoSelecionado] = useState<Grupo | null>(null);
   const { toast } = useToast();
 
   const topicosEstudo = [
@@ -57,15 +60,30 @@ export default function GruposEstudoView() {
         return;
       }
 
-      // Buscar grupos onde o usuário é criador ou membro
-      const { data: grupos, error } = await supabase
-        .from('grupos_estudo')
-        .select('*')
+      // Buscar grupos onde o usuário é membro
+      const { data: membrosData, error: membrosError } = await supabase
+        .from('membros_grupos')
+        .select(`
+          grupo_id,
+          grupos_estudo!inner (
+            id,
+            nome,
+            descricao,
+            codigo_unico,
+            membros,
+            cor,
+            topico,
+            topico_icon,
+            created_at,
+            user_id
+          )
+        `)
         .eq('user_id', user.id);
 
-      if (error) throw error;
+      if (membrosError) throw membrosError;
 
-      setMeusGrupos(grupos || []);
+      const grupos = membrosData?.map(item => item.grupos_estudo).filter(Boolean) || [];
+      setMeusGrupos(grupos as Grupo[]);
     } catch (error) {
       console.error('Erro ao carregar grupos:', error);
       toast({
@@ -87,10 +105,24 @@ export default function GruposEstudoView() {
     setIsModalOpen(true);
   };
 
+  const handleGrupoClick = (grupo: Grupo) => {
+    setGrupoSelecionado(grupo);
+  };
+
+  const handleVoltarParaLista = () => {
+    setGrupoSelecionado(null);
+    carregarMeusGrupos(); // Recarrega a lista ao voltar
+  };
+
   const getTopicIcon = (topicName: string) => {
     const topic = topicosEstudo.find(t => t.nome === topicName);
     return topic?.icon || BookOpen;
   };
+
+  // Se um grupo está selecionado, mostrar a visualização interna
+  if (grupoSelecionado) {
+    return <GrupoInternoView grupo={grupoSelecionado} onVoltar={handleVoltarParaLista} />;
+  }
 
   return (
     <>
@@ -164,6 +196,7 @@ export default function GruposEstudoView() {
                     return (
                       <div
                         key={grupo.id}
+                        onClick={() => handleGrupoClick(grupo)}
                         className="group p-4 bg-gradient-to-r from-slate-800/50 to-slate-700/30 border border-slate-600/50 rounded-xl hover:border-blue-500/50 transition-all duration-300 cursor-pointer hover:shadow-lg hover:shadow-blue-500/10"
                       >
                         <div className="flex items-start justify-between">
@@ -207,19 +240,21 @@ export default function GruposEstudoView() {
                     <Users className="h-8 w-8 text-slate-400" />
                   </div>
                   <div className="space-y-1">
-                    <p className="text-slate-300 font-medium">Nenhum grupo criado ainda</p>
+                    <p className="text-slate-300 font-medium">Nenhum grupo encontrado</p>
                     <p className="text-slate-500 text-sm">
-                      Crie seu primeiro grupo de estudos para começar
+                      {searchTerm ? 'Tente ajustar sua busca' : 'Crie seu primeiro grupo de estudos para começar'}
                     </p>
                   </div>
-                  <Button
-                    onClick={handleCreateGroup}
-                    variant="outline"
-                    size="sm"
-                    className="mt-2 border-orange-500 text-orange-400 hover:bg-orange-500 hover:text-white"
-                  >
-                    Criar primeiro grupo
-                  </Button>
+                  {!searchTerm && (
+                    <Button
+                      onClick={handleCreateGroup}
+                      variant="outline"
+                      size="sm"
+                      className="mt-2 border-orange-500 text-orange-400 hover:bg-orange-500 hover:text-white"
+                    >
+                      Criar primeiro grupo
+                    </Button>
+                  )}
                 </div>
               )}
             </div>
