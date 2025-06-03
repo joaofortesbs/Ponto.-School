@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,7 +47,8 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
     setDebugLog(prev => [...prev, `[${timestamp}] ${message}`]);
   };
 
-  const generateSimpleUniqueCode = (): string => {
+  const generateUniqueCode = (): string => {
+    // Gera código único com timestamp + random para evitar conflitos
     const timestamp = Date.now().toString(36);
     const random = Math.random().toString(36).substring(2, 8);
     return (timestamp + random).toUpperCase().substring(0, 8);
@@ -64,34 +64,34 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
 
     setIsSubmitting(true);
     setDebugLog([]);
-    addDebugLog('Iniciando criação de grupo com validações robustas...');
+    addDebugLog('🚀 Iniciando criação de grupo com SOLUÇÃO DEFINITIVA...');
     
     const maxRetries = 3;
     let attempt = 0;
     
     while (attempt < maxRetries) {
       try {
-        addDebugLog(`Tentativa ${attempt + 1} de ${maxRetries}`);
+        addDebugLog(`📋 Tentativa ${attempt + 1} de ${maxRetries}`);
 
-        // Validação de autenticação robusta
-        addDebugLog('Verificando autenticação...');
+        // Validação obrigatória de autenticação
+        addDebugLog('🔐 Verificando autenticação...');
         const { data: { user }, error: authError } = await supabase.auth.getUser();
         
         if (authError) {
-          addDebugLog(`Erro de autenticação: ${authError.message}`);
+          addDebugLog(`❌ Erro de autenticação: ${authError.message}`);
           throw new Error('Erro de autenticação. Faça login novamente.');
         }
         
         if (!user) {
-          addDebugLog('Usuário não autenticado');
+          addDebugLog('❌ Usuário não autenticado');
           throw new Error('Você precisa estar logado para criar um grupo');
         }
 
-        addDebugLog(`Usuário autenticado: ${user.id}`);
+        addDebugLog(`✅ Usuário autenticado: ${user.id}`);
 
-        // Geração de código único com timestamp para evitar conflitos
-        const codigoUnico = generateSimpleUniqueCode();
-        addDebugLog(`Código único gerado: ${codigoUnico}`);
+        // Geração obrigatória de código único
+        const codigoUnico = generateUniqueCode();
+        addDebugLog(`🎯 Código único gerado: ${codigoUnico}`);
 
         // Validação de nome do grupo
         if (!formData.nome.trim()) {
@@ -102,7 +102,7 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
         
         const groupData = {
           codigo_unico: codigoUnico,
-          user_id: user.id, // CORREÇÃO: usar user_id em vez de criar entrada duplicada
+          user_id: user.id, // SOLUÇÃO: usar user_id em vez de criar_id
           nome: formData.nome.trim(),
           descricao: formData.descricao.trim() || null,
           topico: formData.topico,
@@ -115,7 +115,7 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
           membros: 1
         };
 
-        addDebugLog('Inserindo grupo no Supabase...');
+        addDebugLog('📝 Inserindo grupo no Supabase...');
 
         const { data, error } = await supabase
           .from('grupos_estudo')
@@ -124,11 +124,11 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
           .single();
 
         if (error) {
-          addDebugLog(`Erro do Supabase: ${error.message}`);
+          addDebugLog(`❌ Erro do Supabase: ${error.message}`);
           
           // Verificar se é erro de código duplicado e tentar novamente
           if (error.message.includes('duplicate') && error.message.includes('codigo_unico')) {
-            addDebugLog('Código duplicado detectado, gerando novo código...');
+            addDebugLog('🔄 Código duplicado detectado, gerando novo código...');
             attempt++;
             if (attempt < maxRetries) {
               await new Promise(resolve => setTimeout(resolve, 1000));
@@ -138,26 +138,38 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
           throw error;
         }
 
-        addDebugLog(`Grupo criado com sucesso! ID: ${data.id}`);
+        addDebugLog(`✅ Grupo criado com sucesso! ID: ${data.id}`);
         
-        // SOLUÇÃO DEFINITIVA: Não inserir em membros_grupos para evitar duplicação
-        // O criador está implicitamente associado via user_id na tabela grupos_estudo
-        addDebugLog('CORREÇÃO APLICADA: Criador associado via user_id - sem duplicação em membros_grupos');
-        addDebugLog('Sistema simplificado e livre de erros de unicidade');
+        // SOLUÇÃO DEFINITIVA: Associar criador como membro (sem restrição de unicidade)
+        addDebugLog('👥 Associando criador ao grupo como membro...');
+        const { error: memberError } = await supabase
+          .from('membros_grupos')
+          .insert({
+            grupo_id: data.id,
+            user_id: user.id,
+            joined_at: new Date().toISOString()
+          });
 
-        addDebugLog('Grupo criado e configurado com sucesso!');
+        if (memberError) {
+          addDebugLog(`❌ Erro ao associar membro: ${memberError.message}`);
+          throw memberError;
+        }
+
+        addDebugLog('✅ Criador associado com sucesso como membro');
+        addDebugLog('🎉 GRUPO CRIADO E CONFIGURADO COM SUCESSO!');
+        
         alert(`Grupo criado com sucesso! Código: ${codigoUnico}`);
         onSubmit({ ...groupData, ...data });
         return; // Sair do loop de tentativas
         
       } catch (error: any) {
         console.error(`Erro na tentativa ${attempt + 1}:`, error);
-        addDebugLog(`Erro na tentativa ${attempt + 1}: ${error.message}`);
+        addDebugLog(`❌ Erro na tentativa ${attempt + 1}: ${error.message}`);
         
         attempt++;
         
         if (attempt >= maxRetries) {
-          addDebugLog('Todas as tentativas falharam');
+          addDebugLog('💥 Todas as tentativas falharam');
           
           if (error.message?.includes('authenticated') || error.message?.includes('auth')) {
             alert('Erro: Usuário não autenticado. Faça login novamente.');
@@ -168,7 +180,7 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
           }
           break;
         } else {
-          addDebugLog(`Aguardando ${1500}ms antes da próxima tentativa...`);
+          addDebugLog(`⏱️ Aguardando ${1500}ms antes da próxima tentativa...`);
           await new Promise(resolve => setTimeout(resolve, 1500));
         }
       }
