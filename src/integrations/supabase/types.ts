@@ -104,6 +104,7 @@ export type Database = {
           is_publico: boolean | null
           membros: number
           nome: string
+          permitir_visibilidade: boolean | null
           privado: boolean | null
           topico: string | null
           topico_icon: string | null
@@ -122,6 +123,7 @@ export type Database = {
           is_publico?: boolean | null
           membros?: number
           nome: string
+          permitir_visibilidade?: boolean | null
           privado?: boolean | null
           topico?: string | null
           topico_icon?: string | null
@@ -140,6 +142,7 @@ export type Database = {
           is_publico?: boolean | null
           membros?: number
           nome?: string
+          permitir_visibilidade?: boolean | null
           privado?: boolean | null
           topico?: string | null
           topico_icon?: string | null
