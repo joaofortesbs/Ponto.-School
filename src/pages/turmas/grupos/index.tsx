@@ -65,7 +65,7 @@ export default function GruposEstudo() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Buscar grupos onde is_visible_to_all = true e o usuário não é membro
+      // Buscar grupos onde o usuário não é membro
       const { data: userGroups } = await supabase
         .from('membros_grupos')
         .select('grupo_id')
@@ -73,11 +73,33 @@ export default function GruposEstudo() {
 
       const userGroupIds = userGroups?.map(ug => ug.grupo_id) || [];
 
-      const { data: visibleGroups, error } = await supabase
+      // Buscar parceiros do usuário
+      const { data: partners } = await supabase
+        .from('parceiros')
+        .select('parceiro_id')
+        .eq('user_id', user.id);
+
+      const partnerIds = partners?.map(p => p.parceiro_id) || [];
+
+      // Buscar grupos visíveis
+      let query = supabase
         .from('grupos_estudo')
-        .select('*')
-        .eq('is_visible_to_all', true)
-        .not('id', 'in', `(${userGroupIds.join(',') || 'NULL'})`);
+        .select('*');
+
+      // Filtrar grupos visíveis a todos OU grupos visíveis aos parceiros (se o criador for parceiro)
+      if (partnerIds.length > 0) {
+        query = query.or(`is_visible_to_all.eq.true,and(is_visible_to_partners.eq.true,user_id.in.(${partnerIds.join(',')}))`);
+      } else {
+        query = query.eq('is_visible_to_all', true);
+      }
+
+      // Excluir grupos que o usuário já participa ou criou
+      if (userGroupIds.length > 0) {
+        query = query.not('id', 'in', `(${userGroupIds.join(',')})`);
+      }
+      query = query.neq('user_id', user.id);
+
+      const { data: visibleGroups, error } = await query;
 
       if (error) {
         console.error('Erro ao carregar todos os grupos:', error);
@@ -119,16 +141,75 @@ export default function GruposEstudo() {
     // Recarregar grupos
     if (activeTab === "meus-grupos") {
       loadMyGroups();
+    } else if (activeTab === "todos-grupos") {
+      loadAllGroups();
     }
   };
 
   const handleGroupAdded = () => {
     setIsAddModalOpen(false);
     // Recarregar grupos
-    if (activeTab === "meus-grupos") {
-      loadMyGroups();
-    } else if (activeTab === "todos-grupos") {
+    loadMyGroups();
+    if (activeTab === "todos-grupos") {
       loadAllGroups();
+    }
+  };
+
+  const handleJoinGroup = async (groupId: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from('membros_grupos')
+        .insert({
+          grupo_id: groupId,
+          user_id: user.id,
+          joined_at: new Date().toISOString()
+        });
+
+      if (error) {
+        console.error('Erro ao ingressar no grupo:', error);
+        alert('Erro ao ingressar no grupo');
+        return;
+      }
+
+      alert('Você ingressou no grupo com sucesso!');
+      
+      // Recarregar ambas as grades para refletir a mudança
+      loadMyGroups();
+      loadAllGroups();
+    } catch (error) {
+      console.error('Erro ao ingressar no grupo:', error);
+      alert('Erro ao ingressar no grupo');
+    }
+  };
+
+  const handleLeaveGroup = async (groupId: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from('membros_grupos')
+        .delete()
+        .eq('grupo_id', groupId)
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Erro ao sair do grupo:', error);
+        alert('Erro ao sair do grupo');
+        return;
+      }
+
+      alert('Você saiu do grupo');
+      
+      // Recarregar ambas as grades para refletir a mudança
+      loadMyGroups();
+      loadAllGroups();
+    } catch (error) {
+      console.error('Erro ao sair do grupo:', error);
+      alert('Erro ao sair do grupo');
     }
   };
 
@@ -193,13 +274,23 @@ export default function GruposEstudo() {
               className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white text-xs h-8"
               onClick={(e) => {
                 e.stopPropagation();
-                // Lógica para entrar no grupo
+                handleJoinGroup(group.id);
               }}
             >
               Participar
             </Button>
           ) : (
-            getActivityBadge("média")
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-red-600 border-red-600 hover:bg-red-50 text-xs h-8"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleLeaveGroup(group.id);
+              }}
+            >
+              Sair
+            </Button>
           )}
         </div>
       </div>
@@ -322,7 +413,7 @@ export default function GruposEstudo() {
                 Nenhum grupo visível encontrado
               </h3>
               <p className="text-gray-500 max-w-md mx-auto mt-2">
-                Não encontramos grupos com visibilidade pública no momento ou sua
+                Não encontramos grupos com visibilidade pública ou de parceiros no momento ou sua
                 busca não retornou resultados.
               </p>
             </div>

@@ -103,6 +103,7 @@ export type Database = {
           id: string
           is_publico: boolean | null
           is_visible_to_all: boolean | null
+          is_visible_to_partners: boolean | null
           membros: number
           nome: string
           permitir_visibilidade: boolean | null
@@ -123,6 +124,7 @@ export type Database = {
           id?: string
           is_publico?: boolean | null
           is_visible_to_all?: boolean | null
+          is_visible_to_partners?: boolean | null
           membros?: number
           nome: string
           permitir_visibilidade?: boolean | null
@@ -143,6 +145,7 @@ export type Database = {
           id?: string
           is_publico?: boolean | null
           is_visible_to_all?: boolean | null
+          is_visible_to_partners?: boolean | null
           membros?: number
           nome?: string
           permitir_visibilidade?: boolean | null
@@ -216,6 +219,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      parceiros: {
+        Row: {
+          created_at: string | null
+          parceiro_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          parceiro_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          parceiro_id?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {

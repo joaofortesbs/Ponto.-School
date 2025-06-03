@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -21,7 +20,7 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
     topico: "Matemática",
     cor: "#FF6B00",
     privacidade: "publico", // publico ou privado
-    visibilidadeTodos: false // permitir que todos vejam
+    visibilidade: "" // all, partners ou vazio (nenhuma)
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -109,7 +108,8 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
           cor: formData.cor,
           privado: formData.privacidade === "privado",
           is_publico: formData.privacidade === "publico",
-          is_visible_to_all: formData.visibilidadeTodos,
+          is_visible_to_all: formData.visibilidade === "all",
+          is_visible_to_partners: formData.visibilidade === "partners",
           visibilidade: "todos",
           membros: 1
         };
@@ -268,16 +268,20 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
 
         <div>
           <Label className="text-base font-medium">Visibilidade do grupo</Label>
-          <div className="flex items-center space-x-2 mt-2">
-            <Checkbox
-              id="visibilidade-todos"
-              checked={formData.visibilidadeTodos}
-              onCheckedChange={(checked) => 
-                setFormData(prev => ({ ...prev, visibilidadeTodos: !!checked }))
-              }
-            />
-            <Label htmlFor="visibilidade-todos">Permitir que todos vejam</Label>
-          </div>
+          <RadioGroup
+            value={formData.visibilidade}
+            onValueChange={(value) => setFormData(prev => ({ ...prev, visibilidade: value }))}
+            className="mt-2"
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="all" id="visibilidade-todos" />
+              <Label htmlFor="visibilidade-todos">Permitir que todos vejam</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="partners" id="visibilidade-parceiros" />
+              <Label htmlFor="visibilidade-parceiros">Permitir que meus Parceiros vejam</Label>
+            </div>
+          </RadioGroup>
         </div>
       </div>
 
