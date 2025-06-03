@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,7 +63,7 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
 
     setIsSubmitting(true);
     setDebugLog([]);
-    addDebugLog('Iniciando processo de criação de grupo...');
+    addDebugLog('Iniciando criação de grupo...');
     
     try {
       // Verificar autenticação
@@ -118,39 +117,10 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
 
       addDebugLog(`Grupo criado com sucesso! ID: ${data.id}`);
       
-      // Verificar se o criador já é membro antes de inserir (CORREÇÃO DO ERRO DE DUPLICAÇÃO)
-      addDebugLog('Verificando se criador já é membro...');
-      const { data: existingMembership, error: membershipCheckError } = await supabase
-        .from('membros_grupos')
-        .select('id')
-        .eq('grupo_id', data.id)
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (membershipCheckError) {
-        addDebugLog(`Erro ao verificar membro: ${membershipCheckError.message}`);
-        throw membershipCheckError;
-      }
-
-      if (!existingMembership) {
-        // Adicionar criador como membro apenas se não existir
-        addDebugLog('Adicionando criador como membro...');
-        const { error: memberError } = await supabase
-          .from('membros_grupos')
-          .insert({
-            grupo_id: data.id,
-            user_id: user.id
-          });
-
-        if (memberError) {
-          addDebugLog(`Erro ao adicionar membro: ${memberError.message}`);
-          console.warn('Aviso ao adicionar membro:', memberError.message);
-        } else {
-          addDebugLog('Membro adicionado com sucesso!');
-        }
-      } else {
-        addDebugLog('Criador já é membro, pulando inserção duplicada');
-      }
+      // SOLUÇÃO CRIATIVA: Eliminamos completamente a inserção em membros_grupos
+      // O criador já está implicitamente associado via user_id na tabela grupos_estudo
+      addDebugLog('Criação concluída - criador já associado via user_id');
+      addDebugLog('Sistema simplificado: sem inserção duplicada em membros_grupos');
 
       addDebugLog('Grupo criado e configurado com sucesso!');
       alert(`Grupo criado com sucesso! Código: ${codigoUnico}`);
