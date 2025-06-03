@@ -1,658 +1,428 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, Plus, Search, Calendar, MessageCircle, Star, Eye, X } from "lucide-react";
-import { motion } from "framer-motion";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Search, Plus, Users, Calendar, MessageCircle, Star, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import CreateGroupModal from "../CreateGroupModal";
-import AddGroupModal from "../AddGroupModal";
 import EntrarGrupoPorCodigoModal from "../EntrarGrupoPorCodigoModal";
-import EntrarGrupoPorCodigoForm from "../EntrarGrupoPorCodigoForm";
 
-interface StudyGroup {
+interface Grupo {
   id: string;
   nome: string;
   descricao?: string;
-  topico: string;
+  topico?: string;
   topico_nome?: string;
   topico_icon?: string;
-  cor: string;
-  membros: number;
-  created_at: string;
-  is_publico: boolean;
-  user_id: string;
   codigo_unico: string;
+  is_publico: boolean;
+  membros: number;
+  user_id: string;
+  created_at: string;
 }
 
 const topics = [
-  { value: "Matemática", label: "📏 Matemática", color: "#3B82F6" },
-  { value: "Língua Portuguesa", label: "📚 Língua Portuguesa", color: "#10B981" },
-  { value: "Física", label: "⚡ Física", color: "#F59E0B" },
-  { value: "Química", label: "🧪 Química", color: "#8B5CF6" },
-  { value: "Biologia", label: "🌿 Biologia", color: "#EF4444" },
-  { value: "História", label: "📜 História", color: "#F97316" },
-  { value: "Geografia", label: "🌍 Geografia", color: "#06B6D4" },
-  { value: "Filosofia", label: "🤔 Filosofia", color: "#6366F1" }
+  { name: 'Matemática', icon: '📊' },
+  { name: 'Física', icon: '🔬' },
+  { name: 'Química', icon: '⚗️' },
+  { name: 'Biologia', icon: '🧬' },
+  { name: 'História', icon: '📚' },
+  { name: 'Geografia', icon: '🌍' },
+  { name: 'Filosofia', icon: '🤔' },
+  { name: 'Literatura', icon: '📖' },
+  { name: 'Computação', icon: '💻' },
+  { name: 'Engenharia', icon: '⚙️' }
 ];
 
 export default function GruposEstudoView() {
-  const [myGroups, setMyGroups] = useState<StudyGroup[]>([]);
-  const [publicGroups, setPublicGroups] = useState<StudyGroup[]>([]);
-  const [topicCounts, setTopicCounts] = useState<Record<string, number>>({});
-  const [selectedTopic, setSelectedTopic] = useState<string>("");
+  const [currentView, setCurrentView] = useState<'my-groups' | 'public-groups'>('my-groups');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
+  const [meusGrupos, setMeusGrupos] = useState<Grupo[]>([]);
+  const [gruposPublicos, setGruposPublicos] = useState<Grupo[]>([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
-  const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
-  const [groupToLeave, setGroupToLeave] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<any>(null);
 
   useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-      if (user) {
-        await loadGroups();
-        await loadTopicCounts();
-      }
-      setIsLoading(false);
-    };
-    
-    getUser();
+    checkAuth();
   }, []);
 
-  const loadGroups = async (filterTopic?: string) => {
+  useEffect(() => {
+    if (currentUser) {
+      loadGroups();
+    }
+  }, [currentUser, currentView, searchTerm, selectedTopic]);
+
+  const checkAuth = async () => {
     try {
-      console.log('Loading groups...');
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        console.log('No authenticated user');
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error || !user) {
+        toast.error('Usuário não autenticado');
         return;
       }
-
-      console.log('User authenticated:', user.id);
-
-      // Carregar IDs dos grupos onde o usuário é membro
-      const { data: memberGroups, error: memberError } = await supabase
-        .from('membros_grupos')
-        .select('grupo_id')
-        .eq('user_id', user.id);
-
-      if (memberError) {
-        console.error('Error loading member groups:', memberError);
-      }
-
-      const memberGroupIds = memberGroups?.map(mg => mg.grupo_id) || [];
-
-      // Carregar Meus Grupos (criados pelo usuário OU onde é membro)
-      let myGroupsQuery = supabase
-        .from('grupos_estudo')
-        .select('*')
-        .or(`user_id.eq.${user.id},id.in.(${memberGroupIds.length > 0 ? memberGroupIds.join(',') : 'null'})`);
-
-      if (filterTopic) {
-        myGroupsQuery = myGroupsQuery.eq('topico', filterTopic);
-      }
-
-      const { data: myGroupsData, error: myGroupsError } = await myGroupsQuery;
-
-      if (myGroupsError) {
-        console.error('Error loading my groups:', myGroupsError);
-        setMyGroups([]);
-      } else {
-        console.log('My groups loaded:', myGroupsData);
-        setMyGroups(myGroupsData as StudyGroup[] || []);
-      }
-
-      // Carregar Grupos Públicos (excluindo os que o usuário criou OU é membro)
-      const excludeIds = [...memberGroupIds];
-      
-      let publicGroupsQuery = supabase
-        .from('grupos_estudo')
-        .select('*')
-        .eq('is_publico', true)
-        .neq('user_id', user.id);
-
-      if (excludeIds.length > 0) {
-        publicGroupsQuery = publicGroupsQuery.not('id', 'in', `(${excludeIds.join(',')})`);
-      }
-
-      if (filterTopic) {
-        publicGroupsQuery = publicGroupsQuery.eq('topico', filterTopic);
-      }
-
-      const { data: publicGroupsData, error: publicError } = await publicGroupsQuery;
-
-      if (publicError) {
-        console.error('Error loading public groups:', publicError);
-        setPublicGroups([]);
-      } else {
-        console.log('Public groups loaded:', publicGroupsData);
-        setPublicGroups(publicGroupsData as StudyGroup[] || []);
-      }
-
+      setCurrentUser(user);
     } catch (error) {
-      console.error('Error in loadGroups:', error);
-      setMyGroups([]);
-      setPublicGroups([]);
+      console.error('Erro ao verificar autenticação:', error);
+      toast.error('Erro ao verificar autenticação');
     }
   };
 
-  const loadTopicCounts = async () => {
+  const loadGroups = async () => {
+    if (!currentUser) return;
+    
+    setIsLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const counts: Record<string, number> = {};
-
-      // Para cada tópico, contar quantos grupos o usuário criou ou é membro
-      for (const topic of topics) {
-        try {
-          // Grupos criados
-          const { data: createdGroups, error: createdError } = await supabase
-            .from('grupos_estudo')
-            .select('id')
-            .eq('user_id', user.id)
-            .eq('topico', topic.value);
-
-          // Grupos onde é membro
-          const { data: memberGroups, error: memberError } = await supabase
-            .from('membros_grupos')
-            .select('grupo_id')
-            .eq('user_id', user.id);
-
-          if (!memberError && memberGroups) {
-            const memberGroupIds = memberGroups.map(mg => mg.grupo_id);
-            const { data: memberGroupsData, error: memberGroupsError } = await supabase
-              .from('grupos_estudo')
-              .select('id')
-              .in('id', memberGroupIds)
-              .eq('topico', topic.value);
-
-            const createdCount = createdGroups?.length || 0;
-            const memberCount = memberGroupsData?.length || 0;
-            
-            // Evitar contar duplicatas (se o usuário criou E é membro)
-            const uniqueGroups = new Set([
-              ...(createdGroups?.map(g => g.id) || []),
-              ...(memberGroupsData?.map(g => g.id) || [])
-            ]);
-            
-            counts[topic.value] = uniqueGroups.size;
-          } else {
-            counts[topic.value] = createdGroups?.length || 0;
-          }
-        } catch (error) {
-          console.error(`Error counting topic ${topic.value}:`, error);
-          counts[topic.value] = 0;
-        }
+      if (currentView === 'my-groups') {
+        await loadMeusGrupos();
+      } else {
+        await loadGruposPublicos();
       }
-
-      setTopicCounts(counts);
     } catch (error) {
-      console.error('Error loading topic counts:', error);
+      console.error('Erro ao carregar grupos:', error);
+      toast.error('Erro ao carregar grupos');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleTopicClick = (topicValue: string) => {
-    const newTopic = selectedTopic === topicValue ? "" : topicValue;
-    setSelectedTopic(newTopic);
-    loadGroups(newTopic || undefined);
+  const loadMeusGrupos = async () => {
+    const { data: memberships } = await supabase
+      .from('membros_grupos')
+      .select('grupo_id')
+      .eq('user_id', currentUser.id);
+
+    const groupIds = memberships?.map(m => m.grupo_id) || [];
+
+    let query = supabase
+      .from('grupos_estudo')
+      .select('*');
+
+    if (groupIds.length > 0) {
+      query = query.or(`user_id.eq.${currentUser.id},id.in.(${groupIds.join(',')})`);
+    } else {
+      query = query.eq('user_id', currentUser.id);
+    }
+
+    if (searchTerm) {
+      query = query.ilike('nome', `%${searchTerm}%`);
+    }
+
+    if (selectedTopic) {
+      query = query.eq('topico_nome', selectedTopic);
+    }
+
+    const { data, error } = await query.order('created_at', { ascending: false });
+
+    if (error) throw error;
+    setMeusGrupos(data || []);
   };
 
-  const handleCreateGroup = async () => {
-    setIsCreateModalOpen(false);
-    await loadGroups(selectedTopic || undefined);
-    await loadTopicCounts();
+  const loadGruposPublicos = async () => {
+    const { data: memberships } = await supabase
+      .from('membros_grupos')
+      .select('grupo_id')
+      .eq('user_id', currentUser.id);
+
+    const myGroupIds = memberships?.map(m => m.grupo_id) || [];
+
+    let query = supabase
+      .from('grupos_estudo')
+      .select('*')
+      .eq('is_publico', true)
+      .neq('user_id', currentUser.id);
+
+    if (myGroupIds.length > 0) {
+      query = query.not('id', 'in', `(${myGroupIds.join(',')})`);
+    }
+
+    if (searchTerm) {
+      query = query.ilike('nome', `%${searchTerm}%`);
+    }
+
+    if (selectedTopic) {
+      query = query.eq('topico_nome', selectedTopic);
+    }
+
+    const { data, error } = await query.order('created_at', { ascending: false });
+
+    if (error) throw error;
+    setGruposPublicos(data || []);
   };
 
-  const handleGroupAdded = async () => {
-    await loadGroups(selectedTopic || undefined);
-    await loadTopicCounts();
-  };
-
-  const handleJoinPublicGroup = async (groupId: string) => {
+  const handleJoinGroup = async (groupId: string) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        alert('Usuário não autenticado');
-        return;
-      }
-
-      // Verificar se já é membro
-      const { data: existingMember } = await supabase
-        .from('membros_grupos')
-        .select('id')
-        .eq('grupo_id', groupId)
-        .eq('user_id', user.id)
-        .single();
-
-      if (existingMember) {
-        alert('Você já faz parte deste grupo');
-        return;
-      }
-
-      // Adicionar como membro
-      const { error: memberError } = await supabase
+      const { error } = await supabase
         .from('membros_grupos')
         .insert({
           grupo_id: groupId,
-          user_id: user.id
+          user_id: currentUser.id
         });
 
-      if (memberError) {
-        console.error('Error joining group:', memberError);
-        alert('Erro ao ingressar no grupo. Tente novamente.');
-        return;
-      }
+      if (error) throw error;
 
-      alert('Você ingressou no grupo com sucesso!');
-      await loadGroups(selectedTopic || undefined);
-      await loadTopicCounts();
+      toast.success('Você ingressou no grupo com sucesso!');
+      loadGroups();
     } catch (error) {
-      console.error('Error joining public group:', error);
-      alert('Erro inesperado. Tente novamente.');
+      console.error('Erro ao ingressar no grupo:', error);
+      toast.error('Erro ao ingressar no grupo');
     }
   };
 
-  const handleLeaveGroup = (groupId: string) => {
-    setGroupToLeave(groupId);
-    setIsLeaveModalOpen(true);
-  };
+  const handleLeaveGroup = async (groupId: string) => {
+    if (!window.confirm('Você tem certeza que deseja sair deste grupo?')) {
+      return;
+    }
 
-  const confirmLeaveGroup = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        alert('Usuário não autenticado');
-        return;
-      }
-
-      // Remover da tabela membros_grupos
-      const { error: deleteError } = await supabase
+      const { error } = await supabase
         .from('membros_grupos')
         .delete()
-        .eq('grupo_id', groupToLeave)
-        .eq('user_id', user.id);
+        .eq('grupo_id', groupId)
+        .eq('user_id', currentUser.id);
 
-      if (deleteError) {
-        console.error('Error leaving group:', deleteError);
-        alert('Erro ao sair do grupo. Tente novamente.');
-        return;
-      }
+      if (error) throw error;
 
-      alert('Você saiu do grupo com sucesso!');
-      setIsLeaveModalOpen(false);
-      setGroupToLeave("");
-      await loadGroups(selectedTopic || undefined);
-      await loadTopicCounts();
+      toast.success('Você saiu do grupo com sucesso!');
+      loadGroups();
     } catch (error) {
-      console.error('Error leaving group:', error);
-      alert('Erro inesperado. Tente novamente.');
+      console.error('Erro ao sair do grupo:', error);
+      toast.error('Erro ao sair do grupo');
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR');
+  const scrollTopics = (direction: 'left' | 'right') => {
+    const container = document.querySelector('.topics-carousel');
+    if (container) {
+      const scrollAmount = 150;
+      container.scrollBy({
+        left: direction === 'right' ? scrollAmount : -scrollAmount,
+        behavior: 'smooth'
+      });
+    }
   };
 
-  if (isLoading) {
-    return (
-      <Card className="w-full bg-white dark:bg-[#0A2540] border-[#E0E1DD] dark:border-white/10">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-xl font-bold text-[#29335C] dark:text-white flex items-center gap-2">
-            <Users className="h-5 w-5 text-[#FF6B00]" />
-            Grupos de Estudo
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8">
-            <p className="text-[#64748B] dark:text-white/60">
-              Carregando...
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (!user) {
-    return (
-      <Card className="w-full bg-white dark:bg-[#0A2540] border-[#E0E1DD] dark:border-white/10">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-xl font-bold text-[#29335C] dark:text-white flex items-center gap-2">
-            <Users className="h-5 w-5 text-[#FF6B00]" />
-            Grupos de Estudo
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8">
-            <p className="text-[#64748B] dark:text-white/60">
-              Faça login para acessar os grupos de estudo.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  const currentGroups = currentView === 'my-groups' ? meusGrupos : gruposPublicos;
 
   return (
-    <Card className="w-full bg-white dark:bg-[#0A2540] border-[#E0E1DD] dark:border-white/10">
-      <CardHeader className="pb-4">
-        <div className="flex justify-between items-start">
-          <div>
-            <CardTitle className="text-xl font-bold text-[#29335C] dark:text-white flex items-center gap-2">
-              <Users className="h-5 w-5 text-[#FF6B00]" />
-              Grupos de Estudo
-            </CardTitle>
-            <p className="text-sm text-[#64748B] dark:text-white/60 mt-1">
-              Conecte-se e aprenda com seus colegas
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <h3 className="text-lg font-semibold text-[#29335C] dark:text-white">
+            Grupos de Estudos
+          </h3>
+          <Badge variant="secondary" className="bg-[#FF6B00]/10 text-[#FF6B00]">
+            {meusGrupos.length} grupos
+          </Badge>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => setIsJoinModalOpen(true)}
+            variant="outline"
+            size="sm"
+            className="border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10"
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            Entrar em Grupo
+          </Button>
+          <Button
+            onClick={() => setIsCreateModalOpen(true)}
+            size="sm"
+            className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white"
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            Criar Grupo
+          </Button>
+        </div>
+      </div>
+
+      {/* Topics Carousel */}
+      <div className="relative">
+        <div className="topics-carousel flex gap-2 overflow-x-auto scroll-smooth pb-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <style jsx>{`
+            .topics-carousel::-webkit-scrollbar {
+              display: none;
+            }
+          `}</style>
+          <button
+            onClick={() => setSelectedTopic(null)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+              selectedTopic === null
+                ? 'bg-[#FF6B00] text-white'
+                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+            }`}
+          >
+            Todos
+          </button>
+          {topics.map((topic) => (
+            <button
+              key={topic.name}
+              onClick={() => setSelectedTopic(topic.name)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-2 ${
+                selectedTopic === topic.name
+                  ? 'bg-[#FF6B00] text-white'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+              }`}
+            >
+              <span>{topic.icon}</span>
+              {topic.name}
+            </button>
+          ))}
+        </div>
+        <Button
+          onClick={() => scrollTopics('right')}
+          variant="ghost"
+          size="sm"
+          className="absolute right-0 top-1/2 -translate-y-1/2 bg-white dark:bg-gray-800 shadow-md hover:shadow-lg"
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
+
+      {/* Controls */}
+      <div className="flex items-center gap-4">
+        <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+          <button
+            onClick={() => setCurrentView('my-groups')}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              currentView === 'my-groups'
+                ? 'bg-[#FF6B00] text-white shadow-sm'
+                : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+            }`}
+          >
+            Meus Grupos
+          </button>
+          <button
+            onClick={() => setCurrentView('public-groups')}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              currentView === 'public-groups'
+                ? 'bg-[#FF6B00] text-white shadow-sm'
+                : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+            }`}
+          >
+            Grupos Públicos
+          </button>
+        </div>
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input
+            placeholder="Pesquisar grupos..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+      </div>
+
+      {/* Groups Grid */}
+      <div className="space-y-4">
+        {isLoading ? (
+          <div className="text-center py-8">
+            <p className="text-gray-500">Carregando grupos...</p>
+          </div>
+        ) : currentGroups.length === 0 ? (
+          <div className="text-center py-8">
+            <Users className="h-12 w-12 mx-auto text-gray-400 mb-3" />
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+              {currentView === 'my-groups' ? 'Nenhum grupo encontrado' : 'Nenhum grupo público disponível'}
+            </h3>
+            <p className="text-gray-500 mt-2">
+              {currentView === 'my-groups' 
+                ? 'Você ainda não participa de nenhum grupo de estudos ou sua busca não retornou resultados.'
+                : 'Não há grupos públicos disponíveis no momento ou sua busca não retornou resultados.'
+              }
             </p>
           </div>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setIsJoinModalOpen(true)}
-              className="text-[#FF6B00] border-[#FF6B00] hover:bg-[#FF6B00] hover:text-white"
-            >
-              <Search className="h-4 w-4 mr-1" />
-              Entrar
-            </Button>
-            <Button
-              size="sm"
-              onClick={() => setIsCreateModalOpen(true)}
-              className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white"
-            >
-              <Plus className="h-4 w-4 mr-1" />
-              Criar Grupo
-            </Button>
-          </div>
-        </div>
-      </CardHeader>
-      
-      <CardContent className="space-y-6">
-        {/* Campo para entrar por código */}
-        <EntrarGrupoPorCodigoForm onGroupJoined={handleGroupAdded} />
-
-        {/* Tópicos de Estudo */}
-        <div>
-          <div className="flex justify-between items-center mb-3">
-            <h3 className="text-lg font-semibold text-[#29335C] dark:text-white">
-              Tópicos de Estudo
-            </h3>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleTopicClick("")}
-              className="text-[#64748B] hover:text-[#FF6B00]"
-            >
-              Ver todos
-            </Button>
-          </div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-            {topics.map((topic) => (
-              <motion.button
-                key={topic.value}
-                onClick={() => handleTopicClick(topic.value)}
-                className={`p-3 rounded-lg text-left transition-all duration-200 ${
-                  selectedTopic === topic.value
-                    ? 'ring-2 ring-[#FF6B00] shadow-md'
-                    : 'hover:shadow-md'
-                }`}
-                style={{ 
-                  backgroundColor: selectedTopic === topic.value ? topic.color : `${topic.color}20`,
-                  color: selectedTopic === topic.value ? 'white' : topic.color
-                }}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {currentGroups.map((grupo) => (
+              <div
+                key={grupo.id}
+                className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow"
               >
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">{topic.label.split(' ')[0]}</span>
-                  <div>
-                    <div className="font-medium text-sm">
-                      {topic.label.substring(topic.label.indexOf(' ') + 1)}
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    {grupo.topico_icon && <span className="text-lg">{grupo.topico_icon}</span>}
+                    <div>
+                      <h4 className="font-semibold text-[#29335C] dark:text-white text-sm">
+                        {grupo.nome}
+                      </h4>
+                      {grupo.topico_nome && (
+                        <p className="text-xs text-gray-500">{grupo.topico_nome}</p>
+                      )}
                     </div>
-                    <div className="text-xs opacity-75">
-                      {topicCounts[topic.value] || 0} grupos
-                    </div>
+                  </div>
+                  <Badge variant={grupo.is_publico ? "default" : "secondary"} className="text-xs">
+                    {grupo.is_publico ? 'Público' : 'Privado'}
+                  </Badge>
+                </div>
+
+                {grupo.descricao && (
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-3 line-clamp-2">
+                    {grupo.descricao}
+                  </p>
+                )}
+
+                <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
+                  <div className="flex items-center gap-1">
+                    <Users className="h-3 w-3" />
+                    <span>{grupo.membros} membros</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span>Código: {grupo.codigo_unico}</span>
                   </div>
                 </div>
-              </motion.button>
+
+                <div className="flex gap-2">
+                  {currentView === 'my-groups' ? (
+                    <Button
+                      onClick={() => handleLeaveGroup(grupo.id)}
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 text-red-600 border-red-200 hover:bg-red-50 text-xs"
+                    >
+                      Sair do Grupo
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={() => handleJoinGroup(grupo.id)}
+                      size="sm"
+                      className="flex-1 bg-[#FF6B00] hover:bg-[#FF8C40] text-white text-xs"
+                    >
+                      Participar
+                    </Button>
+                  )}
+                </div>
+              </div>
             ))}
           </div>
-        </div>
-
-        {/* Meus Grupos */}
-        <div>
-          <h3 className="text-lg font-semibold text-[#29335C] dark:text-white mb-3">
-            Meus Grupos {selectedTopic && `- ${selectedTopic}`}
-          </h3>
-          
-          {myGroups.length > 0 ? (
-            <div className="space-y-3">
-              {myGroups.map((group) => (
-                <motion.div
-                  key={group.id}
-                  className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all duration-200 cursor-pointer"
-                  style={{ borderLeftColor: group.cor, borderLeftWidth: '4px' }}
-                  whileHover={{ scale: 1.01 }}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-[#29335C] dark:text-white">
-                        {group.nome}
-                      </h4>
-                      {group.descricao && (
-                        <p className="text-sm text-[#64748B] dark:text-white/60 mt-1">
-                          {group.descricao}
-                        </p>
-                      )}
-                      <div className="flex items-center gap-4 mt-2 text-xs text-[#64748B] dark:text-white/60">
-                        <span className="flex items-center gap-1">
-                          {group.topico_icon || "📚"} {group.topico_nome || group.topico}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Users className="h-3 w-3" />
-                          {group.membros} membros
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          {formatDate(group.created_at)}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          Código: {group.codigo_unico}
-                        </span>
-                        {group.is_publico && (
-                          <span className="flex items-center gap-1 text-green-600">
-                            <Star className="h-3 w-3" />
-                            Público
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="sm">
-                        <MessageCircle className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleLeaveGroup(group.id)}
-                        className="text-red-600 border-red-300 hover:bg-red-50 hover:text-red-700"
-                      >
-                        <X className="h-4 w-4 mr-1" />
-                        Sair
-                      </Button>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
-              <Users className="h-12 w-12 mx-auto text-gray-400 mb-3" />
-              <h4 className="text-lg font-medium text-[#29335C] dark:text-white mb-2">
-                {selectedTopic ? `Nenhum grupo de ${selectedTopic}` : 'Nenhum grupo ainda'}
-              </h4>
-              <p className="text-[#64748B] dark:text-white/60 mb-4">
-                {selectedTopic 
-                  ? `Você ainda não criou grupos de ${selectedTopic}.`
-                  : 'Você ainda não criou nenhum grupo de estudos.'
-                }
-              </p>
-              <Button
-                onClick={() => setIsCreateModalOpen(true)}
-                className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white"
-              >
-                <Plus className="h-4 w-4 mr-1" />
-                Criar Grupo
-              </Button>
-            </div>
-          )}
-        </div>
-
-        {/* Grupos Públicos */}
-        <div>
-          <h3 className="text-lg font-semibold text-[#29335C] dark:text-white mb-3">
-            Grupos Públicos {selectedTopic && `- ${selectedTopic}`}
-          </h3>
-          
-          {publicGroups.length > 0 ? (
-            <div className="space-y-3">
-              {publicGroups.map((group) => (
-                <motion.div
-                  key={group.id}
-                  className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all duration-200 cursor-pointer"
-                  style={{ borderLeftColor: group.cor, borderLeftWidth: '4px' }}
-                  whileHover={{ scale: 1.01 }}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-[#29335C] dark:text-white">
-                        {group.nome}
-                      </h4>
-                      {group.descricao && (
-                        <p className="text-sm text-[#64748B] dark:text-white/60 mt-1">
-                          {group.descricao}
-                        </p>
-                      )}
-                      <div className="flex items-center gap-4 mt-2 text-xs text-[#64748B] dark:text-white/60">
-                        <span className="flex items-center gap-1">
-                          {group.topico_icon || "📚"} {group.topico_nome || group.topico}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Users className="h-3 w-3" />
-                          {group.membros} membros
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          {formatDate(group.created_at)}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          Código: {group.codigo_unico}
-                        </span>
-                        <span className="flex items-center gap-1 text-green-600">
-                          <Eye className="h-3 w-3" />
-                          Público
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleJoinPublicGroup(group.id)}
-                        className="text-[#FF6B00] border-[#FF6B00] hover:bg-[#FF6B00] hover:text-white"
-                      >
-                        Participar
-                      </Button>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
-              <Search className="h-12 w-12 mx-auto text-gray-400 mb-3" />
-              <h4 className="text-lg font-medium text-[#29335C] dark:text-white mb-2">
-                {selectedTopic ? `Nenhum grupo público de ${selectedTopic}` : 'Nenhum grupo público disponível'}
-              </h4>
-              <p className="text-[#64748B] dark:text-white/60 mb-4">
-                {selectedTopic 
-                  ? `Não há grupos públicos de ${selectedTopic} disponíveis no momento.`
-                  : 'Não há grupos públicos disponíveis no momento.'
-                }
-              </p>
-              <Button
-                variant="outline"
-                onClick={() => setIsJoinModalOpen(true)}
-                className="text-[#FF6B00] border-[#FF6B00] hover:bg-[#FF6B00] hover:text-white"
-              >
-                <Search className="h-4 w-4 mr-1" />
-                Buscar Grupos
-              </Button>
-            </div>
-          )}
-        </div>
-      </CardContent>
+        )}
+      </div>
 
       {/* Modals */}
       <CreateGroupModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        onSubmit={handleCreateGroup}
-      />
-
-      <AddGroupModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        onGroupAdded={handleGroupAdded}
+        onSubmit={() => {
+          setIsCreateModalOpen(false);
+          loadGroups();
+        }}
       />
 
       <EntrarGrupoPorCodigoModal
         isOpen={isJoinModalOpen}
         onClose={() => setIsJoinModalOpen(false)}
-        onGroupJoined={handleGroupAdded}
+        onGroupJoined={() => {
+          setIsJoinModalOpen(false);
+          loadGroups();
+        }}
       />
-
-      {/* Modal de Confirmação para Sair do Grupo */}
-      {isLeaveModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-[#0A2540] p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold text-[#29335C] dark:text-white mb-4">
-              Confirmar Saída
-            </h3>
-            <p className="text-[#64748B] dark:text-white/60 mb-6">
-              Você tem certeza que deseja sair deste grupo? Esta ação não pode ser desfeita.
-            </p>
-            <div className="flex gap-3 justify-end">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setIsLeaveModalOpen(false);
-                  setGroupToLeave("");
-                }}
-              >
-                Cancelar
-              </Button>
-              <Button
-                onClick={confirmLeaveGroup}
-                className="bg-red-600 hover:bg-red-700 text-white"
-              >
-                Sair do Grupo
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-    </Card>
+    </div>
   );
 }
