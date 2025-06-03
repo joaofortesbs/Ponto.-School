@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Search, Plus, Users, Calendar, MessageCircle, Star, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 import CreateGroupModal from "../CreateGroupModal";
 import EntrarGrupoPorCodigoModal from "../EntrarGrupoPorCodigoModal";
 
@@ -39,6 +39,7 @@ const topics = [
 ];
 
 export default function GruposEstudoView() {
+  const { toast } = useToast();
   const [currentView, setCurrentView] = useState<'my-groups' | 'public-groups'>('my-groups');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
@@ -63,13 +64,21 @@ export default function GruposEstudoView() {
     try {
       const { data: { user }, error } = await supabase.auth.getUser();
       if (error || !user) {
-        toast.error('Usuário não autenticado');
+        toast({
+          title: "Erro",
+          description: "Usuário não autenticado",
+          variant: "destructive"
+        });
         return;
       }
       setCurrentUser(user);
     } catch (error) {
       console.error('Erro ao verificar autenticação:', error);
-      toast.error('Erro ao verificar autenticação');
+      toast({
+        title: "Erro",
+        description: "Erro ao verificar autenticação",
+        variant: "destructive"
+      });
     }
   };
 
@@ -85,7 +94,11 @@ export default function GruposEstudoView() {
       }
     } catch (error) {
       console.error('Erro ao carregar grupos:', error);
-      toast.error('Erro ao carregar grupos');
+      toast({
+        title: "Erro",
+        description: "Erro ao carregar grupos",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -166,11 +179,18 @@ export default function GruposEstudoView() {
 
       if (error) throw error;
 
-      toast.success('Você ingressou no grupo com sucesso!');
+      toast({
+        title: "Sucesso",
+        description: "Você ingressou no grupo com sucesso!"
+      });
       loadGroups();
     } catch (error) {
       console.error('Erro ao ingressar no grupo:', error);
-      toast.error('Erro ao ingressar no grupo');
+      toast({
+        title: "Erro",
+        description: "Erro ao ingressar no grupo",
+        variant: "destructive"
+      });
     }
   };
 
@@ -188,11 +208,18 @@ export default function GruposEstudoView() {
 
       if (error) throw error;
 
-      toast.success('Você saiu do grupo com sucesso!');
+      toast({
+        title: "Sucesso",
+        description: "Você saiu do grupo com sucesso!"
+      });
       loadGroups();
     } catch (error) {
       console.error('Erro ao sair do grupo:', error);
-      toast.error('Erro ao sair do grupo');
+      toast({
+        title: "Erro",
+        description: "Erro ao sair do grupo",
+        variant: "destructive"
+      });
     }
   };
 
