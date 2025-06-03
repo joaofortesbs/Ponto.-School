@@ -91,7 +91,7 @@ interface Reward {
 export default function ConquistasPage() {
   const { theme } = useTheme();
   const isLightMode = theme === "light";
-  const [activeTab, setActiveTab] = useState<'overview' | 'all' | 'rewards' | 'ranking'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'all' | 'premiacoes' | 'rewards' | 'ranking'>('overview');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
@@ -150,6 +150,132 @@ export default function ConquistasPage() {
 
   // Dados de recompensas para novos usuários (vazio inicialmente)
   const userRewards: Reward[] = [];
+
+  // Dados das premiações físicas
+  interface Premiacao {
+    id: string;
+    name: string;
+    subtitle: string;
+    description: string;
+    image: string;
+    rarity: 'comum' | 'raro' | 'epico' | 'lendario';
+    pontoSchoolsRequired: number;
+    isAvailable: boolean;
+    category: 'material_escolar' | 'acessorio' | 'utilidade';
+  }
+
+  const premiacoes: Premiacao[] = [
+    {
+      id: '1',
+      name: 'Kit de Materiais Escolares',
+      subtitle: 'Arsenal do Gênio',
+      description: 'Kit completo com lápis, canetas, réguas, borrachas e muito mais para seus estudos.',
+      image: '/images/kit-materiais.jpg',
+      rarity: 'lendario',
+      pontoSchoolsRequired: 5000,
+      isAvailable: true,
+      category: 'material_escolar'
+    },
+    {
+      id: '2',
+      name: 'Garrafa',
+      subtitle: 'Dose da Sabedoria',
+      description: 'Garrafa térmica exclusiva Ponto School para te manter hidratado durante os estudos.',
+      image: '/images/garrafa.jpg',
+      rarity: 'raro',
+      pontoSchoolsRequired: 1500,
+      isAvailable: true,
+      category: 'utilidade'
+    },
+    {
+      id: '3',
+      name: 'Caderno',
+      subtitle: 'Anotação Lendária',
+      description: 'Caderno premium com design exclusivo e papel de alta qualidade.',
+      image: '/images/caderno.jpg',
+      rarity: 'epico',
+      pontoSchoolsRequired: 2000,
+      isAvailable: true,
+      category: 'material_escolar'
+    },
+    {
+      id: '4',
+      name: 'Mochila',
+      subtitle: 'Manto do Conhecimento',
+      description: 'Mochila resistente e espaçosa com compartimentos especiais para estudantes.',
+      image: '/images/mochila.jpg',
+      rarity: 'lendario',
+      pontoSchoolsRequired: 4500,
+      isAvailable: true,
+      category: 'acessorio'
+    },
+    {
+      id: '5',
+      name: 'Lápis & Canetas',
+      subtitle: 'Escrita Épica',
+      description: 'Set premium de lápis e canetas para uma escrita suave e precisa.',
+      image: '/images/lapis-canetas.jpg',
+      rarity: 'epico',
+      pontoSchoolsRequired: 1200,
+      isAvailable: true,
+      category: 'material_escolar'
+    },
+    {
+      id: '6',
+      name: 'Borracha',
+      subtitle: 'Escudo contra Erros',
+      description: 'Borracha de alta qualidade que apaga sem danificar o papel.',
+      image: '/images/borracha.jpg',
+      rarity: 'comum',
+      pontoSchoolsRequired: 300,
+      isAvailable: true,
+      category: 'material_escolar'
+    },
+    {
+      id: '7',
+      name: 'Caneca',
+      subtitle: 'Cálice da Inspiração',
+      description: 'Caneca térmica com design motivacional para seus momentos de estudo.',
+      image: '/images/caneca.jpg',
+      rarity: 'raro',
+      pontoSchoolsRequired: 800,
+      isAvailable: true,
+      category: 'utilidade'
+    },
+    {
+      id: '8',
+      name: 'Pulseira',
+      subtitle: 'Bracelete do Estudioso',
+      description: 'Pulseira exclusiva Ponto School com design minimalista e elegante.',
+      image: '/images/pulseira.jpg',
+      rarity: 'raro',
+      pontoSchoolsRequired: 1000,
+      isAvailable: true,
+      category: 'acessorio'
+    },
+    {
+      id: '9',
+      name: 'Boné',
+      subtitle: 'Coroa da Sabedoria',
+      description: 'Boné exclusivo Ponto School com proteção UV e design moderno.',
+      image: '/images/bone.jpg',
+      rarity: 'epico',
+      pontoSchoolsRequired: 1800,
+      isAvailable: true,
+      category: 'acessorio'
+    },
+    {
+      id: '10',
+      name: 'Pasta',
+      subtitle: 'Escudo do Aprendizado',
+      description: 'Pasta organizadora resistente para manter seus materiais sempre em ordem.',
+      image: '/images/pasta.jpg',
+      rarity: 'raro',
+      pontoSchoolsRequired: 1300,
+      isAvailable: true,
+      category: 'material_escolar'
+    }
+  ];
 
   // Funções auxiliares para recompensas
   const getRewardIcon = (type: string) => {
@@ -220,6 +346,41 @@ export default function ConquistasPage() {
     if (reward.action) {
       reward.action.onClick();
     }
+  };
+
+  // Funções auxiliares para premiações
+  const getRarityColor = (rarity: string) => {
+    switch (rarity) {
+      case 'comum': return 'from-gray-400 to-gray-600';
+      case 'raro': return 'from-blue-400 to-blue-600';
+      case 'epico': return 'from-purple-400 to-purple-600';
+      case 'lendario': return 'from-yellow-400 to-yellow-600';
+      default: return 'from-gray-400 to-gray-600';
+    }
+  };
+
+  const getRarityBadgeColor = (rarity: string) => {
+    switch (rarity) {
+      case 'comum': return 'bg-gray-100 text-gray-800 dark:bg-gray-500/20 dark:text-gray-300';
+      case 'raro': return 'bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-300';
+      case 'epico': return 'bg-purple-100 text-purple-800 dark:bg-purple-500/20 dark:text-purple-300';
+      case 'lendario': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-500/20 dark:text-yellow-300';
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-500/20 dark:text-gray-300';
+    }
+  };
+
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case 'material_escolar': return <BookOpen className="h-4 w-4" />;
+      case 'acessorio': return <Crown className="h-4 w-4" />;
+      case 'utilidade': return <Coffee className="h-4 w-4" />;
+      default: return <Gift className="h-4 w-4" />;
+    }
+  };
+
+  const handlePremiacaoRedeem = (premiacao: Premiacao) => {
+    // Aqui implementar lógica de resgate
+    console.log(`Resgatando premiação: ${premiacao.name}`);
   };
 
   // Filtrar recompensas
@@ -876,6 +1037,7 @@ export default function ConquistasPage() {
             {[
               { id: 'overview', label: 'Visão Geral', icon: <Star className="h-4 w-4" /> },
               { id: 'all', label: 'Todas', icon: <Trophy className="h-4 w-4" /> },
+              { id: 'premiacoes', label: 'Premiações', icon: <Crown className="h-4 w-4" /> },
               { id: 'rewards', label: 'Recompensas', icon: <Gift className="h-4 w-4" /> },
               { id: 'ranking', label: 'Ranking', icon: <Medal className="h-4 w-4" /> }
             ].map((tab) => (
@@ -1092,6 +1254,169 @@ export default function ConquistasPage() {
                   </p>
                 </div>
               )}
+            </motion.div>
+          )}
+
+          {activeTab === 'premiacoes' && (
+            <motion.div
+              key="premiacoes"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-6"
+            >
+              {/* Cabeçalho da Aba */}
+              <div className="text-center space-y-2">
+                <motion.h2 
+                  className={`text-3xl font-bold ${
+                    isLightMode ? 'text-gray-800' : 'text-white'
+                  }`}
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  🏆 Premiações Exclusivas
+                </motion.h2>
+                <motion.p 
+                  className={`text-lg ${
+                    isLightMode ? 'text-gray-600' : 'text-white/70'
+                  }`}
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                >
+                  Resgate prêmios físicos incríveis com seus Ponto Schools!
+                </motion.p>
+              </div>
+
+              {/* Grid de Premiações */}
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {premiacoes.map((premiacao, index) => (
+                  <motion.div
+                    key={premiacao.id}
+                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className={`
+                      group relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-500
+                      backdrop-blur-xl border hover:border-orange-400/30 hover:shadow-2xl
+                      ${isLightMode 
+                        ? 'bg-white/90 border-gray-200 hover:shadow-gray-200/50' 
+                        : 'bg-white/10 border-white/20 hover:shadow-orange-500/20'
+                      }
+                      hover:scale-105 h-80
+                    `}
+                    onClick={() => handlePremiacaoRedeem(premiacao)}
+                  >
+                    {/* Imagem da Premiação (70% do card) */}
+                    <div className="relative h-56 overflow-hidden">
+                      {/* Placeholder para imagem - 70% do card */}
+                      <div className={`
+                        w-full h-full bg-gradient-to-br ${getRarityColor(premiacao.rarity)}
+                        flex items-center justify-center
+                      `}>
+                        <div className="text-center text-white">
+                          {getCategoryIcon(premiacao.category)}
+                          <div className="mt-2 text-xs opacity-80">
+                            {premiacao.name}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Badge de Raridade */}
+                      <div className={`
+                        absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-semibold
+                        ${getRarityBadgeColor(premiacao.rarity)} backdrop-blur-md
+                      `}>
+                        {premiacao.rarity.charAt(0).toUpperCase() + premiacao.rarity.slice(1)}
+                      </div>
+
+                      {/* Indicador de Disponibilidade */}
+                      {!premiacao.isAvailable && (
+                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                          <span className="text-white font-bold text-sm">Indisponível</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Informações da Premiação (30% do card) */}
+                    <div className="p-4 h-24 flex flex-col justify-between">
+                      <div>
+                        <h3 className={`font-bold text-sm line-clamp-1 ${
+                          isLightMode ? 'text-gray-800' : 'text-white'
+                        }`}>
+                          {premiacao.name}
+                        </h3>
+                        <p className={`text-xs font-medium text-orange-500 line-clamp-1`}>
+                          {premiacao.subtitle}
+                        </p>
+                      </div>
+
+                      {/* Preço e Botão */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1">
+                          <Gift className="h-4 w-4 text-orange-500" />
+                          <span className={`text-sm font-bold ${
+                            isLightMode ? 'text-gray-800' : 'text-white'
+                          }`}>
+                            {premiacao.pontoSchoolsRequired}
+                          </span>
+                        </div>
+                        
+                        <Button
+                          size="sm"
+                          disabled={!premiacao.isAvailable || userStats.totalPontoCoins < premiacao.pontoSchoolsRequired}
+                          className={`
+                            text-xs px-3 py-1 h-7
+                            ${userStats.totalPontoCoins >= premiacao.pontoSchoolsRequired && premiacao.isAvailable
+                              ? 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white'
+                              : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                            }
+                          `}
+                        >
+                          {userStats.totalPontoCoins >= premiacao.pontoSchoolsRequired && premiacao.isAvailable
+                            ? 'Resgatar'
+                            : 'Insuficiente'
+                          }
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Efeito hover */}
+                    <div className={`
+                      absolute inset-0 bg-gradient-to-t from-orange-500/10 to-transparent 
+                      opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none
+                    `} />
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* Informações adicionais */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className={`
+                  backdrop-blur-xl border rounded-2xl p-6 text-center
+                  ${isLightMode 
+                    ? 'bg-white/80 border-gray-200' 
+                    : 'bg-white/10 border-white/20'
+                  }
+                `}
+              >
+                <div className="flex items-center justify-center gap-2 mb-3">
+                  <Gift className="h-5 w-5 text-orange-500" />
+                  <span className={`font-medium ${
+                    isLightMode ? 'text-gray-800' : 'text-white'
+                  }`}>
+                    Seus Ponto Schools: {userStats.totalPontoCoins}
+                  </span>
+                </div>
+                <p className={`text-sm ${
+                  isLightMode ? 'text-gray-600' : 'text-white/70'
+                }`}>
+                  Complete conquistas e participe das atividades da plataforma para ganhar mais Ponto Schools!
+                </p>
+              </motion.div>
             </motion.div>
           )}
 
