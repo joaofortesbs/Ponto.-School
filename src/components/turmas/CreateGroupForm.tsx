@@ -41,42 +41,11 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
     "#EF4444", "#8B5CF6", "#06B6D4", "#6366F1"
   ];
 
-  const generateUniqueCode = async (): Promise<string> => {
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let attempts = 0;
-    const maxAttempts = 10;
-    
-    while (attempts < maxAttempts) {
-      let code = '';
-      for (let i = 0; i < 8; i++) {
-        code += characters.charAt(Math.floor(Math.random() * characters.length));
-      }
-      
-      try {
-        const { data, error } = await supabase
-          .from('grupos_estudo')
-          .select('codigo_unico')
-          .eq('codigo_unico', code)
-          .maybeSingle();
-        
-        if (error) {
-          console.error('Erro ao verificar código único:', error);
-          attempts++;
-          continue;
-        }
-        
-        if (!data) {
-          return code;
-        }
-        
-        attempts++;
-      } catch (error) {
-        console.error('Erro ao gerar código único:', error);
-        attempts++;
-      }
-    }
-    
-    throw new Error('Não foi possível gerar um código único após várias tentativas');
+  // Função simplificada para gerar código único usando timestamp + random
+  const generateSimpleUniqueCode = (): string => {
+    const timestamp = Date.now().toString(36);
+    const random = Math.random().toString(36).substring(2, 6);
+    return (timestamp + random).toUpperCase().substring(0, 8);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -90,7 +59,8 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
     setIsSubmitting(true);
     
     try {
-      const codigoUnico = await generateUniqueCode();
+      // Gerar código único sem consultar a base primeiro (evita problemas de RLS)
+      const codigoUnico = generateSimpleUniqueCode();
       const selectedTopic = topics.find(t => t.value === formData.topico);
       
       const { data: { user } } = await supabase.auth.getUser();
@@ -100,6 +70,21 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
         setIsSubmitting(false);
         return;
       }
+
+      console.log('Tentando criar grupo com dados:', {
+        codigo_unico: codigoUnico,
+        user_id: user.id,
+        nome: formData.nome.trim(),
+        descricao: formData.descricao.trim() || null,
+        topico: formData.topico,
+        topico_nome: selectedTopic?.label || formData.topico,
+        topico_icon: selectedTopic?.label.split(' ')[0] || "📚",
+        cor: formData.cor,
+        privado: formData.privado,
+        is_publico: !formData.privado,
+        visibilidade: formData.visibilidade,
+        membros: 1
+      });
 
       const groupData = {
         codigo_unico: codigoUnico,
@@ -123,7 +108,32 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
         .single();
 
       if (error) {
-        console.error('Erro ao criar grupo:', error);
+        console.error('Erro detalhado ao criar grupo:', error);
+        
+        // Se houve conflito de código único, tenta novamente com novo código
+        if (error.code === '23505' && error.message.includes('codigo_unico')) {
+          console.log('Código duplicado, tentando novamente...');
+          const newCode = generateSimpleUniqueCode();
+          const retryData = { ...groupData, codigo_unico: newCode };
+          
+          const { data: retryResult, error: retryError } = await supabase
+            .from('grupos_estudo')
+            .insert(retryData)
+            .select()
+            .single();
+          
+          if (retryError) {
+            console.error('Erro na segunda tentativa:', retryError);
+            alert('Erro ao criar grupo. Tente novamente.');
+            setIsSubmitting(false);
+            return;
+          }
+          
+          alert(`Grupo criado com sucesso! Código: ${newCode}`);
+          onSubmit({ ...retryData, ...retryResult });
+          return;
+        }
+        
         alert('Erro ao criar grupo. Tente novamente.');
         setIsSubmitting(false);
         return;

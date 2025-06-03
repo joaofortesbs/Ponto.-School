@@ -58,7 +58,12 @@ export default function GruposEstudoView() {
   const loadMyGroups = async (filterTopic?: string) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        console.log('Usuário não autenticado');
+        return;
+      }
+
+      console.log('Carregando grupos do usuário:', user.id);
 
       // Buscar grupos onde o usuário é membro através da join table
       const { data: memberGroups, error: memberError } = await supabase
@@ -81,9 +86,31 @@ export default function GruposEstudoView() {
         .eq('user_id', user.id);
 
       if (memberError) {
-        console.error('Erro ao carregar grupos:', memberError);
+        console.error('Erro ao carregar grupos através de membros_grupos:', memberError);
+        
+        // Fallback: tentar buscar diretamente na tabela grupos_estudo
+        const { data: directGroups, error: directError } = await supabase
+          .from('grupos_estudo')
+          .select('*')
+          .eq('user_id', user.id);
+        
+        if (directError) {
+          console.error('Erro ao carregar grupos diretamente:', directError);
+          return;
+        }
+        
+        console.log('Grupos carregados diretamente:', directGroups);
+        let groups = directGroups as StudyGroup[] || [];
+        
+        if (filterTopic) {
+          groups = groups.filter(group => group.topico === filterTopic);
+        }
+        
+        setMyGroups(groups);
         return;
       }
+
+      console.log('Grupos carregados através de membros:', memberGroups);
 
       let groups = memberGroups
         ?.map(mg => mg.grupos_estudo)
@@ -108,20 +135,33 @@ export default function GruposEstudoView() {
 
       // Para cada tópico, contar quantos grupos o usuário participa
       for (const topic of topics) {
-        const { data: userGroups, error } = await supabase
-          .from('membros_grupos')
-          .select(`
-            grupos_estudo!inner (
-              topico
-            )
-          `)
-          .eq('user_id', user.id);
+        try {
+          // Primeiro tenta através da tabela de membros
+          const { data: userGroups, error: memberError } = await supabase
+            .from('membros_grupos')
+            .select(`
+              grupos_estudo!inner (
+                topico
+              )
+            `)
+            .eq('user_id', user.id);
 
-        if (!error && userGroups) {
-          counts[topic.value] = userGroups.filter(
-            ug => ug.grupos_estudo?.topico === topic.value
-          ).length;
-        } else {
+          if (!memberError && userGroups) {
+            counts[topic.value] = userGroups.filter(
+              ug => ug.grupos_estudo?.topico === topic.value
+            ).length;
+          } else {
+            // Fallback: buscar diretamente na tabela grupos_estudo
+            const { data: directGroups, error: directError } = await supabase
+              .from('grupos_estudo')
+              .select('topico')
+              .eq('user_id', user.id)
+              .eq('topico', topic.value);
+            
+            counts[topic.value] = directGroups?.length || 0;
+          }
+        } catch (error) {
+          console.error(`Erro ao contar grupos do tópico ${topic.value}:`, error);
           counts[topic.value] = 0;
         }
       }
