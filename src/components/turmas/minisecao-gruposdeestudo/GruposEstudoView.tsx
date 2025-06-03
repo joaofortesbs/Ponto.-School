@@ -2,40 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Search, Plus, Users, ChevronRight, Filter, X, Eye, Settings } from "lucide-react";
+import { Search, Plus, Users, ChevronRight, Settings, Eye, X, Filter } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import CreateGroupModal from "../CreateGroupModal";
-import EntrarGrupoPorCodigoModal from "../EntrarGrupoPorCodigoModal";
+import AddGroupModal from "../AddGroupModal";
 
-interface Grupo {
-  id: string;
-  nome: string;
-  descricao?: string;
-  topico?: string;
-  topico_nome?: string;
-  topico_icon?: string;
-  codigo_unico: string;
-  is_publico: boolean;
-  membros: number;
-  user_id: string;
-  created_at: string;
-  cor?: string;
+interface Topic {
+  name: string;
+  icon: string;
 }
 
-interface Member {
-  id: string;
-  user_id: string;
-  joined_at: string;
-  profiles?: {
-    full_name?: string;
-    display_name?: string;
-    avatar_url?: string;
-  };
-}
-
-// Updated topics list as requested
 const topics = [
   { name: 'Matemática', icon: '📊' },
   { name: 'Língua Portuguesa', icon: '📝' },
@@ -47,39 +24,52 @@ const topics = [
   { name: 'Filosofia', icon: '🤔' },
   { name: 'Sociologia', icon: '👥' },
   { name: 'Arte', icon: '🎨' },
-  { name: 'Inglês', icon: '🇺🇸' },
+  { name: 'Inglês', icon: '🇬🇧' },
   { name: 'Educação Financeira', icon: '💰' },
-  { name: 'Redação', icon: '📖' },
+  { name: 'Redação', icon: '✍️' },
   { name: 'Engenharia', icon: '⚙️' },
   { name: 'Robótica', icon: '🤖' },
-  { name: 'Outros', icon: '📋' }
+  { name: 'Outros', icon: '📖' }
 ];
 
-const filterOptions = [
-  { value: 'mais-membros', label: 'Mais membros' },
-  { value: 'menos-membros', label: 'Menos membros' },
-  { value: 'mais-recentes', label: 'Mais recentes' },
-  { value: 'mais-antigos', label: 'Mais antigos' },
-  { value: 'publicos', label: 'Públicos' },
-  { value: 'privados', label: 'Privados' }
-];
+interface GroupMember {
+  id: string;
+  user_id: string;
+  joined_at: string;
+  email?: string;
+  display_name?: string;
+}
+
+interface GroupDetails {
+  id: string;
+  nome: string;
+  descricao?: string;
+  topico_nome?: string;
+  created_at: string;
+  cor: string;
+  is_publico: boolean;
+  codigo_unico: string;
+  user_id: string;
+  membros: number;
+}
 
 export default function GruposEstudoView() {
-  const { toast } = useToast();
   const [currentView, setCurrentView] = useState<'my-groups' | 'public-groups'>('my-groups');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
-  const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
-  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
-  const [meusGrupos, setMeusGrupos] = useState<Grupo[]>([]);
-  const [gruposPublicos, setGruposPublicos] = useState<Grupo[]>([]);
+  const [meusGrupos, setMeusGrupos] = useState<GroupDetails[]>([]);
+  const [gruposPublicos, setGruposPublicos] = useState<GroupDetails[]>([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
-  const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
-  const [selectedGroup, setSelectedGroup] = useState<Grupo | null>(null);
-  const [groupMembers, setGroupMembers] = useState<Member[]>([]);
+  const [showFilters, setShowFilters] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<string[]>([]);
+  const [configModalOpen, setConfigModalOpen] = useState(false);
+  const [selectedGroupDetails, setSelectedGroupDetails] = useState<GroupDetails | null>(null);
+  const [groupMembers, setGroupMembers] = useState<GroupMember[]>([]);
+
+  const { toast } = useToast();
 
   useEffect(() => {
     checkAuth();
@@ -89,7 +79,7 @@ export default function GruposEstudoView() {
     if (currentUser) {
       loadGroups();
     }
-  }, [currentUser, currentView, searchTerm, selectedTopic, selectedFilters]);
+  }, [currentUser, currentView, searchTerm, selectedTopic, activeFilters]);
 
   const checkAuth = async () => {
     try {
@@ -115,7 +105,6 @@ export default function GruposEstudoView() {
 
   const loadGroups = async () => {
     if (!currentUser) return;
-    
     setIsLoading(true);
     try {
       if (currentView === 'my-groups') {
@@ -136,97 +125,99 @@ export default function GruposEstudoView() {
   };
 
   const loadMeusGrupos = async () => {
-    const { data: memberships } = await supabase
-      .from('membros_grupos')
-      .select('grupo_id')
-      .eq('user_id', currentUser.id);
+    try {
+      // First get memberships
+      const { data: memberships } = await supabase
+        .from('membros_grupos')
+        .select('grupo_id')
+        .eq('user_id', currentUser.id);
 
-    const groupIds = memberships?.map(m => m.grupo_id) || [];
+      const groupIds = memberships?.map(m => m.grupo_id) || [];
 
-    let query = supabase
-      .from('grupos_estudo')
-      .select('*');
+      let query = supabase.from('grupos_estudo').select('*');
+      
+      if (groupIds.length > 0) {
+        query = query.or(`user_id.eq.${currentUser.id},id.in.(${groupIds.join(',')})`);
+      } else {
+        query = query.eq('user_id', currentUser.id);
+      }
 
-    if (groupIds.length > 0) {
-      query = query.or(`user_id.eq.${currentUser.id},id.in.(${groupIds.join(',')})`);
-    } else {
-      query = query.eq('user_id', currentUser.id);
+      if (searchTerm) {
+        query = query.ilike('nome', `%${searchTerm}%`);
+      }
+      if (selectedTopic) {
+        query = query.eq('topico_nome', selectedTopic);
+      }
+
+      // Apply additional filters
+      if (activeFilters.includes('mais-recentes')) {
+        query = query.order('created_at', { ascending: false });
+      } else if (activeFilters.includes('mais-antigos')) {
+        query = query.order('created_at', { ascending: true });
+      } else {
+        query = query.order('created_at', { ascending: false });
+      }
+
+      if (activeFilters.includes('publicos')) {
+        query = query.eq('is_publico', true);
+      } else if (activeFilters.includes('privados')) {
+        query = query.eq('is_publico', false);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+
+      setMeusGrupos(data || []);
+    } catch (error) {
+      console.error('Erro ao carregar meus grupos:', error);
+      throw error;
     }
-
-    // Apply topic filter
-    if (selectedTopic && selectedTopic !== 'Outros') {
-      query = query.eq('topico_nome', selectedTopic);
-    }
-
-    // Apply search filter
-    if (searchTerm) {
-      query = query.ilike('nome', `%${searchTerm}%`);
-    }
-
-    // Apply additional filters
-    if (selectedFilters.includes('publicos')) {
-      query = query.eq('is_publico', true);
-    }
-    if (selectedFilters.includes('privados')) {
-      query = query.eq('is_publico', false);
-    }
-
-    // Apply sorting filters
-    if (selectedFilters.includes('mais-recentes')) {
-      query = query.order('created_at', { ascending: false });
-    } else if (selectedFilters.includes('mais-antigos')) {
-      query = query.order('created_at', { ascending: true });
-    } else {
-      query = query.order('created_at', { ascending: false });
-    }
-
-    const { data, error } = await query;
-
-    if (error) throw error;
-    setMeusGrupos(data || []);
   };
 
   const loadGruposPublicos = async () => {
-    const { data: memberships } = await supabase
-      .from('membros_grupos')
-      .select('grupo_id')
-      .eq('user_id', currentUser.id);
+    try {
+      // Get my memberships to exclude them
+      const { data: memberships } = await supabase
+        .from('membros_grupos')
+        .select('grupo_id')
+        .eq('user_id', currentUser.id);
 
-    const myGroupIds = memberships?.map(m => m.grupo_id) || [];
+      const myGroupIds = memberships?.map(m => m.grupo_id) || [];
 
-    let query = supabase
-      .from('grupos_estudo')
-      .select('*')
-      .eq('is_publico', true)
-      .neq('user_id', currentUser.id);
+      let query = supabase
+        .from('grupos_estudo')
+        .select('*')
+        .eq('is_publico', true)
+        .neq('user_id', currentUser.id);
 
-    if (myGroupIds.length > 0) {
-      query = query.not('id', 'in', `(${myGroupIds.join(',')})`);
+      if (myGroupIds.length > 0) {
+        query = query.not('id', 'in', `(${myGroupIds.join(',')})`);
+      }
+
+      if (searchTerm) {
+        query = query.ilike('nome', `%${searchTerm}%`);
+      }
+      if (selectedTopic) {
+        query = query.eq('topico_nome', selectedTopic);
+      }
+
+      // Apply additional filters
+      if (activeFilters.includes('mais-recentes')) {
+        query = query.order('created_at', { ascending: false });
+      } else if (activeFilters.includes('mais-antigos')) {
+        query = query.order('created_at', { ascending: true });
+      } else {
+        query = query.order('created_at', { ascending: false });
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+
+      setGruposPublicos(data || []);
+    } catch (error) {
+      console.error('Erro ao carregar grupos públicos:', error);
+      throw error;
     }
-
-    // Apply topic filter
-    if (selectedTopic && selectedTopic !== 'Outros') {
-      query = query.eq('topico_nome', selectedTopic);
-    }
-
-    // Apply search filter
-    if (searchTerm) {
-      query = query.ilike('nome', `%${searchTerm}%`);
-    }
-
-    // Apply sorting filters
-    if (selectedFilters.includes('mais-recentes')) {
-      query = query.order('created_at', { ascending: false });
-    } else if (selectedFilters.includes('mais-antigos')) {
-      query = query.order('created_at', { ascending: true });
-    } else {
-      query = query.order('created_at', { ascending: false });
-    }
-
-    const { data, error } = await query;
-
-    if (error) throw error;
-    setGruposPublicos(data || []);
   };
 
   const handleJoinGroup = async (groupId: string) => {
@@ -242,7 +233,7 @@ export default function GruposEstudoView() {
 
       toast({
         title: "Sucesso",
-        description: "Você ingressou no grupo com sucesso!"
+        description: "Você ingressou no grupo com sucesso!",
       });
       loadGroups();
     } catch (error) {
@@ -271,7 +262,7 @@ export default function GruposEstudoView() {
 
       toast({
         title: "Sucesso",
-        description: "Você saiu do grupo com sucesso!"
+        description: "Você saiu do grupo com sucesso!",
       });
       loadGroups();
     } catch (error) {
@@ -284,54 +275,94 @@ export default function GruposEstudoView() {
     }
   };
 
-  const handleShowConfigModal = async (group: Grupo) => {
-    // Check if user is the creator
-    if (group.user_id !== currentUser.id) {
-      toast({
-        title: "Acesso Negado",
-        description: "Apenas o criador pode configurar este grupo",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setSelectedGroup(group);
-    
-    // Load group members
+  const handleShowConfigModal = async (groupId: string) => {
     try {
-      const { data: members, error } = await supabase
-        .from('membros_grupos')
-        .select(`
-          *,
-          profiles:user_id (
-            full_name,
-            display_name,
-            avatar_url
-          )
-        `)
-        .eq('grupo_id', group.id);
+      // First check if user is the creator
+      const { data: group, error: groupError } = await supabase
+        .from('grupos_estudo')
+        .select('*')
+        .eq('id', groupId)
+        .single();
 
-      if (error) throw error;
-      setGroupMembers(members || []);
-      setIsConfigModalOpen(true);
+      if (groupError) {
+        console.error('Erro ao carregar grupo:', groupError);
+        toast({
+          title: "Erro",
+          description: "Erro ao carregar informações do grupo",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (group.user_id !== currentUser.id) {
+        toast({
+          title: "Acesso negado",
+          description: "Apenas o criador pode configurar este grupo",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      setSelectedGroupDetails(group);
+
+      // Load group members with simplified query
+      try {
+        const { data: members, error: membersError } = await supabase
+          .from('membros_grupos')
+          .select('*')
+          .eq('grupo_id', groupId);
+
+        if (membersError) {
+          console.error('Erro ao carregar membros:', membersError);
+          // Still show modal even if members fail to load
+          setGroupMembers([]);
+        } else {
+          // Get user profiles for members
+          const memberProfiles: GroupMember[] = [];
+          
+          for (const member of members || []) {
+            try {
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('email, display_name')
+                .eq('id', member.user_id)
+                .single();
+              
+              memberProfiles.push({
+                id: member.id,
+                user_id: member.user_id,
+                joined_at: member.joined_at,
+                email: profile?.email || 'Email não disponível',
+                display_name: profile?.display_name || 'Nome não disponível'
+              });
+            } catch (error) {
+              // Add member without profile info if profile fetch fails
+              memberProfiles.push({
+                id: member.id,
+                user_id: member.user_id,
+                joined_at: member.joined_at,
+                email: 'Email não disponível',
+                display_name: 'Nome não disponível'
+              });
+            }
+          }
+          
+          setGroupMembers(memberProfiles);
+        }
+      } catch (error) {
+        console.error('Erro ao processar membros:', error);
+        setGroupMembers([]);
+      }
+
+      setConfigModalOpen(true);
     } catch (error) {
-      console.error('Erro ao carregar membros:', error);
+      console.error('Erro geral ao abrir modal:', error);
       toast({
         title: "Erro",
-        description: "Erro ao carregar membros do grupo",
+        description: "Erro ao abrir configurações do grupo",
         variant: "destructive"
       });
     }
-  };
-
-  const handleShareGroup = (group: Grupo) => {
-    const shareText = `Código do grupo: ${group.codigo_unico}\nNome: ${group.nome}`;
-    navigator.clipboard.writeText(shareText).then(() => {
-      toast({
-        title: "Copiado!",
-        description: "Código do grupo copiado para a área de transferência"
-      });
-    });
   };
 
   const scrollTopics = (direction: 'left' | 'right') => {
@@ -345,27 +376,16 @@ export default function GruposEstudoView() {
     }
   };
 
-  const handleTopicSelect = (topicName: string) => {
-    setSelectedTopic(selectedTopic === topicName ? null : topicName);
-  };
-
-  const handleFilterToggle = (filterValue: string) => {
-    setSelectedFilters(prev => 
-      prev.includes(filterValue) 
-        ? prev.filter(f => f !== filterValue)
-        : [...prev, filterValue]
+  const handleFilterToggle = (filter: string) => {
+    setActiveFilters(prev => 
+      prev.includes(filter) 
+        ? prev.filter(f => f !== filter)
+        : [...prev, filter]
     );
   };
 
-  const applyFilters = () => {
-    setIsFilterModalOpen(false);
-    loadGroups();
-  };
-
   const clearFilters = () => {
-    setSelectedFilters([]);
-    setSelectedTopic(null);
-    setIsFilterModalOpen(false);
+    setActiveFilters([]);
   };
 
   const currentGroups = currentView === 'my-groups' ? meusGrupos : gruposPublicos;
@@ -379,9 +399,10 @@ export default function GruposEstudoView() {
             Grupos de Estudos
           </h3>
           <Badge variant="secondary" className="bg-[#FF6B00]/10 text-[#FF6B00]">
-            {currentGroups.length} grupos
+            {meusGrupos.length} grupos
           </Badge>
         </div>
+        
         <div className="flex gap-2">
           <Button
             onClick={() => setIsJoinModalOpen(true)}
@@ -405,321 +426,375 @@ export default function GruposEstudoView() {
 
       {/* Topics Carousel */}
       <div className="relative">
-        <div className="topics-carousel flex gap-2 overflow-x-auto scroll-smooth pb-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-          <style jsx>{`
-            .topics-carousel::-webkit-scrollbar {
-              display: none;
-            }
-          `}</style>
-          <button
-            onClick={() => handleTopicSelect('')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-              selectedTopic === null || selectedTopic === ''
-                ? 'bg-[#FF6B00] text-white'
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-            }`}
-          >
-            Todos
-          </button>
+        <div className="topics-carousel flex gap-2 overflow-x-auto scrollbar-hide pb-2">
           {topics.map((topic) => (
             <button
               key={topic.name}
-              onClick={() => handleTopicSelect(topic.name)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-2 ${
+              onClick={() => setSelectedTopic(selectedTopic === topic.name ? null : topic.name)}
+              className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                 selectedTopic === topic.name
                   ? 'bg-[#FF6B00] text-white'
                   : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
               }`}
             >
-              <span>{topic.icon}</span>
+              <span className="mr-1">{topic.icon}</span>
               {topic.name}
             </button>
           ))}
         </div>
-        <Button
+        <button
           onClick={() => scrollTopics('right')}
-          variant="ghost"
-          size="sm"
-          className="absolute right-0 top-1/2 -translate-y-1/2 bg-white dark:bg-gray-800 shadow-md hover:shadow-lg"
+          className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-white dark:bg-gray-800 shadow-lg rounded-full p-2 border"
         >
           <ChevronRight className="h-4 w-4" />
-        </Button>
+        </button>
       </div>
 
       {/* Controls */}
-      <div className="flex items-center gap-4">
-        <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
-          <button
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex gap-2">
+          <Button
             onClick={() => setCurrentView('my-groups')}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-              currentView === 'my-groups'
-                ? 'bg-[#FF6B00] text-white shadow-sm'
-                : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
-            }`}
+            variant={currentView === 'my-groups' ? 'default' : 'outline'}
+            size="sm"
+            className={currentView === 'my-groups' ? 'bg-[#FF6B00] hover:bg-[#FF8C40]' : ''}
           >
             Meus Grupos
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => setCurrentView('public-groups')}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-              currentView === 'public-groups'
-                ? 'bg-[#FF6B00] text-white shadow-sm'
-                : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
-            }`}
+            variant={currentView === 'public-groups' ? 'default' : 'outline'}
+            size="sm"
+            className={currentView === 'public-groups' ? 'bg-[#FF6B00] hover:bg-[#FF8C40]' : ''}
           >
             Grupos Públicos
-          </button>
-        </div>
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input
-            placeholder="Pesquisar grupos..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-        <div className="relative">
-          <Button
-            onClick={() => setIsFilterModalOpen(!isFilterModalOpen)}
-            variant="outline"
-            size="sm"
-            className="border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10"
-          >
-            <Filter className="h-4 w-4" />
           </Button>
-          
-          {/* Filter Modal */}
-          {isFilterModalOpen && (
-            <div className="absolute top-full right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-4 z-50 min-w-[200px]">
-              <div className="space-y-3">
-                <h4 className="font-medium text-sm text-gray-900 dark:text-white">Filtros</h4>
-                {filterOptions.map((option) => (
-                  <label key={option.value} className="flex items-center space-x-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={selectedFilters.includes(option.value)}
-                      onChange={() => handleFilterToggle(option.value)}
-                      className="rounded border-gray-300 text-[#FF6B00] focus:ring-[#FF6B00]"
-                    />
-                    <span className="text-sm text-gray-700 dark:text-gray-300">{option.label}</span>
-                  </label>
-                ))}
-                <div className="flex gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-                  <Button
-                    onClick={applyFilters}
-                    size="sm"
-                    className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white text-xs"
-                  >
-                    Aplicar
-                  </Button>
+        </div>
+        
+        <div className="flex gap-2 flex-1">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              type="text"
+              placeholder="Buscar grupos..."
+              className="pl-9"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="relative">
+            <Button
+              onClick={() => setShowFilters(!showFilters)}
+              variant="outline"
+              size="sm"
+              className="gap-1"
+            >
+              <Filter className="h-4 w-4" />
+              Filtros
+            </Button>
+            
+            {showFilters && (
+              <div className="absolute right-0 top-full mt-2 bg-white dark:bg-gray-800 border rounded-lg shadow-lg p-4 z-50 w-64">
+                <div className="space-y-2">
+                  <h4 className="font-medium">Filtros</h4>
+                  {[
+                    { value: 'mais-membros', label: 'Mais membros' },
+                    { value: 'menos-membros', label: 'Menos membros' },
+                    { value: 'mais-recentes', label: 'Mais recentes' },
+                    { value: 'mais-antigos', label: 'Mais antigos' },
+                    { value: 'publicos', label: 'Públicos' },
+                    { value: 'privados', label: 'Privados' }
+                  ].map((filter) => (
+                    <label key={filter.value} className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={activeFilters.includes(filter.value)}
+                        onChange={() => handleFilterToggle(filter.value)}
+                        className="rounded"
+                      />
+                      <span className="text-sm">{filter.label}</span>
+                    </label>
+                  ))}
                   <Button
                     onClick={clearFilters}
                     variant="outline"
                     size="sm"
-                    className="text-xs"
+                    className="w-full mt-2"
                   >
-                    Limpar
+                    Limpar filtros
                   </Button>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
       {/* Groups Grid */}
-      <div className="space-y-4">
-        {isLoading ? (
-          <div className="text-center py-8">
-            <p className="text-gray-500">Carregando grupos...</p>
-          </div>
-        ) : currentGroups.length === 0 ? (
-          <div className="text-center py-8">
-            <Users className="h-12 w-12 mx-auto text-gray-400 mb-3" />
-            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-              {currentView === 'my-groups' ? 'Nenhum grupo encontrado' : 'Nenhum grupo público disponível'}
-            </h3>
-            <p className="text-gray-500 mt-2">
-              {currentView === 'my-groups' 
-                ? 'Você ainda não participa de nenhum grupo de estudos ou sua busca não retornou resultados.'
-                : 'Não há grupos públicos disponíveis no momento ou sua busca não retornou resultados.'
-              }
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {currentGroups.map((grupo) => (
-              <div
-                key={grupo.id}
-                className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    {grupo.topico_icon && <span className="text-lg">{grupo.topico_icon}</span>}
-                    <div>
-                      <h4 className="font-semibold text-[#29335C] dark:text-white text-sm">
-                        {grupo.nome}
-                      </h4>
-                      {grupo.topico_nome && (
-                        <p className="text-xs text-gray-500">{grupo.topico_nome}</p>
-                      )}
-                    </div>
-                  </div>
-                  
-                  {/* New Icons Section */}
-                  {currentView === 'my-groups' && (
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleLeaveGroup(grupo.id)}
-                        className="p-1 text-red-500 hover:text-red-700 transition-colors"
-                        title="Sair do grupo"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                      <button
-                        className="p-1 text-gray-400 cursor-not-allowed"
-                        title="Visualizar (em breve)"
-                        disabled
-                      >
-                        <Eye className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => handleShowConfigModal(grupo)}
-                        className="p-1 text-[#FF6B00] hover:text-[#FF8C40] transition-colors"
-                        title="Configurações"
-                      >
-                        <Settings className="h-4 w-4" />
-                      </button>
-                    </div>
-                  )}
-                  
-                  <Badge variant={grupo.is_publico ? "default" : "secondary"} className="text-xs">
-                    {grupo.is_publico ? 'Público' : 'Privado'}
+      {isLoading ? (
+        <div className="text-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF6B00] mx-auto"></div>
+          <p className="mt-2 text-gray-500">Carregando grupos...</p>
+        </div>
+      ) : currentGroups.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {currentGroups.map((group) => (
+            <div
+              key={group.id}
+              className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex-1">
+                  <h4 className="font-semibold text-gray-900 dark:text-white truncate">
+                    {group.nome}
+                  </h4>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Código: {group.codigo_unico}
+                  </p>
+                  <Badge
+                    variant="secondary"
+                    className={`mt-1 ${
+                      group.is_publico
+                        ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+                        : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300'
+                    }`}
+                  >
+                    {group.is_publico ? 'Público' : 'Privado'}
                   </Badge>
                 </div>
-
-                {grupo.descricao && (
-                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-3 line-clamp-2">
-                    {grupo.descricao}
-                  </p>
-                )}
-
-                <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
-                  <div className="flex items-center gap-1">
-                    <Users className="h-3 w-3" />
-                    <span>{grupo.membros} membros</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span>Código: {grupo.codigo_unico}</span>
-                  </div>
-                </div>
-
-                {currentView === 'public-groups' && (
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={() => handleJoinGroup(grupo.id)}
-                      size="sm"
-                      className="flex-1 bg-[#FF6B00] hover:bg-[#FF8C40] text-white text-xs"
+                
+                {currentView === 'my-groups' && (
+                  <div className="flex gap-1 ml-2">
+                    <button
+                      onClick={() => handleLeaveGroup(group.id)}
+                      className="p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                      title="Sair do Grupo"
                     >
-                      Participar
-                    </Button>
+                      <X className="h-4 w-4" />
+                    </button>
+                    <button
+                      className="p-1 text-gray-400 cursor-not-allowed rounded"
+                      title="Visualizar (em breve)"
+                      disabled
+                    >
+                      <Eye className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => handleShowConfigModal(group.id)}
+                      className="p-1 text-[#FF6B00] hover:bg-[#FF6B00]/10 rounded"
+                      title="Configurações"
+                    >
+                      <Settings className="h-4 w-4" />
+                    </button>
                   </div>
                 )}
               </div>
-            ))}
-          </div>
-        )}
-      </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1 text-sm text-gray-500">
+                  <Users className="h-4 w-4" />
+                  <span>{group.membros} membros</span>
+                </div>
+                
+                {currentView === 'public-groups' && (
+                  <Button
+                    onClick={() => handleJoinGroup(group.id)}
+                    size="sm"
+                    className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white"
+                  >
+                    Entrar
+                  </Button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-8">
+          <Users className="h-12 w-12 mx-auto text-gray-400 mb-3" />
+          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+            {currentView === 'my-groups' ? 'Nenhum grupo encontrado' : 'Nenhum grupo público disponível'}
+          </h3>
+          <p className="text-gray-500 max-w-md mx-auto mt-2">
+            {currentView === 'my-groups' 
+              ? 'Você ainda não participa de nenhum grupo de estudos ou sua busca não retornou resultados.'
+              : 'Não há grupos públicos disponíveis no momento ou sua busca não retornou resultados.'
+            }
+          </p>
+        </div>
+      )}
 
       {/* Configuration Modal */}
-      {isConfigModalOpen && selectedGroup && (
-        <Dialog open={isConfigModalOpen} onOpenChange={setIsConfigModalOpen}>
-          <DialogContent className="sm:max-w-md bg-white dark:bg-[#0A2540] border-[#E0E1DD] dark:border-white/10">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-bold text-[#29335C] dark:text-white flex items-center gap-2">
-                <Settings className="h-5 w-5 text-[#FF6B00]" />
-                Configurações do Grupo
-              </DialogTitle>
-            </DialogHeader>
-            
-            <div className="space-y-4 max-h-96 overflow-y-auto">
-              {/* Group Information */}
-              <div className="space-y-2">
-                <h4 className="font-medium text-[#29335C] dark:text-white">Informações</h4>
-                <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-md space-y-2">
-                  <p><strong>Nome:</strong> {selectedGroup.nome}</p>
-                  <p><strong>Descrição:</strong> {selectedGroup.descricao || 'Não informado'}</p>
-                  <p><strong>Tópico:</strong> {selectedGroup.topico_nome || 'Não informado'}</p>
-                  <p><strong>Código:</strong> {selectedGroup.codigo_unico}</p>
-                  <p><strong>Criado em:</strong> {new Date(selectedGroup.created_at).toLocaleDateString()}</p>
-                </div>
+      {configModalOpen && selectedGroupDetails && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  Configurações do Grupo
+                </h3>
+                <Button
+                  onClick={() => setConfigModalOpen(false)}
+                  variant="ghost"
+                  size="sm"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
               </div>
 
-              {/* Privacy */}
-              <div className="space-y-2">
-                <h4 className="font-medium text-[#29335C] dark:text-white">Privacidade</h4>
-                <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-md">
-                  <p>{selectedGroup.is_publico ? 'Público' : 'Privado'}</p>
-                </div>
-              </div>
-
-              {/* Members */}
-              <div className="space-y-2">
-                <h4 className="font-medium text-[#29335C] dark:text-white">Membros ({groupMembers.length})</h4>
-                <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-md max-h-32 overflow-y-auto">
-                  {groupMembers.map((member) => (
-                    <div key={member.id} className="flex items-center gap-2 py-1">
-                      <div className="w-6 h-6 bg-gray-300 rounded-full flex-shrink-0"></div>
-                      <span className="text-sm">
-                        {member.profiles?.display_name || member.profiles?.full_name || 'Usuário'}
-                      </span>
+              <div className="space-y-6">
+                {/* Group Information */}
+                <div className="space-y-4">
+                  <h4 className="font-medium text-gray-900 dark:text-white">Informações do Grupo</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Nome
+                      </label>
+                      <Input value={selectedGroupDetails.nome} readOnly />
                     </div>
-                  ))}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Tópico
+                      </label>
+                      <Input value={selectedGroupDetails.topico_nome || 'Não definido'} readOnly />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Código Único
+                      </label>
+                      <Input value={selectedGroupDetails.codigo_unico} readOnly />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Criado em
+                      </label>
+                      <Input value={new Date(selectedGroupDetails.created_at).toLocaleDateString('pt-BR')} readOnly />
+                    </div>
+                  </div>
+                  {selectedGroupDetails.descricao && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Descrição
+                      </label>
+                      <textarea
+                        value={selectedGroupDetails.descricao}
+                        readOnly
+                        className="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white"
+                        rows={3}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Privacy Settings */}
+                <div className="space-y-4">
+                  <h4 className="font-medium text-gray-900 dark:text-white">Privacidade</h4>
+                  <div className="flex items-center gap-4">
+                    <Badge
+                      variant="secondary"
+                      className={`${
+                        selectedGroupDetails.is_publico
+                          ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+                          : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300'
+                      }`}
+                    >
+                      {selectedGroupDetails.is_publico ? 'Grupo Público' : 'Grupo Privado'}
+                    </Badge>
+                  </div>
+                </div>
+
+                {/* Members */}
+                <div className="space-y-4">
+                  <h4 className="font-medium text-gray-900 dark:text-white">
+                    Membros ({groupMembers.length})
+                  </h4>
+                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                    {groupMembers.length > 0 ? (
+                      groupMembers.map((member) => (
+                        <div
+                          key={member.id}
+                          className="flex items-center gap-3 p-2 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                        >
+                          <div className="w-8 h-8 bg-[#FF6B00] rounded-full flex items-center justify-center text-white text-sm font-medium">
+                            {member.display_name?.charAt(0)?.toUpperCase() || 'U'}
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-900 dark:text-white">
+                              {member.display_name}
+                            </p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              {member.email}
+                            </p>
+                          </div>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            {new Date(member.joined_at).toLocaleDateString('pt-BR')}
+                          </span>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Nenhum membro encontrado
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="space-y-4">
+                  <h4 className="font-medium text-gray-900 dark:text-white">Ações</h4>
+                  <div className="flex gap-3">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        // Placeholder for invite functionality
+                        toast({
+                          title: "Em breve",
+                          description: "Funcionalidade de convite será implementada em breve",
+                        });
+                      }}
+                    >
+                      Convidar Parceiros
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        navigator.clipboard.writeText(selectedGroupDetails.codigo_unico);
+                        toast({
+                          title: "Código copiado",
+                          description: `Código ${selectedGroupDetails.codigo_unico} copiado para a área de transferência`,
+                        });
+                      }}
+                    >
+                      Compartilhar Código
+                    </Button>
+                  </div>
                 </div>
               </div>
 
-              {/* Actions */}
-              <div className="space-y-2">
-                <h4 className="font-medium text-[#29335C] dark:text-white">Ações</h4>
-                <div className="flex gap-2">
-                  <Button
-                    onClick={() => handleShareGroup(selectedGroup)}
-                    variant="outline"
-                    size="sm"
-                    className="flex-1"
-                  >
-                    Compartilhar
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1"
-                    disabled
-                  >
-                    Convidar
-                  </Button>
-                </div>
+              <div className="flex justify-end gap-3 mt-6 pt-6 border-t">
+                <Button
+                  onClick={() => setConfigModalOpen(false)}
+                  variant="outline"
+                >
+                  Fechar
+                </Button>
+                <Button
+                  className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white"
+                  onClick={() => {
+                    // Placeholder for save functionality
+                    toast({
+                      title: "Em breve",
+                      description: "Funcionalidade de edição será implementada em breve",
+                    });
+                  }}
+                >
+                  Salvar Alterações
+                </Button>
               </div>
             </div>
-
-            <div className="flex gap-3 mt-4">
-              <Button
-                variant="outline"
-                onClick={() => setIsConfigModalOpen(false)}
-                className="flex-1"
-              >
-                Fechar
-              </Button>
-              <Button
-                className="flex-1 bg-[#FF6B00] hover:bg-[#FF8C40] text-white"
-                disabled
-              >
-                Salvar
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+          </div>
+        </div>
       )}
 
       {/* Modals */}
@@ -732,10 +807,10 @@ export default function GruposEstudoView() {
         }}
       />
 
-      <EntrarGrupoPorCodigoModal
+      <AddGroupModal
         isOpen={isJoinModalOpen}
         onClose={() => setIsJoinModalOpen(false)}
-        onGroupJoined={() => {
+        onGroupAdded={() => {
           setIsJoinModalOpen(false);
           loadGroups();
         }}
