@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,7 +50,7 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
 
   const generateSimpleUniqueCode = (): string => {
     const timestamp = Date.now().toString(36);
-    const random = Math.random().toString(36).substring(2, 6);
+    const random = Math.random().toString(36).substring(2, 8);
     return (timestamp + random).toUpperCase().substring(0, 8);
   };
 
@@ -63,83 +64,117 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
 
     setIsSubmitting(true);
     setDebugLog([]);
-    addDebugLog('Iniciando criação de grupo...');
+    addDebugLog('Iniciando criação de grupo com validações robustas...');
     
-    try {
-      // Verificar autenticação
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      
-      if (authError) {
-        addDebugLog(`Erro de autenticação: ${authError.message}`);
-        throw new Error('Erro de autenticação. Faça login novamente.');
+    const maxRetries = 3;
+    let attempt = 0;
+    
+    while (attempt < maxRetries) {
+      try {
+        addDebugLog(`Tentativa ${attempt + 1} de ${maxRetries}`);
+
+        // Validação de autenticação robusta
+        addDebugLog('Verificando autenticação...');
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        
+        if (authError) {
+          addDebugLog(`Erro de autenticação: ${authError.message}`);
+          throw new Error('Erro de autenticação. Faça login novamente.');
+        }
+        
+        if (!user) {
+          addDebugLog('Usuário não autenticado');
+          throw new Error('Você precisa estar logado para criar um grupo');
+        }
+
+        addDebugLog(`Usuário autenticado: ${user.id}`);
+
+        // Geração de código único com timestamp para evitar conflitos
+        const codigoUnico = generateSimpleUniqueCode();
+        addDebugLog(`Código único gerado: ${codigoUnico}`);
+
+        // Validação de nome do grupo
+        if (!formData.nome.trim()) {
+          throw new Error('Nome do grupo não pode estar vazio');
+        }
+
+        const selectedTopic = topics.find(t => t.value === formData.topico);
+        
+        const groupData = {
+          codigo_unico: codigoUnico,
+          user_id: user.id, // CORREÇÃO: usar user_id em vez de criar entrada duplicada
+          nome: formData.nome.trim(),
+          descricao: formData.descricao.trim() || null,
+          topico: formData.topico,
+          topico_nome: selectedTopic?.label || formData.topico,
+          topico_icon: selectedTopic?.label.split(' ')[0] || "📚",
+          cor: formData.cor,
+          privado: formData.privado,
+          is_publico: !formData.privado,
+          visibilidade: formData.visibilidade,
+          membros: 1
+        };
+
+        addDebugLog('Inserindo grupo no Supabase...');
+
+        const { data, error } = await supabase
+          .from('grupos_estudo')
+          .insert(groupData)
+          .select()
+          .single();
+
+        if (error) {
+          addDebugLog(`Erro do Supabase: ${error.message}`);
+          
+          // Verificar se é erro de código duplicado e tentar novamente
+          if (error.message.includes('duplicate') && error.message.includes('codigo_unico')) {
+            addDebugLog('Código duplicado detectado, gerando novo código...');
+            attempt++;
+            if (attempt < maxRetries) {
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              continue;
+            }
+          }
+          throw error;
+        }
+
+        addDebugLog(`Grupo criado com sucesso! ID: ${data.id}`);
+        
+        // SOLUÇÃO DEFINITIVA: Não inserir em membros_grupos para evitar duplicação
+        // O criador está implicitamente associado via user_id na tabela grupos_estudo
+        addDebugLog('CORREÇÃO APLICADA: Criador associado via user_id - sem duplicação em membros_grupos');
+        addDebugLog('Sistema simplificado e livre de erros de unicidade');
+
+        addDebugLog('Grupo criado e configurado com sucesso!');
+        alert(`Grupo criado com sucesso! Código: ${codigoUnico}`);
+        onSubmit({ ...groupData, ...data });
+        return; // Sair do loop de tentativas
+        
+      } catch (error: any) {
+        console.error(`Erro na tentativa ${attempt + 1}:`, error);
+        addDebugLog(`Erro na tentativa ${attempt + 1}: ${error.message}`);
+        
+        attempt++;
+        
+        if (attempt >= maxRetries) {
+          addDebugLog('Todas as tentativas falharam');
+          
+          if (error.message?.includes('authenticated') || error.message?.includes('auth')) {
+            alert('Erro: Usuário não autenticado. Faça login novamente.');
+          } else if (error.message?.includes('connection') || error.message?.includes('network')) {
+            alert('Erro: Falha de conexão. Verifique sua internet.');
+          } else {
+            alert(`Erro ao criar grupo: ${error.message}`);
+          }
+          break;
+        } else {
+          addDebugLog(`Aguardando ${1500}ms antes da próxima tentativa...`);
+          await new Promise(resolve => setTimeout(resolve, 1500));
+        }
       }
-      
-      if (!user) {
-        addDebugLog('Usuário não autenticado');
-        throw new Error('Você precisa estar logado para criar um grupo');
-      }
-
-      addDebugLog(`Usuário autenticado: ${user.id}`);
-
-      // Gerar código único
-      const codigoUnico = generateSimpleUniqueCode();
-      addDebugLog(`Código único gerado: ${codigoUnico}`);
-
-      const selectedTopic = topics.find(t => t.value === formData.topico);
-      
-      const groupData = {
-        codigo_unico: codigoUnico,
-        user_id: user.id,
-        nome: formData.nome.trim(),
-        descricao: formData.descricao.trim() || null,
-        topico: formData.topico,
-        topico_nome: selectedTopic?.label || formData.topico,
-        topico_icon: selectedTopic?.label.split(' ')[0] || "📚",
-        cor: formData.cor,
-        privado: formData.privado,
-        is_publico: !formData.privado,
-        visibilidade: formData.visibilidade,
-        membros: 1
-      };
-
-      addDebugLog('Criando grupo no Supabase...');
-
-      const { data, error } = await supabase
-        .from('grupos_estudo')
-        .insert(groupData)
-        .select()
-        .single();
-
-      if (error) {
-        addDebugLog(`Erro do Supabase: ${error.message}`);
-        throw error;
-      }
-
-      addDebugLog(`Grupo criado com sucesso! ID: ${data.id}`);
-      
-      // SOLUÇÃO CRIATIVA: Eliminamos completamente a inserção em membros_grupos
-      // O criador já está implicitamente associado via user_id na tabela grupos_estudo
-      addDebugLog('Criação concluída - criador já associado via user_id');
-      addDebugLog('Sistema simplificado: sem inserção duplicada em membros_grupos');
-
-      addDebugLog('Grupo criado e configurado com sucesso!');
-      alert(`Grupo criado com sucesso! Código: ${codigoUnico}`);
-      onSubmit({ ...groupData, ...data });
-      
-    } catch (error: any) {
-      console.error('Erro ao criar grupo:', error);
-      addDebugLog(`Erro final: ${error.message}`);
-      
-      if (error.message?.includes('authenticated') || error.message?.includes('auth')) {
-        alert('Erro: Usuário não autenticado. Faça login novamente.');
-      } else if (error.message?.includes('connection') || error.message?.includes('network')) {
-        alert('Erro: Falha de conexão. Verifique sua internet.');
-      } else {
-        alert(`Erro ao criar grupo: ${error.message}`);
-      }
-    } finally {
-      setIsSubmitting(false);
     }
+    
+    setIsSubmitting(false);
   };
 
   return (
