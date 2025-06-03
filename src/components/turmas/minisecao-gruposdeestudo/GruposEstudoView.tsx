@@ -60,7 +60,7 @@ export default function GruposEstudoView() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Buscar grupos onde o usuário é membro
+      // Buscar grupos onde o usuário é membro através da join table
       const { data: memberGroups, error: memberError } = await supabase
         .from('membros_grupos')
         .select(`
@@ -106,20 +106,23 @@ export default function GruposEstudoView() {
 
       const counts: Record<string, number> = {};
 
+      // Para cada tópico, contar quantos grupos o usuário participa
       for (const topic of topics) {
-        const { count, error } = await supabase
+        const { data: userGroups, error } = await supabase
           .from('membros_grupos')
-          .select('grupo_id', { count: 'exact' })
-          .eq('user_id', user.id)
-          .in('grupo_id', 
-            supabase
-              .from('grupos_estudo')
-              .select('id')
-              .eq('topico', topic.value)
-          );
+          .select(`
+            grupos_estudo!inner (
+              topico
+            )
+          `)
+          .eq('user_id', user.id);
 
-        if (!error) {
-          counts[topic.value] = count || 0;
+        if (!error && userGroups) {
+          counts[topic.value] = userGroups.filter(
+            ug => ug.grupos_estudo?.topico === topic.value
+          ).length;
+        } else {
+          counts[topic.value] = 0;
         }
       }
 

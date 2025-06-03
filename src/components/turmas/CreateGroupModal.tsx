@@ -1,4 +1,5 @@
-import React from "react";
+
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
@@ -15,19 +16,23 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
   onClose,
   onSubmit,
 }) => {
+  const handleSubmit = (formData: any) => {
+    onSubmit(formData);
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="bg-white dark:bg-[#1E293B] rounded-xl overflow-hidden max-w-4xl w-full shadow-xl relative"
+            className="bg-white dark:bg-[#1E293B] rounded-xl overflow-hidden max-w-lg w-full shadow-xl"
           >
-            <div className="sticky top-0 z-10 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-4 flex justify-between items-center">
-              <h2 className="text-xl font-bold text-white">Novo Grupo de Estudo</h2>
+            <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-4 flex justify-between items-center">
+              <h2 className="text-xl font-bold text-white">Criar Novo Grupo</h2>
               <Button
                 variant="ghost"
                 size="icon"
@@ -38,8 +43,8 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
               </Button>
             </div>
 
-            <div className="p-4 max-h-[80vh] overflow-y-auto">
-              <CreateGroupForm onSubmit={onSubmit} onCancel={onClose} />
+            <div className="p-6">
+              <CreateGroupForm onSubmit={handleSubmit} onCancel={onClose} />
             </div>
           </motion.div>
         </div>
