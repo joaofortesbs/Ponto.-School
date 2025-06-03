@@ -3,8 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Search, Plus, Users, Calendar, MessageCircle, Star, ChevronRight, Filter } from "lucide-react";
+import { Search, Plus, Users, ChevronRight, Filter, X, Eye, Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import CreateGroupModal from "../CreateGroupModal";
@@ -22,6 +21,18 @@ interface Grupo {
   membros: number;
   user_id: string;
   created_at: string;
+  cor?: string;
+}
+
+interface Member {
+  id: string;
+  user_id: string;
+  joined_at: string;
+  profiles?: {
+    full_name?: string;
+    display_name?: string;
+    avatar_url?: string;
+  };
 }
 
 // Updated topics list as requested
@@ -64,8 +75,11 @@ export default function GruposEstudoView() {
   const [gruposPublicos, setGruposPublicos] = useState<Grupo[]>([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
+  const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [selectedGroup, setSelectedGroup] = useState<Grupo | null>(null);
+  const [groupMembers, setGroupMembers] = useState<Member[]>([]);
 
   useEffect(() => {
     checkAuth();
@@ -268,6 +282,56 @@ export default function GruposEstudoView() {
         variant: "destructive"
       });
     }
+  };
+
+  const handleShowConfigModal = async (group: Grupo) => {
+    // Check if user is the creator
+    if (group.user_id !== currentUser.id) {
+      toast({
+        title: "Acesso Negado",
+        description: "Apenas o criador pode configurar este grupo",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setSelectedGroup(group);
+    
+    // Load group members
+    try {
+      const { data: members, error } = await supabase
+        .from('membros_grupos')
+        .select(`
+          *,
+          profiles:user_id (
+            full_name,
+            display_name,
+            avatar_url
+          )
+        `)
+        .eq('grupo_id', group.id);
+
+      if (error) throw error;
+      setGroupMembers(members || []);
+      setIsConfigModalOpen(true);
+    } catch (error) {
+      console.error('Erro ao carregar membros:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao carregar membros do grupo",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleShareGroup = (group: Grupo) => {
+    const shareText = `Código do grupo: ${group.codigo_unico}\nNome: ${group.nome}`;
+    navigator.clipboard.writeText(shareText).then(() => {
+      toast({
+        title: "Copiado!",
+        description: "Código do grupo copiado para a área de transferência"
+      });
+    });
   };
 
   const scrollTopics = (direction: 'left' | 'right') => {
@@ -502,6 +566,34 @@ export default function GruposEstudoView() {
                       )}
                     </div>
                   </div>
+                  
+                  {/* New Icons Section */}
+                  {currentView === 'my-groups' && (
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleLeaveGroup(grupo.id)}
+                        className="p-1 text-red-500 hover:text-red-700 transition-colors"
+                        title="Sair do grupo"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                      <button
+                        className="p-1 text-gray-400 cursor-not-allowed"
+                        title="Visualizar (em breve)"
+                        disabled
+                      >
+                        <Eye className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => handleShowConfigModal(grupo)}
+                        className="p-1 text-[#FF6B00] hover:text-[#FF8C40] transition-colors"
+                        title="Configurações"
+                      >
+                        <Settings className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
+                  
                   <Badge variant={grupo.is_publico ? "default" : "secondary"} className="text-xs">
                     {grupo.is_publico ? 'Público' : 'Privado'}
                   </Badge>
@@ -523,17 +615,8 @@ export default function GruposEstudoView() {
                   </div>
                 </div>
 
-                <div className="flex gap-2">
-                  {currentView === 'my-groups' ? (
-                    <Button
-                      onClick={() => handleLeaveGroup(grupo.id)}
-                      variant="outline"
-                      size="sm"
-                      className="flex-1 text-red-600 border-red-200 hover:bg-red-50 text-xs"
-                    >
-                      Sair do Grupo
-                    </Button>
-                  ) : (
+                {currentView === 'public-groups' && (
+                  <div className="flex gap-2">
                     <Button
                       onClick={() => handleJoinGroup(grupo.id)}
                       size="sm"
@@ -541,13 +624,103 @@ export default function GruposEstudoView() {
                     >
                       Participar
                     </Button>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {/* Configuration Modal */}
+      {isConfigModalOpen && selectedGroup && (
+        <Dialog open={isConfigModalOpen} onOpenChange={setIsConfigModalOpen}>
+          <DialogContent className="sm:max-w-md bg-white dark:bg-[#0A2540] border-[#E0E1DD] dark:border-white/10">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold text-[#29335C] dark:text-white flex items-center gap-2">
+                <Settings className="h-5 w-5 text-[#FF6B00]" />
+                Configurações do Grupo
+              </DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-4 max-h-96 overflow-y-auto">
+              {/* Group Information */}
+              <div className="space-y-2">
+                <h4 className="font-medium text-[#29335C] dark:text-white">Informações</h4>
+                <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-md space-y-2">
+                  <p><strong>Nome:</strong> {selectedGroup.nome}</p>
+                  <p><strong>Descrição:</strong> {selectedGroup.descricao || 'Não informado'}</p>
+                  <p><strong>Tópico:</strong> {selectedGroup.topico_nome || 'Não informado'}</p>
+                  <p><strong>Código:</strong> {selectedGroup.codigo_unico}</p>
+                  <p><strong>Criado em:</strong> {new Date(selectedGroup.created_at).toLocaleDateString()}</p>
+                </div>
+              </div>
+
+              {/* Privacy */}
+              <div className="space-y-2">
+                <h4 className="font-medium text-[#29335C] dark:text-white">Privacidade</h4>
+                <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-md">
+                  <p>{selectedGroup.is_publico ? 'Público' : 'Privado'}</p>
+                </div>
+              </div>
+
+              {/* Members */}
+              <div className="space-y-2">
+                <h4 className="font-medium text-[#29335C] dark:text-white">Membros ({groupMembers.length})</h4>
+                <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-md max-h-32 overflow-y-auto">
+                  {groupMembers.map((member) => (
+                    <div key={member.id} className="flex items-center gap-2 py-1">
+                      <div className="w-6 h-6 bg-gray-300 rounded-full flex-shrink-0"></div>
+                      <span className="text-sm">
+                        {member.profiles?.display_name || member.profiles?.full_name || 'Usuário'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="space-y-2">
+                <h4 className="font-medium text-[#29335C] dark:text-white">Ações</h4>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => handleShareGroup(selectedGroup)}
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                  >
+                    Compartilhar
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    disabled
+                  >
+                    Convidar
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-4">
+              <Button
+                variant="outline"
+                onClick={() => setIsConfigModalOpen(false)}
+                className="flex-1"
+              >
+                Fechar
+              </Button>
+              <Button
+                className="flex-1 bg-[#FF6B00] hover:bg-[#FF8C40] text-white"
+                disabled
+              >
+                Salvar
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* Modals */}
       <CreateGroupModal
