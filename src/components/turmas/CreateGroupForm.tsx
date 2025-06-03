@@ -24,6 +24,8 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [debugLog, setDebugLog] = useState<string[]>([]);
+  const [showDebug, setShowDebug] = useState(false);
 
   const topics = [
     { value: "Matemática", label: "📏 Matemática", color: "#3B82F6" },
@@ -41,7 +43,12 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
     "#EF4444", "#8B5CF6", "#06B6D4", "#6366F1"
   ];
 
-  // Função simplificada para gerar código único usando timestamp + random
+  const addDebugLog = (message: string) => {
+    const timestamp = new Date().toLocaleTimeString();
+    setDebugLog(prev => [...prev, `[${timestamp}] ${message}`]);
+  };
+
+  // Função simplificada para gerar código único
   const generateSimpleUniqueCode = (): string => {
     const timestamp = Date.now().toString(36);
     const random = Math.random().toString(36).substring(2, 6);
@@ -57,35 +64,31 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
     }
 
     setIsSubmitting(true);
+    setDebugLog([]);
+    addDebugLog('Iniciando processo de criação de grupo...');
     
     try {
-      // Gerar código único sem consultar a base primeiro (evita problemas de RLS)
-      const codigoUnico = generateSimpleUniqueCode();
-      const selectedTopic = topics.find(t => t.value === formData.topico);
+      // Verificar autenticação
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
       
-      const { data: { user } } = await supabase.auth.getUser();
+      if (authError) {
+        addDebugLog(`Erro de autenticação: ${authError.message}`);
+        throw new Error('Erro de autenticação. Faça login novamente.');
+      }
       
       if (!user) {
-        alert('Você precisa estar logado para criar um grupo');
-        setIsSubmitting(false);
-        return;
+        addDebugLog('Usuário não autenticado');
+        throw new Error('Você precisa estar logado para criar um grupo');
       }
 
-      console.log('Tentando criar grupo com dados:', {
-        codigo_unico: codigoUnico,
-        user_id: user.id,
-        nome: formData.nome.trim(),
-        descricao: formData.descricao.trim() || null,
-        topico: formData.topico,
-        topico_nome: selectedTopic?.label || formData.topico,
-        topico_icon: selectedTopic?.label.split(' ')[0] || "📚",
-        cor: formData.cor,
-        privado: formData.privado,
-        is_publico: !formData.privado,
-        visibilidade: formData.visibilidade,
-        membros: 1
-      });
+      addDebugLog(`Usuário autenticado: ${user.id}`);
 
+      // Gerar código único
+      const codigoUnico = generateSimpleUniqueCode();
+      addDebugLog(`Código único gerado: ${codigoUnico}`);
+
+      const selectedTopic = topics.find(t => t.value === formData.topico);
+      
       const groupData = {
         codigo_unico: codigoUnico,
         user_id: user.id,
@@ -101,6 +104,8 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
         membros: 1
       };
 
+      addDebugLog('Tentando criar grupo no Supabase...');
+
       const { data, error } = await supabase
         .from('grupos_estudo')
         .insert(groupData)
@@ -108,12 +113,14 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
         .single();
 
       if (error) {
-        console.error('Erro detalhado ao criar grupo:', error);
+        addDebugLog(`Erro do Supabase: ${error.message}`);
         
-        // Se houve conflito de código único, tenta novamente com novo código
+        // Se houve conflito de código único, tenta novamente
         if (error.code === '23505' && error.message.includes('codigo_unico')) {
-          console.log('Código duplicado, tentando novamente...');
+          addDebugLog('Código duplicado detectado, tentando novamente...');
           const newCode = generateSimpleUniqueCode();
+          addDebugLog(`Novo código gerado: ${newCode}`);
+          
           const retryData = { ...groupData, codigo_unico: newCode };
           
           const { data: retryResult, error: retryError } = await supabase
@@ -123,27 +130,34 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
             .single();
           
           if (retryError) {
-            console.error('Erro na segunda tentativa:', retryError);
-            alert('Erro ao criar grupo. Tente novamente.');
-            setIsSubmitting(false);
-            return;
+            addDebugLog(`Erro na segunda tentativa: ${retryError.message}`);
+            throw new Error('Erro ao criar grupo após retry');
           }
           
+          addDebugLog(`Grupo criado com sucesso! Código: ${newCode}`);
           alert(`Grupo criado com sucesso! Código: ${newCode}`);
           onSubmit({ ...retryData, ...retryResult });
           return;
         }
         
-        alert('Erro ao criar grupo. Tente novamente.');
-        setIsSubmitting(false);
-        return;
+        throw error;
       }
 
+      addDebugLog(`Grupo criado com sucesso! ID: ${data.id}`);
       alert(`Grupo criado com sucesso! Código: ${codigoUnico}`);
       onSubmit({ ...groupData, ...data });
-    } catch (error) {
+      
+    } catch (error: any) {
       console.error('Erro ao criar grupo:', error);
-      alert('Erro ao criar grupo. Tente novamente.');
+      addDebugLog(`Erro final: ${error.message}`);
+      
+      if (error.message?.includes('authenticated') || error.message?.includes('auth')) {
+        alert('Erro: Usuário não autenticado. Faça login novamente.');
+      } else if (error.message?.includes('connection') || error.message?.includes('network')) {
+        alert('Erro: Falha de conexão. Verifique sua internet.');
+      } else {
+        alert(`Erro ao criar grupo: ${error.message}`);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -218,6 +232,29 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
         />
         <Label htmlFor="privado">Grupo Privado</Label>
       </div>
+
+      {/* Debug Log */}
+      {debugLog.length > 0 && (
+        <div className="mt-4">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setShowDebug(!showDebug)}
+            className="mb-2"
+          >
+            {showDebug ? 'Ocultar' : 'Mostrar'} Debug Log
+          </Button>
+          
+          {showDebug && (
+            <div className="bg-gray-100 dark:bg-gray-800 p-3 rounded-md max-h-32 overflow-y-auto text-xs">
+              {debugLog.map((log, index) => (
+                <div key={index} className="mb-1">{log}</div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="flex gap-2 pt-4">
         <Button 

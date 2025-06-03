@@ -46,8 +46,8 @@ export default function GruposEstudoView() {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
       if (user) {
-        loadMyGroups();
-        loadTopicCounts();
+        await loadMyGroups();
+        await loadTopicCounts();
       }
       setIsLoading(false);
     };
@@ -57,72 +57,38 @@ export default function GruposEstudoView() {
 
   const loadMyGroups = async (filterTopic?: string) => {
     try {
+      console.log('Loading groups...');
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        console.log('Usuário não autenticado');
+        console.log('No authenticated user');
         return;
       }
 
-      console.log('Carregando grupos do usuário:', user.id);
+      console.log('User authenticated:', user.id);
 
-      // Buscar grupos onde o usuário é membro através da join table
-      const { data: memberGroups, error: memberError } = await supabase
-        .from('membros_grupos')
-        .select(`
-          grupo_id,
-          grupos_estudo (
-            id,
-            nome,
-            descricao,
-            topico,
-            topico_nome,
-            topico_icon,
-            cor,
-            membros,
-            created_at,
-            is_publico
-          )
-        `)
+      // Buscar grupos criados pelo usuário diretamente
+      let query = supabase
+        .from('grupos_estudo')
+        .select('*')
         .eq('user_id', user.id);
 
-      if (memberError) {
-        console.error('Erro ao carregar grupos através de membros_grupos:', memberError);
-        
-        // Fallback: tentar buscar diretamente na tabela grupos_estudo
-        const { data: directGroups, error: directError } = await supabase
-          .from('grupos_estudo')
-          .select('*')
-          .eq('user_id', user.id);
-        
-        if (directError) {
-          console.error('Erro ao carregar grupos diretamente:', directError);
-          return;
-        }
-        
-        console.log('Grupos carregados diretamente:', directGroups);
-        let groups = directGroups as StudyGroup[] || [];
-        
-        if (filterTopic) {
-          groups = groups.filter(group => group.topico === filterTopic);
-        }
-        
-        setMyGroups(groups);
+      if (filterTopic) {
+        query = query.eq('topico', filterTopic);
+      }
+
+      const { data: groups, error } = await query;
+
+      if (error) {
+        console.error('Error loading groups:', error);
+        setMyGroups([]);
         return;
       }
 
-      console.log('Grupos carregados através de membros:', memberGroups);
-
-      let groups = memberGroups
-        ?.map(mg => mg.grupos_estudo)
-        .filter(Boolean) as StudyGroup[] || [];
-
-      if (filterTopic) {
-        groups = groups.filter(group => group.topico === filterTopic);
-      }
-
-      setMyGroups(groups);
+      console.log('Groups loaded:', groups);
+      setMyGroups(groups as StudyGroup[] || []);
     } catch (error) {
-      console.error('Erro ao carregar grupos:', error);
+      console.error('Error in loadMyGroups:', error);
+      setMyGroups([]);
     }
   };
 
@@ -133,42 +99,29 @@ export default function GruposEstudoView() {
 
       const counts: Record<string, number> = {};
 
-      // Para cada tópico, contar quantos grupos o usuário participa
+      // Para cada tópico, contar quantos grupos o usuário criou
       for (const topic of topics) {
         try {
-          // Primeiro tenta através da tabela de membros
-          const { data: userGroups, error: memberError } = await supabase
-            .from('membros_grupos')
-            .select(`
-              grupos_estudo!inner (
-                topico
-              )
-            `)
-            .eq('user_id', user.id);
-
-          if (!memberError && userGroups) {
-            counts[topic.value] = userGroups.filter(
-              ug => ug.grupos_estudo?.topico === topic.value
-            ).length;
+          const { data: groups, error } = await supabase
+            .from('grupos_estudo')
+            .select('id')
+            .eq('user_id', user.id)
+            .eq('topico', topic.value);
+          
+          if (!error && groups) {
+            counts[topic.value] = groups.length;
           } else {
-            // Fallback: buscar diretamente na tabela grupos_estudo
-            const { data: directGroups, error: directError } = await supabase
-              .from('grupos_estudo')
-              .select('topico')
-              .eq('user_id', user.id)
-              .eq('topico', topic.value);
-            
-            counts[topic.value] = directGroups?.length || 0;
+            counts[topic.value] = 0;
           }
         } catch (error) {
-          console.error(`Erro ao contar grupos do tópico ${topic.value}:`, error);
+          console.error(`Error counting topic ${topic.value}:`, error);
           counts[topic.value] = 0;
         }
       }
 
       setTopicCounts(counts);
     } catch (error) {
-      console.error('Erro ao carregar contagens:', error);
+      console.error('Error loading topic counts:', error);
     }
   };
 
@@ -178,15 +131,15 @@ export default function GruposEstudoView() {
     loadMyGroups(newTopic || undefined);
   };
 
-  const handleCreateGroup = () => {
+  const handleCreateGroup = async () => {
     setIsCreateModalOpen(false);
-    loadMyGroups(selectedTopic || undefined);
-    loadTopicCounts();
+    await loadMyGroups(selectedTopic || undefined);
+    await loadTopicCounts();
   };
 
-  const handleGroupAdded = () => {
-    loadMyGroups(selectedTopic || undefined);
-    loadTopicCounts();
+  const handleGroupAdded = async () => {
+    await loadMyGroups(selectedTopic || undefined);
+    await loadTopicCounts();
   };
 
   const formatDate = (dateString: string) => {
@@ -382,8 +335,8 @@ export default function GruposEstudoView() {
               </h4>
               <p className="text-[#64748B] dark:text-white/60 mb-4">
                 {selectedTopic 
-                  ? `Você ainda não participa de grupos de ${selectedTopic}.`
-                  : 'Você ainda não participa de nenhum grupo de estudos.'
+                  ? `Você ainda não criou grupos de ${selectedTopic}.`
+                  : 'Você ainda não criou nenhum grupo de estudos.'
                 }
               </p>
               <div className="flex gap-2 justify-center">
