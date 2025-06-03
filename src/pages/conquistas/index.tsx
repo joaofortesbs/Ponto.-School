@@ -274,6 +274,28 @@ export default function ConquistasPage() {
       pontoSchoolsRequired: 1300,
       isAvailable: true,
       category: 'material_escolar'
+    },
+    {
+      id: '11',
+      name: 'Estojo',
+      subtitle: 'Cofre das Ideias',
+      description: 'Estojo compacto e resistente para guardar seus materiais de forma organizada.',
+      image: '/images/estojo.jpg',
+      rarity: 'comum',
+      pontoSchoolsRequired: 600,
+      isAvailable: true,
+      category: 'material_escolar'
+    },
+    {
+      id: '12',
+      name: 'Marca Texto',
+      subtitle: 'Luz da Atenção',
+      description: 'Kit de marca textos coloridos para destacar os pontos mais importantes dos seus estudos.',
+      image: '/images/marca-texto.jpg',
+      rarity: 'comum',
+      pontoSchoolsRequired: 400,
+      isAvailable: true,
+      category: 'material_escolar'
     }
   ];
 
