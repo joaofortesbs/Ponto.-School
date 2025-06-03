@@ -1,646 +1,820 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Users, Plus, Search, X, Settings, Eye } from 'lucide-react';
-import { FormData, Group } from './types';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Search, Plus, Users, ChevronRight, Settings, Eye, X, Filter } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import CreateGroupModal from "../CreateGroupModal";
+import AddGroupModal from "../AddGroupModal";
 
-interface Props {
-  className?: string;
+interface Topic {
+  name: string;
+  icon: string;
 }
 
-const GruposEstudoView: React.FC<Props> = () => {
+const topics = [
+  { name: 'Matemática', icon: '📊' },
+  { name: 'Língua Portuguesa', icon: '📝' },
+  { name: 'Física', icon: '🔬' },
+  { name: 'Química', icon: '⚗️' },
+  { name: 'Biologia', icon: '🧬' },
+  { name: 'Geografia', icon: '🌍' },
+  { name: 'História', icon: '📚' },
+  { name: 'Filosofia', icon: '🤔' },
+  { name: 'Sociologia', icon: '👥' },
+  { name: 'Arte', icon: '🎨' },
+  { name: 'Inglês', icon: '🇬🇧' },
+  { name: 'Educação Financeira', icon: '💰' },
+  { name: 'Redação', icon: '✍️' },
+  { name: 'Engenharia', icon: '⚙️' },
+  { name: 'Robótica', icon: '🤖' },
+  { name: 'Outros', icon: '📖' }
+];
+
+interface GroupMember {
+  id: string;
+  user_id: string;
+  joined_at: string;
+  email?: string;
+  display_name?: string;
+}
+
+interface GroupDetails {
+  id: string;
+  nome: string;
+  descricao?: string;
+  topico_nome?: string;
+  created_at: string;
+  cor: string;
+  is_publico: boolean;
+  codigo_unico: string;
+  user_id: string;
+  membros: number;
+}
+
+export default function GruposEstudoView() {
+  const [currentView, setCurrentView] = useState<'my-groups' | 'public-groups'>('my-groups');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
+  const [meusGrupos, setMeusGrupos] = useState<GroupDetails[]>([]);
+  const [gruposPublicos, setGruposPublicos] = useState<GroupDetails[]>([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
-  const [configGroupId, setConfigGroupId] = useState<string | null>(null);
-  const [configGroupData, setConfigGroupData] = useState<Group | null>(null);
-  const [configGroupMembers, setConfigGroupMembers] = useState<any[]>([]);
-  const [groups, setGroups] = useState<Group[]>([]);
-  const [user, setUser] = useState<any>(null);
+  const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [currentView, setCurrentView] = useState<'my-groups' | 'all-groups'>('my-groups');
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<string[]>([]);
+  const [configModalOpen, setConfigModalOpen] = useState(false);
+  const [selectedGroupDetails, setSelectedGroupDetails] = useState<GroupDetails | null>(null);
+  const [groupMembers, setGroupMembers] = useState<GroupMember[]>([]);
 
-  const [formData, setFormData] = useState<FormData>({
-    nome: '',
-    descricao: '',
-    topico: 'Matemática',
-    cor: '#FF6B00',
-    isPublico: false,
-    isPrivado: true,
-    permitirVisibilidade: false
-  });
-
-  const topics = [
-    { value: "Matemática", label: "📏 Matemática", color: "#3B82F6" },
-    { value: "Língua Portuguesa", label: "📚 Língua Portuguesa", color: "#10B981" },
-    { value: "Física", label: "⚡ Física", color: "#F59E0B" },
-    { value: "Química", label: "🧪 Química", color: "#8B5CF6" },
-    { value: "Biologia", label: "🌿 Biologia", color: "#EF4444" },
-    { value: "História", label: "📜 História", color: "#F97316" },
-    { value: "Geografia", label: "🌍 Geografia", color: "#06B6D4" },
-    { value: "Filosofia", label: "🤔 Filosofia", color: "#6366F1" }
-  ];
-
-  const colors = [
-    "#FF6B00", "#3B82F6", "#10B981", "#F59E0B", 
-    "#EF4444", "#8B5CF6", "#06B6D4", "#6366F1"
-  ];
+  const { toast } = useToast();
 
   useEffect(() => {
-    const loadSession = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-    };
-
-    loadSession();
+    checkAuth();
   }, []);
 
   useEffect(() => {
-    if (user) {
+    if (currentUser) {
       loadGroups();
     }
-  }, [user, currentView]);
+  }, [currentUser, currentView, searchTerm, selectedTopic, activeFilters]);
+
+  const checkAuth = async () => {
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error || !user) {
+        toast({
+          title: "Erro",
+          description: "Usuário não autenticado",
+          variant: "destructive"
+        });
+        return;
+      }
+      setCurrentUser(user);
+    } catch (error) {
+      console.error('Erro ao verificar autenticação:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao verificar autenticação",
+        variant: "destructive"
+      });
+    }
+  };
 
   const loadGroups = async () => {
-    if (!user) return;
-
+    if (!currentUser) return;
     setIsLoading(true);
     try {
       if (currentView === 'my-groups') {
-        const { data: myGroupsData, error: myGroupsError } = await supabase
-          .from('membros_grupos')
-          .select('grupo_id, grupos_estudo(*)')
-          .eq('user_id', user.id);
-
-        if (myGroupsError) throw myGroupsError;
-        
-        const myGroups = myGroupsData?.map(item => item.grupos_estudo).filter(Boolean) || [];
-        setGroups(myGroups);
-      } else if (currentView === 'all-groups') {
-        // Mudança: consultar grupos com permitir_visibilidade = true
-        const { data: allGroupsData, error: allGroupsError } = await supabase
-          .from('grupos_estudo')
-          .select('*')
-          .eq('permitir_visibilidade', true);
-
-        if (allGroupsError) throw allGroupsError;
-        setGroups(allGroupsData || []);
+        await loadMeusGrupos();
+      } else {
+        await loadGruposPublicos();
       }
     } catch (error) {
       console.error('Erro ao carregar grupos:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao carregar grupos",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const leaveGroup = async (groupId: string) => {
-    if (!user) {
-      alert('Você precisa estar logado para sair do grupo');
-      return;
-    }
-
-    setIsSubmitting(true);
+  const loadMeusGrupos = async () => {
     try {
-      const { error } = await supabase
+      // First get memberships
+      const { data: memberships } = await supabase
         .from('membros_grupos')
-        .delete()
-        .eq('grupo_id', groupId)
-        .eq('user_id', user.id);
+        .select('grupo_id')
+        .eq('user_id', currentUser.id);
 
+      const groupIds = memberships?.map(m => m.grupo_id) || [];
+
+      let query = supabase.from('grupos_estudo').select('*');
+      
+      if (groupIds.length > 0) {
+        query = query.or(`user_id.eq.${currentUser.id},id.in.(${groupIds.join(',')})`);
+      } else {
+        query = query.eq('user_id', currentUser.id);
+      }
+
+      if (searchTerm) {
+        query = query.ilike('nome', `%${searchTerm}%`);
+      }
+      if (selectedTopic) {
+        query = query.eq('topico_nome', selectedTopic);
+      }
+
+      // Apply additional filters
+      if (activeFilters.includes('mais-recentes')) {
+        query = query.order('created_at', { ascending: false });
+      } else if (activeFilters.includes('mais-antigos')) {
+        query = query.order('created_at', { ascending: true });
+      } else {
+        query = query.order('created_at', { ascending: false });
+      }
+
+      if (activeFilters.includes('publicos')) {
+        query = query.eq('is_publico', true);
+      } else if (activeFilters.includes('privados')) {
+        query = query.eq('is_publico', false);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
 
-      alert('Você saiu do grupo com sucesso!');
-      loadGroups();
-    } catch (error: any) {
-      console.error('Erro ao sair do grupo:', error);
-      alert(`Erro ao sair do grupo: ${error.message}`);
-    } finally {
-      setIsSubmitting(false);
+      setMeusGrupos(data || []);
+    } catch (error) {
+      console.error('Erro ao carregar meus grupos:', error);
+      throw error;
     }
   };
 
-  const joinGroup = async (groupId: string) => {
-    if (!user) {
-      alert('Você precisa estar logado para entrar no grupo');
-      return;
-    }
+  const loadGruposPublicos = async () => {
+    try {
+      // Get my memberships to exclude them
+      const { data: memberships } = await supabase
+        .from('membros_grupos')
+        .select('grupo_id')
+        .eq('user_id', currentUser.id);
 
-    setIsSubmitting(true);
+      const myGroupIds = memberships?.map(m => m.grupo_id) || [];
+
+      let query = supabase
+        .from('grupos_estudo')
+        .select('*')
+        .eq('is_publico', true)
+        .neq('user_id', currentUser.id);
+
+      if (myGroupIds.length > 0) {
+        query = query.not('id', 'in', `(${myGroupIds.join(',')})`);
+      }
+
+      if (searchTerm) {
+        query = query.ilike('nome', `%${searchTerm}%`);
+      }
+      if (selectedTopic) {
+        query = query.eq('topico_nome', selectedTopic);
+      }
+
+      // Apply additional filters
+      if (activeFilters.includes('mais-recentes')) {
+        query = query.order('created_at', { ascending: false });
+      } else if (activeFilters.includes('mais-antigos')) {
+        query = query.order('created_at', { ascending: true });
+      } else {
+        query = query.order('created_at', { ascending: false });
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+
+      setGruposPublicos(data || []);
+    } catch (error) {
+      console.error('Erro ao carregar grupos públicos:', error);
+      throw error;
+    }
+  };
+
+  const handleJoinGroup = async (groupId: string) => {
     try {
       const { error } = await supabase
         .from('membros_grupos')
         .insert({
           grupo_id: groupId,
-          user_id: user.id,
-          joined_at: new Date().toISOString()
+          user_id: currentUser.id
         });
 
       if (error) throw error;
 
-      alert('Você entrou no grupo com sucesso!');
-      loadGroups();
-    } catch (error: any) {
-      console.error('Erro ao entrar no grupo:', error);
-      alert(`Erro ao entrar no grupo: ${error.message}`);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const generateUniqueCode = (): string => {
-    const timestamp = Date.now().toString(36);
-    const random = Math.random().toString(36).substring(2, 8);
-    return (timestamp + random).toUpperCase().substring(0, 8);
-  };
-
-  const handleCreateGroup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!user) {
-      alert('Você precisa estar logado para criar um grupo');
-      return;
-    }
-
-    if (!formData.nome.trim()) {
-      alert('Nome do grupo é obrigatório!');
-      return;
-    }
-
-    // Verificar se pelo menos uma opção de privacidade foi selecionada
-    if (!formData.isPublico && !formData.isPrivado) {
-      alert('Selecione a privacidade do grupo (Público ou Privado)');
-      return;
-    }
-
-    if (formData.isPublico && formData.isPrivado) {
-      alert('Selecione apenas uma opção de privacidade');
-      return;
-    }
-
-    setIsSubmitting(true);
-    
-    try {
-      const selectedTopic = topics.find(t => t.value === formData.topico);
-      const codigoUnico = generateUniqueCode();
-
-      const groupData = {
-        codigo_unico: codigoUnico,
-        user_id: user.id,
-        nome: formData.nome.trim(),
-        descricao: formData.descricao.trim() || null,
-        topico: formData.topico,
-        topico_nome: selectedTopic?.label || formData.topico,
-        topico_icon: selectedTopic?.label.split(' ')[0] || "📚",
-        cor: formData.cor,
-        is_publico: formData.isPublico,
-        privado: formData.isPrivado,
-        permitir_visibilidade: formData.permitirVisibilidade, // Nova coluna
-        visibilidade: 'todos',
-        membros: 1
-      };
-
-      const { data, error } = await supabase
-        .from('grupos_estudo')
-        .insert(groupData)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Adicionar criador como membro
-      const { error: memberError } = await supabase
-        .from('membros_grupos')
-        .insert({
-          grupo_id: data.id,
-          user_id: user.id,
-          joined_at: new Date().toISOString()
-        });
-
-      if (memberError) throw memberError;
-
-      alert(`Grupo criado com sucesso! Código: ${codigoUnico}`);
-      
-      // Reset form
-      setFormData({
-        nome: '',
-        descricao: '',
-        topico: 'Matemática',
-        cor: '#FF6B00',
-        isPublico: false,
-        isPrivado: true,
-        permitirVisibilidade: false
+      toast({
+        title: "Sucesso",
+        description: "Você ingressou no grupo com sucesso!",
       });
-      
-      setIsCreateModalOpen(false);
       loadGroups();
-      
-    } catch (error: any) {
-      console.error('Erro ao criar grupo:', error);
-      alert(`Erro ao criar grupo: ${error.message}`);
-    } finally {
-      setIsSubmitting(false);
+    } catch (error) {
+      console.error('Erro ao ingressar no grupo:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao ingressar no grupo",
+        variant: "destructive"
+      });
     }
   };
 
-  const showConfigModal = async (groupId: string) => {
-    setConfigGroupId(groupId);
-    setIsConfigModalOpen(true);
+  const handleLeaveGroup = async (groupId: string) => {
+    if (!window.confirm('Você tem certeza que deseja sair deste grupo?')) {
+      return;
+    }
 
     try {
-      const { data: groupData, error: groupError } = await supabase
+      const { error } = await supabase
+        .from('membros_grupos')
+        .delete()
+        .eq('grupo_id', groupId)
+        .eq('user_id', currentUser.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: "Você saiu do grupo com sucesso!",
+      });
+      loadGroups();
+    } catch (error) {
+      console.error('Erro ao sair do grupo:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao sair do grupo",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleShowConfigModal = async (groupId: string) => {
+    try {
+      // First check if user is the creator
+      const { data: group, error: groupError } = await supabase
         .from('grupos_estudo')
         .select('*')
         .eq('id', groupId)
         .single();
 
-      if (groupError) throw groupError;
-      setConfigGroupData(groupData);
+      if (groupError) {
+        console.error('Erro ao carregar grupo:', groupError);
+        toast({
+          title: "Erro",
+          description: "Erro ao carregar informações do grupo",
+          variant: "destructive"
+        });
+        return;
+      }
 
-      const { data: membersData, error: membersError } = await supabase
-        .from('membros_grupos')
-        .select('user_id')
-        .eq('grupo_id', groupId);
+      if (group.user_id !== currentUser.id) {
+        toast({
+          title: "Acesso negado",
+          description: "Apenas o criador pode configurar este grupo",
+          variant: "destructive"
+        });
+        return;
+      }
 
-      if (membersError) throw membersError;
-      setConfigGroupMembers(membersData);
+      setSelectedGroupDetails(group);
 
+      // Load group members with simplified query
+      try {
+        const { data: members, error: membersError } = await supabase
+          .from('membros_grupos')
+          .select('*')
+          .eq('grupo_id', groupId);
+
+        if (membersError) {
+          console.error('Erro ao carregar membros:', membersError);
+          // Still show modal even if members fail to load
+          setGroupMembers([]);
+        } else {
+          // Get user profiles for members
+          const memberProfiles: GroupMember[] = [];
+          
+          for (const member of members || []) {
+            try {
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('email, display_name')
+                .eq('id', member.user_id)
+                .single();
+              
+              memberProfiles.push({
+                id: member.id,
+                user_id: member.user_id,
+                joined_at: member.joined_at,
+                email: profile?.email || 'Email não disponível',
+                display_name: profile?.display_name || 'Nome não disponível'
+              });
+            } catch (error) {
+              // Add member without profile info if profile fetch fails
+              memberProfiles.push({
+                id: member.id,
+                user_id: member.user_id,
+                joined_at: member.joined_at,
+                email: 'Email não disponível',
+                display_name: 'Nome não disponível'
+              });
+            }
+          }
+          
+          setGroupMembers(memberProfiles);
+        }
+      } catch (error) {
+        console.error('Erro ao processar membros:', error);
+        setGroupMembers([]);
+      }
+
+      setConfigModalOpen(true);
     } catch (error) {
-      console.error('Erro ao carregar dados do grupo:', error);
-      alert('Erro ao carregar dados do grupo');
+      console.error('Erro geral ao abrir modal:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao abrir configurações do grupo",
+        variant: "destructive"
+      });
     }
   };
 
-  const filteredGroups = groups.filter(group =>
-    group.nome.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (group.topico_nome && group.topico_nome.toLowerCase().includes(searchQuery.toLowerCase())) ||
-    group.topico.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const scrollTopics = (direction: 'left' | 'right') => {
+    const container = document.querySelector('.topics-carousel');
+    if (container) {
+      const scrollAmount = 150;
+      container.scrollBy({
+        left: direction === 'right' ? scrollAmount : -scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  const handleFilterToggle = (filter: string) => {
+    setActiveFilters(prev => 
+      prev.includes(filter) 
+        ? prev.filter(f => f !== filter)
+        : [...prev, filter]
+    );
+  };
+
+  const clearFilters = () => {
+    setActiveFilters([]);
+  };
+
+  const currentGroups = currentView === 'my-groups' ? meusGrupos : gruposPublicos;
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Users className="h-8 w-8 text-[#FF6B00]" />
-          <div>
-            <h2 className="text-2xl font-bold text-[#001427] dark:text-white">
-              Grupos de Estudo
-            </h2>
-            <p className="text-[#778DA9] dark:text-gray-400 text-sm">
-              Colabore, compartilhe e aprenda com seus colegas
-            </p>
-          </div>
+          <h3 className="text-lg font-semibold text-[#29335C] dark:text-white">
+            Grupos de Estudos
+          </h3>
+          <Badge variant="secondary" className="bg-[#FF6B00]/10 text-[#FF6B00]">
+            {meusGrupos.length} grupos
+          </Badge>
         </div>
-
-        <Button
-          onClick={() => setIsCreateModalOpen(true)}
-          className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          Criar Novo Grupo
-        </Button>
-      </div>
-
-      <div className="flex gap-4 items-center">
+        
         <div className="flex gap-2">
           <Button
-            variant={currentView === 'my-groups' ? 'default' : 'outline'}
+            onClick={() => setIsJoinModalOpen(true)}
+            variant="outline"
+            size="sm"
+            className="border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10"
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            Entrar em Grupo
+          </Button>
+          <Button
+            onClick={() => setIsCreateModalOpen(true)}
+            size="sm"
+            className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white"
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            Criar Grupo
+          </Button>
+        </div>
+      </div>
+
+      {/* Topics Carousel */}
+      <div className="relative">
+        <div className="topics-carousel flex gap-2 overflow-x-auto scrollbar-hide pb-2">
+          {topics.map((topic) => (
+            <button
+              key={topic.name}
+              onClick={() => setSelectedTopic(selectedTopic === topic.name ? null : topic.name)}
+              className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                selectedTopic === topic.name
+                  ? 'bg-[#FF6B00] text-white'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+              }`}
+            >
+              <span className="mr-1">{topic.icon}</span>
+              {topic.name}
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={() => scrollTopics('right')}
+          className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-white dark:bg-gray-800 shadow-lg rounded-full p-2 border"
+        >
+          <ChevronRight className="h-4 w-4" />
+        </button>
+      </div>
+
+      {/* Controls */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex gap-2">
+          <Button
             onClick={() => setCurrentView('my-groups')}
-            className={currentView === 'my-groups' ? 'bg-[#FF6B00] text-white' : ''}
+            variant={currentView === 'my-groups' ? 'default' : 'outline'}
+            size="sm"
+            className={currentView === 'my-groups' ? 'bg-[#FF6B00] hover:bg-[#FF8C40]' : ''}
           >
             Meus Grupos
           </Button>
           <Button
-            variant={currentView === 'all-groups' ? 'default' : 'outline'}
-            onClick={() => setCurrentView('all-groups')}
-            className={currentView === 'all-groups' ? 'bg-[#FF6B00] text-white' : ''}
+            onClick={() => setCurrentView('public-groups')}
+            variant={currentView === 'public-groups' ? 'default' : 'outline'}
+            size="sm"
+            className={currentView === 'public-groups' ? 'bg-[#FF6B00] hover:bg-[#FF8C40]' : ''}
           >
-            Todos os Grupos
+            Grupos Públicos
           </Button>
         </div>
-
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input
-            type="text"
-            placeholder="Buscar grupos..."
-            className="pl-9"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+        
+        <div className="flex gap-2 flex-1">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              type="text"
+              placeholder="Buscar grupos..."
+              className="pl-9"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="relative">
+            <Button
+              onClick={() => setShowFilters(!showFilters)}
+              variant="outline"
+              size="sm"
+              className="gap-1"
+            >
+              <Filter className="h-4 w-4" />
+              Filtros
+            </Button>
+            
+            {showFilters && (
+              <div className="absolute right-0 top-full mt-2 bg-white dark:bg-gray-800 border rounded-lg shadow-lg p-4 z-50 w-64">
+                <div className="space-y-2">
+                  <h4 className="font-medium">Filtros</h4>
+                  {[
+                    { value: 'mais-membros', label: 'Mais membros' },
+                    { value: 'menos-membros', label: 'Menos membros' },
+                    { value: 'mais-recentes', label: 'Mais recentes' },
+                    { value: 'mais-antigos', label: 'Mais antigos' },
+                    { value: 'publicos', label: 'Públicos' },
+                    { value: 'privados', label: 'Privados' }
+                  ].map((filter) => (
+                    <label key={filter.value} className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={activeFilters.includes(filter.value)}
+                        onChange={() => handleFilterToggle(filter.value)}
+                        className="rounded"
+                      />
+                      <span className="text-sm">{filter.label}</span>
+                    </label>
+                  ))}
+                  <Button
+                    onClick={clearFilters}
+                    variant="outline"
+                    size="sm"
+                    className="w-full mt-2"
+                  >
+                    Limpar filtros
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Grid de grupos */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredGroups.length > 0 ? (
-          filteredGroups.map((group) => (
+      {/* Groups Grid */}
+      {isLoading ? (
+        <div className="text-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF6B00] mx-auto"></div>
+          <p className="mt-2 text-gray-500">Carregando grupos...</p>
+        </div>
+      ) : currentGroups.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {currentGroups.map((group) => (
             <div
               key={group.id}
-              className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 p-4 hover:shadow-md transition-all duration-300"
+              className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow"
             >
-              <div className="flex justify-between items-start mb-3">
+              <div className="flex items-start justify-between mb-3">
                 <div className="flex-1">
-                  <h3 className="font-medium text-[#29335C] dark:text-white mb-1">
+                  <h4 className="font-semibold text-gray-900 dark:text-white truncate">
                     {group.nome}
-                  </h3>
-                  <p className="text-sm text-[#64748B] dark:text-white/60 mb-2">
-                    {group.topico_nome || group.topico}
+                  </h4>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Código: {group.codigo_unico}
                   </p>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Badge variant="outline" className="text-xs">
-                      Código: {group.codigo_unico}
-                    </Badge>
-                    <Badge variant={group.is_publico ? "default" : "secondary"} className="text-xs">
-                      {group.is_publico ? 'Público' : 'Privado'}
-                    </Badge>
-                  </div>
+                  <Badge
+                    variant="secondary"
+                    className={`mt-1 ${
+                      group.is_publico
+                        ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+                        : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300'
+                    }`}
+                  >
+                    {group.is_publico ? 'Público' : 'Privado'}
+                  </Badge>
                 </div>
                 
                 {currentView === 'my-groups' && (
                   <div className="flex gap-1 ml-2">
                     <button
-                      onClick={() => leaveGroup(group.id)}
-                      className="text-red-500 hover:text-red-700 p-1 rounded transition-colors"
+                      onClick={() => handleLeaveGroup(group.id)}
+                      className="p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
                       title="Sair do Grupo"
                     >
-                      ❌
+                      <X className="h-4 w-4" />
                     </button>
                     <button
-                      className="text-gray-400 p-1 rounded transition-colors cursor-not-allowed"
-                      title="Visualizar (Em breve)"
+                      className="p-1 text-gray-400 cursor-not-allowed rounded"
+                      title="Visualizar (em breve)"
                       disabled
                     >
-                      👁️
+                      <Eye className="h-4 w-4" />
                     </button>
                     <button
-                      onClick={() => showConfigModal(group.id)}
-                      className="text-[#FF6B00] hover:text-[#FF8C40] p-1 rounded transition-colors"
+                      onClick={() => handleShowConfigModal(group.id)}
+                      className="p-1 text-[#FF6B00] hover:bg-[#FF6B00]/10 rounded"
                       title="Configurações"
                     >
-                      ⚙️
+                      <Settings className="h-4 w-4" />
                     </button>
                   </div>
                 )}
               </div>
-
-              {currentView === 'all-groups' && (
-                <Button
-                  onClick={() => joinGroup(group.id)}
-                  className="w-full bg-[#FF6B00] hover:bg-[#FF8C40] text-white text-sm"
-                  disabled={isLoading}
-                >
-                  Entrar no Grupo
-                </Button>
-              )}
-            </div>
-          ))
-        ) : (
-          <div className="col-span-full text-center py-8">
-            <Users className="h-12 w-12 mx-auto text-gray-400 mb-3" />
-            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-              {isLoading ? 'Carregando...' : 'Nenhum grupo encontrado'}
-            </h3>
-            <p className="text-gray-500 max-w-md mx-auto mt-2">
-              {currentView === 'my-groups'
-                ? 'Você ainda não participa de nenhum grupo de estudos.'
-                : 'Não há grupos disponíveis no momento.'}
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* Modal de Criar Grupo */}
-      {isCreateModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-[#1E293B] rounded-xl overflow-hidden max-w-lg w-full shadow-xl">
-            <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-4 flex justify-between items-center">
-              <h2 className="text-xl font-bold text-white">Criar Novo Grupo</h2>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 rounded-full text-white/80 hover:text-white hover:bg-white/20"
-                onClick={() => setIsCreateModalOpen(false)}
-              >
-                <X className="h-5 w-5" />
-              </Button>
-            </div>
-
-            <div className="p-6">
-              <form onSubmit={handleCreateGroup} className="space-y-4">
-                <div>
-                  <Label htmlFor="nome">Nome do Grupo *</Label>
-                  <Input
-                    id="nome"
-                    value={formData.nome}
-                    onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
-                    placeholder="Digite o nome do grupo"
-                    required
-                    className="mt-1"
-                  />
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1 text-sm text-gray-500">
+                  <Users className="h-4 w-4" />
+                  <span>{group.membros} membros</span>
                 </div>
-
-                <div>
-                  <Label htmlFor="descricao">Descrição</Label>
-                  <Textarea
-                    id="descricao"
-                    value={formData.descricao}
-                    onChange={(e) => setFormData(prev => ({ ...prev, descricao: e.target.value }))}
-                    placeholder="Descreva o objetivo do grupo (opcional)"
-                    className="mt-1 min-h-[80px]"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="topico">Tópico de Estudo</Label>
-                  <Select
-                    value={formData.topico}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, topico: value }))}
+                
+                {currentView === 'public-groups' && (
+                  <Button
+                    onClick={() => handleJoinGroup(group.id)}
+                    size="sm"
+                    className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white"
                   >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Selecione um tópico" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {topics.map((topic) => (
-                        <SelectItem key={topic.value} value={topic.value}>
-                          {topic.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label>Cor do Grupo</Label>
-                  <div className="flex gap-2 mt-2">
-                    {colors.map((color) => (
-                      <button
-                        key={color}
-                        type="button"
-                        className={`w-8 h-8 rounded-full border-2 ${
-                          formData.cor === color ? 'border-white' : 'border-gray-400'
-                        }`}
-                        style={{ backgroundColor: color }}
-                        onClick={() => setFormData(prev => ({ ...prev, cor: color }))}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                {/* Nova seção de Privacidade do Grupo */}
-                <div>
-                  <Label>Privacidade do Grupo *</Label>
-                  <div className="flex gap-4 mt-2">
-                    <label className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        checked={formData.isPublico}
-                        onChange={(e) => setFormData(prev => ({ 
-                          ...prev, 
-                          isPublico: e.target.checked,
-                          isPrivado: e.target.checked ? false : prev.isPrivado
-                        }))}
-                      />
-                      <span>Público</span>
-                    </label>
-                    <label className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        checked={formData.isPrivado}
-                        onChange={(e) => setFormData(prev => ({ 
-                          ...prev, 
-                          isPrivado: e.target.checked,
-                          isPublico: e.target.checked ? false : prev.isPublico
-                        }))}
-                      />
-                      <span>Privado</span>
-                    </label>
-                  </div>
-                </div>
-
-                {/* Nova seção de Visibilidade do Grupo */}
-                <div>
-                  <Label>Visibilidade do Grupo</Label>
-                  <label className="flex items-center space-x-2 mt-2">
-                    <input
-                      type="checkbox"
-                      checked={formData.permitirVisibilidade}
-                      onChange={(e) => setFormData(prev => ({ 
-                        ...prev, 
-                        permitirVisibilidade: e.target.checked
-                      }))}
-                    />
-                    <span>Permitir que todos vejam</span>
-                  </label>
-                </div>
-
-                <div className="flex gap-2 pt-4">
-                  <Button 
-                    type="submit" 
-                    disabled={isSubmitting}
-                    className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white flex-1"
-                  >
-                    {isSubmitting ? 'Criando...' : 'Criar Grupo'}
+                    Entrar
                   </Button>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => setIsCreateModalOpen(false)}
-                    disabled={isSubmitting}
-                    className="flex-1"
-                  >
-                    Cancelar
-                  </Button>
-                </div>
-              </form>
+                )}
+              </div>
             </div>
-          </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-8">
+          <Users className="h-12 w-12 mx-auto text-gray-400 mb-3" />
+          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+            {currentView === 'my-groups' ? 'Nenhum grupo encontrado' : 'Nenhum grupo público disponível'}
+          </h3>
+          <p className="text-gray-500 max-w-md mx-auto mt-2">
+            {currentView === 'my-groups' 
+              ? 'Você ainda não participa de nenhum grupo de estudos ou sua busca não retornou resultados.'
+              : 'Não há grupos públicos disponíveis no momento ou sua busca não retornou resultados.'
+            }
+          </p>
         </div>
       )}
 
-      {/* Modal de Configurações */}
-      {isConfigModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-[#1E293B] rounded-xl overflow-hidden max-w-md w-full shadow-xl">
-            <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-4 flex justify-between items-center">
-              <h2 className="text-xl font-bold text-white">Configurações do Grupo</h2>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 rounded-full text-white/80 hover:text-white hover:bg-white/20"
-                onClick={() => setIsConfigModalOpen(false)}
-              >
-                <X className="h-5 w-5" />
-              </Button>
-            </div>
+      {/* Configuration Modal */}
+      {configModalOpen && selectedGroupDetails && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  Configurações do Grupo
+                </h3>
+                <Button
+                  onClick={() => setConfigModalOpen(false)}
+                  variant="ghost"
+                  size="sm"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
 
-            <div className="p-4 space-y-4">
-              {configGroupData ? (
-                <>
-                  <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                    <h4 className="font-medium mb-2">Informações</h4>
-                    <p><strong>Nome:</strong> {configGroupData.nome}</p>
-                    <p><strong>Descrição:</strong> {configGroupData.descricao || 'Sem descrição'}</p>
-                    <p><strong>Tópico:</strong> {configGroupData.topico}</p>
-                    <p><strong>Código:</strong> {configGroupData.codigo_unico}</p>
-                  </div>
-
-                  <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                    <h4 className="font-medium mb-2">Privacidade</h4>
-                    <p><strong>Tipo:</strong> {configGroupData.is_publico ? 'Público' : 'Privado'}</p>
-                    <p><strong>Visibilidade:</strong> {configGroupData.permitir_visibilidade ? 'Permitida para todos' : 'Restrita'}</p>
-                  </div>
-
-                  <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                    <h4 className="font-medium mb-2">Membros ({configGroupMembers.length})</h4>
-                    <div className="space-y-1 max-h-32 overflow-y-auto">
-                      {configGroupMembers.map((member: any, index: number) => (
-                        <div key={index} className="text-sm">
-                          {member.user_id || 'Usuário'}
-                        </div>
-                      ))}
+              <div className="space-y-6">
+                {/* Group Information */}
+                <div className="space-y-4">
+                  <h4 className="font-medium text-gray-900 dark:text-white">Informações do Grupo</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Nome
+                      </label>
+                      <Input value={selectedGroupDetails.nome} readOnly />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Tópico
+                      </label>
+                      <Input value={selectedGroupDetails.topico_nome || 'Não definido'} readOnly />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Código Único
+                      </label>
+                      <Input value={selectedGroupDetails.codigo_unico} readOnly />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Criado em
+                      </label>
+                      <Input value={new Date(selectedGroupDetails.created_at).toLocaleDateString('pt-BR')} readOnly />
                     </div>
                   </div>
+                  {selectedGroupDetails.descricao && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Descrição
+                      </label>
+                      <textarea
+                        value={selectedGroupDetails.descricao}
+                        readOnly
+                        className="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white"
+                        rows={3}
+                      />
+                    </div>
+                  )}
+                </div>
 
-                  <div className="flex gap-2">
-                    <Button className="flex-1 bg-blue-500 hover:bg-blue-600 text-white" size="sm">
-                      Convidar
-                    </Button>
-                    <Button 
-                      className="flex-1 bg-green-500 hover:bg-green-600 text-white" 
-                      size="sm"
+                {/* Privacy Settings */}
+                <div className="space-y-4">
+                  <h4 className="font-medium text-gray-900 dark:text-white">Privacidade</h4>
+                  <div className="flex items-center gap-4">
+                    <Badge
+                      variant="secondary"
+                      className={`${
+                        selectedGroupDetails.is_publico
+                          ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+                          : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300'
+                      }`}
+                    >
+                      {selectedGroupDetails.is_publico ? 'Grupo Público' : 'Grupo Privado'}
+                    </Badge>
+                  </div>
+                </div>
+
+                {/* Members */}
+                <div className="space-y-4">
+                  <h4 className="font-medium text-gray-900 dark:text-white">
+                    Membros ({groupMembers.length})
+                  </h4>
+                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                    {groupMembers.length > 0 ? (
+                      groupMembers.map((member) => (
+                        <div
+                          key={member.id}
+                          className="flex items-center gap-3 p-2 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                        >
+                          <div className="w-8 h-8 bg-[#FF6B00] rounded-full flex items-center justify-center text-white text-sm font-medium">
+                            {member.display_name?.charAt(0)?.toUpperCase() || 'U'}
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-900 dark:text-white">
+                              {member.display_name}
+                            </p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              {member.email}
+                            </p>
+                          </div>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            {new Date(member.joined_at).toLocaleDateString('pt-BR')}
+                          </span>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Nenhum membro encontrado
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="space-y-4">
+                  <h4 className="font-medium text-gray-900 dark:text-white">Ações</h4>
+                  <div className="flex gap-3">
+                    <Button
+                      variant="outline"
                       onClick={() => {
-                        const shareText = `Código do grupo: ${configGroupData.codigo_unico}`;
-                        navigator.clipboard.writeText(shareText);
-                        alert('Código copiado para a área de transferência!');
+                        // Placeholder for invite functionality
+                        toast({
+                          title: "Em breve",
+                          description: "Funcionalidade de convite será implementada em breve",
+                        });
                       }}
                     >
-                      Compartilhar
+                      Convidar Parceiros
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        navigator.clipboard.writeText(selectedGroupDetails.codigo_unico);
+                        toast({
+                          title: "Código copiado",
+                          description: `Código ${selectedGroupDetails.codigo_unico} copiado para a área de transferência`,
+                        });
+                      }}
+                    >
+                      Compartilhar Código
                     </Button>
                   </div>
-                </>
-              ) : (
-                <p>Carregando informações do grupo...</p>
-              )}
+                </div>
+              </div>
 
-              <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={() => setIsConfigModalOpen(false)}
-              >
-                Fechar
-              </Button>
+              <div className="flex justify-end gap-3 mt-6 pt-6 border-t">
+                <Button
+                  onClick={() => setConfigModalOpen(false)}
+                  variant="outline"
+                >
+                  Fechar
+                </Button>
+                <Button
+                  className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white"
+                  onClick={() => {
+                    // Placeholder for save functionality
+                    toast({
+                      title: "Em breve",
+                      description: "Funcionalidade de edição será implementada em breve",
+                    });
+                  }}
+                >
+                  Salvar Alterações
+                </Button>
+              </div>
             </div>
           </div>
         </div>
       )}
+
+      {/* Modals */}
+      <CreateGroupModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSubmit={() => {
+          setIsCreateModalOpen(false);
+          loadGroups();
+        }}
+      />
+
+      <AddGroupModal
+        isOpen={isJoinModalOpen}
+        onClose={() => setIsJoinModalOpen(false)}
+        onGroupAdded={() => {
+          setIsJoinModalOpen(false);
+          loadGroups();
+        }}
+      />
     </div>
   );
-};
-
-export default GruposEstudoView;
+}
