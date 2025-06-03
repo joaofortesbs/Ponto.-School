@@ -7,6 +7,8 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import CreateGroupModal from "../CreateGroupModal";
 import AddGroupModal from "../AddGroupModal";
+import EntrarGrupoPorCodigoModal from "../EntrarGrupoPorCodigoModal";
+import EntrarGrupoPorCodigoForm from "../EntrarGrupoPorCodigoForm";
 
 interface StudyGroup {
   id: string;
@@ -41,6 +43,7 @@ export default function GruposEstudoView() {
   const [selectedTopic, setSelectedTopic] = useState<string>("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
 
@@ -167,6 +170,49 @@ export default function GruposEstudoView() {
     await loadTopicCounts();
   };
 
+  const handleJoinPublicGroup = async (groupId: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        alert('Usuário não autenticado');
+        return;
+      }
+
+      // Verificar se já é membro
+      const { data: existingMember } = await supabase
+        .from('membros_grupos')
+        .select('id')
+        .eq('grupo_id', groupId)
+        .eq('user_id', user.id)
+        .single();
+
+      if (existingMember) {
+        alert('Você já faz parte deste grupo');
+        return;
+      }
+
+      // Adicionar como membro
+      const { error: memberError } = await supabase
+        .from('membros_grupos')
+        .insert({
+          grupo_id: groupId,
+          user_id: user.id
+        });
+
+      if (memberError) {
+        console.error('Error joining group:', memberError);
+        alert('Erro ao ingressar no grupo. Tente novamente.');
+        return;
+      }
+
+      alert('Você ingressou no grupo com sucesso!');
+      await loadGroups(selectedTopic || undefined);
+    } catch (error) {
+      console.error('Error joining public group:', error);
+      alert('Erro inesperado. Tente novamente.');
+    }
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR');
   };
@@ -228,11 +274,11 @@ export default function GruposEstudoView() {
             <Button
               size="sm"
               variant="outline"
-              onClick={() => setIsAddModalOpen(true)}
+              onClick={() => setIsJoinModalOpen(true)}
               className="text-[#FF6B00] border-[#FF6B00] hover:bg-[#FF6B00] hover:text-white"
             >
               <Search className="h-4 w-4 mr-1" />
-              Buscar
+              Entrar
             </Button>
             <Button
               size="sm"
@@ -247,6 +293,9 @@ export default function GruposEstudoView() {
       </CardHeader>
       
       <CardContent className="space-y-6">
+        {/* Campo para entrar por código */}
+        <EntrarGrupoPorCodigoForm onGroupJoined={handleGroupAdded} />
+
         {/* Tópicos de Estudo */}
         <div>
           <div className="flex justify-between items-center mb-3">
@@ -430,6 +479,7 @@ export default function GruposEstudoView() {
                       <Button 
                         variant="outline" 
                         size="sm"
+                        onClick={() => handleJoinPublicGroup(group.id)}
                         className="text-[#FF6B00] border-[#FF6B00] hover:bg-[#FF6B00] hover:text-white"
                       >
                         Participar
@@ -453,7 +503,7 @@ export default function GruposEstudoView() {
               </p>
               <Button
                 variant="outline"
-                onClick={() => setIsAddModalOpen(true)}
+                onClick={() => setIsJoinModalOpen(true)}
                 className="text-[#FF6B00] border-[#FF6B00] hover:bg-[#FF6B00] hover:text-white"
               >
                 <Search className="h-4 w-4 mr-1" />
@@ -475,6 +525,12 @@ export default function GruposEstudoView() {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onGroupAdded={handleGroupAdded}
+      />
+
+      <EntrarGrupoPorCodigoModal
+        isOpen={isJoinModalOpen}
+        onClose={() => setIsJoinModalOpen(false)}
+        onGroupJoined={handleGroupAdded}
       />
     </Card>
   );
