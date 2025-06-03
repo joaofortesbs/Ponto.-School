@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, Plus, Search, Calendar, MessageCircle, Star } from "lucide-react";
+import { Users, Plus, Search, Calendar, MessageCircle, Star, Eye } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import CreateGroupModal from "../CreateGroupModal";
@@ -19,6 +19,8 @@ interface StudyGroup {
   membros: number;
   created_at: string;
   is_publico: boolean;
+  user_id: string;
+  codigo_unico: string;
 }
 
 const topics = [
@@ -34,6 +36,7 @@ const topics = [
 
 export default function GruposEstudoView() {
   const [myGroups, setMyGroups] = useState<StudyGroup[]>([]);
+  const [publicGroups, setPublicGroups] = useState<StudyGroup[]>([]);
   const [topicCounts, setTopicCounts] = useState<Record<string, number>>({});
   const [selectedTopic, setSelectedTopic] = useState<string>("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -46,7 +49,7 @@ export default function GruposEstudoView() {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
       if (user) {
-        await loadMyGroups();
+        await loadGroups();
         await loadTopicCounts();
       }
       setIsLoading(false);
@@ -55,7 +58,7 @@ export default function GruposEstudoView() {
     getUser();
   }, []);
 
-  const loadMyGroups = async (filterTopic?: string) => {
+  const loadGroups = async (filterTopic?: string) => {
     try {
       console.log('Loading groups...');
       const { data: { user } } = await supabase.auth.getUser();
@@ -66,29 +69,51 @@ export default function GruposEstudoView() {
 
       console.log('User authenticated:', user.id);
 
-      // Buscar grupos criados pelo usuário
-      let query = supabase
+      // Carregar Meus Grupos (criados pelo usuário ou onde é membro)
+      let myGroupsQuery = supabase
         .from('grupos_estudo')
         .select('*')
         .eq('user_id', user.id);
 
       if (filterTopic) {
-        query = query.eq('topico', filterTopic);
+        myGroupsQuery = myGroupsQuery.eq('topico', filterTopic);
       }
 
-      const { data: groups, error } = await query;
+      const { data: createdGroups, error: createdError } = await myGroupsQuery;
 
-      if (error) {
-        console.error('Error loading groups:', error);
+      if (createdError) {
+        console.error('Error loading created groups:', createdError);
         setMyGroups([]);
-        return;
+      } else {
+        console.log('Created groups loaded:', createdGroups);
+        setMyGroups(createdGroups as StudyGroup[] || []);
       }
 
-      console.log('Groups loaded:', groups);
-      setMyGroups(groups as StudyGroup[] || []);
+      // Carregar Grupos Públicos (excluindo os que o usuário criou)
+      let publicGroupsQuery = supabase
+        .from('grupos_estudo')
+        .select('*')
+        .eq('is_publico', true)
+        .neq('user_id', user.id);
+
+      if (filterTopic) {
+        publicGroupsQuery = publicGroupsQuery.eq('topico', filterTopic);
+      }
+
+      const { data: publicGroupsData, error: publicError } = await publicGroupsQuery;
+
+      if (publicError) {
+        console.error('Error loading public groups:', publicError);
+        setPublicGroups([]);
+      } else {
+        console.log('Public groups loaded:', publicGroupsData);
+        setPublicGroups(publicGroupsData as StudyGroup[] || []);
+      }
+
     } catch (error) {
-      console.error('Error in loadMyGroups:', error);
+      console.error('Error in loadGroups:', error);
       setMyGroups([]);
+      setPublicGroups([]);
     }
   };
 
@@ -128,17 +153,17 @@ export default function GruposEstudoView() {
   const handleTopicClick = (topicValue: string) => {
     const newTopic = selectedTopic === topicValue ? "" : topicValue;
     setSelectedTopic(newTopic);
-    loadMyGroups(newTopic || undefined);
+    loadGroups(newTopic || undefined);
   };
 
   const handleCreateGroup = async () => {
     setIsCreateModalOpen(false);
-    await loadMyGroups(selectedTopic || undefined);
+    await loadGroups(selectedTopic || undefined);
     await loadTopicCounts();
   };
 
   const handleGroupAdded = async () => {
-    await loadMyGroups(selectedTopic || undefined);
+    await loadGroups(selectedTopic || undefined);
     await loadTopicCounts();
   };
 
@@ -207,7 +232,7 @@ export default function GruposEstudoView() {
               className="text-[#FF6B00] border-[#FF6B00] hover:bg-[#FF6B00] hover:text-white"
             >
               <Search className="h-4 w-4 mr-1" />
-              Adicionar
+              Buscar
             </Button>
             <Button
               size="sm"
@@ -310,6 +335,9 @@ export default function GruposEstudoView() {
                           <Calendar className="h-3 w-3" />
                           {formatDate(group.created_at)}
                         </span>
+                        <span className="flex items-center gap-1">
+                          Código: {group.codigo_unico}
+                        </span>
                         {group.is_publico && (
                           <span className="flex items-center gap-1 text-green-600">
                             <Star className="h-3 w-3" />
@@ -339,23 +367,98 @@ export default function GruposEstudoView() {
                   : 'Você ainda não criou nenhum grupo de estudos.'
                 }
               </p>
-              <div className="flex gap-2 justify-center">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsAddModalOpen(true)}
-                  className="text-[#FF6B00] border-[#FF6B00] hover:bg-[#FF6B00] hover:text-white"
+              <Button
+                onClick={() => setIsCreateModalOpen(true)}
+                className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Criar Grupo
+              </Button>
+            </div>
+          )}
+        </div>
+
+        {/* Grupos Públicos */}
+        <div>
+          <h3 className="text-lg font-semibold text-[#29335C] dark:text-white mb-3">
+            Grupos Públicos {selectedTopic && `- ${selectedTopic}`}
+          </h3>
+          
+          {publicGroups.length > 0 ? (
+            <div className="space-y-3">
+              {publicGroups.map((group) => (
+                <motion.div
+                  key={group.id}
+                  className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all duration-200 cursor-pointer"
+                  style={{ borderLeftColor: group.cor, borderLeftWidth: '4px' }}
+                  whileHover={{ scale: 1.01 }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
                 >
-                  <Search className="h-4 w-4 mr-1" />
-                  Buscar Grupos
-                </Button>
-                <Button
-                  onClick={() => setIsCreateModalOpen(true)}
-                  className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white"
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Criar Grupo
-                </Button>
-              </div>
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-[#29335C] dark:text-white">
+                        {group.nome}
+                      </h4>
+                      {group.descricao && (
+                        <p className="text-sm text-[#64748B] dark:text-white/60 mt-1">
+                          {group.descricao}
+                        </p>
+                      )}
+                      <div className="flex items-center gap-4 mt-2 text-xs text-[#64748B] dark:text-white/60">
+                        <span className="flex items-center gap-1">
+                          {group.topico_icon || "📚"} {group.topico_nome || group.topico}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Users className="h-3 w-3" />
+                          {group.membros} membros
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          {formatDate(group.created_at)}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          Código: {group.codigo_unico}
+                        </span>
+                        <span className="flex items-center gap-1 text-green-600">
+                          <Eye className="h-3 w-3" />
+                          Público
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="text-[#FF6B00] border-[#FF6B00] hover:bg-[#FF6B00] hover:text-white"
+                      >
+                        Participar
+                      </Button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
+              <Search className="h-12 w-12 mx-auto text-gray-400 mb-3" />
+              <h4 className="text-lg font-medium text-[#29335C] dark:text-white mb-2">
+                {selectedTopic ? `Nenhum grupo público de ${selectedTopic}` : 'Nenhum grupo público disponível'}
+              </h4>
+              <p className="text-[#64748B] dark:text-white/60 mb-4">
+                {selectedTopic 
+                  ? `Não há grupos públicos de ${selectedTopic} disponíveis no momento.`
+                  : 'Não há grupos públicos disponíveis no momento.'
+                }
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => setIsAddModalOpen(true)}
+                className="text-[#FF6B00] border-[#FF6B00] hover:bg-[#FF6B00] hover:text-white"
+              >
+                <Search className="h-4 w-4 mr-1" />
+                Buscar Grupos
+              </Button>
             </div>
           )}
         </div>
