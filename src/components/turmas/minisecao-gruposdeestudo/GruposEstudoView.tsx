@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, Plus, Search, Calendar, MessageCircle, Star, Eye } from "lucide-react";
+import { Users, Plus, Search, Calendar, MessageCircle, Star, Eye, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import CreateGroupModal from "../CreateGroupModal";
@@ -44,6 +44,8 @@ export default function GruposEstudoView() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
+  const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
+  const [groupToLeave, setGroupToLeave] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
 
@@ -72,32 +74,50 @@ export default function GruposEstudoView() {
 
       console.log('User authenticated:', user.id);
 
-      // Carregar Meus Grupos (criados pelo usuário ou onde é membro)
+      // Carregar IDs dos grupos onde o usuário é membro
+      const { data: memberGroups, error: memberError } = await supabase
+        .from('membros_grupos')
+        .select('grupo_id')
+        .eq('user_id', user.id);
+
+      if (memberError) {
+        console.error('Error loading member groups:', memberError);
+      }
+
+      const memberGroupIds = memberGroups?.map(mg => mg.grupo_id) || [];
+
+      // Carregar Meus Grupos (criados pelo usuário OU onde é membro)
       let myGroupsQuery = supabase
         .from('grupos_estudo')
         .select('*')
-        .eq('user_id', user.id);
+        .or(`user_id.eq.${user.id},id.in.(${memberGroupIds.length > 0 ? memberGroupIds.join(',') : 'null'})`);
 
       if (filterTopic) {
         myGroupsQuery = myGroupsQuery.eq('topico', filterTopic);
       }
 
-      const { data: createdGroups, error: createdError } = await myGroupsQuery;
+      const { data: myGroupsData, error: myGroupsError } = await myGroupsQuery;
 
-      if (createdError) {
-        console.error('Error loading created groups:', createdError);
+      if (myGroupsError) {
+        console.error('Error loading my groups:', myGroupsError);
         setMyGroups([]);
       } else {
-        console.log('Created groups loaded:', createdGroups);
-        setMyGroups(createdGroups as StudyGroup[] || []);
+        console.log('My groups loaded:', myGroupsData);
+        setMyGroups(myGroupsData as StudyGroup[] || []);
       }
 
-      // Carregar Grupos Públicos (excluindo os que o usuário criou)
+      // Carregar Grupos Públicos (excluindo os que o usuário criou OU é membro)
+      const excludeIds = [...memberGroupIds];
+      
       let publicGroupsQuery = supabase
         .from('grupos_estudo')
         .select('*')
         .eq('is_publico', true)
         .neq('user_id', user.id);
+
+      if (excludeIds.length > 0) {
+        publicGroupsQuery = publicGroupsQuery.not('id', 'in', `(${excludeIds.join(',')})`);
+      }
 
       if (filterTopic) {
         publicGroupsQuery = publicGroupsQuery.eq('topico', filterTopic);
@@ -127,19 +147,42 @@ export default function GruposEstudoView() {
 
       const counts: Record<string, number> = {};
 
-      // Para cada tópico, contar quantos grupos o usuário criou
+      // Para cada tópico, contar quantos grupos o usuário criou ou é membro
       for (const topic of topics) {
         try {
-          const { data: groups, error } = await supabase
+          // Grupos criados
+          const { data: createdGroups, error: createdError } = await supabase
             .from('grupos_estudo')
             .select('id')
             .eq('user_id', user.id)
             .eq('topico', topic.value);
-          
-          if (!error && groups) {
-            counts[topic.value] = groups.length;
+
+          // Grupos onde é membro
+          const { data: memberGroups, error: memberError } = await supabase
+            .from('membros_grupos')
+            .select('grupo_id')
+            .eq('user_id', user.id);
+
+          if (!memberError && memberGroups) {
+            const memberGroupIds = memberGroups.map(mg => mg.grupo_id);
+            const { data: memberGroupsData, error: memberGroupsError } = await supabase
+              .from('grupos_estudo')
+              .select('id')
+              .in('id', memberGroupIds)
+              .eq('topico', topic.value);
+
+            const createdCount = createdGroups?.length || 0;
+            const memberCount = memberGroupsData?.length || 0;
+            
+            // Evitar contar duplicatas (se o usuário criou E é membro)
+            const uniqueGroups = new Set([
+              ...(createdGroups?.map(g => g.id) || []),
+              ...(memberGroupsData?.map(g => g.id) || [])
+            ]);
+            
+            counts[topic.value] = uniqueGroups.size;
           } else {
-            counts[topic.value] = 0;
+            counts[topic.value] = createdGroups?.length || 0;
           }
         } catch (error) {
           console.error(`Error counting topic ${topic.value}:`, error);
@@ -207,8 +250,46 @@ export default function GruposEstudoView() {
 
       alert('Você ingressou no grupo com sucesso!');
       await loadGroups(selectedTopic || undefined);
+      await loadTopicCounts();
     } catch (error) {
       console.error('Error joining public group:', error);
+      alert('Erro inesperado. Tente novamente.');
+    }
+  };
+
+  const handleLeaveGroup = (groupId: string) => {
+    setGroupToLeave(groupId);
+    setIsLeaveModalOpen(true);
+  };
+
+  const confirmLeaveGroup = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        alert('Usuário não autenticado');
+        return;
+      }
+
+      // Remover da tabela membros_grupos
+      const { error: deleteError } = await supabase
+        .from('membros_grupos')
+        .delete()
+        .eq('grupo_id', groupToLeave)
+        .eq('user_id', user.id);
+
+      if (deleteError) {
+        console.error('Error leaving group:', deleteError);
+        alert('Erro ao sair do grupo. Tente novamente.');
+        return;
+      }
+
+      alert('Você saiu do grupo com sucesso!');
+      setIsLeaveModalOpen(false);
+      setGroupToLeave("");
+      await loadGroups(selectedTopic || undefined);
+      await loadTopicCounts();
+    } catch (error) {
+      console.error('Error leaving group:', error);
       alert('Erro inesperado. Tente novamente.');
     }
   };
@@ -399,6 +480,15 @@ export default function GruposEstudoView() {
                       <Button variant="ghost" size="sm">
                         <MessageCircle className="h-4 w-4" />
                       </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleLeaveGroup(group.id)}
+                        className="text-red-600 border-red-300 hover:bg-red-50 hover:text-red-700"
+                      >
+                        <X className="h-4 w-4 mr-1" />
+                        Sair
+                      </Button>
                     </div>
                   </div>
                 </motion.div>
@@ -532,6 +622,37 @@ export default function GruposEstudoView() {
         onClose={() => setIsJoinModalOpen(false)}
         onGroupJoined={handleGroupAdded}
       />
+
+      {/* Modal de Confirmação para Sair do Grupo */}
+      {isLeaveModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-[#0A2540] p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-[#29335C] dark:text-white mb-4">
+              Confirmar Saída
+            </h3>
+            <p className="text-[#64748B] dark:text-white/60 mb-6">
+              Você tem certeza que deseja sair deste grupo? Esta ação não pode ser desfeita.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsLeaveModalOpen(false);
+                  setGroupToLeave("");
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={confirmLeaveGroup}
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                Sair do Grupo
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </Card>
   );
 }
