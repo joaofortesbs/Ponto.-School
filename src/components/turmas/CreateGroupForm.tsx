@@ -19,13 +19,11 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
     descricao: "",
     topico: "Matemática",
     cor: "#FF6B00",
-    privacidade: "publico", // publico ou privado
-    visibilidade: "" // all, partners ou vazio (nenhuma)
+    privacidade: "publico",
+    visibilidade: ""
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [debugLog, setDebugLog] = useState<string[]>([]);
-  const [showDebug, setShowDebug] = useState(false);
 
   const topics = [
     { value: "Matemática", label: "📏 Matemática", color: "#3B82F6" },
@@ -43,11 +41,6 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
     "#EF4444", "#8B5CF6", "#06B6D4", "#6366F1"
   ];
 
-  const addDebugLog = (message: string) => {
-    const timestamp = new Date().toLocaleTimeString();
-    setDebugLog(prev => [...prev, `[${timestamp}] ${message}`]);
-  };
-
   const generateUniqueCode = (): string => {
     const timestamp = Date.now().toString(36);
     const random = Math.random().toString(36).substring(2, 8);
@@ -63,124 +56,61 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
     }
 
     setIsSubmitting(true);
-    setDebugLog([]);
-    addDebugLog('🚀 Iniciando criação de grupo...');
     
-    const maxRetries = 3;
-    let attempt = 0;
-    
-    while (attempt < maxRetries) {
-      try {
-        addDebugLog(`📋 Tentativa ${attempt + 1} de ${maxRetries}`);
-
-        addDebugLog('🔐 Verificando autenticação...');
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
-        
-        if (authError) {
-          addDebugLog(`❌ Erro de autenticação: ${authError.message}`);
-          throw new Error('Erro de autenticação. Faça login novamente.');
-        }
-        
-        if (!user) {
-          addDebugLog('❌ Usuário não autenticado');
-          throw new Error('Você precisa estar logado para criar um grupo');
-        }
-
-        addDebugLog(`✅ Usuário autenticado: ${user.id}`);
-
-        const codigoUnico = generateUniqueCode();
-        addDebugLog(`🎯 Código único gerado: ${codigoUnico}`);
-
-        if (!formData.nome.trim()) {
-          throw new Error('Nome do grupo não pode estar vazio');
-        }
-
-        const selectedTopic = topics.find(t => t.value === formData.topico);
-        
-        const groupData = {
-          codigo_unico: codigoUnico,
-          user_id: user.id,
-          nome: formData.nome.trim(),
-          descricao: formData.descricao.trim() || null,
-          topico: formData.topico,
-          topico_nome: selectedTopic?.label || formData.topico,
-          topico_icon: selectedTopic?.label.split(' ')[0] || "📚",
-          cor: formData.cor,
-          privado: formData.privacidade === "privado",
-          is_publico: formData.privacidade === "publico",
-          is_visible_to_all: formData.visibilidade === "all",
-          is_visible_to_partners: formData.visibilidade === "partners",
-          visibilidade: "todos",
-          membros: 1
-        };
-
-        addDebugLog('📝 Inserindo grupo no Supabase...');
-
-        const { data, error } = await supabase
-          .from('grupos_estudo')
-          .insert(groupData)
-          .select()
-          .single();
-
-        if (error) {
-          addDebugLog(`❌ Erro do Supabase: ${error.message}`);
-          
-          if (error.message.includes('duplicate') && error.message.includes('codigo_unico')) {
-            addDebugLog('🔄 Código duplicado detectado, gerando novo código...');
-            attempt++;
-            if (attempt < maxRetries) {
-              await new Promise(resolve => setTimeout(resolve, 1000));
-              continue;
-            }
-          }
-          throw error;
-        }
-
-        addDebugLog(`✅ Grupo criado com sucesso! ID: ${data.id}`);
-        
-        addDebugLog('👥 Associando criador ao grupo como membro...');
-        const { error: memberError } = await supabase
-          .from('membros_grupos')
-          .insert({
-            grupo_id: data.id,
-            user_id: user.id,
-            joined_at: new Date().toISOString()
-          });
-
-        if (memberError) {
-          addDebugLog(`❌ Erro ao associar membro: ${memberError.message}`);
-          throw memberError;
-        }
-
-        addDebugLog('✅ Criador associado com sucesso como membro');
-        addDebugLog('🎉 GRUPO CRIADO E CONFIGURADO COM SUCESSO!');
-        
-        alert(`Grupo criado com sucesso! Código: ${codigoUnico}`);
-        onSubmit({ ...groupData, ...data });
-        return;
-        
-      } catch (error: any) {
-        console.error(`Erro na tentativa ${attempt + 1}:`, error);
-        addDebugLog(`❌ Erro na tentativa ${attempt + 1}: ${error.message}`);
-        
-        attempt++;
-        
-        if (attempt >= maxRetries) {
-          addDebugLog('💥 Todas as tentativas falharam');
-          
-          if (error.message?.includes('authenticated') || error.message?.includes('auth')) {
-            alert('Erro: Usuário não autenticado. Faça login novamente.');
-          } else if (error.message?.includes('connection') || error.message?.includes('network')) {
-            alert('Erro: Falha de conexão. Verifique sua internet.');
-          } else {
-            alert(`Erro ao criar grupo: ${error.message}`);
-          }
-          break;
-        } else {
-          addDebugLog(`⏱️ Aguardando ${1500}ms antes da próxima tentativa...`);
-          await new Promise(resolve => setTimeout(resolve, 1500));
-        }
+    try {
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError || !user) {
+        throw new Error('Você precisa estar logado para criar um grupo');
       }
+
+      const codigoUnico = generateUniqueCode();
+      const selectedTopic = topics.find(t => t.value === formData.topico);
+      
+      const groupData = {
+        codigo_unico: codigoUnico,
+        user_id: user.id,
+        nome: formData.nome.trim(),
+        descricao: formData.descricao.trim() || null,
+        topico: formData.topico,
+        topico_nome: selectedTopic?.label || formData.topico,
+        topico_icon: selectedTopic?.label.split(' ')[0] || "📚",
+        cor: formData.cor,
+        privado: formData.privacidade === "privado",
+        is_publico: formData.privacidade === "publico",
+        is_visible_to_all: formData.visibilidade === "all",
+        is_visible_to_partners: formData.visibilidade === "partners",
+        membros: 1
+      };
+
+      const { data, error } = await supabase
+        .from('grupos_estudo')
+        .insert(groupData)
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+      
+      const { error: memberError } = await supabase
+        .from('membros_grupos')
+        .insert({
+          grupo_id: data.id,
+          user_id: user.id,
+          joined_at: new Date().toISOString()
+        });
+
+      if (memberError) {
+        throw memberError;
+      }
+      
+      alert(`Grupo criado com sucesso! Código: ${codigoUnico}`);
+      onSubmit({ ...groupData, ...data });
+        
+    } catch (error: any) {
+      console.error('Erro ao criar grupo:', error);
+      alert(`Erro ao criar grupo: ${error.message}`);
     }
     
     setIsSubmitting(false);
@@ -284,28 +214,6 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
           </RadioGroup>
         </div>
       </div>
-
-      {debugLog.length > 0 && (
-        <div className="mt-4">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setShowDebug(!showDebug)}
-            className="mb-2"
-          >
-            {showDebug ? 'Ocultar' : 'Mostrar'} Debug Log
-          </Button>
-          
-          {showDebug && (
-            <div className="bg-gray-100 dark:bg-gray-800 p-3 rounded-md max-h-32 overflow-y-auto text-xs">
-              {debugLog.map((log, index) => (
-                <div key={index} className="mb-1">{log}</div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
 
       <div className="flex gap-2 pt-4">
         <Button 

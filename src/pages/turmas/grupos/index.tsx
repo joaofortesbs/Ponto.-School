@@ -65,6 +65,8 @@ export default function GruposEstudo() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      console.log('Carregando view: todos-grupos');
+
       // Buscar grupos onde o usuário não é membro
       const { data: userGroups } = await supabase
         .from('membros_grupos')
@@ -106,6 +108,7 @@ export default function GruposEstudo() {
         return;
       }
 
+      console.log('Grupos visíveis encontrados:', visibleGroups?.length || 0);
       setAllGroups(visibleGroups || []);
     } catch (error) {
       console.error('Erro ao carregar todos os grupos:', error);
