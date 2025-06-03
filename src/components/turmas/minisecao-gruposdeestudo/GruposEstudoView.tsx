@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Search, Plus, Users, Calendar, MessageCircle, Star, ChevronRight } from "lucide-react";
+import { Search, Plus, Users, Calendar, MessageCircle, Star, ChevronRight, Filter } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import CreateGroupModal from "../CreateGroupModal";
@@ -25,17 +24,33 @@ interface Grupo {
   created_at: string;
 }
 
+// Updated topics list as requested
 const topics = [
   { name: 'Matemática', icon: '📊' },
+  { name: 'Língua Portuguesa', icon: '📝' },
   { name: 'Física', icon: '🔬' },
   { name: 'Química', icon: '⚗️' },
   { name: 'Biologia', icon: '🧬' },
-  { name: 'História', icon: '📚' },
   { name: 'Geografia', icon: '🌍' },
+  { name: 'História', icon: '📚' },
   { name: 'Filosofia', icon: '🤔' },
-  { name: 'Literatura', icon: '📖' },
-  { name: 'Computação', icon: '💻' },
-  { name: 'Engenharia', icon: '⚙️' }
+  { name: 'Sociologia', icon: '👥' },
+  { name: 'Arte', icon: '🎨' },
+  { name: 'Inglês', icon: '🇺🇸' },
+  { name: 'Educação Financeira', icon: '💰' },
+  { name: 'Redação', icon: '📖' },
+  { name: 'Engenharia', icon: '⚙️' },
+  { name: 'Robótica', icon: '🤖' },
+  { name: 'Outros', icon: '📋' }
+];
+
+const filterOptions = [
+  { value: 'mais-membros', label: 'Mais membros' },
+  { value: 'menos-membros', label: 'Menos membros' },
+  { value: 'mais-recentes', label: 'Mais recentes' },
+  { value: 'mais-antigos', label: 'Mais antigos' },
+  { value: 'publicos', label: 'Públicos' },
+  { value: 'privados', label: 'Privados' }
 ];
 
 export default function GruposEstudoView() {
@@ -43,6 +58,8 @@ export default function GruposEstudoView() {
   const [currentView, setCurrentView] = useState<'my-groups' | 'public-groups'>('my-groups');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
+  const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [meusGrupos, setMeusGrupos] = useState<Grupo[]>([]);
   const [gruposPublicos, setGruposPublicos] = useState<Grupo[]>([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -58,7 +75,7 @@ export default function GruposEstudoView() {
     if (currentUser) {
       loadGroups();
     }
-  }, [currentUser, currentView, searchTerm, selectedTopic]);
+  }, [currentUser, currentView, searchTerm, selectedTopic, selectedFilters]);
 
   const checkAuth = async () => {
     try {
@@ -122,15 +139,34 @@ export default function GruposEstudoView() {
       query = query.eq('user_id', currentUser.id);
     }
 
+    // Apply topic filter
+    if (selectedTopic && selectedTopic !== 'Outros') {
+      query = query.eq('topico_nome', selectedTopic);
+    }
+
+    // Apply search filter
     if (searchTerm) {
       query = query.ilike('nome', `%${searchTerm}%`);
     }
 
-    if (selectedTopic) {
-      query = query.eq('topico_nome', selectedTopic);
+    // Apply additional filters
+    if (selectedFilters.includes('publicos')) {
+      query = query.eq('is_publico', true);
+    }
+    if (selectedFilters.includes('privados')) {
+      query = query.eq('is_publico', false);
     }
 
-    const { data, error } = await query.order('created_at', { ascending: false });
+    // Apply sorting filters
+    if (selectedFilters.includes('mais-recentes')) {
+      query = query.order('created_at', { ascending: false });
+    } else if (selectedFilters.includes('mais-antigos')) {
+      query = query.order('created_at', { ascending: true });
+    } else {
+      query = query.order('created_at', { ascending: false });
+    }
+
+    const { data, error } = await query;
 
     if (error) throw error;
     setMeusGrupos(data || []);
@@ -154,15 +190,26 @@ export default function GruposEstudoView() {
       query = query.not('id', 'in', `(${myGroupIds.join(',')})`);
     }
 
+    // Apply topic filter
+    if (selectedTopic && selectedTopic !== 'Outros') {
+      query = query.eq('topico_nome', selectedTopic);
+    }
+
+    // Apply search filter
     if (searchTerm) {
       query = query.ilike('nome', `%${searchTerm}%`);
     }
 
-    if (selectedTopic) {
-      query = query.eq('topico_nome', selectedTopic);
+    // Apply sorting filters
+    if (selectedFilters.includes('mais-recentes')) {
+      query = query.order('created_at', { ascending: false });
+    } else if (selectedFilters.includes('mais-antigos')) {
+      query = query.order('created_at', { ascending: true });
+    } else {
+      query = query.order('created_at', { ascending: false });
     }
 
-    const { data, error } = await query.order('created_at', { ascending: false });
+    const { data, error } = await query;
 
     if (error) throw error;
     setGruposPublicos(data || []);
@@ -234,6 +281,29 @@ export default function GruposEstudoView() {
     }
   };
 
+  const handleTopicSelect = (topicName: string) => {
+    setSelectedTopic(selectedTopic === topicName ? null : topicName);
+  };
+
+  const handleFilterToggle = (filterValue: string) => {
+    setSelectedFilters(prev => 
+      prev.includes(filterValue) 
+        ? prev.filter(f => f !== filterValue)
+        : [...prev, filterValue]
+    );
+  };
+
+  const applyFilters = () => {
+    setIsFilterModalOpen(false);
+    loadGroups();
+  };
+
+  const clearFilters = () => {
+    setSelectedFilters([]);
+    setSelectedTopic(null);
+    setIsFilterModalOpen(false);
+  };
+
   const currentGroups = currentView === 'my-groups' ? meusGrupos : gruposPublicos;
 
   return (
@@ -245,7 +315,7 @@ export default function GruposEstudoView() {
             Grupos de Estudos
           </h3>
           <Badge variant="secondary" className="bg-[#FF6B00]/10 text-[#FF6B00]">
-            {meusGrupos.length} grupos
+            {currentGroups.length} grupos
           </Badge>
         </div>
         <div className="flex gap-2">
@@ -278,9 +348,9 @@ export default function GruposEstudoView() {
             }
           `}</style>
           <button
-            onClick={() => setSelectedTopic(null)}
+            onClick={() => handleTopicSelect('')}
             className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-              selectedTopic === null
+              selectedTopic === null || selectedTopic === ''
                 ? 'bg-[#FF6B00] text-white'
                 : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
             }`}
@@ -290,7 +360,7 @@ export default function GruposEstudoView() {
           {topics.map((topic) => (
             <button
               key={topic.name}
-              onClick={() => setSelectedTopic(topic.name)}
+              onClick={() => handleTopicSelect(topic.name)}
               className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-2 ${
                 selectedTopic === topic.name
                   ? 'bg-[#FF6B00] text-white'
@@ -344,6 +414,53 @@ export default function GruposEstudoView() {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-9"
           />
+        </div>
+        <div className="relative">
+          <Button
+            onClick={() => setIsFilterModalOpen(!isFilterModalOpen)}
+            variant="outline"
+            size="sm"
+            className="border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10"
+          >
+            <Filter className="h-4 w-4" />
+          </Button>
+          
+          {/* Filter Modal */}
+          {isFilterModalOpen && (
+            <div className="absolute top-full right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-4 z-50 min-w-[200px]">
+              <div className="space-y-3">
+                <h4 className="font-medium text-sm text-gray-900 dark:text-white">Filtros</h4>
+                {filterOptions.map((option) => (
+                  <label key={option.value} className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={selectedFilters.includes(option.value)}
+                      onChange={() => handleFilterToggle(option.value)}
+                      className="rounded border-gray-300 text-[#FF6B00] focus:ring-[#FF6B00]"
+                    />
+                    <span className="text-sm text-gray-700 dark:text-gray-300">{option.label}</span>
+                  </label>
+                ))}
+                <div className="flex gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                  <Button
+                    onClick={applyFilters}
+                    size="sm"
+                    className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white text-xs"
+                  >
+                    Aplicar
+                  </Button>
+                  <Button
+                    onClick={clearFilters}
+                    variant="outline"
+                    size="sm"
+                    className="text-xs"
+                  >
+                    Limpar
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
