@@ -165,6 +165,7 @@ export default function ConquistasPage() {
   }
 
   const premiacoes: Premiacao[] = [
+    // Lendário
     {
       id: '1',
       name: 'Kit de Materiais Escolares',
@@ -173,28 +174,6 @@ export default function ConquistasPage() {
       image: '/images/kit-materiais.jpg',
       rarity: 'lendario',
       pontoSchoolsRequired: 5000,
-      isAvailable: true,
-      category: 'material_escolar'
-    },
-    {
-      id: '2',
-      name: 'Garrafa',
-      subtitle: 'Dose da Sabedoria',
-      description: 'Garrafa térmica exclusiva Ponto School para te manter hidratado durante os estudos.',
-      image: '/images/garrafa.jpg',
-      rarity: 'raro',
-      pontoSchoolsRequired: 1500,
-      isAvailable: true,
-      category: 'utilidade'
-    },
-    {
-      id: '3',
-      name: 'Caderno',
-      subtitle: 'Anotação Lendária',
-      description: 'Caderno premium com design exclusivo e papel de alta qualidade.',
-      image: '/images/caderno.jpg',
-      rarity: 'epico',
-      pontoSchoolsRequired: 2000,
       isAvailable: true,
       category: 'material_escolar'
     },
@@ -209,6 +188,18 @@ export default function ConquistasPage() {
       isAvailable: true,
       category: 'acessorio'
     },
+    // Épico
+    {
+      id: '3',
+      name: 'Caderno',
+      subtitle: 'Anotação Lendária',
+      description: 'Caderno premium com design exclusivo e papel de alta qualidade.',
+      image: '/images/caderno.jpg',
+      rarity: 'epico',
+      pontoSchoolsRequired: 2000,
+      isAvailable: true,
+      category: 'material_escolar'
+    },
     {
       id: '5',
       name: 'Lápis & Canetas',
@@ -221,15 +212,38 @@ export default function ConquistasPage() {
       category: 'material_escolar'
     },
     {
-      id: '6',
-      name: 'Borracha',
-      subtitle: 'Escudo contra Erros',
-      description: 'Borracha de alta qualidade que apaga sem danificar o papel.',
-      image: '/images/borracha.jpg',
-      rarity: 'comum',
-      pontoSchoolsRequired: 300,
+      id: '9',
+      name: 'Boné',
+      subtitle: 'Coroa da Sabedoria',
+      description: 'Boné exclusivo Ponto School com proteção UV e design moderno.',
+      image: '/images/bone.jpg',
+      rarity: 'epico',
+      pontoSchoolsRequired: 1800,
+      isAvailable: true,
+      category: 'acessorio'
+    },
+    {
+      id: '11',
+      name: 'Estojo',
+      subtitle: 'Cofre das Ideias',
+      description: 'Estojo compacto e resistente para guardar seus materiais de forma organizada.',
+      image: '/images/estojo.jpg',
+      rarity: 'epico',
+      pontoSchoolsRequired: 600,
       isAvailable: true,
       category: 'material_escolar'
+    },
+    // Raro
+    {
+      id: '2',
+      name: 'Garrafa',
+      subtitle: 'Dose da Sabedoria',
+      description: 'Garrafa térmica exclusiva Ponto School para te manter hidratado durante os estudos.',
+      image: '/images/garrafa.jpg',
+      rarity: 'raro',
+      pontoSchoolsRequired: 1500,
+      isAvailable: true,
+      category: 'utilidade'
     },
     {
       id: '7',
@@ -254,17 +268,6 @@ export default function ConquistasPage() {
       category: 'acessorio'
     },
     {
-      id: '9',
-      name: 'Boné',
-      subtitle: 'Coroa da Sabedoria',
-      description: 'Boné exclusivo Ponto School com proteção UV e design moderno.',
-      image: '/images/bone.jpg',
-      rarity: 'epico',
-      pontoSchoolsRequired: 1800,
-      isAvailable: true,
-      category: 'acessorio'
-    },
-    {
       id: '10',
       name: 'Pasta',
       subtitle: 'Escudo do Aprendizado',
@@ -276,24 +279,25 @@ export default function ConquistasPage() {
       category: 'material_escolar'
     },
     {
-      id: '11',
-      name: 'Estojo',
-      subtitle: 'Cofre das Ideias',
-      description: 'Estojo compacto e resistente para guardar seus materiais de forma organizada.',
-      image: '/images/estojo.jpg',
-      rarity: 'comum',
-      pontoSchoolsRequired: 600,
-      isAvailable: true,
-      category: 'material_escolar'
-    },
-    {
       id: '12',
       name: 'Marca Texto',
       subtitle: 'Luz da Atenção',
       description: 'Kit de marca textos coloridos para destacar os pontos mais importantes dos seus estudos.',
       image: '/images/marca-texto.jpg',
-      rarity: 'comum',
+      rarity: 'raro',
       pontoSchoolsRequired: 400,
+      isAvailable: true,
+      category: 'material_escolar'
+    },
+    // Comum
+    {
+      id: '6',
+      name: 'Borracha',
+      subtitle: 'Escudo contra Erros',
+      description: 'Borracha de alta qualidade que apaga sem danificar o papel.',
+      image: '/images/borracha.jpg',
+      rarity: 'comum',
+      pontoSchoolsRequired: 300,
       isAvailable: true,
       category: 'material_escolar'
     }
