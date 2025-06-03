@@ -66,7 +66,7 @@ export default function GruposEstudoView() {
 
       console.log('User authenticated:', user.id);
 
-      // Buscar grupos criados pelo usuário diretamente
+      // Buscar grupos criados pelo usuário
       let query = supabase
         .from('grupos_estudo')
         .select('*')

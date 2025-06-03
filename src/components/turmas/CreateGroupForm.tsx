@@ -48,7 +48,6 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
     setDebugLog(prev => [...prev, `[${timestamp}] ${message}`]);
   };
 
-  // Função simplificada para gerar código único
   const generateSimpleUniqueCode = (): string => {
     const timestamp = Date.now().toString(36);
     const random = Math.random().toString(36).substring(2, 6);
@@ -114,32 +113,6 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
 
       if (error) {
         addDebugLog(`Erro do Supabase: ${error.message}`);
-        
-        // Se houve conflito de código único, tenta novamente
-        if (error.code === '23505' && error.message.includes('codigo_unico')) {
-          addDebugLog('Código duplicado detectado, tentando novamente...');
-          const newCode = generateSimpleUniqueCode();
-          addDebugLog(`Novo código gerado: ${newCode}`);
-          
-          const retryData = { ...groupData, codigo_unico: newCode };
-          
-          const { data: retryResult, error: retryError } = await supabase
-            .from('grupos_estudo')
-            .insert(retryData)
-            .select()
-            .single();
-          
-          if (retryError) {
-            addDebugLog(`Erro na segunda tentativa: ${retryError.message}`);
-            throw new Error('Erro ao criar grupo após retry');
-          }
-          
-          addDebugLog(`Grupo criado com sucesso! Código: ${newCode}`);
-          alert(`Grupo criado com sucesso! Código: ${newCode}`);
-          onSubmit({ ...retryData, ...retryResult });
-          return;
-        }
-        
         throw error;
       }
 
