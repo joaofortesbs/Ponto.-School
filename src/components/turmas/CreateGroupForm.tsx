@@ -103,7 +103,7 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
         membros: 1
       };
 
-      addDebugLog('Tentando criar grupo no Supabase...');
+      addDebugLog('Criando grupo no Supabase...');
 
       const { data, error } = await supabase
         .from('grupos_estudo')
@@ -117,6 +117,25 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
       }
 
       addDebugLog(`Grupo criado com sucesso! ID: ${data.id}`);
+      
+      // Adicionar criador como membro
+      addDebugLog('Adicionando criador como membro...');
+      const { error: memberError } = await supabase
+        .from('membros_grupos')
+        .insert({
+          grupo_id: data.id,
+          user_id: user.id
+        });
+
+      if (memberError) {
+        addDebugLog(`Erro ao adicionar membro: ${memberError.message}`);
+        // Não falha se o membro já foi adicionado por trigger
+        console.warn('Aviso ao adicionar membro:', memberError.message);
+      } else {
+        addDebugLog('Membro adicionado com sucesso!');
+      }
+
+      addDebugLog('Grupo criado e configurado com sucesso!');
       alert(`Grupo criado com sucesso! Código: ${codigoUnico}`);
       onSubmit({ ...groupData, ...data });
       
