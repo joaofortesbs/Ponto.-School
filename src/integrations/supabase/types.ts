@@ -102,8 +102,10 @@ export type Database = {
           descricao: string | null
           id: string
           is_publico: boolean | null
+          is_visible_to_all: boolean | null
           membros: number
           nome: string
+          permitir_visibilidade: boolean | null
           privado: boolean | null
           topico: string | null
           topico_icon: string | null
@@ -120,8 +122,10 @@ export type Database = {
           descricao?: string | null
           id?: string
           is_publico?: boolean | null
+          is_visible_to_all?: boolean | null
           membros?: number
           nome: string
+          permitir_visibilidade?: boolean | null
           privado?: boolean | null
           topico?: string | null
           topico_icon?: string | null
@@ -138,8 +142,10 @@ export type Database = {
           descricao?: string | null
           id?: string
           is_publico?: boolean | null
+          is_visible_to_all?: boolean | null
           membros?: number
           nome?: string
+          permitir_visibilidade?: boolean | null
           privado?: boolean | null
           topico?: string | null
           topico_icon?: string | null

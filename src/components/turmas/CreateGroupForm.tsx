@@ -1,9 +1,11 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -18,8 +20,8 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
     descricao: "",
     topico: "Matemática",
     cor: "#FF6B00",
-    privado: false,
-    visibilidade: "todos"
+    privacidade: "publico", // publico ou privado
+    visibilidadeTodos: false // permitir que todos vejam
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -48,7 +50,6 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
   };
 
   const generateUniqueCode = (): string => {
-    // Gera código único com timestamp + random para evitar conflitos
     const timestamp = Date.now().toString(36);
     const random = Math.random().toString(36).substring(2, 8);
     return (timestamp + random).toUpperCase().substring(0, 8);
@@ -64,7 +65,7 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
 
     setIsSubmitting(true);
     setDebugLog([]);
-    addDebugLog('🚀 Iniciando criação de grupo com SOLUÇÃO DEFINITIVA...');
+    addDebugLog('🚀 Iniciando criação de grupo...');
     
     const maxRetries = 3;
     let attempt = 0;
@@ -73,7 +74,6 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
       try {
         addDebugLog(`📋 Tentativa ${attempt + 1} de ${maxRetries}`);
 
-        // Validação obrigatória de autenticação
         addDebugLog('🔐 Verificando autenticação...');
         const { data: { user }, error: authError } = await supabase.auth.getUser();
         
@@ -89,11 +89,9 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
 
         addDebugLog(`✅ Usuário autenticado: ${user.id}`);
 
-        // Geração obrigatória de código único
         const codigoUnico = generateUniqueCode();
         addDebugLog(`🎯 Código único gerado: ${codigoUnico}`);
 
-        // Validação de nome do grupo
         if (!formData.nome.trim()) {
           throw new Error('Nome do grupo não pode estar vazio');
         }
@@ -102,16 +100,17 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
         
         const groupData = {
           codigo_unico: codigoUnico,
-          user_id: user.id, // SOLUÇÃO: usar user_id em vez de criar_id
+          user_id: user.id,
           nome: formData.nome.trim(),
           descricao: formData.descricao.trim() || null,
           topico: formData.topico,
           topico_nome: selectedTopic?.label || formData.topico,
           topico_icon: selectedTopic?.label.split(' ')[0] || "📚",
           cor: formData.cor,
-          privado: formData.privado,
-          is_publico: !formData.privado,
-          visibilidade: formData.visibilidade,
+          privado: formData.privacidade === "privado",
+          is_publico: formData.privacidade === "publico",
+          is_visible_to_all: formData.visibilidadeTodos,
+          visibilidade: "todos",
           membros: 1
         };
 
@@ -126,7 +125,6 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
         if (error) {
           addDebugLog(`❌ Erro do Supabase: ${error.message}`);
           
-          // Verificar se é erro de código duplicado e tentar novamente
           if (error.message.includes('duplicate') && error.message.includes('codigo_unico')) {
             addDebugLog('🔄 Código duplicado detectado, gerando novo código...');
             attempt++;
@@ -140,7 +138,6 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
 
         addDebugLog(`✅ Grupo criado com sucesso! ID: ${data.id}`);
         
-        // SOLUÇÃO DEFINITIVA: Associar criador como membro (sem restrição de unicidade)
         addDebugLog('👥 Associando criador ao grupo como membro...');
         const { error: memberError } = await supabase
           .from('membros_grupos')
@@ -160,7 +157,7 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
         
         alert(`Grupo criado com sucesso! Código: ${codigoUnico}`);
         onSubmit({ ...groupData, ...data });
-        return; // Sair do loop de tentativas
+        return;
         
       } catch (error: any) {
         console.error(`Erro na tentativa ${attempt + 1}:`, error);
@@ -250,16 +247,40 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
         </div>
       </div>
 
-      <div className="flex items-center space-x-2">
-        <Switch
-          id="privado"
-          checked={formData.privado}
-          onCheckedChange={(checked) => setFormData(prev => ({ ...prev, privado: checked }))}
-        />
-        <Label htmlFor="privado">Grupo Privado</Label>
+      <div className="space-y-4">
+        <div>
+          <Label className="text-base font-medium">Privacidade do grupo</Label>
+          <RadioGroup
+            value={formData.privacidade}
+            onValueChange={(value) => setFormData(prev => ({ ...prev, privacidade: value }))}
+            className="mt-2"
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="publico" id="publico" />
+              <Label htmlFor="publico">Público</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="privado" id="privado" />
+              <Label htmlFor="privado">Privado</Label>
+            </div>
+          </RadioGroup>
+        </div>
+
+        <div>
+          <Label className="text-base font-medium">Visibilidade do grupo</Label>
+          <div className="flex items-center space-x-2 mt-2">
+            <Checkbox
+              id="visibilidade-todos"
+              checked={formData.visibilidadeTodos}
+              onCheckedChange={(checked) => 
+                setFormData(prev => ({ ...prev, visibilidadeTodos: !!checked }))
+              }
+            />
+            <Label htmlFor="visibilidade-todos">Permitir que todos vejam</Label>
+          </div>
+        </div>
       </div>
 
-      {/* Debug Log */}
       {debugLog.length > 0 && (
         <div className="mt-4">
           <Button
