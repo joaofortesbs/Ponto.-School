@@ -42,7 +42,13 @@ export default function GruposEstudo() {
         .from('membros_grupos')
         .select(`
           grupo_id,
-          grupos_estudo (*)
+          grupos_estudo (
+            *,
+            tipo_grupo,
+            disciplina_area,
+            topico_especifico,
+            tags
+          )
         `)
         .eq('user_id', user.id);
 
@@ -89,7 +95,13 @@ export default function GruposEstudo() {
       // Buscar grupos visíveis
       let query = supabase
         .from('grupos_estudo')
-        .select('*');
+        .select(`
+          *,
+          tipo_grupo,
+          disciplina_area,
+          topico_especifico,
+          tags
+        `);
 
       // Filtrar grupos visíveis a todos OU grupos visíveis aos parceiros (se o criador for parceiro)
       if (partnerIds.length > 0) {
