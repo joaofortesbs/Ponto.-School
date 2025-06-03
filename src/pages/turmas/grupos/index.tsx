@@ -36,6 +36,8 @@ export default function GruposEstudo() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      console.log('Carregando Meus Grupos para usuário:', user.id);
+
       const { data: memberGroups, error } = await supabase
         .from('membros_grupos')
         .select(`
@@ -50,6 +52,7 @@ export default function GruposEstudo() {
       }
 
       const groups = memberGroups?.map(mg => mg.grupos_estudo) || [];
+      console.log('Meus Grupos carregados:', groups.length);
       setMyGroups(groups);
     } catch (error) {
       console.error('Erro ao carregar meus grupos:', error);
@@ -65,9 +68,9 @@ export default function GruposEstudo() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      console.log('Carregando view: todos-grupos');
+      console.log('Carregando Todos os Grupos para usuário:', user.id);
 
-      // Buscar grupos onde o usuário não é membro
+      // Buscar grupos onde o usuário é membro
       const { data: userGroups } = await supabase
         .from('membros_grupos')
         .select('grupo_id')
@@ -108,7 +111,7 @@ export default function GruposEstudo() {
         return;
       }
 
-      console.log('Grupos visíveis encontrados:', visibleGroups?.length || 0);
+      console.log('Todos os Grupos carregados:', visibleGroups?.length || 0);
       setAllGroups(visibleGroups || []);
     } catch (error) {
       console.error('Erro ao carregar todos os grupos:', error);
@@ -118,6 +121,7 @@ export default function GruposEstudo() {
   };
 
   useEffect(() => {
+    console.log('Tab ativa:', activeTab);
     if (activeTab === "meus-grupos") {
       loadMyGroups();
     } else if (activeTab === "todos-grupos") {
@@ -163,6 +167,8 @@ export default function GruposEstudo() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      console.log('Ingressando no grupo:', groupId);
+
       const { error } = await supabase
         .from('membros_grupos')
         .insert({
@@ -192,6 +198,8 @@ export default function GruposEstudo() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+
+      console.log('Saindo do grupo:', groupId);
 
       const { error } = await supabase
         .from('membros_grupos')
