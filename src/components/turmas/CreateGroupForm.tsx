@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -117,21 +118,38 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
 
       addDebugLog(`Grupo criado com sucesso! ID: ${data.id}`);
       
-      // Adicionar criador como membro
-      addDebugLog('Adicionando criador como membro...');
-      const { error: memberError } = await supabase
+      // Verificar se o criador já é membro antes de inserir (CORREÇÃO DO ERRO DE DUPLICAÇÃO)
+      addDebugLog('Verificando se criador já é membro...');
+      const { data: existingMembership, error: membershipCheckError } = await supabase
         .from('membros_grupos')
-        .insert({
-          grupo_id: data.id,
-          user_id: user.id
-        });
+        .select('id')
+        .eq('grupo_id', data.id)
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-      if (memberError) {
-        addDebugLog(`Erro ao adicionar membro: ${memberError.message}`);
-        // Não falha se o membro já foi adicionado por trigger
-        console.warn('Aviso ao adicionar membro:', memberError.message);
+      if (membershipCheckError) {
+        addDebugLog(`Erro ao verificar membro: ${membershipCheckError.message}`);
+        throw membershipCheckError;
+      }
+
+      if (!existingMembership) {
+        // Adicionar criador como membro apenas se não existir
+        addDebugLog('Adicionando criador como membro...');
+        const { error: memberError } = await supabase
+          .from('membros_grupos')
+          .insert({
+            grupo_id: data.id,
+            user_id: user.id
+          });
+
+        if (memberError) {
+          addDebugLog(`Erro ao adicionar membro: ${memberError.message}`);
+          console.warn('Aviso ao adicionar membro:', memberError.message);
+        } else {
+          addDebugLog('Membro adicionado com sucesso!');
+        }
       } else {
-        addDebugLog('Membro adicionado com sucesso!');
+        addDebugLog('Criador já é membro, pulando inserção duplicada');
       }
 
       addDebugLog('Grupo criado e configurado com sucesso!');
