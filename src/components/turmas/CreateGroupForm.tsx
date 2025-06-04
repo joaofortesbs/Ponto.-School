@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,6 +36,7 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
   const [partners, setPartners] = useState<Partner[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [invitedPartners, setInvitedPartners] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Carregar parceiros
   useEffect(() => {
@@ -44,9 +44,15 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
   }, []);
 
   const loadPartners = async () => {
+    setIsLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
+      console.log("Carregando parceiros para usuário:", user.id);
 
       const { data: partnersData, error } = await supabase
         .from('parceiros')
@@ -61,12 +67,16 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
 
       if (error) {
         console.error('Erro ao carregar parceiros:', error);
+        setIsLoading(false);
         return;
       }
 
+      console.log('Parceiros encontrados:', partnersData);
       setPartners(partnersData || []);
     } catch (error) {
       console.error('Erro ao carregar parceiros:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -110,6 +120,7 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
       invitedPartners: invitedPartners // Adicionamos a lista de parceiros convidados
     };
 
+    console.log("Enviando formulário com parceiros convidados:", invitedPartners);
     onSubmit(formData);
   };
 
@@ -323,7 +334,9 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
               </div>
               
               <div className="max-h-32 overflow-y-auto space-y-2">
-                {filteredPartners.length > 0 ? (
+                {isLoading ? (
+                  <p className="text-gray-400 text-sm text-center py-4">Carregando parceiros...</p>
+                ) : filteredPartners.length > 0 ? (
                   filteredPartners.map((partner, index) => (
                     <div key={index} className="flex items-center justify-between p-2 bg-gray-600 rounded">
                       <span className="text-white text-sm">
@@ -342,7 +355,7 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
                   ))
                 ) : (
                   <p className="text-gray-400 text-sm text-center py-4">
-                    {partners.length === 0 ? 'Nenhum parceiro encontrado.' : 'Nenhum parceiro corresponde à pesquisa.'}
+                    {searchQuery ? 'Nenhum parceiro corresponde à pesquisa.' : 'Nenhum parceiro encontrado.'}
                   </p>
                 )}
               </div>

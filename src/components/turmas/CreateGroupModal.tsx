@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import CreateGroupForm from "./CreateGroupForm";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/use-toast";
 
 interface CreateGroupModalProps {
   isOpen: boolean;
@@ -60,11 +61,16 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
   };
 
   const handleSubmit = async (formData: any) => {
+    console.log("Form data recebido no modal:", formData);
     setIsLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        alert('Usuário não autenticado');
+        toast({
+          title: "Erro",
+          description: "Usuário não autenticado",
+          variant: "destructive"
+        });
         return;
       }
 
@@ -93,7 +99,11 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
 
       if (insertError) {
         console.error('Erro ao criar grupo:', insertError);
-        alert('Erro ao criar grupo: ' + insertError.message);
+        toast({
+          title: "Erro",
+          description: `Erro ao criar grupo: ${insertError.message}`,
+          variant: "destructive"
+        });
         return;
       }
 
@@ -129,18 +139,36 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
 
         if (convitesError) {
           console.error('Erro ao enviar convites:', convitesError);
-          alert('Grupo criado, mas houve um erro ao enviar alguns convites.');
+          toast({
+            title: "Aviso",
+            description: "Grupo criado, mas houve um erro ao enviar alguns convites.",
+            variant: "warning"
+          });
         } else {
           console.log('Convites enviados com sucesso:', convites.length);
+          toast({
+            title: "Sucesso",
+            description: `Grupo criado e ${convites.length} convites enviados.`,
+            variant: "default"
+          });
         }
+      } else {
+        toast({
+          title: "Sucesso",
+          description: "Grupo criado com sucesso!",
+          variant: "default"
+        });
       }
 
-      alert('Grupo criado com sucesso!');
       onSubmit(newGroup);
       onClose();
     } catch (error) {
       console.error('Erro ao criar grupo:', error);
-      alert('Erro ao criar grupo');
+      toast({
+        title: "Erro",
+        description: "Erro ao criar grupo",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
