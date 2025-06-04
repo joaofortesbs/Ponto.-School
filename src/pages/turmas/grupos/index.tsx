@@ -1,17 +1,18 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Users2,
   Search,
   Plus,
   Filter,
+  Calendar,
+  MessageCircle,
   Star,
-  ArrowRight,
 } from "lucide-react";
 import CreateGroupModal from "@/components/turmas/CreateGroupModal";
 import AddGroupModal from "@/components/turmas/AddGroupModal";
@@ -65,6 +66,7 @@ export default function GruposEstudo() {
 
       console.log('Carregando view: todos-grupos');
 
+      // Buscar grupos onde o usuário não é membro
       const { data: userGroups } = await supabase
         .from('membros_grupos')
         .select('grupo_id')
@@ -72,6 +74,7 @@ export default function GruposEstudo() {
 
       const userGroupIds = userGroups?.map(ug => ug.grupo_id) || [];
 
+      // Buscar parceiros do usuário
       const { data: partners } = await supabase
         .from('parceiros')
         .select('parceiro_id')
@@ -79,16 +82,19 @@ export default function GruposEstudo() {
 
       const partnerIds = partners?.map(p => p.parceiro_id) || [];
 
+      // Buscar grupos visíveis
       let query = supabase
         .from('grupos_estudo')
         .select('*');
 
+      // Filtrar grupos visíveis a todos OU grupos visíveis aos parceiros (se o criador for parceiro)
       if (partnerIds.length > 0) {
         query = query.or(`is_visible_to_all.eq.true,and(is_visible_to_partners.eq.true,user_id.in.(${partnerIds.join(',')}))`);
       } else {
         query = query.eq('is_visible_to_all', true);
       }
 
+      // Excluir grupos que o usuário já participa ou criou
       if (userGroupIds.length > 0) {
         query = query.not('id', 'in', `(${userGroupIds.join(',')})`);
       }
@@ -138,6 +144,7 @@ export default function GruposEstudo() {
   const handleCreateGroup = (formData: any) => {
     console.log("Novo grupo criado:", formData);
     setIsCreateModalOpen(false);
+    // Recarregar grupos
     if (activeTab === "meus-grupos") {
       loadMyGroups();
     } else if (activeTab === "todos-grupos") {
@@ -147,6 +154,7 @@ export default function GruposEstudo() {
 
   const handleGroupAdded = () => {
     setIsAddModalOpen(false);
+    // Recarregar grupos
     loadMyGroups();
     if (activeTab === "todos-grupos") {
       loadAllGroups();
@@ -174,6 +182,7 @@ export default function GruposEstudo() {
 
       alert('Você ingressou no grupo com sucesso!');
       
+      // Recarregar ambas as grades para refletir a mudança
       loadMyGroups();
       loadAllGroups();
     } catch (error) {
@@ -201,16 +210,13 @@ export default function GruposEstudo() {
 
       alert('Você saiu do grupo');
       
+      // Recarregar ambas as grades para refletir a mudança
       loadMyGroups();
       loadAllGroups();
     } catch (error) {
       console.error('Erro ao sair do grupo:', error);
       alert('Erro ao sair do grupo');
     }
-  };
-
-  const handleAccessGroup = (groupId: string) => {
-    navigate(`/turmas/grupos/${groupId}`);
   };
 
   const getActivityBadge = (level: string) => {
@@ -239,7 +245,8 @@ export default function GruposEstudo() {
   const renderGroupCard = (group: any, showJoinButton = false) => (
     <div
       key={group.id}
-      className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow"
+      className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow cursor-pointer"
+      onClick={() => navigate(`/turmas/grupos/${group.id}`)}
     >
       <div className="h-32 bg-gray-200 relative">
         <div 
@@ -257,6 +264,7 @@ export default function GruposEstudo() {
           {group.nome}
         </h3>
         
+        {/* Novas informações dos grupos */}
         <div className="space-y-1 mb-3 text-xs text-gray-600 dark:text-gray-300">
           {group.tipo_grupo && (
             <p><span className="font-medium">Tipo:</span> {group.tipo_grupo}</p>
@@ -266,9 +274,6 @@ export default function GruposEstudo() {
           )}
           {group.topico_especifico && (
             <p><span className="font-medium">Tópico:</span> {group.topico_especifico}</p>
-          )}
-          {group.codigo_unico && (
-            <p><span className="font-medium">Código:</span> {group.codigo_unico}</p>
           )}
           {group.tags && group.tags.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-2">
@@ -286,21 +291,21 @@ export default function GruposEstudo() {
           )}
         </div>
 
-        <div className="flex justify-between items-center mb-3">
+        <div className="flex justify-between items-center">
           <div className="flex items-center">
             <Users2 className="h-4 w-4 mr-1 text-gray-500" />
             <span className="text-xs text-gray-500">
               {group.membros || 0} membros
             </span>
           </div>
-        </div>
-
-        <div className="flex gap-2">
           {showJoinButton ? (
             <Button
               size="sm"
-              className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white text-xs h-8 flex-1"
-              onClick={() => handleJoinGroup(group.id)}
+              className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white text-xs h-8"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleJoinGroup(group.id);
+              }}
             >
               Participar
             </Button>
@@ -308,19 +313,15 @@ export default function GruposEstudo() {
             <Button
               size="sm"
               variant="outline"
-              className="text-red-600 border-red-600 hover:bg-red-50 text-xs h-8 flex-1"
-              onClick={() => handleLeaveGroup(group.id)}
+              className="text-red-600 border-red-600 hover:bg-red-50 text-xs h-8"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleLeaveGroup(group.id);
+              }}
             >
               Sair
             </Button>
           )}
-          <Button
-            size="sm"
-            className="bg-[#001427] hover:bg-[#1E293B] text-white text-xs h-8 px-3"
-            onClick={() => handleAccessGroup(group.id)}
-          >
-            <ArrowRight className="h-3 w-3" />
-          </Button>
         </div>
       </div>
     </div>

@@ -1,9 +1,6 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import GroupDetail from "@/components/turmas/GroupDetail";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import GroupDetail from "@/components/turmas/group-detail";
 
 export default function GroupDetailPage() {
   const { id } = useParams();
@@ -16,93 +13,33 @@ export default function GroupDetailPage() {
     membros: 0,
     tags: [],
   });
-  const { toast } = useToast();
 
   useEffect(() => {
+    // Simulate fetching group data
     const fetchGroup = async () => {
-      if (!id) {
-        navigate("/turmas/grupos");
-        return;
-      }
-
       try {
-        // Verificar se o usuário está autenticado
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          toast({
-            title: "Acesso negado",
-            description: "Você precisa estar logado para acessar grupos",
-            variant: "destructive",
-          });
-          navigate("/turmas/grupos");
-          return;
-        }
+        // Add a small delay to simulate network request
+        await new Promise((resolve) => setTimeout(resolve, 500));
 
-        // Verificar se o usuário é membro do grupo
-        const { data: membership, error: membershipError } = await supabase
-          .from('membros_grupos')
-          .select('id')
-          .eq('grupo_id', id)
-          .eq('user_id', user.id)
-          .single();
-
-        if (membershipError || !membership) {
-          toast({
-            title: "Acesso negado",
-            description: "Você não é membro deste grupo",
-            variant: "destructive",
-          });
-          navigate("/turmas/grupos");
-          return;
-        }
-
-        // Buscar dados do grupo
-        const { data: groupData, error: groupError } = await supabase
-          .from('grupos_estudo')
-          .select('*')
-          .eq('id', id)
-          .single();
-
-        if (groupError || !groupData) {
-          console.error('Erro ao buscar grupo:', groupError);
-          toast({
-            title: "Erro",
-            description: "Grupo não encontrado",
-            variant: "destructive",
-          });
-          navigate("/turmas/grupos");
-          return;
-        }
-
-        // Contar membros
-        const { data: membersCount } = await supabase
-          .from('membros_grupos')
-          .select('id', { count: 'exact' })
-          .eq('grupo_id', id);
-
+        // In a real app, you would fetch from an API
+        // For now, we'll use mock data
         setGroup({
-          id: groupData.id,
-          nome: groupData.nome,
-          descricao: groupData.descricao || "",
-          membros: membersCount?.length || 0,
-          tags: groupData.tags || [],
+          id: id || "",
+          nome: "Grupo de Cálculo Avançado",
+          descricao:
+            "Grupo para estudos de cálculo avançado e preparação para provas",
+          membros: 6,
+          tags: ["Cálculo", "Matemática", "Estudo em grupo"],
         });
-
       } catch (error) {
         console.error("Error fetching group:", error);
-        toast({
-          title: "Erro",
-          description: "Erro inesperado ao carregar grupo",
-          variant: "destructive",
-        });
-        navigate("/turmas/grupos");
       } finally {
         setLoading(false);
       }
     };
 
     fetchGroup();
-  }, [id, navigate, toast]);
+  }, [id]);
 
   const handleBack = () => {
     navigate("/turmas/grupos");
@@ -116,5 +53,11 @@ export default function GroupDetailPage() {
     );
   }
 
-  return <GroupDetail group={group} onBack={handleBack} />;
+  return (
+    <div className="min-h-screen bg-[#001427] p-4">
+      <div className="container mx-auto max-w-7xl">
+        <GroupDetail group={group} onBack={handleBack} />
+      </div>
+    </div>
+  );
 }
