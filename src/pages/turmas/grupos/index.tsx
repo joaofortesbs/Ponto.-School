@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ import {
   Calendar,
   MessageCircle,
   Star,
+  ArrowRight,
 } from "lucide-react";
 import CreateGroupModal from "@/components/turmas/CreateGroupModal";
 import AddGroupModal from "@/components/turmas/AddGroupModal";
@@ -298,30 +300,46 @@ export default function GruposEstudo() {
               {group.membros || 0} membros
             </span>
           </div>
-          {showJoinButton ? (
-            <Button
-              size="sm"
-              className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white text-xs h-8"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleJoinGroup(group.id);
-              }}
-            >
-              Participar
-            </Button>
-          ) : (
-            <Button
-              size="sm"
-              variant="outline"
-              className="text-red-600 border-red-600 hover:bg-red-50 text-xs h-8"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleLeaveGroup(group.id);
-              }}
-            >
-              Sair
-            </Button>
-          )}
+          <div className="flex gap-2">
+            {showJoinButton ? (
+              <Button
+                size="sm"
+                className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white text-xs h-8"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleJoinGroup(group.id);
+                }}
+              >
+                Participar
+              </Button>
+            ) : (
+              <>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-red-600 border-red-600 hover:bg-red-50 text-xs h-8"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleLeaveGroup(group.id);
+                  }}
+                >
+                  Sair
+                </Button>
+                <Button
+                  size="sm"
+                  className="bg-[#f4a261] hover:bg-[#e76f51] text-white text-xs h-8 flex items-center gap-1"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // Funcionalidade será adicionada no próximo prompt
+                    console.log('Acessar grupo:', group.id);
+                  }}
+                >
+                  <ArrowRight className="h-3 w-3" />
+                  Acessar
+                </Button>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>
