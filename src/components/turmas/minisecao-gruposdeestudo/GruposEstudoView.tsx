@@ -104,7 +104,7 @@ export default function GruposEstudoView() {
   const [filterTopic, setFilterTopic] = useState("");
   const [showGroupInterface, setShowGroupInterface] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState('discussions');
+  const [groupActiveTab, setGroupActiveTab] = useState('discussions');
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
@@ -370,7 +370,7 @@ export default function GruposEstudoView() {
       }
       console.log('Grupo encontrado:', groupData);
 
-      // Passo 4: Alternar para interface interna (sem navigate)
+      // Passo 4: Alternar para interface interna
       console.log('Alternando para interface interna do grupo...');
       setSelectedGroup(groupData);
       setShowGroupInterface(true);
@@ -431,7 +431,7 @@ export default function GruposEstudoView() {
     console.log('Configurando chat em tempo real para grupo:', groupId);
     
     const channel = supabase
-      .channel(`group-chat-${groupId}`)
+      .channel(`group-${groupId}`)
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
@@ -460,18 +460,12 @@ export default function GruposEstudoView() {
   };
 
   const sendMessage = async () => {
-    if (!newMessage.trim() || !selectedGroup) return;
+    if (!newMessage.trim() || isLoadingMessages || !selectedGroup) return;
 
+    setIsLoadingMessages(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast({
-          title: "Erro",
-          description: "Você precisa estar logado para enviar mensagens",
-          variant: "destructive"
-        });
-        return;
-      }
+      if (!user) return;
 
       const { error } = await supabase
         .from('mensagens_grupos')
@@ -494,6 +488,13 @@ export default function GruposEstudoView() {
       setNewMessage('');
     } catch (error: any) {
       console.error('Erro ao enviar mensagem:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao enviar mensagem",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoadingMessages(false);
     }
   };
 
@@ -502,7 +503,7 @@ export default function GruposEstudoView() {
     setShowGroupInterface(false);
     setSelectedGroup(null);
     setMessages([]);
-    setActiveTab('discussions');
+    setGroupActiveTab('discussions');
   };
 
   const formatTime = (timestamp: string) => {
@@ -660,95 +661,124 @@ export default function GruposEstudoView() {
   // Render da interface interna do grupo
   if (showGroupInterface && selectedGroup) {
     return (
-      <div className="container mx-auto p-4 max-w-7xl">
-        <div className="flex items-center mb-6">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleBackToGroups}
-            className="mr-4"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar
-          </Button>
-          <h1 className="text-2xl font-bold text-[#001427] dark:text-white">
-            {selectedGroup.nome}
-          </h1>
+      <div className="groups-interface bg-[#001427] text-white min-h-screen">
+        {/* Header da Interface do Grupo */}
+        <div className="group-header bg-[#2a4066] p-4 border-b border-gray-600">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Button
+                onClick={handleBackToGroups}
+                variant="ghost"
+                className="text-white hover:bg-[#FF6B00] hover:text-white"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Voltar
+              </Button>
+              <h1 className="text-xl font-bold text-white">{selectedGroup.nome}</h1>
+            </div>
+          </div>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="discussions">Discussões</TabsTrigger>
-            <TabsTrigger value="events" disabled>Eventos</TabsTrigger>
-            <TabsTrigger value="members" disabled>Membros</TabsTrigger>
-            <TabsTrigger value="files" disabled>Arquivos</TabsTrigger>
-            <TabsTrigger value="about" disabled>Sobre</TabsTrigger>
-          </TabsList>
+        {/* Abas da Interface do Grupo */}
+        <div className="group-tabs border-b border-gray-600">
+          <div className="flex space-x-1 px-4">
+            {[
+              { id: 'discussions', label: 'Discussões' },
+              { id: 'events', label: 'Eventos' },
+              { id: 'members', label: 'Membros' },
+              { id: 'files', label: 'Arquivos' },
+              { id: 'about', label: 'Sobre' }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setGroupActiveTab(tab.id)}
+                className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                  groupActiveTab === tab.id
+                    ? 'border-[#FF6B00] text-[#FF6B00]'
+                    : 'border-transparent text-gray-400 hover:text-white hover:border-gray-300'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
 
-          <TabsContent value="discussions" className="mt-6">
-            <Card className="h-[600px] flex flex-col">
-              <CardContent className="flex-1 flex flex-col p-4">
-                <div className="flex-1 overflow-y-auto mb-4 space-y-3">
-                  {isLoadingMessages ? (
-                    <div className="text-center text-gray-400 py-8">
-                      <p>Carregando mensagens...</p>
-                    </div>
-                  ) : messages.length === 0 ? (
-                    <div className="text-center text-gray-400 py-8">
-                      <p>Nenhuma mensagem ainda. Seja o primeiro a conversar!</p>
-                    </div>
-                  ) : (
-                    messages.map((message) => (
-                      <div key={message.id} className="chat-message">
-                        <div className="message-header flex items-center gap-2 mb-1">
-                          <span className="sender font-medium text-[#FF6B00]">
-                            {getCurrentUserDisplayName(message)}
-                          </span>
-                          <span className="timestamp text-xs text-gray-400">
-                            {formatTime(message.created_at)}
-                          </span>
-                        </div>
-                        <div className="message-content bg-[#2a4066] rounded-lg p-3">
-                          <p className="text-white text-sm whitespace-pre-wrap">
-                            {message.mensagem}
-                          </p>
-                        </div>
+        {/* Conteúdo das Abas */}
+        <div className="group-content p-4">
+          {groupActiveTab === 'discussions' && (
+            <div className="chat-section h-96 flex flex-col">
+              {/* Área de Mensagens */}
+              <div className="chat-messages flex-1 overflow-y-auto p-4 space-y-3 bg-[#1a2a44] rounded-lg mb-4">
+                {messages.length === 0 ? (
+                  <div className="text-center text-gray-400 py-8">
+                    <p>Nenhuma mensagem ainda. Seja o primeiro a conversar!</p>
+                  </div>
+                ) : (
+                  messages.map((message) => (
+                    <div key={message.id} className="chat-message">
+                      <div className="message-header flex items-center gap-2 mb-1">
+                        <span className="sender font-medium text-[#FF6B00]">
+                          {message.profiles?.display_name || message.profiles?.email || 'Usuário'}
+                        </span>
+                        <span className="timestamp text-xs text-gray-400">
+                          {new Date(message.created_at).toLocaleTimeString('pt-BR', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </span>
                       </div>
-                    ))
-                  )}
-                </div>
+                      <div className="message-content bg-[#2a4066] rounded-lg p-3">
+                        <p className="text-white text-sm whitespace-pre-wrap">
+                          {message.mensagem}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
 
+              {/* Input de Mensagem */}
+              <div className="chat-input">
                 <div className="flex gap-2">
                   <Input
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
-                    placeholder="Digite sua mensagem..."
                     onKeyPress={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
                         sendMessage();
                       }
                     }}
-                    className="flex-1"
+                    placeholder="Digite sua mensagem..."
+                    disabled={isLoadingMessages}
+                    className="flex-1 bg-[#1a2a44] border-gray-600 text-white placeholder-gray-400"
                   />
                   <Button
                     onClick={sendMessage}
-                    disabled={!newMessage.trim()}
+                    disabled={isLoadingMessages || !newMessage.trim()}
                     className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white"
                   >
                     <Send className="h-4 w-4" />
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+              </div>
+            </div>
+          )}
+
+          {/* Outras abas com placeholders */}
+          {groupActiveTab !== 'discussions' && (
+            <div className="text-center text-gray-400 py-8">
+              <p>Funcionalidade em desenvolvimento</p>
+            </div>
+          )}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-4 max-w-7xl">
+    <div className="grupos-estudo-container">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div className="flex items-center">
           <Users2 className="h-8 w-8 text-[#FF6B00] mr-3" />
