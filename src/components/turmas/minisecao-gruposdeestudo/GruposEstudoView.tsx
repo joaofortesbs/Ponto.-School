@@ -53,6 +53,24 @@ interface GroupDetails {
   membros: number;
 }
 
+interface Group {
+  id: string;
+  nome: string;
+  descricao: string;
+  user_id: string;
+  codigo_unico: string;
+  is_publico: boolean;
+  is_visible_to_all: boolean;
+  is_visible_to_partners: boolean;
+  tipo_grupo: string;
+  disciplina_area: string;
+  topico_especifico: string;
+  tags: string[];
+  created_at: string;
+  membros?: number;
+  isMember?: boolean;
+}
+
 export default function GruposEstudoView() {
   const [currentView, setCurrentView] = useState<'my-groups' | 'public-groups'>('my-groups');
   const [searchTerm, setSearchTerm] = useState('');
@@ -68,6 +86,8 @@ export default function GruposEstudoView() {
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [selectedGroupDetails, setSelectedGroupDetails] = useState<GroupDetails | null>(null);
   const [groupMembers, setGroupMembers] = useState<GroupMember[]>([]);
+  const [userGroupIds, setUserGroupIds] = useState<string[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
 
   const { toast } = useToast();
 
@@ -135,7 +155,7 @@ export default function GruposEstudoView() {
       const groupIds = memberships?.map(m => m.grupo_id) || [];
 
       let query = supabase.from('grupos_estudo').select('*');
-      
+
       if (groupIds.length > 0) {
         query = query.or(`user_id.eq.${currentUser.id},id.in.(${groupIds.join(',')})`);
       } else {
@@ -319,7 +339,7 @@ export default function GruposEstudoView() {
         } else {
           // Get user profiles for members
           const memberProfiles: GroupMember[] = [];
-          
+
           for (const member of members || []) {
             try {
               const { data: profile } = await supabase
@@ -327,7 +347,7 @@ export default function GruposEstudoView() {
                 .select('email, display_name')
                 .eq('id', member.user_id)
                 .single();
-              
+
               memberProfiles.push({
                 id: member.id,
                 user_id: member.user_id,
@@ -346,7 +366,7 @@ export default function GruposEstudoView() {
               });
             }
           }
-          
+
           setGroupMembers(memberProfiles);
         }
       } catch (error) {
@@ -402,7 +422,7 @@ export default function GruposEstudoView() {
             {meusGrupos.length} grupos
           </Badge>
         </div>
-        
+
         <div className="flex gap-2">
           <Button
             onClick={() => setIsJoinModalOpen(true)}
@@ -470,7 +490,7 @@ export default function GruposEstudoView() {
             Grupos Públicos
           </Button>
         </div>
-        
+
         <div className="flex gap-2 flex-1">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -492,7 +512,7 @@ export default function GruposEstudoView() {
               <Filter className="h-4 w-4" />
               Filtros
             </Button>
-            
+
             {showFilters && (
               <div className="absolute right-0 top-full mt-2 bg-white dark:bg-gray-800 border rounded-lg shadow-lg p-4 z-50 w-64">
                 <div className="space-y-2">
@@ -562,7 +582,7 @@ export default function GruposEstudoView() {
                     {group.is_publico ? 'Público' : 'Privado'}
                   </Badge>
                 </div>
-                
+
                 {currentView === 'my-groups' && (
                   <div className="flex gap-1 ml-2">
                     <button
@@ -589,13 +609,13 @@ export default function GruposEstudoView() {
                   </div>
                 )}
               </div>
-              
+
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1 text-sm text-gray-500">
                   <Users className="h-4 w-4" />
                   <span>{group.membros} membros</span>
                 </div>
-                
+
                 {currentView === 'public-groups' && (
                   <Button
                     onClick={() => handleJoinGroup(group.id)}

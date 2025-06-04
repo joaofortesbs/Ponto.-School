@@ -42,3 +42,37 @@
   transform: scale(1.1);
   transition: transform 0.2s ease, color 0.2s ease;
 }
+/* Estilos para o botão Acessar Grupo */
+.access-group-btn {
+  padding: 8px 12px;
+  background: #f4a261;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-left: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.access-group-btn:hover {
+  background: #e76f51;
+}
+
+.access-group-btn:active {
+  transform: translateY(1px);
+}
+
+/* Estilos para o container de ações dos cartões */
+.card-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.card-actions button {
+  white-space: nowrap;
+}
