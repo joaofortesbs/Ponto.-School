@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -129,13 +128,17 @@ export default function GruposEstudo() {
   const filteredMyGroups = myGroups.filter(
     (group) =>
       group?.nome?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      group?.topico?.toLowerCase().includes(searchQuery.toLowerCase()),
+      group?.tipo_grupo?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      group?.disciplina_area?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      group?.topico_especifico?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const filteredAllGroups = allGroups.filter(
     (group) =>
       group?.nome?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      group?.topico?.toLowerCase().includes(searchQuery.toLowerCase()),
+      group?.tipo_grupo?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      group?.disciplina_area?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      group?.topico_especifico?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleCreateGroup = (formData: any) => {
@@ -260,9 +263,33 @@ export default function GruposEstudo() {
         <h3 className="font-bold text-lg mb-1 text-[#001427] dark:text-white">
           {group.nome}
         </h3>
-        <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
-          {group.topico_nome || group.topico}
-        </p>
+        
+        {/* Novas informações dos grupos */}
+        <div className="space-y-1 mb-3 text-xs text-gray-600 dark:text-gray-300">
+          {group.tipo_grupo && (
+            <p><span className="font-medium">Tipo:</span> {group.tipo_grupo}</p>
+          )}
+          {group.disciplina_area && (
+            <p><span className="font-medium">Disciplina:</span> {group.disciplina_area}</p>
+          )}
+          {group.topico_especifico && (
+            <p><span className="font-medium">Tópico:</span> {group.topico_especifico}</p>
+          )}
+          {group.tags && group.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-2">
+              {group.tags.slice(0, 3).map((tag: string, index: number) => (
+                <Badge key={index} variant="outline" className="text-xs">
+                  {tag}
+                </Badge>
+              ))}
+              {group.tags.length > 3 && (
+                <Badge variant="outline" className="text-xs">
+                  +{group.tags.length - 3}
+                </Badge>
+              )}
+            </div>
+          )}
+        </div>
 
         <div className="flex justify-between items-center">
           <div className="flex items-center">

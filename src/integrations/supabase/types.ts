@@ -100,6 +100,7 @@ export type Database = {
           created_at: string | null
           data_criacao: string | null
           descricao: string | null
+          disciplina_area: string | null
           id: string
           is_publico: boolean | null
           is_visible_to_all: boolean | null
@@ -108,7 +109,10 @@ export type Database = {
           nome: string
           permitir_visibilidade: boolean | null
           privado: boolean | null
+          tags: string[] | null
+          tipo_grupo: string | null
           topico: string | null
+          topico_especifico: string | null
           topico_icon: string | null
           topico_nome: string | null
           updated_at: string | null
@@ -121,6 +125,7 @@ export type Database = {
           created_at?: string | null
           data_criacao?: string | null
           descricao?: string | null
+          disciplina_area?: string | null
           id?: string
           is_publico?: boolean | null
           is_visible_to_all?: boolean | null
@@ -129,7 +134,10 @@ export type Database = {
           nome: string
           permitir_visibilidade?: boolean | null
           privado?: boolean | null
+          tags?: string[] | null
+          tipo_grupo?: string | null
           topico?: string | null
+          topico_especifico?: string | null
           topico_icon?: string | null
           topico_nome?: string | null
           updated_at?: string | null
@@ -142,6 +150,7 @@ export type Database = {
           created_at?: string | null
           data_criacao?: string | null
           descricao?: string | null
+          disciplina_area?: string | null
           id?: string
           is_publico?: boolean | null
           is_visible_to_all?: boolean | null
@@ -150,7 +159,10 @@ export type Database = {
           nome?: string
           permitir_visibilidade?: boolean | null
           privado?: boolean | null
+          tags?: string[] | null
+          tipo_grupo?: string | null
           topico?: string | null
+          topico_especifico?: string | null
           topico_icon?: string | null
           topico_nome?: string | null
           updated_at?: string | null

@@ -1,11 +1,14 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Search, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface CreateGroupFormProps {
@@ -13,227 +16,350 @@ interface CreateGroupFormProps {
   onCancel: () => void;
 }
 
+interface Partner {
+  parceiro_id: string;
+  profiles?: {
+    display_name?: string;
+    full_name?: string;
+  };
+}
+
 const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel }) => {
-  const [formData, setFormData] = useState({
-    nome: "",
-    descricao: "",
-    topico: "Matemática",
-    cor: "#FF6B00",
-    privacidade: "publico",
-    visibilidade: ""
-  });
+  // Estados do formulário
+  const [groupName, setGroupName] = useState("");
+  const [groupDescription, setGroupDescription] = useState("");
+  const [groupType, setGroupType] = useState("");
+  const [groupDiscipline, setGroupDiscipline] = useState("");
+  const [groupSpecificTopic, setGroupSpecificTopic] = useState("");
+  const [groupTags, setGroupTags] = useState("");
+  const [groupPrivacy, setGroupPrivacy] = useState("public");
+  const [groupVisibility, setGroupVisibility] = useState("all");
+  const [partners, setPartners] = useState<Partner[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  // Carregar parceiros
+  useEffect(() => {
+    loadPartners();
+  }, []);
 
-  const topics = [
-    { value: "Matemática", label: "📏 Matemática", color: "#3B82F6" },
-    { value: "Língua Portuguesa", label: "📚 Língua Portuguesa", color: "#10B981" },
-    { value: "Física", label: "⚡ Física", color: "#F59E0B" },
-    { value: "Química", label: "🧪 Química", color: "#8B5CF6" },
-    { value: "Biologia", label: "🌿 Biologia", color: "#EF4444" },
-    { value: "História", label: "📜 História", color: "#F97316" },
-    { value: "Geografia", label: "🌍 Geografia", color: "#06B6D4" },
-    { value: "Filosofia", label: "🤔 Filosofia", color: "#6366F1" }
-  ];
+  const loadPartners = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-  const colors = [
-    "#FF6B00", "#3B82F6", "#10B981", "#F59E0B", 
-    "#EF4444", "#8B5CF6", "#06B6D4", "#6366F1"
-  ];
+      const { data: partnersData, error } = await supabase
+        .from('parceiros')
+        .select(`
+          parceiro_id,
+          profiles!parceiros_parceiro_id_fkey (
+            display_name,
+            full_name
+          )
+        `)
+        .eq('user_id', user.id);
 
-  const generateUniqueCode = (): string => {
-    const timestamp = Date.now().toString(36);
-    const random = Math.random().toString(36).substring(2, 8);
-    return (timestamp + random).toUpperCase().substring(0, 8);
+      if (error) {
+        console.error('Erro ao carregar parceiros:', error);
+        return;
+      }
+
+      setPartners(partnersData || []);
+    } catch (error) {
+      console.error('Erro ao carregar parceiros:', error);
+    }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.nome.trim()) {
-      alert('Nome do grupo é obrigatório!');
+  // Filtrar parceiros com base na pesquisa
+  const filteredPartners = partners.filter(partner => {
+    const name = partner.profiles?.display_name || partner.profiles?.full_name || 'Nome não disponível';
+    return name.toLowerCase().includes(searchQuery.toLowerCase());
+  });
+
+  const handleSubmit = () => {
+    if (!groupName || !groupDescription || !groupType || !groupDiscipline || !groupSpecificTopic) {
+      alert('Por favor, preencha todos os campos obrigatórios.');
       return;
     }
 
-    setIsSubmitting(true);
-    
-    try {
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      
-      if (authError || !user) {
-        throw new Error('Você precisa estar logado para criar um grupo');
-      }
+    const tags = groupTags ? groupTags.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
 
-      const codigoUnico = generateUniqueCode();
-      const selectedTopic = topics.find(t => t.value === formData.topico);
-      
-      const groupData = {
-        codigo_unico: codigoUnico,
-        user_id: user.id,
-        nome: formData.nome.trim(),
-        descricao: formData.descricao.trim() || null,
-        topico: formData.topico,
-        topico_nome: selectedTopic?.label || formData.topico,
-        topico_icon: selectedTopic?.label.split(' ')[0] || "📚",
-        cor: formData.cor,
-        privado: formData.privacidade === "privado",
-        is_publico: formData.privacidade === "publico",
-        is_visible_to_all: formData.visibilidade === "all",
-        is_visible_to_partners: formData.visibilidade === "partners",
-        membros: 1
-      };
+    const formData = {
+      nome: groupName,
+      descricao: groupDescription,
+      tipo_grupo: groupType,
+      disciplina_area: groupDiscipline,
+      topico_especifico: groupSpecificTopic,
+      tags: tags,
+      is_publico: groupPrivacy === "public",
+      is_visible_to_all: groupVisibility === "all",
+      is_visible_to_partners: groupVisibility === "partners"
+    };
 
-      const { data, error } = await supabase
-        .from('grupos_estudo')
-        .insert(groupData)
-        .select()
-        .single();
+    onSubmit(formData);
+  };
 
-      if (error) {
-        throw error;
-      }
-      
-      const { error: memberError } = await supabase
-        .from('membros_grupos')
-        .insert({
-          grupo_id: data.id,
-          user_id: user.id,
-          joined_at: new Date().toISOString()
-        });
+  // Gerar prévia do grupo
+  const renderGroupPreview = () => {
+    const tags = groupTags ? groupTags.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
+    const isPublic = groupPrivacy === "public" ? "Público" : "Privado";
+    const visibility = groupVisibility === "all" ? "Todos podem ver" : "Apenas Parceiros podem ver";
 
-      if (memberError) {
-        throw memberError;
-      }
-      
-      alert(`Grupo criado com sucesso! Código: ${codigoUnico}`);
-      onSubmit({ ...groupData, ...data });
+    return (
+      <div className="space-y-3">
+        <div>
+          <h4 className="text-lg font-semibold text-white mb-2">
+            {groupName || "Nome do grupo"}
+          </h4>
+          <p className="text-gray-300 text-sm">
+            {groupDescription || "Descrição do grupo"}
+          </p>
+        </div>
         
-    } catch (error: any) {
-      console.error('Erro ao criar grupo:', error);
-      alert(`Erro ao criar grupo: ${error.message}`);
-    }
-    
-    setIsSubmitting(false);
+        <div className="grid grid-cols-2 gap-2 text-xs">
+          <div>
+            <span className="text-gray-400">Tipo:</span>
+            <p className="text-white">{groupType || "Não selecionado"}</p>
+          </div>
+          <div>
+            <span className="text-gray-400">Disciplina:</span>
+            <p className="text-white">{groupDiscipline || "Não especificada"}</p>
+          </div>
+          <div>
+            <span className="text-gray-400">Tópico:</span>
+            <p className="text-white">{groupSpecificTopic || "Não especificado"}</p>
+          </div>
+          <div>
+            <span className="text-gray-400">Privacidade:</span>
+            <p className="text-white">{isPublic}</p>
+          </div>
+        </div>
+
+        {tags.length > 0 && (
+          <div>
+            <span className="text-gray-400 text-xs">Tags:</span>
+            <div className="flex flex-wrap gap-1 mt-1">
+              {tags.map((tag, index) => (
+                <Badge key={index} variant="secondary" className="text-xs">
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div>
+          <span className="text-gray-400 text-xs">Visibilidade:</span>
+          <p className="text-white text-xs">{visibility}</p>
+        </div>
+      </div>
+    );
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <Label htmlFor="nome">Nome do Grupo *</Label>
-        <Input
-          id="nome"
-          value={formData.nome}
-          onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
-          placeholder="Digite o nome do grupo"
-          required
-          className="mt-1"
-        />
-      </div>
-
-      <div>
-        <Label htmlFor="descricao">Descrição</Label>
-        <Textarea
-          id="descricao"
-          value={formData.descricao}
-          onChange={(e) => setFormData(prev => ({ ...prev, descricao: e.target.value }))}
-          placeholder="Descreva o objetivo do grupo (opcional)"
-          className="mt-1 min-h-[80px]"
-        />
-      </div>
-
-      <div>
-        <Label htmlFor="topico">Tópico de Estudo</Label>
-        <Select
-          value={formData.topico}
-          onValueChange={(value) => setFormData(prev => ({ ...prev, topico: value }))}
-        >
-          <SelectTrigger className="mt-1">
-            <SelectValue placeholder="Selecione um tópico" />
-          </SelectTrigger>
-          <SelectContent>
-            {topics.map((topic) => (
-              <SelectItem key={topic.value} value={topic.value}>
-                {topic.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div>
-        <Label>Cor do Grupo</Label>
-        <div className="flex gap-2 mt-2">
-          {colors.map((color) => (
-            <button
-              key={color}
-              type="button"
-              className={`w-8 h-8 rounded-full border-2 ${
-                formData.cor === color ? 'border-white' : 'border-gray-400'
-              }`}
-              style={{ backgroundColor: color }}
-              onClick={() => setFormData(prev => ({ ...prev, cor: color }))}
+    <div className="space-y-6">
+      {/* Mini-seção 1: Informações Básicas */}
+      <Card className="bg-gray-800 border-gray-700">
+        <CardHeader>
+          <CardTitle className="text-[#FF6B00]">Informações Básicas</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="group-name" className="text-white">Nome do grupo *</Label>
+            <Input
+              id="group-name"
+              value={groupName}
+              onChange={(e) => setGroupName(e.target.value)}
+              placeholder="Digite o nome do grupo"
+              className="bg-gray-700 border-gray-600 text-white"
             />
-          ))}
-        </div>
-      </div>
+          </div>
 
-      <div className="space-y-4">
-        <div>
-          <Label className="text-base font-medium">Privacidade do grupo</Label>
-          <RadioGroup
-            value={formData.privacidade}
-            onValueChange={(value) => setFormData(prev => ({ ...prev, privacidade: value }))}
-            className="mt-2"
-          >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="publico" id="publico" />
-              <Label htmlFor="publico">Público</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="privado" id="privado" />
-              <Label htmlFor="privado">Privado</Label>
-            </div>
-          </RadioGroup>
-        </div>
+          <div>
+            <Label htmlFor="group-description" className="text-white">Descrição *</Label>
+            <Textarea
+              id="group-description"
+              value={groupDescription}
+              onChange={(e) => setGroupDescription(e.target.value)}
+              placeholder="Digite a descrição do grupo"
+              className="bg-gray-700 border-gray-600 text-white"
+            />
+          </div>
 
-        <div>
-          <Label className="text-base font-medium">Visibilidade do grupo</Label>
-          <RadioGroup
-            value={formData.visibilidade}
-            onValueChange={(value) => setFormData(prev => ({ ...prev, visibilidade: value }))}
-            className="mt-2"
-          >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="all" id="visibilidade-todos" />
-              <Label htmlFor="visibilidade-todos">Permitir que todos vejam</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="partners" id="visibilidade-parceiros" />
-              <Label htmlFor="visibilidade-parceiros">Permitir que meus Parceiros vejam</Label>
-            </div>
-          </RadioGroup>
-        </div>
-      </div>
+          <div>
+            <Label htmlFor="group-type" className="text-white">Tipo do Grupo *</Label>
+            <Select value={groupType} onValueChange={setGroupType}>
+              <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
+                <SelectValue placeholder="Selecione o tipo do grupo" />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-700 border-gray-600">
+                <SelectItem value="Materias Basicas">Matérias Básicas</SelectItem>
+                <SelectItem value="ENEM & Exames">ENEM & Exames</SelectItem>
+                <SelectItem value="Interesses & Habilidades">Interesses & Habilidades</SelectItem>
+                <SelectItem value="Projetos & Atividades">Projetos & Atividades</SelectItem>
+                <SelectItem value="Grupos de Apoio">Grupos de Apoio</SelectItem>
+                <SelectItem value="Outros">Outros...</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-      <div className="flex gap-2 pt-4">
-        <Button 
-          type="submit" 
-          disabled={isSubmitting}
-          className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white flex-1"
-        >
-          {isSubmitting ? 'Criando...' : 'Criar Grupo'}
-        </Button>
-        <Button 
-          type="button" 
-          variant="outline" 
-          onClick={onCancel}
-          disabled={isSubmitting}
-          className="flex-1"
-        >
-          Cancelar
-        </Button>
-      </div>
-    </form>
+          <div>
+            <Label htmlFor="group-discipline" className="text-white">Disciplina/Área *</Label>
+            <Input
+              id="group-discipline"
+              value={groupDiscipline}
+              onChange={(e) => setGroupDiscipline(e.target.value)}
+              placeholder="Ex.: Matemática"
+              className="bg-gray-700 border-gray-600 text-white"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="group-specific-topic" className="text-white">Tópico Específico *</Label>
+            <Input
+              id="group-specific-topic"
+              value={groupSpecificTopic}
+              onChange={(e) => setGroupSpecificTopic(e.target.value)}
+              placeholder="Ex.: Álgebra Linear"
+              className="bg-gray-700 border-gray-600 text-white"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="group-tags" className="text-white">Tags</Label>
+            <Input
+              id="group-tags"
+              value={groupTags}
+              onChange={(e) => setGroupTags(e.target.value)}
+              placeholder="Ex.: cálculo, matemática, exercícios (separar por vírgulas)"
+              className="bg-gray-700 border-gray-600 text-white"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Mini-seção 2: Configurações */}
+      <Card className="bg-gray-800 border-gray-700">
+        <CardHeader>
+          <CardTitle className="text-[#FF6B00]">Configurações</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label className="text-white font-medium">Privacidade do grupo</Label>
+            <RadioGroup value={groupPrivacy} onValueChange={setGroupPrivacy} className="mt-2">
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="public" id="public-privacy" />
+                <Label htmlFor="public-privacy" className="text-white">Público</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="private" id="private-privacy" />
+                <Label htmlFor="private-privacy" className="text-white">Privado</Label>
+              </div>
+            </RadioGroup>
+          </div>
+
+          <div>
+            <Label className="text-white font-medium">Visibilidade do grupo</Label>
+            <RadioGroup value={groupVisibility} onValueChange={setGroupVisibility} className="mt-2">
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="all" id="group-visibility-all" />
+                <Label htmlFor="group-visibility-all" className="text-white">Permitir que todos vejam</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="partners" id="group-visibility-partners" />
+                <Label htmlFor="group-visibility-partners" className="text-white">Permitir que meus Parceiros vejam</Label>
+              </div>
+            </RadioGroup>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Mini-seção 3: Participantes */}
+      <Card className="bg-gray-800 border-gray-700">
+        <CardHeader>
+          <CardTitle className="text-[#FF6B00]">Participantes</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Card className="bg-gray-700 border-gray-600">
+            <CardHeader>
+              <CardTitle className="text-white text-sm flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                Convidar Participantes
+              </CardTitle>
+              <CardDescription className="text-gray-400">
+                Pesquise e convide seus parceiros para o grupo
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Pesquisar Parceiros"
+                  className="pl-9 bg-gray-600 border-gray-500 text-white"
+                />
+              </div>
+              
+              <div className="max-h-32 overflow-y-auto space-y-2">
+                {filteredPartners.length > 0 ? (
+                  filteredPartners.map((partner, index) => (
+                    <div key={index} className="flex items-center justify-between p-2 bg-gray-600 rounded">
+                      <span className="text-white text-sm">
+                        {partner.profiles?.display_name || partner.profiles?.full_name || 'Nome não disponível'}
+                      </span>
+                      <Button 
+                        size="sm" 
+                        disabled 
+                        className="bg-gray-500 text-gray-300 cursor-not-allowed"
+                      >
+                        Convidar
+                      </Button>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-400 text-sm text-center py-4">
+                    {partners.length === 0 ? 'Nenhum parceiro encontrado.' : 'Nenhum parceiro corresponde à pesquisa.'}
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </CardContent>
+      </Card>
+
+      {/* Mini-seção 4: Imagem do Grupo */}
+      <Card className="bg-gray-800 border-gray-700">
+        <CardHeader>
+          <CardTitle className="text-[#FF6B00]">Imagem do Grupo</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Card className="bg-gray-700 border-gray-600">
+            <CardHeader>
+              <CardTitle className="text-white text-sm">Prévia do Grupo</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {renderGroupPreview()}
+            </CardContent>
+          </Card>
+
+          <div className="flex justify-end gap-3 pt-4">
+            <Button 
+              onClick={onCancel}
+              variant="outline"
+              className="border-gray-600 text-white hover:bg-gray-700"
+            >
+              Cancelar
+            </Button>
+            <Button 
+              onClick={handleSubmit}
+              className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white"
+            >
+              Criar Grupo
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
