@@ -1,0 +1,571 @@
+Entendido! Você já adicionou manualmente o botão "Acessar Grupo" nos cards da grade de "Grupos de Estudos", mas ele está sem configuração ou integração, funcionando apenas como um elemento estático no front-end. Vou criar um prompt claro e objetivo para configurar e ativar esse botão, conectando-o ao back-end e implementando a lógica para exibir a interface interna do grupo de estudos, conforme descrito anteriormente. Vou simplificar o prompt para evitar conflitos ou erros por parte da IA de Vibe Code, focando exclusivamente na ativação do botão "Acessar Grupo" e na transição para a interface interna do grupo, com a estrutura de 5 mini-seções ("Discussões", "Eventos", "Membros", "Arquivos", "Sobre"), sendo "Discussões" um chat funcional e as demais desativadas. Também garantirei que a integração com o Supabase seja robusta, reutilizando validações anteriores para evitar problemas como os enfrentados antes (ex.: erros de conexão ou autenticação).
+
+⚠️ Instruções Diretas para Implementação: Ativação do Botão "Acessar Grupo" nos Cards de Grupos de Estudos (Prioridade Absoluta)
+❗ ATENÇÃO:
+
+➕ Este desenvolvimento ativa o botão "Acessar Grupo" já existente nos cards da grade de "Grupos de Estudos", configurando sua funcionalidade para exibir a interface interna do grupo, com 5 mini-seções ("Discussões", "Eventos", "Membros", "Arquivos", "Sobre"), sendo "Discussões" um chat funcional e as demais desativadas.
+
+🔥 NÃO ALTERE o design, estilo, ou layout da mini-seção "Grupos de Estudos", exceto para ajustar o comportamento do botão "Acessar Grupo" e criar a interface interna do grupo.
+
+⚙️ As ações devem incluir ajustes no index.html, styles.css, script.js, criação de tabelas no Supabase para o chat, e configuração de um sistema de mensagens em tempo real, mantendo todas as funcionalidades existentes (listagem, criação, ingresso, saída, filtragem, configurações) intactas e sem erros.
+
+🌍 Contexto do Sistema Atual
+Com base nas conversas anteriores:
+
+A mini-seção "Grupos de Estudos" exibe "Meus Grupos" e "Todos os Grupos", com filtros, tópicos como carrossel, e cards interativos na grade.
+Cada card de grupo já contém o botão "Acessar Grupo", adicionado manualmente, mas sem funcionalidade.
+Banco de Dados Supabase:
+grupos_estudo: id, nome, criador_id, codigo_unico, is_public, is_visible_to_all, is_visible_to_partners, tipo_grupo, disciplina_area, topico_especifico, tags, created_at.
+membros_grupos: grupo_id, user_id, joined_at.
+parceiros: user_id, parceiro_id.
+convites_grupos: id, grupo_id, convidado_id, criador_id, status, created_at.
+Problemas Anteriores:
+Erros de conexão com o Supabase e autenticação foram resolvidos com as funções validateSupabaseConnection e validateUserAuth. Essas funções devem ser reutilizadas para evitar recorrências.
+🏗️ Objetivo Estratégico
+Configurar o botão "Acessar Grupo" já existente nos cards da grade de "Grupos de Estudos" para exibir a interface interna do grupo.
+Criar a interface interna do grupo, com 5 mini-seções:
+"Discussões": Chat funcional em tempo real, inspirado em WhatsApp/Instagram/Telegram.
+"Eventos", "Membros", "Arquivos", "Sobre": Desativadas por enquanto, com placeholders.
+Substituir a interface da mini-seção "Grupos de Estudos" pela interface interna do grupo ao clicar no botão.
+Garantir integração com o Supabase para o chat, com mensagens em tempo real.
+🛠️ Etapas Exatas do Processo
+🔸 Ajustes no Banco de Dados (Supabase)
+Criação da Tabela mensagens_grupos:
+Crie uma tabela para armazenar as mensagens do chat:
+text
+
+Recolher
+
+Desencapsular
+
+Copiar
+CREATE TABLE IF NOT EXISTS mensagens_grupos (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  grupo_id UUID REFERENCES grupos_estudo(id),
+  user_id UUID REFERENCES auth.users(id),
+  mensagem TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+Índices:
+text
+
+Recolher
+
+Desencapsular
+
+Copiar
+CREATE INDEX IF NOT EXISTS idx_mensagens_grupos_grupo_id ON mensagens_grupos (grupo_id);
+CREATE INDEX IF NOT EXISTS idx_mensagens_grupos_created_at ON mensagens_grupos (created_at);
+Permissões (RLS):
+Leitura: Apenas membros do grupo podem ler mensagens.
+text
+
+Recolher
+
+Desencapsular
+
+Copiar
+CREATE POLICY "Membros podem ler mensagens" ON mensagens_grupos
+FOR SELECT
+USING (
+  EXISTS (
+    SELECT 1 FROM membros_grupos
+    WHERE membros_grupos.grupo_id = mensagens_grupos.grupo_id
+    AND membros_grupos.user_id = auth.uid()
+  )
+);
+Escrita: Apenas membros do grupo podem enviar mensagens.
+text
+
+Recolher
+
+Desencapsular
+
+Copiar
+CREATE POLICY "Membros podem enviar mensagens" ON mensagens_grupos
+FOR INSERT
+WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM membros_grupos
+    WHERE membros_grupos.grupo_id = mensagens_grupos.grupo_id
+    AND membros_grupos.user_id = auth.uid()
+  )
+);
+Habilite Realtime:
+text
+
+Recolher
+
+Desencapsular
+
+Copiar
+ALTER TABLE mensagens_grupos ENABLE REALTIME;
+🔸 Ajustes no HTML (index.html)
+Etapa 1: Verificar o Botão "Acessar Grupo"
+Confirme que o botão "Acessar Grupo" nos cards tem um atributo data-group-id para identificar o grupo:
+text
+
+Recolher
+
+Desencapsular
+
+Copiar
+<button class="access-group-btn" data-group-id="${group.id}">Acessar Grupo</button>
+Ação: Se o atributo data-group-id estiver ausente, adicione-o na função que renderiza os cards (ex.: loadGroups).
+Etapa 2: Criar a Interface Interna do Grupo
+Adicione uma nova <div> para a interface interna, inicialmente oculta:
+text
+
+Recolher
+
+Desencapsular
+
+Copiar
+<div id="group-interface" class="group-interface" style="display: none;">
+  <div class="group-header">
+    <button id="back-to-groups-btn" class="btn">Voltar</button>
+    <h3 id="group-title"></h3>
+  </div>
+  <div class="group-tabs">
+    <button class="tab-btn active" data-tab="discussions">Discussões</button>
+    <button class="tab-btn" data-tab="events" disabled>Eventos</button>
+    <button class="tab-btn" data-tab="members" disabled>Membros</button>
+    <button class="tab-btn" data-tab="files" disabled>Arquivos</button>
+    <button class="tab-btn" data-tab="about" disabled>Sobre</button>
+  </div>
+  <div class="group-content">
+    <div id="discussions-tab" class="tab-content active">
+      <div id="chat-messages" class="chat-messages"></div>
+      <div class="chat-input">
+        <input type="text" id="chat-input" placeholder="Digite sua mensagem...">
+        <button id="send-message-btn" class="btn-orange">Enviar</button>
+      </div>
+    </div>
+    <div id="events-tab" class="tab-content" style="display: none;">
+      <p>Funcionalidade em desenvolvimento.</p>
+    </div>
+    <div id="members-tab" class="tab-content" style="display: none;">
+      <p>Funcionalidade em desenvolvimento.</p>
+    </div>
+    <div id="files-tab" class="tab-content" style="display: none;">
+      <p>Funcionalidade em desenvolvimento.</p>
+    </div>
+    <div id="about-tab" class="tab-content" style="display: none;">
+      <p>Funcionalidade em desenvolvimento.</p>
+    </div>
+  </div>
+</div>
+Etapa 3: Ajustar a Estrutura da Grade
+Envolva a grade atual de "Grupos de Estudos" em uma <div> para facilitar a alternância:
+text
+
+Recolher
+
+Desencapsular
+
+Copiar
+<div id="groups-grid-container">
+  <!-- Grade atual de Grupos de Estudos -->
+</div>
+🔸 Ajustes no CSS (styles.css)
+Estilização do Botão "Acessar Grupo":
+text
+
+Recolher
+
+Desencapsular
+
+Copiar
+.access-group-btn {
+  padding: 8px 12px;
+  background: #f4a261;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-left: 5px;
+}
+.access-group-btn:hover {
+  background: #e76f51;
+}
+Estilização da Interface Interna:
+text
+
+Recolher
+
+Desencapsular
+
+Copiar
+.group-interface {
+  padding: 20px;
+  background: #1a2a44;
+  border-radius: 8px;
+  height: 100%;
+}
+.group-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.group-header h3 {
+  margin: 0 0 0 10px;
+  color: #f4a261;
+}
+.group-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.tab-btn {
+  padding: 10px 15px;
+  background: #2a4066;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.tab-btn.active {
+  background: #f4a261;
+}
+.tab-btn:disabled {
+  background: #888;
+  cursor: not-allowed;
+}
+.group-content {
+  background: #2a4066;
+  padding: 15px;
+  border-radius: 8px;
+  height: calc(100% - 150px);
+}
+.tab-content {
+  display: none;
+}
+.tab-content.active {
+  display: block;
+}
+.chat-messages {
+  height: 400px;
+  overflow-y: auto;
+  padding: 10px;
+  background: #1a2a44;
+  border-radius: 5px;
+  margin-bottom: 15px;
+}
+.chat-message {
+  margin-bottom: 10px;
+}
+.chat-message .sender {
+  font-weight: bold;
+  color: #f4a261;
+}
+.chat-message .timestamp {
+  font-size: 0.8em;
+  color: #888;
+  margin-left: 5px;
+}
+.chat-message .message {
+  color: #fff;
+}
+.chat-input {
+  display: flex;
+  gap: 10px;
+}
+.chat-input input {
+  flex: 1;
+  padding: 8px;
+  border-radius: 5px;
+  border: 1px solid #3d5a80;
+  background: #1a2a44;
+  color: #fff;
+}
+🔸 Ajustes no JavaScript (script.js)
+Etapa 1: Ativar o Botão "Acessar Grupo"
+Localize a função loadGroups (ou similar) que renderiza a grade de grupos.
+Adicione o evento de clique aos botões "Acessar Grupo":
+text
+
+Recolher
+
+Desencapsular
+
+Copiar
+const loadGroups = async (view) => {
+  // ... Código existente para buscar grupos ...
+  const groupsGrid = document.querySelector('#groups-grid'); // Ajuste o seletor conforme necessário
+  groupsGrid.innerHTML = groups.map(group => `
+    <div class="group-card" data-group-id="${group.id}">
+      <h4>${group.nome}</h4>
+      <p>${group.descricao}</p>
+      <div class="card-actions">
+        <!-- Outros botões existentes -->
+        <button class="access-group-btn" data-group-id="${group.id}">Acessar Grupo</button>
+      </div>
+    </div>
+  `).join('');
+
+  document.querySelectorAll('.access-group-btn').forEach(button => {
+    button.addEventListener('click', () => {
+      const groupId = button.getAttribute('data-group-id');
+      enterGroup(groupId);
+    });
+  });
+};
+Etapa 2: Função para Entrar no Grupo
+Crie a função enterGroup:
+text
+
+Recolher
+
+Desencapsular
+
+Copiar
+let currentGroupId = null;
+
+const enterGroup = async (groupId) => {
+  try {
+    console.log('Acessando grupo com ID:', groupId);
+
+    // Validar conexão com o Supabase
+    if (!await validateSupabaseConnection()) return;
+
+    // Validar autenticação do usuário
+    const userId = await validateUserAuth();
+    if (!userId) return;
+
+    // Verificar se o usuário é membro do grupo
+    const { data: membership, error: membershipError } = await supabase
+      .from('membros_grupos')
+      .select('id')
+      .eq('grupo_id', groupId)
+      .eq('user_id', userId)
+      .single();
+    if (membershipError || !membership) {
+      console.error('Erro ao verificar membresia:', membershipError);
+      alert('Você não é membro deste grupo.');
+      return;
+    }
+
+    // Buscar informações do grupo
+    const { data: group, error: groupError } = await supabase
+      .from('grupos_estudo')
+      .select('nome')
+      .eq('id', groupId)
+      .single();
+    if (groupError || !group) {
+      console.error('Erro ao buscar grupo:', groupError);
+      alert('Grupo não encontrado.');
+      return;
+    }
+
+    // Atualizar o título do grupo
+    document.getElementById('group-title').textContent = group.nome;
+    currentGroupId = groupId;
+
+    // Alternar interfaces
+    document.getElementById('groups-grid-container').style.display = 'none';
+    document.getElementById('group-interface').style.display = 'block';
+
+    // Carregar o chat
+    loadChatMessages(groupId);
+    setupChatRealtime(groupId);
+  } catch (error) {
+    console.error('Erro ao acessar grupo:', error.message);
+    alert('Erro ao acessar o grupo. Tente novamente.');
+  }
+};
+Etapa 3: Função para Carregar Mensagens do Chat
+Crie a função loadChatMessages:
+text
+
+Recolher
+
+Desencapsular
+
+Copiar
+const loadChatMessages = async (groupId) => {
+  try {
+    console.log('Carregando mensagens para grupo:', groupId);
+    const { data: messages, error } = await supabase
+      .from('mensagens_grupos')
+      .select(`
+        id,
+        mensagem,
+        created_at,
+        user:auth.users!mensagens_grupos_user_id_fkey(name, username)
+      `)
+      .eq('grupo_id', groupId)
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error('Erro ao carregar mensagens:', error.message);
+      displayChatError('Erro ao carregar mensagens.');
+      return;
+    }
+
+    const chatMessages = document.getElementById('chat-messages');
+    chatMessages.innerHTML = messages.map(msg => `
+      <div class="chat-message">
+        <span class="sender">${msg.user.name} (@${msg.user.username})</span>
+        <span class="timestamp">${new Date(msg.created_at).toLocaleTimeString()}</span>
+        <p class="message">${msg.mensagem}</p>
+      </div>
+    `).join('');
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  } catch (error) {
+    console.error('Erro geral ao carregar mensagens:', error.message);
+    displayChatError('Erro ao carregar mensagens.');
+  }
+};
+
+const displayChatError = (message) => {
+  const chatMessages = document.getElementById('chat-messages');
+  chatMessages.innerHTML = `<p style="color: #ff4444;">${message}</p>`;
+};
+Etapa 4: Configurar Chat em Tempo Real
+Crie a função setupChatRealtime:
+text
+
+Recolher
+
+Desencapsular
+
+Copiar
+let chatSubscription = null;
+
+const setupChatRealtime = (groupId) => {
+  if (chatSubscription) {
+    supabase.removeSubscription(chatSubscription);
+  }
+
+  chatSubscription = supabase
+    .channel(`group-${groupId}`)
+    .on('postgres_changes', {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'mensagens_grupos',
+      filter: `grupo_id=eq.${groupId}`
+    }, async (payload) => {
+      console.log('Nova mensagem recebida:', payload);
+      const { data: user, error } = await supabase
+        .from('auth.users')
+        .select('name, username')
+        .eq('id', payload.new.user_id)
+        .single();
+      if (error) {
+        console.error('Erro ao buscar usuário da mensagem:', error);
+        return;
+      }
+
+      const chatMessages = document.getElementById('chat-messages');
+      chatMessages.innerHTML += `
+        <div class="chat-message">
+          <span class="sender">${user.name} (@${user.username})</span>
+          <span class="timestamp">${new Date(payload.new.created_at).toLocaleTimeString()}</span>
+          <p class="message">${payload.new.mensagem}</p>
+        </div>
+      `;
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    })
+    .subscribe();
+};
+Etapa 5: Enviar Mensagens
+Adicione a lógica para o botão "Enviar":
+text
+
+Recolher
+
+Desencapsular
+
+Copiar
+document.getElementById('send-message-btn').addEventListener('click', async () => {
+  const input = document.getElementById('chat-input');
+  const message = input.value.trim();
+  if (!message) return;
+
+  try {
+    const userId = await validateUserAuth();
+    if (!userId) return;
+
+    const { error } = await supabase
+      .from('mensagens_grupos')
+      .insert({
+        grupo_id: currentGroupId,
+        user_id: userId,
+        mensagem: message,
+        created_at: new Date().toISOString()
+      });
+
+    if (error) {
+      console.error('Erro ao enviar mensagem:', error.message);
+      alert('Erro ao enviar mensagem.');
+      return;
+    }
+
+    input.value = '';
+  } catch (error) {
+    console.error('Erro geral ao enviar mensagem:', error.message);
+    alert('Erro ao enviar mensagem.');
+  }
+});
+
+document.getElementById('chat-input').addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') {
+    document.getElementById('send-message-btn').click();
+  }
+});
+Etapa 6: Voltar para a Grade de Grupos
+Adicione a lógica para o botão "Voltar":
+text
+
+Recolher
+
+Desencapsular
+
+Copiar
+document.getElementById('back-to-groups-btn').addEventListener('click', () => {
+  console.log('Voltando para a grade de grupos...');
+  document.getElementById('group-interface').style.display = 'none';
+  document.getElementById('groups-grid-container').style.display = 'block';
+  currentGroupId = null;
+
+  if (chatSubscription) {
+    supabase.removeSubscription(chatSubscription);
+    chatSubscription = null;
+  }
+});
+Etapa 7: Gerenciar Abas
+Adicione a lógica para alternar entre as abas:
+text
+
+Recolher
+
+Desencapsular
+
+Copiar
+document.querySelectorAll('.tab-btn').forEach(button => {
+  button.addEventListener('click', () => {
+    if (button.disabled) return;
+
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+    button.classList.add('active');
+    document.getElementById(`${button.getAttribute('data-tab')}-tab`).classList.add('active');
+  });
+});
+🏗 Regras e Considerações Técnicas
+🚫 NÃO fazer:
+❌ Não remova ou modifique o botão "Acessar Grupo" já existente nos cards.
+❌ Não altere o design, estilo, ou layout da mini-seção "Grupos de Estudos", exceto para criar a interface interna.
+❌ Não modifique funcionalidades existentes fora do escopo desta tarefa.
+✅ DEVE fazer:
+✔️ Configurar o botão "Acessar Grupo" para exibir a interface interna do grupo.
+✔️ Criar a interface interna com 5 mini-seções: "Discussões" (chat funcional), "Eventos", "Membros", "Arquivos", e "Sobre" (desativadas).
+✔️ Implementar o chat em tempo real com integração ao Supabase.
+✔️ Criar a tabela mensagens_grupos e configurar Realtime e permissões.
+✔️ Adicionar botão "Voltar" para retornar à grade.
+✔️ Reutilizar as funções validateSupabaseConnection e validateUserAuth para evitar erros.
+💡 Considerações Finais
+Horário: 07:29 PM -03, 04/06/2025. Execute e teste imediatamente após a implementação.
+Solução Criativa: Se houver falhas no Realtime, adicione um botão "Atualizar" no chat para recarregar mensagens manualmente.
+Próximos Passos: Após validação, podemos ativar as abas "Eventos", "Membros", "Arquivos", e "Sobre".
