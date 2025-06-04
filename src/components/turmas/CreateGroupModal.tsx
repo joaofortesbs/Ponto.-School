@@ -19,6 +19,46 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
 }) => {
   const [isLoading, setIsLoading] = useState(false);
 
+  const generateUniqueCode = async (): Promise<string> => {
+    let codigoUnico: string;
+    let isUnique = false;
+    let attempts = 0;
+    const maxAttempts = 10;
+
+    while (!isUnique && attempts < maxAttempts) {
+      // Gerar código de 8 caracteres usando substring(2, 10)
+      codigoUnico = Math.random().toString(36).substring(2, 10).toUpperCase();
+      
+      console.log('Código único gerado:', codigoUnico, 'Comprimento:', codigoUnico.length);
+      
+      // Verificar se o código já existe no banco
+      const { data: existingGroup, error } = await supabase
+        .from('grupos_estudo')
+        .select('id')
+        .eq('codigo_unico', codigoUnico)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Erro ao verificar unicidade do código:', error);
+        attempts++;
+        continue;
+      }
+
+      if (!existingGroup) {
+        isUnique = true;
+        console.log('Código único validado:', codigoUnico);
+        return codigoUnico;
+      }
+      
+      attempts++;
+    }
+
+    // Fallback: se não conseguir gerar código único, usar timestamp
+    const fallbackCode = Date.now().toString(36).substring(-8).toUpperCase();
+    console.log('Usando código fallback:', fallbackCode, 'Comprimento:', fallbackCode.length);
+    return fallbackCode;
+  };
+
   const handleSubmit = async (formData: any) => {
     setIsLoading(true);
     try {
@@ -28,8 +68,8 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
         return;
       }
 
-      // Gerar código único para o grupo
-      const codigoUnico = Math.random().toString(36).substring(2, 8).toUpperCase();
+      // Gerar código único de 8 caracteres
+      const codigoUnico = await generateUniqueCode();
 
       // Criar o grupo no Supabase
       const { data: newGroup, error: insertError } = await supabase
@@ -56,6 +96,8 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
         alert('Erro ao criar grupo: ' + insertError.message);
         return;
       }
+
+      console.log('Grupo criado com código:', newGroup.codigo_unico, 'Comprimento:', newGroup.codigo_unico.length);
 
       // Adicionar o criador como membro do grupo
       const { error: memberError } = await supabase
