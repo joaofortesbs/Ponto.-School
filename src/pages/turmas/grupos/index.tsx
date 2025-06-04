@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -265,6 +266,9 @@ export default function GruposEstudo() {
           )}
           {group.topico_especifico && (
             <p><span className="font-medium">Tópico:</span> {group.topico_especifico}</p>
+          )}
+          {group.codigo_unico && (
+            <p><span className="font-medium">Código:</span> {group.codigo_unico}</p>
           )}
           {group.tags && group.tags.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-2">

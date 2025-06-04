@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from "react";
-import { Send } from "lucide-react";
+import { Send, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
@@ -180,6 +180,12 @@ const ChatSection: React.FC<ChatSectionProps> = ({ groupId }) => {
     return 'Usuário';
   };
 
+  // Verificar se é o usuário atual
+  const isCurrentUser = async (userId: string) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    return user?.id === userId;
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -200,38 +206,27 @@ const ChatSection: React.FC<ChatSectionProps> = ({ groupId }) => {
             </p>
           </div>
         ) : (
-          messages.map((message) => {
-            const { data: { user: currentUser } } = supabase.auth.getUser();
-            const isCurrentUser = currentUser?.id === message.user_id;
-            
-            return (
+          messages.map((message) => (
+            <div
+              key={message.id}
+              className={`flex justify-start`}
+            >
               <div
-                key={message.id}
-                className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
+                className={`max-w-xs lg:max-w-md px-3 py-2 rounded-lg bg-[#2D3A52] text-gray-100`}
               >
-                <div
-                  className={`max-w-xs lg:max-w-md px-3 py-2 rounded-lg ${
-                    isCurrentUser
-                      ? 'bg-[#FF6B00] text-white'
-                      : 'bg-[#2D3A52] text-gray-100'
-                  }`}
-                >
-                  {!isCurrentUser && (
-                    <p className="text-xs font-medium text-[#FF6B00] mb-1">
-                      {getUserName(message)}
-                    </p>
-                  )}
-                  <p className="text-sm">{message.mensagem}</p>
-                  <p className="text-xs mt-1 opacity-70">
-                    {new Date(message.created_at).toLocaleTimeString('pt-BR', {
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </p>
-                </div>
+                <p className="text-xs font-medium text-[#FF6B00] mb-1">
+                  {getUserName(message)}
+                </p>
+                <p className="text-sm">{message.mensagem}</p>
+                <p className="text-xs mt-1 opacity-70">
+                  {new Date(message.created_at).toLocaleTimeString('pt-BR', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </p>
               </div>
-            );
-          })
+            </div>
+          ))
         )}
         <div ref={messagesEndRef} />
       </div>
