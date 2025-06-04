@@ -40,19 +40,51 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
   const [invitedPartners, setInvitedPartners] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Validação da configuração do Supabase
+  const validateSupabaseConnection = async (): Promise<boolean> => {
+    try {
+      console.log('🔧 Validando conexão com o Supabase...');
+      const { data, error } = await supabase
+        .from('parceiros')
+        .select('id', { count: 'exact' })
+        .limit(1);
+      
+      if (error) {
+        console.error('❌ Erro na validação da conexão com Supabase:', error);
+        throw new Error(`Falha na conexão com o Supabase: ${error.message}`);
+      }
+      console.log('✅ Conexão com Supabase validada com sucesso');
+      return true;
+    } catch (error: any) {
+      console.error('💥 Falha na validação da conexão:', error.message);
+      toast({
+        title: "Erro de Conexão",
+        description: "Erro ao conectar ao banco de dados. Verifique sua configuração ou tente novamente.",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
   // Função de depuração detalhada para carregar parceiros
   const loadPartners = async () => {
-    console.log('🔍 Iniciando função loadPartners...');
+    console.log('🚀 Iniciando função loadPartners...');
     setIsLoading(true);
     
     try {
-      // Passo 1: Obter o ID do usuário logado
+      // Passo 1: Validação inicial da conexão
+      if (!await validateSupabaseConnection()) {
+        setIsLoading(false);
+        return;
+      }
+
+      // Passo 2: Obter o ID do usuário logado
       const { data: userData, error: authError } = await supabase.auth.getUser();
-      if (authError || !userData.user) {
-        console.error('❌ Erro ao obter usuário logado:', authError);
+      if (authError || !userData?.user) {
+        console.error('❌ Erro ao obter usuário logado:', authError?.message || authError);
         toast({
-          title: "Erro de autenticação",
-          description: "Erro ao identificar usuário. Faça login novamente.",
+          title: "Erro de Autenticação",
+          description: "Faça login novamente para carregar parceiros.",
           variant: "destructive"
         });
         setIsLoading(false);
@@ -60,10 +92,10 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
       }
       
       const userId = userData.user.id;
-      console.log('✅ Usuário logado com ID:', userId);
+      console.log('👤 Usuário logado com ID:', userId);
 
-      // Passo 2: Buscar os parceiros do usuário na tabela 'parceiros'
-      console.log('🔍 Consultando tabela parceiros...');
+      // Passo 3: Buscar os parceiros do usuário na tabela 'parceiros'
+      console.log('🔍 Executando consulta ao Supabase para parceiros do usuário:', userId);
       const { data: partnersData, error } = await supabase
         .from('parceiros')
         .select(`
@@ -76,7 +108,7 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
         .eq('user_id', userId);
 
       if (error) {
-        console.error('❌ Erro ao consultar tabela parceiros:', error);
+        console.error('❌ Erro ao consultar tabela parceiros:', error.message, 'Detalhes:', error.details);
         toast({
           title: "Erro ao carregar parceiros",
           description: "Erro ao consultar banco de dados. Tente novamente.",
@@ -88,7 +120,7 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
 
       console.log('📊 Dados retornados da tabela parceiros:', partnersData);
 
-      // Passo 3: Verificar se há parceiros
+      // Passo 4: Verificar se há parceiros
       if (!partnersData || partnersData.length === 0) {
         console.log('ℹ️ Nenhum parceiro encontrado para o usuário:', userId);
         setPartners([]);
@@ -96,7 +128,7 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
         return;
       }
 
-      // Passo 4: Processar e validar dados dos parceiros
+      // Passo 5: Processar e validar dados dos parceiros
       const validPartners = partnersData.filter(partner => {
         if (!partner.profiles) {
           console.warn('⚠️ Parceiro sem dados de perfil:', partner);
@@ -108,8 +140,8 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
       console.log('✅ Parceiros válidos encontrados:', validPartners.length);
       setPartners(validPartners || []);
       
-    } catch (error) {
-      console.error('❌ Erro geral na função loadPartners:', error);
+    } catch (error: any) {
+      console.error('💥 Erro geral na função loadPartners:', error.message, 'Stack:', error.stack);
       toast({
         title: "Erro inesperado",
         description: "Erro inesperado ao carregar parceiros.",
@@ -120,10 +152,33 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
     }
   };
 
+  // Verificação manual da tabela parceiros para depuração
+  const checkPartnersTable = async (userId: string) => {
+    console.log('🔍 Verificando dados na tabela parceiros para userId:', userId);
+    const { data, error } = await supabase
+      .from('parceiros')
+      .select('*')
+      .eq('user_id', userId);
+    
+    if (error) {
+      console.error('❌ Erro ao verificar tabela parceiros:', error);
+    } else {
+      console.log('📋 Dados encontrados na tabela parceiros:', data);
+    }
+    return data;
+  };
+
   // Carregar parceiros ao montar o componente
   useEffect(() => {
     console.log('🚀 Componente CreateGroupForm montado, carregando parceiros...');
-    loadPartners();
+    const initializePartners = async () => {
+      const { data: userData } = await supabase.auth.getUser();
+      if (userData?.user) {
+        await checkPartnersTable(userData.user.id);
+      }
+      await loadPartners();
+    };
+    initializePartners();
   }, []);
 
   // Filtrar parceiros com base na pesquisa
