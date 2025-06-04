@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import CreateGroupModal from "../CreateGroupModal";
 import AddGroupModal from "../AddGroupModal";
+import GroupDetailInterface from "../group-detail";
 import "@/styles/grupo-estudo-card.css";
 
 interface Topic {
@@ -89,6 +90,9 @@ export default function GruposEstudoView() {
   const [groupMembers, setGroupMembers] = useState<GroupMember[]>([]);
   const [userGroupIds, setUserGroupIds] = useState<string[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
+  const [showGroupInterface, setShowGroupInterface] = useState(false);
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+  const [selectedGroupName, setSelectedGroupName] = useState<string>('');
 
   const { toast } = useToast();
 
@@ -409,7 +413,65 @@ export default function GruposEstudoView() {
     setActiveFilters([]);
   };
 
+  const handleAccessGroup = async (groupId: string, groupName: string) => {
+    try {
+      if (!currentUser) {
+        toast({
+          title: "Erro",
+          description: "Usuário não autenticado",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Verificar se o usuário é membro do grupo
+      const { data: membership, error: membershipError } = await supabase
+        .from('membros_grupos')
+        .select('id')
+        .eq('grupo_id', groupId)
+        .eq('user_id', currentUser.id)
+        .single();
+
+      if (membershipError || !membership) {
+        toast({
+          title: "Acesso negado",
+          description: "Você não é membro deste grupo",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      setSelectedGroupId(groupId);
+      setSelectedGroupName(groupName);
+      setShowGroupInterface(true);
+    } catch (error) {
+      console.error('Erro ao acessar grupo:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao acessar o grupo",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleBackToGroups = () => {
+    setShowGroupInterface(false);
+    setSelectedGroupId(null);
+    setSelectedGroupName('');
+  };
+
   const currentGroups = currentView === 'my-groups' ? meusGrupos : gruposPublicos;
+
+  if (showGroupInterface && selectedGroupId) {
+    return (
+      <GroupDetailInterface
+        groupId={selectedGroupId}
+        groupName={selectedGroupName}
+        onBack={handleBackToGroups}
+        currentUser={currentUser}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -620,8 +682,11 @@ export default function GruposEstudoView() {
                 <div className="card-actions">
                   <button
                     className="access-group-btn"
-                    disabled
-                    title="Funcionalidade em desenvolvimento"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAccessGroup(group.id, group.nome);
+                    }}
+                    title="Acessar Grupo"
                   >
                     Acessar Grupo
                   </button>
