@@ -112,6 +112,29 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
         console.error('Erro ao adicionar membro:', memberError);
       }
 
+      // Processar os convites para os parceiros selecionados
+      if (formData.invitedPartners && formData.invitedPartners.length > 0) {
+        console.log('Enviando convites para', formData.invitedPartners.length, 'parceiros');
+        
+        const convites = formData.invitedPartners.map((parceiro_id: string) => ({
+          grupo_id: newGroup.id,
+          convidado_id: parceiro_id,
+          criador_id: user.id,
+          status: 'pendente'
+        }));
+
+        const { error: convitesError } = await supabase
+          .from('convites_grupos')
+          .insert(convites);
+
+        if (convitesError) {
+          console.error('Erro ao enviar convites:', convitesError);
+          alert('Grupo criado, mas houve um erro ao enviar alguns convites.');
+        } else {
+          console.log('Convites enviados com sucesso:', convites.length);
+        }
+      }
+
       alert('Grupo criado com sucesso!');
       onSubmit(newGroup);
       onClose();

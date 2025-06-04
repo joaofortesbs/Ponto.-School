@@ -36,6 +36,7 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
   const [groupVisibility, setGroupVisibility] = useState("all");
   const [partners, setPartners] = useState<Partner[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [invitedPartners, setInvitedPartners] = useState<string[]>([]);
 
   // Carregar parceiros
   useEffect(() => {
@@ -75,6 +76,19 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
     return name.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
+  const handleInvitePartner = (partnerId: string) => {
+    setInvitedPartners(prev => {
+      // Se já estiver convidado, remova o convite
+      if (prev.includes(partnerId)) {
+        return prev.filter(id => id !== partnerId);
+      } 
+      // Senão, adicione o convite
+      return [...prev, partnerId];
+    });
+  };
+
+  const isPartnerInvited = (partnerId: string) => invitedPartners.includes(partnerId);
+
   const handleSubmit = () => {
     if (!groupName || !groupDescription || !groupType || !groupDiscipline || !groupSpecificTopic) {
       alert('Por favor, preencha todos os campos obrigatórios.');
@@ -92,7 +106,8 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
       tags: tags,
       is_publico: groupPrivacy === "public",
       is_visible_to_all: groupVisibility === "all",
-      is_visible_to_partners: groupVisibility === "partners"
+      is_visible_to_partners: groupVisibility === "partners",
+      invitedPartners: invitedPartners // Adicionamos a lista de parceiros convidados
     };
 
     onSubmit(formData);
@@ -151,6 +166,13 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
           <span className="text-gray-400 text-xs">Visibilidade:</span>
           <p className="text-white text-xs">{visibility}</p>
         </div>
+
+        {invitedPartners.length > 0 && (
+          <div>
+            <span className="text-gray-400 text-xs">Parceiros convidados:</span>
+            <p className="text-white text-xs">{invitedPartners.length} parceiro(s)</p>
+          </div>
+        )}
       </div>
     );
   };
@@ -309,10 +331,12 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
                       </span>
                       <Button 
                         size="sm" 
-                        disabled 
-                        className="bg-gray-500 text-gray-300 cursor-not-allowed"
+                        onClick={() => handleInvitePartner(partner.parceiro_id)}
+                        className={isPartnerInvited(partner.parceiro_id) ? 
+                          "bg-green-600 hover:bg-green-700 text-white" : 
+                          "bg-[#FF6B00] hover:bg-[#FF8C40] text-white"}
                       >
-                        Convidar
+                        {isPartnerInvited(partner.parceiro_id) ? "Convidado" : "Convidar"}
                       </Button>
                     </div>
                   ))
@@ -330,7 +354,7 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
       {/* Mini-seção 4: Imagem do Grupo */}
       <Card className="bg-gray-800 border-gray-700">
         <CardHeader>
-          <CardTitle className="text-[#FF6B00]">Imagem do Grupo</CardTitle>
+          <CardTitle className="text-[#FF6B00]">Prévia do Grupo</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <Card className="bg-gray-700 border-gray-600">
