@@ -27,6 +27,7 @@ export default function GruposEstudo() {
   const [myGroups, setMyGroups] = useState<any[]>([]);
   const [allGroups, setAllGroups] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedGroup, setSelectedGroup] = useState<any>(null);
 
   // Carregar grupos do usuário
   const loadMyGroups = async () => {
@@ -219,6 +220,15 @@ export default function GruposEstudo() {
     }
   };
 
+  const handleAccessGroup = (group: any) => {
+    console.log('Acessando grupo:', group);
+    setSelectedGroup(group);
+  };
+
+  const handleBackToGroups = () => {
+    setSelectedGroup(null);
+  };
+
   const getActivityBadge = (level: string) => {
     switch (level) {
       case "alta":
@@ -264,7 +274,6 @@ export default function GruposEstudo() {
           {group.nome}
         </h3>
         
-        {/* Novas informações dos grupos */}
         <div className="space-y-1 mb-3 text-xs text-gray-600 dark:text-gray-300">
           {group.tipo_grupo && (
             <p><span className="font-medium">Tipo:</span> {group.tipo_grupo}</p>
@@ -298,34 +307,62 @@ export default function GruposEstudo() {
               {group.membros || 0} membros
             </span>
           </div>
-          {showJoinButton ? (
-            <Button
-              size="sm"
-              className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white text-xs h-8"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleJoinGroup(group.id);
-              }}
-            >
-              Participar
-            </Button>
-          ) : (
-            <Button
-              size="sm"
-              variant="outline"
-              className="text-red-600 border-red-600 hover:bg-red-50 text-xs h-8"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleLeaveGroup(group.id);
-              }}
-            >
-              Sair
-            </Button>
-          )}
+          <div className="flex gap-2">
+            {showJoinButton ? (
+              <Button
+                size="sm"
+                className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white text-xs h-8"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleJoinGroup(group.id);
+                }}
+              >
+                Participar
+              </Button>
+            ) : (
+              <>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-red-600 border-red-600 hover:bg-red-50 text-xs h-8"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleLeaveGroup(group.id);
+                  }}
+                >
+                  Sair
+                </Button>
+                <Button
+                  size="sm"
+                  className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white text-xs h-8"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleAccessGroup(group);
+                  }}
+                >
+                  Acessar
+                </Button>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>
   );
+
+  // Show group detail view if a group is selected
+  if (selectedGroup) {
+    const GroupDetail = React.lazy(() => import("@/components/turmas/group-detail"));
+    return (
+      <React.Suspense fallback={
+        <div className="flex items-center justify-center h-screen bg-[#001427]">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#FF6B00]"></div>
+        </div>
+      }>
+        <GroupDetail group={selectedGroup} onBack={handleBackToGroups} />
+      </React.Suspense>
+    );
+  }
 
   return (
     <div className="container mx-auto p-4 max-w-7xl">
