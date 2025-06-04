@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import CreateGroupForm from "./CreateGroupForm";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/components/ui/use-toast";
 
 interface CreateGroupModalProps {
   isOpen: boolean;
@@ -21,7 +20,6 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
 
   const generateUniqueCode = async (): Promise<string> => {
-    console.log('🔑 Gerando código único para o grupo...');
     let codigoUnico: string;
     let isUnique = false;
     let attempts = 0;
@@ -31,7 +29,7 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
       // Gerar código de 8 caracteres usando substring(2, 10)
       codigoUnico = Math.random().toString(36).substring(2, 10).toUpperCase();
       
-      console.log('🎲 Código único gerado:', codigoUnico, 'Comprimento:', codigoUnico.length);
+      console.log('Código único gerado:', codigoUnico, 'Comprimento:', codigoUnico.length);
       
       // Verificar se o código já existe no banco
       const { data: existingGroup, error } = await supabase
@@ -41,50 +39,39 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
         .maybeSingle();
 
       if (error) {
-        console.error('❌ Erro ao verificar unicidade do código:', error);
+        console.error('Erro ao verificar unicidade do código:', error);
         attempts++;
         continue;
       }
 
       if (!existingGroup) {
         isUnique = true;
-        console.log('✅ Código único validado:', codigoUnico);
+        console.log('Código único validado:', codigoUnico);
         return codigoUnico;
       }
       
       attempts++;
-      console.log('🔄 Código já existe, tentativa:', attempts);
     }
 
     // Fallback: se não conseguir gerar código único, usar timestamp
     const fallbackCode = Date.now().toString(36).substring(-8).toUpperCase();
-    console.log('⚠️ Usando código fallback:', fallbackCode, 'Comprimento:', fallbackCode.length);
+    console.log('Usando código fallback:', fallbackCode, 'Comprimento:', fallbackCode.length);
     return fallbackCode;
   };
 
   const handleSubmit = async (formData: any) => {
-    console.log("📋 Form data recebido no modal:", formData);
     setIsLoading(true);
-    
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        console.error('❌ Usuário não autenticado');
-        toast({
-          title: "Erro",
-          description: "Usuário não autenticado",
-          variant: "destructive"
-        });
+        alert('Usuário não autenticado');
         return;
       }
-
-      console.log('👤 Usuário autenticado:', user.id);
 
       // Gerar código único de 8 caracteres
       const codigoUnico = await generateUniqueCode();
 
       // Criar o grupo no Supabase
-      console.log('💾 Criando grupo no Supabase...');
       const { data: newGroup, error: insertError } = await supabase
         .from('grupos_estudo')
         .insert({
@@ -105,20 +92,14 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
         .single();
 
       if (insertError) {
-        console.error('❌ Erro ao criar grupo:', insertError);
-        toast({
-          title: "Erro",
-          description: `Erro ao criar grupo: ${insertError.message}`,
-          variant: "destructive"
-        });
+        console.error('Erro ao criar grupo:', insertError);
+        alert('Erro ao criar grupo: ' + insertError.message);
         return;
       }
 
-      console.log('✅ Grupo criado com sucesso:', newGroup);
-      console.log('🔑 Código único do grupo:', newGroup.codigo_unico, 'Comprimento:', newGroup.codigo_unico.length);
+      console.log('Grupo criado com código:', newGroup.codigo_unico, 'Comprimento:', newGroup.codigo_unico.length);
 
       // Adicionar o criador como membro do grupo
-      console.log('👥 Adicionando criador como membro...');
       const { error: memberError } = await supabase
         .from('membros_grupos')
         .insert({
@@ -128,62 +109,15 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
         });
 
       if (memberError) {
-        console.error('❌ Erro ao adicionar membro:', memberError);
-      } else {
-        console.log('✅ Criador adicionado como membro');
+        console.error('Erro ao adicionar membro:', memberError);
       }
 
-      // Processar os convites para os parceiros selecionados
-      if (formData.invitedPartners && formData.invitedPartners.length > 0) {
-        console.log('📨 Enviando convites para', formData.invitedPartners.length, 'parceiros');
-        console.log('👥 Lista de parceiros convidados:', formData.invitedPartners);
-        
-        const convites = formData.invitedPartners.map((parceiro_id: string) => ({
-          grupo_id: newGroup.id,
-          convidado_id: parceiro_id,
-          criador_id: user.id,
-          status: 'pendente'
-        }));
-
-        console.log('📋 Convites a serem inseridos:', convites);
-
-        const { error: convitesError } = await supabase
-          .from('convites_grupos')
-          .insert(convites);
-
-        if (convitesError) {
-          console.error('❌ Erro ao enviar convites:', convitesError);
-          toast({
-            title: "Aviso",
-            description: "Grupo criado, mas houve um erro ao enviar alguns convites.",
-            variant: "destructive"
-          });
-        } else {
-          console.log('✅ Convites enviados com sucesso:', convites.length);
-          toast({
-            title: "Sucesso",
-            description: `Grupo criado e ${convites.length} convites enviados.`,
-            variant: "default"
-          });
-        }
-      } else {
-        console.log('ℹ️ Nenhum parceiro foi convidado');
-        toast({
-          title: "Sucesso",
-          description: "Grupo criado com sucesso!",
-          variant: "default"
-        });
-      }
-
+      alert('Grupo criado com sucesso!');
       onSubmit(newGroup);
       onClose();
     } catch (error) {
-      console.error('❌ Erro geral ao criar grupo:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao criar grupo",
-        variant: "destructive"
-      });
+      console.error('Erro ao criar grupo:', error);
+      alert('Erro ao criar grupo');
     } finally {
       setIsLoading(false);
     }

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -220,12 +219,6 @@ export default function GruposEstudo() {
     }
   };
 
-  // Updated function to handle group access
-  const handleAccessGroup = (groupId: string) => {
-    console.log('Acessando grupo com ID:', groupId);
-    navigate(`/turmas/grupos/${groupId}`);
-  };
-
   const getActivityBadge = (level: string) => {
     switch (level) {
       case "alta":
@@ -252,7 +245,8 @@ export default function GruposEstudo() {
   const renderGroupCard = (group: any, showJoinButton = false) => (
     <div
       key={group.id}
-      className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow"
+      className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow cursor-pointer"
+      onClick={() => navigate(`/turmas/grupos/${group.id}`)}
     >
       <div className="h-32 bg-gray-200 relative">
         <div 
@@ -297,25 +291,17 @@ export default function GruposEstudo() {
           )}
         </div>
 
-        <div className="flex justify-between items-center gap-2 mb-3">
+        <div className="flex justify-between items-center">
           <div className="flex items-center">
             <Users2 className="h-4 w-4 mr-1 text-gray-500" />
             <span className="text-xs text-gray-500">
               {group.membros || 0} membros
             </span>
           </div>
-          {group.codigo_unico && (
-            <div className="text-xs text-gray-500">
-              Código: {group.codigo_unico}
-            </div>
-          )}
-        </div>
-        
-        <div className="flex flex-col gap-2">
           {showJoinButton ? (
             <Button
               size="sm"
-              className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white text-xs h-8 w-full"
+              className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white text-xs h-8"
               onClick={(e) => {
                 e.stopPropagation();
                 handleJoinGroup(group.id);
@@ -324,29 +310,17 @@ export default function GruposEstudo() {
               Participar
             </Button>
           ) : (
-            <>
-              <Button
-                size="sm"
-                className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white text-xs h-8 w-full"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleAccessGroup(group.id);
-                }}
-              >
-                Acessar Grupo
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="text-red-600 border-red-600 hover:bg-red-50 text-xs h-8 w-full"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleLeaveGroup(group.id);
-                }}
-              >
-                Sair
-              </Button>
-            </>
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-red-600 border-red-600 hover:bg-red-50 text-xs h-8"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleLeaveGroup(group.id);
+              }}
+            >
+              Sair
+            </Button>
           )}
         </div>
       </div>

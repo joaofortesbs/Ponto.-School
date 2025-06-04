@@ -9,41 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      convites_grupos: {
-        Row: {
-          convidado_id: string | null
-          created_at: string | null
-          criador_id: string | null
-          grupo_id: string | null
-          id: string
-          status: string | null
-        }
-        Insert: {
-          convidado_id?: string | null
-          created_at?: string | null
-          criador_id?: string | null
-          grupo_id?: string | null
-          id?: string
-          status?: string | null
-        }
-        Update: {
-          convidado_id?: string | null
-          created_at?: string | null
-          criador_id?: string | null
-          grupo_id?: string | null
-          id?: string
-          status?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "convites_grupos_grupo_id_fkey"
-            columns: ["grupo_id"]
-            isOneToOne: false
-            referencedRelation: "grupos_estudo"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       flow_sessions: {
         Row: {
           created_at: string
