@@ -40,108 +40,30 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
   const [invitedPartners, setInvitedPartners] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Função para exibir mensagens de erro
-  const displayError = (message: string) => {
-    console.error('Erro exibido:', message);
-    toast({
-      title: "Erro",
-      description: message,
-      variant: "destructive"
-    });
-  };
-
-  // Validação da conexão com o Supabase
-  const validateSupabaseConnection = async (): Promise<boolean> => {
-    try {
-      console.log('🔧 Validando conexão com o Supabase...');
-      const { data, error } = await supabase
-        .from('grupos_estudo')
-        .select('id', { count: 'exact' })
-        .limit(1);
-      
-      if (error) {
-        console.error('❌ Erro ao validar conexão com Supabase:', error.message, 'Detalhes:', error.details);
-        console.log('⚙️ Configuração atual do Supabase URL:', 'https://zwmznopdzujcxzujijge.supabase.co');
-        throw new Error(`Falha na conexão com o Supabase: ${error.message}`);
-      }
-      console.log('✅ Conexão com Supabase validada com sucesso. Dados de teste:', data);
-      return true;
-    } catch (error: any) {
-      console.error('💥 Erro geral na validação da conexão:', error.message);
-      displayError('Erro: Falha na conexão com o banco de dados. Verifique sua configuração.');
-      return false;
-    }
-  };
-
-  // Validação da autenticação do usuário
-  const validateUserAuth = async (): Promise<string | null> => {
-    try {
-      console.log('🔐 Validando autenticação do usuário...');
-      const { data: userData, error: authError } = await supabase.auth.getUser();
-      if (authError || !userData?.user) {
-        console.error('❌ Erro ao validar autenticação:', authError?.message || authError);
-        throw new Error('Usuário não autenticado ou token inválido');
-      }
-      console.log('✅ Usuário autenticado com sucesso. ID:', userData.user.id);
-      return userData.user.id;
-    } catch (error: any) {
-      console.error('💥 Erro geral na validação de autenticação:', error.message);
-      displayError('Erro: Faça login novamente para carregar parceiros.');
-      return null;
-    }
-  };
-
-  // Verificação de dados na tabela parceiros
-  const checkPartnersData = async (userId: string): Promise<boolean> => {
-    try {
-      console.log('📊 Verificando dados na tabela parceiros para userId:', userId);
-      const { data, error } = await supabase
-        .from('parceiros')
-        .select('parceiro_id')
-        .eq('user_id', userId);
-      
-      if (error) {
-        console.error('❌ Erro ao verificar tabela parceiros:', error.message);
-        return false;
-      }
-      console.log('📋 Dados encontrados na tabela parceiros:', data);
-      return data && data.length > 0;
-    } catch (error: any) {
-      console.error('💥 Erro ao verificar dados dos parceiros:', error.message);
-      return false;
-    }
-  };
-
   // Função de depuração detalhada para carregar parceiros
   const loadPartners = async () => {
-    console.log('🚀 Iniciando função loadPartners...');
+    console.log('🔍 Iniciando função loadPartners...');
     setIsLoading(true);
     
     try {
-      // Passo 1: Validação inicial da conexão
-      if (!await validateSupabaseConnection()) {
+      // Passo 1: Obter o ID do usuário logado
+      const { data: userData, error: authError } = await supabase.auth.getUser();
+      if (authError || !userData.user) {
+        console.error('❌ Erro ao obter usuário logado:', authError);
+        toast({
+          title: "Erro de autenticação",
+          description: "Erro ao identificar usuário. Faça login novamente.",
+          variant: "destructive"
+        });
         setIsLoading(false);
         return;
       }
+      
+      const userId = userData.user.id;
+      console.log('✅ Usuário logado com ID:', userId);
 
-      // Passo 2: Obter o ID do usuário logado
-      const userId = await validateUserAuth();
-      if (!userId) {
-        setIsLoading(false);
-        return;
-      }
-
-      // Passo 3: Verificar se há dados na tabela parceiros
-      const hasPartners = await checkPartnersData(userId);
-      if (!hasPartners) {
-        console.log('ℹ️ Nenhum parceiro encontrado para o usuário:', userId);
-        setPartners([]);
-        setIsLoading(false);
-        return;
-      }
-
-      // Passo 4: Buscar os parceiros do usuário na tabela 'parceiros'
-      console.log('🔍 Executando consulta ao Supabase para parceiros do usuário:', userId);
+      // Passo 2: Buscar os parceiros do usuário na tabela 'parceiros'
+      console.log('🔍 Consultando tabela parceiros...');
       const { data: partnersData, error } = await supabase
         .from('parceiros')
         .select(`
@@ -154,29 +76,45 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
         .eq('user_id', userId);
 
       if (error) {
-        console.error('❌ Erro ao consultar tabela parceiros:', error.message, 'Detalhes:', error.details);
-        displayError('Erro ao consultar banco de dados. Tente novamente.');
+        console.error('❌ Erro ao consultar tabela parceiros:', error);
+        toast({
+          title: "Erro ao carregar parceiros",
+          description: "Erro ao consultar banco de dados. Tente novamente.",
+          variant: "destructive"
+        });
         setIsLoading(false);
         return;
       }
 
       console.log('📊 Dados retornados da tabela parceiros:', partnersData);
 
-      // Passo 5: Processar e validar dados dos parceiros
-      const validPartners = partnersData?.filter(partner => {
+      // Passo 3: Verificar se há parceiros
+      if (!partnersData || partnersData.length === 0) {
+        console.log('ℹ️ Nenhum parceiro encontrado para o usuário:', userId);
+        setPartners([]);
+        setIsLoading(false);
+        return;
+      }
+
+      // Passo 4: Processar e validar dados dos parceiros
+      const validPartners = partnersData.filter(partner => {
         if (!partner.profiles) {
           console.warn('⚠️ Parceiro sem dados de perfil:', partner);
           return false;
         }
         return true;
-      }) || [];
+      });
 
       console.log('✅ Parceiros válidos encontrados:', validPartners.length);
-      setPartners(validPartners);
+      setPartners(validPartners || []);
       
-    } catch (error: any) {
-      console.error('💥 Erro geral na função loadPartners:', error.message, 'Stack:', error.stack);
-      displayError('Erro inesperado ao carregar parceiros.');
+    } catch (error) {
+      console.error('❌ Erro geral na função loadPartners:', error);
+      toast({
+        title: "Erro inesperado",
+        description: "Erro inesperado ao carregar parceiros.",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
