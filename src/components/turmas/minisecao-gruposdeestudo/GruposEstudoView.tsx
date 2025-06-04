@@ -415,11 +415,12 @@ export default function GruposEstudoView() {
 
   const handleAccessGroup = async (group: any) => {
     try {
-      console.log('Iniciando função handleAccessGroup para grupo:', group);
+      console.log('=== INICIANDO handleAccessGroup ===');
+      console.log('Grupo recebido:', JSON.stringify(group, null, 2));
       
-      // Validar se o grupo é válido
+      // Passo 1: Validar se o grupo é válido
       if (!group || !group.id) {
-        console.error('Grupo inválido fornecido:', group);
+        console.error('ERRO: Grupo inválido fornecido:', group);
         toast({
           title: "Erro",
           description: "Grupo inválido selecionado",
@@ -427,44 +428,62 @@ export default function GruposEstudoView() {
         });
         return;
       }
-      console.log('Grupo válido encontrado com ID:', group.id);
+      console.log('✓ Grupo válido encontrado com ID:', group.id);
 
-      // Passo 1: Validar autenticação do usuário
-      console.log('Validando autenticação do usuário...');
+      // Passo 2: Validar autenticação do usuário
+      console.log('=== VALIDANDO AUTENTICAÇÃO ===');
       const { data: { user }, error: authError } = await supabase.auth.getUser();
-      if (authError || !user) {
-        console.error('Erro de autenticação:', authError?.message || 'Usuário não encontrado');
+      
+      if (authError) {
+        console.error('ERRO de autenticação:', authError.message, authError);
         toast({
           title: "Erro de Autenticação",
-          description: "Você precisa estar logado para acessar o grupo",
+          description: `Falha na autenticação: ${authError.message}`,
           variant: "destructive"
         });
         return;
       }
-      console.log('Usuário autenticado com ID:', user.id);
 
-      // Passo 2: Verificar membresia do usuário no grupo
-      console.log('Verificando membresia do usuário', user.id, 'no grupo', group.id);
-      const { data: membership, error: membershipError } = await supabase
+      if (!user) {
+        console.error('ERRO: Usuário não encontrado após autenticação');
+        toast({
+          title: "Erro de Autenticação",
+          description: "Usuário não autenticado. Faça login novamente.",
+          variant: "destructive"
+        });
+        return;
+      }
+      console.log('✓ Usuário autenticado com ID:', user.id);
+
+      // Passo 3: Verificar membresia do usuário no grupo
+      console.log('=== VERIFICANDO MEMBRESIA ===');
+      console.log('Consultando membros_grupos com:', { 
+        grupo_id: group.id, 
+        user_id: user.id 
+      });
+      
+      const { data: membershipData, error: membershipError } = await supabase
         .from('membros_grupos')
-        .select('*')
+        .select('id, grupo_id, user_id, joined_at')
         .eq('grupo_id', group.id)
         .eq('user_id', user.id);
 
       if (membershipError) {
-        console.error('Erro ao verificar membresia:', membershipError.message, 'Detalhes:', membershipError);
+        console.error('ERRO na consulta de membresia:', membershipError.message);
+        console.error('Detalhes do erro:', membershipError);
         toast({
-          title: "Erro",
+          title: "Erro na Verificação",
           description: `Erro ao verificar participação: ${membershipError.message}`,
           variant: "destructive"
         });
         return;
       }
 
-      console.log('Resultado da verificação de membresia:', membership);
+      console.log('Resultado da consulta de membresia:', membershipData);
 
-      if (!membership || membership.length === 0) {
-        console.log('Usuário não é membro do grupo. grupo_id:', group.id, 'user_id:', user.id);
+      if (!membershipData || membershipData.length === 0) {
+        console.log('AVISO: Usuário não é membro do grupo');
+        console.log('Dados retornados:', membershipData);
         toast({
           title: "Acesso Negado",
           description: "Você não é membro deste grupo",
@@ -472,10 +491,10 @@ export default function GruposEstudoView() {
         });
         return;
       }
-      console.log('Usuário é membro do grupo. Dados da membresia:', membership);
+      console.log('✓ Membresia confirmada:', membershipData[0]);
 
-      // Passo 3: Buscar dados completos do perfil do usuário
-      console.log('Buscando dados do perfil do usuário...');
+      // Passo 4: Buscar dados completos do perfil do usuário
+      console.log('=== BUSCANDO PERFIL DO USUÁRIO ===');
       const { data: userProfile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -483,31 +502,47 @@ export default function GruposEstudoView() {
         .single();
 
       if (profileError) {
-        console.error('Erro ao buscar perfil do usuário:', profileError);
-        // Continuar mesmo sem perfil completo, usando dados básicos do auth
+        console.warn('Aviso ao buscar perfil do usuário:', profileError.message);
+        console.log('Continuando sem perfil completo...');
+      } else {
+        console.log('✓ Perfil do usuário encontrado:', userProfile);
       }
 
-      const currentUser = {
+      // Preparar dados do usuário atual
+      const currentUserData = {
         id: user.id,
         email: user.email,
-        display_name: userProfile?.display_name || userProfile?.full_name || 'Usuário'
+        display_name: userProfile?.display_name || userProfile?.full_name || user.email?.split('@')[0] || 'Usuário'
       };
-      console.log('Dados do usuário atual para o chat:', currentUser);
+      console.log('✓ Dados do usuário preparados:', currentUserData);
 
-      // Passo 4: Acessar a interface do grupo
-      console.log('Acessando interface do grupo...');
+      // Passo 5: Navegar para a interface do grupo
+      console.log('=== NAVEGANDO PARA INTERFACE DO GRUPO ===');
+      console.log('Navegando para:', `/turmas/grupos/${group.id}`);
+      console.log('State que será passado:', { 
+        group: group,
+        currentUser: currentUserData
+      });
+
       navigate(`/turmas/grupos/${group.id}`, { 
         state: { 
           group: group,
-          currentUser: currentUser
+          currentUser: currentUserData
         }
       });
 
-    } catch (error) {
-      console.error('Erro geral na função handleAccessGroup:', error);
+      console.log('✓ Navegação iniciada com sucesso');
+
+    } catch (error: any) {
+      console.error('=== ERRO INESPERADO ===');
+      console.error('Tipo do erro:', typeof error);
+      console.error('Mensagem do erro:', error?.message);
+      console.error('Stack trace:', error?.stack);
+      console.error('Erro completo:', error);
+      
       toast({
         title: "Erro",
-        description: "Erro inesperado ao acessar o grupo. Tente novamente.",
+        description: `Erro inesperado: ${error?.message || 'Erro desconhecido'}. Verifique o console para mais detalhes.`,
         variant: "destructive"
       });
     }
