@@ -38,8 +38,11 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
   }, [messages]);
 
   useEffect(() => {
-    loadMessages();
-    setupRealtimeSubscription();
+    if (groupId) {
+      console.log('Carregando chat para grupo:', groupId);
+      loadMessages();
+      setupRealtimeSubscription();
+    }
 
     return () => {
       supabase.removeAllSubscriptions();
@@ -48,6 +51,8 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
 
   const loadMessages = async () => {
     try {
+      console.log('Carregando mensagens para grupo:', groupId);
+      
       const { data, error } = await supabase
         .from('mensagens_grupos')
         .select(`
@@ -70,6 +75,7 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
         return;
       }
 
+      console.log('Mensagens carregadas:', data);
       setMessages(data || []);
     } catch (error) {
       console.error('Erro ao carregar mensagens:', error);
@@ -77,6 +83,8 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
   };
 
   const setupRealtimeSubscription = () => {
+    console.log('Configurando realtime para grupo:', groupId);
+    
     const channel = supabase
       .channel(`group-${groupId}`)
       .on('postgres_changes', {
@@ -111,6 +119,8 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
 
     setIsLoading(true);
     try {
+      console.log('Enviando mensagem:', newMessage, 'para grupo:', groupId, 'por usuário:', currentUser.id);
+      
       const { error } = await supabase
         .from('mensagens_grupos')
         .insert({
@@ -130,6 +140,7 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
       }
 
       setNewMessage('');
+      console.log('Mensagem enviada com sucesso');
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
       toast({
