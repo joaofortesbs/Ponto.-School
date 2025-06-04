@@ -64,6 +64,17 @@
   transform: translateY(1px);
 }
 
+.access-group-btn:disabled {
+  background: #ccc;
+  color: #888;
+  cursor: not-allowed;
+}
+
+.access-group-btn:disabled:hover {
+  background: #ccc;
+  transform: none;
+}
+
 /* Estilos para o container de ações dos cartões */
 .card-actions {
   display: flex;

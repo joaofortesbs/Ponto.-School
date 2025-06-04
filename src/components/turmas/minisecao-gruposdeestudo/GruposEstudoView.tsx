@@ -616,15 +616,24 @@ export default function GruposEstudoView() {
                   <span>{group.membros} membros</span>
                 </div>
 
-                {currentView === 'public-groups' && (
-                  <Button
-                    onClick={() => handleJoinGroup(group.id)}
-                    size="sm"
-                    className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white"
+                <div className="card-actions">
+                  <button
+                    className="access-group-btn"
+                    disabled
+                    title="Funcionalidade em desenvolvimento"
                   >
-                    Entrar
-                  </Button>
-                )}
+                    Acessar Grupo
+                  </button>
+                  {currentView === 'public-groups' && (
+                    <Button
+                      onClick={() => handleJoinGroup(group.id)}
+                      size="sm"
+                      className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white"
+                    >
+                      Entrar
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
           ))}
