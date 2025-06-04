@@ -1,6 +1,8 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import GroupDetail from "@/components/turmas/group-detail";
+import GroupDetail from "@/components/turmas/GroupDetail";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function GroupDetailPage() {
   const { id } = useParams();
@@ -15,31 +17,68 @@ export default function GroupDetailPage() {
   });
 
   useEffect(() => {
-    // Simulate fetching group data
     const fetchGroup = async () => {
-      try {
-        // Add a small delay to simulate network request
-        await new Promise((resolve) => setTimeout(resolve, 500));
+      if (!id) {
+        navigate("/turmas/grupos");
+        return;
+      }
 
-        // In a real app, you would fetch from an API
-        // For now, we'll use mock data
+      try {
+        console.log('🔍 Buscando dados do grupo:', id);
+        
+        // Verificar se o usuário é membro do grupo
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          console.error('❌ Usuário não autenticado');
+          navigate("/turmas/grupos");
+          return;
+        }
+
+        // Buscar dados do grupo
+        const { data: groupData, error: groupError } = await supabase
+          .from('grupos_estudo')
+          .select('*')
+          .eq('id', id)
+          .single();
+
+        if (groupError || !groupData) {
+          console.error('❌ Erro ao buscar grupo:', groupError);
+          navigate("/turmas/grupos");
+          return;
+        }
+
+        // Verificar se o usuário é membro
+        const { data: memberData, error: memberError } = await supabase
+          .from('membros_grupos')
+          .select('user_id')
+          .eq('grupo_id', id)
+          .eq('user_id', user.id)
+          .single();
+
+        if (memberError || !memberData) {
+          console.error('❌ Usuário não é membro do grupo:', memberError);
+          navigate("/turmas/grupos");
+          return;
+        }
+
+        console.log('✅ Dados do grupo carregados:', groupData);
         setGroup({
-          id: id || "",
-          nome: "Grupo de Cálculo Avançado",
-          descricao:
-            "Grupo para estudos de cálculo avançado e preparação para provas",
-          membros: 6,
-          tags: ["Cálculo", "Matemática", "Estudo em grupo"],
+          id: groupData.id,
+          nome: groupData.nome,
+          descricao: groupData.descricao || '',
+          membros: groupData.membros || 0,
+          tags: groupData.tags || [],
         });
       } catch (error) {
-        console.error("Error fetching group:", error);
+        console.error('❌ Erro geral ao buscar grupo:', error);
+        navigate("/turmas/grupos");
       } finally {
         setLoading(false);
       }
     };
 
     fetchGroup();
-  }, [id]);
+  }, [id, navigate]);
 
   const handleBack = () => {
     navigate("/turmas/grupos");
