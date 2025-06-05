@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -75,6 +74,21 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
     return name.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
+  // Função para lidar com mudanças no tipo de grupo (corrigida)
+  const handleGroupTypeChange = (value: string) => {
+    console.log('Mudança no tipo de grupo detectada. Valor:', value, 'Stack:', new Error().stack);
+    setGroupType(value);
+    
+    // Resetar visibilidade quando o tipo muda
+    if (value === "Materias Basicas" || value === "ENEM & Exames") {
+      setGroupVisibility("all");
+    } else {
+      setGroupVisibility("partners");
+    }
+    
+    console.log('Tipo de grupo atualizado para:', value);
+  };
+
   const handleSubmit = () => {
     if (!groupName || !groupDescription || !groupType || !groupDiscipline || !groupSpecificTopic) {
       alert('Por favor, preencha todos os campos obrigatórios.');
@@ -95,7 +109,81 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
       is_visible_to_partners: groupVisibility === "partners"
     };
 
+    console.log('Dados do formulário sendo enviados:', formData);
     onSubmit(formData);
+  };
+
+  // Função segura para renderizar campos condicionais baseados no tipo
+  const renderConditionalFields = () => {
+    if (!groupType) return null;
+
+    console.log('Renderizando campos condicionais para tipo:', groupType);
+
+    return (
+      <Card className="bg-gray-700 border-gray-600 mt-4">
+        <CardHeader>
+          <CardTitle className="text-white text-sm">Configurações Específicas</CardTitle>
+          <CardDescription className="text-gray-400">
+            Configurações baseadas no tipo de grupo selecionado
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {(groupType === "Materias Basicas" || groupType === "ENEM & Exames") && (
+            <div>
+              <Label className="text-white font-medium">Visibilidade Acadêmica</Label>
+              <RadioGroup value={groupVisibility} onValueChange={setGroupVisibility} className="mt-2">
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="all" id="academic-visibility-all" />
+                  <Label htmlFor="academic-visibility-all" className="text-white">
+                    Visível para todos os estudantes
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="partners" id="academic-visibility-partners" />
+                  <Label htmlFor="academic-visibility-partners" className="text-white">
+                    Apenas meus parceiros de estudo
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+          )}
+          
+          {(groupType === "Interesses & Habilidades" || groupType === "Projetos & Atividades") && (
+            <div>
+              <Label className="text-white font-medium">Visibilidade de Projeto</Label>
+              <RadioGroup value={groupVisibility} onValueChange={setGroupVisibility} className="mt-2">
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="partners" id="project-visibility-partners" />
+                  <Label htmlFor="project-visibility-partners" className="text-white">
+                    Apenas parceiros selecionados
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="all" id="project-visibility-all" />
+                  <Label htmlFor="project-visibility-all" className="text-white">
+                    Aberto para interessados
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+          )}
+
+          {groupType === "Grupos de Apoio" && (
+            <div>
+              <Label className="text-white font-medium">Privacidade do Grupo de Apoio</Label>
+              <RadioGroup value={groupVisibility} onValueChange={setGroupVisibility} className="mt-2">
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="partners" id="support-visibility-partners" />
+                  <Label htmlFor="support-visibility-partners" className="text-white">
+                    Privado - apenas convidados
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
   };
 
   // Função segura para renderizar prévia do grupo
@@ -187,7 +275,7 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
 
           <div>
             <Label htmlFor="group-type" className="text-white">Tipo do Grupo *</Label>
-            <Select value={groupType} onValueChange={setGroupType}>
+            <Select value={groupType} onValueChange={handleGroupTypeChange}>
               <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
                 <SelectValue placeholder="Selecione o tipo do grupo" />
               </SelectTrigger>
@@ -270,6 +358,9 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
               </div>
             </RadioGroup>
           </div>
+
+          {/* Renderizar campos condicionais baseados no tipo */}
+          {renderConditionalFields()}
         </CardContent>
       </Card>
 
