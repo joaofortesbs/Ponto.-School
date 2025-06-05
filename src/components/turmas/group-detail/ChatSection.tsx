@@ -48,6 +48,9 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
 
   const loadMessages = async () => {
     try {
+      setIsLoading(true);
+      console.log('Carregando mensagens para grupo:', groupId);
+
       const { data, error } = await supabase
         .from('mensagens_grupos')
         .select(`
@@ -70,9 +73,17 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
         return;
       }
 
+      console.log('Mensagens carregadas:', data);
       setMessages(data || []);
     } catch (error) {
       console.error('Erro ao carregar mensagens:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao carregar mensagens",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -111,6 +122,8 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
 
     setIsLoading(true);
     try {
+      console.log('Enviando mensagem para grupo:', groupId);
+      
       const { error } = await supabase
         .from('mensagens_grupos')
         .insert({
@@ -130,6 +143,7 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
       }
 
       setNewMessage('');
+      console.log('Mensagem enviada com sucesso');
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
       toast({
@@ -166,7 +180,11 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
   return (
     <div className="chat-section h-full flex flex-col">
       <div className="chat-messages flex-1 overflow-y-auto p-4 space-y-3">
-        {messages.length === 0 ? (
+        {isLoading ? (
+          <div className="text-center text-gray-400 py-8">
+            <p>Carregando mensagens...</p>
+          </div>
+        ) : messages.length === 0 ? (
           <div className="text-center text-gray-400 py-8">
             <p>Nenhuma mensagem ainda. Seja o primeiro a conversar!</p>
           </div>

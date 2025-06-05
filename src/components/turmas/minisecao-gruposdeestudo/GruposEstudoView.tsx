@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import CreateGroupModal from "../CreateGroupModal";
 import AddGroupModal from "../AddGroupModal";
+import GroupDetailInterface from "../group-detail/GroupDetailInterface";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -104,10 +105,20 @@ export default function GruposEstudoView() {
   const [filterTopic, setFilterTopic] = useState("");
   const [showGroupInterface, setShowGroupInterface] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<any>(null);
-  const [groupActiveTab, setGroupActiveTab] = useState('discussions');
-  const [messages, setMessages] = useState<any[]>([]);
-  const [newMessage, setNewMessage] = useState('');
-  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
+  useEffect(() => {
+    getCurrentUser();
+  }, []);
+
+  const getCurrentUser = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUser(user);
+    } catch (error) {
+      console.error('Erro ao buscar usuário:', error);
+    }
+  };
 
   const loadMyGroups = async () => {
     setIsLoading(true);
@@ -305,14 +316,11 @@ export default function GruposEstudoView() {
 
   const handleAccessGroup = async (group: any) => {
     try {
-      console.log('Iniciando handleAccessGroup para grupo:', group);
-      console.log('Stack Trace:', new Error().stack);
+      console.log('Acessando grupo:', group);
 
-      // Passo 1: Validar autenticação
-      console.log('Validando autenticação...');
+      // Validar autenticação
       const { data: { user }, error: authError } = await supabase.auth.getUser();
       if (authError || !user) {
-        console.error('Erro de autenticação:', authError, 'Stack:', new Error().stack);
         toast({
           title: "Erro",
           description: "Você precisa estar logado para acessar o grupo.",
@@ -320,18 +328,16 @@ export default function GruposEstudoView() {
         });
         return;
       }
-      console.log('Usuário autenticado. ID:', user.id);
 
-      // Passo 2: Verificar membresia
-      console.log('Verificando membresia para userId:', user.id, 'e grupoId:', group.id);
+      // Verificar membresia
       const { data: membershipData, error: membershipError } = await supabase
         .from('membros_grupos')
-        .select('id, joined_at')
+        .select('id')
         .eq('grupo_id', group.id)
         .eq('user_id', user.id);
 
       if (membershipError) {
-        console.error('Erro na consulta de membresia:', membershipError.message, 'Detalhes:', membershipError, 'Stack:', new Error().stack);
+        console.error('Erro na consulta de membresia:', membershipError);
         toast({
           title: "Erro",
           description: `Erro ao verificar membresia: ${membershipError.message}`,
@@ -341,7 +347,6 @@ export default function GruposEstudoView() {
       }
 
       if (!membershipData || membershipData.length === 0) {
-        console.log('Usuário não é membro. Dados:', membershipData, 'Stack:', new Error().stack);
         toast({
           title: "Acesso negado",
           description: "Você não é membro deste grupo.",
@@ -349,10 +354,8 @@ export default function GruposEstudoView() {
         });
         return;
       }
-      console.log('Membresia confirmada. Dados:', membershipData);
 
-      // Passo 3: Buscar informações completas do grupo
-      console.log('Buscando dados completos do grupo ID:', group.id);
+      // Buscar informações completas do grupo
       const { data: groupData, error: groupError } = await supabase
         .from('grupos_estudo')
         .select('*')
@@ -360,7 +363,7 @@ export default function GruposEstudoView() {
         .single();
 
       if (groupError || !groupData) {
-        console.error('Erro ao buscar grupo:', groupError?.message, 'Detalhes:', groupError, 'Stack:', new Error().stack);
+        console.error('Erro ao buscar grupo:', groupError);
         toast({
           title: "Erro",
           description: "Grupo não encontrado.",
@@ -368,142 +371,25 @@ export default function GruposEstudoView() {
         });
         return;
       }
-      console.log('Grupo encontrado:', groupData);
 
-      // Passo 4: Alternar para interface interna
-      console.log('Alternando para interface interna do grupo...');
+      // Alternar para interface interna
       setSelectedGroup(groupData);
       setShowGroupInterface(true);
       
-      // Passo 5: Carregar mensagens do chat
-      console.log('Carregando mensagens do chat para grupo ID:', group.id);
-      await loadChatMessages(group.id);
-      setupChatRealtime(group.id);
-      
       console.log('Grupo acessado com sucesso.');
     } catch (error: any) {
-      console.error('Erro inesperado em handleAccessGroup:', error.message, 'Stack Trace Completo:', error.stack);
+      console.error('Erro inesperado em handleAccessGroup:', error);
       toast({
         title: "Erro inesperado",
-        description: "Erro inesperado ao acessar o grupo. Verifique o console para detalhes.",
+        description: "Erro inesperado ao acessar o grupo.",
         variant: "destructive"
       });
-    }
-  };
-
-  const loadChatMessages = async (groupId: string) => {
-    try {
-      setIsLoadingMessages(true);
-      console.log('Carregando mensagens para grupo:', groupId);
-      
-      const { data: messagesData, error } = await supabase
-        .from('mensagens_grupos')
-        .select(`
-          id,
-          mensagem,
-          created_at,
-          user_id,
-          profiles!inner(display_name, email)
-        `)
-        .eq('grupo_id', groupId)
-        .order('created_at', { ascending: true });
-
-      if (error) {
-        console.error('Erro ao carregar mensagens:', error);
-        toast({
-          title: "Erro",
-          description: "Erro ao carregar mensagens do chat",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      console.log('Mensagens carregadas:', messagesData);
-      setMessages(messagesData || []);
-    } catch (error: any) {
-      console.error('Erro ao carregar mensagens:', error);
-    } finally {
-      setIsLoadingMessages(false);
-    }
-  };
-
-  const setupChatRealtime = (groupId: string) => {
-    console.log('Configurando chat em tempo real para grupo:', groupId);
-    
-    const channel = supabase
-      .channel(`group-${groupId}`)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'mensagens_grupos',
-        filter: `grupo_id=eq.${groupId}`
-      }, async (payload) => {
-        console.log('Nova mensagem recebida:', payload);
-        
-        // Buscar dados do usuário que enviou a mensagem
-        const { data: userProfile, error } = await supabase
-          .from('profiles')
-          .select('display_name, email')
-          .eq('id', payload.new.user_id)
-          .single();
-
-        const newMessage = {
-          ...payload.new,
-          profiles: userProfile || { display_name: 'Usuário', email: '' }
-        };
-
-        setMessages(prev => [...prev, newMessage]);
-      })
-      .subscribe();
-
-    return () => supabase.removeChannel(channel);
-  };
-
-  const sendMessage = async () => {
-    if (!newMessage.trim() || isLoadingMessages || !selectedGroup) return;
-
-    setIsLoadingMessages(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { error } = await supabase
-        .from('mensagens_grupos')
-        .insert({
-          grupo_id: selectedGroup.id,
-          user_id: user.id,
-          mensagem: newMessage.trim()
-        });
-
-      if (error) {
-        console.error('Erro ao enviar mensagem:', error);
-        toast({
-          title: "Erro",
-          description: "Erro ao enviar mensagem",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      setNewMessage('');
-    } catch (error: any) {
-      console.error('Erro ao enviar mensagem:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao enviar mensagem",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoadingMessages(false);
     }
   };
 
   const handleBackToGroups = () => {
-    console.log('Voltando para a lista de grupos...');
     setShowGroupInterface(false);
     setSelectedGroup(null);
-    setMessages([]);
-    setGroupActiveTab('discussions');
   };
 
   const formatTime = (timestamp: string) => {
@@ -658,122 +544,14 @@ export default function GruposEstudoView() {
     </div>
   );
 
-  // Render da interface interna do grupo
   if (showGroupInterface && selectedGroup) {
     return (
-      <div className="groups-interface bg-[#001427] text-white min-h-screen">
-        {/* Header da Interface do Grupo */}
-        <div className="group-header bg-[#2a4066] p-4 border-b border-gray-600">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Button
-                onClick={handleBackToGroups}
-                variant="ghost"
-                className="text-white hover:bg-[#FF6B00] hover:text-white"
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Voltar
-              </Button>
-              <h1 className="text-xl font-bold text-white">{selectedGroup.nome}</h1>
-            </div>
-          </div>
-        </div>
-
-        {/* Abas da Interface do Grupo */}
-        <div className="group-tabs border-b border-gray-600">
-          <div className="flex space-x-1 px-4">
-            {[
-              { id: 'discussions', label: 'Discussões' },
-              { id: 'events', label: 'Eventos' },
-              { id: 'members', label: 'Membros' },
-              { id: 'files', label: 'Arquivos' },
-              { id: 'about', label: 'Sobre' }
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setGroupActiveTab(tab.id)}
-                className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                  groupActiveTab === tab.id
-                    ? 'border-[#FF6B00] text-[#FF6B00]'
-                    : 'border-transparent text-gray-400 hover:text-white hover:border-gray-300'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Conteúdo das Abas */}
-        <div className="group-content p-4">
-          {groupActiveTab === 'discussions' && (
-            <div className="chat-section h-96 flex flex-col">
-              {/* Área de Mensagens */}
-              <div className="chat-messages flex-1 overflow-y-auto p-4 space-y-3 bg-[#1a2a44] rounded-lg mb-4">
-                {messages.length === 0 ? (
-                  <div className="text-center text-gray-400 py-8">
-                    <p>Nenhuma mensagem ainda. Seja o primeiro a conversar!</p>
-                  </div>
-                ) : (
-                  messages.map((message) => (
-                    <div key={message.id} className="chat-message">
-                      <div className="message-header flex items-center gap-2 mb-1">
-                        <span className="sender font-medium text-[#FF6B00]">
-                          {message.profiles?.display_name || message.profiles?.email || 'Usuário'}
-                        </span>
-                        <span className="timestamp text-xs text-gray-400">
-                          {new Date(message.created_at).toLocaleTimeString('pt-BR', {
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </span>
-                      </div>
-                      <div className="message-content bg-[#2a4066] rounded-lg p-3">
-                        <p className="text-white text-sm whitespace-pre-wrap">
-                          {message.mensagem}
-                        </p>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-
-              {/* Input de Mensagem */}
-              <div className="chat-input">
-                <div className="flex gap-2">
-                  <Input
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        sendMessage();
-                      }
-                    }}
-                    placeholder="Digite sua mensagem..."
-                    disabled={isLoadingMessages}
-                    className="flex-1 bg-[#1a2a44] border-gray-600 text-white placeholder-gray-400"
-                  />
-                  <Button
-                    onClick={sendMessage}
-                    disabled={isLoadingMessages || !newMessage.trim()}
-                    className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white"
-                  >
-                    <Send className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Outras abas com placeholders */}
-          {groupActiveTab !== 'discussions' && (
-            <div className="text-center text-gray-400 py-8">
-              <p>Funcionalidade em desenvolvimento</p>
-            </div>
-          )}
-        </div>
-      </div>
+      <GroupDetailInterface
+        groupId={selectedGroup.id}
+        groupName={selectedGroup.nome}
+        onBack={handleBackToGroups}
+        currentUser={currentUser}
+      />
     );
   }
 
