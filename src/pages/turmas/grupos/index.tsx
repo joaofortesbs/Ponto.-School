@@ -29,27 +29,11 @@ export default function GruposEstudo() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<any>(null);
 
-  // Clear expired locks on page load
-  useEffect(() => {
-    const checkExpiredLocks = () => {
-      const lockValue = localStorage.getItem('group_submission_lock');
-      if (lockValue) {
-        const [timestamp] = lockValue.split(':');
-        const lockAge = Date.now() - parseInt(timestamp, 10);
-        if (lockAge > 10000) { // 10 seconds timeout
-          console.log('Limpando lock expirado ao carregar página');
-          localStorage.removeItem('group_submission_lock');
-        }
-      }
-    };
-    checkExpiredLocks();
-  }, []);
-
-  // Carregar grupos do usuário com verificação robusta de duplicatas
+  // Carregar grupos do usuário com correção de duplicatas
   const loadMyGroups = async () => {
     setIsLoading(true);
     try {
-      console.log('Iniciando loadMyGroups com database limpo. Stack:', new Error().stack);
+      console.log('Iniciando loadMyGroups para carregar Meus Grupos. Stack:', new Error().stack);
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -74,16 +58,16 @@ export default function GruposEstudo() {
       }
       console.log('Dados brutos retornados:', memberGroups);
 
-      // Filter out null groups (orphaned records should be cleaned by migration)
-      const validGroups = memberGroups?.filter(memberGroup => memberGroup.grupos_estudo !== null) || [];
-      
-      if (memberGroups && validGroups.length !== memberGroups.length) {
-        console.warn('Registros órfãos detectados (devem ter sido limpos pela migração):', memberGroups.length - validGroups.length);
+      // Detectar duplicatas nos dados brutos
+      const groupIds = memberGroups?.map(item => item.grupo_id) || [];
+      const duplicates = groupIds.filter((id, index) => groupIds.indexOf(id) !== index);
+      if (duplicates.length > 0) {
+        console.warn('Duplicatas detectadas nos dados brutos (IDs):', duplicates);
       }
 
-      // Extract unique groups using Map (duplicates should be cleaned by migration)
+      // Filtrar duplicatas usando Map para garantir unicidade
       const groupsMap = new Map();
-      validGroups.forEach(memberGroup => {
+      memberGroups?.forEach(memberGroup => {
         const group = memberGroup.grupos_estudo;
         if (group && !groupsMap.has(group.id)) {
           groupsMap.set(group.id, group);
@@ -91,10 +75,10 @@ export default function GruposEstudo() {
       });
       
       const uniqueGroups = Array.from(groupsMap.values());
-      console.log('Grupos após processamento:', uniqueGroups.length, 'grupos únicos');
+      console.log('Grupos após remoção de duplicatas:', uniqueGroups.length, 'grupos únicos');
       
       setMyGroups(uniqueGroups);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Erro geral em loadMyGroups:', error.message, 'Stack:', error.stack);
     } finally {
       setIsLoading(false);
@@ -186,7 +170,7 @@ export default function GruposEstudo() {
   );
 
   const handleCreateGroup = (formData: any) => {
-    console.log("Novo grupo criado com RPC:", formData);
+    console.log("Novo grupo criado:", formData);
     setIsCreateModalOpen(false);
     // Recarregar grupos
     if (activeTab === "meus-grupos") {
@@ -210,31 +194,21 @@ export default function GruposEstudo() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Use the new RPC function to add member
-      console.log('Ingressando no grupo via RPC. GroupId:', groupId, 'UserId:', user.id);
-      const { data: addMemberResult, error: addMemberError } = await supabase
-        .rpc('add_group_member', {
-          p_grupo_id: groupId,
-          p_user_id: user.id
+      const { error } = await supabase
+        .from('membros_grupos')
+        .insert({
+          grupo_id: groupId,
+          user_id: user.id,
+          joined_at: new Date().toISOString()
         });
 
-      if (addMemberError) {
-        console.error('Erro ao ingressar no grupo via RPC:', addMemberError);
+      if (error) {
+        console.error('Erro ao ingressar no grupo:', error);
         alert('Erro ao ingressar no grupo');
         return;
       }
 
-      if (!addMemberResult || addMemberResult.length === 0) {
-        alert('Erro ao ingressar no grupo');
-        return;
-      }
-
-      const result = addMemberResult[0];
-      if (result.member_added) {
-        alert('Você ingressou no grupo com sucesso!');
-      } else {
-        alert(result.message || 'Você já é membro deste grupo!');
-      }
+      alert('Você ingressou no grupo com sucesso!');
       
       // Recarregar ambas as grades para refletir a mudança
       loadMyGroups();
