@@ -27,6 +27,7 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const channelRef = useRef<any>(null);
   const { toast } = useToast();
 
   const scrollToBottom = () => {
@@ -42,7 +43,12 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
     setupRealtimeSubscription();
 
     return () => {
-      supabase.removeAllSubscriptions();
+      // Corrigir aqui: usar removeChannel ao invés de removeAllSubscriptions
+      if (channelRef.current) {
+        console.log('Removendo canal Realtime:', channelRef.current);
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
     };
   }, [groupId]);
 
@@ -88,6 +94,15 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
   };
 
   const setupRealtimeSubscription = () => {
+    // Limpar canal existente se houver
+    if (channelRef.current) {
+      console.log('Removendo canal existente:', channelRef.current);
+      supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
+    }
+
+    console.log('Configurando novo canal Realtime para grupo:', groupId);
+    
     const channel = supabase
       .channel(`group-${groupId}`)
       .on('postgres_changes', {
@@ -112,9 +127,11 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
 
         setMessages(prev => [...prev, newMessage]);
       })
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Status da assinatura Realtime:', status);
+      });
 
-    return () => supabase.removeChannel(channel);
+    channelRef.current = channel;
   };
 
   const sendMessage = async () => {
