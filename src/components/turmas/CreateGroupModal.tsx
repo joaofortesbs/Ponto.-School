@@ -60,18 +60,27 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
   };
 
   const handleSubmit = async (formData: any) => {
+    if (isLoading) {
+      console.log('Submissão já em andamento. Ignorando nova tentativa.');
+      return;
+    }
+
     setIsLoading(true);
     try {
+      console.log('Iniciando criação de grupo. FormData:', formData, 'Stack:', new Error().stack);
+      
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         alert('Usuário não autenticado');
         return;
       }
+      console.log('Usuário autenticado. ID:', user.id);
 
       // Gerar código único de 8 caracteres
       const codigoUnico = await generateUniqueCode();
 
       // Criar o grupo no Supabase
+      console.log('Criando grupo no Supabase...');
       const { data: newGroup, error: insertError } = await supabase
         .from('grupos_estudo')
         .insert({
@@ -92,31 +101,53 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
         .single();
 
       if (insertError) {
-        console.error('Erro ao criar grupo:', insertError);
+        console.error('Erro ao criar grupo:', insertError.message, 'Detalhes:', insertError.details, 'Stack:', new Error().stack);
         alert('Erro ao criar grupo: ' + insertError.message);
         return;
       }
 
-      console.log('Grupo criado com código:', newGroup.codigo_unico, 'Comprimento:', newGroup.codigo_unico.length);
+      console.log('Grupo criado com sucesso. ID:', newGroup.id, 'Código:', newGroup.codigo_unico);
 
-      // Adicionar o criador como membro do grupo
-      const { error: memberError } = await supabase
+      // Verificar se o criador já é membro antes de adicionar
+      console.log('Verificando se criador já é membro do grupo...');
+      const { data: existingMember, error: memberCheckError } = await supabase
         .from('membros_grupos')
-        .insert({
-          grupo_id: newGroup.id,
-          user_id: user.id,
-          joined_at: new Date().toISOString()
-        });
+        .select('id')
+        .eq('grupo_id', newGroup.id)
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-      if (memberError) {
-        console.error('Erro ao adicionar membro:', memberError);
+      if (memberCheckError) {
+        console.error('Erro ao verificar membresia existente:', memberCheckError.message, 'Stack:', new Error().stack);
+      }
+
+      if (!existingMember) {
+        // Adicionar o criador como membro do grupo
+        console.log('Adicionando criador como membro do grupo...');
+        const { error: memberError } = await supabase
+          .from('membros_grupos')
+          .insert({
+            grupo_id: newGroup.id,
+            user_id: user.id,
+            joined_at: new Date().toISOString()
+          });
+
+        if (memberError) {
+          console.error('Erro ao adicionar membro:', memberError.message, 'Detalhes:', memberError.details, 'Stack:', new Error().stack);
+          // Não bloquear o fluxo, pois o grupo já foi criado
+          console.warn('Grupo criado mas criador não foi adicionado como membro automaticamente');
+        } else {
+          console.log('Criador adicionado como membro com sucesso');
+        }
+      } else {
+        console.log('Criador já é membro do grupo. Pulando inserção.');
       }
 
       alert('Grupo criado com sucesso!');
       onSubmit(newGroup);
       onClose();
     } catch (error) {
-      console.error('Erro ao criar grupo:', error);
+      console.error('Erro geral ao criar grupo:', error.message, 'Stack:', error.stack);
       alert('Erro ao criar grupo');
     } finally {
       setIsLoading(false);
