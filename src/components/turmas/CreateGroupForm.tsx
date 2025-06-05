@@ -14,7 +14,6 @@ import { supabase } from "@/integrations/supabase/client";
 interface CreateGroupFormProps {
   onSubmit: (formData: any) => void;
   onCancel: () => void;
-  isLoading?: boolean;
 }
 
 interface Partner {
@@ -25,7 +24,7 @@ interface Partner {
   };
 }
 
-const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel, isLoading = false }) => {
+const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel }) => {
   // Estados do formulário
   const [groupName, setGroupName] = useState("");
   const [groupDescription, setGroupDescription] = useState("");
@@ -76,144 +75,27 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel, i
     return name.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
-  // Função para lidar com mudanças no tipo de grupo
-  const handleGroupTypeChange = (value: string) => {
-    console.log('Mudança no tipo de grupo detectada às', new Date().toISOString(), 'Valor:', value);
-    setGroupType(value);
-    
-    // Resetar visibilidade quando o tipo muda
-    if (value === "Materias Basicas" || value === "ENEM & Exames") {
-      setGroupVisibility("all");
-    } else {
-      setGroupVisibility("partners");
-    }
-    
-    console.log('Tipo de grupo atualizado para:', value);
-  };
-
   const handleSubmit = () => {
-    console.log('Iniciando validação do formulário às', new Date().toISOString());
-    
-    // Validações básicas com logs detalhados
-    if (!groupName.trim()) {
-      console.error('Validação falhou: Nome do grupo vazio');
-      alert('Por favor, preencha o nome do grupo.');
-      return;
-    }
-
-    if (!groupDescription.trim()) {
-      console.error('Validação falhou: Descrição do grupo vazia');
-      alert('Por favor, preencha a descrição do grupo.');
-      return;
-    }
-
-    if (!groupType) {
-      console.error('Validação falhou: Tipo do grupo não selecionado');
-      alert('Por favor, selecione o tipo do grupo.');
-      return;
-    }
-
-    if (!groupDiscipline.trim()) {
-      console.error('Validação falhou: Disciplina/área vazia');
-      alert('Por favor, preencha a disciplina/área.');
-      return;
-    }
-
-    if (!groupSpecificTopic.trim()) {
-      console.error('Validação falhou: Tópico específico vazio');
-      alert('Por favor, preencha o tópico específico.');
+    if (!groupName || !groupDescription || !groupType || !groupDiscipline || !groupSpecificTopic) {
+      alert('Por favor, preencha todos os campos obrigatórios.');
       return;
     }
 
     const tags = groupTags ? groupTags.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
 
     const formData = {
-      nome: groupName.trim(),
-      descricao: groupDescription.trim(),
+      nome: groupName,
+      descricao: groupDescription,
       tipo_grupo: groupType,
-      disciplina_area: groupDiscipline.trim(),
-      topico_especifico: groupSpecificTopic.trim(),
+      disciplina_area: groupDiscipline,
+      topico_especifico: groupSpecificTopic,
       tags: tags,
       is_publico: groupPrivacy === "public",
       is_visible_to_all: groupVisibility === "all",
       is_visible_to_partners: groupVisibility === "partners"
     };
 
-    console.log('Validação concluída. Dados do formulário sendo enviados às', new Date().toISOString(), ':', formData);
     onSubmit(formData);
-  };
-
-  // Função segura para renderizar campos condicionais baseados no tipo
-  const renderConditionalFields = () => {
-    if (!groupType) return null;
-
-    console.log('Renderizando campos condicionais para tipo:', groupType, 'às', new Date().toISOString());
-
-    return (
-      <Card className="bg-gray-700 border-gray-600 mt-4">
-        <CardHeader>
-          <CardTitle className="text-white text-sm">Configurações Específicas</CardTitle>
-          <CardDescription className="text-gray-400">
-            Configurações baseadas no tipo de grupo selecionado
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {(groupType === "Materias Basicas" || groupType === "ENEM & Exames") && (
-            <div>
-              <Label className="text-white font-medium">Visibilidade Acadêmica</Label>
-              <RadioGroup value={groupVisibility} onValueChange={setGroupVisibility} className="mt-2">
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="all" id="academic-visibility-all" />
-                  <Label htmlFor="academic-visibility-all" className="text-white">
-                    Visível para todos os estudantes
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="partners" id="academic-visibility-partners" />
-                  <Label htmlFor="academic-visibility-partners" className="text-white">
-                    Apenas meus parceiros de estudo
-                  </Label>
-                </div>
-              </RadioGroup>
-            </div>
-          )}
-          
-          {(groupType === "Interesses & Habilidades" || groupType === "Projetos & Atividades") && (
-            <div>
-              <Label className="text-white font-medium">Visibilidade de Projeto</Label>
-              <RadioGroup value={groupVisibility} onValueChange={setGroupVisibility} className="mt-2">
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="partners" id="project-visibility-partners" />
-                  <Label htmlFor="project-visibility-partners" className="text-white">
-                    Apenas parceiros selecionados
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="all" id="project-visibility-all" />
-                  <Label htmlFor="project-visibility-all" className="text-white">
-                    Aberto para interessados
-                  </Label>
-                </div>
-              </RadioGroup>
-            </div>
-          )}
-
-          {groupType === "Grupos de Apoio" && (
-            <div>
-              <Label className="text-white font-medium">Privacidade do Grupo de Apoio</Label>
-              <RadioGroup value={groupVisibility} onValueChange={setGroupVisibility} className="mt-2">
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="partners" id="support-visibility-partners" />
-                  <Label htmlFor="support-visibility-partners" className="text-white">
-                    Privado - apenas convidados
-                  </Label>
-                </div>
-              </RadioGroup>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    );
   };
 
   // Função segura para renderizar prévia do grupo
@@ -289,7 +171,6 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel, i
               onChange={(e) => setGroupName(e.target.value)}
               placeholder="Digite o nome do grupo"
               className="bg-gray-700 border-gray-600 text-white"
-              disabled={isLoading}
             />
           </div>
 
@@ -301,13 +182,12 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel, i
               onChange={(e) => setGroupDescription(e.target.value)}
               placeholder="Digite a descrição do grupo"
               className="bg-gray-700 border-gray-600 text-white"
-              disabled={isLoading}
             />
           </div>
 
           <div>
             <Label htmlFor="group-type" className="text-white">Tipo do Grupo *</Label>
-            <Select value={groupType} onValueChange={handleGroupTypeChange} disabled={isLoading}>
+            <Select value={groupType} onValueChange={setGroupType}>
               <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
                 <SelectValue placeholder="Selecione o tipo do grupo" />
               </SelectTrigger>
@@ -330,7 +210,6 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel, i
               onChange={(e) => setGroupDiscipline(e.target.value)}
               placeholder="Ex.: Matemática"
               className="bg-gray-700 border-gray-600 text-white"
-              disabled={isLoading}
             />
           </div>
 
@@ -342,7 +221,6 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel, i
               onChange={(e) => setGroupSpecificTopic(e.target.value)}
               placeholder="Ex.: Álgebra Linear"
               className="bg-gray-700 border-gray-600 text-white"
-              disabled={isLoading}
             />
           </div>
 
@@ -354,7 +232,6 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel, i
               onChange={(e) => setGroupTags(e.target.value)}
               placeholder="Ex.: cálculo, matemática, exercícios (separar por vírgulas)"
               className="bg-gray-700 border-gray-600 text-white"
-              disabled={isLoading}
             />
           </div>
         </CardContent>
@@ -368,7 +245,7 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel, i
         <CardContent className="space-y-4">
           <div>
             <Label className="text-white font-medium">Privacidade do grupo</Label>
-            <RadioGroup value={groupPrivacy} onValueChange={setGroupPrivacy} className="mt-2" disabled={isLoading}>
+            <RadioGroup value={groupPrivacy} onValueChange={setGroupPrivacy} className="mt-2">
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="public" id="public-privacy" />
                 <Label htmlFor="public-privacy" className="text-white">Público</Label>
@@ -382,7 +259,7 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel, i
 
           <div>
             <Label className="text-white font-medium">Visibilidade do grupo</Label>
-            <RadioGroup value={groupVisibility} onValueChange={setGroupVisibility} className="mt-2" disabled={isLoading}>
+            <RadioGroup value={groupVisibility} onValueChange={setGroupVisibility} className="mt-2">
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="all" id="group-visibility-all" />
                 <Label htmlFor="group-visibility-all" className="text-white">Permitir que todos vejam</Label>
@@ -393,8 +270,6 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel, i
               </div>
             </RadioGroup>
           </div>
-
-          {renderConditionalFields()}
         </CardContent>
       </Card>
 
@@ -422,7 +297,6 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel, i
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Pesquisar Parceiros"
                   className="pl-9 bg-gray-600 border-gray-500 text-white"
-                  disabled={isLoading}
                 />
               </div>
               
@@ -473,16 +347,14 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel, i
               onClick={onCancel}
               variant="outline"
               className="border-gray-600 text-white hover:bg-gray-700"
-              disabled={isLoading}
             >
               Cancelar
             </Button>
             <Button 
               onClick={handleSubmit}
               className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white"
-              disabled={isLoading}
             >
-              {isLoading ? 'Criando...' : 'Criar Grupo'}
+              Criar Grupo
             </Button>
           </div>
         </CardContent>
