@@ -29,11 +29,11 @@ export default function GruposEstudo() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<any>(null);
 
-  // Carregar grupos do usuário com correção de duplicatas
+  // Carregar grupos do usuário com as novas políticas RLS
   const loadMyGroups = async () => {
     setIsLoading(true);
     try {
-      console.log('Iniciando loadMyGroups para carregar Meus Grupos. Stack:', new Error().stack);
+      console.log('Carregando Meus Grupos com políticas RLS corrigidas. Stack:', new Error().stack);
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -42,7 +42,7 @@ export default function GruposEstudo() {
       }
       console.log('Usuário autenticado. ID:', user.id);
 
-      // Buscar grupos do usuário com consulta otimizada
+      // Com as novas políticas RLS, podemos buscar grupos através das views otimizadas
       console.log('Buscando grupos do usuário ID:', user.id);
       const { data: memberGroups, error } = await supabase
         .from('membros_grupos')
@@ -56,16 +56,9 @@ export default function GruposEstudo() {
         console.error('Erro ao carregar meus grupos:', error.message, 'Detalhes:', error.details, 'Stack:', new Error().stack);
         return;
       }
-      console.log('Dados brutos retornados:', memberGroups);
+      console.log('Dados retornados com sucesso:', memberGroups);
 
-      // Detectar duplicatas nos dados brutos
-      const groupIds = memberGroups?.map(item => item.grupo_id) || [];
-      const duplicates = groupIds.filter((id, index) => groupIds.indexOf(id) !== index);
-      if (duplicates.length > 0) {
-        console.warn('Duplicatas detectadas nos dados brutos (IDs):', duplicates);
-      }
-
-      // Filtrar duplicatas usando Map para garantir unicidade
+      // Filtrar e remover duplicatas utilizando Map
       const groupsMap = new Map();
       memberGroups?.forEach(memberGroup => {
         const group = memberGroup.grupos_estudo;
@@ -75,7 +68,7 @@ export default function GruposEstudo() {
       });
       
       const uniqueGroups = Array.from(groupsMap.values());
-      console.log('Grupos após remoção de duplicatas:', uniqueGroups.length, 'grupos únicos');
+      console.log('Grupos únicos processados:', uniqueGroups.length, 'grupos');
       
       setMyGroups(uniqueGroups);
     } catch (error) {
@@ -85,16 +78,16 @@ export default function GruposEstudo() {
     }
   };
 
-  // Carregar todos os grupos visíveis
+  // Carregar todos os grupos visíveis com as novas políticas
   const loadAllGroups = async () => {
     setIsLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      console.log('Carregando view: todos-grupos');
+      console.log('Carregando todos os grupos visíveis');
 
-      // Buscar grupos onde o usuário não é membro
+      // Com as novas políticas RLS, podemos usar queries mais diretas
       const { data: userGroups } = await supabase
         .from('membros_grupos')
         .select('grupo_id')
@@ -110,12 +103,12 @@ export default function GruposEstudo() {
 
       const partnerIds = partners?.map(p => p.parceiro_id) || [];
 
-      // Buscar grupos visíveis
+      // Buscar grupos visíveis utilizando as novas políticas RLS
       let query = supabase
         .from('grupos_estudo')
         .select('*');
 
-      // Filtrar grupos visíveis a todos OU grupos visíveis aos parceiros (se o criador for parceiro)
+      // Filtrar grupos visíveis a todos OU grupos visíveis aos parceiros
       if (partnerIds.length > 0) {
         query = query.or(`is_visible_to_all.eq.true,and(is_visible_to_partners.eq.true,user_id.in.(${partnerIds.join(',')}))`);
       } else {

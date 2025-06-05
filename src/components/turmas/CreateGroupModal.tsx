@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -26,7 +27,7 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
 
     setIsLoading(true);
     try {
-      console.log('Iniciando criação de grupo com RPC otimizada. FormData:', formData, 'Stack:', new Error().stack);
+      console.log('Iniciando criação de grupo com RLS corrigida. FormData:', formData, 'Stack:', new Error().stack);
       
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -40,8 +41,8 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
         return;
       }
 
-      // Chamar a função RPC otimizada com tabela temporária
-      console.log('Executando função RPC create_group_with_member otimizada...');
+      // Chamar a função RPC com SECURITY DEFINER
+      console.log('Executando função RPC create_group_with_member com SECURITY DEFINER...');
       const { data: rpcResult, error: rpcError } = await supabase
         .rpc('create_group_with_member', {
           p_name: formData.nome.trim(),
@@ -73,7 +74,7 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
         return;
       }
 
-      console.log('Grupo criado com sucesso via RPC otimizada. ID:', result.group_id, 'Membro adicionado:', result.member_added, 'Mensagem:', result.message);
+      console.log('Grupo criado com sucesso via RPC com SECURITY DEFINER. ID:', result.group_id, 'Membro adicionado:', result.member_added, 'Mensagem:', result.message);
 
       // Construir objeto de grupo para compatibilidade
       const grupoData = {
