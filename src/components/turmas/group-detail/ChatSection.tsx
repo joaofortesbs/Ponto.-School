@@ -48,35 +48,68 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
 
   const loadMessages = async () => {
     try {
-      const { data, error } = await supabase
+      console.log('Carregando mensagens para grupo ID:', groupId);
+      
+      // Primeiro, buscar as mensagens
+      const { data: messagesData, error: messagesError } = await supabase
         .from('mensagens_grupos')
-        .select(`
-          id,
-          mensagem,
-          created_at,
-          user_id,
-          profiles!inner(display_name, email)
-        `)
+        .select('id, mensagem, created_at, user_id')
         .eq('grupo_id', groupId)
         .order('created_at', { ascending: true });
 
-      if (error) {
-        console.error('Erro ao carregar mensagens:', error);
+      if (messagesError) {
+        console.error('Erro ao carregar mensagens:', messagesError);
         toast({
           title: "Erro",
-          description: "Erro ao carregar mensagens",
+          description: "Erro ao carregar mensagens do chat",
           variant: "destructive"
         });
         return;
       }
 
-      setMessages(data || []);
+      console.log('Mensagens encontradas:', messagesData?.length || 0);
+
+      if (!messagesData || messagesData.length === 0) {
+        setMessages([]);
+        return;
+      }
+
+      // Buscar informações dos usuários para cada mensagem
+      const userIds = [...new Set(messagesData.map(msg => msg.user_id))];
+      const { data: usersData, error: usersError } = await supabase
+        .from('profiles')
+        .select('id, display_name, email')
+        .in('id', userIds);
+
+      if (usersError) {
+        console.error('Erro ao buscar dados dos usuários:', usersError);
+        // Continuar mesmo com erro dos usuários, usar fallback
+      }
+
+      // Combinar mensagens com dados dos usuários
+      const messagesWithUsers = messagesData.map(msg => ({
+        ...msg,
+        profiles: usersData?.find(user => user.id === msg.user_id) || { 
+          display_name: 'Usuário', 
+          email: '' 
+        }
+      }));
+
+      setMessages(messagesWithUsers);
+      console.log('Mensagens carregadas com sucesso:', messagesWithUsers.length);
     } catch (error) {
-      console.error('Erro ao carregar mensagens:', error);
+      console.error('Erro geral ao carregar mensagens:', error);
+      toast({
+        title: "Erro",
+        description: "Erro inesperado ao carregar mensagens",
+        variant: "destructive"
+      });
     }
   };
 
   const setupRealtimeSubscription = () => {
+    console.log('Configurando chat em tempo real para grupo:', groupId);
+    
     const channel = supabase
       .channel(`group-${groupId}`)
       .on('postgres_changes', {
@@ -100,8 +133,11 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
         };
 
         setMessages(prev => [...prev, newMessage]);
+        console.log('Mensagem adicionada ao chat:', newMessage);
       })
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Status do canal Realtime:', status);
+      });
 
     return () => supabase.removeChannel(channel);
   };
@@ -111,6 +147,8 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
 
     setIsLoading(true);
     try {
+      console.log('Enviando mensagem para grupo:', groupId, 'Usuário:', currentUser.id);
+      
       const { error } = await supabase
         .from('mensagens_grupos')
         .insert({
@@ -129,12 +167,16 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
         return;
       }
 
+      console.log('Mensagem enviada com sucesso');
       setNewMessage('');
+      
+      // Recarregar mensagens para garantir consistência
+      await loadMessages();
     } catch (error) {
-      console.error('Erro ao enviar mensagem:', error);
+      console.error('Erro inesperado ao enviar mensagem:', error);
       toast({
         title: "Erro",
-        description: "Erro ao enviar mensagem",
+        description: "Erro inesperado ao enviar mensagem",
         variant: "destructive"
       });
     } finally {
