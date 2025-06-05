@@ -98,7 +98,7 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
     onSubmit(formData);
   };
 
-  // Gerar prévia do grupo
+  // Função segura para renderizar prévia do grupo
   const renderGroupPreview = () => {
     const tags = groupTags ? groupTags.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
     const isPublic = groupPrivacy === "public" ? "Público" : "Privado";
@@ -303,7 +303,7 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
               <div className="max-h-32 overflow-y-auto space-y-2">
                 {filteredPartners.length > 0 ? (
                   filteredPartners.map((partner, index) => (
-                    <div key={index} className="flex items-center justify-between p-2 bg-gray-600 rounded">
+                    <div key={`partner-${partner.parceiro_id}-${index}`} className="flex items-center justify-between p-2 bg-gray-600 rounded">
                       <span className="text-white text-sm">
                         {partner.profiles?.display_name || partner.profiles?.full_name || 'Nome não disponível'}
                       </span>
