@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -58,6 +57,13 @@ export default function GruposEstudo() {
         return;
       }
       console.log('Dados brutos retornados:', memberGroups);
+
+      // Detectar duplicatas nos dados brutos
+      const groupIds = memberGroups?.map(item => item.grupo_id) || [];
+      const duplicates = groupIds.filter((id, index) => groupIds.indexOf(id) !== index);
+      if (duplicates.length > 0) {
+        console.warn('Duplicatas detectadas nos dados brutos (IDs):', duplicates);
+      }
 
       // Filtrar duplicatas usando Map para garantir unicidade
       const groupsMap = new Map();

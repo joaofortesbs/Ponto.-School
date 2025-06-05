@@ -76,6 +76,27 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
       }
       console.log('Usuário autenticado. ID:', user.id);
 
+      // Verificar se já existe um grupo com o mesmo nome criado pelo usuário
+      console.log('Verificando se grupo já existe para o usuário...');
+      const { data: existingGroup, error: checkError } = await supabase
+        .from('grupos_estudo')
+        .select('id')
+        .eq('nome', formData.nome)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (checkError && checkError.code !== 'PGRST116') {
+        console.error('Erro ao verificar grupo existente:', checkError.message);
+        alert('Erro ao verificar grupo existente');
+        return;
+      }
+
+      if (existingGroup) {
+        console.log('Grupo já existe:', existingGroup);
+        alert('Você já criou um grupo com esse nome. Escolha outro nome.');
+        return;
+      }
+
       // Gerar código único de 8 caracteres
       const codigoUnico = await generateUniqueCode();
 
@@ -117,7 +138,7 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
         .eq('user_id', user.id)
         .maybeSingle();
 
-      if (memberCheckError) {
+      if (memberCheckError && memberCheckError.code !== 'PGRST116') {
         console.error('Erro ao verificar membresia existente:', memberCheckError.message, 'Stack:', new Error().stack);
       }
 
