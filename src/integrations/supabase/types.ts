@@ -128,6 +128,27 @@ export type Database = {
         }
         Relationships: []
       }
+      group_creation_locks: {
+        Row: {
+          created_at: string | null
+          group_name: string
+          lock_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          group_name: string
+          lock_id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          group_name?: string
+          lock_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       grupos_estudo: {
         Row: {
           codigo_unico: string
@@ -803,6 +824,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_group_member: {
+        Args: { p_grupo_id: string; p_user_id: string }
+        Returns: {
+          member_added: boolean
+          message: string
+        }[]
+      }
       create_group_with_member: {
         Args: {
           p_name: string

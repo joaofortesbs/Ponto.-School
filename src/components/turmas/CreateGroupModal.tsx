@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -27,7 +26,7 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
 
     setIsLoading(true);
     try {
-      console.log('Iniciando criação de grupo via RPC melhorada. FormData:', formData, 'Stack:', new Error().stack);
+      console.log('Iniciando criação de grupo com RPC otimizada. FormData:', formData, 'Stack:', new Error().stack);
       
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -36,36 +35,20 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
       }
       console.log('Usuário autenticado. ID:', user.id);
 
-      // Verificar se já existe um grupo com o mesmo nome criado pelo usuário
-      console.log('Verificando se grupo já existe para o usuário...');
-      const { data: existingGroup, error: checkError } = await supabase
-        .from('grupos_estudo')
-        .select('id')
-        .eq('nome', formData.nome)
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (checkError && checkError.code !== 'PGRST116') {
-        console.error('Erro ao verificar grupo existente:', checkError.message);
-        alert('Erro ao verificar grupo existente');
+      if (!formData.nome?.trim()) {
+        alert('O nome do grupo é obrigatório.');
         return;
       }
 
-      if (existingGroup) {
-        console.log('Grupo já existe:', existingGroup);
-        alert('Você já criou um grupo com esse nome. Escolha outro nome.');
-        return;
-      }
-
-      // Chamar a função RPC melhorada
-      console.log('Executando função RPC create_group_with_member melhorada...');
+      // Chamar a função RPC otimizada com tabela temporária
+      console.log('Executando função RPC create_group_with_member otimizada...');
       const { data: rpcResult, error: rpcError } = await supabase
         .rpc('create_group_with_member', {
-          p_name: formData.nome,
-          p_description: formData.descricao,
-          p_type: formData.tipo_grupo,
-          p_is_visible_to_all: formData.is_visible_to_all,
-          p_is_visible_to_partners: formData.is_visible_to_partners,
+          p_name: formData.nome.trim(),
+          p_description: formData.descricao || '',
+          p_type: formData.tipo_grupo || 'public',
+          p_is_visible_to_all: formData.is_visible_to_all || false,
+          p_is_visible_to_partners: formData.is_visible_to_partners || false,
           p_user_id: user.id
         });
 
@@ -90,7 +73,7 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
         return;
       }
 
-      console.log('Grupo criado com sucesso via RPC melhorada. ID:', result.group_id, 'Membro adicionado:', result.member_added, 'Mensagem:', result.message);
+      console.log('Grupo criado com sucesso via RPC otimizada. ID:', result.group_id, 'Membro adicionado:', result.member_added, 'Mensagem:', result.message);
 
       // Construir objeto de grupo para compatibilidade
       const grupoData = {
@@ -113,7 +96,7 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
       onClose();
     } catch (error) {
       console.error('Erro geral ao criar grupo:', error.message, 'Stack:', error.stack);
-      alert('Erro ao criar grupo');
+      alert('Erro ao criar grupo. Verifique o console.');
     } finally {
       setIsLoading(false);
     }
