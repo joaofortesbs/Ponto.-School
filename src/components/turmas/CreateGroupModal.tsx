@@ -19,15 +19,36 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
 }) => {
   const [isLoading, setIsLoading] = useState(false);
 
+  // Lock management for preventing concurrent submissions across tabs
+  const SUBMISSION_KEY = 'group_submission_lock';
+  
+  const acquireLock = () => {
+    const lockValue = Date.now().toString();
+    localStorage.setItem(SUBMISSION_KEY, lockValue);
+    return lockValue;
+  };
+
+  const releaseLock = (lockValue: string) => {
+    if (localStorage.getItem(SUBMISSION_KEY) === lockValue) {
+      localStorage.removeItem(SUBMISSION_KEY);
+    }
+  };
+
+  const isLocked = () => {
+    return !!localStorage.getItem(SUBMISSION_KEY);
+  };
+
   const handleSubmit = async (formData: any) => {
-    if (isLoading) {
-      console.log('Submissão já em andamento. Ignorando nova tentativa.');
+    if (isLoading || isLocked()) {
+      console.log('Submissão bloqueada. isLoading:', isLoading, 'isLocked:', isLocked());
+      alert('Uma submissão já está em andamento. Aguarde ou recarregue a página.');
       return;
     }
 
+    const lockValue = acquireLock();
     setIsLoading(true);
     try {
-      console.log('Iniciando criação de grupo com abordagem simplificada. FormData:', formData, 'Stack:', new Error().stack);
+      console.log('Iniciando criação de grupo com verificação explícita de membros. FormData:', formData, 'Lock:', lockValue, 'Stack:', new Error().stack);
       
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -57,7 +78,7 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
         return;
       }
 
-      // Primeira operação: Criar o grupo
+      // Criar o grupo
       console.log('Criando grupo com nome:', formData.nome);
       const { data: group, error: groupError } = await supabase
         .from('grupos_estudo')
@@ -84,51 +105,45 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
       }
       console.log('Grupo criado com sucesso. ID:', group.id);
 
-      // Segunda operação: Adicionar o criador como membro com retry
-      let retryCount = 0;
-      const maxRetries = 3;
-      let memberAdded = false;
+      // Verificar se o membro já existe antes de adicionar
+      console.log('Verificando se userId:', user.id, 'já é membro do grupo ID:', group.id);
+      const { data: existingMember, error: memberCheckError } = await supabase
+        .from('membros_grupos')
+        .select('id')
+        .eq('grupo_id', group.id)
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-      while (retryCount < maxRetries && !memberAdded) {
-        try {
-          console.log(`Tentativa ${retryCount + 1} de adicionar membro ao grupo ID: ${group.id}`);
-          
-          const { error: memberError } = await supabase
-            .from('membros_grupos')
-            .insert({
-              grupo_id: group.id,
-              user_id: user.id,
-              joined_at: new Date().toISOString()
-            });
-
-          if (memberError) {
-            if (memberError.code === '23505' || memberError.message.includes('duplicate key value')) {
-              console.log('Membro já existe para grupo ID:', group.id, '. Ignorando inserção.');
-              memberAdded = true; // Tratar como sucesso
-            } else if (retryCount < maxRetries - 1) {
-              retryCount++;
-              console.log(`Erro detectado: ${memberError.message}. Aguardando 1s para retry (tentativa ${retryCount}/${maxRetries})`);
-              await new Promise(resolve => setTimeout(resolve, 1000)); // Espera 1 segundo
-            } else {
-              throw new Error('Erro ao adicionar criador como membro após retries: ' + memberError.message);
-            }
-          } else {
-            memberAdded = true;
-            console.log('Membro adicionado com sucesso ao grupo ID:', group.id);
-          }
-        } catch (retryError) {
-          if (retryCount === maxRetries - 1) {
-            throw retryError;
-          }
-          retryCount++;
-          console.log(`Erro no retry: ${retryError.message}. Tentativa ${retryCount}/${maxRetries}`);
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        }
+      if (memberCheckError && memberCheckError.code !== 'PGRST116') {
+        console.error('Erro ao verificar membresia:', memberCheckError.message);
+        alert('Erro ao verificar membresia');
+        return;
       }
 
-      if (!memberAdded) {
-        console.error('Falha ao adicionar membro após todas as tentativas.');
-        alert('Grupo criado, mas erro ao adicionar você como membro. Tente acessar o grupo manualmente.');
+      if (existingMember) {
+        console.log('Membro já existe para grupo ID:', group.id, '. Ignorando inserção.');
+      } else {
+        // Adicionar o membro
+        console.log('Adicionando userId:', user.id, 'ao grupo ID:', group.id);
+        const { error: memberError } = await supabase
+          .from('membros_grupos')
+          .insert({
+            grupo_id: group.id,
+            user_id: user.id,
+            joined_at: new Date().toISOString()
+          });
+
+        if (memberError) {
+          // Verificar se é erro de duplicata
+          if (memberError.code === '23505' || memberError.message.includes('duplicate key value')) {
+            console.log('Membro já existe (detecção por erro). Ignorando.');
+          } else {
+            console.error('Erro ao adicionar membro:', memberError.message);
+            alert('Grupo criado, mas erro ao adicionar você como membro. Tente acessar o grupo manualmente.');
+          }
+        } else {
+          console.log('Membro adicionado com sucesso ao grupo ID:', group.id);
+        }
       }
 
       // Construir objeto de grupo para compatibilidade
@@ -151,11 +166,12 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
       alert('Grupo criado com sucesso!');
       onSubmit(grupoData);
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro geral ao criar grupo:', error.message, 'Stack:', error.stack);
       alert('Erro ao criar grupo: ' + error.message);
     } finally {
       setIsLoading(false);
+      releaseLock(lockValue);
     }
   };
 
