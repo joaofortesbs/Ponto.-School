@@ -357,6 +357,30 @@ export type Database = {
         }
         Relationships: []
       }
+      transaction_log: {
+        Row: {
+          action: string | null
+          created_at: string | null
+          group_id: string | null
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          action?: string | null
+          created_at?: string | null
+          group_id?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string | null
+          created_at?: string | null
+          group_id?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_account_info: {
         Row: {
           created_at: string | null
@@ -790,7 +814,8 @@ export type Database = {
         }
         Returns: {
           group_id: string
-          member_id: string
+          member_added: boolean
+          message: string
         }[]
       }
     }
