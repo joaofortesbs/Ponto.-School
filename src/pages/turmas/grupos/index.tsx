@@ -29,11 +29,11 @@ export default function GruposEstudo() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<any>(null);
 
-  // Carregar grupos do usuário com correção de duplicatas
+  // Carregar grupos do usuário com nova abordagem simplificada
   const loadMyGroups = async () => {
     setIsLoading(true);
     try {
-      console.log('Iniciando loadMyGroups para carregar Meus Grupos. Stack:', new Error().stack);
+      console.log('Iniciando loadMyGroups com abordagem simplificada. Stack:', new Error().stack);
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -170,7 +170,7 @@ export default function GruposEstudo() {
   );
 
   const handleCreateGroup = (formData: any) => {
-    console.log("Novo grupo criado:", formData);
+    console.log("Novo grupo criado com abordagem simplificada:", formData);
     setIsCreateModalOpen(false);
     // Recarregar grupos
     if (activeTab === "meus-grupos") {

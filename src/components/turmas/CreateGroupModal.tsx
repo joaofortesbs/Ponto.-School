@@ -27,7 +27,7 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
 
     setIsLoading(true);
     try {
-      console.log('Iniciando criação de grupo via RPC melhorada. FormData:', formData, 'Stack:', new Error().stack);
+      console.log('Iniciando criação de grupo com abordagem simplificada. FormData:', formData, 'Stack:', new Error().stack);
       
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -57,44 +57,83 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
         return;
       }
 
-      // Chamar a função RPC melhorada
-      console.log('Executando função RPC create_group_with_member melhorada...');
-      const { data: rpcResult, error: rpcError } = await supabase
-        .rpc('create_group_with_member', {
-          p_name: formData.nome,
-          p_description: formData.descricao,
-          p_type: formData.tipo_grupo,
-          p_is_visible_to_all: formData.is_visible_to_all,
-          p_is_visible_to_partners: formData.is_visible_to_partners,
-          p_user_id: user.id
-        });
+      // Primeira operação: Criar o grupo
+      console.log('Criando grupo com nome:', formData.nome);
+      const { data: group, error: groupError } = await supabase
+        .from('grupos_estudo')
+        .insert({
+          nome: formData.nome,
+          descricao: formData.descricao,
+          tipo_grupo: formData.tipo_grupo,
+          disciplina_area: formData.disciplina_area || '',
+          topico_especifico: formData.topico_especifico || '',
+          tags: formData.tags || [],
+          user_id: user.id,
+          is_publico: formData.is_publico,
+          is_visible_to_all: formData.is_visible_to_all,
+          is_visible_to_partners: formData.is_visible_to_partners,
+          created_at: new Date().toISOString()
+        })
+        .select()
+        .single();
 
-      if (rpcError) {
-        console.error('Erro na RPC create_group_with_member:', rpcError.message, 'Detalhes:', rpcError.details, 'Stack:', new Error().stack);
-        alert('Erro ao criar grupo: ' + rpcError.message);
+      if (groupError) {
+        console.error('Erro ao criar grupo:', groupError.message, 'Detalhes:', groupError.details);
+        alert('Erro ao criar grupo: ' + groupError.message);
         return;
       }
+      console.log('Grupo criado com sucesso. ID:', group.id);
 
-      if (!rpcResult || rpcResult.length === 0) {
-        console.error('RPC não retornou dados válidos:', rpcResult);
-        alert('Erro ao criar grupo: transação não retornou dados válidos');
-        return;
+      // Segunda operação: Adicionar o criador como membro com retry
+      let retryCount = 0;
+      const maxRetries = 3;
+      let memberAdded = false;
+
+      while (retryCount < maxRetries && !memberAdded) {
+        try {
+          console.log(`Tentativa ${retryCount + 1} de adicionar membro ao grupo ID: ${group.id}`);
+          
+          const { error: memberError } = await supabase
+            .from('membros_grupos')
+            .insert({
+              grupo_id: group.id,
+              user_id: user.id,
+              joined_at: new Date().toISOString()
+            });
+
+          if (memberError) {
+            if (memberError.code === '23505' || memberError.message.includes('duplicate key value')) {
+              console.log('Membro já existe para grupo ID:', group.id, '. Ignorando inserção.');
+              memberAdded = true; // Tratar como sucesso
+            } else if (retryCount < maxRetries - 1) {
+              retryCount++;
+              console.log(`Erro detectado: ${memberError.message}. Aguardando 1s para retry (tentativa ${retryCount}/${maxRetries})`);
+              await new Promise(resolve => setTimeout(resolve, 1000)); // Espera 1 segundo
+            } else {
+              throw new Error('Erro ao adicionar criador como membro após retries: ' + memberError.message);
+            }
+          } else {
+            memberAdded = true;
+            console.log('Membro adicionado com sucesso ao grupo ID:', group.id);
+          }
+        } catch (retryError) {
+          if (retryCount === maxRetries - 1) {
+            throw retryError;
+          }
+          retryCount++;
+          console.log(`Erro no retry: ${retryError.message}. Tentativa ${retryCount}/${maxRetries}`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
       }
 
-      const result = rpcResult[0];
-      console.log('Resultado da RPC:', result);
-
-      if (!result.group_id) {
-        console.error('RPC falhou ao criar grupo:', result.message);
-        alert('Erro ao criar grupo: ' + result.message);
-        return;
+      if (!memberAdded) {
+        console.error('Falha ao adicionar membro após todas as tentativas.');
+        alert('Grupo criado, mas erro ao adicionar você como membro. Tente acessar o grupo manualmente.');
       }
-
-      console.log('Grupo criado com sucesso via RPC melhorada. ID:', result.group_id, 'Membro adicionado:', result.member_added, 'Mensagem:', result.message);
 
       // Construir objeto de grupo para compatibilidade
       const grupoData = {
-        id: result.group_id,
+        id: group.id,
         nome: formData.nome,
         descricao: formData.descricao,
         tipo_grupo: formData.tipo_grupo,
@@ -105,15 +144,16 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
         is_visible_to_all: formData.is_visible_to_all,
         is_visible_to_partners: formData.is_visible_to_partners,
         user_id: user.id,
-        created_at: new Date().toISOString()
+        created_at: group.created_at
       };
 
+      console.log('Grupo criado e membro adicionado com sucesso!');
       alert('Grupo criado com sucesso!');
       onSubmit(grupoData);
       onClose();
     } catch (error) {
       console.error('Erro geral ao criar grupo:', error.message, 'Stack:', error.stack);
-      alert('Erro ao criar grupo');
+      alert('Erro ao criar grupo: ' + error.message);
     } finally {
       setIsLoading(false);
     }
