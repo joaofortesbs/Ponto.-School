@@ -19,23 +19,37 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
 }) => {
   const [isLoading, setIsLoading] = useState(false);
 
-  // Lock management for preventing concurrent submissions across tabs
+  // Enhanced lock management for preventing concurrent submissions
   const SUBMISSION_KEY = 'group_submission_lock';
+  const LOCK_TIMEOUT = 10000; // 10 seconds
   
   const acquireLock = () => {
-    const lockValue = Date.now().toString();
+    const timestamp = Date.now();
+    const lockValue = `${timestamp}:${Math.random()}`; // Avoid collisions
     localStorage.setItem(SUBMISSION_KEY, lockValue);
+    console.log('Lock adquirido:', lockValue);
     return lockValue;
   };
 
   const releaseLock = (lockValue: string) => {
     if (localStorage.getItem(SUBMISSION_KEY) === lockValue) {
       localStorage.removeItem(SUBMISSION_KEY);
+      console.log('Lock liberado:', lockValue);
     }
   };
 
   const isLocked = () => {
-    return !!localStorage.getItem(SUBMISSION_KEY);
+    const lockValue = localStorage.getItem(SUBMISSION_KEY);
+    if (!lockValue) return false;
+    
+    const [timestamp] = lockValue.split(':');
+    const lockAge = Date.now() - parseInt(timestamp, 10);
+    if (lockAge > LOCK_TIMEOUT) {
+      console.log('Lock expirado. Liberando...');
+      localStorage.removeItem(SUBMISSION_KEY);
+      return false;
+    }
+    return true;
   };
 
   const handleSubmit = async (formData: any) => {
@@ -48,7 +62,7 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
     const lockValue = acquireLock();
     setIsLoading(true);
     try {
-      console.log('Iniciando criação de grupo com verificação explícita de membros. FormData:', formData, 'Lock:', lockValue, 'Stack:', new Error().stack);
+      console.log('Iniciando criação de grupo com nova RPC. FormData:', formData, 'Lock:', lockValue, 'Stack:', new Error().stack);
       
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -105,46 +119,36 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
       }
       console.log('Grupo criado com sucesso. ID:', group.id);
 
-      // Verificar se o membro já existe antes de adicionar
-      console.log('Verificando se userId:', user.id, 'já é membro do grupo ID:', group.id);
-      const { data: existingMember, error: memberCheckError } = await supabase
-        .from('membros_grupos')
-        .select('id')
-        .eq('grupo_id', group.id)
-        .eq('user_id', user.id)
-        .maybeSingle();
+      // Adicionar o membro usando a nova função RPC
+      console.log('Adicionando userId:', user.id, 'ao grupo ID:', group.id, 'via RPC');
+      const { data: addMemberResult, error: addMemberError } = await supabase
+        .rpc('add_group_member', {
+          p_grupo_id: group.id,
+          p_user_id: user.id
+        });
 
-      if (memberCheckError && memberCheckError.code !== 'PGRST116') {
-        console.error('Erro ao verificar membresia:', memberCheckError.message);
-        alert('Erro ao verificar membresia');
+      if (addMemberError) {
+        console.error('Erro na RPC add_group_member:', addMemberError.message);
+        alert('Grupo criado, mas erro ao adicionar você como membro. Tente acessar o grupo manualmente.');
         return;
       }
 
-      if (existingMember) {
-        console.log('Membro já existe para grupo ID:', group.id, '. Ignorando inserção.');
-      } else {
-        // Adicionar o membro
-        console.log('Adicionando userId:', user.id, 'ao grupo ID:', group.id);
-        const { error: memberError } = await supabase
-          .from('membros_grupos')
-          .insert({
-            grupo_id: group.id,
-            user_id: user.id,
-            joined_at: new Date().toISOString()
-          });
-
-        if (memberError) {
-          // Verificar se é erro de duplicata
-          if (memberError.code === '23505' || memberError.message.includes('duplicate key value')) {
-            console.log('Membro já existe (detecção por erro). Ignorando.');
-          } else {
-            console.error('Erro ao adicionar membro:', memberError.message);
-            alert('Grupo criado, mas erro ao adicionar você como membro. Tente acessar o grupo manualmente.');
-          }
-        } else {
-          console.log('Membro adicionado com sucesso ao grupo ID:', group.id);
-        }
+      if (!addMemberResult || addMemberResult.length === 0) {
+        console.error('RPC retornou resultado vazio');
+        alert('Grupo criado, mas erro ao adicionar você como membro. Tente acessar o grupo manualmente.');
+        return;
       }
+
+      const result = addMemberResult[0];
+      console.log('Resultado da RPC add_group_member:', result);
+
+      if (!result.member_added) {
+        console.error('Falha ao adicionar membro:', result.message);
+        alert('Grupo criado, mas erro ao adicionar você como membro: ' + result.message);
+        return;
+      }
+
+      console.log('Membro adicionado com sucesso:', result.message);
 
       // Construir objeto de grupo para compatibilidade
       const grupoData = {
@@ -162,7 +166,7 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
         created_at: group.created_at
       };
 
-      console.log('Grupo criado e membro adicionado com sucesso!');
+      console.log('Grupo criado e membro adicionado com sucesso via RPC!');
       alert('Grupo criado com sucesso!');
       onSubmit(grupoData);
       onClose();

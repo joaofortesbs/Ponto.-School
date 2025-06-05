@@ -803,7 +803,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      add_group_member: {
+        Args: { p_grupo_id: string; p_user_id: string }
+        Returns: {
+          member_added: boolean
+          message: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

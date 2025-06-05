@@ -29,11 +29,27 @@ export default function GruposEstudo() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<any>(null);
 
+  // Clear expired locks on page load
+  useEffect(() => {
+    const checkExpiredLocks = () => {
+      const lockValue = localStorage.getItem('group_submission_lock');
+      if (lockValue) {
+        const [timestamp] = lockValue.split(':');
+        const lockAge = Date.now() - parseInt(timestamp, 10);
+        if (lockAge > 10000) { // 10 seconds timeout
+          console.log('Limpando lock expirado ao carregar página');
+          localStorage.removeItem('group_submission_lock');
+        }
+      }
+    };
+    checkExpiredLocks();
+  }, []);
+
   // Carregar grupos do usuário com verificação robusta de duplicatas
   const loadMyGroups = async () => {
     setIsLoading(true);
     try {
-      console.log('Iniciando loadMyGroups com verificação robusta de duplicatas. Stack:', new Error().stack);
+      console.log('Iniciando loadMyGroups com database limpo. Stack:', new Error().stack);
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -58,21 +74,14 @@ export default function GruposEstudo() {
       }
       console.log('Dados brutos retornados:', memberGroups);
 
-      // Verificar registros órfãos (grupos deletados mas membresia mantida)
+      // Filter out null groups (orphaned records should be cleaned by migration)
       const validGroups = memberGroups?.filter(memberGroup => memberGroup.grupos_estudo !== null) || [];
       
       if (memberGroups && validGroups.length !== memberGroups.length) {
-        console.warn('Registros órfãos detectados:', memberGroups.length - validGroups.length);
+        console.warn('Registros órfãos detectados (devem ter sido limpos pela migração):', memberGroups.length - validGroups.length);
       }
 
-      // Detectar duplicatas nos dados brutos
-      const groupIds = validGroups.map(item => item.grupo_id);
-      const duplicates = groupIds.filter((id, index) => groupIds.indexOf(id) !== index);
-      if (duplicates.length > 0) {
-        console.warn('Duplicatas detectadas nos dados brutos (IDs):', duplicates);
-      }
-
-      // Filtrar duplicatas usando Map para garantir unicidade
+      // Extract unique groups using Map (duplicates should be cleaned by migration)
       const groupsMap = new Map();
       validGroups.forEach(memberGroup => {
         const group = memberGroup.grupos_estudo;
@@ -82,7 +91,7 @@ export default function GruposEstudo() {
       });
       
       const uniqueGroups = Array.from(groupsMap.values());
-      console.log('Grupos após remoção de duplicatas e órfãos:', uniqueGroups.length, 'grupos únicos');
+      console.log('Grupos após processamento:', uniqueGroups.length, 'grupos únicos');
       
       setMyGroups(uniqueGroups);
     } catch (error: any) {
@@ -177,7 +186,7 @@ export default function GruposEstudo() {
   );
 
   const handleCreateGroup = (formData: any) => {
-    console.log("Novo grupo criado com verificação explícita:", formData);
+    console.log("Novo grupo criado com RPC:", formData);
     setIsCreateModalOpen(false);
     // Recarregar grupos
     if (activeTab === "meus-grupos") {
@@ -201,38 +210,31 @@ export default function GruposEstudo() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Verificar se já é membro
-      const { data: existingMember } = await supabase
-        .from('membros_grupos')
-        .select('id')
-        .eq('grupo_id', groupId)
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (existingMember) {
-        alert('Você já é membro deste grupo!');
-        return;
-      }
-
-      const { error } = await supabase
-        .from('membros_grupos')
-        .insert({
-          grupo_id: groupId,
-          user_id: user.id,
-          joined_at: new Date().toISOString()
+      // Use the new RPC function to add member
+      console.log('Ingressando no grupo via RPC. GroupId:', groupId, 'UserId:', user.id);
+      const { data: addMemberResult, error: addMemberError } = await supabase
+        .rpc('add_group_member', {
+          p_grupo_id: groupId,
+          p_user_id: user.id
         });
 
-      if (error) {
-        if (error.code === '23505') {
-          alert('Você já é membro deste grupo!');
-        } else {
-          console.error('Erro ao ingressar no grupo:', error);
-          alert('Erro ao ingressar no grupo');
-        }
+      if (addMemberError) {
+        console.error('Erro ao ingressar no grupo via RPC:', addMemberError);
+        alert('Erro ao ingressar no grupo');
         return;
       }
 
-      alert('Você ingressou no grupo com sucesso!');
+      if (!addMemberResult || addMemberResult.length === 0) {
+        alert('Erro ao ingressar no grupo');
+        return;
+      }
+
+      const result = addMemberResult[0];
+      if (result.member_added) {
+        alert('Você ingressou no grupo com sucesso!');
+      } else {
+        alert(result.message || 'Você já é membro deste grupo!');
+      }
       
       // Recarregar ambas as grades para refletir a mudança
       loadMyGroups();
