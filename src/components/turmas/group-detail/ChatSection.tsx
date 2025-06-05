@@ -57,6 +57,7 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
       setIsLoading(true);
       console.log('Carregando mensagens para grupo:', groupId);
 
+      // Corrigir a consulta para usar a tabela profiles ao invés de auth.users
       const { data, error } = await supabase
         .from('mensagens_grupos')
         .select(`
