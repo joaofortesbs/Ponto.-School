@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -18,46 +19,6 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
 }) => {
   const [isLoading, setIsLoading] = useState(false);
 
-  const generateUniqueCode = async (): Promise<string> => {
-    let codigoUnico: string;
-    let isUnique = false;
-    let attempts = 0;
-    const maxAttempts = 10;
-
-    while (!isUnique && attempts < maxAttempts) {
-      // Gerar código de 8 caracteres usando substring(2, 10)
-      codigoUnico = Math.random().toString(36).substring(2, 10).toUpperCase();
-      
-      console.log('Código único gerado:', codigoUnico, 'Comprimento:', codigoUnico.length);
-      
-      // Verificar se o código já existe no banco
-      const { data: existingGroup, error } = await supabase
-        .from('grupos_estudo')
-        .select('id')
-        .eq('codigo_unico', codigoUnico)
-        .maybeSingle();
-
-      if (error) {
-        console.error('Erro ao verificar unicidade do código:', error);
-        attempts++;
-        continue;
-      }
-
-      if (!existingGroup) {
-        isUnique = true;
-        console.log('Código único validado:', codigoUnico);
-        return codigoUnico;
-      }
-      
-      attempts++;
-    }
-
-    // Fallback: se não conseguir gerar código único, usar timestamp
-    const fallbackCode = Date.now().toString(36).substring(-8).toUpperCase();
-    console.log('Usando código fallback:', fallbackCode, 'Comprimento:', fallbackCode.length);
-    return fallbackCode;
-  };
-
   const handleSubmit = async (formData: any) => {
     if (isLoading) {
       console.log('Submissão já em andamento. Ignorando nova tentativa.');
@@ -66,7 +27,7 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
 
     setIsLoading(true);
     try {
-      console.log('Iniciando criação de grupo. FormData:', formData, 'Stack:', new Error().stack);
+      console.log('Iniciando criação de grupo usando transação atômica. FormData:', formData, 'Stack:', new Error().stack);
       
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -75,81 +36,50 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
       }
       console.log('Usuário autenticado. ID:', user.id);
 
-      // Verificar se já existe um grupo com o mesmo nome criado pelo usuário
-      console.log('Verificando se grupo já existe para o usuário...');
-      const { data: existingGroup, error: checkError } = await supabase
-        .from('grupos_estudo')
-        .select('id')
-        .eq('nome', formData.nome)
-        .eq('user_id', user.id)
-        .maybeSingle();
+      // Usar a função RPC para transação atômica
+      console.log('Chamando função RPC create_group_with_member...');
+      const { data: result, error: rpcError } = await supabase.rpc('create_group_with_member', {
+        p_name: formData.nome,
+        p_description: formData.descricao,
+        p_type: formData.tipo_grupo,
+        p_user_id: user.id,
+        p_is_visible_to_all: formData.is_visible_to_all,
+        p_is_visible_to_partners: formData.is_visible_to_partners,
+        p_disciplina_area: formData.disciplina_area,
+        p_topico_especifico: formData.topico_especifico,
+        p_tags: formData.tags || []
+      });
 
-      if (checkError && checkError.code !== 'PGRST116') {
-        console.error('Erro ao verificar grupo existente:', checkError.message);
-        alert('Erro ao verificar grupo existente');
+      if (rpcError) {
+        console.error('Erro na função RPC create_group_with_member:', rpcError.message, 'Detalhes:', rpcError.details, 'Stack:', new Error().stack);
+        alert('Erro ao criar grupo: ' + rpcError.message);
         return;
       }
 
-      if (existingGroup) {
-        console.log('Grupo já existe:', existingGroup);
-        alert('Você já criou um grupo com esse nome. Escolha outro nome.');
+      if (!result || result.length === 0 || !result[0].success) {
+        console.error('Falha na criação do grupo. Resultado:', result);
+        alert('Falha ao criar grupo. Verifique o console.');
         return;
       }
 
-      // Gerar código único de 8 caracteres
-      const codigoUnico = await generateUniqueCode();
+      const groupId = result[0].group_id;
+      console.log('Grupo criado com sucesso via transação atômica. ID:', groupId);
 
-      // Criar o grupo no Supabase
-      console.log('Criando grupo no Supabase...');
-      const { data: newGroup, error: insertError } = await supabase
+      // Buscar os dados completos do grupo criado para passar para o callback
+      const { data: newGroup, error: fetchError } = await supabase
         .from('grupos_estudo')
-        .insert({
-          nome: formData.nome,
-          descricao: formData.descricao,
-          user_id: user.id,
-          codigo_unico: codigoUnico,
-          is_publico: formData.is_publico,
-          is_visible_to_all: formData.is_visible_to_all,
-          is_visible_to_partners: formData.is_visible_to_partners,
-          tipo_grupo: formData.tipo_grupo,
-          disciplina_area: formData.disciplina_area,
-          topico_especifico: formData.topico_especifico,
-          tags: formData.tags,
-          membros: 1
-        })
-        .select()
+        .select('*')
+        .eq('id', groupId)
         .single();
 
-      if (insertError) {
-        console.error('Erro ao criar grupo:', insertError.message, 'Detalhes:', insertError.details, 'Stack:', new Error().stack);
-        alert('Erro ao criar grupo: ' + insertError.message);
-        return;
-      }
-
-      console.log('Grupo criado com sucesso. ID:', newGroup.id, 'Código:', newGroup.codigo_unico);
-
-      // Usar upsert para adicionar o criador como membro (evita violação do índice único)
-      console.log('Adicionando criador como membro usando upsert para grupo ID:', newGroup.id);
-      const { error: memberError } = await supabase
-        .from('membros_grupos')
-        .upsert({
-          grupo_id: newGroup.id,
-          user_id: user.id,
-          joined_at: new Date().toISOString()
-        }, {
-          onConflict: 'grupo_id,user_id'
-        });
-
-      if (memberError) {
-        console.error('Erro ao adicionar membro usando upsert:', memberError.message, 'Detalhes:', memberError.details, 'Stack:', new Error().stack);
-        // Não bloquear o fluxo, pois o grupo já foi criado
-        console.warn('Grupo criado mas criador não foi adicionado como membro automaticamente');
-      } else {
-        console.log('Criador adicionado como membro com sucesso usando upsert');
+      if (fetchError) {
+        console.error('Erro ao buscar dados do grupo criado:', fetchError.message);
+        // Não bloquear o fluxo, pois o grupo foi criado com sucesso
+        console.warn('Grupo criado mas não foi possível buscar os dados completos');
       }
 
       alert('Grupo criado com sucesso!');
-      onSubmit(newGroup);
+      onSubmit(newGroup || { id: groupId });
       onClose();
     } catch (error) {
       console.error('Erro geral ao criar grupo:', error.message, 'Stack:', error.stack);

@@ -779,7 +779,23 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_group_with_member: {
+        Args: {
+          p_name: string
+          p_description: string
+          p_type: string
+          p_user_id: string
+          p_is_visible_to_all: boolean
+          p_is_visible_to_partners: boolean
+          p_disciplina_area?: string
+          p_topico_especifico?: string
+          p_tags?: string[]
+        }
+        Returns: {
+          group_id: string
+          success: boolean
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
