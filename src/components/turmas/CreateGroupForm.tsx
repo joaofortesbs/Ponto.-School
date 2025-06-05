@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -74,9 +75,9 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
     return name.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
-  // Função para lidar com mudanças no tipo de grupo (corrigida)
+  // Função para lidar com mudanças no tipo de grupo
   const handleGroupTypeChange = (value: string) => {
-    console.log('Mudança no tipo de grupo detectada. Valor:', value, 'Stack:', new Error().stack);
+    console.log('Mudança no tipo de grupo detectada. Valor:', value);
     setGroupType(value);
     
     // Resetar visibilidade quando o tipo muda
@@ -90,19 +91,40 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
   };
 
   const handleSubmit = () => {
-    if (!groupName || !groupDescription || !groupType || !groupDiscipline || !groupSpecificTopic) {
-      alert('Por favor, preencha todos os campos obrigatórios.');
+    // Validações básicas
+    if (!groupName.trim()) {
+      alert('Por favor, preencha o nome do grupo.');
+      return;
+    }
+
+    if (!groupDescription.trim()) {
+      alert('Por favor, preencha a descrição do grupo.');
+      return;
+    }
+
+    if (!groupType) {
+      alert('Por favor, selecione o tipo do grupo.');
+      return;
+    }
+
+    if (!groupDiscipline.trim()) {
+      alert('Por favor, preencha a disciplina/área.');
+      return;
+    }
+
+    if (!groupSpecificTopic.trim()) {
+      alert('Por favor, preencha o tópico específico.');
       return;
     }
 
     const tags = groupTags ? groupTags.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
 
     const formData = {
-      nome: groupName,
-      descricao: groupDescription,
+      nome: groupName.trim(),
+      descricao: groupDescription.trim(),
       tipo_grupo: groupType,
-      disciplina_area: groupDiscipline,
-      topico_especifico: groupSpecificTopic,
+      disciplina_area: groupDiscipline.trim(),
+      topico_especifico: groupSpecificTopic.trim(),
       tags: tags,
       is_publico: groupPrivacy === "public",
       is_visible_to_all: groupVisibility === "all",

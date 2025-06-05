@@ -27,8 +27,34 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
 
     setIsLoading(true);
     try {
-      console.log('Iniciando criação de grupo usando transação atômica. FormData:', formData, 'Stack:', new Error().stack);
+      console.log('Iniciando criação de grupo. FormData:', formData);
       
+      // Validar dados obrigatórios
+      if (!formData.nome || !formData.nome.trim()) {
+        alert('Nome do grupo é obrigatório.');
+        return;
+      }
+
+      if (!formData.descricao || !formData.descricao.trim()) {
+        alert('Descrição do grupo é obrigatória.');
+        return;
+      }
+
+      if (!formData.tipo_grupo) {
+        alert('Tipo do grupo é obrigatório.');
+        return;
+      }
+
+      if (!formData.disciplina_area || !formData.disciplina_area.trim()) {
+        alert('Disciplina/Área é obrigatória.');
+        return;
+      }
+
+      if (!formData.topico_especifico || !formData.topico_especifico.trim()) {
+        alert('Tópico específico é obrigatório.');
+        return;
+      }
+
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         alert('Usuário não autenticado');
@@ -36,36 +62,54 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
       }
       console.log('Usuário autenticado. ID:', user.id);
 
+      // Verificar se grupo já existe
+      console.log('Verificando se grupo já existe...');
+      const { data: existingGroup, error: existingError } = await supabase
+        .from('grupos_estudo')
+        .select('id')
+        .eq('nome', formData.nome.trim())
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (existingError) {
+        console.error('Erro ao verificar grupo existente:', existingError);
+      }
+
+      if (existingGroup) {
+        alert('Você já criou um grupo com esse nome. Escolha outro nome.');
+        return;
+      }
+
       // Usar a função RPC para transação atômica
       console.log('Chamando função RPC create_group_with_member...');
       const { data: result, error: rpcError } = await supabase.rpc('create_group_with_member', {
-        p_name: formData.nome,
-        p_description: formData.descricao,
+        p_name: formData.nome.trim(),
+        p_description: formData.descricao.trim(),
         p_type: formData.tipo_grupo,
         p_user_id: user.id,
-        p_is_visible_to_all: formData.is_visible_to_all,
-        p_is_visible_to_partners: formData.is_visible_to_partners,
-        p_disciplina_area: formData.disciplina_area,
-        p_topico_especifico: formData.topico_especifico,
+        p_is_visible_to_all: formData.is_visible_to_all || false,
+        p_is_visible_to_partners: formData.is_visible_to_partners || false,
+        p_disciplina_area: formData.disciplina_area.trim(),
+        p_topico_especifico: formData.topico_especifico.trim(),
         p_tags: formData.tags || []
       });
 
       if (rpcError) {
-        console.error('Erro na função RPC create_group_with_member:', rpcError.message, 'Detalhes:', rpcError.details, 'Stack:', new Error().stack);
-        alert('Erro ao criar grupo: ' + rpcError.message);
+        console.error('Erro na função RPC create_group_with_member:', rpcError);
+        alert(`Erro ao criar grupo: ${rpcError.message}`);
         return;
       }
 
       if (!result || result.length === 0 || !result[0].success) {
         console.error('Falha na criação do grupo. Resultado:', result);
-        alert('Falha ao criar grupo. Verifique o console.');
+        alert('Falha ao criar grupo. Tente novamente.');
         return;
       }
 
       const groupId = result[0].group_id;
-      console.log('Grupo criado com sucesso via transação atômica. ID:', groupId);
+      console.log('Grupo criado com sucesso. ID:', groupId);
 
-      // Buscar os dados completos do grupo criado para passar para o callback
+      // Buscar os dados completos do grupo criado
       const { data: newGroup, error: fetchError } = await supabase
         .from('grupos_estudo')
         .select('*')
@@ -73,17 +117,16 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
         .single();
 
       if (fetchError) {
-        console.error('Erro ao buscar dados do grupo criado:', fetchError.message);
+        console.error('Erro ao buscar dados do grupo criado:', fetchError);
         // Não bloquear o fluxo, pois o grupo foi criado com sucesso
-        console.warn('Grupo criado mas não foi possível buscar os dados completos');
       }
 
       alert('Grupo criado com sucesso!');
       onSubmit(newGroup || { id: groupId });
       onClose();
     } catch (error) {
-      console.error('Erro geral ao criar grupo:', error.message, 'Stack:', error.stack);
-      alert('Erro ao criar grupo');
+      console.error('Erro geral ao criar grupo:', error);
+      alert(`Erro inesperado ao criar grupo: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
