@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -129,39 +128,24 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
 
       console.log('Grupo criado com sucesso. ID:', newGroup.id, 'Código:', newGroup.codigo_unico);
 
-      // Verificar se o criador já é membro antes de adicionar
-      console.log('Verificando se criador já é membro do grupo...');
-      const { data: existingMember, error: memberCheckError } = await supabase
+      // Usar upsert para adicionar o criador como membro (evita violação do índice único)
+      console.log('Adicionando criador como membro usando upsert para grupo ID:', newGroup.id);
+      const { error: memberError } = await supabase
         .from('membros_grupos')
-        .select('id')
-        .eq('grupo_id', newGroup.id)
-        .eq('user_id', user.id)
-        .maybeSingle();
+        .upsert({
+          grupo_id: newGroup.id,
+          user_id: user.id,
+          joined_at: new Date().toISOString()
+        }, {
+          onConflict: 'grupo_id,user_id'
+        });
 
-      if (memberCheckError && memberCheckError.code !== 'PGRST116') {
-        console.error('Erro ao verificar membresia existente:', memberCheckError.message, 'Stack:', new Error().stack);
-      }
-
-      if (!existingMember) {
-        // Adicionar o criador como membro do grupo
-        console.log('Adicionando criador como membro do grupo...');
-        const { error: memberError } = await supabase
-          .from('membros_grupos')
-          .insert({
-            grupo_id: newGroup.id,
-            user_id: user.id,
-            joined_at: new Date().toISOString()
-          });
-
-        if (memberError) {
-          console.error('Erro ao adicionar membro:', memberError.message, 'Detalhes:', memberError.details, 'Stack:', new Error().stack);
-          // Não bloquear o fluxo, pois o grupo já foi criado
-          console.warn('Grupo criado mas criador não foi adicionado como membro automaticamente');
-        } else {
-          console.log('Criador adicionado como membro com sucesso');
-        }
+      if (memberError) {
+        console.error('Erro ao adicionar membro usando upsert:', memberError.message, 'Detalhes:', memberError.details, 'Stack:', new Error().stack);
+        // Não bloquear o fluxo, pois o grupo já foi criado
+        console.warn('Grupo criado mas criador não foi adicionado como membro automaticamente');
       } else {
-        console.log('Criador já é membro do grupo. Pulando inserção.');
+        console.log('Criador adicionado como membro com sucesso usando upsert');
       }
 
       alert('Grupo criado com sucesso!');
