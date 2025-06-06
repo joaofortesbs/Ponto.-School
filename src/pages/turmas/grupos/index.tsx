@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -30,21 +29,13 @@ export default function GruposEstudo() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<any>(null);
 
-  // Carregar grupos do usuário com correção de duplicatas
+  // Carregar grupos do usuário
   const loadMyGroups = async () => {
     setIsLoading(true);
     try {
-      console.log('Iniciando loadMyGroups para carregar Meus Grupos. Stack:', new Error().stack);
-
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        console.error('Usuário não autenticado. Stack:', new Error().stack);
-        return;
-      }
-      console.log('Usuário autenticado. ID:', user.id);
+      if (!user) return;
 
-      // Buscar grupos do usuário com consulta otimizada
-      console.log('Buscando grupos do usuário ID:', user.id);
       const { data: memberGroups, error } = await supabase
         .from('membros_grupos')
         .select(`
@@ -54,26 +45,14 @@ export default function GruposEstudo() {
         .eq('user_id', user.id);
 
       if (error) {
-        console.error('Erro ao carregar meus grupos:', error.message, 'Detalhes:', error.details, 'Stack:', new Error().stack);
+        console.error('Erro ao carregar meus grupos:', error);
         return;
       }
-      console.log('Dados brutos retornados:', memberGroups);
 
-      // Filtrar duplicatas usando Map para garantir unicidade
-      const groupsMap = new Map();
-      memberGroups?.forEach(memberGroup => {
-        const group = memberGroup.grupos_estudo;
-        if (group && !groupsMap.has(group.id)) {
-          groupsMap.set(group.id, group);
-        }
-      });
-      
-      const uniqueGroups = Array.from(groupsMap.values());
-      console.log('Grupos após remoção de duplicatas:', uniqueGroups.length, 'grupos únicos');
-      
-      setMyGroups(uniqueGroups);
+      const groups = memberGroups?.map(mg => mg.grupos_estudo) || [];
+      setMyGroups(groups);
     } catch (error) {
-      console.error('Erro geral em loadMyGroups:', error.message, 'Stack:', error.stack);
+      console.error('Erro ao carregar meus grupos:', error);
     } finally {
       setIsLoading(false);
     }
