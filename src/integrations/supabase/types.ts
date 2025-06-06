@@ -128,6 +128,57 @@ export type Database = {
         }
         Relationships: []
       }
+      group_creation_audit: {
+        Row: {
+          action: string
+          created_at: string | null
+          details: Json | null
+          group_id: string | null
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          details?: Json | null
+          group_id?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          details?: Json | null
+          group_id?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      group_creation_locks: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          group_name: string
+          lock_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          group_name: string
+          lock_id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          group_name?: string
+          lock_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       grupos_estudo: {
         Row: {
           codigo_unico: string
@@ -354,6 +405,30 @@ export type Database = {
           status?: boolean
           titulo?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      transaction_log: {
+        Row: {
+          action: string | null
+          created_at: string | null
+          group_id: string | null
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          action?: string | null
+          created_at?: string | null
+          group_id?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string | null
+          created_at?: string | null
+          group_id?: string | null
+          id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -779,7 +854,40 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      add_group_member: {
+        Args: { p_grupo_id: string; p_user_id: string }
+        Returns: {
+          member_added: boolean
+          message: string
+        }[]
+      }
+      clean_expired_locks: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      create_group_with_member: {
+        Args: {
+          p_name: string
+          p_description: string
+          p_type: string
+          p_is_visible_to_all: boolean
+          p_is_visible_to_partners: boolean
+          p_user_id: string
+          p_codigo_unico?: string
+          p_disciplina_area?: string
+          p_topico_especifico?: string
+          p_tags?: string[]
+        }
+        Returns: {
+          group_id: string
+          success: boolean
+          error_message: string
+        }[]
+      }
+      is_group_member: {
+        Args: { group_id: string; user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
