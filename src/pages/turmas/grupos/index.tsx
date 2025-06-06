@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -29,20 +30,20 @@ export default function GruposEstudo() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<any>(null);
 
-  // Carregar grupos do usuário com verificação melhorada
+  // Carregar grupos do usuário com correção de duplicatas
   const loadMyGroups = async () => {
     setIsLoading(true);
     try {
-      console.log('Carregando Meus Grupos com função RPC melhorada');
+      console.log('Iniciando loadMyGroups para carregar Meus Grupos. Stack:', new Error().stack);
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        console.error('Usuário não autenticado');
+        console.error('Usuário não autenticado. Stack:', new Error().stack);
         return;
       }
       console.log('Usuário autenticado. ID:', user.id);
 
-      // Buscar grupos do usuário através de membros_grupos
+      // Buscar grupos do usuário com consulta otimizada
       console.log('Buscando grupos do usuário ID:', user.id);
       const { data: memberGroups, error } = await supabase
         .from('membros_grupos')
@@ -53,12 +54,12 @@ export default function GruposEstudo() {
         .eq('user_id', user.id);
 
       if (error) {
-        console.error('Erro ao carregar meus grupos:', error.message, 'Detalhes:', error.details);
+        console.error('Erro ao carregar meus grupos:', error.message, 'Detalhes:', error.details, 'Stack:', new Error().stack);
         return;
       }
-      console.log('Dados retornados com sucesso:', memberGroups);
+      console.log('Dados brutos retornados:', memberGroups);
 
-      // Filtrar e remover duplicatas utilizando Map
+      // Filtrar duplicatas usando Map para garantir unicidade
       const groupsMap = new Map();
       memberGroups?.forEach(memberGroup => {
         const group = memberGroup.grupos_estudo;
@@ -68,26 +69,26 @@ export default function GruposEstudo() {
       });
       
       const uniqueGroups = Array.from(groupsMap.values());
-      console.log('Grupos únicos processados:', uniqueGroups.length, 'grupos');
+      console.log('Grupos após remoção de duplicatas:', uniqueGroups.length, 'grupos únicos');
       
       setMyGroups(uniqueGroups);
-    } catch (error: any) {
-      console.error('Erro geral em loadMyGroups:', error?.message, 'Stack:', error?.stack);
+    } catch (error) {
+      console.error('Erro geral em loadMyGroups:', error.message, 'Stack:', error.stack);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Carregar todos os grupos visíveis com as políticas RLS
+  // Carregar todos os grupos visíveis
   const loadAllGroups = async () => {
     setIsLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      console.log('Carregando todos os grupos visíveis');
+      console.log('Carregando view: todos-grupos');
 
-      // Buscar grupos que o usuário já participa
+      // Buscar grupos onde o usuário não é membro
       const { data: userGroups } = await supabase
         .from('membros_grupos')
         .select('grupo_id')
@@ -103,12 +104,12 @@ export default function GruposEstudo() {
 
       const partnerIds = partners?.map(p => p.parceiro_id) || [];
 
-      // Buscar grupos visíveis utilizando as políticas RLS
+      // Buscar grupos visíveis
       let query = supabase
         .from('grupos_estudo')
         .select('*');
 
-      // Filtrar grupos visíveis a todos OU grupos visíveis aos parceiros
+      // Filtrar grupos visíveis a todos OU grupos visíveis aos parceiros (se o criador for parceiro)
       if (partnerIds.length > 0) {
         query = query.or(`is_visible_to_all.eq.true,and(is_visible_to_partners.eq.true,user_id.in.(${partnerIds.join(',')}))`);
       } else {
@@ -130,8 +131,8 @@ export default function GruposEstudo() {
 
       console.log('Grupos visíveis encontrados:', visibleGroups?.length || 0);
       setAllGroups(visibleGroups || []);
-    } catch (error: any) {
-      console.error('Erro ao carregar todos os grupos:', error?.message);
+    } catch (error) {
+      console.error('Erro ao carregar todos os grupos:', error);
     } finally {
       setIsLoading(false);
     }
@@ -187,8 +188,6 @@ export default function GruposEstudo() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      console.log('Tentando ingressar no grupo:', groupId);
-
       const { error } = await supabase
         .from('membros_grupos')
         .insert({
@@ -208,8 +207,8 @@ export default function GruposEstudo() {
       // Recarregar ambas as grades para refletir a mudança
       loadMyGroups();
       loadAllGroups();
-    } catch (error: any) {
-      console.error('Erro ao ingressar no grupo:', error?.message);
+    } catch (error) {
+      console.error('Erro ao ingressar no grupo:', error);
       alert('Erro ao ingressar no grupo');
     }
   };
@@ -218,8 +217,6 @@ export default function GruposEstudo() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-
-      console.log('Tentando sair do grupo:', groupId);
 
       const { error } = await supabase
         .from('membros_grupos')
@@ -238,8 +235,8 @@ export default function GruposEstudo() {
       // Recarregar ambas as grades para refletir a mudança
       loadMyGroups();
       loadAllGroups();
-    } catch (error: any) {
-      console.error('Erro ao sair do grupo:', error?.message);
+    } catch (error) {
+      console.error('Erro ao sair do grupo:', error);
       alert('Erro ao sair do grupo');
     }
   };
