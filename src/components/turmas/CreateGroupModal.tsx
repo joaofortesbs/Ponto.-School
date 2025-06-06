@@ -27,7 +27,7 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
 
     setIsLoading(true);
     try {
-      console.log('Iniciando criação de grupo com RLS corrigida. FormData:', formData, 'Stack:', new Error().stack);
+      console.log('Iniciando criação de grupo com função RPC melhorada. FormData:', formData);
       
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -41,8 +41,8 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
         return;
       }
 
-      // Chamar a função RPC com SECURITY DEFINER
-      console.log('Executando função RPC create_group_with_member com SECURITY DEFINER...');
+      // Chamar a função RPC atualizada com verificação explícita
+      console.log('Executando função RPC create_group_with_member com verificação explícita...');
       const { data: rpcResult, error: rpcError } = await supabase
         .rpc('create_group_with_member', {
           p_name: formData.nome.trim(),
@@ -54,7 +54,7 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
         });
 
       if (rpcError) {
-        console.error('Erro na RPC create_group_with_member:', rpcError.message, 'Detalhes:', rpcError.details, 'Stack:', new Error().stack);
+        console.error('Erro na RPC create_group_with_member:', rpcError.message, 'Detalhes:', rpcError.details);
         alert('Erro ao criar grupo: ' + rpcError.message);
         return;
       }
@@ -74,7 +74,7 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
         return;
       }
 
-      console.log('Grupo criado com sucesso via RPC com SECURITY DEFINER. ID:', result.group_id, 'Membro adicionado:', result.member_added, 'Mensagem:', result.message);
+      console.log('Grupo criado com sucesso via RPC com verificação explícita. ID:', result.group_id, 'Membro adicionado:', result.member_added, 'Mensagem:', result.message);
 
       // Construir objeto de grupo para compatibilidade
       const grupoData = {
@@ -95,8 +95,8 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
       alert('Grupo criado com sucesso!');
       onSubmit(grupoData);
       onClose();
-    } catch (error) {
-      console.error('Erro geral ao criar grupo:', error.message, 'Stack:', error.stack);
+    } catch (error: any) {
+      console.error('Erro geral ao criar grupo:', error?.message, 'Stack:', error?.stack);
       alert('Erro ao criar grupo. Verifique o console.');
     } finally {
       setIsLoading(false);

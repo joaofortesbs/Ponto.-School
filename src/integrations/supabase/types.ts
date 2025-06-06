@@ -131,18 +131,21 @@ export type Database = {
       group_creation_locks: {
         Row: {
           created_at: string | null
+          expires_at: string | null
           group_name: string
           lock_id: string
           user_id: string
         }
         Insert: {
           created_at?: string | null
+          expires_at?: string | null
           group_name: string
           lock_id?: string
           user_id: string
         }
         Update: {
           created_at?: string | null
+          expires_at?: string | null
           group_name?: string
           lock_id?: string
           user_id?: string
@@ -830,6 +833,10 @@ export type Database = {
           member_added: boolean
           message: string
         }[]
+      }
+      clean_expired_locks: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       create_group_with_member: {
         Args: {

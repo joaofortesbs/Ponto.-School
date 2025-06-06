@@ -29,20 +29,20 @@ export default function GruposEstudo() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<any>(null);
 
-  // Carregar grupos do usuário com as novas políticas RLS
+  // Carregar grupos do usuário com verificação melhorada
   const loadMyGroups = async () => {
     setIsLoading(true);
     try {
-      console.log('Carregando Meus Grupos com políticas RLS corrigidas. Stack:', new Error().stack);
+      console.log('Carregando Meus Grupos com função RPC melhorada');
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        console.error('Usuário não autenticado. Stack:', new Error().stack);
+        console.error('Usuário não autenticado');
         return;
       }
       console.log('Usuário autenticado. ID:', user.id);
 
-      // Com as novas políticas RLS, podemos buscar grupos através das views otimizadas
+      // Buscar grupos do usuário através de membros_grupos
       console.log('Buscando grupos do usuário ID:', user.id);
       const { data: memberGroups, error } = await supabase
         .from('membros_grupos')
@@ -53,7 +53,7 @@ export default function GruposEstudo() {
         .eq('user_id', user.id);
 
       if (error) {
-        console.error('Erro ao carregar meus grupos:', error.message, 'Detalhes:', error.details, 'Stack:', new Error().stack);
+        console.error('Erro ao carregar meus grupos:', error.message, 'Detalhes:', error.details);
         return;
       }
       console.log('Dados retornados com sucesso:', memberGroups);
@@ -71,14 +71,14 @@ export default function GruposEstudo() {
       console.log('Grupos únicos processados:', uniqueGroups.length, 'grupos');
       
       setMyGroups(uniqueGroups);
-    } catch (error) {
-      console.error('Erro geral em loadMyGroups:', error.message, 'Stack:', error.stack);
+    } catch (error: any) {
+      console.error('Erro geral em loadMyGroups:', error?.message, 'Stack:', error?.stack);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Carregar todos os grupos visíveis com as novas políticas
+  // Carregar todos os grupos visíveis com as políticas RLS
   const loadAllGroups = async () => {
     setIsLoading(true);
     try {
@@ -87,7 +87,7 @@ export default function GruposEstudo() {
 
       console.log('Carregando todos os grupos visíveis');
 
-      // Com as novas políticas RLS, podemos usar queries mais diretas
+      // Buscar grupos que o usuário já participa
       const { data: userGroups } = await supabase
         .from('membros_grupos')
         .select('grupo_id')
@@ -103,7 +103,7 @@ export default function GruposEstudo() {
 
       const partnerIds = partners?.map(p => p.parceiro_id) || [];
 
-      // Buscar grupos visíveis utilizando as novas políticas RLS
+      // Buscar grupos visíveis utilizando as políticas RLS
       let query = supabase
         .from('grupos_estudo')
         .select('*');
@@ -130,8 +130,8 @@ export default function GruposEstudo() {
 
       console.log('Grupos visíveis encontrados:', visibleGroups?.length || 0);
       setAllGroups(visibleGroups || []);
-    } catch (error) {
-      console.error('Erro ao carregar todos os grupos:', error);
+    } catch (error: any) {
+      console.error('Erro ao carregar todos os grupos:', error?.message);
     } finally {
       setIsLoading(false);
     }
@@ -187,6 +187,8 @@ export default function GruposEstudo() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      console.log('Tentando ingressar no grupo:', groupId);
+
       const { error } = await supabase
         .from('membros_grupos')
         .insert({
@@ -206,8 +208,8 @@ export default function GruposEstudo() {
       // Recarregar ambas as grades para refletir a mudança
       loadMyGroups();
       loadAllGroups();
-    } catch (error) {
-      console.error('Erro ao ingressar no grupo:', error);
+    } catch (error: any) {
+      console.error('Erro ao ingressar no grupo:', error?.message);
       alert('Erro ao ingressar no grupo');
     }
   };
@@ -216,6 +218,8 @@ export default function GruposEstudo() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+
+      console.log('Tentando sair do grupo:', groupId);
 
       const { error } = await supabase
         .from('membros_grupos')
@@ -234,8 +238,8 @@ export default function GruposEstudo() {
       // Recarregar ambas as grades para refletir a mudança
       loadMyGroups();
       loadAllGroups();
-    } catch (error) {
-      console.error('Erro ao sair do grupo:', error);
+    } catch (error: any) {
+      console.error('Erro ao sair do grupo:', error?.message);
       alert('Erro ao sair do grupo');
     }
   };
