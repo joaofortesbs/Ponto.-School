@@ -4,14 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Users2,
   Search,
   Plus,
   Filter,
-  Calendar,
-  MessageCircle,
   Star,
 } from "lucide-react";
 import CreateGroupModal from "@/components/turmas/CreateGroupModal";
@@ -29,12 +26,15 @@ export default function GruposEstudo() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<any>(null);
 
-  // Carregar grupos do usuário
   const loadMyGroups = async () => {
     setIsLoading(true);
     try {
+      console.log('Iniciando loadMyGroups...');
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        console.log('Usuário não autenticado');
+        return;
+      }
 
       const { data: memberGroups, error } = await supabase
         .from('membros_grupos')
@@ -49,7 +49,19 @@ export default function GruposEstudo() {
         return;
       }
 
-      const groups = memberGroups?.map(mg => mg.grupos_estudo) || [];
+      console.log('Dados brutos de memberGroups:', memberGroups);
+
+      // Usar Map para garantir unicidade
+      const groupsMap = new Map();
+      memberGroups?.forEach(mg => {
+        const group = mg.grupos_estudo;
+        if (group && !groupsMap.has(group.id)) {
+          groupsMap.set(group.id, group);
+        }
+      });
+      
+      const groups = Array.from(groupsMap.values());
+      console.log('Grupos únicos processados:', groups);
       setMyGroups(groups);
     } catch (error) {
       console.error('Erro ao carregar meus grupos:', error);
@@ -58,14 +70,12 @@ export default function GruposEstudo() {
     }
   };
 
-  // Carregar todos os grupos visíveis
   const loadAllGroups = async () => {
     setIsLoading(true);
     try {
+      console.log('Carregando todos os grupos visíveis...');
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-
-      console.log('Carregando view: todos-grupos');
 
       // Buscar grupos onde o usuário não é membro
       const { data: userGroups } = await supabase
@@ -88,14 +98,12 @@ export default function GruposEstudo() {
         .from('grupos_estudo')
         .select('*');
 
-      // Filtrar grupos visíveis a todos OU grupos visíveis aos parceiros (se o criador for parceiro)
       if (partnerIds.length > 0) {
         query = query.or(`is_visible_to_all.eq.true,and(is_visible_to_partners.eq.true,user_id.in.(${partnerIds.join(',')}))`);
       } else {
         query = query.eq('is_visible_to_all', true);
       }
 
-      // Excluir grupos que o usuário já participa ou criou
       if (userGroupIds.length > 0) {
         query = query.not('id', 'in', `(${userGroupIds.join(',')})`);
       }
@@ -125,7 +133,6 @@ export default function GruposEstudo() {
     }
   }, [activeTab]);
 
-  // Filtrar grupos baseado na pesquisa
   const filteredMyGroups = myGroups.filter(
     (group) =>
       group?.nome?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -145,7 +152,6 @@ export default function GruposEstudo() {
   const handleCreateGroup = (formData: any) => {
     console.log("Novo grupo criado:", formData);
     setIsCreateModalOpen(false);
-    // Recarregar grupos
     if (activeTab === "meus-grupos") {
       loadMyGroups();
     } else if (activeTab === "todos-grupos") {
@@ -155,7 +161,6 @@ export default function GruposEstudo() {
 
   const handleGroupAdded = () => {
     setIsAddModalOpen(false);
-    // Recarregar grupos
     loadMyGroups();
     if (activeTab === "todos-grupos") {
       loadAllGroups();
@@ -166,6 +171,8 @@ export default function GruposEstudo() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+
+      console.log('Tentando ingressar no grupo:', groupId);
 
       const { error } = await supabase
         .from('membros_grupos')
@@ -183,7 +190,6 @@ export default function GruposEstudo() {
 
       alert('Você ingressou no grupo com sucesso!');
       
-      // Recarregar ambas as grades para refletir a mudança
       loadMyGroups();
       loadAllGroups();
     } catch (error) {
@@ -196,6 +202,8 @@ export default function GruposEstudo() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+
+      console.log('Tentando sair do grupo:', groupId);
 
       const { error } = await supabase
         .from('membros_grupos')
@@ -211,7 +219,6 @@ export default function GruposEstudo() {
 
       alert('Você saiu do grupo');
       
-      // Recarregar ambas as grades para refletir a mudança
       loadMyGroups();
       loadAllGroups();
     } catch (error) {
@@ -227,29 +234,6 @@ export default function GruposEstudo() {
 
   const handleBackToGroups = () => {
     setSelectedGroup(null);
-  };
-
-  const getActivityBadge = (level: string) => {
-    switch (level) {
-      case "alta":
-        return (
-          <Badge className="bg-green-500 hover:bg-green-600">
-            Atividade Alta
-          </Badge>
-        );
-      case "média":
-        return (
-          <Badge className="bg-yellow-500 hover:bg-yellow-600">
-            Atividade Média
-          </Badge>
-        );
-      default:
-        return (
-          <Badge className="bg-gray-500 hover:bg-gray-600">
-            Atividade Baixa
-          </Badge>
-        );
-    }
   };
 
   const renderGroupCard = (group: any, showJoinButton = false) => (

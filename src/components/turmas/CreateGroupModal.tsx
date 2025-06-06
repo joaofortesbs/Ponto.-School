@@ -26,12 +26,10 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
     const maxAttempts = 10;
 
     while (!isUnique && attempts < maxAttempts) {
-      // Gerar código de 8 caracteres usando substring(2, 10)
       codigoUnico = Math.random().toString(36).substring(2, 10).toUpperCase();
       
       console.log('Código único gerado:', codigoUnico, 'Comprimento:', codigoUnico.length);
       
-      // Verificar se o código já existe no banco
       const { data: existingGroup, error } = await supabase
         .from('grupos_estudo')
         .select('id')
@@ -53,13 +51,17 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
       attempts++;
     }
 
-    // Fallback: se não conseguir gerar código único, usar timestamp
     const fallbackCode = Date.now().toString(36).substring(-8).toUpperCase();
     console.log('Usando código fallback:', fallbackCode, 'Comprimento:', fallbackCode.length);
     return fallbackCode;
   };
 
   const handleSubmit = async (formData: any) => {
+    if (isLoading) {
+      console.log('Submissão já em andamento. Ignorando nova tentativa.');
+      return;
+    }
+
     setIsLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -68,10 +70,12 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
         return;
       }
 
-      // Gerar código único de 8 caracteres
+      console.log('Iniciando criação de grupo. Dados:', formData);
+
       const codigoUnico = await generateUniqueCode();
 
-      // Criar o grupo no Supabase
+      // Primeiro, criar o grupo
+      console.log('Inserindo grupo em grupos_estudo...');
       const { data: newGroup, error: insertError } = await supabase
         .from('grupos_estudo')
         .insert({
@@ -97,26 +101,66 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
         return;
       }
 
-      console.log('Grupo criado com código:', newGroup.codigo_unico, 'Comprimento:', newGroup.codigo_unico.length);
+      console.log('Grupo criado com sucesso:', newGroup);
 
-      // Adicionar o criador como membro do grupo
-      const { error: memberError } = await supabase
+      // Verificar se o criador já é membro
+      console.log('Verificando se o criador já é membro do grupo ID:', newGroup.id);
+      const { data: existingMember, error: memberCheckError } = await supabase
         .from('membros_grupos')
-        .insert({
-          grupo_id: newGroup.id,
-          user_id: user.id,
-          joined_at: new Date().toISOString()
-        });
+        .select('id')
+        .eq('grupo_id', newGroup.id)
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-      if (memberError) {
-        console.error('Erro ao adicionar membro:', memberError);
+      if (memberCheckError) {
+        console.error('Erro ao verificar membresia:', memberCheckError);
+      }
+
+      if (!existingMember) {
+        console.log('Adicionando criador como membro...');
+        const { error: memberError } = await supabase
+          .from('membros_grupos')
+          .insert({
+            grupo_id: newGroup.id,
+            user_id: user.id,
+            joined_at: new Date().toISOString()
+          });
+
+        if (memberError) {
+          console.error('Erro ao adicionar membro:', memberError);
+          alert('Grupo criado, mas erro ao adicionar como membro: ' + memberError.message);
+        } else {
+          console.log('Criador adicionado como membro com sucesso.');
+        }
+      } else {
+        console.log('Criador já é membro. Ignorando inserção.');
+      }
+
+      // Registrar auditoria
+      try {
+        await supabase
+          .from('grupo_criacao_audit')
+          .insert({
+            grupo_id: newGroup.id,
+            user_id: user.id,
+            action: 'CREATE_GROUP',
+            details: {
+              nome: formData.nome,
+              tipo_grupo: formData.tipo_grupo,
+              codigo_unico: codigoUnico,
+              timestamp: new Date().toISOString()
+            }
+          });
+        console.log('Auditoria registrada com sucesso.');
+      } catch (auditError) {
+        console.warn('Erro ao registrar auditoria:', auditError);
       }
 
       alert('Grupo criado com sucesso!');
       onSubmit(newGroup);
       onClose();
     } catch (error) {
-      console.error('Erro ao criar grupo:', error);
+      console.error('Erro geral ao criar grupo:', error);
       alert('Erro ao criar grupo');
     } finally {
       setIsLoading(false);
