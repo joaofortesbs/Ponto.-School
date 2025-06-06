@@ -76,12 +76,12 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
         return;
       }
 
-      console.log('Iniciando criação de grupo com nova função RPC. Dados:', formData);
+      console.log('Iniciando criação de grupo com nova função. Dados:', formData);
 
       const codigoUnico = await generateUniqueCode();
 
-      // Usar a nova função RPC que corrige a recursão infinita
-      const { data: result, error: rpcError } = await supabase.rpc('create_group_with_member_bypass', {
+      // Usar a nova função que criamos
+      const { data: result, error: rpcError } = await supabase.rpc('create_group_with_member', {
         p_name: formData.nome,
         p_description: formData.descricao,
         p_type: formData.tipo_grupo,
@@ -99,56 +99,43 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
         throw new Error(`Erro na função RPC: ${rpcError.message}`);
       }
 
-      console.log('Grupo criado com sucesso via RPC:', result);
-
-      // Registrar na auditoria
-      try {
-        await supabase.from('group_creation_audit').insert({
-          group_id: result[0].group_id,
-          user_id: user.id,
-          action: 'create_group_success',
-          details: { 
-            group_name: formData.nome,
-            group_type: formData.tipo_grupo,
-            codigo_unico: codigoUnico
-          }
-        });
-      } catch (auditError) {
-        console.warn('Erro ao registrar auditoria:', auditError);
-        // Não falhar a criação do grupo por erro de auditoria
+      if (!result || result.length === 0 || !result[0].success) {
+        const errorMessage = result?.[0]?.error_message || 'Erro desconhecido ao criar grupo';
+        console.error('Erro retornado pela função:', errorMessage);
+        throw new Error(errorMessage);
       }
+
+      console.log('Grupo criado com sucesso:', result);
 
       toast({
         title: "Sucesso",
         description: "Grupo criado com sucesso!",
       });
 
-      onSubmit(result[0]);
+      // Retornar o grupo criado
+      const groupData = {
+        id: result[0].group_id,
+        nome: formData.nome,
+        descricao: formData.descricao,
+        tipo_grupo: formData.tipo_grupo,
+        codigo_unico: codigoUnico,
+        disciplina_area: formData.disciplina_area,
+        topico_especifico: formData.topico_especifico,
+        tags: formData.tags,
+        user_id: user.id,
+        is_visible_to_all: formData.is_visible_to_all,
+        is_visible_to_partners: formData.is_visible_to_partners
+      };
+
+      onSubmit(groupData);
       onClose();
         
     } catch (error) {
       console.error('Erro geral ao criar grupo:', error);
       
-      // Registrar erro na auditoria
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          await supabase.from('group_creation_audit').insert({
-            user_id: user.id,
-            action: 'create_group_error',
-            details: { 
-              error: error.message,
-              stack: error.stack
-            }
-          });
-        }
-      } catch (auditError) {
-        console.warn('Erro ao registrar auditoria de erro:', auditError);
-      }
-
       toast({
         title: "Erro",
-        description: "Erro ao criar grupo. Tente novamente.",
+        description: error.message || "Erro ao criar grupo. Tente novamente.",
         variant: "destructive",
       });
     } finally {

@@ -128,6 +128,33 @@ export type Database = {
         }
         Relationships: []
       }
+      group_creation_audit: {
+        Row: {
+          action: string
+          created_at: string | null
+          details: Json | null
+          group_id: string | null
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          details?: Json | null
+          group_id?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          details?: Json | null
+          group_id?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       group_creation_locks: {
         Row: {
           created_at: string | null
@@ -846,11 +873,15 @@ export type Database = {
           p_is_visible_to_all: boolean
           p_is_visible_to_partners: boolean
           p_user_id: string
+          p_codigo_unico?: string
+          p_disciplina_area?: string
+          p_topico_especifico?: string
+          p_tags?: string[]
         }
         Returns: {
           group_id: string
-          member_added: boolean
-          message: string
+          success: boolean
+          error_message: string
         }[]
       }
       is_group_member: {
