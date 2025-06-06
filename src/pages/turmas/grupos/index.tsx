@@ -37,7 +37,7 @@ export default function GruposEstudo() {
         return;
       }
 
-      // Primeiro, buscar grupos onde o usuário é criador
+      // Buscar grupos onde o usuário é criador
       const { data: createdGroups, error: createdError } = await supabase
         .from('grupos_estudo')
         .select('*')
@@ -47,7 +47,7 @@ export default function GruposEstudo() {
         console.error('Erro ao carregar grupos criados:', createdError);
       }
 
-      // Depois, buscar grupos onde o usuário é membro
+      // Buscar grupos onde o usuário é membro
       const { data: memberGroups, error: memberError } = await supabase
         .from('membros_grupos')
         .select(`
@@ -135,22 +135,24 @@ export default function GruposEstudo() {
 
   const exportGroups = async () => {
     try {
-      console.log('Iniciando exportação de grupos...');
+      console.log('Iniciando exportação de grupos usando função RPC...');
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         alert('Usuário não autenticado');
         return;
       }
 
-      // Buscar todos os grupos do usuário
-      const { data: exportData, error } = await supabase
-        .from('grupos_estudo')
-        .select('*')
-        .eq('user_id', user.id);
+      // Tentar usar a função RPC de exportação
+      const { data: exportData, error } = await supabase.rpc('export_groups');
 
       if (error) {
-        console.error('Erro ao exportar grupos:', error);
+        console.error('Erro ao exportar grupos via RPC:', error);
         alert('Erro ao exportar grupos: ' + error.message);
+        return;
+      }
+
+      if (!exportData || exportData.length === 0) {
+        alert('Nenhum grupo encontrado para exportar.');
         return;
       }
 
@@ -159,7 +161,7 @@ export default function GruposEstudo() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'grupos_exportados.json';
+      a.download = `grupos_exportados_${new Date().toISOString().split('T')[0]}.json`;
       a.click();
       window.URL.revokeObjectURL(url);
       
@@ -228,7 +230,7 @@ export default function GruposEstudo() {
           joined_at: new Date().toISOString()
         });
 
-      if (error && error.code !== '23505') { // Ignorar erro de duplicata
+      if (error && error.code !== '23505') {
         console.error('Erro ao ingressar no grupo:', error);
         alert('Erro ao ingressar no grupo');
         return;

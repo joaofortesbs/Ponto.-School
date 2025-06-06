@@ -30,7 +30,6 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
       
       console.log('Código único gerado:', codigoUnico, 'Comprimento:', codigoUnico.length);
       
-      // Verificação simplificada sem usar políticas RLS problemáticas
       const { data: existingGroup, error } = await supabase
         .from('grupos_estudo')
         .select('id')
@@ -71,83 +70,80 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
         return;
       }
 
-      console.log('Iniciando criação de grupo com transação. Dados:', formData);
+      console.log('Iniciando criação de grupo com nova função. Dados:', formData);
 
       const codigoUnico = await generateUniqueCode();
 
-      // Usar função de transação para evitar problemas de RLS
-      const { data: result, error: transactionError } = await supabase.rpc('create_group_with_member', {
-        p_name: formData.nome,
-        p_description: formData.descricao,
-        p_type: formData.tipo_grupo,
-        p_is_visible_to_all: formData.is_visible_to_all,
-        p_is_visible_to_partners: formData.is_visible_to_partners,
-        p_user_id: user.id,
-        p_codigo_unico: codigoUnico,
-        p_disciplina_area: formData.disciplina_area,
-        p_topico_especifico: formData.topico_especifico,
-        p_tags: formData.tags
-      });
+      // Tentar usar a função RPC primeiro
+      try {
+        const { data: result, error: rpcError } = await supabase.rpc('create_group_with_member', {
+          p_name: formData.nome,
+          p_description: formData.descricao,
+          p_type: formData.tipo_grupo,
+          p_is_visible_to_all: formData.is_visible_to_all,
+          p_is_visible_to_partners: formData.is_visible_to_partners,
+          p_user_id: user.id,
+          p_codigo_unico: codigoUnico,
+          p_disciplina_area: formData.disciplina_area,
+          p_topico_especifico: formData.topico_especifico,
+          p_tags: formData.tags
+        });
 
-      if (transactionError) {
-        console.error('Erro na transação:', transactionError);
+        if (rpcError) {
+          throw new Error(`Erro na função RPC: ${rpcError.message}`);
+        }
+
+        console.log('Grupo criado com sucesso via RPC:', result);
+        onSubmit(result[0]);
         
-        // Fallback para método direto se a função RPC não existir
-        if (transactionError.code === 'PGRST301') {
-          console.log('Função RPC não encontrada, usando método direto...');
-          
-          // Primeiro, criar o grupo
-          const { data: newGroup, error: insertError } = await supabase
-            .from('grupos_estudo')
-            .insert({
-              nome: formData.nome,
-              descricao: formData.descricao,
-              user_id: user.id,
-              codigo_unico: codigoUnico,
-              is_publico: formData.is_publico,
-              is_visible_to_all: formData.is_visible_to_all,
-              is_visible_to_partners: formData.is_visible_to_partners,
-              tipo_grupo: formData.tipo_grupo,
-              disciplina_area: formData.disciplina_area,
-              topico_especifico: formData.topico_especifico,
-              tags: formData.tags,
-              membros: 1
-            })
-            .select()
-            .single();
+      } catch (rpcError) {
+        console.warn('Função RPC falhou, usando método direto:', rpcError);
+        
+        // Fallback para método direto se a função RPC falhar
+        const { data: newGroup, error: insertError } = await supabase
+          .from('grupos_estudo')
+          .insert({
+            nome: formData.nome,
+            descricao: formData.descricao,
+            user_id: user.id,
+            codigo_unico: codigoUnico,
+            is_publico: formData.is_publico,
+            is_visible_to_all: formData.is_visible_to_all,
+            is_visible_to_partners: formData.is_visible_to_partners,
+            tipo_grupo: formData.tipo_grupo,
+            disciplina_area: formData.disciplina_area,
+            topico_especifico: formData.topico_especifico,
+            tags: formData.tags,
+            membros: 1
+          })
+          .select()
+          .single();
 
-          if (insertError) {
-            console.error('Erro ao criar grupo:', insertError);
-            alert('Erro ao criar grupo: ' + insertError.message);
-            return;
-          }
-
-          console.log('Grupo criado com sucesso:', newGroup);
-
-          // Então, adicionar o criador como membro
-          const { error: memberError } = await supabase
-            .from('membros_grupos')
-            .insert({
-              grupo_id: newGroup.id,
-              user_id: user.id,
-              joined_at: new Date().toISOString()
-            });
-
-          if (memberError && memberError.code !== '23505') { // Ignorar erro de duplicata
-            console.error('Erro ao adicionar membro:', memberError);
-            alert('Grupo criado, mas erro ao adicionar como membro: ' + memberError.message);
-          } else {
-            console.log('Criador adicionado como membro com sucesso.');
-          }
-
-          onSubmit(newGroup);
-        } else {
-          alert('Erro ao criar grupo: ' + transactionError.message);
+        if (insertError) {
+          console.error('Erro ao criar grupo:', insertError);
+          alert('Erro ao criar grupo: ' + insertError.message);
           return;
         }
-      } else {
-        console.log('Grupo criado com sucesso via transação:', result);
-        onSubmit(result);
+
+        console.log('Grupo criado com sucesso:', newGroup);
+
+        // Adicionar o criador como membro
+        const { error: memberError } = await supabase
+          .from('membros_grupos')
+          .insert({
+            grupo_id: newGroup.id,
+            user_id: user.id,
+            joined_at: new Date().toISOString()
+          });
+
+        if (memberError && memberError.code !== '23505') {
+          console.error('Erro ao adicionar membro:', memberError);
+          alert('Grupo criado, mas erro ao adicionar como membro: ' + memberError.message);
+        } else {
+          console.log('Criador adicionado como membro com sucesso.');
+        }
+
+        onSubmit(newGroup);
       }
 
       alert('Grupo criado com sucesso!');
