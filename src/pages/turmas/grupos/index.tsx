@@ -10,6 +10,7 @@ import {
   Plus,
   Filter,
   Star,
+  Download,
 } from "lucide-react";
 import CreateGroupModal from "@/components/turmas/CreateGroupModal";
 import AddGroupModal from "@/components/turmas/AddGroupModal";
@@ -36,7 +37,18 @@ export default function GruposEstudo() {
         return;
       }
 
-      const { data: memberGroups, error } = await supabase
+      // Primeiro, buscar grupos onde o usuário é criador
+      const { data: createdGroups, error: createdError } = await supabase
+        .from('grupos_estudo')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (createdError) {
+        console.error('Erro ao carregar grupos criados:', createdError);
+      }
+
+      // Depois, buscar grupos onde o usuário é membro
+      const { data: memberGroups, error: memberError } = await supabase
         .from('membros_grupos')
         .select(`
           grupo_id,
@@ -44,15 +56,24 @@ export default function GruposEstudo() {
         `)
         .eq('user_id', user.id);
 
-      if (error) {
-        console.error('Erro ao carregar meus grupos:', error);
-        return;
+      if (memberError) {
+        console.error('Erro ao carregar grupos como membro:', memberError);
       }
 
-      console.log('Dados brutos de memberGroups:', memberGroups);
+      console.log('Grupos criados:', createdGroups);
+      console.log('Grupos como membro:', memberGroups);
 
       // Usar Map para garantir unicidade
       const groupsMap = new Map();
+      
+      // Adicionar grupos criados
+      createdGroups?.forEach(group => {
+        if (group && !groupsMap.has(group.id)) {
+          groupsMap.set(group.id, group);
+        }
+      });
+
+      // Adicionar grupos onde é membro
       memberGroups?.forEach(mg => {
         const group = mg.grupos_estudo;
         if (group && !groupsMap.has(group.id)) {
@@ -85,24 +106,11 @@ export default function GruposEstudo() {
 
       const userGroupIds = userGroups?.map(ug => ug.grupo_id) || [];
 
-      // Buscar parceiros do usuário
-      const { data: partners } = await supabase
-        .from('parceiros')
-        .select('parceiro_id')
-        .eq('user_id', user.id);
-
-      const partnerIds = partners?.map(p => p.parceiro_id) || [];
-
       // Buscar grupos visíveis
       let query = supabase
         .from('grupos_estudo')
-        .select('*');
-
-      if (partnerIds.length > 0) {
-        query = query.or(`is_visible_to_all.eq.true,and(is_visible_to_partners.eq.true,user_id.in.(${partnerIds.join(',')}))`);
-      } else {
-        query = query.eq('is_visible_to_all', true);
-      }
+        .select('*')
+        .eq('is_visible_to_all', true);
 
       if (userGroupIds.length > 0) {
         query = query.not('id', 'in', `(${userGroupIds.join(',')})`);
@@ -122,6 +130,44 @@ export default function GruposEstudo() {
       console.error('Erro ao carregar todos os grupos:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const exportGroups = async () => {
+    try {
+      console.log('Iniciando exportação de grupos...');
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        alert('Usuário não autenticado');
+        return;
+      }
+
+      // Buscar todos os grupos do usuário
+      const { data: exportData, error } = await supabase
+        .from('grupos_estudo')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Erro ao exportar grupos:', error);
+        alert('Erro ao exportar grupos: ' + error.message);
+        return;
+      }
+
+      const jsonData = JSON.stringify(exportData, null, 2);
+      const blob = new Blob([jsonData], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'grupos_exportados.json';
+      a.click();
+      window.URL.revokeObjectURL(url);
+      
+      console.log('Grupos exportados com sucesso:', exportData?.length || 0, 'grupos.');
+      alert(`${exportData?.length || 0} grupos exportados com sucesso!`);
+    } catch (error) {
+      console.error('Erro ao exportar grupos:', error);
+      alert('Erro ao exportar grupos. Verifique o console.');
     }
   };
 
@@ -182,7 +228,7 @@ export default function GruposEstudo() {
           joined_at: new Date().toISOString()
         });
 
-      if (error) {
+      if (error && error.code !== '23505') { // Ignorar erro de duplicata
         console.error('Erro ao ingressar no grupo:', error);
         alert('Erro ao ingressar no grupo');
         return;
@@ -374,6 +420,14 @@ export default function GruposEstudo() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
+          <Button
+            onClick={exportGroups}
+            variant="outline"
+            className="gap-1"
+          >
+            <Download className="h-4 w-4" />
+            <span>Exportar</span>
+          </Button>
           <Button
             onClick={() => setIsAddModalOpen(true)}
             variant="outline"
