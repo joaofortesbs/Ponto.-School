@@ -15,9 +15,11 @@ import {
 import CreateGroupModal from "@/components/turmas/CreateGroupModal";
 import AddGroupModal from "@/components/turmas/AddGroupModal";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function GruposEstudo() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -135,24 +137,35 @@ export default function GruposEstudo() {
 
   const exportGroups = async () => {
     try {
-      console.log('Iniciando exportação de grupos usando função RPC...');
+      console.log('Iniciando exportação de grupos usando edge function...');
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        alert('Usuário não autenticado');
+        toast({
+          title: "Erro",
+          description: "Usuário não autenticado",
+          variant: "destructive",
+        });
         return;
       }
 
-      // Tentar usar a função RPC de exportação
-      const { data: exportData, error } = await supabase.rpc('export_groups');
+      // Usar a edge function para exportação
+      const { data: exportData, error } = await supabase.functions.invoke('export-groups');
 
       if (error) {
-        console.error('Erro ao exportar grupos via RPC:', error);
-        alert('Erro ao exportar grupos: ' + error.message);
+        console.error('Erro ao exportar grupos via edge function:', error);
+        toast({
+          title: "Erro",
+          description: `Erro ao exportar grupos: ${error.message}`,
+          variant: "destructive",
+        });
         return;
       }
 
       if (!exportData || exportData.length === 0) {
-        alert('Nenhum grupo encontrado para exportar.');
+        toast({
+          title: "Aviso",
+          description: "Nenhum grupo encontrado para exportar.",
+        });
         return;
       }
 
@@ -166,10 +179,17 @@ export default function GruposEstudo() {
       window.URL.revokeObjectURL(url);
       
       console.log('Grupos exportados com sucesso:', exportData?.length || 0, 'grupos.');
-      alert(`${exportData?.length || 0} grupos exportados com sucesso!`);
+      toast({
+        title: "Sucesso",
+        description: `${exportData?.length || 0} grupos exportados com sucesso!`,
+      });
     } catch (error) {
       console.error('Erro ao exportar grupos:', error);
-      alert('Erro ao exportar grupos. Verifique o console.');
+      toast({
+        title: "Erro",
+        description: "Erro ao exportar grupos. Verifique o console.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -232,17 +252,28 @@ export default function GruposEstudo() {
 
       if (error && error.code !== '23505') {
         console.error('Erro ao ingressar no grupo:', error);
-        alert('Erro ao ingressar no grupo');
+        toast({
+          title: "Erro",
+          description: "Erro ao ingressar no grupo",
+          variant: "destructive",
+        });
         return;
       }
 
-      alert('Você ingressou no grupo com sucesso!');
+      toast({
+        title: "Sucesso",
+        description: "Você ingressou no grupo com sucesso!",
+      });
       
       loadMyGroups();
       loadAllGroups();
     } catch (error) {
       console.error('Erro ao ingressar no grupo:', error);
-      alert('Erro ao ingressar no grupo');
+      toast({
+        title: "Erro",
+        description: "Erro ao ingressar no grupo",
+        variant: "destructive",
+      });
     }
   };
 
@@ -261,17 +292,28 @@ export default function GruposEstudo() {
 
       if (error) {
         console.error('Erro ao sair do grupo:', error);
-        alert('Erro ao sair do grupo');
+        toast({
+          title: "Erro",
+          description: "Erro ao sair do grupo",
+          variant: "destructive",
+        });
         return;
       }
 
-      alert('Você saiu do grupo');
+      toast({
+        title: "Sucesso",
+        description: "Você saiu do grupo",
+      });
       
       loadMyGroups();
       loadAllGroups();
     } catch (error) {
       console.error('Erro ao sair do grupo:', error);
-      alert('Erro ao sair do grupo');
+      toast({
+        title: "Erro",
+        description: "Erro ao sair do grupo",
+        variant: "destructive",
+      });
     }
   };
 

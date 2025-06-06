@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import CreateGroupForm from "./CreateGroupForm";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 interface CreateGroupModalProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
   onSubmit,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   const generateUniqueCode = async (): Promise<string> => {
     let codigoUnico: string;
@@ -66,91 +68,89 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        alert('Usuário não autenticado');
+        toast({
+          title: "Erro",
+          description: "Usuário não autenticado",
+          variant: "destructive",
+        });
         return;
       }
 
-      console.log('Iniciando criação de grupo com nova função. Dados:', formData);
+      console.log('Iniciando criação de grupo com nova função RPC. Dados:', formData);
 
       const codigoUnico = await generateUniqueCode();
 
-      // Tentar usar a função RPC primeiro
-      try {
-        const { data: result, error: rpcError } = await supabase.rpc('create_group_with_member', {
-          p_name: formData.nome,
-          p_description: formData.descricao,
-          p_type: formData.tipo_grupo,
-          p_is_visible_to_all: formData.is_visible_to_all,
-          p_is_visible_to_partners: formData.is_visible_to_partners,
-          p_user_id: user.id,
-          p_codigo_unico: codigoUnico,
-          p_disciplina_area: formData.disciplina_area,
-          p_topico_especifico: formData.topico_especifico,
-          p_tags: formData.tags
-        });
+      // Usar a nova função RPC que corrige a recursão infinita
+      const { data: result, error: rpcError } = await supabase.rpc('create_group_with_member_bypass', {
+        p_name: formData.nome,
+        p_description: formData.descricao,
+        p_type: formData.tipo_grupo,
+        p_is_visible_to_all: formData.is_visible_to_all,
+        p_is_visible_to_partners: formData.is_visible_to_partners,
+        p_user_id: user.id,
+        p_codigo_unico: codigoUnico,
+        p_disciplina_area: formData.disciplina_area,
+        p_topico_especifico: formData.topico_especifico,
+        p_tags: formData.tags
+      });
 
-        if (rpcError) {
-          throw new Error(`Erro na função RPC: ${rpcError.message}`);
-        }
-
-        console.log('Grupo criado com sucesso via RPC:', result);
-        onSubmit(result[0]);
-        
-      } catch (rpcError) {
-        console.warn('Função RPC falhou, usando método direto:', rpcError);
-        
-        // Fallback para método direto se a função RPC falhar
-        const { data: newGroup, error: insertError } = await supabase
-          .from('grupos_estudo')
-          .insert({
-            nome: formData.nome,
-            descricao: formData.descricao,
-            user_id: user.id,
-            codigo_unico: codigoUnico,
-            is_publico: formData.is_publico,
-            is_visible_to_all: formData.is_visible_to_all,
-            is_visible_to_partners: formData.is_visible_to_partners,
-            tipo_grupo: formData.tipo_grupo,
-            disciplina_area: formData.disciplina_area,
-            topico_especifico: formData.topico_especifico,
-            tags: formData.tags,
-            membros: 1
-          })
-          .select()
-          .single();
-
-        if (insertError) {
-          console.error('Erro ao criar grupo:', insertError);
-          alert('Erro ao criar grupo: ' + insertError.message);
-          return;
-        }
-
-        console.log('Grupo criado com sucesso:', newGroup);
-
-        // Adicionar o criador como membro
-        const { error: memberError } = await supabase
-          .from('membros_grupos')
-          .insert({
-            grupo_id: newGroup.id,
-            user_id: user.id,
-            joined_at: new Date().toISOString()
-          });
-
-        if (memberError && memberError.code !== '23505') {
-          console.error('Erro ao adicionar membro:', memberError);
-          alert('Grupo criado, mas erro ao adicionar como membro: ' + memberError.message);
-        } else {
-          console.log('Criador adicionado como membro com sucesso.');
-        }
-
-        onSubmit(newGroup);
+      if (rpcError) {
+        console.error('Erro na função RPC:', rpcError);
+        throw new Error(`Erro na função RPC: ${rpcError.message}`);
       }
 
-      alert('Grupo criado com sucesso!');
+      console.log('Grupo criado com sucesso via RPC:', result);
+
+      // Registrar na auditoria
+      try {
+        await supabase.from('group_creation_audit').insert({
+          group_id: result[0].group_id,
+          user_id: user.id,
+          action: 'create_group_success',
+          details: { 
+            group_name: formData.nome,
+            group_type: formData.tipo_grupo,
+            codigo_unico: codigoUnico
+          }
+        });
+      } catch (auditError) {
+        console.warn('Erro ao registrar auditoria:', auditError);
+        // Não falhar a criação do grupo por erro de auditoria
+      }
+
+      toast({
+        title: "Sucesso",
+        description: "Grupo criado com sucesso!",
+      });
+
+      onSubmit(result[0]);
       onClose();
+        
     } catch (error) {
       console.error('Erro geral ao criar grupo:', error);
-      alert('Erro ao criar grupo');
+      
+      // Registrar erro na auditoria
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await supabase.from('group_creation_audit').insert({
+            user_id: user.id,
+            action: 'create_group_error',
+            details: { 
+              error: error.message,
+              stack: error.stack
+            }
+          });
+        }
+      } catch (auditError) {
+        console.warn('Erro ao registrar auditoria de erro:', auditError);
+      }
+
+      toast({
+        title: "Erro",
+        description: "Erro ao criar grupo. Tente novamente.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -184,6 +184,7 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
               <CreateGroupForm 
                 onSubmit={handleSubmit} 
                 onCancel={onClose}
+                isLoading={isLoading}
               />
             </div>
           </motion.div>

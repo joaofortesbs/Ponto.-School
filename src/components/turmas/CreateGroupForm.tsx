@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,12 +7,13 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Search, Users } from "lucide-react";
+import { Search, Users, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface CreateGroupFormProps {
   onSubmit: (formData: any) => void;
   onCancel: () => void;
+  isLoading?: boolean;
 }
 
 interface Partner {
@@ -24,7 +24,7 @@ interface Partner {
   };
 }
 
-const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel }) => {
+const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel, isLoading = false }) => {
   // Estados do formulário
   const [groupName, setGroupName] = useState("");
   const [groupDescription, setGroupDescription] = useState("");
@@ -171,6 +171,7 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
               onChange={(e) => setGroupName(e.target.value)}
               placeholder="Digite o nome do grupo"
               className="bg-gray-700 border-gray-600 text-white"
+              disabled={isLoading}
             />
           </div>
 
@@ -182,12 +183,13 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
               onChange={(e) => setGroupDescription(e.target.value)}
               placeholder="Digite a descrição do grupo"
               className="bg-gray-700 border-gray-600 text-white"
+              disabled={isLoading}
             />
           </div>
 
           <div>
             <Label htmlFor="group-type" className="text-white">Tipo do Grupo *</Label>
-            <Select value={groupType} onValueChange={setGroupType}>
+            <Select value={groupType} onValueChange={setGroupType} disabled={isLoading}>
               <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
                 <SelectValue placeholder="Selecione o tipo do grupo" />
               </SelectTrigger>
@@ -210,6 +212,7 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
               onChange={(e) => setGroupDiscipline(e.target.value)}
               placeholder="Ex.: Matemática"
               className="bg-gray-700 border-gray-600 text-white"
+              disabled={isLoading}
             />
           </div>
 
@@ -221,6 +224,7 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
               onChange={(e) => setGroupSpecificTopic(e.target.value)}
               placeholder="Ex.: Álgebra Linear"
               className="bg-gray-700 border-gray-600 text-white"
+              disabled={isLoading}
             />
           </div>
 
@@ -232,6 +236,7 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
               onChange={(e) => setGroupTags(e.target.value)}
               placeholder="Ex.: cálculo, matemática, exercícios (separar por vírgulas)"
               className="bg-gray-700 border-gray-600 text-white"
+              disabled={isLoading}
             />
           </div>
         </CardContent>
@@ -245,7 +250,7 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
         <CardContent className="space-y-4">
           <div>
             <Label className="text-white font-medium">Privacidade do grupo</Label>
-            <RadioGroup value={groupPrivacy} onValueChange={setGroupPrivacy} className="mt-2">
+            <RadioGroup value={groupPrivacy} onValueChange={setGroupPrivacy} className="mt-2" disabled={isLoading}>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="public" id="public-privacy" />
                 <Label htmlFor="public-privacy" className="text-white">Público</Label>
@@ -259,7 +264,7 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
 
           <div>
             <Label className="text-white font-medium">Visibilidade do grupo</Label>
-            <RadioGroup value={groupVisibility} onValueChange={setGroupVisibility} className="mt-2">
+            <RadioGroup value={groupVisibility} onValueChange={setGroupVisibility} className="mt-2" disabled={isLoading}>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="all" id="group-visibility-all" />
                 <Label htmlFor="group-visibility-all" className="text-white">Permitir que todos vejam</Label>
@@ -297,6 +302,7 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Pesquisar Parceiros"
                   className="pl-9 bg-gray-600 border-gray-500 text-white"
+                  disabled={isLoading}
                 />
               </div>
               
@@ -330,14 +336,11 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
       {/* Mini-seção 4: Imagem do Grupo */}
       <Card className="bg-gray-800 border-gray-700">
         <CardHeader>
-          <CardTitle className="text-[#FF6B00]">Imagem do Grupo</CardTitle>
+          <CardTitle className="text-[#FF6B00]">Prévia do Grupo</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent>
           <Card className="bg-gray-700 border-gray-600">
-            <CardHeader>
-              <CardTitle className="text-white text-sm">Prévia do Grupo</CardTitle>
-            </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
               {renderGroupPreview()}
             </CardContent>
           </Card>
@@ -347,14 +350,23 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel })
               onClick={onCancel}
               variant="outline"
               className="border-gray-600 text-white hover:bg-gray-700"
+              disabled={isLoading}
             >
               Cancelar
             </Button>
             <Button 
               onClick={handleSubmit}
               className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white"
+              disabled={isLoading}
             >
-              Criar Grupo
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Criando...
+                </>
+              ) : (
+                'Criar Grupo'
+              )}
             </Button>
           </div>
         </CardContent>
