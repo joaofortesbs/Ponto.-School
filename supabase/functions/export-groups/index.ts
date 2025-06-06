@@ -34,23 +34,24 @@ serve(async (req) => {
       )
     }
 
-    // Export groups where user is creator or member
-    const { data: userGroups, error: groupsError } = await supabase
-      .from('grupos_estudo')
+    // Export groups using the new redesigned structure
+    const { data: memberGroups, error: groupsError } = await supabase
+      .from('membros_grupos')
       .select(`
-        id,
-        nome,
-        descricao,
-        tipo_grupo,
-        disciplina_area,
-        topico_especifico,
-        tags,
-        is_publico,
-        is_visible_to_all,
-        is_visible_to_partners,
-        codigo_unico,
-        created_at,
-        membros
+        grupos_estudo (
+          id,
+          nome,
+          descricao,
+          tipo_grupo,
+          criador_id,
+          is_public,
+          is_visible_to_all,
+          is_visible_to_partners,
+          disciplina_area,
+          topico_especifico,
+          tags,
+          created_at
+        )
       `)
       .eq('user_id', user.id)
 
@@ -65,41 +66,8 @@ serve(async (req) => {
       )
     }
 
-    // Also get groups where user is a member
-    const { data: memberGroups, error: memberError } = await supabase
-      .from('membros_grupos')
-      .select(`
-        grupos_estudo (
-          id,
-          nome,
-          descricao,
-          tipo_grupo,
-          disciplina_area,
-          topico_especifico,
-          tags,
-          is_publico,
-          is_visible_to_all,
-          is_visible_to_partners,
-          codigo_unico,
-          created_at,
-          membros
-        )
-      `)
-      .eq('user_id', user.id)
-
-    if (memberError) {
-      console.error('Error fetching member groups:', memberError)
-    }
-
-    // Combine and deduplicate groups
-    const allGroups = [...(userGroups || [])]
-    const memberGroupsData = memberGroups?.map(mg => mg.grupos_estudo).filter(Boolean) || []
-    
-    memberGroupsData.forEach(group => {
-      if (!allGroups.find(g => g.id === group.id)) {
-        allGroups.push(group)
-      }
-    })
+    // Extract groups from the join result
+    const allGroups = memberGroups?.map(mg => mg.grupos_estudo).filter(Boolean) || []
 
     console.log(`Exported ${allGroups.length} groups for user ${user.id}`)
 

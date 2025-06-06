@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -32,54 +33,52 @@ export default function GruposEstudo() {
   const loadMyGroups = async () => {
     setIsLoading(true);
     try {
-      console.log('Iniciando loadMyGroups...');
+      console.log('Carregando meus grupos com novo sistema...');
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         console.log('Usuário não autenticado');
         return;
       }
 
-      // Buscar grupos onde o usuário é criador
-      const { data: createdGroups, error: createdError } = await supabase
-        .from('grupos_estudo')
-        .select('*')
-        .eq('user_id', user.id);
-
-      if (createdError) {
-        console.error('Erro ao carregar grupos criados:', createdError);
-      }
-
-      // Buscar grupos onde o usuário é membro
-      const { data: memberGroups, error: memberError } = await supabase
+      // Buscar grupos onde o usuário é membro usando a nova estrutura
+      const { data: memberGroups, error } = await supabase
         .from('membros_grupos')
         .select(`
           grupo_id,
-          grupos_estudo (*)
+          joined_at,
+          grupos_estudo!inner (
+            id,
+            nome,
+            descricao,
+            tipo_grupo,
+            criador_id,
+            is_public,
+            is_visible_to_all,
+            is_visible_to_partners,
+            disciplina_area,
+            topico_especifico,
+            tags,
+            created_at
+          )
         `)
         .eq('user_id', user.id);
 
-      if (memberError) {
-        console.error('Erro ao carregar grupos como membro:', memberError);
+      if (error) {
+        console.error('Erro ao carregar grupos como membro:', error);
+        return;
       }
 
-      console.log('Grupos criados:', createdGroups);
-      console.log('Grupos como membro:', memberGroups);
+      console.log('Dados retornados da consulta:', memberGroups);
 
-      // Usar Map para garantir unicidade
+      // Processar os dados para obter lista única de grupos
       const groupsMap = new Map();
-      
-      // Adicionar grupos criados
-      createdGroups?.forEach(group => {
-        if (group && !groupsMap.has(group.id)) {
-          groupsMap.set(group.id, group);
-        }
-      });
-
-      // Adicionar grupos onde é membro
       memberGroups?.forEach(mg => {
         const group = mg.grupos_estudo;
         if (group && !groupsMap.has(group.id)) {
-          groupsMap.set(group.id, group);
+          groupsMap.set(group.id, {
+            ...group,
+            membros: 1 // Para compatibilidade, será calculado depois se necessário
+          });
         }
       });
       
@@ -100,7 +99,7 @@ export default function GruposEstudo() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Buscar grupos onde o usuário não é membro
+      // Buscar IDs dos grupos onde o usuário já é membro
       const { data: userGroups } = await supabase
         .from('membros_grupos')
         .select('grupo_id')
@@ -108,16 +107,16 @@ export default function GruposEstudo() {
 
       const userGroupIds = userGroups?.map(ug => ug.grupo_id) || [];
 
-      // Buscar grupos visíveis
+      // Buscar grupos visíveis que o usuário não participa
       let query = supabase
         .from('grupos_estudo')
         .select('*')
-        .eq('is_visible_to_all', true);
+        .eq('is_visible_to_all', true)
+        .neq('criador_id', user.id);
 
       if (userGroupIds.length > 0) {
         query = query.not('id', 'in', `(${userGroupIds.join(',')})`);
       }
-      query = query.neq('user_id', user.id);
 
       const { data: visibleGroups, error } = await query;
 
@@ -137,7 +136,7 @@ export default function GruposEstudo() {
 
   const exportGroups = async () => {
     try {
-      console.log('Iniciando exportação de grupos usando edge function...');
+      console.log('Iniciando exportação de grupos...');
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         toast({
@@ -148,11 +147,16 @@ export default function GruposEstudo() {
         return;
       }
 
-      // Usar a edge function para exportação
-      const { data: exportData, error } = await supabase.functions.invoke('export-groups');
+      // Exportar grupos usando a nova estrutura
+      const { data: exportData, error } = await supabase
+        .from('membros_grupos')
+        .select(`
+          grupos_estudo (*)
+        `)
+        .eq('user_id', user.id);
 
       if (error) {
-        console.error('Erro ao exportar grupos via edge function:', error);
+        console.error('Erro ao exportar grupos:', error);
         toast({
           title: "Erro",
           description: `Erro ao exportar grupos: ${error.message}`,
@@ -161,7 +165,9 @@ export default function GruposEstudo() {
         return;
       }
 
-      if (!exportData || exportData.length === 0) {
+      const groups = exportData?.map(item => item.grupos_estudo).filter(Boolean) || [];
+
+      if (groups.length === 0) {
         toast({
           title: "Aviso",
           description: "Nenhum grupo encontrado para exportar.",
@@ -169,7 +175,7 @@ export default function GruposEstudo() {
         return;
       }
 
-      const jsonData = JSON.stringify(exportData, null, 2);
+      const jsonData = JSON.stringify(groups, null, 2);
       const blob = new Blob([jsonData], { type: 'application/json' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -178,10 +184,10 @@ export default function GruposEstudo() {
       a.click();
       window.URL.revokeObjectURL(url);
       
-      console.log('Grupos exportados com sucesso:', exportData?.length || 0, 'grupos.');
+      console.log('Grupos exportados com sucesso:', groups.length, 'grupos.');
       toast({
         title: "Sucesso",
-        description: `${exportData?.length || 0} grupos exportados com sucesso!`,
+        description: `${groups.length} grupos exportados com sucesso!`,
       });
     } catch (error) {
       console.error('Erro ao exportar grupos:', error);
@@ -337,7 +343,7 @@ export default function GruposEstudo() {
           className="w-full h-full"
           style={{ backgroundColor: group.cor || "#FF6B00" }}
         />
-        {group.is_publico && (
+        {group.is_public && (
           <Badge className="absolute top-2 left-2 bg-[#FF6B00] hover:bg-[#FF8C40]">
             <Star className="h-3 w-3 mr-1 fill-current" /> Público
           </Badge>

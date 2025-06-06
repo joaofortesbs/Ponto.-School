@@ -21,43 +21,6 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const generateUniqueCode = async (): Promise<string> => {
-    let codigoUnico: string;
-    let isUnique = false;
-    let attempts = 0;
-    const maxAttempts = 10;
-
-    while (!isUnique && attempts < maxAttempts) {
-      codigoUnico = Math.random().toString(36).substring(2, 10).toUpperCase();
-      
-      console.log('Código único gerado:', codigoUnico, 'Comprimento:', codigoUnico.length);
-      
-      const { data: existingGroup, error } = await supabase
-        .from('grupos_estudo')
-        .select('id')
-        .eq('codigo_unico', codigoUnico)
-        .maybeSingle();
-
-      if (error && error.code !== 'PGRST116') {
-        console.error('Erro ao verificar unicidade do código:', error);
-        attempts++;
-        continue;
-      }
-
-      if (!existingGroup) {
-        isUnique = true;
-        console.log('Código único validado:', codigoUnico);
-        return codigoUnico;
-      }
-      
-      attempts++;
-    }
-
-    const fallbackCode = Date.now().toString(36).substring(-8).toUpperCase();
-    console.log('Usando código fallback:', fallbackCode, 'Comprimento:', fallbackCode.length);
-    return fallbackCode;
-  };
-
   const handleSubmit = async (formData: any) => {
     if (isLoading) {
       console.log('Submissão já em andamento. Ignorando nova tentativa.');
@@ -76,22 +39,20 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
         return;
       }
 
-      console.log('Iniciando criação de grupo com nova função. Dados:', formData);
+      console.log('Iniciando criação de grupo com sistema redesenhado. Dados:', formData);
+      console.log('User ID:', user.id);
 
-      const codigoUnico = await generateUniqueCode();
-
-      // Usar a nova função que criamos
+      // Usar a nova função redesenhada
       const { data: result, error: rpcError } = await supabase.rpc('create_group_with_member', {
         p_name: formData.nome,
-        p_description: formData.descricao,
-        p_type: formData.tipo_grupo,
-        p_is_visible_to_all: formData.is_visible_to_all,
-        p_is_visible_to_partners: formData.is_visible_to_partners,
+        p_description: formData.descricao || '',
+        p_type: formData.is_publico ? 'public' : 'private',
+        p_is_visible_to_all: formData.is_visible_to_all || false,
+        p_is_visible_to_partners: formData.is_visible_to_partners || false,
         p_user_id: user.id,
-        p_codigo_unico: codigoUnico,
-        p_disciplina_area: formData.disciplina_area,
-        p_topico_especifico: formData.topico_especifico,
-        p_tags: formData.tags
+        p_disciplina_area: formData.disciplina_area || null,
+        p_topico_especifico: formData.topico_especifico || null,
+        p_tags: formData.tags || null
       });
 
       if (rpcError) {
@@ -112,17 +73,17 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
         description: "Grupo criado com sucesso!",
       });
 
-      // Retornar o grupo criado
+      // Retornar o grupo criado com a nova estrutura
       const groupData = {
         id: result[0].group_id,
         nome: formData.nome,
         descricao: formData.descricao,
-        tipo_grupo: formData.tipo_grupo,
-        codigo_unico: codigoUnico,
+        tipo_grupo: formData.is_publico ? 'public' : 'private',
+        criador_id: user.id,
         disciplina_area: formData.disciplina_area,
         topico_especifico: formData.topico_especifico,
         tags: formData.tags,
-        user_id: user.id,
+        is_public: formData.is_publico,
         is_visible_to_all: formData.is_visible_to_all,
         is_visible_to_partners: formData.is_visible_to_partners
       };

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -278,62 +279,7 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, onCancel, i
         </CardContent>
       </Card>
 
-      {/* Mini-seção 3: Participantes */}
-      <Card className="bg-gray-800 border-gray-700">
-        <CardHeader>
-          <CardTitle className="text-[#FF6B00]">Participantes</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Card className="bg-gray-700 border-gray-600">
-            <CardHeader>
-              <CardTitle className="text-white text-sm flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                Convidar Participantes
-              </CardTitle>
-              <CardDescription className="text-gray-400">
-                Pesquise e convide seus parceiros para o grupo
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Pesquisar Parceiros"
-                  className="pl-9 bg-gray-600 border-gray-500 text-white"
-                  disabled={isLoading}
-                />
-              </div>
-              
-              <div className="max-h-32 overflow-y-auto space-y-2">
-                {filteredPartners.length > 0 ? (
-                  filteredPartners.map((partner, index) => (
-                    <div key={index} className="flex items-center justify-between p-2 bg-gray-600 rounded">
-                      <span className="text-white text-sm">
-                        {partner.profiles?.display_name || partner.profiles?.full_name || 'Nome não disponível'}
-                      </span>
-                      <Button 
-                        size="sm" 
-                        disabled 
-                        className="bg-gray-500 text-gray-300 cursor-not-allowed"
-                      >
-                        Convidar
-                      </Button>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-gray-400 text-sm text-center py-4">
-                    {partners.length === 0 ? 'Nenhum parceiro encontrado.' : 'Nenhum parceiro corresponde à pesquisa.'}
-                  </p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </CardContent>
-      </Card>
-
-      {/* Mini-seção 4: Imagem do Grupo */}
+      {/* Mini-seção 3: Prévia do Grupo */}
       <Card className="bg-gray-800 border-gray-700">
         <CardHeader>
           <CardTitle className="text-[#FF6B00]">Prévia do Grupo</CardTitle>

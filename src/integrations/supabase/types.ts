@@ -34,15 +34,7 @@ export type Database = {
           id?: string
           status?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "convites_grupos_grupo_id_fkey"
-            columns: ["grupo_id"]
-            isOneToOne: false
-            referencedRelation: "grupos_estudo"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       flow_sessions: {
         Row: {
@@ -135,7 +127,7 @@ export type Database = {
           details: Json | null
           group_id: string | null
           id: string
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           action: string
@@ -143,7 +135,7 @@ export type Database = {
           details?: Json | null
           group_id?: string | null
           id?: string
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           action?: string
@@ -151,9 +143,17 @@ export type Database = {
           details?: Json | null
           group_id?: string | null
           id?: string
-          user_id?: string | null
+          user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_group_creation_audit_group_id"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "grupos_estudo"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       group_creation_locks: {
         Row: {
@@ -181,104 +181,71 @@ export type Database = {
       }
       grupos_estudo: {
         Row: {
-          codigo_unico: string
-          cor: string
+          codigo_unico: string | null
           created_at: string | null
-          data_criacao: string | null
+          criador_id: string
           descricao: string | null
           disciplina_area: string | null
           id: string
-          is_publico: boolean | null
+          is_public: boolean | null
           is_visible_to_all: boolean | null
           is_visible_to_partners: boolean | null
-          membros: number
           nome: string
-          permitir_visibilidade: boolean | null
-          privado: boolean | null
           tags: string[] | null
-          tipo_grupo: string | null
-          topico: string | null
+          tipo_grupo: string
           topico_especifico: string | null
-          topico_icon: string | null
-          topico_nome: string | null
-          updated_at: string | null
-          user_id: string
-          visibilidade: string | null
         }
         Insert: {
-          codigo_unico?: string
-          cor?: string
+          codigo_unico?: string | null
           created_at?: string | null
-          data_criacao?: string | null
+          criador_id: string
           descricao?: string | null
           disciplina_area?: string | null
           id?: string
-          is_publico?: boolean | null
+          is_public?: boolean | null
           is_visible_to_all?: boolean | null
           is_visible_to_partners?: boolean | null
-          membros?: number
           nome: string
-          permitir_visibilidade?: boolean | null
-          privado?: boolean | null
           tags?: string[] | null
-          tipo_grupo?: string | null
-          topico?: string | null
+          tipo_grupo: string
           topico_especifico?: string | null
-          topico_icon?: string | null
-          topico_nome?: string | null
-          updated_at?: string | null
-          user_id: string
-          visibilidade?: string | null
         }
         Update: {
-          codigo_unico?: string
-          cor?: string
+          codigo_unico?: string | null
           created_at?: string | null
-          data_criacao?: string | null
+          criador_id?: string
           descricao?: string | null
           disciplina_area?: string | null
           id?: string
-          is_publico?: boolean | null
+          is_public?: boolean | null
           is_visible_to_all?: boolean | null
           is_visible_to_partners?: boolean | null
-          membros?: number
           nome?: string
-          permitir_visibilidade?: boolean | null
-          privado?: boolean | null
           tags?: string[] | null
-          tipo_grupo?: string | null
-          topico?: string | null
+          tipo_grupo?: string
           topico_especifico?: string | null
-          topico_icon?: string | null
-          topico_nome?: string | null
-          updated_at?: string | null
-          user_id?: string
-          visibilidade?: string | null
         }
         Relationships: []
       }
       membros_grupos: {
         Row: {
           grupo_id: string
-          id: string
           joined_at: string | null
           user_id: string
         }
         Insert: {
           grupo_id: string
-          id?: string
           joined_at?: string | null
           user_id: string
         }
         Update: {
           grupo_id?: string
-          id?: string
           joined_at?: string | null
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "membros_grupos_grupo_id_fkey"
+            foreignKeyName: "fk_membros_grupos_grupo_id"
             columns: ["grupo_id"]
             isOneToOne: false
             referencedRelation: "grupos_estudo"
@@ -310,7 +277,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "mensagens_grupos_grupo_id_fkey"
+            foreignKeyName: "fk_mensagens_grupos_grupo_id"
             columns: ["grupo_id"]
             isOneToOne: false
             referencedRelation: "grupos_estudo"
@@ -873,7 +840,6 @@ export type Database = {
           p_is_visible_to_all: boolean
           p_is_visible_to_partners: boolean
           p_user_id: string
-          p_codigo_unico?: string
           p_disciplina_area?: string
           p_topico_especifico?: string
           p_tags?: string[]
@@ -884,9 +850,26 @@ export type Database = {
           error_message: string
         }[]
       }
+      get_group_messages: {
+        Args: { p_group_id: string; p_user_id: string }
+        Returns: {
+          id: string
+          user_id: string
+          mensagem: string
+          created_at: string
+        }[]
+      }
       is_group_member: {
         Args: { group_id: string; user_id: string }
         Returns: boolean
+      }
+      send_group_message: {
+        Args: { p_group_id: string; p_user_id: string; p_message: string }
+        Returns: {
+          message_id: string
+          success: boolean
+          error_message: string
+        }[]
       }
     }
     Enums: {
