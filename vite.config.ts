@@ -6,19 +6,12 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  base:
-    process.env.NODE_ENV === "development"
-      ? "/"
-      : process.env.VITE_BASE_PATH || "/",
-  optimizeDeps: {
-    entries: ["src/main.tsx"],
-  },
+  base: "/",
   plugins: [
     react(),
     mode === 'development' && componentTagger(),
   ].filter(Boolean),
   resolve: {
-    preserveSymlinks: true,
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
@@ -28,7 +21,7 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
   },
   build: {
-    target: 'esnext',
+    target: 'es2015',
     minify: 'esbuild',
     sourcemap: false,
   },
