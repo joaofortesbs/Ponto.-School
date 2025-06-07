@@ -1,26 +1,25 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Users2,
   Search,
   Plus,
   Filter,
+  Calendar,
+  MessageCircle,
   Star,
-  Download,
 } from "lucide-react";
 import CreateGroupModal from "@/components/turmas/CreateGroupModal";
 import AddGroupModal from "@/components/turmas/AddGroupModal";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
 
 export default function GruposEstudo() {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -30,60 +29,27 @@ export default function GruposEstudo() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<any>(null);
 
+  // Carregar grupos do usuário
   const loadMyGroups = async () => {
     setIsLoading(true);
     try {
-      console.log('Carregando meus grupos com novo sistema...');
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        console.log('Usuário não autenticado');
-        return;
-      }
+      if (!user) return;
 
-      // Buscar grupos onde o usuário é membro usando a nova estrutura
       const { data: memberGroups, error } = await supabase
         .from('membros_grupos')
         .select(`
           grupo_id,
-          joined_at,
-          grupos_estudo!inner (
-            id,
-            nome,
-            descricao,
-            tipo_grupo,
-            criador_id,
-            is_public,
-            is_visible_to_all,
-            is_visible_to_partners,
-            disciplina_area,
-            topico_especifico,
-            tags,
-            created_at
-          )
+          grupos_estudo (*)
         `)
         .eq('user_id', user.id);
 
       if (error) {
-        console.error('Erro ao carregar grupos como membro:', error);
+        console.error('Erro ao carregar meus grupos:', error);
         return;
       }
 
-      console.log('Dados retornados da consulta:', memberGroups);
-
-      // Processar os dados para obter lista única de grupos
-      const groupsMap = new Map();
-      memberGroups?.forEach(mg => {
-        const group = mg.grupos_estudo;
-        if (group && !groupsMap.has(group.id)) {
-          groupsMap.set(group.id, {
-            ...group,
-            membros: 1 // Para compatibilidade, será calculado depois se necessário
-          });
-        }
-      });
-      
-      const groups = Array.from(groupsMap.values());
-      console.log('Grupos únicos processados:', groups);
+      const groups = memberGroups?.map(mg => mg.grupos_estudo) || [];
       setMyGroups(groups);
     } catch (error) {
       console.error('Erro ao carregar meus grupos:', error);
@@ -92,14 +58,16 @@ export default function GruposEstudo() {
     }
   };
 
+  // Carregar todos os grupos visíveis
   const loadAllGroups = async () => {
     setIsLoading(true);
     try {
-      console.log('Carregando todos os grupos visíveis...');
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Buscar IDs dos grupos onde o usuário já é membro
+      console.log('Carregando view: todos-grupos');
+
+      // Buscar grupos onde o usuário não é membro
       const { data: userGroups } = await supabase
         .from('membros_grupos')
         .select('grupo_id')
@@ -107,16 +75,31 @@ export default function GruposEstudo() {
 
       const userGroupIds = userGroups?.map(ug => ug.grupo_id) || [];
 
-      // Buscar grupos visíveis que o usuário não participa
+      // Buscar parceiros do usuário
+      const { data: partners } = await supabase
+        .from('parceiros')
+        .select('parceiro_id')
+        .eq('user_id', user.id);
+
+      const partnerIds = partners?.map(p => p.parceiro_id) || [];
+
+      // Buscar grupos visíveis
       let query = supabase
         .from('grupos_estudo')
-        .select('*')
-        .eq('is_visible_to_all', true)
-        .neq('criador_id', user.id);
+        .select('*');
 
+      // Filtrar grupos visíveis a todos OU grupos visíveis aos parceiros (se o criador for parceiro)
+      if (partnerIds.length > 0) {
+        query = query.or(`is_visible_to_all.eq.true,and(is_visible_to_partners.eq.true,user_id.in.(${partnerIds.join(',')}))`);
+      } else {
+        query = query.eq('is_visible_to_all', true);
+      }
+
+      // Excluir grupos que o usuário já participa ou criou
       if (userGroupIds.length > 0) {
         query = query.not('id', 'in', `(${userGroupIds.join(',')})`);
       }
+      query = query.neq('user_id', user.id);
 
       const { data: visibleGroups, error } = await query;
 
@@ -134,71 +117,6 @@ export default function GruposEstudo() {
     }
   };
 
-  const exportGroups = async () => {
-    try {
-      console.log('Iniciando exportação de grupos...');
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast({
-          title: "Erro",
-          description: "Usuário não autenticado",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Exportar grupos usando a nova estrutura
-      const { data: exportData, error } = await supabase
-        .from('membros_grupos')
-        .select(`
-          grupos_estudo (*)
-        `)
-        .eq('user_id', user.id);
-
-      if (error) {
-        console.error('Erro ao exportar grupos:', error);
-        toast({
-          title: "Erro",
-          description: `Erro ao exportar grupos: ${error.message}`,
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const groups = exportData?.map(item => item.grupos_estudo).filter(Boolean) || [];
-
-      if (groups.length === 0) {
-        toast({
-          title: "Aviso",
-          description: "Nenhum grupo encontrado para exportar.",
-        });
-        return;
-      }
-
-      const jsonData = JSON.stringify(groups, null, 2);
-      const blob = new Blob([jsonData], { type: 'application/json' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `grupos_exportados_${new Date().toISOString().split('T')[0]}.json`;
-      a.click();
-      window.URL.revokeObjectURL(url);
-      
-      console.log('Grupos exportados com sucesso:', groups.length, 'grupos.');
-      toast({
-        title: "Sucesso",
-        description: `${groups.length} grupos exportados com sucesso!`,
-      });
-    } catch (error) {
-      console.error('Erro ao exportar grupos:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao exportar grupos. Verifique o console.",
-        variant: "destructive",
-      });
-    }
-  };
-
   useEffect(() => {
     if (activeTab === "meus-grupos") {
       loadMyGroups();
@@ -207,6 +125,7 @@ export default function GruposEstudo() {
     }
   }, [activeTab]);
 
+  // Filtrar grupos baseado na pesquisa
   const filteredMyGroups = myGroups.filter(
     (group) =>
       group?.nome?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -226,6 +145,7 @@ export default function GruposEstudo() {
   const handleCreateGroup = (formData: any) => {
     console.log("Novo grupo criado:", formData);
     setIsCreateModalOpen(false);
+    // Recarregar grupos
     if (activeTab === "meus-grupos") {
       loadMyGroups();
     } else if (activeTab === "todos-grupos") {
@@ -235,6 +155,7 @@ export default function GruposEstudo() {
 
   const handleGroupAdded = () => {
     setIsAddModalOpen(false);
+    // Recarregar grupos
     loadMyGroups();
     if (activeTab === "todos-grupos") {
       loadAllGroups();
@@ -246,8 +167,6 @@ export default function GruposEstudo() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      console.log('Tentando ingressar no grupo:', groupId);
-
       const { error } = await supabase
         .from('membros_grupos')
         .insert({
@@ -256,30 +175,20 @@ export default function GruposEstudo() {
           joined_at: new Date().toISOString()
         });
 
-      if (error && error.code !== '23505') {
+      if (error) {
         console.error('Erro ao ingressar no grupo:', error);
-        toast({
-          title: "Erro",
-          description: "Erro ao ingressar no grupo",
-          variant: "destructive",
-        });
+        alert('Erro ao ingressar no grupo');
         return;
       }
 
-      toast({
-        title: "Sucesso",
-        description: "Você ingressou no grupo com sucesso!",
-      });
+      alert('Você ingressou no grupo com sucesso!');
       
+      // Recarregar ambas as grades para refletir a mudança
       loadMyGroups();
       loadAllGroups();
     } catch (error) {
       console.error('Erro ao ingressar no grupo:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao ingressar no grupo",
-        variant: "destructive",
-      });
+      alert('Erro ao ingressar no grupo');
     }
   };
 
@@ -287,8 +196,6 @@ export default function GruposEstudo() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-
-      console.log('Tentando sair do grupo:', groupId);
 
       const { error } = await supabase
         .from('membros_grupos')
@@ -298,28 +205,18 @@ export default function GruposEstudo() {
 
       if (error) {
         console.error('Erro ao sair do grupo:', error);
-        toast({
-          title: "Erro",
-          description: "Erro ao sair do grupo",
-          variant: "destructive",
-        });
+        alert('Erro ao sair do grupo');
         return;
       }
 
-      toast({
-        title: "Sucesso",
-        description: "Você saiu do grupo",
-      });
+      alert('Você saiu do grupo');
       
+      // Recarregar ambas as grades para refletir a mudança
       loadMyGroups();
       loadAllGroups();
     } catch (error) {
       console.error('Erro ao sair do grupo:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao sair do grupo",
-        variant: "destructive",
-      });
+      alert('Erro ao sair do grupo');
     }
   };
 
@@ -330,6 +227,29 @@ export default function GruposEstudo() {
 
   const handleBackToGroups = () => {
     setSelectedGroup(null);
+  };
+
+  const getActivityBadge = (level: string) => {
+    switch (level) {
+      case "alta":
+        return (
+          <Badge className="bg-green-500 hover:bg-green-600">
+            Atividade Alta
+          </Badge>
+        );
+      case "média":
+        return (
+          <Badge className="bg-yellow-500 hover:bg-yellow-600">
+            Atividade Média
+          </Badge>
+        );
+      default:
+        return (
+          <Badge className="bg-gray-500 hover:bg-gray-600">
+            Atividade Baixa
+          </Badge>
+        );
+    }
   };
 
   const renderGroupCard = (group: any, showJoinButton = false) => (
@@ -343,7 +263,7 @@ export default function GruposEstudo() {
           className="w-full h-full"
           style={{ backgroundColor: group.cor || "#FF6B00" }}
         />
-        {group.is_public && (
+        {group.is_publico && (
           <Badge className="absolute top-2 left-2 bg-[#FF6B00] hover:bg-[#FF8C40]">
             <Star className="h-3 w-3 mr-1 fill-current" /> Público
           </Badge>
@@ -470,14 +390,6 @@ export default function GruposEstudo() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <Button
-            onClick={exportGroups}
-            variant="outline"
-            className="gap-1"
-          >
-            <Download className="h-4 w-4" />
-            <span>Exportar</span>
-          </Button>
           <Button
             onClick={() => setIsAddModalOpen(true)}
             variant="outline"

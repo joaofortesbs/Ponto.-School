@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import CreateGroupForm from "./CreateGroupForm";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
 
 interface CreateGroupModalProps {
   isOpen: boolean;
@@ -19,86 +18,106 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
   onSubmit,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
 
-  const handleSubmit = async (formData: any) => {
-    if (isLoading) {
-      console.log('Submissão já em andamento. Ignorando nova tentativa.');
-      return;
+  const generateUniqueCode = async (): Promise<string> => {
+    let codigoUnico: string;
+    let isUnique = false;
+    let attempts = 0;
+    const maxAttempts = 10;
+
+    while (!isUnique && attempts < maxAttempts) {
+      // Gerar código de 8 caracteres usando substring(2, 10)
+      codigoUnico = Math.random().toString(36).substring(2, 10).toUpperCase();
+      
+      console.log('Código único gerado:', codigoUnico, 'Comprimento:', codigoUnico.length);
+      
+      // Verificar se o código já existe no banco
+      const { data: existingGroup, error } = await supabase
+        .from('grupos_estudo')
+        .select('id')
+        .eq('codigo_unico', codigoUnico)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Erro ao verificar unicidade do código:', error);
+        attempts++;
+        continue;
+      }
+
+      if (!existingGroup) {
+        isUnique = true;
+        console.log('Código único validado:', codigoUnico);
+        return codigoUnico;
+      }
+      
+      attempts++;
     }
 
+    // Fallback: se não conseguir gerar código único, usar timestamp
+    const fallbackCode = Date.now().toString(36).substring(-8).toUpperCase();
+    console.log('Usando código fallback:', fallbackCode, 'Comprimento:', fallbackCode.length);
+    return fallbackCode;
+  };
+
+  const handleSubmit = async (formData: any) => {
     setIsLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        toast({
-          title: "Erro",
-          description: "Usuário não autenticado",
-          variant: "destructive",
-        });
+        alert('Usuário não autenticado');
         return;
       }
 
-      console.log('Iniciando criação de grupo com sistema redesenhado. Dados:', formData);
-      console.log('User ID:', user.id);
+      // Gerar código único de 8 caracteres
+      const codigoUnico = await generateUniqueCode();
 
-      // Usar a nova função redesenhada
-      const { data: result, error: rpcError } = await supabase.rpc('create_group_with_member', {
-        p_name: formData.nome,
-        p_description: formData.descricao || '',
-        p_type: formData.is_publico ? 'public' : 'private',
-        p_is_visible_to_all: formData.is_visible_to_all || false,
-        p_is_visible_to_partners: formData.is_visible_to_partners || false,
-        p_user_id: user.id,
-        p_disciplina_area: formData.disciplina_area || null,
-        p_topico_especifico: formData.topico_especifico || null,
-        p_tags: formData.tags || null
-      });
+      // Criar o grupo no Supabase
+      const { data: newGroup, error: insertError } = await supabase
+        .from('grupos_estudo')
+        .insert({
+          nome: formData.nome,
+          descricao: formData.descricao,
+          user_id: user.id,
+          codigo_unico: codigoUnico,
+          is_publico: formData.is_publico,
+          is_visible_to_all: formData.is_visible_to_all,
+          is_visible_to_partners: formData.is_visible_to_partners,
+          tipo_grupo: formData.tipo_grupo,
+          disciplina_area: formData.disciplina_area,
+          topico_especifico: formData.topico_especifico,
+          tags: formData.tags,
+          membros: 1
+        })
+        .select()
+        .single();
 
-      if (rpcError) {
-        console.error('Erro na função RPC:', rpcError);
-        throw new Error(`Erro na função RPC: ${rpcError.message}`);
+      if (insertError) {
+        console.error('Erro ao criar grupo:', insertError);
+        alert('Erro ao criar grupo: ' + insertError.message);
+        return;
       }
 
-      if (!result || result.length === 0 || !result[0].success) {
-        const errorMessage = result?.[0]?.error_message || 'Erro desconhecido ao criar grupo';
-        console.error('Erro retornado pela função:', errorMessage);
-        throw new Error(errorMessage);
+      console.log('Grupo criado com código:', newGroup.codigo_unico, 'Comprimento:', newGroup.codigo_unico.length);
+
+      // Adicionar o criador como membro do grupo
+      const { error: memberError } = await supabase
+        .from('membros_grupos')
+        .insert({
+          grupo_id: newGroup.id,
+          user_id: user.id,
+          joined_at: new Date().toISOString()
+        });
+
+      if (memberError) {
+        console.error('Erro ao adicionar membro:', memberError);
       }
 
-      console.log('Grupo criado com sucesso:', result);
-
-      toast({
-        title: "Sucesso",
-        description: "Grupo criado com sucesso!",
-      });
-
-      // Retornar o grupo criado com a nova estrutura
-      const groupData = {
-        id: result[0].group_id,
-        nome: formData.nome,
-        descricao: formData.descricao,
-        tipo_grupo: formData.is_publico ? 'public' : 'private',
-        criador_id: user.id,
-        disciplina_area: formData.disciplina_area,
-        topico_especifico: formData.topico_especifico,
-        tags: formData.tags,
-        is_public: formData.is_publico,
-        is_visible_to_all: formData.is_visible_to_all,
-        is_visible_to_partners: formData.is_visible_to_partners
-      };
-
-      onSubmit(groupData);
+      alert('Grupo criado com sucesso!');
+      onSubmit(newGroup);
       onClose();
-        
     } catch (error) {
-      console.error('Erro geral ao criar grupo:', error);
-      
-      toast({
-        title: "Erro",
-        description: error.message || "Erro ao criar grupo. Tente novamente.",
-        variant: "destructive",
-      });
+      console.error('Erro ao criar grupo:', error);
+      alert('Erro ao criar grupo');
     } finally {
       setIsLoading(false);
     }
@@ -132,7 +151,6 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
               <CreateGroupForm 
                 onSubmit={handleSubmit} 
                 onCancel={onClose}
-                isLoading={isLoading}
               />
             </div>
           </motion.div>
