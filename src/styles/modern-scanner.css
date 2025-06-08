@@ -1,31 +1,98 @@
-
-/* Modern scanner effects */
-@keyframes scanLine {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100vw); }
-}
-
-@keyframes scanGlow {
-  0%, 100% { opacity: 0; }
-  50% { opacity: 1; }
-}
-
-.scanner-line {
+.scanner-text {
   position: relative;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 48px;
+  font-weight: 600;
+  color: #FFFFFF;
+  text-shadow: 0 0 10px rgba(224, 247, 255, 0.3);
+  letter-spacing: 2px;
+  z-index: 2;
+  display: inline-block;
+}
+
+/* Cores para modo claro */
+:root:not(.dark) .scanner-text {
+  color: #333333;
+  text-shadow: 0 0 10px rgba(51, 51, 51, 0.1);
+}
+
+.scanner-text::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 0;
+  height: 3px;
+  background: linear-gradient(to right, #00D4FF, #E0F7FF, #00D4FF);
+  border-radius: 2px;
+  opacity: 0.8;
+  transition: width 0.3s ease;
+  box-shadow: 0 0 8px rgba(0, 212, 255, 0.6);
+  animation: underline-animation 2.5s ease-in-out infinite;
+}
+
+@keyframes underline-animation {
+  0% {
+    width: 0;
+    left: 0;
+  }
+  50% {
+    width: 100%;
+    left: 0;
+  }
+  100% {
+    width: 0;
+    left: 100%;
+  }
+}
+
+.scanner-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100vh;
+  background-color: #0A1C2B;
   overflow: hidden;
 }
 
-.scanner-line::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  width: 2px;
-  background: linear-gradient(to bottom, transparent, #FF6B00, transparent);
-  animation: scanLine 2s linear infinite;
+/* Fundo para modo claro */
+:root:not(.dark) .scanner-container {
+  background-color: #f7f9fa;
 }
 
-.scanner-glow {
-  animation: scanGlow 2s ease-in-out infinite;
+.scanner-text-wrapper {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+  padding: 20px;
+  border-radius: 8px;
+  background-color: rgba(10, 28, 43, 0.8);
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
+}
+
+/* Fundo do wrapper para modo claro */
+:root:not(.dark) .scanner-text-wrapper {
+  background-color: rgba(245, 247, 250, 0.8);
+  box-shadow: 0 0 20px rgba(0, 150, 255, 0.15);
+}
+
+.welcome-text {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+  color: #FFFFFF;
+  font-size: 32px;
+  line-height: 1.4;
+}
+
+:root:not(.dark) .welcome-text {
+  color: #333333;
+}
+
+@keyframes scanner-animation {
+
 }

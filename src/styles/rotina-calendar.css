@@ -1,39 +1,95 @@
 
-/* Calendar styling */
-.calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 1px;
-  background: #ddd;
+/* Custom styles for the Rotina Inteligente calendar */
+.rbc-calendar {
+  font-family: inherit;
+  box-sizing: border-box;
 }
 
-.calendar-day {
-  background: white;
-  padding: 8px;
-  min-height: 60px;
-  transition: background-color 0.2s ease;
+/* Dark mode styles */
+.dark .rbc-calendar {
+  background-color: #1E293B;
+  color: #fff;
 }
 
-.calendar-day:hover {
-  background: #f0f9ff;
+.dark .rbc-month-view,
+.dark .rbc-time-view,
+.dark .rbc-agenda-view {
+  background-color: #1E293B;
+  border-color: #29335C;
 }
 
-.calendar-day.selected {
-  background: #FF6B00;
-  color: white;
+.dark .rbc-header,
+.dark .rbc-header + .rbc-header,
+.dark .rbc-day-bg + .rbc-day-bg,
+.dark .rbc-time-header-content,
+.dark .rbc-time-content,
+.dark .rbc-time-header.rbc-overflowing,
+.dark .rbc-month-row + .rbc-month-row,
+.dark .rbc-day-slot .rbc-time-slot,
+.dark .rbc-timeslot-group {
+  border-color: #29335C;
 }
 
-.calendar-day.today {
-  background: #fef3c7;
-  border: 2px solid #f59e0b;
+.dark .rbc-off-range-bg {
+  background: #111a2c;
 }
 
-@keyframes calendarPop {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-  100% { transform: scale(1); }
+.dark .rbc-today {
+  background-color: rgba(255, 107, 0, 0.1);
 }
 
-.calendar-day.animate-pop {
-  animation: calendarPop 0.3s ease-out;
+.dark .rbc-toolbar button {
+  color: #fff;
+  border-color: #29335C;
+}
+
+.dark .rbc-toolbar button:hover {
+  background-color: rgba(255, 107, 0, 0.1);
+  border-color: rgba(255, 107, 0, 0.3);
+}
+
+.dark .rbc-toolbar button.rbc-active {
+  background-color: rgba(255, 107, 0, 0.2);
+  border-color: rgba(255, 107, 0, 0.5);
+}
+
+.dark .rbc-event {
+  background-color: #FF6B00;
+  border-color: #FF8C40;
+}
+
+.dark .rbc-slot-selection {
+  background-color: rgba(255, 107, 0, 0.5);
+}
+
+/* Light mode default overrides */
+.rbc-today {
+  background-color: rgba(255, 107, 0, 0.05);
+}
+
+.rbc-event {
+  background-color: #FF6B00;
+  border-color: #FF8C40;
+}
+
+.rbc-toolbar button:hover,
+.rbc-toolbar button.rbc-active {
+  background-color: rgba(255, 107, 0, 0.1);
+  border-color: rgba(255, 107, 0, 0.3);
+}
+
+.rbc-slot-selection {
+  background-color: rgba(255, 107, 0, 0.3);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .rbc-toolbar {
+    flex-direction: column;
+    align-items: start;
+  }
+  
+  .rbc-toolbar .rbc-toolbar-label {
+    margin: 8px 0;
+  }
 }
