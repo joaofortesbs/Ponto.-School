@@ -872,6 +872,27 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      create_group_safe: {
+        Args: {
+          p_nome: string
+          p_descricao?: string
+          p_tipo_grupo?: string
+          p_disciplina_area?: string
+          p_topico_especifico?: string
+          p_tags?: string[]
+          p_is_public?: boolean
+          p_is_visible_to_all?: boolean
+          p_is_visible_to_partners?: boolean
+          p_criador_id?: string
+        }
+        Returns: {
+          id: string
+          nome: string
+          codigo_unico: string
+          success: boolean
+          message: string
+        }[]
+      }
       create_group_with_member: {
         Args: {
           p_name: string
@@ -923,6 +944,10 @@ export type Database = {
           success: boolean
           error_message: string
         }[]
+      }
+      user_can_access_group: {
+        Args: { group_id: string; user_id: string }
+        Returns: boolean
       }
     }
     Enums: {

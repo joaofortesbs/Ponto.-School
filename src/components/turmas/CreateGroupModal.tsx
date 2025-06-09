@@ -21,46 +21,6 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const generateUniqueCode = async (): Promise<string> => {
-    let codigoUnico: string;
-    let isUnique = false;
-    let attempts = 0;
-    const maxAttempts = 10;
-
-    while (!isUnique && attempts < maxAttempts) {
-      // Gerar código de 8 caracteres usando substring(2, 10)
-      codigoUnico = Math.random().toString(36).substring(2, 10).toUpperCase();
-      
-      console.log('Código único gerado:', codigoUnico, 'Comprimento:', codigoUnico.length);
-      
-      // Verificar se o código já existe no banco
-      const { data: existingGroup, error } = await supabase
-        .from('grupos_estudo')
-        .select('id')
-        .eq('codigo_unico', codigoUnico)
-        .maybeSingle();
-
-      if (error) {
-        console.error('Erro ao verificar unicidade do código:', error);
-        attempts++;
-        continue;
-      }
-
-      if (!existingGroup) {
-        isUnique = true;
-        console.log('Código único validado:', codigoUnico);
-        return codigoUnico;
-      }
-      
-      attempts++;
-    }
-
-    // Fallback: se não conseguir gerar código único, usar timestamp
-    const fallbackCode = Date.now().toString(36).substring(-8).toUpperCase();
-    console.log('Usando código fallback:', fallbackCode, 'Comprimento:', fallbackCode.length);
-    return fallbackCode;
-  };
-
   const handleSubmit = async (formData: any) => {
     setIsLoading(true);
     try {
@@ -91,69 +51,78 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
         return;
       }
 
-      // Gerar código único
-      const codigoUnico = await generateUniqueCode();
+      console.log('Chamando função create_group_safe...');
 
-      // Preparar dados com estrutura correta
-      const groupData = {
-        nome: formData.nome.trim(),
-        descricao: formData.descricao?.trim() || null,
-        criador_id: user.id,
-        codigo_unico: codigoUnico,
-        // CORREÇÃO: usar is_public em vez de is_publico
-        is_public: formData.is_public === true || formData.is_public === 'true',
-        is_visible_to_all: formData.is_visible_to_all === true || formData.is_visible_to_all === 'true',
-        is_visible_to_partners: formData.is_visible_to_partners === true || formData.is_visible_to_partners === 'true',
-        tipo_grupo: formData.tipo_grupo,
-        disciplina_area: formData.disciplina_area || null,
-        topico_especifico: formData.topico_especifico || null,
-        tags: Array.isArray(formData.tags) ? formData.tags : []
-      };
+      // Usar a nova função segura do banco de dados
+      const { data: result, error: createError } = await supabase
+        .rpc('create_group_safe', {
+          p_nome: formData.nome.trim(),
+          p_descricao: formData.descricao?.trim() || null,
+          p_tipo_grupo: formData.tipo_grupo,
+          p_disciplina_area: formData.disciplina_area || null,
+          p_topico_especifico: formData.topico_especifico || null,
+          p_tags: Array.isArray(formData.tags) ? formData.tags : [],
+          p_is_public: formData.is_public === true || formData.is_public === 'true',
+          p_is_visible_to_all: formData.is_visible_to_all === true || formData.is_visible_to_all === 'true',
+          p_is_visible_to_partners: formData.is_visible_to_partners === true || formData.is_visible_to_partners === 'true',
+          p_criador_id: user.id
+        });
 
-      console.log('Dados preparados para inserção:', groupData);
-
-      // Inserir grupo no banco de dados
-      const { data: newGroup, error: insertError } = await supabase
-        .from('grupos_estudo')
-        .insert(groupData)
-        .select()
-        .single();
-
-      if (insertError) {
-        console.error('Erro ao inserir grupo:', insertError);
+      if (createError) {
+        console.error('Erro ao criar grupo:', createError);
         toast({
           title: "Erro",
-          description: `Erro ao criar grupo: ${insertError.message}`,
+          description: `Erro ao criar grupo: ${createError.message}`,
           variant: "destructive"
         });
         return;
       }
 
-      console.log('Grupo criado com sucesso:', newGroup);
-
-      // Adicionar o criador como membro do grupo
-      const { error: memberError } = await supabase
-        .from('membros_grupos')
-        .insert({
-          grupo_id: newGroup.id,
-          user_id: user.id
-        });
-
-      if (memberError) {
-        console.error('Erro ao adicionar criador como membro:', memberError);
+      if (!result || result.length === 0) {
+        console.error('Nenhum resultado retornado da função');
         toast({
-          title: "Aviso",
-          description: "Grupo criado, mas houve erro ao adicionar você como membro",
+          title: "Erro",
+          description: "Erro inesperado ao criar grupo",
           variant: "destructive"
         });
-      } else {
-        console.log('Criador adicionado como membro com sucesso');
+        return;
       }
+
+      const groupResult = result[0];
+      
+      if (!groupResult.success) {
+        console.error('Falha na criação do grupo:', groupResult.message);
+        toast({
+          title: "Erro",
+          description: groupResult.message || "Erro ao criar grupo",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      console.log('Grupo criado com sucesso:', groupResult);
 
       toast({
         title: "Sucesso",
-        description: `Grupo "${newGroup.nome}" criado com sucesso! Código: ${newGroup.codigo_unico}`,
+        description: `Grupo "${groupResult.nome}" criado com sucesso! Código: ${groupResult.codigo_unico}`,
       });
+      
+      // Criar objeto do grupo no formato esperado
+      const newGroup = {
+        id: groupResult.id,
+        nome: groupResult.nome,
+        codigo_unico: groupResult.codigo_unico,
+        criador_id: user.id,
+        tipo_grupo: formData.tipo_grupo,
+        disciplina_area: formData.disciplina_area,
+        topico_especifico: formData.topico_especifico,
+        tags: formData.tags,
+        is_public: formData.is_public,
+        is_visible_to_all: formData.is_visible_to_all,
+        is_visible_to_partners: formData.is_visible_to_partners,
+        descricao: formData.descricao,
+        created_at: new Date().toISOString()
+      };
       
       onSubmit(newGroup);
       onClose();
