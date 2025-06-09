@@ -39,54 +39,123 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
   }, [messages]);
 
   useEffect(() => {
+    if (!currentUser || !groupId) {
+      console.log('Usuário ou grupo não disponível');
+      return;
+    }
+
     loadMessages();
     setupRealtimeSubscription();
 
     return () => {
-      // Corrigir aqui: usar removeChannel ao invés de removeAllSubscriptions
       if (channelRef.current) {
         console.log('Removendo canal Realtime:', channelRef.current);
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
       }
     };
-  }, [groupId]);
+  }, [groupId, currentUser]);
 
   const loadMessages = async () => {
+    if (!currentUser || !groupId) {
+      console.log('Usuário ou grupo não disponível para carregar mensagens');
+      return;
+    }
+
     try {
       setIsLoading(true);
-      console.log('Carregando mensagens para grupo:', groupId);
+      console.log('Carregando mensagens para grupo:', groupId, 'usuário:', currentUser.id);
 
-      // Corrigir a consulta para usar a tabela profiles ao invés de auth.users
-      const { data, error } = await supabase
-        .from('mensagens_grupos')
-        .select(`
-          id,
-          mensagem,
-          created_at,
-          user_id,
-          profiles!inner(display_name, email)
-        `)
+      // Primeiro verificar se o usuário é membro do grupo
+      const { data: membership, error: membershipError } = await supabase
+        .from('membros_grupos')
+        .select('*')
         .eq('grupo_id', groupId)
-        .order('created_at', { ascending: true });
+        .eq('user_id', currentUser.id)
+        .single();
 
-      if (error) {
-        console.error('Erro ao carregar mensagens:', error);
+      if (membershipError || !membership) {
+        console.error('Usuário não é membro do grupo:', membershipError);
         toast({
-          title: "Erro",
-          description: "Erro ao carregar mensagens",
+          title: "Acesso negado",
+          description: "Você não é membro deste grupo",
           variant: "destructive"
         });
         return;
       }
 
-      console.log('Mensagens carregadas:', data);
-      setMessages(data || []);
+      console.log('Verificação de membresia aprovada');
+
+      // Carregar mensagens usando a função segura do banco
+      const { data, error } = await supabase
+        .rpc('get_group_messages_safe', {
+          p_group_id: groupId,
+          p_user_id: currentUser.id
+        });
+
+      if (error) {
+        console.error('Erro ao carregar mensagens via função:', error);
+        
+        // Fallback: tentar consulta direta
+        const { data: directData, error: directError } = await supabase
+          .from('mensagens_grupos')
+          .select(`
+            id,
+            mensagem,
+            created_at,
+            user_id,
+            profiles!inner(display_name, email)
+          `)
+          .eq('grupo_id', groupId)
+          .order('created_at', { ascending: true });
+
+        if (directError) {
+          console.error('Erro na consulta direta:', directError);
+          toast({
+            title: "Erro",
+            description: "Erro ao carregar mensagens do chat",
+            variant: "destructive"
+          });
+          return;
+        }
+
+        console.log('Mensagens carregadas via consulta direta:', directData?.length || 0);
+        setMessages(directData || []);
+        return;
+      }
+
+      console.log('Mensagens carregadas via função segura:', data?.length || 0);
+      
+      // Buscar dados dos perfis para as mensagens
+      if (data && data.length > 0) {
+        const userIds = [...new Set(data.map(msg => msg.user_id))];
+        
+        const { data: profiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, display_name, email')
+          .in('id', userIds);
+
+        if (!profilesError && profiles) {
+          const messagesWithProfiles = data.map(msg => ({
+            ...msg,
+            profiles: profiles.find(p => p.id === msg.user_id) || { display_name: 'Usuário', email: '' }
+          }));
+          setMessages(messagesWithProfiles);
+        } else {
+          setMessages(data.map(msg => ({
+            ...msg,
+            profiles: { display_name: 'Usuário', email: '' }
+          })));
+        }
+      } else {
+        setMessages([]);
+      }
+
     } catch (error) {
-      console.error('Erro ao carregar mensagens:', error);
+      console.error('Erro inesperado ao carregar mensagens:', error);
       toast({
         title: "Erro",
-        description: "Erro ao carregar mensagens",
+        description: "Erro inesperado ao carregar mensagens",
         variant: "destructive"
       });
     } finally {
@@ -95,6 +164,11 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
   };
 
   const setupRealtimeSubscription = () => {
+    if (!currentUser || !groupId) {
+      console.log('Não é possível configurar Realtime sem usuário ou grupo');
+      return;
+    }
+
     // Limpar canal existente se houver
     if (channelRef.current) {
       console.log('Removendo canal existente:', channelRef.current);
@@ -112,35 +186,50 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
         table: 'mensagens_grupos',
         filter: `grupo_id=eq.${groupId}`
       }, async (payload) => {
-        console.log('Nova mensagem recebida:', payload);
+        console.log('Nova mensagem recebida via Realtime:', payload);
         
-        // Buscar dados do usuário que enviou a mensagem
-        const { data: userProfile, error } = await supabase
-          .from('profiles')
-          .select('display_name, email')
-          .eq('id', payload.new.user_id)
-          .single();
+        try {
+          // Buscar dados do usuário que enviou a mensagem
+          const { data: userProfile, error } = await supabase
+            .from('profiles')
+            .select('display_name, email')
+            .eq('id', payload.new.user_id)
+            .single();
 
-        const newMessage: ChatMessage = {
-          ...payload.new,
-          profiles: userProfile || { display_name: 'Usuário', email: '' }
-        };
+          const newMessage: ChatMessage = {
+            ...payload.new,
+            profiles: userProfile || { display_name: 'Usuário', email: '' }
+          };
 
-        setMessages(prev => [...prev, newMessage]);
+          setMessages(prev => [...prev, newMessage]);
+          
+          // Scroll para a nova mensagem
+          setTimeout(scrollToBottom, 100);
+        } catch (error) {
+          console.error('Erro ao processar nova mensagem do Realtime:', error);
+        }
       })
       .subscribe((status) => {
         console.log('Status da assinatura Realtime:', status);
+        if (status === 'SUBSCRIBED') {
+          console.log('Realtime conectado com sucesso para grupo:', groupId);
+        } else if (status === 'CLOSED') {
+          console.log('Conexão Realtime fechada para grupo:', groupId);
+        }
       });
 
     channelRef.current = channel;
   };
 
   const sendMessage = async () => {
-    if (!newMessage.trim() || isLoading || !currentUser) return;
+    if (!newMessage.trim() || isLoading || !currentUser || !groupId) {
+      console.log('Condições inválidas para envio de mensagem');
+      return;
+    }
 
     setIsLoading(true);
     try {
-      console.log('Enviando mensagem para grupo:', groupId);
+      console.log('Enviando mensagem para grupo:', groupId, 'usuário:', currentUser.id);
       
       const { error } = await supabase
         .from('mensagens_grupos')
@@ -154,7 +243,7 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
         console.error('Erro ao enviar mensagem:', error);
         toast({
           title: "Erro",
-          description: "Erro ao enviar mensagem",
+          description: "Erro ao enviar mensagem: " + error.message,
           variant: "destructive"
         });
         return;
@@ -162,11 +251,14 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
 
       setNewMessage('');
       console.log('Mensagem enviada com sucesso');
+      
+      // A nova mensagem será adicionada automaticamente via Realtime
+      
     } catch (error) {
-      console.error('Erro ao enviar mensagem:', error);
+      console.error('Erro inesperado ao enviar mensagem:', error);
       toast({
         title: "Erro",
-        description: "Erro ao enviar mensagem",
+        description: "Erro inesperado ao enviar mensagem",
         variant: "destructive"
       });
     } finally {
@@ -194,6 +286,16 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
     }
     return message.profiles?.display_name || message.profiles?.email || 'Usuário';
   };
+
+  if (!currentUser) {
+    return (
+      <div className="chat-section h-full flex items-center justify-center">
+        <div className="text-center text-gray-400 py-8">
+          <p>Faça login para acessar o chat</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="chat-section h-full flex flex-col">

@@ -4,22 +4,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Users2,
   Search,
   Plus,
   Filter,
-  Calendar,
-  MessageCircle,
   Star,
 } from "lucide-react";
 import CreateGroupModal from "@/components/turmas/CreateGroupModal";
 import AddGroupModal from "@/components/turmas/AddGroupModal";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 export default function GruposEstudo() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -27,32 +26,82 @@ export default function GruposEstudo() {
   const [myGroups, setMyGroups] = useState<any[]>([]);
   const [allGroups, setAllGroups] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedGroup, setSelectedGroup] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
+  useEffect(() => {
+    getCurrentUser();
+  }, []);
+
+  useEffect(() => {
+    if (currentUser) {
+      if (activeTab === "meus-grupos") {
+        loadMyGroups();
+      } else if (activeTab === "todos-grupos") {
+        loadAllGroups();
+      }
+    }
+  }, [activeTab, currentUser]);
+
+  const getCurrentUser = async () => {
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error) {
+        console.error('Erro ao obter usuário:', error);
+        return;
+      }
+      setCurrentUser(user);
+    } catch (error) {
+      console.error('Erro ao obter usuário:', error);
+    }
+  };
 
   // Carregar grupos do usuário
   const loadMyGroups = async () => {
+    if (!currentUser) return;
+    
     setIsLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      console.log('Carregando meus grupos para usuário:', currentUser.id);
 
       const { data: memberGroups, error } = await supabase
         .from('membros_grupos')
         .select(`
           grupo_id,
-          grupos_estudo (*)
+          grupos_estudo (
+            id,
+            nome,
+            descricao,
+            tipo_grupo,
+            disciplina_area,
+            topico_especifico,
+            tags,
+            is_public,
+            criador_id,
+            created_at
+          )
         `)
-        .eq('user_id', user.id);
+        .eq('user_id', currentUser.id);
 
       if (error) {
         console.error('Erro ao carregar meus grupos:', error);
+        toast({
+          title: "Erro",
+          description: "Erro ao carregar seus grupos",
+          variant: "destructive"
+        });
         return;
       }
 
-      const groups = memberGroups?.map(mg => mg.grupos_estudo) || [];
+      const groups = memberGroups?.map(mg => mg.grupos_estudo).filter(Boolean) || [];
+      console.log('Meus grupos carregados:', groups.length);
       setMyGroups(groups);
     } catch (error) {
       console.error('Erro ao carregar meus grupos:', error);
+      toast({
+        title: "Erro",
+        description: "Erro inesperado ao carregar grupos",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -60,51 +109,40 @@ export default function GruposEstudo() {
 
   // Carregar todos os grupos visíveis
   const loadAllGroups = async () => {
+    if (!currentUser) return;
+    
     setIsLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      console.log('Carregando view: todos-grupos');
+      console.log('Carregando todos os grupos visíveis');
 
       // Buscar grupos onde o usuário não é membro
       const { data: userGroups } = await supabase
         .from('membros_grupos')
         .select('grupo_id')
-        .eq('user_id', user.id);
+        .eq('user_id', currentUser.id);
 
       const userGroupIds = userGroups?.map(ug => ug.grupo_id) || [];
 
-      // Buscar parceiros do usuário
-      const { data: partners } = await supabase
-        .from('parceiros')
-        .select('parceiro_id')
-        .eq('user_id', user.id);
-
-      const partnerIds = partners?.map(p => p.parceiro_id) || [];
-
-      // Buscar grupos visíveis
+      // Buscar grupos visíveis públicos
       let query = supabase
         .from('grupos_estudo')
-        .select('*');
+        .select('*')
+        .eq('is_public', true);
 
-      // Filtrar grupos visíveis a todos OU grupos visíveis aos parceiros (se o criador for parceiro)
-      if (partnerIds.length > 0) {
-        query = query.or(`is_visible_to_all.eq.true,and(is_visible_to_partners.eq.true,user_id.in.(${partnerIds.join(',')}))`);
-      } else {
-        query = query.eq('is_visible_to_all', true);
-      }
-
-      // Excluir grupos que o usuário já participa ou criou
+      // Excluir grupos que o usuário já participa
       if (userGroupIds.length > 0) {
         query = query.not('id', 'in', `(${userGroupIds.join(',')})`);
       }
-      query = query.neq('user_id', user.id);
 
       const { data: visibleGroups, error } = await query;
 
       if (error) {
         console.error('Erro ao carregar todos os grupos:', error);
+        toast({
+          title: "Erro",
+          description: "Erro ao carregar grupos disponíveis",
+          variant: "destructive"
+        });
         return;
       }
 
@@ -112,18 +150,15 @@ export default function GruposEstudo() {
       setAllGroups(visibleGroups || []);
     } catch (error) {
       console.error('Erro ao carregar todos os grupos:', error);
+      toast({
+        title: "Erro",
+        description: "Erro inesperado ao carregar grupos",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
   };
-
-  useEffect(() => {
-    if (activeTab === "meus-grupos") {
-      loadMyGroups();
-    } else if (activeTab === "todos-grupos") {
-      loadAllGroups();
-    }
-  }, [activeTab]);
 
   // Filtrar grupos baseado na pesquisa
   const filteredMyGroups = myGroups.filter(
@@ -142,20 +177,57 @@ export default function GruposEstudo() {
       group?.topico_especifico?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleCreateGroup = (formData: any) => {
-    console.log("Novo grupo criado:", formData);
-    setIsCreateModalOpen(false);
-    // Recarregar grupos
-    if (activeTab === "meus-grupos") {
-      loadMyGroups();
-    } else if (activeTab === "todos-grupos") {
-      loadAllGroups();
+  const handleCreateGroup = async (formData: any) => {
+    console.log("Criando novo grupo:", formData);
+    try {
+      const { data, error } = await supabase.rpc('create_group_with_member', {
+        p_name: formData.nome,
+        p_description: formData.descricao || '',
+        p_type: formData.tipo_grupo,
+        p_is_visible_to_all: formData.is_visible_to_all || false,
+        p_is_visible_to_partners: formData.is_visible_to_partners || false,
+        p_user_id: currentUser.id,
+        p_disciplina_area: formData.disciplina_area,
+        p_topico_especifico: formData.topico_especifico,
+        p_tags: formData.tags
+      });
+
+      if (error) {
+        console.error('Erro ao criar grupo:', error);
+        toast({
+          title: "Erro",
+          description: "Erro ao criar grupo: " + error.message,
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (data && data.length > 0 && data[0].success) {
+        toast({
+          title: "Sucesso",
+          description: "Grupo criado com sucesso!",
+        });
+        setIsCreateModalOpen(false);
+        loadMyGroups(); // Recarregar a lista
+      } else {
+        toast({
+          title: "Erro",
+          description: data?.[0]?.error_message || "Erro ao criar grupo",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Erro inesperado ao criar grupo:', error);
+      toast({
+        title: "Erro",
+        description: "Erro inesperado ao criar grupo",
+        variant: "destructive"
+      });
     }
   };
 
   const handleGroupAdded = () => {
     setIsAddModalOpen(false);
-    // Recarregar grupos
     loadMyGroups();
     if (activeTab === "todos-grupos") {
       loadAllGroups();
@@ -163,92 +235,83 @@ export default function GruposEstudo() {
   };
 
   const handleJoinGroup = async (groupId: string) => {
+    if (!currentUser) return;
+    
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
+      console.log('Tentando ingressar no grupo:', groupId);
+      
       const { error } = await supabase
         .from('membros_grupos')
         .insert({
           grupo_id: groupId,
-          user_id: user.id,
-          joined_at: new Date().toISOString()
+          user_id: currentUser.id
         });
 
       if (error) {
         console.error('Erro ao ingressar no grupo:', error);
-        alert('Erro ao ingressar no grupo');
+        toast({
+          title: "Erro",
+          description: "Erro ao ingressar no grupo: " + error.message,
+          variant: "destructive"
+        });
         return;
       }
 
-      alert('Você ingressou no grupo com sucesso!');
+      toast({
+        title: "Sucesso",
+        description: "Você ingressou no grupo com sucesso!",
+      });
       
-      // Recarregar ambas as grades para refletir a mudança
+      // Recarregar ambas as listas
       loadMyGroups();
       loadAllGroups();
     } catch (error) {
       console.error('Erro ao ingressar no grupo:', error);
-      alert('Erro ao ingressar no grupo');
+      toast({
+        title: "Erro",
+        description: "Erro inesperado ao ingressar no grupo",
+        variant: "destructive"
+      });
     }
   };
 
   const handleLeaveGroup = async (groupId: string) => {
+    if (!currentUser) return;
+    
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
+      console.log('Tentando sair do grupo:', groupId);
+      
       const { error } = await supabase
         .from('membros_grupos')
         .delete()
         .eq('grupo_id', groupId)
-        .eq('user_id', user.id);
+        .eq('user_id', currentUser.id);
 
       if (error) {
         console.error('Erro ao sair do grupo:', error);
-        alert('Erro ao sair do grupo');
+        toast({
+          title: "Erro",
+          description: "Erro ao sair do grupo: " + error.message,
+          variant: "destructive"
+        });
         return;
       }
 
-      alert('Você saiu do grupo');
+      toast({
+        title: "Sucesso",
+        description: "Você saiu do grupo",
+      });
       
-      // Recarregar ambas as grades para refletir a mudança
+      // Recarregar ambas as listas
       loadMyGroups();
       loadAllGroups();
     } catch (error) {
       console.error('Erro ao sair do grupo:', error);
-      alert('Erro ao sair do grupo');
-    }
-  };
-
-  const handleAccessGroup = (group: any) => {
-    console.log('Acessando grupo:', group);
-    setSelectedGroup(group);
-  };
-
-  const handleBackToGroups = () => {
-    setSelectedGroup(null);
-  };
-
-  const getActivityBadge = (level: string) => {
-    switch (level) {
-      case "alta":
-        return (
-          <Badge className="bg-green-500 hover:bg-green-600">
-            Atividade Alta
-          </Badge>
-        );
-      case "média":
-        return (
-          <Badge className="bg-yellow-500 hover:bg-yellow-600">
-            Atividade Média
-          </Badge>
-        );
-      default:
-        return (
-          <Badge className="bg-gray-500 hover:bg-gray-600">
-            Atividade Baixa
-          </Badge>
-        );
+      toast({
+        title: "Erro",
+        description: "Erro inesperado ao sair do grupo",
+        variant: "destructive"
+      });
     }
   };
 
@@ -260,10 +323,9 @@ export default function GruposEstudo() {
     >
       <div className="h-32 bg-gray-200 relative">
         <div 
-          className="w-full h-full"
-          style={{ backgroundColor: group.cor || "#FF6B00" }}
+          className="w-full h-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40]"
         />
-        {group.is_publico && (
+        {group.is_public && (
           <Badge className="absolute top-2 left-2 bg-[#FF6B00] hover:bg-[#FF8C40]">
             <Star className="h-3 w-3 mr-1 fill-current" /> Público
           </Badge>
@@ -304,7 +366,7 @@ export default function GruposEstudo() {
           <div className="flex items-center">
             <Users2 className="h-4 w-4 mr-1 text-gray-500" />
             <span className="text-xs text-gray-500">
-              {group.membros || 0} membros
+              Grupo de estudos
             </span>
           </div>
           <div className="flex gap-2">
@@ -337,7 +399,7 @@ export default function GruposEstudo() {
                   className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white text-xs h-8"
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleAccessGroup(group);
+                    // Acessar grupo será feito pelo onClick do card
                   }}
                 >
                   Acessar
@@ -350,22 +412,25 @@ export default function GruposEstudo() {
     </div>
   );
 
-  // Show group detail view if a group is selected
-  if (selectedGroup) {
-    const GroupDetail = React.lazy(() => import("@/components/turmas/group-detail"));
+  if (!currentUser) {
     return (
-      <React.Suspense fallback={
-        <div className="flex items-center justify-center h-screen bg-[#001427]">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#FF6B00]"></div>
+      <div className="container mx-auto p-4 max-w-7xl">
+        <div className="text-center py-10">
+          <Users2 className="h-12 w-12 mx-auto text-gray-400 mb-3" />
+          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+            Acesso necessário
+          </h3>
+          <p className="text-gray-500 max-w-md mx-auto mt-2">
+            Faça login para acessar os grupos de estudos.
+          </p>
         </div>
-      }>
-        <GroupDetail group={selectedGroup} onBack={handleBackToGroups} />
-      </React.Suspense>
+      </div>
     );
   }
 
   return (
     <div className="container mx-auto p-4 max-w-7xl">
+      
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div className="flex items-center">
           <Users2 className="h-8 w-8 text-[#FF6B00] mr-3" />
@@ -480,7 +545,7 @@ export default function GruposEstudo() {
                 Nenhum grupo visível encontrado
               </h3>
               <p className="text-gray-500 max-w-md mx-auto mt-2">
-                Não encontramos grupos com visibilidade pública ou de parceiros no momento ou sua
+                Não encontramos grupos públicos no momento ou sua
                 busca não retornou resultados.
               </p>
             </div>
