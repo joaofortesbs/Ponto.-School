@@ -43,6 +43,7 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
     setupRealtimeSubscription();
 
     return () => {
+      // Corrigir aqui: usar removeChannel ao invés de removeAllSubscriptions
       if (channelRef.current) {
         console.log('Removendo canal Realtime:', channelRef.current);
         supabase.removeChannel(channelRef.current);
@@ -56,15 +57,21 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
       setIsLoading(true);
       console.log('Carregando mensagens para grupo:', groupId);
 
-      // Primeiro, carregar apenas as mensagens sem fazer join com profiles
-      const { data: messagesData, error: messagesError } = await supabase
+      // Corrigir a consulta para usar a tabela profiles ao invés de auth.users
+      const { data, error } = await supabase
         .from('mensagens_grupos')
-        .select('id, mensagem, created_at, user_id')
+        .select(`
+          id,
+          mensagem,
+          created_at,
+          user_id,
+          profiles!inner(display_name, email)
+        `)
         .eq('grupo_id', groupId)
         .order('created_at', { ascending: true });
 
-      if (messagesError) {
-        console.error('Erro ao carregar mensagens:', messagesError);
+      if (error) {
+        console.error('Erro ao carregar mensagens:', error);
         toast({
           title: "Erro",
           description: "Erro ao carregar mensagens",
@@ -73,37 +80,8 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
         return;
       }
 
-      console.log('Mensagens carregadas:', messagesData?.length || 0);
-
-      // Se não há mensagens, definir array vazio
-      if (!messagesData || messagesData.length === 0) {
-        setMessages([]);
-        return;
-      }
-
-      // Depois, carregar os perfis dos usuários separadamente
-      const userIds = [...new Set(messagesData.map(msg => msg.user_id))];
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, display_name, email')
-        .in('id', userIds);
-
-      if (profilesError) {
-        console.error('Erro ao carregar perfis:', profilesError);
-        // Continuar sem os perfis se houver erro
-      }
-
-      // Combinar mensagens com perfis
-      const messagesWithProfiles = messagesData.map(message => ({
-        ...message,
-        profiles: profilesData?.find(profile => profile.id === message.user_id) || {
-          display_name: 'Usuário',
-          email: ''
-        }
-      }));
-
-      console.log('Mensagens com perfis:', messagesWithProfiles);
-      setMessages(messagesWithProfiles);
+      console.log('Mensagens carregadas:', data);
+      setMessages(data || []);
     } catch (error) {
       console.error('Erro ao carregar mensagens:', error);
       toast({
