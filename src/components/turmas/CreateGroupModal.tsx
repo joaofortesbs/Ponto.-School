@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import CreateGroupForm from "./CreateGroupForm";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface CreateGroupModalProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
   onSubmit,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   const generateUniqueCode = async (): Promise<string> => {
     let codigoUnico: string;
@@ -62,62 +64,106 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
   const handleSubmit = async (formData: any) => {
     setIsLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        alert('Usuário não autenticado');
+      console.log('Iniciando criação de grupo com dados:', formData);
+      
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        console.error('Erro de autenticação:', userError);
+        toast({
+          title: "Erro",
+          description: "Usuário não autenticado",
+          variant: "destructive"
+        });
         return;
       }
 
-      // Gerar código único de 8 caracteres
+      // Validação dos dados obrigatórios
+      const requiredFields = ['nome', 'tipo_grupo'];
+      const missingFields = requiredFields.filter(field => !formData[field] || formData[field].trim() === '');
+      
+      if (missingFields.length > 0) {
+        console.error('Campos obrigatórios ausentes:', missingFields);
+        toast({
+          title: "Erro",
+          description: `Campos obrigatórios: ${missingFields.join(', ')}`,
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Gerar código único
       const codigoUnico = await generateUniqueCode();
 
-      // Criar o grupo no Supabase
+      // Preparar dados com estrutura correta
+      const groupData = {
+        nome: formData.nome.trim(),
+        descricao: formData.descricao?.trim() || null,
+        criador_id: user.id,
+        codigo_unico: codigoUnico,
+        // CORREÇÃO: usar is_public em vez de is_publico
+        is_public: formData.is_public === true || formData.is_public === 'true',
+        is_visible_to_all: formData.is_visible_to_all === true || formData.is_visible_to_all === 'true',
+        is_visible_to_partners: formData.is_visible_to_partners === true || formData.is_visible_to_partners === 'true',
+        tipo_grupo: formData.tipo_grupo,
+        disciplina_area: formData.disciplina_area || null,
+        topico_especifico: formData.topico_especifico || null,
+        tags: Array.isArray(formData.tags) ? formData.tags : []
+      };
+
+      console.log('Dados preparados para inserção:', groupData);
+
+      // Inserir grupo no banco de dados
       const { data: newGroup, error: insertError } = await supabase
         .from('grupos_estudo')
-        .insert({
-          nome: formData.nome,
-          descricao: formData.descricao,
-          user_id: user.id,
-          codigo_unico: codigoUnico,
-          is_publico: formData.is_publico,
-          is_visible_to_all: formData.is_visible_to_all,
-          is_visible_to_partners: formData.is_visible_to_partners,
-          tipo_grupo: formData.tipo_grupo,
-          disciplina_area: formData.disciplina_area,
-          topico_especifico: formData.topico_especifico,
-          tags: formData.tags,
-          membros: 1
-        })
+        .insert(groupData)
         .select()
         .single();
 
       if (insertError) {
-        console.error('Erro ao criar grupo:', insertError);
-        alert('Erro ao criar grupo: ' + insertError.message);
+        console.error('Erro ao inserir grupo:', insertError);
+        toast({
+          title: "Erro",
+          description: `Erro ao criar grupo: ${insertError.message}`,
+          variant: "destructive"
+        });
         return;
       }
 
-      console.log('Grupo criado com código:', newGroup.codigo_unico, 'Comprimento:', newGroup.codigo_unico.length);
+      console.log('Grupo criado com sucesso:', newGroup);
 
       // Adicionar o criador como membro do grupo
       const { error: memberError } = await supabase
         .from('membros_grupos')
         .insert({
           grupo_id: newGroup.id,
-          user_id: user.id,
-          joined_at: new Date().toISOString()
+          user_id: user.id
         });
 
       if (memberError) {
-        console.error('Erro ao adicionar membro:', memberError);
+        console.error('Erro ao adicionar criador como membro:', memberError);
+        toast({
+          title: "Aviso",
+          description: "Grupo criado, mas houve erro ao adicionar você como membro",
+          variant: "destructive"
+        });
+      } else {
+        console.log('Criador adicionado como membro com sucesso');
       }
 
-      alert('Grupo criado com sucesso!');
+      toast({
+        title: "Sucesso",
+        description: `Grupo "${newGroup.nome}" criado com sucesso! Código: ${newGroup.codigo_unico}`,
+      });
+      
       onSubmit(newGroup);
       onClose();
     } catch (error) {
-      console.error('Erro ao criar grupo:', error);
-      alert('Erro ao criar grupo');
+      console.error('Erro inesperado ao criar grupo:', error);
+      toast({
+        title: "Erro",
+        description: "Erro inesperado ao criar grupo",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -151,6 +197,7 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
               <CreateGroupForm 
                 onSubmit={handleSubmit} 
                 onCancel={onClose}
+                isLoading={isLoading}
               />
             </div>
           </motion.div>

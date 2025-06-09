@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -177,53 +178,14 @@ export default function GruposEstudo() {
       group?.topico_especifico?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleCreateGroup = async (formData: any) => {
-    console.log("Criando novo grupo:", formData);
-    try {
-      const { data, error } = await supabase.rpc('create_group_with_member', {
-        p_name: formData.nome,
-        p_description: formData.descricao || '',
-        p_type: formData.tipo_grupo,
-        p_is_visible_to_all: formData.is_visible_to_all || false,
-        p_is_visible_to_partners: formData.is_visible_to_partners || false,
-        p_user_id: currentUser.id,
-        p_disciplina_area: formData.disciplina_area,
-        p_topico_especifico: formData.topico_especifico,
-        p_tags: formData.tags
-      });
-
-      if (error) {
-        console.error('Erro ao criar grupo:', error);
-        toast({
-          title: "Erro",
-          description: "Erro ao criar grupo: " + error.message,
-          variant: "destructive"
-        });
-        return;
-      }
-
-      if (data && data.length > 0 && data[0].success) {
-        toast({
-          title: "Sucesso",
-          description: "Grupo criado com sucesso!",
-        });
-        setIsCreateModalOpen(false);
-        loadMyGroups(); // Recarregar a lista
-      } else {
-        toast({
-          title: "Erro",
-          description: data?.[0]?.error_message || "Erro ao criar grupo",
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      console.error('Erro inesperado ao criar grupo:', error);
-      toast({
-        title: "Erro",
-        description: "Erro inesperado ao criar grupo",
-        variant: "destructive"
-      });
-    }
+  const handleCreateGroup = async (newGroup: any) => {
+    console.log("Grupo criado com sucesso:", newGroup);
+    toast({
+      title: "Sucesso",
+      description: `Grupo "${newGroup.nome}" criado com sucesso!`,
+    });
+    setIsCreateModalOpen(false);
+    loadMyGroups(); // Recarregar a lista
   };
 
   const handleGroupAdded = () => {
