@@ -42,7 +42,7 @@ const CardRecompensasDisponiveis: React.FC<CardRecompensasDisponiveisProps> = ({
         <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center">
           <Gift className="w-4 h-4 text-white" />
         </div>
-        <h3 className="font-semibold text-sm" style={{ color: "#E8E8E8" }}>Recompensas Disponíveis</h3>
+        <h3 className="font-semibold text-sm" style={{ color: "#FFFFFF" }}>Recompensas Disponíveis</h3>
       </div>
 
       <div className="space-y-2 mb-4">
@@ -51,8 +51,8 @@ const CardRecompensasDisponiveis: React.FC<CardRecompensasDisponiveisProps> = ({
             <div className="w-4 h-4 flex items-center justify-center">
               {prize.icon}
             </div>
-            <span className="flex-1" style={{ color: "#CCCCCC" }}>{prize.name}</span>
-            <span style={{ color: "#AAAAAA" }}>{prize.chance}%</span>
+            <span className="flex-1" style={{ color: "#FFFFFF" }}>{prize.name}</span>
+            <span style={{ color: "#FFFFFF" }}>{prize.chance}%</span>
           </div>
         ))}
       </div>
@@ -60,10 +60,10 @@ const CardRecompensasDisponiveis: React.FC<CardRecompensasDisponiveisProps> = ({
       {/* Regenerar Recompensas */}
       <div className="border-t border-white/10 pt-3">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xs" style={{ color: "#BBBBBB" }}>Regenerar recompensas</span>
+          <span className="text-xs" style={{ color: "#FFFFFF" }}>Regenerar recompensas</span>
           <div className="flex items-center gap-1">
             <Coins className="w-3 h-3 text-orange-500" />
-            <span className="text-xs" style={{ color: "#E8E8E8" }}>{userSPs} SPs</span>
+            <span className="text-xs" style={{ color: "#FFFFFF" }}>{userSPs} SPs</span>
           </div>
         </div>
         
@@ -83,7 +83,7 @@ const CardRecompensasDisponiveis: React.FC<CardRecompensasDisponiveisProps> = ({
         </Button>
         
         {regenerationCount > 0 && (
-          <p className="text-xs mt-1 text-center" style={{ color: "#999999" }}>
+          <p className="text-xs mt-1 text-center" style={{ color: "#FFFFFF" }}>
             Regenerações: {regenerationCount}/3
           </p>
         )}

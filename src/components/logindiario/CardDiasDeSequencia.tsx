@@ -30,7 +30,7 @@ const CardDiasDeSequencia: React.FC<CardDiasDeSequenciaProps> = ({
         <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
           <Calendar className="w-4 h-4 text-white" />
         </div>
-        <h3 className="font-semibold text-sm" style={{ color: "#E8E8E8" }}>Sequência de Giros</h3>
+        <h3 className="font-semibold text-sm" style={{ color: "#FFFFFF" }}>Sequência de Giros</h3>
       </div>
 
       <div className="space-y-3">
@@ -38,16 +38,16 @@ const CardDiasDeSequencia: React.FC<CardDiasDeSequenciaProps> = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Flame className="w-4 h-4 text-orange-500" />
-            <span className="text-sm" style={{ color: "#CCCCCC" }}>Dias consecutivos</span>
+            <span className="text-sm" style={{ color: "#FFFFFF" }}>Dias consecutivos</span>
           </div>
-          <span className="font-bold" style={{ color: "#E8E8E8" }}>{diasSequencia}</span>
+          <span className="font-bold" style={{ color: "#FFFFFF" }}>{diasSequencia}</span>
         </div>
 
         {/* Recorde pessoal */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Trophy className="w-4 h-4 text-yellow-500" />
-            <span className="text-sm" style={{ color: "#CCCCCC" }}>Recorde pessoal</span>
+            <span className="text-sm" style={{ color: "#FFFFFF" }}>Recorde pessoal</span>
           </div>
           <span className="text-yellow-500 font-bold">{recordePessoal}</span>
         </div>
@@ -55,8 +55,8 @@ const CardDiasDeSequencia: React.FC<CardDiasDeSequenciaProps> = ({
         {/* Próxima meta */}
         <div className="bg-white/5 rounded-lg p-2">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-xs" style={{ color: "#BBBBBB" }}>Próxima meta</span>
-            <span className="text-xs" style={{ color: "#E8E8E8" }}>{diasSequencia}/{proximaMeta}</span>
+            <span className="text-xs" style={{ color: "#FFFFFF" }}>Próxima meta</span>
+            <span className="text-xs" style={{ color: "#FFFFFF" }}>{diasSequencia}/{proximaMeta}</span>
           </div>
           <div className="w-full bg-white/10 rounded-full h-2">
             <div 

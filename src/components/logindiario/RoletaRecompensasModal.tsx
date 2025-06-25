@@ -437,7 +437,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                     fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
                     letterSpacing: "-0.04em",
                     textShadow: "0 2px 4px rgba(0,0,0,0.3)",
-                    color: "#2D1B14"
+                    color: "#FF6A00"
                   }}
                 >
                   Login Diário
