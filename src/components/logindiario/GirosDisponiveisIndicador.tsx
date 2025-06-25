@@ -16,7 +16,7 @@ const GirosDisponiveisIndicador: React.FC<GirosDisponiveisIndicadorProps> = ({
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-white/20 backdrop-blur-md border border-white/30 rounded-full px-4 py-2 flex items-center gap-3"
+      className="bg-white/20 backdrop-blur-md border border-white/30 rounded-full px-4 py-2 flex items-center gap-3"
     >
       {/* Giros Normais */}
       <div className="flex items-center gap-1">
