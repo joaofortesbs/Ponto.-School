@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence, PanInfo } from "framer-motion";
 import {
@@ -55,26 +56,26 @@ export default function ModoEventosModal({
 }: ModoEventosModalProps) {
   const { theme } = useTheme();
   const isLightMode = theme === 'light';
-
+  
   // Função para verificar se um modo está liberado
   const isModeUnlocked = (releaseStart?: string, releaseEnd?: string) => {
     if (!releaseStart || !releaseEnd) return true;
-
+    
     const now = new Date();
     const currentYear = now.getFullYear();
-
+    
     // Parse das datas no formato DD/MM
     const [startDay, startMonth] = releaseStart.split('/').map(Number);
     const [endDay, endMonth] = releaseEnd.split('/').map(Number);
-
+    
     const startDate = new Date(currentYear, startMonth - 1, startDay);
     const endDate = new Date(currentYear, endMonth - 1, endDay);
-
+    
     // Se a data de fim é no ano seguinte (caso do Fim de Ano)
     if (endMonth < startMonth) {
       endDate.setFullYear(currentYear + 1);
     }
-
+    
     return now >= startDate && now <= endDate;
   };
 
@@ -191,19 +192,19 @@ export default function ModoEventosModal({
   // Função para ativar apenas um modo por vez
   const toggleEventMode = (id: string) => {
     const mode = eventModes.find(m => m.id === id);
-
+    
     // Não permitir ativar modos bloqueados
     if (mode?.isLocked) {
       return;
     }
-
+    
     setEventModes(prev =>
       prev.map(mode => ({
         ...mode,
         enabled: mode.id === id ? !mode.enabled : false
       }))
     );
-
+    
     // Se nenhum modo estiver ativo após o toggle, ativar o modo padrão
     setTimeout(() => {
       setEventModes(prev => {
@@ -224,23 +225,23 @@ export default function ModoEventosModal({
     const distance = index - currentIndex;
     const isCenter = distance === 0;
     const absDistance = Math.abs(distance);
-
+    
     // Posição X baseada na distância do centro
     const baseSpacing = 160;
     const x = distance * baseSpacing;
-
+    
     // Escala baseada na distância (centro = 1, outros diminuem)
     const scale = isCenter ? 1.2 : Math.max(0.6, 1 - absDistance * 0.15);
-
+    
     // Rotação Y para efeito de perspectiva 3D
     const rotateY = isCenter ? 0 : distance * -15;
-
+    
     // Z-index para sobreposição correta
     const zIndex = isCenter ? 10 : Math.max(1, 5 - absDistance);
-
+    
     // Opacidade baseada na distância
     const opacity = isCenter ? 1 : Math.max(0.4, 1 - absDistance * 0.3);
-
+    
     // Blur para simular profundidade
     const blur = isCenter ? 0 : Math.min(absDistance * 2, 6);
 
@@ -278,7 +279,7 @@ export default function ModoEventosModal({
   const handleDragEnd = (event: any, info: PanInfo) => {
     setIsDragging(false);
     const threshold = 50;
-
+    
     if (info.offset.x > threshold) {
       prevSlide();
     } else if (info.offset.x < -threshold) {
@@ -295,21 +296,34 @@ export default function ModoEventosModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent 
-        className="fixed inset-0 z-50 flex items-center justify-center p-0 m-0 max-w-none w-full h-full border-0 rounded-none"
-        style={{
-          background: isLightMode 
-            ? 'linear-gradient(135deg, rgba(255, 236, 214, 0.95) 0%, rgba(255, 250, 240, 0.98) 100%)'
-            : 'linear-gradient(135deg, rgba(30, 30, 40, 0.95) 0%, rgba(20, 20, 30, 0.98) 100%)',
-          backdropFilter: 'blur(12px)',
-          border: '2px solid #FF6A00',
-          borderRadius: '24px',
-          boxShadow: isLightMode
-            ? '0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 30px rgba(255, 106, 0, 0.2)'
-            : '0 25px 50px -12px rgba(0, 0, 0, 0.4), 0 0 40px rgba(255, 106, 0, 0.3)',
-        }}
-      >
-        <div className="relative w-full h-full overflow-hidden">
+      <DialogContent className="w-[900px] h-[720px] max-w-none p-0 border-0 bg-transparent overflow-hidden">
+        <div className="relative w-full h-full">
+          {/* Background com estilo do modal de boas-vindas adaptado para tema claro/escuro */}
+          <div className={`absolute inset-0 backdrop-blur-xl rounded-3xl border-4 shadow-[0_0_50px_rgba(255,107,0,0.05)] ${
+            isLightMode 
+              ? 'bg-[#1e3a5f]/73 border-[#FF6B00]/20' 
+              : 'bg-[#0a1929]/73 border-[#FF6B00]/30'
+          }`}>
+            {/* Glassmorphism overlay com tom azul marinho escuro moderno */}
+            <div className={`absolute inset-0 rounded-3xl ${
+              isLightMode
+                ? 'bg-gradient-to-br from-[#1e3a5f]/35 via-[#2d4f75]/25 to-[#1e3a5f]/35'
+                : 'bg-gradient-to-br from-[#0a1929]/35 via-[#0f2744]/25 to-[#0a1929]/35'
+            }`} />
+            
+            {/* Grid sutil */}
+            <div 
+              className="absolute inset-0 opacity-[0.015] rounded-3xl"
+              style={{
+                backgroundImage: `
+                  linear-gradient(rgba(30, 58, 95, ${isLightMode ? '0.05' : '0.08'}) 1px, transparent 1px),
+                  linear-gradient(90deg, rgba(30, 58, 95, ${isLightMode ? '0.05' : '0.08'}) 1px, transparent 1px)
+                `,
+                backgroundSize: '40px 40px'
+              }}
+            />
+          </div>
+
           {/* Close button simples */}
           <Button
             variant="ghost"
@@ -336,7 +350,7 @@ export default function ModoEventosModal({
                 >
                   <div className="relative bg-[#FF6B00]/10 p-5 rounded-2xl border border-[#FF6B00]/20 backdrop-blur-sm">
                     <Calendar className="h-8 w-8 text-[#FF6B00]" />
-
+                    
                     {/* Orbiting elements */}
                     <motion.div 
                       className="absolute -top-1.5 -right-1.5 bg-[#FFD700]/10 p-1 rounded-lg border border-[#FFD700]/20 backdrop-blur-sm"
@@ -408,7 +422,7 @@ export default function ModoEventosModal({
                     const IconComponent = mode.icon;
                     const style = getCardStyle(index);
                     const isCenter = index === currentIndex;
-
+                    
                     return (
                       <motion.div
                         key={mode.id}
@@ -490,7 +504,7 @@ export default function ModoEventosModal({
                               }}
                             />
                           )}
-
+                          
                           {/* Borda adicional para modo ativo */}
                           {mode.enabled && (
                             <motion.div
@@ -548,7 +562,7 @@ export default function ModoEventosModal({
                               >
                                 <Lock className="h-8 w-8 text-gray-600 dark:text-gray-300" />
                               </motion.div>
-
+                              
                               {/* Mensagem de liberação */}
                               <div className="text-center px-4">
                                 <p className={`text-xs font-medium leading-tight ${
@@ -597,7 +611,7 @@ export default function ModoEventosModal({
                                   filter: mode.enabled ? `drop-shadow(0 0 8px ${mode.color})` : 'none'
                                 }}
                               />
-
+                              
                               {/* Icon glow effect - melhorado para modo ativo */}
                               {(isCenter || mode.enabled) && (
                                 <motion.div 
@@ -618,7 +632,7 @@ export default function ModoEventosModal({
                                   }}
                                 />
                               )}
-
+                              
                               {/* Efeito adicional para modo ativo */}
                               {mode.enabled && (
                                 <motion.div 
@@ -637,7 +651,7 @@ export default function ModoEventosModal({
                                 />
                               )}
                             </motion.div>
-
+                            
                             {/* Text Content */}
                             <div className="space-y-2">
                               <h4 className={`text-lg font-semibold ${isLightMode ? 'text-gray-800' : 'text-white'}`}>
@@ -778,7 +792,7 @@ export default function ModoEventosModal({
                       style={{ color: activeMode.color }}
                     />
                   </motion.div>
-
+                  
                   {/* Nome e status */}
                   <div className="flex flex-col">
                     <span className={`font-semibold text-lg ${
@@ -792,7 +806,7 @@ export default function ModoEventosModal({
                       Modo ativo atual
                     </span>
                   </div>
-
+                  
                   {/* Indicador de status */}
                   <motion.div 
                     className="w-3 h-3 rounded-full"
@@ -803,7 +817,7 @@ export default function ModoEventosModal({
                 </motion.div>
               )}
 
-
+              
             </div>
           </div>
         </div>
