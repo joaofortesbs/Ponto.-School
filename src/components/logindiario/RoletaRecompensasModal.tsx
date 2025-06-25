@@ -12,6 +12,7 @@ import RoletaDeRecompensas from "./RoletaDeRecompensas";
 import CardDiasDeSequencia from "./CardDiasDeSequencia";
 import CardRecompensasDisponiveis from "./CardRecompensasDisponiveis";
 import GirosDisponiveisIndicador from "./GirosDisponiveisIndicador";
+import { useTheme } from "@/components/ThemeProvider";
 
 interface RoletaRecompensasModalProps {
   open: boolean;
@@ -368,6 +369,9 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
 
     requestAnimationFrame(animate);
   };
+
+    const { theme } = useTheme();
+    const isLightMode = theme === 'light';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

@@ -171,7 +171,11 @@ export default function ModoEventosModal({
     },
   ]);
 
-  const [currentIndex, setCurrentIndex] = useState(3); // Centraliza no card "Ponto. School" (agora na posição 3)
+  const [currentIndex, setCurrentIndex] = useState(() => {
+    // Encontra o índice do card "Ponto. School" para centralizar por padrão
+    const pontoSchoolIndex = eventModes.findIndex(mode => mode.id === 'ponto-school');
+    return pontoSchoolIndex !== -1 ? pontoSchoolIndex : 3;
+  });
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -285,7 +289,7 @@ export default function ModoEventosModal({
       <DialogContent className="w-[900px] h-[720px] max-w-none p-0 border-0 bg-transparent overflow-hidden">
         <div className="relative w-full h-full">
           {/* Background com estilo do modal de boas-vindas adaptado para tema claro/escuro */}
-          <div className={`absolute inset-0 backdrop-blur-xl rounded-3xl border shadow-[0_0_50px_rgba(255,107,0,0.05)] ${
+          <div className={`absolute inset-0 backdrop-blur-xl rounded-3xl border-2 shadow-[0_0_50px_rgba(255,107,0,0.05)] ${
             isLightMode 
               ? 'bg-[#1e3a5f]/73 border-[#FF6B00]/20' 
               : 'bg-[#0a1929]/73 border-[#FF6B00]/30'
