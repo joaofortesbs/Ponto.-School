@@ -379,26 +379,52 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
         className="sm:max-w-[650px] p-0 bg-transparent border-0 shadow-none"
         onInteractOutside={(e) => e.preventDefault()}
       >
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.9, opacity: 0 }}
-          transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          className="relative bg-orange-50/20 backdrop-blur-md border border-orange-200/30 rounded-2xl p-8 shadow-2xl"
-          style={{
-            background: "rgba(255, 245, 235, 0.15)",
-            backdropFilter: "blur(20px)",
-            WebkitBackdropFilter: "blur(20px)",
-          }}
-        >
+        <div className="relative w-full h-full">
+          {/* Background com estilo do modal de Modo Eventos */}
+          <div className={`absolute inset-0 backdrop-blur-xl rounded-3xl border-4 shadow-[0_0_50px_rgba(255,107,0,0.05)] ${
+            isLightMode 
+              ? 'bg-[#1e3a5f]/73 border-[#FF6B00]/20' 
+              : 'bg-[#0a1929]/73 border-[#FF6B00]/30'
+          }`}>
+            {/* Glassmorphism overlay com tom azul marinho escuro moderno */}
+            <div className={`absolute inset-0 rounded-3xl ${
+              isLightMode
+                ? 'bg-gradient-to-br from-[#1e3a5f]/35 via-[#2d4f75]/25 to-[#1e3a5f]/35'
+                : 'bg-gradient-to-br from-[#0a1929]/35 via-[#0f2744]/25 to-[#0a1929]/35'
+            }`} />
+            
+            {/* Grid sutil */}
+            <div 
+              className="absolute inset-0 opacity-[0.015] rounded-3xl"
+              style={{
+                backgroundImage: `
+                  linear-gradient(rgba(30, 58, 95, ${isLightMode ? '0.05' : '0.08'}) 1px, transparent 1px),
+                  linear-gradient(90deg, rgba(30, 58, 95, ${isLightMode ? '0.05' : '0.08'}) 1px, transparent 1px)
+                `,
+                backgroundSize: '40px 40px'
+              }}
+            />
+          </div>
+
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="relative z-10 p-8"
+          >
           {/* Botão de fechar */}
           <Button
             variant="ghost"
             size="icon"
-            className="absolute top-4 right-4 h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 border border-orange-200/30 transition-all duration-300"
             onClick={() => onOpenChange(false)}
+            className={`absolute top-4 right-4 z-50 h-8 w-8 rounded-full transition-all duration-300 ${
+              isLightMode
+                ? 'bg-gray-100/80 hover:bg-gray-200/80 text-gray-600 hover:text-gray-800'
+                : 'bg-black/30 hover:bg-black/50 text-white/60 hover:text-white'
+            }`}
           >
-            <X className="h-4 w-4 text-orange-700" />
+            <X className="h-4 w-4" />
           </Button>
 
           {/* Título */}
@@ -541,12 +567,13 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
 
           {/* Gradiente sutil no fundo */}
           <div 
-            className="absolute inset-0 rounded-2xl opacity-30 pointer-events-none"
+            className="absolute inset-0 rounded-3xl opacity-30 pointer-events-none"
             style={{
               background: "radial-gradient(circle at 50% 50%, rgba(255, 107, 0, 0.1) 0%, transparent 70%)"
             }}
           />
-        </motion.div>
+          </motion.div>
+        </div>
       </DialogContent>
     </Dialog>
   );
