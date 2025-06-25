@@ -287,14 +287,14 @@ export default function ModoEventosModal({
           {/* Background com estilo do modal de boas-vindas adaptado para tema claro/escuro */}
           <div className={`absolute inset-0 backdrop-blur-xl rounded-3xl border shadow-[0_0_50px_rgba(255,107,0,0.05)] ${
             isLightMode 
-              ? 'bg-white/25 border-[#FF6B00]/20' 
-              : 'bg-black/40 border-[#FF6B00]/30'
+              ? 'bg-[#1e3a5f]/73 border-[#FF6B00]/20' 
+              : 'bg-[#0a1929]/73 border-[#FF6B00]/30'
           }`}>
-            {/* Glassmorphism overlay com tom laranja mais suave */}
+            {/* Glassmorphism overlay com tom azul marinho escuro moderno */}
             <div className={`absolute inset-0 rounded-3xl ${
               isLightMode
-                ? 'bg-gradient-to-br from-white/35 via-gray-100/25 to-white/35'
-                : 'bg-gradient-to-br from-[#FF6B00]/05 via-black/20 to-[#FF8C40]/03'
+                ? 'bg-gradient-to-br from-[#1e3a5f]/35 via-[#2d4f75]/25 to-[#1e3a5f]/35'
+                : 'bg-gradient-to-br from-[#0a1929]/35 via-[#0f2744]/25 to-[#0a1929]/35'
             }`} />
             
             {/* Grid sutil */}
@@ -302,8 +302,8 @@ export default function ModoEventosModal({
               className="absolute inset-0 opacity-[0.015] rounded-3xl"
               style={{
                 backgroundImage: `
-                  linear-gradient(rgba(255, 107, 0, ${isLightMode ? '0.05' : '0.08'}) 1px, transparent 1px),
-                  linear-gradient(90deg, rgba(255, 107, 0, ${isLightMode ? '0.05' : '0.08'}) 1px, transparent 1px)
+                  linear-gradient(rgba(30, 58, 95, ${isLightMode ? '0.05' : '0.08'}) 1px, transparent 1px),
+                  linear-gradient(90deg, rgba(30, 58, 95, ${isLightMode ? '0.05' : '0.08'}) 1px, transparent 1px)
                 `,
                 backgroundSize: '40px 40px'
               }}
@@ -358,9 +358,9 @@ export default function ModoEventosModal({
 
               <DialogTitle className="text-center">
                 <motion.h1 
-                  className={`text-4xl font-light leading-tight tracking-wide mb-3 ${
+                  className={`text-5xl font-bold leading-tight tracking-wide mb-3 ${
                     isLightMode
-                      ? 'bg-gradient-to-r from-[#333333] via-[#FF6B00] to-[#FF8C40] bg-clip-text text-transparent'
+                      ? 'bg-gradient-to-r from-[#FFFFFF] via-[#FF6B00] to-[#FF8C40] bg-clip-text text-transparent'
                       : 'bg-gradient-to-r from-[#FFFFFF] via-[#FF6B00] to-[#FF8C40] bg-clip-text text-transparent'
                   }`}
                   animate={{ backgroundPosition: ["0%", "100%", "0%"] }}
