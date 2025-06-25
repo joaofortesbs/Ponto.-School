@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -56,7 +55,7 @@ export default function GruposEstudo() {
     }
   };
 
-  // Carregar grupos do usuário
+  // Carregar grupos do usuário (criados ou onde é membro)
   const loadMyGroups = async () => {
     if (!currentUser) return;
     
@@ -64,7 +63,19 @@ export default function GruposEstudo() {
     try {
       console.log('Carregando meus grupos para usuário:', currentUser.id);
 
-      const { data: memberGroups, error } = await supabase
+      // Buscar grupos onde o usuário é criador
+      const { data: createdGroups, error: createdError } = await supabase
+        .from('grupos_estudo')
+        .select('*')
+        .eq('criador_id', currentUser.id);
+
+      if (createdError) {
+        console.error('Erro ao carregar grupos criados:', createdError);
+        throw createdError;
+      }
+
+      // Buscar grupos onde o usuário é membro (mas não criador)
+      const { data: memberGroups, error: memberError } = await supabase
         .from('membros_grupos')
         .select(`
           grupo_id,
@@ -77,30 +88,31 @@ export default function GruposEstudo() {
             topico_especifico,
             tags,
             is_public,
+            is_visible_to_all,
             criador_id,
+            codigo_unico,
             created_at
           )
         `)
-        .eq('user_id', currentUser.id);
+        .eq('user_id', currentUser.id)
+        .neq('grupos_estudo.criador_id', currentUser.id);
 
-      if (error) {
-        console.error('Erro ao carregar meus grupos:', error);
-        toast({
-          title: "Erro",
-          description: "Erro ao carregar seus grupos",
-          variant: "destructive"
-        });
-        return;
+      if (memberError) {
+        console.error('Erro ao carregar grupos de membro:', memberError);
+        throw memberError;
       }
 
-      const groups = memberGroups?.map(mg => mg.grupos_estudo).filter(Boolean) || [];
-      console.log('Meus grupos carregados:', groups.length);
-      setMyGroups(groups);
+      // Combinar os grupos
+      const memberGroupsData = memberGroups?.map(mg => mg.grupos_estudo).filter(Boolean) || [];
+      const allMyGroups = [...(createdGroups || []), ...memberGroupsData];
+      
+      console.log('Meus grupos carregados:', allMyGroups.length);
+      setMyGroups(allMyGroups);
     } catch (error) {
       console.error('Erro ao carregar meus grupos:', error);
       toast({
         title: "Erro",
-        description: "Erro inesperado ao carregar grupos",
+        description: "Erro ao carregar seus grupos",
         variant: "destructive"
       });
     } finally {
@@ -108,7 +120,7 @@ export default function GruposEstudo() {
     }
   };
 
-  // Carregar todos os grupos visíveis
+  // Carregar grupos visíveis para todos (exceto os que o usuário já participa)
   const loadAllGroups = async () => {
     if (!currentUser) return;
     
@@ -116,44 +128,36 @@ export default function GruposEstudo() {
     try {
       console.log('Carregando todos os grupos visíveis');
 
-      // Buscar grupos onde o usuário não é membro
-      const { data: userGroups } = await supabase
+      // Buscar grupos com is_visible_to_all = true, excluindo os que o usuário já participa
+      const { data: visibleGroups, error } = await supabase
+        .from('grupos_estudo')
+        .select('*')
+        .eq('is_visible_to_all', true)
+        .neq('criador_id', currentUser.id);
+
+      if (error) {
+        console.error('Erro ao carregar todos os grupos:', error);
+        throw error;
+      }
+
+      // Filtrar grupos onde o usuário não é membro
+      const { data: userMemberships } = await supabase
         .from('membros_grupos')
         .select('grupo_id')
         .eq('user_id', currentUser.id);
 
-      const userGroupIds = userGroups?.map(ug => ug.grupo_id) || [];
+      const userGroupIds = userMemberships?.map(m => m.grupo_id) || [];
+      const filteredGroups = visibleGroups?.filter(group => 
+        !userGroupIds.includes(group.id)
+      ) || [];
 
-      // Buscar grupos visíveis públicos
-      let query = supabase
-        .from('grupos_estudo')
-        .select('*')
-        .eq('is_public', true);
-
-      // Excluir grupos que o usuário já participa
-      if (userGroupIds.length > 0) {
-        query = query.not('id', 'in', `(${userGroupIds.join(',')})`);
-      }
-
-      const { data: visibleGroups, error } = await query;
-
-      if (error) {
-        console.error('Erro ao carregar todos os grupos:', error);
-        toast({
-          title: "Erro",
-          description: "Erro ao carregar grupos disponíveis",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      console.log('Grupos visíveis encontrados:', visibleGroups?.length || 0);
-      setAllGroups(visibleGroups || []);
+      console.log('Grupos visíveis encontrados:', filteredGroups.length);
+      setAllGroups(filteredGroups);
     } catch (error) {
       console.error('Erro ao carregar todos os grupos:', error);
       toast({
         title: "Erro",
-        description: "Erro inesperado ao carregar grupos",
+        description: "Erro ao carregar grupos disponíveis",
         variant: "destructive"
       });
     } finally {
@@ -186,6 +190,11 @@ export default function GruposEstudo() {
     });
     setIsCreateModalOpen(false);
     loadMyGroups(); // Recarregar a lista
+    
+    // Se o grupo for visível para todos, recarregar também a lista de todos os grupos
+    if (newGroup.is_visible_to_all) {
+      loadAllGroups();
+    }
   };
 
   const handleGroupAdded = () => {
@@ -277,6 +286,51 @@ export default function GruposEstudo() {
     }
   };
 
+  const handleJoinByCode = async (codigo: string) => {
+    if (!currentUser || !codigo) return;
+    
+    try {
+      const { data, error } = await supabase
+        .rpc('join_group_by_code', {
+          p_codigo_unico: codigo.trim(),
+          p_user_id: currentUser.id
+        });
+
+      if (error) {
+        console.error('Erro ao entrar no grupo:', error);
+        toast({
+          title: "Erro",
+          description: "Erro ao entrar no grupo: " + error.message,
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const result = data[0];
+      if (result.success) {
+        toast({
+          title: "Sucesso",
+          description: result.message,
+        });
+        loadMyGroups();
+        loadAllGroups();
+      } else {
+        toast({
+          title: "Erro",
+          description: result.message,
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao entrar no grupo:', error);
+      toast({
+        title: "Erro",
+        description: "Erro inesperado ao entrar no grupo",
+        variant: "destructive"
+      });
+    }
+  };
+
   const renderGroupCard = (group: any, showJoinButton = false) => (
     <div
       key={group.id}
@@ -287,9 +341,18 @@ export default function GruposEstudo() {
         <div 
           className="w-full h-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40]"
         />
-        {group.is_public && (
-          <Badge className="absolute top-2 left-2 bg-[#FF6B00] hover:bg-[#FF8C40]">
+        {group.is_public ? (
+          <Badge className="absolute top-2 left-2 bg-green-500 hover:bg-green-600">
             <Star className="h-3 w-3 mr-1 fill-current" /> Público
+          </Badge>
+        ) : (
+          <Badge className="absolute top-2 left-2 bg-blue-500 hover:bg-blue-600">
+            🔒 Privado
+          </Badge>
+        )}
+        {group.codigo_unico && (
+          <Badge className="absolute top-2 right-2 bg-gray-700 text-white text-xs">
+            {group.codigo_unico}
           </Badge>
         )}
       </div>
@@ -338,10 +401,18 @@ export default function GruposEstudo() {
                 className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white text-xs h-8"
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleJoinGroup(group.id);
+                  if (group.is_public) {
+                    handleJoinGroup(group.id);
+                  } else {
+                    // Para grupos privados, mostrar modal de código ou redirecionar
+                    const codigo = prompt('Digite o código do grupo:');
+                    if (codigo) {
+                      handleJoinByCode(codigo);
+                    }
+                  }
                 }}
               >
-                Participar
+                {group.is_public ? 'Participar' : 'Inserir Código'}
               </Button>
             ) : (
               <>
@@ -361,7 +432,7 @@ export default function GruposEstudo() {
                   className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white text-xs h-8"
                   onClick={(e) => {
                     e.stopPropagation();
-                    // Acessar grupo será feito pelo onClick do card
+                    navigate(`/turmas/grupos/${group.id}`);
                   }}
                 >
                   Acessar

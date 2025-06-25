@@ -3,9 +3,10 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { X, Search, Users } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface AddGroupModalProps {
   isOpen: boolean;
@@ -18,155 +19,81 @@ const AddGroupModal: React.FC<AddGroupModalProps> = ({
   onClose,
   onGroupAdded,
 }) => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [codeInput, setCodeInput] = useState("");
-  const [publicGroups, setPublicGroups] = useState<any[]>([]);
+  const [codigo, setCodigo] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
 
-  const searchPublicGroups = async () => {
-    if (!searchQuery.trim()) return;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     
+    if (!codigo.trim()) {
+      toast({
+        title: "Erro",
+        description: "Digite o código do grupo",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('grupos_estudo')
-        .select('*')
-        .eq('is_publico', true)
-        .ilike('nome', `%${searchQuery}%`)
-        .limit(10);
-
-      if (error) {
-        console.error('Erro ao buscar grupos:', error);
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        toast({
+          title: "Erro",
+          description: "Usuário não autenticado",
+          variant: "destructive"
+        });
         return;
       }
 
-      setPublicGroups(data || []);
+      const { data, error } = await supabase
+        .rpc('join_group_by_code', {
+          p_codigo_unico: codigo.trim().toUpperCase(),
+          p_user_id: user.id
+        });
+
+      if (error) {
+        console.error('Erro ao entrar no grupo:', error);
+        toast({
+          title: "Erro",
+          description: "Erro ao entrar no grupo: " + error.message,
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const result = data[0];
+      if (result.success) {
+        toast({
+          title: "Sucesso",
+          description: result.message,
+        });
+        setCodigo("");
+        onGroupAdded();
+        onClose();
+      } else {
+        toast({
+          title: "Erro",
+          description: result.message,
+          variant: "destructive"
+        });
+      }
     } catch (error) {
-      console.error('Erro ao buscar grupos:', error);
+      console.error('Erro ao entrar no grupo:', error);
+      toast({
+        title: "Erro",
+        description: "Erro inesperado ao entrar no grupo",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const joinGroupByCode = async () => {
-    if (!codeInput.trim()) {
-      alert('Digite um código válido');
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        alert('Você precisa estar logado');
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Buscar grupo pelo código
-      const { data: grupo, error: grupoError } = await supabase
-        .from('grupos_estudo')
-        .select('*')
-        .eq('codigo_unico', codeInput.toUpperCase())
-        .maybeSingle();
-
-      if (grupoError || !grupo) {
-        alert('Código inválido ou grupo não encontrado');
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Verificar se já é membro
-      const { data: membership } = await supabase
-        .from('membros_grupos')
-        .select('*')
-        .eq('grupo_id', grupo.id)
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (membership) {
-        alert('Você já é membro deste grupo');
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Adicionar como membro
-      const { error: memberError } = await supabase
-        .from('membros_grupos')
-        .insert({
-          grupo_id: grupo.id,
-          user_id: user.id
-        });
-
-      if (memberError) {
-        console.error('Erro ao entrar no grupo:', memberError);
-        alert('Erro ao entrar no grupo. Tente novamente.');
-        setIsSubmitting(false);
-        return;
-      }
-
-      alert(`Você entrou no grupo "${grupo.nome}" com sucesso!`);
-      onGroupAdded();
-      onClose();
-    } catch (error) {
-      console.error('Erro ao entrar no grupo:', error);
-      alert('Erro ao entrar no grupo. Tente novamente.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const joinPublicGroup = async (grupoId: string) => {
-    setIsSubmitting(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        alert('Você precisa estar logado');
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Verificar se já é membro
-      const { data: membership } = await supabase
-        .from('membros_grupos')
-        .select('*')
-        .eq('grupo_id', grupoId)
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (membership) {
-        alert('Você já é membro deste grupo');
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Adicionar como membro
-      const { error } = await supabase
-        .from('membros_grupos')
-        .insert({
-          grupo_id: grupoId,
-          user_id: user.id
-        });
-
-      if (error) {
-        console.error('Erro ao entrar no grupo:', error);
-        alert('Erro ao entrar no grupo. Tente novamente.');
-        setIsSubmitting(false);
-        return;
-      }
-
-      alert('Você entrou no grupo com sucesso!');
-      onGroupAdded();
-      onClose();
-    } catch (error) {
-      console.error('Erro ao entrar no grupo:', error);
-      alert('Erro ao entrar no grupo. Tente novamente.');
-    } finally {
-      setIsSubmitting(false);
-    }
+  const handleClose = () => {
+    setCodigo("");
+    onClose();
   };
 
   return (
@@ -178,111 +105,60 @@ const AddGroupModal: React.FC<AddGroupModalProps> = ({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="bg-white dark:bg-[#1E293B] rounded-xl overflow-hidden max-w-md w-full shadow-xl"
+            className="bg-[#1E293B] rounded-xl overflow-hidden max-w-md w-full shadow-xl"
           >
             <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-4 flex justify-between items-center">
-              <h2 className="text-xl font-bold text-white">Adicionar Grupo</h2>
+              <h2 className="text-xl font-bold text-white">Entrar em Grupo</h2>
               <Button
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8 rounded-full text-white/80 hover:text-white hover:bg-white/20"
-                onClick={onClose}
+                onClick={handleClose}
+                disabled={isLoading}
               >
                 <X className="h-5 w-5" />
               </Button>
             </div>
 
-            <div className="p-4">
-              <Tabs defaultValue="code" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="code">Por Código</TabsTrigger>
-                  <TabsTrigger value="search">Buscar</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="code" className="space-y-4">
-                  <div>
-                    <Input
-                      value={codeInput}
-                      onChange={(e) => setCodeInput(e.target.value.toUpperCase())}
-                      placeholder="Digite o código do grupo"
-                      className="text-center font-mono text-lg"
-                      maxLength={8}
-                    />
-                  </div>
-                  <Button 
-                    onClick={joinGroupByCode}
-                    disabled={isSubmitting || !codeInput.trim()}
-                    className="w-full bg-[#FF6B00] hover:bg-[#FF8C40] text-white"
+            <div className="p-6">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="codigo" className="text-white">
+                    Código do Grupo
+                  </Label>
+                  <Input
+                    id="codigo"
+                    value={codigo}
+                    onChange={(e) => setCodigo(e.target.value.toUpperCase())}
+                    placeholder="Digite o código (ex: ABC12345)"
+                    disabled={isLoading}
+                    className="bg-[#2a4066] border-gray-600 text-white placeholder-gray-400"
+                    maxLength={8}
+                  />
+                  <p className="text-sm text-gray-400">
+                    Digite o código único de 8 caracteres fornecido pelo criador do grupo.
+                  </p>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleClose}
+                    disabled={isLoading}
+                    className="border-gray-600 text-gray-300 hover:bg-gray-800"
                   >
-                    {isSubmitting ? 'Entrando...' : 'Entrar no Grupo'}
+                    Cancelar
                   </Button>
-                </TabsContent>
-                
-                <TabsContent value="search" className="space-y-4">
-                  <div className="flex gap-2">
-                    <Input
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Buscar grupos públicos"
-                      onKeyPress={(e) => e.key === 'Enter' && searchPublicGroups()}
-                    />
-                    <Button 
-                      onClick={searchPublicGroups}
-                      disabled={isLoading}
-                      size="icon"
-                      className="bg-[#FF6B00] hover:bg-[#FF8C40]"
-                    >
-                      <Search className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  
-                  <div className="max-h-60 overflow-y-auto space-y-2">
-                    {isLoading ? (
-                      <div className="text-center py-4 text-gray-500">
-                        Buscando grupos...
-                      </div>
-                    ) : publicGroups.length > 0 ? (
-                      publicGroups.map((grupo) => (
-                        <div
-                          key={grupo.id}
-                          className="p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                        >
-                          <div className="flex justify-between items-start">
-                            <div className="flex-1">
-                              <h4 className="font-medium text-sm">{grupo.nome}</h4>
-                              <p className="text-xs text-gray-500 mt-1">
-                                {grupo.topico_nome || grupo.topico}
-                              </p>
-                              <div className="flex items-center gap-1 mt-1">
-                                <Users className="h-3 w-3 text-gray-400" />
-                                <span className="text-xs text-gray-500">
-                                  {grupo.membros} membros
-                                </span>
-                              </div>
-                            </div>
-                            <Button
-                              size="sm"
-                              onClick={() => joinPublicGroup(grupo.id)}
-                              disabled={isSubmitting}
-                              className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white text-xs"
-                            >
-                              Entrar
-                            </Button>
-                          </div>
-                        </div>
-                      ))
-                    ) : searchQuery && !isLoading ? (
-                      <div className="text-center py-4 text-gray-500">
-                        Nenhum grupo encontrado
-                      </div>
-                    ) : (
-                      <div className="text-center py-4 text-gray-500">
-                        Digite um termo para buscar grupos públicos
-                      </div>
-                    )}
-                  </div>
-                </TabsContent>
-              </Tabs>
+                  <Button
+                    type="submit"
+                    disabled={isLoading || !codigo.trim()}
+                    className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white"
+                  >
+                    {isLoading ? "Entrando..." : "Entrar no Grupo"}
+                  </Button>
+                </div>
+              </form>
             </div>
           </motion.div>
         </div>
