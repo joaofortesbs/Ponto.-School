@@ -381,12 +381,11 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
       >
         <div className="relative w-full h-full">
           {/* Background com cor de fundo #FFECD6 */}
-          <div className={`absolute inset-0 rounded-3xl border-4 shadow-[0_0_50px_rgba(255,107,0,0.05)] ${
-            isLightMode 
-              ? 'border-[#FF6B00]/20' 
-              : 'border-[#FF6B00]/30'
-          }`}
-          style={{ backgroundColor: '#FFECD6' }}>
+          <div className={`absolute inset-0 rounded-3xl border-4 shadow-[0_0_50px_rgba(255,106,0,0.05)]`}
+          style={{ 
+            backgroundColor: '#FFECD6',
+            borderColor: '#FF6A00'
+          }}>
           </div>
 
           <motion.div
@@ -433,11 +432,12 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                   initial={{ y: 30, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.3, duration: 0.6, type: "spring", damping: 25 }}
-                  className="text-3xl font-semibold tracking-tight leading-tight text-white"
+                  className="text-3xl font-semibold tracking-tight leading-tight"
                   style={{
                     fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
                     letterSpacing: "-0.04em",
                     textShadow: "0 2px 4px rgba(0,0,0,0.3)",
+                    color: "#2D1B14"
                   }}
                 >
                   Login Diário
@@ -447,9 +447,10 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.5, duration: 0.5 }}
-                  className="text-sm font-medium text-white/80 mt-1"
+                  className="text-sm font-medium mt-1"
                   style={{
                     textShadow: "0 1px 2px rgba(0,0,0,0.2)",
+                    color: "#5D4037"
                   }}
                 >
                   Resgate sua recompensa
