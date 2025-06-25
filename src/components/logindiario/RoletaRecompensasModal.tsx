@@ -380,10 +380,10 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
         onInteractOutside={(e) => e.preventDefault()}
       >
         <div className="relative w-full h-full">
-          {/* Background com efeito de vidro fosco e opacidade 73% */}
+          {/* Background com efeito de vidro fosco e opacidade 57% */}
           <div className="absolute inset-0 backdrop-blur-xl rounded-3xl border-4 shadow-[0_0_50px_rgba(255,107,0,0.05)] border-[#ff7921]"
                style={{ 
-                 background: 'rgba(255, 236, 214, 0.73)',
+                 background: 'rgba(255, 102, 0, 0.57)',
                  backdropFilter: 'blur(20px)',
                  WebkitBackdropFilter: 'blur(20px)'
                }}>
