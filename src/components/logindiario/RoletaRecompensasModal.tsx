@@ -475,28 +475,46 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
               transition={{ delay: 0.6, duration: 0.8, type: "spring", damping: 15 }}
               className="mt-8 flex justify-start items-start gap-12"
             >
-              <div className="relative">
-                {/* Indicador de Giros Disponíveis */}
-                <GirosDisponiveisIndicador 
-                  girosDisponiveis={girosDisponiveis}
-                  girosEspeciais={girosEspeciais}
-                />
+              {/* Container da roleta posicionado à esquerda */}
+              <div className="flex flex-col justify-start">
+                {/* Card Sequência de Giros */}
+                <motion.div
+                  initial={{ x: -30, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: 0.8, duration: 0.6 }}
+                  className="mb-6"
+                >
+                  <CardDiasDeSequencia 
+                    isSpinning={isSpinning} 
+                    showResult={showResult} 
+                  />
+                </motion.div>
 
-                {/* Roleta de Recompensas */}
-                <RoletaDeRecompensas
-                  isSpinning={isSpinning}
-                  currentRotation={currentRotation}
-                  prizesWithIcons={prizesWithIcons}
-                  selectedPrize={selectedPrize}
-                  showResult={showResult}
-                  onSpin={spinWheel}
-                  activePoint={activePoint}
-                  currentPrizeGroup={currentPrizeGroup}
-                  pinoTilt={pinoTilt}
-                  pinoBlinking={pinoBlinking}
-                  pinoColor={pinoColor}
-                  canSpin={canSpin}
-                />
+                {/* Indicador de Giros Disponíveis */}
+                <div className="mb-4">
+                  <GirosDisponiveisIndicador 
+                    girosDisponiveis={girosDisponiveis}
+                    girosEspeciais={girosEspeciais}
+                  />
+                </div>
+
+                {/* Roleta de Recompensas com margem superior para posicionar mais para baixo */}
+                <div className="mt-8">
+                  <RoletaDeRecompensas
+                    isSpinning={isSpinning}
+                    currentRotation={currentRotation}
+                    prizesWithIcons={prizesWithIcons}
+                    selectedPrize={selectedPrize}
+                    showResult={showResult}
+                    onSpin={spinWheel}
+                    activePoint={activePoint}
+                    currentPrizeGroup={currentPrizeGroup}
+                    pinoTilt={pinoTilt}
+                    pinoBlinking={pinoBlinking}
+                    pinoColor={pinoColor}
+                    canSpin={canSpin}
+                  />
+                </div>
               </div>
 
               {/* Cards laterais */}
