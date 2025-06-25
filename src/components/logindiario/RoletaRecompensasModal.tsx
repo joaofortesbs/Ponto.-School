@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -371,22 +370,26 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
     requestAnimationFrame(animate);
   };
 
-  const { theme } = useTheme();
-  const isLightMode = theme === 'light';
+    const { theme } = useTheme();
+    const isLightMode = theme === 'light';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[650px] p-0 bg-transparent border-0 shadow-none">
+      <DialogContent 
+        className="sm:max-w-[650px] p-0 bg-transparent border-0 shadow-none"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
           transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          className={`absolute inset-0 backdrop-blur-xl rounded-3xl border-4 shadow-[0_0_50px_rgba(255,107,0,0.05)] ${
-            isLightMode 
-              ? 'bg-[#1e3a5f]/73 border-[#FF6B00]/20' 
-              : 'bg-[#0a1929]/73 border-[#FF6B00]/30'
-          }`}
+          className="relative bg-orange-50/20 backdrop-blur-md border border-orange-200/30 rounded-2xl p-8 shadow-2xl"
+          style={{
+            background: "rgba(255, 245, 235, 0.15)",
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
+          }}
         >
           {/* Botão de fechar */}
           <Button
@@ -399,7 +402,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
           </Button>
 
           {/* Título */}
-          <div className="mb-8 p-8">
+          <div className="mb-8">
             <div className="flex items-center gap-5 mb-6">
               <motion.div
                 initial={{ scale: 0, rotate: -180 }}
@@ -421,7 +424,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                   initial={{ y: 30, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.3, duration: 0.6, type: "spring", damping: 25 }}
-                  className="text-3xl font-bold tracking-tight leading-tight text-white"
+                  className="text-3xl font-semibold tracking-tight leading-tight text-white"
                   style={{
                     fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
                     letterSpacing: "-0.04em",
