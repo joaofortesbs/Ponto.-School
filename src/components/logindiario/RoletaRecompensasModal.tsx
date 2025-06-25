@@ -383,9 +383,10 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
           {/* Background com estilo do modal de Modo Eventos */}
           <div className={`absolute inset-0 backdrop-blur-xl rounded-3xl border-4 shadow-[0_0_50px_rgba(255,107,0,0.05)] ${
             isLightMode 
-              ? 'bg-[#1e3a5f]/73 border-[#FF6B00]/20' 
-              : 'bg-[#0a1929]/73 border-[#FF6B00]/30'
-          }`}>
+              ? 'border-[#FF6B00]/20' 
+              : 'border-[#FF6B00]/30'
+          }`}
+          style={{ backgroundColor: '#FFECD6' }}>
             {/* Glassmorphism overlay com tom azul marinho escuro moderno */}
             <div className={`absolute inset-0 rounded-3xl ${
               isLightMode
