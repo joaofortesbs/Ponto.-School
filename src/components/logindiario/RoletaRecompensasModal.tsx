@@ -436,7 +436,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                   style={{
                     fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
                     letterSpacing: "-0.04em",
-                    textShadow: "0 2px 4px rgba(0,0,0,0.3)",
+                    textShadow: "0 1px 2px rgba(0,0,0,0.15)",
                     color: "#FF6A00"
                   }}
                 >
