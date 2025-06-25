@@ -295,11 +295,21 @@ export default function ModoEventosModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      
-        
-          {/* Background com cor de fundo #FFECD6 */}
-          
-
+      <DialogContent 
+        className="fixed inset-0 z-50 flex items-center justify-center p-0 m-0 max-w-none w-full h-full border-0 rounded-none"
+        style={{
+          background: isLightMode 
+            ? 'linear-gradient(135deg, rgba(255, 236, 214, 0.95) 0%, rgba(255, 250, 240, 0.98) 100%)'
+            : 'linear-gradient(135deg, rgba(30, 30, 40, 0.95) 0%, rgba(20, 20, 30, 0.98) 100%)',
+          backdropFilter: 'blur(12px)',
+          border: '2px solid #FF6A00',
+          borderRadius: '24px',
+          boxShadow: isLightMode
+            ? '0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 30px rgba(255, 106, 0, 0.2)'
+            : '0 25px 50px -12px rgba(0, 0, 0, 0.4), 0 0 40px rgba(255, 106, 0, 0.3)',
+        }}
+      >
+        <div className="relative w-full h-full overflow-hidden">
           {/* Close button simples */}
           <Button
             variant="ghost"
