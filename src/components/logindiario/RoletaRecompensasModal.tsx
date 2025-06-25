@@ -475,28 +475,12 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
               transition={{ delay: 0.6, duration: 0.8, type: "spring", damping: 15 }}
               className="mt-8 flex justify-start items-start gap-12"
             >
-              {/* Container da roleta posicionado à esquerda */}
-              <div className="flex flex-col justify-start">
-                {/* Card Sequência de Giros */}
-                <motion.div
-                  initial={{ x: -30, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ delay: 0.8, duration: 0.6 }}
-                  className="mb-6"
-                >
-                  <CardDiasDeSequencia 
-                    isSpinning={isSpinning} 
-                    showResult={showResult} 
-                  />
-                </motion.div>
-
+              <div className="relative">
                 {/* Indicador de Giros Disponíveis */}
-                <div className="mb-4">
-                  <GirosDisponiveisIndicador 
-                    girosDisponiveis={girosDisponiveis}
-                    girosEspeciais={girosEspeciais}
-                  />
-                </div>
+                <GirosDisponiveisIndicador 
+                  girosDisponiveis={girosDisponiveis}
+                  girosEspeciais={girosEspeciais}
+                />
 
                 {/* Roleta de Recompensas */}
                 <RoletaDeRecompensas
@@ -515,13 +499,20 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                 />
               </div>
 
-              {/* Card de Recompensas Disponíveis à direita */}
+              {/* Cards laterais */}
               <motion.div
                 initial={{ x: 30, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ delay: 0.8, duration: 0.6 }}
-                className="flex flex-col justify-start ml-12"
+                className="flex flex-col justify-start"
               >
+                {/* Card Sequência de Giros */}
+                <CardDiasDeSequencia 
+                  isSpinning={isSpinning} 
+                  showResult={showResult} 
+                />
+
+                {/* Card Recompensas Disponíveis */}
                 <CardRecompensasDisponiveis 
                   currentPrizes={prizesWithIcons}
                   onRegeneratePrizes={handleRegeneratePrizes}
