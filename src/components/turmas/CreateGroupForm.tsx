@@ -31,13 +31,21 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({
     disciplina_area: "",
     topico_especifico: "",
     tags: [] as string[],
-    // CORREÇÃO: usar is_public em vez de is_publico
     is_public: false,
     is_visible_to_all: false,
     is_visible_to_partners: false,
   });
 
   const [tagInput, setTagInput] = useState("");
+
+  // Mapeamento de tipos de grupo para valores válidos no banco
+  const tipoGrupoMap = {
+    'Grupo de Estudo': 'estudo',
+    'Projeto': 'projeto', 
+    'Pesquisa': 'pesquisa',
+    'Revisão': 'revisao',
+    'Debate': 'debate'
+  };
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -74,8 +82,17 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Enviando dados do formulário:', formData);
-    onSubmit(formData);
+    
+    // Mapear o tipo_grupo para o valor válido no banco
+    const mappedTipoGrupo = tipoGrupoMap[formData.tipo_grupo as keyof typeof tipoGrupoMap] || 'estudo';
+    
+    const submissionData = {
+      ...formData,
+      tipo_grupo: mappedTipoGrupo
+    };
+    
+    console.log('Enviando dados do formulário:', submissionData);
+    onSubmit(submissionData);
   };
 
   return (
@@ -109,16 +126,17 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({
               value={formData.tipo_grupo}
               onValueChange={(value) => handleSelectChange("tipo_grupo", value)}
               disabled={isLoading}
+              required
             >
               <SelectTrigger className="bg-[#2a4066] border-gray-600 text-white">
                 <SelectValue placeholder="Selecione o tipo" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="estudo">Grupo de Estudo</SelectItem>
-                <SelectItem value="projeto">Projeto</SelectItem>
-                <SelectItem value="pesquisa">Pesquisa</SelectItem>
-                <SelectItem value="revisao">Revisão</SelectItem>
-                <SelectItem value="debate">Debate</SelectItem>
+                <SelectItem value="Grupo de Estudo">Grupo de Estudo</SelectItem>
+                <SelectItem value="Projeto">Projeto</SelectItem>
+                <SelectItem value="Pesquisa">Pesquisa</SelectItem>
+                <SelectItem value="Revisão">Revisão</SelectItem>
+                <SelectItem value="Debate">Debate</SelectItem>
               </SelectContent>
             </Select>
           </div>

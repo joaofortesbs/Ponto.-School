@@ -53,7 +53,7 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
 
       console.log('Chamando função create_group_safe...');
 
-      // Usar a nova função segura do banco de dados
+      // Usar a função segura do banco de dados
       const { data: result, error: createError } = await supabase
         .rpc('create_group_safe', {
           p_nome: formData.nome.trim(),
