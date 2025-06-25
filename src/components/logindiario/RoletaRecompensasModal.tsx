@@ -475,6 +475,30 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
               transition={{ delay: 0.6, duration: 0.8, type: "spring", damping: 15 }}
               className="mt-8 flex justify-start items-start gap-12"
             >
+              <div className="relative">
+                {/* Indicador de Giros Disponíveis */}
+                <GirosDisponiveisIndicador 
+                  girosDisponiveis={girosDisponiveis}
+                  girosEspeciais={girosEspeciais}
+                />
+
+                {/* Roleta de Recompensas */}
+                <RoletaDeRecompensas
+                  isSpinning={isSpinning}
+                  currentRotation={currentRotation}
+                  prizesWithIcons={prizesWithIcons}
+                  selectedPrize={selectedPrize}
+                  showResult={showResult}
+                  onSpin={spinWheel}
+                  activePoint={activePoint}
+                  currentPrizeGroup={currentPrizeGroup}
+                  pinoTilt={pinoTilt}
+                  pinoBlinking={pinoBlinking}
+                  pinoColor={pinoColor}
+                  canSpin={canSpin}
+                />
+              </div>
+
               {/* Cards laterais */}
               <motion.div
                 initial={{ x: 30, opacity: 0 }}
@@ -496,33 +520,6 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
                   userSPs={userSPs}
                 />
               </motion.div>
-
-              {/* Container da roleta alinhado com os cards */}
-              <div className="flex flex-col justify-start">
-                {/* Indicador de Giros Disponíveis */}
-                <div className="mb-4">
-                  <GirosDisponiveisIndicador 
-                    girosDisponiveis={girosDisponiveis}
-                    girosEspeciais={girosEspeciais}
-                  />
-                </div>
-
-                {/* Roleta de Recompensas */}
-                <RoletaDeRecompensas
-                  isSpinning={isSpinning}
-                  currentRotation={currentRotation}
-                  prizesWithIcons={prizesWithIcons}
-                  selectedPrize={selectedPrize}
-                  showResult={showResult}
-                  onSpin={spinWheel}
-                  activePoint={activePoint}
-                  currentPrizeGroup={currentPrizeGroup}
-                  pinoTilt={pinoTilt}
-                  pinoBlinking={pinoBlinking}
-                  pinoColor={pinoColor}
-                  canSpin={canSpin}
-                />
-              </div>
             </motion.div>
           </div>
 
