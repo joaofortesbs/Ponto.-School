@@ -297,30 +297,12 @@ export default function ModoEventosModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="w-[900px] h-[720px] max-w-none p-0 border-0 bg-transparent overflow-hidden">
         <div className="relative w-full h-full">
-          {/* Background com estilo do modal de boas-vindas adaptado para tema claro/escuro */}
-          <div className={`absolute inset-0 backdrop-blur-xl rounded-3xl border-4 shadow-[0_0_50px_rgba(255,107,0,0.05)] ${
-            isLightMode 
-              ? 'bg-[#1e3a5f]/73 border-[#FF6B00]/20' 
-              : 'bg-[#0a1929]/73 border-[#FF6B00]/30'
-          }`}>
-            {/* Glassmorphism overlay com tom azul marinho escuro moderno */}
-            <div className={`absolute inset-0 rounded-3xl ${
-              isLightMode
-                ? 'bg-gradient-to-br from-[#1e3a5f]/35 via-[#2d4f75]/25 to-[#1e3a5f]/35'
-                : 'bg-gradient-to-br from-[#0a1929]/35 via-[#0f2744]/25 to-[#0a1929]/35'
-            }`} />
-
-            {/* Grid sutil */}
-            <div 
-              className="absolute inset-0 opacity-[0.015] rounded-3xl"
-              style={{
-                backgroundImage: `
-                  linear-gradient(rgba(30, 58, 95, ${isLightMode ? '0.05' : '0.08'}) 1px, transparent 1px),
-                  linear-gradient(90deg, rgba(30, 58, 95, ${isLightMode ? '0.05' : '0.08'}) 1px, transparent 1px)
-                `,
-                backgroundSize: '40px 40px'
-              }}
-            />
+          {/* Background com mesma cor do modal de Login Diário (#FFECD6) */}
+          <div className={`absolute inset-0 rounded-3xl border-4 shadow-[0_0_50px_rgba(255,106,0,0.05)]`}
+          style={{ 
+            backgroundColor: '#FFECD6',
+            borderColor: '#FF6A00'
+          }}>
           </div>
 
           {/* Close button simples */}
