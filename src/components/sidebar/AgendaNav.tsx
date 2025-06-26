@@ -22,7 +22,7 @@ export default function AgendaNav() {
         <Calendar
           className={`h-5 w-5 mr-3 ${isActive ? "text-[#FF6B00]" : "text-[#001427] dark:text-white"}`}
         />
-        <span>Agenda</span>
+        <span className={isActive ? "text-[#FF6B00]" : ""}>Agenda</span>
         <div
           className={`absolute left-0 top-0 h-full w-1 rounded-r-md transition-all duration-300 ${isActive ? "bg-[#FF6B00]" : "bg-transparent group-hover:bg-[#FF6B00]/50"}`}
         />
