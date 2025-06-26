@@ -182,15 +182,6 @@ export default function AtalhoSchoolCard() {
       >
         {/* Header com gradiente igual ao card Seu Foco Hoje */}
         <div className={`p-5 relative ${isLightMode ? 'bg-gradient-to-r from-orange-50 to-orange-100/50' : 'bg-gradient-to-r from-[#0A2540]/80 to-[#001427]'} border-b ${isLightMode ? 'border-orange-100' : 'border-[#FF6B00]/20'}`}>
-          {/* Barra de progresso interativa no topo */}
-          <div className="absolute top-0 left-0 h-1 bg-[#FF6B00]/20 w-full overflow-hidden">
-            <motion.div 
-              className="h-full bg-[#FF6B00]" 
-              initial={{ width: '0%' }}
-              animate={{ width: '100%' }}
-              transition={{ duration: 1.5, ease: "easeOut" }}
-            />
-          </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className={`p-2.5 rounded-lg flex items-center justify-center ${isLightMode ? 'bg-white shadow-sm border border-orange-200' : 'bg-[#FF6B00]/15 shadow-lg shadow-[#FF6B00]/5 border border-[#FF6B00]/30'}`}>

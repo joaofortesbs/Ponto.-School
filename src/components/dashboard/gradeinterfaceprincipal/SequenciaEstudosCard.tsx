@@ -632,10 +632,10 @@ export default function SequenciaEstudosCard() {
       </div>
 
       {/* Header elegante com gradiente e botão de check-in */}
-      <div className={`p-5 ${isLightMode ? 'bg-gradient-to-r from-orange-50 to-orange-100/50' : 'bg-gradient-to-r from-[#0A2540]/80 to-[#001427]'} border-b ${isLightMode ? 'border-orange-100' : 'border-[#FF6B00]/20'}`}>
+      <div className={`p-5 relative ${isLightMode ? 'bg-gradient-to-r from-orange-50 to-orange-100/50' : 'bg-gradient-to-r from-[#0A2540]/80 to-[#001427]'} border-b ${isLightMode ? 'border-orange-100' : 'border-[#FF6B00]/20'}`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className={`p-2.5 rounded-lg flex items-center justify-center ${isLightMode ? 'bg-white shadow-sm border border-orange-200' : 'bg-[#FF6B00]/10 border border-[#FF6B00]/30'}`}>
+            <div className={`p-2.5 rounded-lg flex items-center justify-center ${isLightMode ? 'bg-white shadow-sm border border-orange-200' : 'bg-[#FF6B00]/15 shadow-lg shadow-[#FF6B00]/5 border border-[#FF6B00]/30'}`}>
               <Flame className={`h-5 w-5 text-[#FF6B00]`} />
             </div>
             <div>
