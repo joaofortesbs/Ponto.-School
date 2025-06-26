@@ -16,11 +16,11 @@ export default function AgendaNav() {
     <div className="space-y-1">
       <Button
         variant="ghost"
-        className={`flex items-center justify-start rounded-lg px-3 py-2 text-start w-full group hover:scale-[1.02] transition-all duration-200 relative ${isActive ? "bg-[#29335C] text-white dark:bg-[#29335C] dark:text-white" : "text-[#001427] hover:bg-[#FF6B00]/5 dark:text-white dark:hover:bg-[#FF6B00]/10"}`}
+        className={`flex items-center justify-start rounded-lg px-3 py-2 text-start w-full group hover:scale-[1.02] transition-all duration-200 relative ${isActive ? "bg-[#FF6B00]/10 text-[#FF6B00] dark:bg-[#FF6B00]/20 dark:text-white" : "text-[#001427] hover:bg-[#FF6B00]/5 dark:text-white dark:hover:bg-[#FF6B00]/10"}`}
         onClick={handleMainClick}
       >
         <Calendar
-          className={`h-5 w-5 mr-3 ${isActive ? "text-white" : "text-[#001427] dark:text-white"}`}
+          className={`h-5 w-5 mr-3 ${isActive ? "text-[#FF6B00]" : "text-[#001427] dark:text-white"}`}
         />
         <span>Agenda</span>
         <div
