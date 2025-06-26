@@ -284,12 +284,12 @@ export function LoginForm() {
               onChange={handleChange}
               onKeyPress={handleKeyPress}
               placeholder="Digite seu e-mail"
-              className="pl-10 h-11 bg-[#021121] dark:bg-[#021121] backdrop-blur-md border-[#FF6B00]/10 dark:border-[#FF6B00]/20 focus:border-[#FF6B00]/60 dark:focus:border-[#FF6B00]/60 transition-all duration-300 hover:border-[#FF6B00]/30 rounded-lg focus:bg-white/30 dark:focus:bg-white/8"
+              className="pl-10 h-11 bg-white/30 dark:bg-white/8 backdrop-blur-md border-[#FF6B00]/10 dark:border-[#FF6B00]/20 focus:border-[#FF6B00]/60 dark:focus:border-[#FF6B00]/60 transition-all duration-300 hover:border-[#FF6B00]/30 rounded-lg"
               required
               style={{
                 backdropFilter: "blur(12px)",
                 WebkitBackdropFilter: "blur(12px)",
-                boxShadow: "inset 0 3px 6px rgba(0, 0, 0, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.05)"
+                boxShadow: "inset 0 1px 2px rgba(255, 255, 255, 0.1)"
               }}
             />
             <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none border border-[#FF6B00]/30 shadow-[0_0_15px_rgba(255,107,0,0.15)]" style={{
@@ -311,12 +311,12 @@ export function LoginForm() {
               onChange={handleChange}
               onKeyPress={handleKeyPress}
               placeholder="Digite sua senha"
-              className="pl-10 pr-10 h-11 bg-[#021121] dark:bg-[#021121] backdrop-blur-md border-[#FF6B00]/10 dark:border-[#FF6B00]/20 focus:border-[#FF6B00]/60 dark:focus:border-[#FF6B00]/60 transition-all duration-300 hover:border-[#FF6B00]/30 rounded-lg focus:bg-white/30 dark:focus:bg-white/8"
+              className="pl-10 pr-10 h-11 bg-white/30 dark:bg-white/8 backdrop-blur-md border-[#FF6B00]/10 dark:border-[#FF6B00]/20 focus:border-[#FF6B00]/60 dark:focus:border-[#FF6B00]/60 transition-all duration-300 hover:border-[#FF6B00]/30 rounded-lg"
               required
               style={{
                 backdropFilter: "blur(12px)",
                 WebkitBackdropFilter: "blur(12px)",
-                boxShadow: "inset 0 3px 6px rgba(0, 0, 0, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.05)"
+                boxShadow: "inset 0 1px 2px rgba(255, 255, 255, 0.1)"
               }}
             />
             <Button
@@ -336,7 +336,7 @@ export function LoginForm() {
               background: "linear-gradient(135deg, rgba(255, 107, 0, 0.03) 0%, rgba(255, 140, 64, 0.02) 100%)"
             }}></div>
           </div>
-          <div className="flex justify-between items-center mt-6">
+          <div className="flex justify-between items-center mt-3">
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="rememberMe"
@@ -383,7 +383,7 @@ export function LoginForm() {
           className="w-full h-11 text-base bg-brand-primary hover:bg-brand-primary/90 text-white transition-all duration-300 shadow-md hover:shadow-lg hover:shadow-brand-primary/20 relative overflow-hidden group"
           disabled={loading}
         >
-          <span className="relative z-10 font-bold">{loading ? "Entrando..." : "Acessar minha conta"}</span>
+          <span className="relative z-10">{loading ? "Entrando..." : "Acessar minha conta"}</span>
           <span className="absolute inset-0 bg-gradient-to-r from-brand-primary to-[#FF8C40] opacity-0 group-hover:opacity-100 transition-opacity duration-500"></span>
         </Button>
 
