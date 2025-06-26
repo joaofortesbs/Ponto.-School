@@ -336,7 +336,7 @@ export function LoginForm() {
               background: "linear-gradient(135deg, rgba(255, 107, 0, 0.03) 0%, rgba(255, 140, 64, 0.02) 100%)"
             }}></div>
           </div>
-          <div className="flex justify-between items-center mt-6"></div>
+          <div className="flex justify-between items-center mt-6">
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="rememberMe"
