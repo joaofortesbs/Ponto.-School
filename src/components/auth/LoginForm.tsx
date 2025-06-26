@@ -284,7 +284,11 @@ export function LoginForm() {
               onChange={handleChange}
               onKeyPress={handleKeyPress}
               placeholder="Digite seu e-mail"
-              className="pl-10 h-11 rounded-lg transition-all duration-300 hover:border-[#FF6B00]/30 bg-[#031223]/60 text-white border-[#FF6B00]/10 dark:border-[#FF6B00]/20 focus:border-[#FF6B00]/60 dark:focus:border-[#FF6B00]/60 backdrop-blur-md dark:bg-white/8"
+              className={`pl-10 h-11 rounded-lg transition-all duration-300 hover:border-[#FF6B00]/30 bg-[#031223]/60 text-white backdrop-blur-md dark:bg-white/8 ${
+                formData.email 
+                  ? 'border-[#FF6B00] dark:border-[#FF6B00] focus:border-[#FF6B00] dark:focus:border-[#FF6B00] shadow-[0_0_15px_rgba(255,107,0,0.3)]' 
+                  : 'border-[#FF6B00]/10 dark:border-[#FF6B00]/20 focus:border-[#FF6B00]/60 dark:focus:border-[#FF6B00]/60'
+              }`}
               required
               style={{
                 backdropFilter: "blur(12px)",
@@ -311,7 +315,11 @@ export function LoginForm() {
               onChange={handleChange}
               onKeyPress={handleKeyPress}
               placeholder="Digite sua senha"
-              className="pl-10 pr-10 h-11 rounded-lg transition-all duration-300 hover:border-[#FF6B00]/30 bg-[#031223]/60 text-white border-[#FF6B00]/10 dark:border-[#FF6B00]/20 focus:border-[#FF6B00]/60 dark:focus:border-[#FF6B00]/60 backdrop-blur-md dark:bg-white/8"
+              className={`pl-10 pr-10 h-11 rounded-lg transition-all duration-300 hover:border-[#FF6B00]/30 bg-[#031223]/60 text-white backdrop-blur-md dark:bg-white/8 ${
+                formData.password 
+                  ? 'border-[#FF6B00] dark:border-[#FF6B00] focus:border-[#FF6B00] dark:focus:border-[#FF6B00] shadow-[0_0_15px_rgba(255,107,0,0.3)]' 
+                  : 'border-[#FF6B00]/10 dark:border-[#FF6B00]/20 focus:border-[#FF6B00]/60 dark:focus:border-[#FF6B00]/60'
+              }`}
               required
               style={{
                 backdropFilter: "blur(12px)",
