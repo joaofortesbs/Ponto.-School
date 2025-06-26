@@ -15,8 +15,8 @@ export default function EpictusIACard() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
     >
-      {/* Header com gradiente igual ao card Atalhos School */}
-      <div className={`p-6 relative ${isLightMode ? 'bg-gradient-to-r from-purple-50 to-purple-100/50' : 'bg-gradient-to-r from-[#0A2540]/80 to-[#001427]'} border-b ${isLightMode ? 'border-purple-100' : 'border-purple-500/20'}`}>
+      {/* Header com gradiente personalizado para Epictus IA */}
+      <div className={`p-5 relative ${isLightMode ? 'bg-gradient-to-r from-purple-50 to-purple-100/50' : 'bg-gradient-to-r from-[#0A2540]/80 to-[#001427]'} border-b ${isLightMode ? 'border-purple-100' : 'border-purple-500/20'}`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className={`p-2.5 rounded-lg flex items-center justify-center ${isLightMode ? 'bg-white shadow-sm border border-purple-200' : 'bg-purple-500/15 shadow-lg shadow-purple-500/5 border border-purple-500/30'}`}>
@@ -27,7 +27,7 @@ export default function EpictusIACard() {
                 Epictus IA
               </h3>
               <p className={`text-sm ${isLightMode ? 'text-gray-500' : 'text-gray-300'}`}>
-                <span className="font-medium">Seu copiloto inteligente</span>
+                Seu copiloto inteligente
               </p>
             </div>
           </div>
@@ -45,7 +45,7 @@ export default function EpictusIACard() {
       </div>
 
       {/* Content area */}
-      <div className="p-6 flex flex-col flex-1">
+      <div className="p-5 flex flex-col flex-1">
         <div className="flex items-center justify-center flex-1">
           <div className="text-center space-y-4">
             <div className={`w-16 h-16 rounded-full ${isLightMode ? 'bg-purple-100' : 'bg-purple-500/20'} flex items-center justify-center mx-auto`}>
