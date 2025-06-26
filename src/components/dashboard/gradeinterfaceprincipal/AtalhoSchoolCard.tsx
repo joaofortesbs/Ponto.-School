@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { Pencil, BookOpen, Calendar, Users, Brain, Settings, MessageSquare, ChevronRight, Grid, Sparkles, Plus, FileText, Lightbulb, Rocket, Star, Network } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
@@ -11,14 +10,14 @@ export default function AtalhoSchoolCard() {
   const [hoveredAtalho, setHoveredAtalho] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
-  
+
   // Observer para ajustar o tamanho do card de acordo com o card "Seu Foco Hoje"
   useEffect(() => {
     // Função para observar mudanças no card "Seu Foco Hoje"
     const adjustHeight = () => {
       const focoHojeCard = document.querySelector('[data-card-type="foco-hoje"]') as HTMLElement;
       const atalhoCard = cardRef.current;
-      
+
       if (focoHojeCard && atalhoCard) {
         // Atualiza a altura do card para corresponder ao "Seu Foco Hoje"
         const focoHojeHeight = focoHojeCard.offsetHeight;
@@ -29,7 +28,7 @@ export default function AtalhoSchoolCard() {
     // Configura um observador de mutação para detectar mudanças no card "Seu Foco Hoje"
     const observer = new MutationObserver(adjustHeight);
     const focoHojeCard = document.querySelector('[data-card-type="foco-hoje"]');
-    
+
     if (focoHojeCard) {
       observer.observe(focoHojeCard, { 
         attributes: true, 
@@ -37,17 +36,17 @@ export default function AtalhoSchoolCard() {
         subtree: true,
         attributeFilter: ['style', 'class']
       });
-      
+
       // Ajusta a altura inicialmente
       adjustHeight();
     }
-    
+
     // Também ajusta a altura quando a janela é redimensionada
     window.addEventListener('resize', adjustHeight);
-    
+
     // Ajusta periodicamente para garantir que está sincronizado
     const intervalId = setInterval(adjustHeight, 500);
-    
+
     // Limpa o observador quando o componente é desmontado
     return () => {
       observer.disconnect();
@@ -180,8 +179,11 @@ export default function AtalhoSchoolCard() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
       >
-        {/* Header com gradiente igual ao card Seu Foco Hoje */}
-        <div className={`p-5 ${isLightMode ? 'bg-gradient-to-r from-orange-50 to-amber-50/50' : 'bg-gradient-to-br from-[#FF6B00]/10 to-transparent'} border-b ${isLightMode ? 'border-orange-100' : 'border-[#FF6B00]/20'}`}>
+        {/* Header com gradiente laranja */}
+        <div className={`${isLightMode 
+        ? 'bg-gradient-to-r from-[#FF6B00] to-[#FF8C40]' 
+        : 'bg-gradient-to-r from-[#FF6B00] to-[#FF8C40]'
+      } p-5 border-b ${isLightMode ? 'border-orange-100' : 'border-[#FF6B00]/20'}`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className={`p-2.5 rounded-lg flex items-center justify-center ${isLightMode ? 'bg-white shadow-sm border border-orange-200' : 'bg-[#FF6B00]/15 shadow-lg shadow-[#FF6B00]/5 border border-[#FF6B00]/30'}`}>
@@ -196,7 +198,7 @@ export default function AtalhoSchoolCard() {
                 </p>
               </div>
             </div>
-            
+
             <div className="hidden md:flex">
               <motion.button 
                 onClick={abrirModal}
@@ -243,7 +245,7 @@ export default function AtalhoSchoolCard() {
                 <span className={`text-sm font-medium text-center ${isLightMode ? 'text-gray-700' : 'text-gray-200'}`}>
                   {atalho.nome}
                 </span>
-                
+
                 {/* Efeito de destaque ao passar o mouse */}
                 {hoveredAtalho === atalho.id && (
                   <motion.div 
@@ -263,7 +265,7 @@ export default function AtalhoSchoolCard() {
                 )}
               </motion.div>
             ))}
-            
+
             {/* Botão de adicionar novo atalho */}
             {atalhos.length < 6 && (
               <motion.div
