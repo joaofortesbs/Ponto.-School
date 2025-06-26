@@ -276,7 +276,11 @@ export function LoginForm() {
             E-mail
           </label>
           <div className="relative group">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-hover:text-brand-primary transition-colors duration-200 z-10" />
+            <Mail className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 group-hover:text-brand-primary transition-colors duration-200 z-10 ${
+              formData.email 
+                ? 'text-[#FF6B00]' 
+                : 'text-muted-foreground'
+            }`} />
             <Input
               type="text"
               name="email"
@@ -307,7 +311,11 @@ export function LoginForm() {
             Senha
           </label>
           <div className="relative group">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-hover:text-brand-primary transition-colors duration-200 z-10" />
+            <Lock className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 group-hover:text-brand-primary transition-colors duration-200 z-10 ${
+              formData.password 
+                ? 'text-[#FF6B00]' 
+                : 'text-muted-foreground'
+            }`} />
             <Input
               type={showPassword ? "text" : "password"}
               name="password"
