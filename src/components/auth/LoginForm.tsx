@@ -272,7 +272,7 @@ export function LoginForm() {
 
       <form onSubmit={handleSubmit} className="space-y-4 relative z-10">
         <div className="space-y-2">
-          <label className="text-sm font-medium text-brand-black dark:text-white drop-shadow-sm">
+          <label className="text-sm font-bold text-brand-black dark:text-white drop-shadow-sm">
             E-mail
           </label>
           <div className="relative group">
@@ -299,7 +299,7 @@ export function LoginForm() {
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-brand-black dark:text-white drop-shadow-sm">
+          <label className="text-sm font-bold text-brand-black dark:text-white drop-shadow-sm">
             Senha
           </label>
           <div className="relative group">
@@ -336,7 +336,7 @@ export function LoginForm() {
               background: "linear-gradient(135deg, rgba(255, 107, 0, 0.03) 0%, rgba(255, 140, 64, 0.02) 100%)"
             }}></div>
           </div>
-          <div className="flex justify-between items-center mt-1">
+          <div className="flex justify-between items-center mt-3">
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="rememberMe"
@@ -387,11 +387,11 @@ export function LoginForm() {
           <span className="absolute inset-0 bg-gradient-to-r from-brand-primary to-[#FF8C40] opacity-0 group-hover:opacity-100 transition-opacity duration-500"></span>
         </Button>
 
-        <p className="text-center text-sm text-brand-muted dark:text-white/70">
+        <p className="text-center text-sm text-brand-muted dark:text-white/70 font-bold">
           Ainda não tem conta?{" "}
           <Button
             variant="link"
-            className="text-brand-primary hover:text-brand-primary/90 p-0 h-auto font-medium relative group"
+            className="text-brand-primary hover:text-brand-primary/90 p-0 h-auto font-bold relative group"
             onClick={() => navigate("/register")}
           >
             Cadastre-se
