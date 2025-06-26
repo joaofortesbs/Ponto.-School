@@ -110,7 +110,7 @@ export default function TurmasNav() {
     <div className="space-y-1">
       <Button
         variant="ghost"
-        className={`flex items-center justify-start rounded-lg px-3 py-2 text-start w-full group hover:scale-[1.02] transition-all duration-200 relative ${isActive ? "bg-[#FF6B00]/10 text-[#FF6B00] dark:bg-[#FF6B00]/20 dark:text-white" : "text-[#001427] hover:bg-[#FF6B00]/10 dark:text-white dark:hover:bg-[#FF6B00]/20"}`}
+        className={`flex items-center justify-start rounded-lg px-3 py-2 text-start w-full group hover:scale-[1.02] transition-all duration-200 relative ${isActive ? "bg-[#FF6B00]/10 text-[#FF6B00] dark:bg-[#FF6B00]/20 dark:text-white" : "text-[#001427] hover:bg-[#FF6B00]/20 dark:text-white dark:hover:bg-[#FF6B00]/20"}`}
         onClick={handleMainClick}
       >
         <BookOpen
