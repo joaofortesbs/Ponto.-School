@@ -23,6 +23,7 @@ export function LoginForm() {
     rememberMe: false,
   });
   const [success, setSuccess] = useState(false); // Added success state
+  const [invalidCredentials, setInvalidCredentials] = useState(false); // Track invalid credentials
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -92,6 +93,11 @@ export function LoginForm() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.type === "checkbox" ? e.target.checked : e.target.value;
     setFormData((prev) => ({ ...prev, [e.target.name]: value }));
+    
+    // Clear invalid credentials state when user starts typing in email or password fields
+    if (e.target.name === "email" || e.target.name === "password") {
+      setInvalidCredentials(false);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -170,6 +176,7 @@ export function LoginForm() {
         if (profileError || !profileData?.email) {
           setSuccess(false);
           setError("Nome de usuário não encontrado");
+          setInvalidCredentials(true); // Set invalid credentials state
           setLoading(false);
           clearTimeout(preloadTimeout);
           clearTimeout(authTimeout);
@@ -200,6 +207,7 @@ export function LoginForm() {
         if (error.message.includes("Invalid login credentials") ||
             error.message.includes("Email not confirmed")) {
           setError("Email ou senha inválidos");
+          setInvalidCredentials(true); // Set invalid credentials state
         } else if (error.status === 0) { //Improved network error handling
           setError("Erro de conexão. Verifique sua internet.");
         } else {
@@ -277,9 +285,11 @@ export function LoginForm() {
           </label>
           <div className="relative group">
             <Mail className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 group-hover:text-brand-primary transition-colors duration-200 z-10 ${
-              formData.email 
-                ? 'text-[#FF6B00]' 
-                : 'text-muted-foreground'
+              invalidCredentials 
+                ? 'text-red-500' 
+                : formData.email 
+                  ? 'text-[#FF6B00]' 
+                  : 'text-muted-foreground'
             }`} />
             <Input
               type="text"
@@ -289,9 +299,11 @@ export function LoginForm() {
               onKeyPress={handleKeyPress}
               placeholder="Digite seu e-mail"
               className={`pl-10 h-11 rounded-lg transition-all duration-300 hover:border-[#FF6B00]/30 bg-[#031223]/60 text-white backdrop-blur-md dark:bg-white/8 ${
-                formData.email 
-                  ? 'border-[#FF6B00] dark:border-[#FF6B00] focus:border-[#FF6B00] dark:focus:border-[#FF6B00] shadow-[0_0_15px_rgba(255,107,0,0.3)]' 
-                  : 'border-[#FF6B00]/10 dark:border-[#FF6B00]/20 focus:border-[#FF6B00]/60 dark:focus:border-[#FF6B00]/60'
+                invalidCredentials 
+                  ? 'border-red-500 dark:border-red-500 focus:border-red-500 dark:focus:border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]' 
+                  : formData.email 
+                    ? 'border-[#FF6B00] dark:border-[#FF6B00] focus:border-[#FF6B00] dark:focus:border-[#FF6B00] shadow-[0_0_15px_rgba(255,107,0,0.3)]' 
+                    : 'border-[#FF6B00]/10 dark:border-[#FF6B00]/20 focus:border-[#FF6B00]/60 dark:focus:border-[#FF6B00]/60'
               }`}
               required
               style={{
@@ -312,9 +324,11 @@ export function LoginForm() {
           </label>
           <div className="relative group">
             <Lock className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 group-hover:text-brand-primary transition-colors duration-200 z-10 ${
-              formData.password 
-                ? 'text-[#FF6B00]' 
-                : 'text-muted-foreground'
+              invalidCredentials 
+                ? 'text-red-500' 
+                : formData.password 
+                  ? 'text-[#FF6B00]' 
+                  : 'text-muted-foreground'
             }`} />
             <Input
               type={showPassword ? "text" : "password"}
@@ -324,9 +338,11 @@ export function LoginForm() {
               onKeyPress={handleKeyPress}
               placeholder="Digite sua senha"
               className={`pl-10 pr-10 h-11 rounded-lg transition-all duration-300 hover:border-[#FF6B00]/30 bg-[#031223]/60 text-white backdrop-blur-md dark:bg-white/8 ${
-                formData.password 
-                  ? 'border-[#FF6B00] dark:border-[#FF6B00] focus:border-[#FF6B00] dark:focus:border-[#FF6B00] shadow-[0_0_15px_rgba(255,107,0,0.3)]' 
-                  : 'border-[#FF6B00]/10 dark:border-[#FF6B00]/20 focus:border-[#FF6B00]/60 dark:focus:border-[#FF6B00]/60'
+                invalidCredentials 
+                  ? 'border-red-500 dark:border-red-500 focus:border-red-500 dark:focus:border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]' 
+                  : formData.password 
+                    ? 'border-[#FF6B00] dark:border-[#FF6B00] focus:border-[#FF6B00] dark:focus:border-[#FF6B00] shadow-[0_0_15px_rgba(255,107,0,0.3)]' 
+                    : 'border-[#FF6B00]/10 dark:border-[#FF6B00]/20 focus:border-[#FF6B00]/60 dark:focus:border-[#FF6B00]/60'
               }`}
               required
               style={{
