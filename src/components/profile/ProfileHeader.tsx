@@ -1479,12 +1479,12 @@ The code has been modified to include the EditProfileModal and the functionality
           </motion.div>
         </motion.div>
 
-        {/* Barra de progresso embaixo do avatar - otimizada para novos usuários */}
+        {/* Barra de progresso melhorada - reduzida */}
         <motion.div
-          className="mt-2 w-full max-w-[200px] mx-auto"
+          className="mt-3"
           initial={{ y: 10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.8, duration: 0.3 }}
+          transition={{ delay: 1.2, duration: 0.3 }}
         >
           <div className="flex justify-between items-center mb-1">
             <div className="flex items-center">
@@ -1501,12 +1501,6 @@ The code has been modified to include the EditProfileModal and the functionality
               {(() => {
                 const currentXP = userProfile?.experience_points || 0;
                 const currentLevel = userProfile?.level || 1;
-                
-                // Para novos usuários (nível 1 e 0 XP), mostrar progresso inicial
-                if (currentLevel === 1 && currentXP === 0) {
-                  return "0%";
-                }
-                
                 const xpForNextLevel = currentLevel * 1000;
                 const previousLevelXP = (currentLevel - 1) * 1000;
                 const xpInCurrentLevel = currentXP - previousLevelXP;
@@ -1523,115 +1517,12 @@ The code has been modified to include the EditProfileModal and the functionality
                     className="absolute right-6 -mt-10 px-2 py-1.5 bg-black/80 text-white text-[10px] rounded-lg shadow-lg backdrop-blur-sm z-50 w-32 text-center"
                   >
                     <div className="font-medium mb-0.5">Progresso</div>
-                    {(() => {
-                      const currentXP = userProfile?.experience_points || 0;
-                      const currentLevel = userProfile?.level || 1;
-                      
-                      if (currentLevel === 1 && currentXP === 0) {
-                        return (
-                          <>
-                            <div className="text-white/80">0 / 1.000 XP</div>
-                            <div className="text-white/80">Comece estudando!</div>
-                          </>
-                        );
-                      }
-                      
-                      return (
-                        <>
-                          <div className="text-white/80">{currentXP}/{currentLevel * 1000} XP</div>
-                          <div className="text-white/80">Faltam {(currentLevel * 1000) - currentXP} XP</div>
-                        </>
-                      );
-                    })()}
+                    <div className="text-white/80">{userProfile?.experience_points || 0}/{(userProfile?.level || 1) * 1000} XP</div>
+                    <div className="text-white/80">Faltam {((userProfile?.level || 1) * 1000) - (userProfile?.experience_points || 0)} XP</div>
                   </motion.div>
                 )}
               </AnimatePresence>
-            </div>
-          </div>
-          <div className="h-2 w-full bg-slate-100 dark:bg-slate-800/50 rounded-full overflow-hidden shadow-inner">
-            <div
-              className="h-full bg-gradient-to-r from-[#FF6B00] via-[#FF9B50] to-[#FF6B00] rounded-full progress-animation relative transition-all duration-500"
-              style={{ 
-                width: `${(() => {
-                  const currentXP = userProfile?.experience_points || 0;
-                  const currentLevel = userProfile?.level || 1;
-                  
-                  // Para novos usuários, mostrar uma pequena barra inicial (5%) para indicar que é possível progredir
-                  if (currentLevel === 1 && currentXP === 0) {
-                    return "5";
-                  }
-                  
-                  const xpForNextLevel = currentLevel * 1000;
-                  const previousLevelXP = (currentLevel - 1) * 1000;
-                  const xpInCurrentLevel = currentXP - previousLevelXP;
-                  const xpNeededForLevel = xpForNextLevel - previousLevelXP;
-                  return xpNeededForLevel > 0 ? Math.max(5, Math.round((xpInCurrentLevel / xpNeededForLevel) * 100)) : 0;
-                })()}%` 
-              }}
-            >
-              {/* Animação de brilho */}
-              <div className="absolute inset-0 animate-shimmer" style={{
-                background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent)',
-                backgroundSize: '200% 100%',
-                animation: 'shimmer 2s infinite'
-              }}></div>
-            </div>
-          </div>
-          
-          {/* Mensagem motivacional para novos usuários */}
-          {(() => {
-            const currentXP = userProfile?.experience_points || 0;
-            const currentLevel = userProfile?.level || 1;
-            
-            if (currentLevel === 1 && currentXP === 0) {
-              return (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 1.2, duration: 0.5 }}
-                  className="text-center mt-1"
-                >
-                  <span className="text-[9px] text-[#64748B] dark:text-white/60 bg-[#FF6B00]/5 dark:bg-[#FF6B00]/10 px-2 py-0.5 rounded-full">
-                    ✨ Comece sua jornada de aprendizado!
-                  </span>
-                </motion.div>
-              );
-            }
-            return null;
-          })()}
-        </motion.div>
-
-        {/* Barra de progresso melhorada - reduzida */}
-        <motion.div
-          className="mt-3"
-          initial={{ y: 10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 1.2, duration: 0.3 }}
-        >
-          <div className="flex justify-between items-center mb-1">
-            <div className="flex items-center">
-              <ChevronUp className="h-2.5 w-2.5 text-[#FF6B00] mr-0.5" />
-              <span className="text-[10px] text-[#64748B] dark:text-white/60">
-                Progresso geral
-              </span>
-            </div>
-            <div
-              className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20 transition-all duration-300 cursor-pointer"
-              onMouseEnter={() => setShowTooltip(true)}
-              onMouseLeave={() => setShowTooltip(false)}
-            >
-              {(() => {
-                const currentXP = userProfile?.experience_points || 0;
-                const currentLevel = userProfile?.level || 1;
-                const xpForNextLevel = currentLevel * 1000;
-                const previousLevelXP = (currentLevel - 1) * 1000;
-                const xpInCurrentLevel = currentXP - previousLevelXP;
-                const xpNeededForLevel = xpForNextLevel - previousLevelXP;
-                const progressPercentage = xpNeededForLevel > 0 ? Math.round((xpInCurrentLevel / xpNeededForLevel) * 100) : 0;
-                return `${progressPercentage}%`;
-              })()}
-            </div>
-          </div>
+            </div>          </div>
           <div className="h-2 w-full bg-slate-100 dark:bg-slate-800/50 rounded-full overflow-hidden shadow-inner">
             <div
               className="h-full bg-gradient-to-r from-[#FF6B00] via-[#FF9B50] to-[#FF6B00] rounded-full progress-animation relative"
