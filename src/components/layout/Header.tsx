@@ -1854,7 +1854,7 @@ export default function Header() {
                     style={{
                       backgroundColor: isLightMode 
                         ? 'rgba(254, 240, 231, 0.73)' 
-                        : 'rgba(13, 29, 46, 0.73)',
+                        : '#0D1D2E',
                       backdropFilter: 'blur(28px) saturate(180%)',
                       WebkitBackdropFilter: 'blur(28px) saturate(180%)',
                       border: '1px solid rgba(255, 107, 0, 0.15)',
