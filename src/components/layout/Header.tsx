@@ -1078,7 +1078,7 @@ export default function Header() {
     <header className="w-full h-[72px] px-6 bg-white dark:bg-[#0A2540] border-b border-brand-border dark:border-white/10 flex items-center justify-between">
       {/* Hidden audio element for notification sounds */}
       <audio ref={audioRef} src="/message-sound.mp3" preload="auto" />
-      
+
 
       {/* Silence Notifications Dialog */}
       <Dialog open={isSilenceDialogOpen} onOpenChange={setIsSilenceDialogOpen}>
@@ -1144,7 +1144,11 @@ export default function Header() {
 
       {/* Minimalist Search Bar */}
       <div className="flex-1 max-w-2xl mx-auto px-6">
-        <div className="relative group">
+        <div className="relative group flex items-center">
+          <div className="w-8 h-8 rounded-full border-2 border-orange-500 mr-4">
+            {/* This is the empty rounded component with orange border */}
+          </div>
+          <div className="relative group">
           <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-300 dark:text-gray-500 transition-all duration-300 group-hover:text-[#FF6B00] dark:group-hover:text-[#FF6B00]">
             <Search className="h-4 w-4" />
           </div>
@@ -1709,7 +1713,7 @@ export default function Header() {
                             <p className="text-xs text-muted-foreground">
                               {notification.description}
                             </p>
-                            <span className="text-xs text-muted-foreground">
+                            <span className="text-xs text-mutedforeground">
                               {notification.date}
                             </span>
                           </div>
