@@ -1851,7 +1851,7 @@ export default function Header() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56 p-0 overflow-hidden border-0"
                     style={{
-                      backgroundColor: 'rgba(255, 234, 211, 0.73)',
+                      backgroundColor: '#fef0e7',
                       backdropFilter: 'blur(28px) saturate(180%)',
                       WebkitBackdropFilter: 'blur(28px) saturate(180%)',
                       border: '1px solid rgba(255, 107, 0, 0.15)',
@@ -1870,7 +1870,7 @@ export default function Header() {
                       }}
                     >
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#FF6B00]/3 to-transparent" />
-                      <h3 className="text-sm font-light relative z-10 text-gray-800 tracking-wide">
+                      <h3 className="text-sm font-bold relative z-10 text-gray-800 tracking-wide text-center">
                         Minha Conta
                       </h3>
                     </div>
