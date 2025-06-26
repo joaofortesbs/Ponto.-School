@@ -94,6 +94,16 @@ export function LoginForm() {
     setFormData((prev) => ({ ...prev, [e.target.name]: value }));
   };
 
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !loading) {
+      e.preventDefault();
+      const form = e.currentTarget.closest('form');
+      if (form) {
+        form.requestSubmit();
+      }
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -272,6 +282,7 @@ export function LoginForm() {
               name="email"
               value={formData.email}
               onChange={handleChange}
+              onKeyPress={handleKeyPress}
               placeholder="Digite seu e-mail"
               className="pl-10 h-11 bg-white/30 dark:bg-white/8 backdrop-blur-md border-[#FF6B00]/10 dark:border-[#FF6B00]/20 focus:border-[#FF6B00]/60 dark:focus:border-[#FF6B00]/60 transition-all duration-300 hover:border-[#FF6B00]/30 rounded-lg"
               required
@@ -298,6 +309,7 @@ export function LoginForm() {
               name="password"
               value={formData.password}
               onChange={handleChange}
+              onKeyPress={handleKeyPress}
               placeholder="Digite sua senha"
               className="pl-10 pr-10 h-11 bg-white/30 dark:bg-white/8 backdrop-blur-md border-[#FF6B00]/10 dark:border-[#FF6B00]/20 focus:border-[#FF6B00]/60 dark:focus:border-[#FF6B00]/60 transition-all duration-300 hover:border-[#FF6B00]/30 rounded-lg"
               required
