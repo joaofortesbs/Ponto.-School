@@ -1,52 +1,87 @@
+
 import React, { useState, useEffect } from "react";
+import { Brain, Lightbulb, Send, ArrowRight, BarChart2, Sparkles, Zap, Check, Star, Wand2, Rocket, BookOpen, LucideIcon } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
-import { motion, AnimatePresence } from "framer-motion";
-import { Brain, MessageSquare, Lightbulb, Sparkles, Zap, ChevronRight, Star, ArrowRight, Play, Users, BookOpen, Target, TrendingUp, Clock, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function EpictusIACopilotoCard() {
   const { theme } = useTheme();
   const isLightMode = theme === "light";
+  const [pergunta, setPergunta] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(true);
 
-  // Estados para controlar diferentes aspectos do card
-  const [currentStep, setCurrentStep] = useState(0);
-  const [showWelcome, setShowWelcome = useState(true);
-  const [isInteractive, setIsInteractive] = useState(false);
+  const sugestoes = [
+    {
+      icon: BookOpen,
+      texto: "Como posso melhorar meus estudos?",
+      categoria: "Estudos"
+    },
+    {
+      icon: BarChart2,
+      texto: "Quais são minhas métricas de progresso?",
+      categoria: "Progresso"
+    },
+    {
+      icon: Lightbulb,
+      texto: "Preciso de dicas para organizar minha rotina",
+      categoria: "Organização"
+    },
+    {
+      icon: Rocket,
+      texto: "Como acelerar meu aprendizado?",
+      categoria: "Produtividade"
+    }
+  ];
+
+  const handleSuggestionClick = (texto: string) => {
+    setPergunta(texto);
+    setShowSuggestions(false);
+  };
+
+  const handleSubmit = () => {
+    if (!pergunta.trim()) return;
+    
+    setIsTyping(true);
+    setShowSuggestions(false);
+    
+    // Simular resposta da IA
+    setTimeout(() => {
+      setIsTyping(false);
+      setPergunta("");
+    }, 2000);
+  };
 
   return (
-    <motion.div 
-      className={`rounded-xl overflow-hidden ${isLightMode ? 'bg-white' : 'bg-gradient-to-br from-[#001e3a] to-[#00162b]'} shadow-lg ${isLightMode ? 'border border-gray-200' : 'border border-white/10'} h-full self-start flex flex-col overflow-y-auto grid-cell`}
-      style={{ minHeight: '600px' }}
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
+      className={`relative p-6 rounded-2xl shadow-lg border transition-all duration-300 ${
+        isLightMode 
+          ? "bg-white border-gray-200 shadow-gray-100" 
+          : "bg-[#1a1a2e] border-gray-700 shadow-black/20"
+      }`}
     >
-      {/* Header elegante com gradiente personalizado para Epictus IA */}
-      <div className={`p-6 relative ${isLightMode ? 'bg-gradient-to-r from-orange-50 to-orange-100/50' : 'bg-gradient-to-r from-[#0A2540]/80 to-[#001427]'} border-b ${isLightMode ? 'border-orange-100' : 'border-[#FF6B00]/20'}`}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className={`p-2.5 rounded-lg flex items-center justify-center ${isLightMode ? 'bg-white shadow-sm border border-orange-200' : 'bg-[#FF6B00]/15 shadow-lg shadow-[#FF6B00]/5 border border-[#FF6B00]/30'}`}>
-              <Brain className={`h-5 w-5 text-[#FF6B00]`} />
-            </div>
-            <div>
-              <h3 className={`font-semibold text-lg ${isLightMode ? 'text-gray-800' : 'text-white'}`}>
-                Epictus IA
-              </h3>
-              <p className={`text-sm ${isLightMode ? 'text-gray-500' : 'text-gray-300'}`}>
-                <span className="font-medium">Seu copiloto inteligente</span>
-              </p>
-            </div>
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-4">
+        <div className="relative">
+          <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
+            <Brain className="w-5 h-5 text-white" />
           </div>
-
-          <div className="hidden md:flex">
-            <motion.button 
-              className={`rounded-full p-2 ${isLightMode ? 'bg-orange-50 hover:bg-orange-100' : 'bg-[#FF6B00]/10 hover:bg-[#FF6B00]/20'} transition-colors`}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Sparkles className={`h-4 w-4 ${isLightMode ? 'text-[#FF6B00]' : 'text-[#FF6B00]'}`} />
-            </motion.button>
-          </div>
+          <motion.div
+            animate={{ scale: [1, 1.2, 1] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full"
+          />
+        </div>
+        <div>
+          <h3 className={`font-semibold text-lg ${isLightMode ? "text-gray-900" : "text-white"}`}>
+            Epictus IA
+          </h3>
+          <p className={`text-sm ${isLightMode ? "text-gray-600" : "text-gray-400"}`}>
+            Seu Copiloto Inteligente
+          </p>
         </div>
       </div>
 
@@ -64,7 +99,7 @@ export default function EpictusIACopilotoCard() {
             } focus:outline-none focus:ring-2 focus:ring-orange-500/20`}
             rows={3}
           />
-
+          
           <Button
             onClick={handleSubmit}
             disabled={!pergunta.trim() || isTyping}
