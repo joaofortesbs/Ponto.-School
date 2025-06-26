@@ -369,7 +369,7 @@ export function LoginForm() {
         )}
 
         {/* Divisão com asterisco */}
-        <div className="my-5 flex items-center">
+        <div className="my-8 flex items-center">
           <div className="flex-1 border-t border-gray-300 dark:border-gray-700"></div>
           <div className="mx-4 text-gray-400">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none">
@@ -379,6 +379,8 @@ export function LoginForm() {
           <div className="flex-1 border-t border-gray-300 dark:border-gray-700"></div>
         </div>
 
+        <div className="mt-6"></div>
+
         <Button
           type="submit"
           className="w-full h-11 text-base bg-brand-primary hover:bg-brand-primary/90 text-white transition-all duration-300 shadow-md hover:shadow-lg hover:shadow-brand-primary/20 relative overflow-hidden group"
@@ -387,6 +389,8 @@ export function LoginForm() {
           <span className="relative z-10 font-bold">{loading ? "Entrando..." : "Acessar minha conta"}</span>
           <span className="absolute inset-0 bg-gradient-to-r from-brand-primary to-[#FF8C40] opacity-0 group-hover:opacity-100 transition-opacity duration-500"></span>
         </Button>
+
+        <div className="mt-8"></div>
 
         <p className="text-center text-sm text-brand-muted dark:text-white/70 font-bold">
           Ainda não tem conta?{" "}
