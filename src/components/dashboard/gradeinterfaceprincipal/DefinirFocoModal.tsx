@@ -468,13 +468,13 @@ return (
           {/* Efeitos de fundo */}
           <div className="absolute -top-10 -left-10 w-32 h-32 bg-gradient-to-br from-orange-500/10 to-orange-300/5 rounded-full blur-2xl pointer-events-none"></div>
           <div className="absolute top-0 right-0 w-28 h-28 bg-gradient-to-bl from-blue-500/5 to-purple-300/10 rounded-full blur-xl pointer-events-none"></div>
-          
+
           {/* Título Premium com ícone */}
           <div className="flex items-center gap-3">
             <div className={`flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br ${isLightMode ? 'from-amber-50 to-orange-100' : 'from-[#FF6B00]/20 to-[#FF8C40]/10'} border ${isLightMode ? 'border-orange-200/60' : 'border-[#FF6B00]/20'} shadow-sm`}>
               <Target className="h-6 w-6 text-[#FF6B00]" />
             </div>
-            
+
             <div className="relative">
               <h2 className={`relative text-xl font-bold tracking-tight ${isLightMode ? 'text-gray-900' : 'text-white'} flex flex-col`}>                
                 <span className="flex items-center gap-2">
@@ -487,7 +487,7 @@ return (
               <div className="absolute -bottom-2 left-0 right-0 h-0.5 bg-gradient-to-r from-[#FF6B00]/50 via-[#FF8C40]/30 to-transparent rounded-full"></div>
             </div>
           </div>
-          
+
           <button 
             onClick={onClose}
             className={`p-1.5 rounded-full ${isLightMode ? 'bg-gray-100 hover:bg-gray-200' : 'bg-gray-800 hover:bg-gray-700'} transition-all shadow-sm`}
@@ -520,7 +520,7 @@ return (
               }
             </div>
           </div>
-          
+
           <div className="relative w-full h-1.5 bg-gray-200 dark:bg-gray-700/50 rounded-full overflow-hidden">
             <div 
               className="absolute top-0 left-0 h-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-full"

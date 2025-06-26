@@ -669,8 +669,7 @@ export default function FocoDoDiaCard() {
 
   // Função para planejar foco do próximo dia
   const planejamentoFuturo = () => {
-    // Resetar o estado de conclusão para sair da interface de comemoração
-    setTodasAtividadesConcluidas(false);
+    // Manter a interface de comemoração visível durante o modal
     setModalAberto(true);
   };
 
