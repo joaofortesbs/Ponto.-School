@@ -1047,10 +1047,8 @@ export default function FocoDoDiaCard() {
                     </motion.button>
 
                     <motion.button 
-                      onClick={explorarBiblioteca}
-                      className={`rounded-lg p-3 text-xs font-medium ${isLightMode ? 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50' : 'bg-gray-800 border border-gray-700 text-gray-200 hover:bg-gray-700'} flex items-center justify-center gap-1.5 transition-colors shadow-sm`}
-                      whileHover={{ scale: 1.03 }}
-                      whileTap={{ scale: 0.98 }}
+                      disabled
+                      className={`rounded-lg p-3 text-xs font-medium ${isLightMode ? 'bg-gray-100 border border-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gray-800/50 border border-gray-700/50 text-gray-500 cursor-not-allowed'} flex items-center justify-center gap-1.5 shadow-sm opacity-60`}
                     >
                       <BookOpen className="h-4 w-4" />
                       Explorar Biblioteca
@@ -1062,48 +1060,7 @@ export default function FocoDoDiaCard() {
               </motion.div>
             )}
 
-            {/* Histórico de Sessões de Foco */}
-            {todasAtividadesConcluidas && (
-              <div 
-                className={`mt-4 p-3 rounded-lg ${isLightMode ? 'bg-blue-50' : 'bg-blue-900/10'} border ${isLightMode ? 'border-blue-100' : 'border-blue-800/30'} transition-all relative`}
-              >
-                {/* Cabeçalho sempre visível - sem expansão */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className={`p-1.5 rounded-md ${isLightMode ? 'bg-blue-100' : 'bg-blue-800/30'}`}>
-                      <Flame className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <p className={`text-xs font-semibold ${isLightMode ? 'text-gray-700' : 'text-gray-200'}`}>
-                      Suas sessões de foco
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className={`text-[10px] ${isLightMode ? 'text-blue-600' : 'text-blue-400'}`}>
-                      Hoje
-                    </span>
-                    <div className="flex items-center gap-1 bg-blue-100/80 dark:bg-blue-900/30 px-1.5 py-0.5 rounded-full">
-                      <span className={`text-xs font-medium ${isLightMode ? 'text-blue-600' : 'text-blue-400'}`}>
-                        3 sessões
-                      </span>
-                      <Target className="h-3 w-3 text-blue-500" />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Conteúdo fixo - sem expansão em hover */}
-                <div className="flex items-center justify-between mt-2">
-                  <div className="flex items-center gap-1.5">
-                    <div className={`w-1.5 h-1.5 rounded-full ${isLightMode ? 'bg-green-500' : 'bg-green-400'}`}></div>
-                    <span className={`text-xs ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
-                      Sessão de {progressoAtividades}% concluída
-                    </span>
-                  </div>
-                  <span className={`text-[10px] ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                    Agora
-                  </span>
-                </div>
-              </div>
-            )}
+            
           </>
         ) : (
           <>
