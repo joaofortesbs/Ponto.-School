@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import GuiaAvatar from "./GuiaAvatar";
 import {
   Calendar as CalendarIcon,
   MessageCircle,
@@ -1142,12 +1143,14 @@ export default function Header() {
         </DialogContent>
       </Dialog>
 
+      {/* Guia Avatar */}
+      <div className="flex items-center">
+        <GuiaAvatar className="mr-6" />
+      </div>
+
       {/* Minimalist Search Bar */}
       <div className="flex-1 max-w-2xl mx-auto px-6">
         <div className="relative group flex items-center">
-          <div className="w-8 h-8 rounded-full border-2 border-orange-500 mr-4">
-            {/* This is the empty rounded component with orange border */}
-          </div>
           <div className="relative group flex-1">
             <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-300 dark:text-gray-500 transition-all duration-300 group-hover:text-[#FF6B00] dark:group-hover:text-[#FF6B00]">
               <Search className="h-4 w-4" />
