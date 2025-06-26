@@ -15,7 +15,7 @@ export default function EpictusIACard() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
     >
-      {/* Header com gradiente personalizado para Epictus IA */}
+      {/* Header personalizado para Epictus IA */}
       <div className={`p-5 relative ${isLightMode ? 'bg-gradient-to-r from-purple-50 to-purple-100/50' : 'bg-gradient-to-r from-[#0A2540]/80 to-[#001427]'} border-b ${isLightMode ? 'border-purple-100' : 'border-purple-500/20'}`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
