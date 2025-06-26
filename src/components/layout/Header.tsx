@@ -1707,7 +1707,7 @@ export default function Header() {
                       >
                         <div className="flex items-start gap-3">
                           <div
-                            className={`w-8 h-8 rounded-full flex items-center justify-center transition-transform duration-300 group-hover:scale-110 ${notification.type === "update" ? "bg-blue-100 text-blue-60 dark:bg-blue-900/30 dark:text-blue-400" : notification.type === "warning" ? "bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400" : "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400"}`}
+                            className={`w-8 h-8 rounded-full flex items-center justify-center transition-transform duration-300 group-hover:scale-110 ${notification.type === "update" ? "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400" : notification.type === "warning" ? "bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400" : "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400"}`}
                           >
                             {notification.type === "update" && (
                               <Upload className="h-4 w-4" />
