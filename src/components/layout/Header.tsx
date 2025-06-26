@@ -1852,7 +1852,9 @@ export default function Header() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48 p-0 overflow-hidden border-0"
                     style={{
-                      backgroundColor: 'rgba(254, 240, 231, 0.73)',
+                      backgroundColor: isLightMode 
+                        ? 'rgba(254, 240, 231, 0.73)' 
+                        : 'rgba(13, 29, 46, 0.73)',
                       backdropFilter: 'blur(28px) saturate(180%)',
                       WebkitBackdropFilter: 'blur(28px) saturate(180%)',
                       border: '1px solid rgba(255, 107, 0, 0.15)',
@@ -1871,7 +1873,7 @@ export default function Header() {
                       }}
                     >
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#FF6B00]/3 to-transparent" />
-                      <h3 className="text-sm font-bold relative z-10 text-gray-800 tracking-wide text-center">
+                      <h3 className={`text-sm font-bold relative z-10 tracking-wide text-center ${isLightMode ? 'text-gray-800' : 'text-white'}`}>
                         Minha Conta
                       </h3>
                     </div>
@@ -1879,19 +1881,19 @@ export default function Header() {
                     {/* Menu Items com design minimalista */}
                     <div className="py-3 px-2">
                       <DropdownMenuItem 
-                        className="mx-2 my-1.5 rounded-lg cursor-pointer transition-all duration-300 group relative overflow-hidden hover:bg-white/5 text-gray-700 hover:text-[#FF6B00] focus:bg-white/5 focus:text-[#FF6B00] border border-transparent hover:border-[#FF6B00]"
+                        className={`mx-2 my-1.5 rounded-lg cursor-pointer transition-all duration-300 group relative overflow-hidden hover:bg-white/5 hover:text-[#FF6B00] focus:bg-white/5 focus:text-[#FF6B00] border border-transparent hover:border-[#FF6B00] ${isLightMode ? 'text-gray-700' : 'text-white'}`}
                         onClick={() => window.location.href = '/profile'}
                       >
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#FF6B00]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        <User className="mr-3.5 h-4 w-4 relative z-10 text-gray-600 group-hover:text-[#FF6B00] transition-colors duration-300" />
+                        <User className={`mr-3.5 h-4 w-4 relative z-10 group-hover:text-[#FF6B00] transition-colors duration-300 ${isLightMode ? 'text-gray-600' : 'text-gray-300'}`} />
                         <span className="relative z-10 font-normal text-sm">Perfil</span>
                       </DropdownMenuItem>
 
                       <DropdownMenuItem 
-                        className="mx-2 my-1.5 rounded-lg cursor-pointer transition-all duration-300 group relative overflow-hidden hover:bg-white/5 text-gray-700 hover:text-[#FF6B00] focus:bg-white/5 focus:text-[#FF6B00] border border-transparent hover:border-[#FF6B00]"
+                        className={`mx-2 my-1.5 rounded-lg cursor-pointer transition-all duration-300 group relative overflow-hidden hover:bg-white/5 hover:text-[#FF6B00] focus:bg-white/5 focus:text-[#FF6B00] border border-transparent hover:border-[#FF6B00] ${isLightMode ? 'text-gray-700' : 'text-white'}`}
                       >
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#FF6B00]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        <HelpCircle className="mr-3.5 h-4 w-4 relative z-10 text-gray-600 group-hover:text-[#FF6B00] transition-colors duration-300" />
+                        <HelpCircle className={`mr-3.5 h-4 w-4 relative z-10 group-hover:text-[#FF6B00] transition-colors duration-300 ${isLightMode ? 'text-gray-600' : 'text-gray-300'}`} />
                         <span className="relative z-10 font-normal text-sm">Ajuda</span>
                       </DropdownMenuItem>
                     </div>
@@ -1907,11 +1909,11 @@ export default function Header() {
                     {/* Logout com destaque sutil */}
                     <div className="pb-3 px-2">
                       <DropdownMenuItem 
-                        className="mx-2 my-1.5 rounded-lg cursor-pointer transition-all duration-300 group relative overflow-hidden hover:bg-red-500/10 text-gray-700 hover:text-red-500 focus:bg-red-500/10 focus:text-red-500 border border-transparent hover:border-red-500/20"
+                        className={`mx-2 my-1.5 rounded-lg cursor-pointer transition-all duration-300 group relative overflow-hidden hover:bg-red-500/10 hover:text-red-500 focus:bg-red-500/10 focus:text-red-500 border border-transparent hover:border-red-500/20 ${isLightMode ? 'text-gray-700' : 'text-white'}`}
                         onClick={handleLogout}
                       >
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-500/8 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        <LogOut className="mr-3.5 h-4 w-4 relative z-10 text-gray-600 group-hover:text-red-500 transition-colors duration-300" />
+                        <LogOut className={`mr-3.5 h-4 w-4 relative z-10 group-hover:text-red-500 transition-colors duration-300 ${isLightMode ? 'text-gray-600' : 'text-gray-300'}`} />
                         <span className="relative z-10 font-normal text-sm">Sair</span>
                       </DropdownMenuItem>
                     </div>
