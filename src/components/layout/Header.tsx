@@ -963,8 +963,8 @@ export default function Header() {
       avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=You",
       message: replyText,
       time: new Date().toLocaleTimeString([], {
-        hour: "2-digit",```text
-minute: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
         minute: "2-digit",
       }),
       date: "Agora mesmo",

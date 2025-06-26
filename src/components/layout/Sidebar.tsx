@@ -1,3 +1,5 @@
+
+
 import { cn } from "@/lib/utils";
 import { SidebarNav } from "@/components/sidebar/SidebarNav";
 import { useState, useEffect, useRef } from "react";
@@ -19,7 +21,6 @@ export default function Sidebar({
   const [sidebarCollapsed, setSidebarCollapsed] = useState(isCollapsed);
   const [customLogo, setCustomLogo] = useState<string | null>(null);
   const [isHovered, setIsHovered] = useState(false);
-  const [isLightMode, setIsLightMode] = useState(true); // Adicionado estado para o tema
 
   useEffect(() => {
     // Obter a imagem padrão da configuração global ou usar o valor padrão
@@ -134,24 +135,10 @@ export default function Sidebar({
     handleResize();
     window.addEventListener("resize", handleResize);
 
-    // Detecta a preferência de tema do usuário
-    const themePreference = localStorage.getItem('theme') || 'light';
-    setIsLightMode(themePreference === 'light');
-
-    // Atualiza o estado quando o tema muda
-    const handleThemeChange = (event: StorageEvent) => {
-      if (event.key === 'theme') {
-        setIsLightMode(event.newValue === 'light');
-      }
-    };
-
-    window.addEventListener('storage', handleThemeChange);
-
     return () => {
       document.removeEventListener("logoLoaded", handleLogoLoaded);
       document.removeEventListener("logoLoadFailed", handleLogoLoadFailed);
       window.removeEventListener("resize", handleResize);
-      window.removeEventListener('storage', handleThemeChange);
     };
   }, []);
 
@@ -239,7 +226,6 @@ export default function Sidebar({
               "p-2 flex-1",
               sidebarCollapsed ? "pt-8" : "pt-4"
             )}
-            isLightMode={isLightMode} // Passando o estado para o SidebarNav
           />
 
           {/* Toggle Button - positioned at bottom when collapsed, at top when expanded */}
@@ -263,188 +249,5 @@ export default function Sidebar({
         </div>
       </aside>
     </>
-  );
-}
-// types.ts
-export type MainNavItem = {
-  title: string
-  href: string
-  icon?: string
-}
-
-export type SidebarNavItem = {
-  title: string
-  href: string
-  icon?: string
-}
-import React from 'react';
-import { usePathname, useRouter } from 'next/navigation';
-import { MainNavItem, SidebarNavItem } from "@/types";
-import { cn } from "@/lib/utils";
-import { PontoNavItem } from "@/components/sidebar/PontoNavItem";
-import { Icons } from "@/components/icons";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { LogOut, User, HelpCircle } from "lucide-react";
-import { useSession } from "next-auth/react";
-import { toast } from "@/components/ui/use-toast";
-
-interface SidebarNavProps extends React.HTMLAttributes<HTMLElement> {
-  items?: SidebarNavItem[];
-  mainItems?: MainNavItem[];
-  isCollapsed: boolean;
-  onToggleCollapse: () => void;
-  isLightMode: boolean; // Recebe o estado do tema
-}
-
-export function SidebarNav({
-  className,
-  items = [],
-  mainItems = [],
-  isCollapsed,
-  onToggleCollapse,
-  isLightMode,
-  ...props
-}: SidebarNavProps) {
-  const pathname = usePathname();
-  const router = useRouter();
-  const navigate = router.push;
-  const { data: session } = useSession();
-  const userData = session?.user as {
-    id: string;
-    email: string;
-    name: string;
-    image: string;
-    display_name: string;
-  } | null | undefined;
-  const [showSupportChat, setShowSupportChat] = React.useState(false);
-
-  const handleLogout = async () => {
-    try {
-      // Desconectar o usuário
-      await fetch("/api/auth/logout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ redirect: false }), // Indica que não precisa redirecionar
-      });
-
-      // Redirecionar para a página inicial após o logout
-      router.push("/");
-    } catch (error) {
-      console.error("Erro ao desconectar:", error);
-      toast({
-        title: "Erro ao desconectar",
-        description: "Por favor, tente novamente.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  return (
-    <div className={cn("flex flex-col space-y-6 w-full", className)} {...props}>
-      <div className="hidden md:flex flex-col space-y-1 w-full">
-        {mainItems?.length ? (
-          <div className="flex flex-col space-y-1 w-full">
-            {mainItems.map((item) => (
-              <PontoNavItem
-                key={item.href}
-                href={item.href}
-                title={item.title}
-                icon={item.icon}
-                isCollapsed={isCollapsed}
-              />
-            ))}
-          </div>
-        ) : null}
-      </div>
-      <div className="flex-1">
-        <nav className="grid w-full gap-1 px-2">
-          {items?.map((item, index) => {
-            return (
-              <PontoNavItem
-                key={index}
-                href={item.href}
-                title={item.title}
-                icon={item.icon}
-                isCollapsed={isCollapsed}
-              />
-            );
-          })}
-        </nav>
-      </div>
-      <div className="flex flex-col items-center justify-center w-full border-t border-gray-200 dark:border-gray-800 pt-4 pb-2">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-              <Avatar className="h-8 w-8">
-                <AvatarImage src={userData?.image || "/images/avatars/01.png"} alt={userData?.name || "Avatar"} />
-                <AvatarFallback>{userData?.name?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
-              </Avatar>
-            </Button>
-          </DropdownMenuTrigger>
-
-          <DropdownMenuContent 
-              className={`w-56 ${
-                isLightMode 
-                  ? 'bg-white border-gray-200' 
-                  : 'border-gray-700'
-              }`}
-              style={!isLightMode ? {
-                backgroundColor: 'rgba(13, 29, 46, 0.73)',
-                backdropFilter: 'blur(8px)',
-                borderColor: 'rgba(255, 255, 255, 0.1)'
-              } : {}}
-              align="end"
-            >
-            <DropdownMenuLabel 
-              className={isLightMode ? 'text-gray-900' : 'text-white'}
-            >
-              Minha Conta
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator className={isLightMode ? 'bg-gray-200' : 'bg-gray-600'} />
-
-            <DropdownMenuItem 
-              className={`flex items-center space-x-2 ${
-                isLightMode ? 'hover:bg-gray-100 text-gray-900' : 'hover:bg-gray-700 text-white'
-              }`}
-              onClick={() => router.push('/profile')}
-            >
-              <User className="h-4 w-4" />
-              <span>Perfil</span>
-            </DropdownMenuItem>
-
-            <DropdownMenuItem 
-              className={`flex items-center space-x-2 ${
-                isLightMode ? 'hover:bg-gray-100 text-gray-900' : 'hover:bg-gray-700 text-white'
-              }`}
-            >
-              <HelpCircle className="h-4 w-4" />
-              <span>Ajuda</span>
-            </DropdownMenuItem>
-
-            <DropdownMenuSeparator className={isLightMode ? 'bg-gray-200' : 'bg-gray-600'} />
-
-            <DropdownMenuItem 
-              className={`flex items-center space-x-2 ${
-                isLightMode ? 'hover:bg-gray-100 text-red-600' : 'hover:bg-gray-700 text-red-400'
-              }`}
-              onClick={handleLogout}
-            >
-              <LogOut className="h-4 w-4" />
-              <span>Sair</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    </div>
   );
 }
