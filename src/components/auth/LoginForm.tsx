@@ -369,7 +369,7 @@ export function LoginForm() {
         )}
 
         {/* Divisão com asterisco */}
-        <div className="my-6 flex items-center">
+        <div className="my-8 flex items-center">
           <div className="flex-1 border-t border-gray-300 dark:border-gray-700"></div>
           <div className="mx-4 text-gray-400">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none">
@@ -378,6 +378,8 @@ export function LoginForm() {
           </div>
           <div className="flex-1 border-t border-gray-300 dark:border-gray-700"></div>
         </div>
+
+        <div className="mt-6"></div>
 
         <Button
           type="submit"
