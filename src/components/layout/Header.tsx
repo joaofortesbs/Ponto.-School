@@ -1828,7 +1828,7 @@ export default function Header() {
                       </span>
                       <div className="flex items-center gap-1">
                         <Diamond className="h-3 w-3 text-[#FF6B00]" />
-                        <span className="text-xs text-[#FF6B00]">Premium</span>
+                        <span className="text-xs text-[#FF6B00]">Full</span>
                       </div>
                     </div>
                     <ChevronDown className="h-4 w-4 text-brand-muted dark:text-white/40 ml-1" />
@@ -1906,7 +1906,7 @@ export default function Header() {
             </TooltipTrigger>
             <TooltipContent>
               <div className="text-xs">
-                Conta Premium
+                Conta Full
                 <br />
                 Acesso a todos os recursos
               </div>
