@@ -285,6 +285,9 @@ export default function FocoDoDiaCard() {
     setModalAberto(false);
     setGerando(true);
 
+    // Garantir que saímos do estado de conclusão quando geramos novo foco
+    setTodasAtividadesConcluidas(false);
+
     try {
       // Obter ID do usuário atual
       const { data: { session } } = await supabase.auth.getSession();
@@ -411,12 +414,13 @@ export default function FocoDoDiaCard() {
         novasAtividades = novasAtividades.slice(0, 4);
       }
 
-      // Atualizar estados
+      // Atualizar estados - garantindo que saia da interface de conclusão
       setFocoPrincipal(novoFocoPrincipal);
       setAtividades(novasAtividades);
       setTemFoco(true);
       setGerando(false);
       setTodasAtividadesConcluidas(false);
+      setMostrarAnimacaoConclusao(false);
 
       // Salvar no Supabase e localStorage para persistência
       try {
@@ -483,11 +487,13 @@ export default function FocoDoDiaCard() {
       novasAtividades = [...novasAtividades, ...tarefasComplementares];
     }
 
-    // Atualizar estados
+    // Atualizar estados - garantindo que saia da interface de conclusão
     setFocoPrincipal(novoFocoPrincipal);
     setAtividades(novasAtividades);
     setTemFoco(true);
     setGerando(false);
+    setTodasAtividadesConcluidas(false);
+    setMostrarAnimacaoConclusao(false);
 
     // Salvar no localStorage para persistência
     localStorage.setItem('focoDia', JSON.stringify({
@@ -663,6 +669,8 @@ export default function FocoDoDiaCard() {
 
   // Função para planejar foco do próximo dia
   const planejamentoFuturo = () => {
+    // Resetar o estado de conclusão para sair da interface de comemoração
+    setTodasAtividadesConcluidas(false);
     setModalAberto(true);
   };
 
