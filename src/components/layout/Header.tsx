@@ -1849,9 +1849,9 @@ export default function Header() {
                     <ChevronDown className="h-4 w-4 text-brand-muted dark:text-white/40 ml-1" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 p-0 overflow-hidden border-0"
+                <DropdownMenuContent align="end" className="w-48 p-0 overflow-hidden border-0"
                     style={{
-                      backgroundColor: '#fef0e7',
+                      backgroundColor: 'rgba(254, 240, 231, 0.73)',
                       backdropFilter: 'blur(28px) saturate(180%)',
                       WebkitBackdropFilter: 'blur(28px) saturate(180%)',
                       border: '1px solid rgba(255, 107, 0, 0.15)',
@@ -1878,7 +1878,7 @@ export default function Header() {
                     {/* Menu Items com design minimalista */}
                     <div className="py-3 px-2">
                       <DropdownMenuItem 
-                        className="mx-2 my-1.5 rounded-lg cursor-pointer transition-all duration-300 group relative overflow-hidden hover:bg-white/5 text-gray-700 hover:text-[#FF6B00] focus:bg-white/5 focus:text-[#FF6B00] border border-transparent hover:border-white/10"
+                        className="mx-2 my-1.5 rounded-lg cursor-pointer transition-all duration-300 group relative overflow-hidden hover:bg-white/5 text-gray-700 hover:text-[#FF6B00] focus:bg-white/5 focus:text-[#FF6B00] border border-transparent hover:border-gray-300"
                         onClick={() => window.location.href = '/profile'}
                       >
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#FF6B00]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -1887,7 +1887,7 @@ export default function Header() {
                       </DropdownMenuItem>
 
                       <DropdownMenuItem 
-                        className="mx-2 my-1.5 rounded-lg cursor-pointer transition-all duration-300 group relative overflow-hidden hover:bg-white/5 text-gray-700 hover:text-[#FF6B00] focus:bg-white/5 focus:text-[#FF6B00] border border-transparent hover:border-white/10"
+                        className="mx-2 my-1.5 rounded-lg cursor-pointer transition-all duration-300 group relative overflow-hidden hover:bg-white/5 text-gray-700 hover:text-[#FF6B00] focus:bg-white/5 focus:text-[#FF6B00] border border-transparent hover:border-gray-300"
                       >
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#FF6B00]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                         <HelpCircle className="mr-3.5 h-4 w-4 relative z-10 text-gray-600 group-hover:text-[#FF6B00] transition-colors duration-300" />
