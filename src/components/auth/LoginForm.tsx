@@ -362,24 +362,22 @@ export function LoginForm() {
               Esqueci minha senha
             </Button>
           </div>
+
+          {/* Divisão com asterisco */}
+          <div className="my-8 flex items-center">
+            <div className="flex-1 border-t border-gray-300 dark:border-gray-700"></div>
+            <div className="mx-4 text-gray-400">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2v20m7.0711-17.071L4.9289 19.071M22 12H2m17.0711 7.0711L4.9289 4.9289"></path>
+              </svg>
+            </div>
+            <div className="flex-1 border-t border-gray-300 dark:border-gray-700"></div>
+          </div>
         </div>
 
         {error && (
           <div className="text-sm text-red-500 text-center">{error}</div>
         )}
-
-        {/* Divisão com asterisco */}
-        <div className="my-8 flex items-center">
-          <div className="flex-1 border-t border-gray-300 dark:border-gray-700"></div>
-          <div className="mx-4 text-gray-400">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none">
-              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2v20m7.0711-17.071L4.9289 19.071M22 12H2m17.0711 7.0711L4.9289 4.9289"></path>
-            </svg>
-          </div>
-          <div className="flex-1 border-t border-gray-300 dark:border-gray-700"></div>
-        </div>
-
-        <div className="mt-6"></div>
 
         <Button
           type="submit"
