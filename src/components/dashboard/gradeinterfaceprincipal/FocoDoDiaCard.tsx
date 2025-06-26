@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Target, Clock, BookOpen, Play, Check, ChevronRight, Flame, Trophy, PlusCircle, Settings, Smile, HelpCircle, BarChart2 } from "lucide-react";
+import { Target, Clock, BookOpen, Play, Check, ChevronRight, Flame, Trophy, PlusCircle, Settings, Smile, HelpCircle, BarChart2, Trash2 } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import { motion, AnimatePresence } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
@@ -815,9 +815,11 @@ export default function FocoDoDiaCard() {
               <h3 className={`font-semibold text-lg ${isLightMode ? 'text-gray-800' : 'text-white'}`}>
                 {todasAtividadesConcluidas ? "Seu Foco Hoje: Concluído!" : "Seu Foco Hoje"}
               </h3>
-              <p className={`text-sm ${isLightMode ? 'text-gray-500' : 'text-gray-300'}`}>
-                Programe o seu dia mais produtivo
-              </p>
+              {!atividades || atividades.length === 0 ? (
+                <p className={`text-sm ${isLightMode ? 'text-gray-500' : 'text-gray-300'}`}>
+                  Programe o seu dia mais produtivo
+                </p>
+              ) : null}
               {temFoco && focoPrincipal && !todasAtividadesConcluidas && (
                 <p className={`text-sm ${isLightMode ? 'text-gray-500' : 'text-gray-300'}`}>
                   <span className="font-bold text-[#FF6B00]">
@@ -1251,6 +1253,33 @@ export default function FocoDoDiaCard() {
           )}
 
           {!todasAtividadesConcluidas ? (
+              atividades.length > 0 ? (
+            <motion.button
+              onClick={(e) => {
+                e.stopPropagation();
+                // Limpar o estado local
+                setAtividades([]);
+                setFocoPrincipal(null);
+                setTemFoco(false);
+                setTodasAtividadesConcluidas(false);
+                // Limpar o localStorage
+                localStorage.removeItem('focoDia');
+              }}
+              className={`rounded-lg px-5 py-2.5 text-sm font-medium bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white shadow-sm hover:shadow-md transition-all flex items-center gap-2 ${isLightMode ? '' : 'border border-[#FF6B00]/40'}`}
+              whileHover={{ scale: 1.03, y: -1 }}
+              whileTap={{ scale: 0.97 }}
+              initial={{ boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)" }}
+              animate={{ boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)" }}
+              whileHover={{
+                boxShadow: "0 4px 12px rgba(255, 107, 0, 0.25)",
+                scale: 1.03,
+                y: -1
+              }}
+            >
+              Excluir Objetivos
+              <Trash2 className="h-4 w-4 opacity-80" />
+            </motion.button>
+              ) : (
             <motion.button 
               onClick={() => setModalAberto(true)}
               className={`rounded-lg px-5 py-2.5 text-sm font-medium bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white shadow-sm hover:shadow-md transition-all flex items-center gap-2 ${isLightMode ? '' : 'border border-[#FF6B00]/40'}`}
@@ -1267,6 +1296,7 @@ export default function FocoDoDiaCard() {
               {atividades.length > 0 ? "Iniciar Foco" : "Definir Foco"}
               <Target className="h-4 w-4 opacity-80" />
             </motion.button>
+              )
           ) : (
             <motion.button 
               onClick={redefinirFoco}
