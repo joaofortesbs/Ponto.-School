@@ -45,7 +45,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
-
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useNavigate } from "react-router-dom";
 import { profileService } from "@/services/profileService";
@@ -1078,6 +1078,31 @@ export default function Header() {
     <header className="w-full h-[72px] px-6 bg-white dark:bg-[#0A2540] border-b border-brand-border dark:border-white/10 flex items-center justify-between">
       {/* Hidden audio element for notification sounds */}
       <audio ref={audioRef} src="/message-sound.mp3" preload="auto" />
+      {/* Modern Platform Avatar */}
+      <div className="flex items-center">
+        <div className="relative group cursor-pointer">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#FF6B00] via-[#FF8C40] to-[#FFD700] rounded-full opacity-70 blur-[6px] group-hover:opacity-100 group-hover:blur-[8px] transition-all duration-500"></div>
+          <Avatar className="h-11 w-11 border-[1.5px] border-white dark:border-[#001427] shadow-lg relative z-10 transition-all duration-500 group-hover:scale-105">
+            <AvatarImage
+              src={userProfile?.profile_image || "/images/ponto-school-avatar.png"}
+              alt="Ponto School Avatar"
+              className="scale-90 group-hover:scale-95 transition-all duration-500"
+              onError={(e) => {
+                e.currentTarget.src =
+                  "https://api.dicebear.com/7.x/avataaars/svg?seed=PontoSchool&backgroundColor=ff6b00";
+              }}
+            />
+            <AvatarFallback className="bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] text-white font-bold">
+              PS
+            </AvatarFallback>
+          </Avatar>
+          <div className="absolute -bottom-1 -right-1 bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] text-white text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-lg z-20 transform transition-all duration-500 group-hover:scale-110 group-hover:rotate-12">
+            <span className="transform group-hover:-rotate-12 transition-transform duration-500">
+              P
+            </span>
+          </div>
+        </div>
+      </div>
 
       {/* Silence Notifications Dialog */}
       <Dialog open={isSilenceDialogOpen} onOpenChange={setIsSilenceDialogOpen}>
@@ -1441,9 +1466,15 @@ export default function Header() {
                             setMessagesData(updatedMessages);
                           }}
                         >
-                          <div className="h-9 w-9 border-2 border-transparent group-hover:border-[#FF6B00] group-hover:animate-pulse-border transition-all duration-200 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] flex items-center justify-center text-white font-bold">
-                            {message.sender.substring(0, 2)}
-                          </div>
+                          <Avatar className="h-9 w-9 border-2 border-transparent group-hover:border-[#FF6B00] group-hover:animate-pulse-border transition-all duration-200">
+                            <AvatarImage
+                              src={message.avatar}
+                              alt={message.sender}
+                            />
+                            <AvatarFallback>
+                              {message.sender.substring(0, 2)}
+                            </AvatarFallback>
+                          </Avatar>
                           <div className="flex-1 space-y-1">
                             <div className="flex items-center justify-between">
                               <p className="text-sm font-medium group-hover:text-[#FF6B00] transition-colors duration-200">
@@ -1785,6 +1816,23 @@ export default function Header() {
                     variant="ghost"
                     className="relative h-12 hover:bg-brand-card dark:hover:bg-white/5 flex items-center gap-3 px-3 group transition-all duration-300"
                   >
+                    <Avatar className="h-9 w-9 border-2 border-transparent group-hover:border-[#FF6B00] transition-all duration-300">
+                      <AvatarImage
+                        src={userProfile?.profile_image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userProfile?.username || "user"}`}
+                        alt={
+                          userProfile?.display_name ||
+                          userProfile?.full_name ||
+                          userProfile?.username ||
+                          "Usuário"
+                        }
+                      />
+                      <AvatarFallback>
+                        {userProfile?.display_name?.substring(0, 2) ||
+                          userProfile?.full_name?.substring(0, 2) ||
+                          userProfile?.username?.substring(0, 2) ||
+                          "U"}
+                      </AvatarFallback>
+                    </Avatar>
                     <div className="flex flex-col items-start">
                       <span className="text-sm font-semibold text-brand-black dark:text-white">
                         {isLoading
