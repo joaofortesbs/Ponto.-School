@@ -1850,69 +1850,44 @@ export default function Header() {
                     <ChevronDown className="h-4 w-4 text-brand-muted dark:text-white/40 ml-1" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48 p-0 overflow-hidden border-0"
-                    style={{
-                      backgroundColor: 'rgba(254, 240, 231, 0.73)',
-                      backdropFilter: 'blur(28px) saturate(180%)',
-                      WebkitBackdropFilter: 'blur(28px) saturate(180%)',
-                      border: '1px solid rgba(255, 107, 0, 0.15)',
-                      borderRadius: '18px',
-                      boxShadow: isLightMode
-                        ? '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 8px 16px -8px rgba(255, 107, 0, 0.1), inset 0 1px 0 rgba(255, 107, 0, 0.1)'
-                        : '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 8px 16px -8px rgba(255, 107, 0, 0.15), inset 0 1px 0 rgba(255, 107, 0, 0.12)'
-                    }}
+                <DropdownMenuContent align="end" className="w-48 p-0 overflow-hidden border-0 backdrop-blur-md bg-white/90 dark:bg-[#0A2540]/90 border border-[#FF6B00]/30 shadow-lg"
                   >
-                    {/* Header minimalista */}
-                    <div 
-                      className="px-5 py-4 relative"
-                      style={{
-                        background: 'linear-gradient(135deg, rgba(255, 107, 0, 0.08) 0%, rgba(255, 140, 64, 0.04) 100%)',
-                        borderBottom: '1px solid rgba(255, 107, 0, 0.12)'
-                      }}
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#FF6B00]/3 to-transparent" />
-                      <h3 className="text-sm font-bold relative z-10 text-gray-800 tracking-wide text-center">
+                    {/* Header com mesmo estilo do modal de pesquisa */}
+                    <div className="p-3 bg-gradient-to-r from-orange-100 to-orange-200 dark:from-orange-900 dark:to-orange-800 border-b rounded-t-xl">
+                      <h3 className="text-sm font-bold text-center">
                         Minha Conta
                       </h3>
                     </div>
 
-                    {/* Menu Items com design minimalista */}
-                    <div className="py-3 px-2">
+                    {/* Menu Items com mesmo estilo do modal de pesquisa */}
+                    <div className="p-2">
                       <DropdownMenuItem 
-                        className="mx-2 my-1.5 rounded-lg cursor-pointer transition-all duration-300 group relative overflow-hidden hover:bg-white/5 text-gray-700 hover:text-[#FF6B00] focus:bg-white/5 focus:text-[#FF6B00] border border-transparent hover:border-[#FF6B00]"
+                        className="p-2 hover:bg-orange-50 dark:hover:bg-orange-900/10 rounded-md cursor-pointer transition-colors duration-150 flex items-center gap-2"
                         onClick={() => window.location.href = '/profile'}
                       >
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#FF6B00]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        <User className="mr-3.5 h-4 w-4 relative z-10 text-gray-600 group-hover:text-[#FF6B00] transition-colors duration-300" />
-                        <span className="relative z-10 font-normal text-sm">Perfil</span>
+                        <User className="h-4 w-4 text-gray-400" />
+                        <span className="text-sm">Perfil</span>
                       </DropdownMenuItem>
 
                       <DropdownMenuItem 
-                        className="mx-2 my-1.5 rounded-lg cursor-pointer transition-all duration-300 group relative overflow-hidden hover:bg-white/5 text-gray-700 hover:text-[#FF6B00] focus:bg-white/5 focus:text-[#FF6B00] border border-transparent hover:border-[#FF6B00]"
+                        className="p-2 hover:bg-orange-50 dark:hover:bg-orange-900/10 rounded-md cursor-pointer transition-colors duration-150 flex items-center gap-2"
                       >
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#FF6B00]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        <HelpCircle className="mr-3.5 h-4 w-4 relative z-10 text-gray-600 group-hover:text-[#FF6B00] transition-colors duration-300" />
-                        <span className="relative z-10 font-normal text-sm">Ajuda</span>
+                        <HelpCircle className="h-4 w-4 text-gray-400" />
+                        <span className="text-sm">Ajuda</span>
                       </DropdownMenuItem>
                     </div>
 
-                    {/* Separator sutil */}
-                    <div 
-                      className="mx-4 my-2 h-px"
-                      style={{
-                        background: 'linear-gradient(to right, transparent, rgba(255, 107, 0, 0.15), transparent)'
-                      }}
-                    />
+                    {/* Separador com mesmo estilo do modal de pesquisa */}
+                    <div className="border-t border-gray-100 dark:border-gray-800"></div>
 
-                    {/* Logout com destaque sutil */}
-                    <div className="pb-3 px-2">
+                    {/* Logout com mesmo estilo do modal de pesquisa */}
+                    <div className="p-2">
                       <DropdownMenuItem 
-                        className="mx-2 my-1.5 rounded-lg cursor-pointer transition-all duration-300 group relative overflow-hidden hover:bg-red-500/10 text-gray-700 hover:text-red-500 focus:bg-red-500/10 focus:text-red-500 border border-transparent hover:border-red-500/20"
+                        className="p-2 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-md cursor-pointer transition-colors duration-150 flex items-center gap-2 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
                         onClick={handleLogout}
                       >
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-500/8 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        <LogOut className="mr-3.5 h-4 w-4 relative z-10 text-gray-600 group-hover:text-red-500 transition-colors duration-300" />
-                        <span className="relative z-10 font-normal text-sm">Sair</span>
+                        <LogOut className="h-4 w-4" />
+                        <span className="text-sm">Sair</span>
                       </DropdownMenuItem>
                     </div>
                   </DropdownMenuContent>
