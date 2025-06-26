@@ -815,6 +815,9 @@ export default function FocoDoDiaCard() {
               <h3 className={`font-semibold text-lg ${isLightMode ? 'text-gray-800' : 'text-white'}`}>
                 {todasAtividadesConcluidas ? "Seu Foco Hoje: Concluído!" : "Seu Foco Hoje"}
               </h3>
+              <p className={`text-sm ${isLightMode ? 'text-gray-500' : 'text-gray-300'}`}>
+                Programe o seu dia mais produtivo
+              </p>
               {temFoco && focoPrincipal && !todasAtividadesConcluidas && (
                 <p className={`text-sm ${isLightMode ? 'text-gray-500' : 'text-gray-300'}`}>
                   <span className="font-bold text-[#FF6B00]">
@@ -1084,7 +1087,7 @@ export default function FocoDoDiaCard() {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Conteúdo fixo - sem expansão em hover */}
                 <div className="flex items-center justify-between mt-2">
                   <div className="flex items-center gap-1.5">
