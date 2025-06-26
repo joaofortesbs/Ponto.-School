@@ -265,10 +265,18 @@ export default function Sidebar({
     </>
   );
 }
-```
+// types.ts
+export type MainNavItem = {
+  title: string
+  href: string
+  icon?: string
+}
 
-```typescript
-// SidebarNav.tsx
+export type SidebarNavItem = {
+  title: string
+  href: string
+  icon?: string
+}
 import React from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { MainNavItem, SidebarNavItem } from "@/types";
@@ -383,7 +391,7 @@ export function SidebarNav({
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
-          
+
           <DropdownMenuContent 
               className={`w-56 ${
                 isLightMode 
@@ -395,16 +403,48 @@ export function SidebarNav({
                 backdropFilter: 'blur(8px)',
                 borderColor: 'rgba(255, 255, 255, 0.1)'
               } : {}}
-              align```typescript
-// types.ts
-export type MainNavItem = {
-  title: string
-  href: string
-  icon?: string
-}
+              align="end"
+            >
+            <DropdownMenuLabel 
+              className={isLightMode ? 'text-gray-900' : 'text-white'}
+            >
+              Minha Conta
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator className={isLightMode ? 'bg-gray-200' : 'bg-gray-600'} />
 
-export type SidebarNavItem = {
-  title: string
-  href: string
-  icon?: string
+            <DropdownMenuItem 
+              className={`flex items-center space-x-2 ${
+                isLightMode ? 'hover:bg-gray-100 text-gray-900' : 'hover:bg-gray-700 text-white'
+              }`}
+              onClick={() => router.push('/profile')}
+            >
+              <User className="h-4 w-4" />
+              <span>Perfil</span>
+            </DropdownMenuItem>
+
+            <DropdownMenuItem 
+              className={`flex items-center space-x-2 ${
+                isLightMode ? 'hover:bg-gray-100 text-gray-900' : 'hover:bg-gray-700 text-white'
+              }`}
+            >
+              <HelpCircle className="h-4 w-4" />
+              <span>Ajuda</span>
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator className={isLightMode ? 'bg-gray-200' : 'bg-gray-600'} />
+
+            <DropdownMenuItem 
+              className={`flex items-center space-x-2 ${
+                isLightMode ? 'hover:bg-gray-100 text-red-600' : 'hover:bg-gray-700 text-red-400'
+              }`}
+              onClick={handleLogout}
+            >
+              <LogOut className="h-4 w-4" />
+              <span>Sair</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </div>
+  );
 }
