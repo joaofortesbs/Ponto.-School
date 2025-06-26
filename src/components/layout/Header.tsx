@@ -1072,7 +1072,7 @@ export default function Header() {
   };
 
     // Determine if the theme is light or dark
-    const isLightMode = theme === 'light';
+    const isLightMode = theme === 'light' || (!isDark && theme !== 'dark');
 
   return (
     <header className="w-full h-[72px] px-6 bg-white dark:bg-[#0A2540] border-b border-brand-border dark:border-white/10 flex items-center justify-between">
@@ -1854,7 +1854,7 @@ export default function Header() {
                     style={{
                       backgroundColor: isLightMode 
                         ? 'rgba(254, 240, 231, 0.73)' 
-                        : '#0D1D2E',
+                        : '#0D1D2E !important',
                       backdropFilter: 'blur(28px) saturate(180%)',
                       WebkitBackdropFilter: 'blur(28px) saturate(180%)',
                       border: '1px solid rgba(255, 107, 0, 0.15)',
