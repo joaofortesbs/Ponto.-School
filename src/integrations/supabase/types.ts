@@ -227,6 +227,7 @@ export type Database = {
           descricao: string | null
           disciplina_area: string | null
           id: string
+          is_private: boolean | null
           is_public: boolean | null
           is_visible_to_all: boolean | null
           is_visible_to_partners: boolean | null
@@ -242,6 +243,7 @@ export type Database = {
           descricao?: string | null
           disciplina_area?: string | null
           id?: string
+          is_private?: boolean | null
           is_public?: boolean | null
           is_visible_to_all?: boolean | null
           is_visible_to_partners?: boolean | null
@@ -257,6 +259,7 @@ export type Database = {
           descricao?: string | null
           disciplina_area?: string | null
           id?: string
+          is_private?: boolean | null
           is_public?: boolean | null
           is_visible_to_all?: boolean | null
           is_visible_to_partners?: boolean | null
@@ -883,6 +886,7 @@ export type Database = {
           p_is_public?: boolean
           p_is_visible_to_all?: boolean
           p_is_visible_to_partners?: boolean
+          p_is_private?: boolean
           p_criador_id?: string
         }
         Returns: {
