@@ -89,7 +89,6 @@ export default function GruposEstudo() {
             tags,
             is_public,
             is_visible_to_all,
-            is_private,
             criador_id,
             codigo_unico,
             created_at
@@ -332,16 +331,6 @@ export default function GruposEstudo() {
     }
   };
 
-  const getTipoText = (tipo: string) => {
-    const tipos: { [key: string]: string } = {
-      'estudo': 'Estudo',
-      'pesquisa': 'Pesquisa',
-      'projeto': 'Projeto',
-      'discussao': 'Discussão'
-    };
-    return tipos[tipo] || tipo;
-  };
-
   const renderGroupCard = (group: any, showJoinButton = false) => (
     <div
       key={group.id}
@@ -352,7 +341,7 @@ export default function GruposEstudo() {
         <div 
           className="w-full h-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40]"
         />
-        {group.is_visible_to_all ? (
+        {group.is_public ? (
           <Badge className="absolute top-2 left-2 bg-green-500 hover:bg-green-600">
             <Star className="h-3 w-3 mr-1 fill-current" /> Público
           </Badge>
@@ -374,7 +363,7 @@ export default function GruposEstudo() {
         
         <div className="space-y-1 mb-3 text-xs text-gray-600 dark:text-gray-300">
           {group.tipo_grupo && (
-            <p><span className="font-medium">Tipo:</span> {getTipoText(group.tipo_grupo)}</p>
+            <p><span className="font-medium">Tipo:</span> {group.tipo_grupo}</p>
           )}
           {group.disciplina_area && (
             <p><span className="font-medium">Disciplina:</span> {group.disciplina_area}</p>
@@ -412,22 +401,43 @@ export default function GruposEstudo() {
                 className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white text-xs h-8"
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleJoinGroup(group.id);
+                  if (group.is_public) {
+                    handleJoinGroup(group.id);
+                  } else {
+                    // Para grupos privados, mostrar modal de código ou redirecionar
+                    const codigo = prompt('Digite o código do grupo:');
+                    if (codigo) {
+                      handleJoinByCode(codigo);
+                    }
+                  }
                 }}
               >
-                Participar
+                {group.is_public ? 'Participar' : 'Inserir Código'}
               </Button>
             ) : (
-              <Button
-                size="sm"
-                className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white text-xs h-8"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigate(`/turmas/grupos/${group.id}`);
-                }}
-              >
-                Acessar
-              </Button>
+              <>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-red-600 border-red-600 hover:bg-red-50 text-xs h-8"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleLeaveGroup(group.id);
+                  }}
+                >
+                  Sair
+                </Button>
+                <Button
+                  size="sm"
+                  className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white text-xs h-8"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/turmas/grupos/${group.id}`);
+                  }}
+                >
+                  Acessar
+                </Button>
+              </>
             )}
           </div>
         </div>
