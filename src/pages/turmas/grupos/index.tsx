@@ -34,13 +34,35 @@ export default function GruposEstudo() {
 
   useEffect(() => {
     if (currentUser) {
-      if (activeTab === "meus-grupos") {
-        loadMyGroups();
-      } else if (activeTab === "todos-grupos") {
-        loadAllGroups();
-      }
+      loadMyGroups();
+      loadAllGroups();
+      
+      // Configurar realtime para atualizações automáticas
+      const channel = supabase.channel('grupos_changes')
+        .on('postgres_changes', { 
+          event: 'INSERT', 
+          schema: 'public', 
+          table: 'grupos_estudo' 
+        }, () => {
+          console.log('Novo grupo detectado, recarregando listas...');
+          loadMyGroups();
+          loadAllGroups();
+        })
+        .on('postgres_changes', { 
+          event: 'INSERT', 
+          schema: 'public', 
+          table: 'membros_grupos' 
+        }, () => {
+          console.log('Novo membro detectado, recarregando listas...');
+          loadMyGroups();
+        })
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
-  }, [activeTab, currentUser]);
+  }, [currentUser]);
 
   const getCurrentUser = async () => {
     try {
@@ -121,19 +143,18 @@ export default function GruposEstudo() {
     }
   };
 
-  // Carregar grupos visíveis para todos (exceto os que o usuário já participa)
+  // Carregar TODOS os grupos (não apenas os visíveis para todos)
   const loadAllGroups = async () => {
     if (!currentUser) return;
     
     setIsLoading(true);
     try {
-      console.log('Carregando todos os grupos visíveis');
+      console.log('Carregando todos os grupos disponíveis');
 
-      // Buscar grupos com is_visible_to_all = true, excluindo os que o usuário já participa
-      const { data: visibleGroups, error } = await supabase
+      // Buscar TODOS os grupos, excluindo apenas os que o usuário já participa
+      const { data: allAvailableGroups, error } = await supabase
         .from('grupos_estudo')
         .select('*')
-        .eq('is_visible_to_all', true)
         .neq('criador_id', currentUser.id);
 
       if (error) {
@@ -148,11 +169,11 @@ export default function GruposEstudo() {
         .eq('user_id', currentUser.id);
 
       const userGroupIds = userMemberships?.map(m => m.grupo_id) || [];
-      const filteredGroups = visibleGroups?.filter(group => 
+      const filteredGroups = allAvailableGroups?.filter(group => 
         !userGroupIds.includes(group.id)
       ) || [];
 
-      console.log('Grupos visíveis encontrados:', filteredGroups.length);
+      console.log('Todos os grupos disponíveis encontrados:', filteredGroups.length);
       setAllGroups(filteredGroups);
     } catch (error) {
       console.error('Erro ao carregar todos os grupos:', error);
@@ -166,7 +187,6 @@ export default function GruposEstudo() {
     }
   };
 
-  // Filtrar grupos baseado na pesquisa
   const filteredMyGroups = myGroups.filter(
     (group) =>
       group?.nome?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -190,20 +210,18 @@ export default function GruposEstudo() {
       description: `Grupo "${newGroup.nome}" criado com sucesso!`,
     });
     setIsCreateModalOpen(false);
-    loadMyGroups(); // Recarregar a lista
     
-    // Se o grupo for visível para todos, recarregar também a lista de todos os grupos
-    if (newGroup.is_visible_to_all) {
-      loadAllGroups();
-    }
+    // Recarregar ambas as listas imediatamente
+    await loadMyGroups();
+    await loadAllGroups();
   };
 
-  const handleGroupAdded = () => {
+  const handleGroupAdded = async () => {
     setIsAddModalOpen(false);
-    loadMyGroups();
-    if (activeTab === "todos-grupos") {
-      loadAllGroups();
-    }
+    
+    // Recarregar ambas as listas
+    await loadMyGroups();
+    await loadAllGroups();
   };
 
   const handleJoinGroup = async (groupId: string) => {
@@ -235,98 +253,13 @@ export default function GruposEstudo() {
       });
       
       // Recarregar ambas as listas
-      loadMyGroups();
-      loadAllGroups();
+      await loadMyGroups();
+      await loadAllGroups();
     } catch (error) {
       console.error('Erro ao ingressar no grupo:', error);
       toast({
         title: "Erro",
         description: "Erro inesperado ao ingressar no grupo",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleLeaveGroup = async (groupId: string) => {
-    if (!currentUser) return;
-    
-    try {
-      console.log('Tentando sair do grupo:', groupId);
-      
-      const { error } = await supabase
-        .from('membros_grupos')
-        .delete()
-        .eq('grupo_id', groupId)
-        .eq('user_id', currentUser.id);
-
-      if (error) {
-        console.error('Erro ao sair do grupo:', error);
-        toast({
-          title: "Erro",
-          description: "Erro ao sair do grupo: " + error.message,
-          variant: "destructive"
-        });
-        return;
-      }
-
-      toast({
-        title: "Sucesso",
-        description: "Você saiu do grupo",
-      });
-      
-      // Recarregar ambas as listas
-      loadMyGroups();
-      loadAllGroups();
-    } catch (error) {
-      console.error('Erro ao sair do grupo:', error);
-      toast({
-        title: "Erro",
-        description: "Erro inesperado ao sair do grupo",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleJoinByCode = async (codigo: string) => {
-    if (!currentUser || !codigo) return;
-    
-    try {
-      const { data, error } = await supabase
-        .rpc('join_group_by_code', {
-          p_codigo_unico: codigo.trim(),
-          p_user_id: currentUser.id
-        });
-
-      if (error) {
-        console.error('Erro ao entrar no grupo:', error);
-        toast({
-          title: "Erro",
-          description: "Erro ao entrar no grupo: " + error.message,
-          variant: "destructive"
-        });
-        return;
-      }
-
-      const result = data[0];
-      if (result.success) {
-        toast({
-          title: "Sucesso",
-          description: result.message,
-        });
-        loadMyGroups();
-        loadAllGroups();
-      } else {
-        toast({
-          title: "Erro",
-          description: result.message,
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      console.error('Erro ao entrar no grupo:', error);
-      toast({
-        title: "Erro",
-        description: "Erro inesperado ao entrar no grupo",
         variant: "destructive"
       });
     }
@@ -507,13 +440,13 @@ export default function GruposEstudo() {
               value="meus-grupos"
               className="data-[state=active]:bg-[#FF6B00] data-[state=active]:text-white"
             >
-              Meus Grupos
+              Meus Grupos ({myGroups.length})
             </TabsTrigger>
             <TabsTrigger
               value="todos-grupos"
               className="data-[state=active]:bg-[#FF6B00] data-[state=active]:text-white"
             >
-              Todos os Grupos
+              Todos os Grupos ({allGroups.length})
             </TabsTrigger>
           </TabsList>
 
@@ -565,10 +498,10 @@ export default function GruposEstudo() {
             <div className="text-center py-10">
               <Users2 className="h-12 w-12 mx-auto text-gray-400 mb-3" />
               <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                Nenhum grupo visível encontrado
+                Nenhum grupo disponível
               </h3>
               <p className="text-gray-500 max-w-md mx-auto mt-2">
-                Não encontramos grupos públicos no momento ou sua
+                Não há grupos disponíveis para participar no momento ou sua
                 busca não retornou resultados.
               </p>
             </div>
