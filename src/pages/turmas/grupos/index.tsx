@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -60,6 +61,13 @@ export default function GruposEstudo() {
           console.log('Status do canal Realtime:', status);
           if (status !== 'SUBSCRIBED') {
             console.warn('Realtime não conectado, usando fallback manual');
+            // Fallback: recarregar dados a cada 10 segundos
+            const interval = setInterval(() => {
+              loadMyGroups();
+              loadAllGroups();
+            }, 10000);
+            
+            return () => clearInterval(interval);
           }
         });
 
@@ -96,7 +104,8 @@ export default function GruposEstudo() {
       const { data: createdGroups, error: createdError } = await supabase
         .from('grupos_estudo')
         .select('*')
-        .eq('criador_id', currentUser.id);
+        .eq('criador_id', currentUser.id)
+        .order('created_at', { ascending: false });
 
       if (createdError) {
         console.error('❌ Erro ao carregar grupos criados:', createdError);
@@ -158,7 +167,7 @@ export default function GruposEstudo() {
     try {
       console.log('🔄 Carregando todos os grupos disponíveis');
 
-      // Buscar TODOS os grupos (removendo filtros restritivos)
+      // Buscar TODOS os grupos
       const { data: allAvailableGroups, error } = await supabase
         .from('grupos_estudo')
         .select('*')
@@ -169,19 +178,8 @@ export default function GruposEstudo() {
         throw error;
       }
 
-      // Filtrar grupos onde o usuário não é membro para evitar duplicatas em "Todos os Grupos"
-      const { data: userMemberships } = await supabase
-        .from('membros_grupos')
-        .select('grupo_id')
-        .eq('user_id', currentUser.id);
-
-      const userGroupIds = userMemberships?.map(m => m.grupo_id) || [];
-      const filteredGroups = allAvailableGroups?.filter(group => 
-        group.criador_id !== currentUser.id && !userGroupIds.includes(group.id)
-      ) || [];
-
-      console.log('✅ Todos os grupos disponíveis encontrados:', filteredGroups.length, filteredGroups);
-      setAllGroups(filteredGroups);
+      console.log('✅ Todos os grupos encontrados:', allAvailableGroups?.length || 0, allAvailableGroups);
+      setAllGroups(allAvailableGroups || []);
     } catch (error) {
       console.error('❌ Erro ao carregar todos os grupos:', error);
       toast({
@@ -218,7 +216,7 @@ export default function GruposEstudo() {
     });
     setIsCreateModalOpen(false);
     
-    // Forçar recarregamento imediato com delay para garantir persistência
+    // Forçar recarregamento imediato
     setTimeout(async () => {
       console.log('🔄 Recarregando listas após criação...');
       await loadMyGroups();
@@ -296,7 +294,7 @@ export default function GruposEstudo() {
       className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow cursor-pointer"
       onClick={() => navigate(`/turmas/grupos/${group.id}`)}
     >
-      <div className="h-32 bg-gray-200 relative">
+      <div className="h-24 bg-gray-200 relative">
         <div 
           className="w-full h-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40]"
         />
@@ -315,12 +313,12 @@ export default function GruposEstudo() {
           </Badge>
         )}
       </div>
-      <div className="p-4">
-        <h3 className="font-bold text-lg mb-1 text-[#001427] dark:text-white">
+      <div className="p-3">
+        <h3 className="font-bold text-base mb-1 text-[#001427] dark:text-white">
           {group.nome}
         </h3>
         
-        <div className="space-y-1 mb-3 text-xs text-gray-600 dark:text-gray-300">
+        <div className="space-y-1 mb-2 text-xs text-gray-600 dark:text-gray-300">
           {group.tipo_grupo && (
             <p><span className="font-medium">Tipo:</span> {getTipoText(group.tipo_grupo)}</p>
           )}
@@ -331,15 +329,15 @@ export default function GruposEstudo() {
             <p><span className="font-medium">Tópico:</span> {group.topico_especifico}</p>
           )}
           {group.tags && group.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-2">
-              {group.tags.slice(0, 3).map((tag: string, index: number) => (
+            <div className="flex flex-wrap gap-1 mt-1">
+              {group.tags.slice(0, 2).map((tag: string, index: number) => (
                 <Badge key={index} variant="outline" className="text-xs">
                   {tag}
                 </Badge>
               ))}
-              {group.tags.length > 3 && (
+              {group.tags.length > 2 && (
                 <Badge variant="outline" className="text-xs">
-                  +{group.tags.length - 3}
+                  +{group.tags.length - 2}
                 </Badge>
               )}
             </div>
@@ -348,16 +346,16 @@ export default function GruposEstudo() {
 
         <div className="flex justify-between items-center">
           <div className="flex items-center">
-            <Users2 className="h-4 w-4 mr-1 text-gray-500" />
+            <Users2 className="h-3 w-3 mr-1 text-gray-500" />
             <span className="text-xs text-gray-500">
               Grupo de estudos
             </span>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-1">
             {showJoinButton ? (
               <Button
                 size="sm"
-                className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white text-xs h-8"
+                className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white text-xs h-7 px-2"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleJoinGroup(group.id);
@@ -368,7 +366,7 @@ export default function GruposEstudo() {
             ) : (
               <Button
                 size="sm"
-                className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white text-xs h-8"
+                className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white text-xs h-7 px-2"
                 onClick={(e) => {
                   e.stopPropagation();
                   navigate(`/turmas/grupos/${group.id}`);
@@ -477,7 +475,7 @@ export default function GruposEstudo() {
               <p>Carregando grupos...</p>
             </div>
           ) : filteredMyGroups.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {filteredMyGroups.map((group) => renderGroupCard(group))}
             </div>
           ) : (
@@ -506,8 +504,12 @@ export default function GruposEstudo() {
               <p>Carregando grupos...</p>
             </div>
           ) : filteredAllGroups.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredAllGroups.map((group) => renderGroupCard(group, true))}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {filteredAllGroups.map((group) => {
+                // Verificar se o usuário já é membro para mostrar o botão correto
+                const isMember = myGroups.some(myGroup => myGroup.id === group.id);
+                return renderGroupCard(group, !isMember);
+              })}
             </div>
           ) : (
             <div className="text-center py-10">
