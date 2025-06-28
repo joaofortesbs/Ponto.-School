@@ -941,6 +941,15 @@ export type Database = {
         Args: { group_id: string; user_id: string }
         Returns: boolean
       }
+      join_group_by_code: {
+        Args: { p_codigo_unico: string; p_user_id: string }
+        Returns: {
+          success: boolean
+          message: string
+          group_id: string
+          group_name: string
+        }[]
+      }
       send_group_message: {
         Args: { p_group_id: string; p_user_id: string; p_message: string }
         Returns: {

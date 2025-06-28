@@ -52,7 +52,7 @@ const CelebrationModal: React.FC<CelebrationModalProps> = ({
 
   const getVisibilityText = () => {
     if (group.is_visible_to_all) {
-      return group.is_private ? "Privado (mas visível na lista)" : "Público";
+      return "Público";
     }
     return "Privado";
   };
@@ -65,7 +65,7 @@ const CelebrationModal: React.FC<CelebrationModalProps> = ({
       'discussao': 'Discussão'
     };
     return tipos[tipo] || tipo;
-  
+  };
 
   return (
     <AnimatePresence>
@@ -148,7 +148,7 @@ const CelebrationModal: React.FC<CelebrationModalProps> = ({
                 </div>
               </div>
 
-              {/* Código Único */}
+              {/* Código Único - Sempre exibir pois todos os grupos têm código */}
               {group.codigo_unico && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}

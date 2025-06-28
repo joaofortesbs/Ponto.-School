@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
 
@@ -27,7 +26,7 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({
     disciplina_area: "",
     topico_especifico: "",
     tags: [] as string[],
-    visibilidade: "privado", // 'privado', 'visivel_todos', 'visivel_parceiros'
+    visibilidade: "privado", // 'privado', 'visivel_todos'
   });
 
   const [currentTag, setCurrentTag] = useState("");
@@ -76,7 +75,7 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({
       return;
     }
 
-    // Mapear visibilidade para campos booleanos
+    // Mapear visibilidade para campos booleanos corretos
     const submissionData = {
       nome: formData.nome.trim(),
       descricao: formData.descricao.trim(),
@@ -84,12 +83,14 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({
       disciplina_area: formData.disciplina_area.trim() || null,
       topico_especifico: formData.topico_especifico.trim() || null,
       tags: formData.tags,
+      // Corrigir a lógica de visibilidade
       is_private: formData.visibilidade === "privado",
       is_visible_to_all: formData.visibilidade === "visivel_todos",
-      is_visible_to_partners: formData.visibilidade === "visivel_parceiros",
-      is_public: formData.visibilidade === "visivel_todos", // Para compatibilidade
+      is_visible_to_partners: false,
+      is_public: formData.visibilidade === "visivel_todos",
     };
 
+    console.log('Dados do formulário sendo enviados:', submissionData);
     onSubmit(submissionData);
   };
 
@@ -150,11 +151,11 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({
         </Select>
       </div>
 
-      {/* Configurações de Visibilidade */}
+      {/* Configurações de Visibilidade - Corrigidas */}
       <div className="space-y-3">
         <Label className="text-white">Configurações de Visibilidade</Label>
-        <div className="space-y-2">
-          <div className="flex items-center space-x-2">
+        <div className="space-y-3">
+          <div className="flex items-start space-x-3 p-3 border border-gray-600 rounded-lg">
             <input
               type="radio"
               id="privado"
@@ -162,15 +163,20 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({
               value="privado"
               checked={formData.visibilidade === "privado"}
               onChange={(e) => handleInputChange("visibilidade", e.target.value)}
-              className="text-[#FF6B00]"
+              className="mt-1"
               disabled={isLoading}
             />
-            <Label htmlFor="privado" className="text-white cursor-pointer">
-              Grupo Privado (apenas com código de acesso)
-            </Label>
+            <div className="flex-1">
+              <Label htmlFor="privado" className="text-white cursor-pointer font-medium">
+                🔒 Grupo Privado (apenas com código de acesso)
+              </Label>
+              <p className="text-sm text-gray-400 mt-1">
+                Apenas pessoas com o código único podem encontrar e entrar no grupo
+              </p>
+            </div>
           </div>
           
-          <div className="flex items-center space-x-2">
+          <div className="flex items-start space-x-3 p-3 border border-gray-600 rounded-lg">
             <input
               type="radio"
               id="visivel_todos"
@@ -178,28 +184,17 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({
               value="visivel_todos"
               checked={formData.visibilidade === "visivel_todos"}
               onChange={(e) => handleInputChange("visibilidade", e.target.value)}
-              className="text-[#FF6B00]"
+              className="mt-1"
               disabled={isLoading}
             />
-            <Label htmlFor="visivel_todos" className="text-white cursor-pointer">
-              Visível para Todos (aparece na lista pública)
-            </Label>
-          </div>
-          
-          <div className="flex items-center space-x-2 opacity-50">
-            <input
-              type="radio"
-              id="visivel_parceiros"
-              name="visibilidade"
-              value="visivel_parceiros"
-              checked={formData.visibilidade === "visivel_parceiros"}
-              onChange={(e) => handleInputChange("visibilidade", e.target.value)}
-              className="text-[#FF6B00]"
-              disabled={true}
-            />
-            <Label htmlFor="visivel_parceiros" className="text-gray-400 cursor-not-allowed">
-              Visível para Parceiros (em breve)
-            </Label>
+            <div className="flex-1">
+              <Label htmlFor="visivel_todos" className="text-white cursor-pointer font-medium">
+                🌟 Visível para Todos (aparece na lista pública)
+              </Label>
+              <p className="text-sm text-gray-400 mt-1">
+                Aparece na grade "Todos os Grupos" e também pode ser acessado via código
+              </p>
+            </div>
           </div>
         </div>
       </div>

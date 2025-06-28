@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { X } from "lucide-react";
+import { X, Users, Hash } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -47,7 +47,9 @@ const AddGroupModal: React.FC<AddGroupModalProps> = ({
         return;
       }
 
-      const { data, error } = await supabase
+      console.log('Tentando entrar no grupo com código:', codigo.trim().toUpperCase());
+
+      const { data: result, error } = await supabase
         .rpc('join_group_by_code', {
           p_codigo_unico: codigo.trim().toUpperCase(),
           p_user_id: user.id
@@ -57,17 +59,27 @@ const AddGroupModal: React.FC<AddGroupModalProps> = ({
         console.error('Erro ao entrar no grupo:', error);
         toast({
           title: "Erro",
-          description: "Erro ao entrar no grupo: " + error.message,
+          description: `Erro ao entrar no grupo: ${error.message}`,
           variant: "destructive"
         });
         return;
       }
 
-      const result = data[0];
-      if (result.success) {
+      if (!result || result.length === 0) {
+        toast({
+          title: "Erro",
+          description: "Resposta inválida do servidor",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const joinResult = result[0];
+      
+      if (joinResult.success) {
         toast({
           title: "Sucesso",
-          description: result.message,
+          description: joinResult.message,
         });
         setCodigo("");
         onGroupAdded();
@@ -75,12 +87,12 @@ const AddGroupModal: React.FC<AddGroupModalProps> = ({
       } else {
         toast({
           title: "Erro",
-          description: result.message,
+          description: joinResult.message,
           variant: "destructive"
         });
       }
     } catch (error) {
-      console.error('Erro ao entrar no grupo:', error);
+      console.error('Erro inesperado:', error);
       toast({
         title: "Erro",
         description: "Erro inesperado ao entrar no grupo",
@@ -92,8 +104,10 @@ const AddGroupModal: React.FC<AddGroupModalProps> = ({
   };
 
   const handleClose = () => {
-    setCodigo("");
-    onClose();
+    if (!isLoading) {
+      setCodigo("");
+      onClose();
+    }
   };
 
   return (
@@ -108,7 +122,10 @@ const AddGroupModal: React.FC<AddGroupModalProps> = ({
             className="bg-[#1E293B] rounded-xl overflow-hidden max-w-md w-full shadow-xl"
           >
             <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-4 flex justify-between items-center">
-              <h2 className="text-xl font-bold text-white">Entrar em Grupo</h2>
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Entrar em Grupo
+              </h2>
               <Button
                 variant="ghost"
                 size="icon"
@@ -126,17 +143,20 @@ const AddGroupModal: React.FC<AddGroupModalProps> = ({
                   <Label htmlFor="codigo" className="text-white">
                     Código do Grupo
                   </Label>
-                  <Input
-                    id="codigo"
-                    value={codigo}
-                    onChange={(e) => setCodigo(e.target.value.toUpperCase())}
-                    placeholder="Digite o código (ex: ABC12345)"
-                    disabled={isLoading}
-                    className="bg-[#2a4066] border-gray-600 text-white placeholder-gray-400"
-                    maxLength={8}
-                  />
+                  <div className="relative">
+                    <Hash className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="codigo"
+                      value={codigo}
+                      onChange={(e) => setCodigo(e.target.value.toUpperCase())}
+                      placeholder="Digite o código (ex: ABC123)"
+                      className="bg-[#2a4066] border-gray-600 text-white placeholder-gray-400 pl-10"
+                      disabled={isLoading}
+                      maxLength={8}
+                    />
+                  </div>
                   <p className="text-sm text-gray-400">
-                    Digite o código único de 8 caracteres fornecido pelo criador do grupo.
+                    Digite o código único do grupo que você deseja entrar
                   </p>
                 </div>
 
