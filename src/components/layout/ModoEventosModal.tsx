@@ -171,17 +171,47 @@ export default function ModoEventosModal({
   ]);
 
   const [currentIndex, setCurrentIndex] = useState(() => {
-    // Encontra o índice do card "Ponto. School" para centralizar por padrão
+    // Verifica se há um modo ativo salvo no localStorage
+    const savedActiveMode = localStorage.getItem('modoEventos_selectedCard');
+    if (savedActiveMode) {
+      const savedIndex = eventModes.findIndex(mode => mode.id === savedActiveMode);
+      if (savedIndex !== -1) {
+        return savedIndex;
+      }
+    }
+    
+    // Caso contrário, encontra o modo ativo atual ou o "Ponto. School" como padrão
+    const activeModeIndex = eventModes.findIndex(mode => mode.enabled);
+    if (activeModeIndex !== -1) {
+      return activeModeIndex;
+    }
+    
     const pontoSchoolIndex = eventModes.findIndex(mode => mode.id === 'ponto-school');
     return pontoSchoolIndex !== -1 ? pontoSchoolIndex : 3;
   });
 
-  // Efeito para garantir que o card "Ponto. School" seja centralizado sempre que o modal for aberto
+  // Efeito para garantir que o card selecionado seja centralizado sempre que o modal for aberto
   useEffect(() => {
     if (isOpen) {
-      const pontoSchoolIndex = eventModes.findIndex(mode => mode.id === 'ponto-school');
-      if (pontoSchoolIndex !== -1) {
-        setCurrentIndex(pontoSchoolIndex);
+      const savedActiveMode = localStorage.getItem('modoEventos_selectedCard');
+      if (savedActiveMode) {
+        const savedIndex = eventModes.findIndex(mode => mode.id === savedActiveMode);
+        if (savedIndex !== -1) {
+          setCurrentIndex(savedIndex);
+          return;
+        }
+      }
+      
+      // Se não há modo salvo, centraliza o modo ativo atual
+      const activeModeIndex = eventModes.findIndex(mode => mode.enabled);
+      if (activeModeIndex !== -1) {
+        setCurrentIndex(activeModeIndex);
+      } else {
+        // Fallback para "Ponto. School"
+        const pontoSchoolIndex = eventModes.findIndex(mode => mode.id === 'ponto-school');
+        if (pontoSchoolIndex !== -1) {
+          setCurrentIndex(pontoSchoolIndex);
+        }
       }
     }
   }, [isOpen, eventModes]);
@@ -204,11 +234,15 @@ export default function ModoEventosModal({
       }))
     );
 
+    // Salvar o card selecionado no localStorage
+    localStorage.setItem('modoEventos_selectedCard', id);
+
     // Se nenhum modo estiver ativo após o toggle, ativar o modo padrão
     setTimeout(() => {
       setEventModes(prev => {
         const hasAnyEnabled = prev.some(mode => mode.enabled);
         if (!hasAnyEnabled) {
+          localStorage.setItem('modoEventos_selectedCard', 'ponto-school');
           return prev.map(mode => ({
             ...mode,
             enabled: mode.id === 'ponto-school'
@@ -434,6 +468,8 @@ export default function ModoEventosModal({
                             toggleEventMode(mode.id);
                           } else if (!isCenter) {
                             setCurrentIndex(index);
+                            // Salvar o card centralizado no localStorage quando o usuário navegar
+                            localStorage.setItem('modoEventos_selectedCard', mode.id);
                           }
                         }}
                       >
