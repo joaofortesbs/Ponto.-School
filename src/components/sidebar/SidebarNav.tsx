@@ -110,17 +110,17 @@ export function SidebarNav({
         const storedFirstName = localStorage.getItem('userFirstName');
         const storedDisplayName = localStorage.getItem('userDisplayName');
         const storedAvatarUrl = localStorage.getItem('userAvatarUrl');
-        
+
         if (storedDisplayName) {
           setFirstName(storedDisplayName);
         } else if (storedFirstName) {
           setFirstName(storedFirstName);
         }
-        
+
         if (storedAvatarUrl) {
           setProfileImage(storedAvatarUrl);
         }
-        
+
         // Depois buscar do Supabase para dados atualizados
         const {
           data: { user },
@@ -138,7 +138,7 @@ export function SidebarNav({
             if (!firstName) setFirstName("Usuário"); // Fallback if profile fetch fails
           } else if (data) {
             setUserProfile(data as UserProfile);
-            
+
             // Se o perfil tiver um avatar_url, usar ele e atualizar localStorage
             if (data.avatar_url) {
               setProfileImage(data.avatar_url);
@@ -150,10 +150,10 @@ export function SidebarNav({
                            data.display_name || 
                            data.username || 
                            "";
-            
+
             setFirstName(firstName);
             localStorage.setItem('userFirstName', firstName);
-            
+
             // Disparar evento para outros componentes
             document.dispatchEvent(new CustomEvent('usernameUpdated', { 
               detail: { 
@@ -186,7 +186,7 @@ export function SidebarNav({
     if (file) {
       try {
         setIsUploading(true);
-        
+
         // Obter o usuário atual
         const { data: currentUser } = await supabase.auth.getUser();
         if (!currentUser.user) {
@@ -236,10 +236,10 @@ export function SidebarNav({
 
         // Atualizar o estado local
         setProfileImage(publicUrlData.publicUrl);
-        
+
         // Salvar no localStorage para persistência
         localStorage.setItem('userAvatarUrl', publicUrlData.publicUrl);
-        
+
         // Disparar evento para outros componentes saberem que o avatar foi atualizado
         document.dispatchEvent(new CustomEvent('userAvatarUpdated', { 
           detail: { url: publicUrlData.publicUrl } 
@@ -486,7 +486,7 @@ export function SidebarNav({
         isCollapsed ? "mt-6" : "mt-4"
       )}>
         {/* Profile Image Component - Responsive avatar */}
-        <div className="relative mb-4 flex justify-center">
+        <div className="relative mb-4 flex justify-center flex-col items-center">
           <div 
             className={cn(
               "rounded-full overflow-hidden bg-gradient-to-r from-[#FF6B00] via-[#FF8736] to-[#FFB366] p-0.5 cursor-pointer transition-all duration-300",
@@ -511,23 +511,45 @@ export function SidebarNav({
                     "bg-yellow-300 rounded-full flex items-center justify-center",
                     isCollapsed ? "w-6 h-6" : "w-10 h-10"
                   )}>
-                    <div className={cn(
-                      "bg-orange-400 rounded-full",
-                      isCollapsed ? "w-4 h-4" : "w-8 h-8"
-                    )}></div>
+                    <span className={cn(
+                      "text-black font-bold",
+                      isCollapsed ? "text-xs" : "text-lg"
+                    )}>
+                      {firstName ? firstName.charAt(0).toUpperCase() : "U"}
+                    </span>
                   </div>
                 </div>
               )}
             </div>
           </div>
+
+          {/* Barra de progresso - apenas quando minimizado */}
+          {isCollapsed && (
+            <div className="mt-2 w-12 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-full transition-all duration-300"
+                style={{ width: '0%' }}
+              />
+            </div>
+          )}
+
+          {/* File input component */}
+          <input
+            type="file"
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            className="hidden"
+          />
         </div>
-        
+
         {isUploading && (
           <div className="mb-3 text-xs text-gray-500 dark:text-gray-400">
             Enviando...
           </div>
         )}
-        
+
         {/* Hidden File Input */}
         <input
           ref={fileInputRef}
@@ -564,11 +586,11 @@ export function SidebarNav({
                       const previousLevelXP = (currentLevel - 1) * 1000;
                       const xpInCurrentLevel = currentXP - previousLevelXP;
                       const xpNeededForLevel = xpForNextLevel - previousLevelXP;
-                      
+
                       if (currentLevel === 1 && currentXP === 0) {
                         return 0; // Usuário novo sem XP
                       }
-                      
+
                       return xpNeededForLevel > 0 ? Math.round((xpInCurrentLevel / xpNeededForLevel) * 100) : 0;
                     })()}%` 
                   }}
@@ -579,11 +601,11 @@ export function SidebarNav({
                   const currentXP = userProfile?.experience_points || 0;
                   const currentLevel = userProfile?.level || 1;
                   const xpForNextLevel = currentLevel * 1000;
-                  
+
                   if (currentLevel === 1 && currentXP === 0) {
                     return "0 XP / 1.000 XP"; // Usuário novo
                   }
-                  
+
                   return `${currentXP.toLocaleString()} XP / ${xpForNextLevel.toLocaleString()} XP`;
                 })()}
               </span>
