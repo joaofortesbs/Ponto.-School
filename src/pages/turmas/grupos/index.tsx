@@ -30,22 +30,25 @@ export default function GruposEstudo() {
   const [currentUser, setCurrentUser] = useState<any>(null);
 
   useEffect(() => {
+    console.log('🔄 Componente GruposEstudo montado, obtendo usuário atual...');
     getCurrentUser();
   }, []);
 
   useEffect(() => {
     if (currentUser) {
+      console.log('👤 Usuário autenticado:', currentUser.id);
       loadMyGroups();
       loadAllGroups();
       
       // Configurar realtime para atualizações automáticas
+      console.log('🔄 Configurando canal Realtime...');
       const channel = supabase.channel('grupos_changes')
         .on('postgres_changes', { 
           event: '*', 
           schema: 'public', 
           table: 'grupos_estudo' 
         }, (payload) => {
-          console.log('Mudança detectada em grupos_estudo:', payload);
+          console.log('📡 Realtime - Mudança detectada em grupos_estudo:', payload);
           loadMyGroups();
           loadAllGroups();
         })
@@ -54,15 +57,16 @@ export default function GruposEstudo() {
           schema: 'public', 
           table: 'membros_grupos' 
         }, (payload) => {
-          console.log('Mudança detectada em membros_grupos:', payload);
+          console.log('📡 Realtime - Mudança detectada em membros_grupos:', payload);
           loadMyGroups();
         })
         .subscribe((status) => {
-          console.log('Status do canal Realtime:', status);
+          console.log('📡 Status do canal Realtime:', status);
           if (status !== 'SUBSCRIBED') {
-            console.warn('Realtime não conectado, usando fallback manual');
+            console.warn('⚠️ Realtime não conectado, usando fallback manual');
             // Fallback: recarregar dados a cada 10 segundos
             const interval = setInterval(() => {
+              console.log('🔄 Fallback: Recarregando dados...');
               loadMyGroups();
               loadAllGroups();
             }, 10000);
@@ -72,7 +76,7 @@ export default function GruposEstudo() {
         });
 
       return () => {
-        console.log('Removendo canal Realtime');
+        console.log('🔄 Removendo canal Realtime');
         supabase.removeChannel(channel);
       };
     }
@@ -80,27 +84,32 @@ export default function GruposEstudo() {
 
   const getCurrentUser = async () => {
     try {
+      console.log('🔄 Obtendo usuário atual...');
       const { data: { user }, error } = await supabase.auth.getUser();
       if (error) {
-        console.error('Erro ao obter usuário:', error);
+        console.error('❌ Erro ao obter usuário:', error);
         return;
       }
-      console.log('Usuário atual:', user?.id);
+      console.log('✅ Usuário atual obtido:', user?.id);
       setCurrentUser(user);
     } catch (error) {
-      console.error('Erro ao obter usuário:', error);
+      console.error('❌ Erro ao obter usuário:', error);
     }
   };
 
   // Carregar grupos do usuário (criados ou onde é membro)
   const loadMyGroups = async () => {
-    if (!currentUser) return;
+    if (!currentUser) {
+      console.log('⚠️ loadMyGroups: Usuário não autenticado');
+      return;
+    }
     
     setIsLoading(true);
     try {
       console.log('🔄 Carregando meus grupos para usuário:', currentUser.id);
 
       // Buscar grupos onde o usuário é criador
+      console.log('🔄 Buscando grupos criados pelo usuário...');
       const { data: createdGroups, error: createdError } = await supabase
         .from('grupos_estudo')
         .select('*')
@@ -111,8 +120,10 @@ export default function GruposEstudo() {
         console.error('❌ Erro ao carregar grupos criados:', createdError);
         throw createdError;
       }
+      console.log('✅ Grupos criados encontrados:', createdGroups?.length || 0, createdGroups);
 
       // Buscar grupos onde o usuário é membro (mas não criador)
+      console.log('🔄 Buscando grupos onde é membro...');
       const { data: memberGroups, error: memberError } = await supabase
         .from('membros_grupos')
         .select(`
@@ -140,12 +151,13 @@ export default function GruposEstudo() {
         console.error('❌ Erro ao carregar grupos de membro:', memberError);
         throw memberError;
       }
+      console.log('✅ Grupos como membro encontrados:', memberGroups?.length || 0, memberGroups);
 
       // Combinar os grupos
       const memberGroupsData = memberGroups?.map(mg => mg.grupos_estudo).filter(Boolean) || [];
       const allMyGroups = [...(createdGroups || []), ...memberGroupsData];
       
-      console.log('✅ Meus grupos carregados:', allMyGroups.length, allMyGroups);
+      console.log('✅ Total de meus grupos:', allMyGroups.length, allMyGroups);
       setMyGroups(allMyGroups);
     } catch (error) {
       console.error('❌ Erro ao carregar meus grupos:', error);
@@ -161,7 +173,10 @@ export default function GruposEstudo() {
 
   // Carregar TODOS os grupos disponíveis
   const loadAllGroups = async () => {
-    if (!currentUser) return;
+    if (!currentUser) {
+      console.log('⚠️ loadAllGroups: Usuário não autenticado');
+      return;
+    }
     
     setIsLoading(true);
     try {
@@ -208,6 +223,8 @@ export default function GruposEstudo() {
       group?.topico_especifico?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  console.log('🔍 Grupos filtrados - Meus:', filteredMyGroups.length, 'Todos:', filteredAllGroups.length);
+
   const handleCreateGroup = async (newGroup: any) => {
     console.log("✅ Grupo criado com sucesso:", newGroup);
     toast({
@@ -225,6 +242,7 @@ export default function GruposEstudo() {
   };
 
   const handleGroupAdded = async () => {
+    console.log("✅ Usuário adicionado ao grupo com sucesso");
     setIsAddModalOpen(false);
     
     // Forçar recarregamento imediato
@@ -236,7 +254,10 @@ export default function GruposEstudo() {
   };
 
   const handleJoinGroup = async (groupId: string) => {
-    if (!currentUser) return;
+    if (!currentUser) {
+      console.error('❌ Usuário não autenticado para ingressar no grupo');
+      return;
+    }
     
     try {
       console.log('🔄 Tentando ingressar no grupo:', groupId);
@@ -258,6 +279,7 @@ export default function GruposEstudo() {
         return;
       }
 
+      console.log('✅ Ingresso no grupo realizado com sucesso');
       toast({
         title: "Sucesso",
         description: "Você ingressou no grupo com sucesso!",
@@ -288,100 +310,105 @@ export default function GruposEstudo() {
     return tipos[tipo] || tipo;
   };
 
-  const renderGroupCard = (group: any, showJoinButton = false) => (
-    <div
-      key={group.id}
-      className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow cursor-pointer"
-      onClick={() => navigate(`/turmas/grupos/${group.id}`)}
-    >
-      <div className="h-24 bg-gray-200 relative">
-        <div 
-          className="w-full h-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40]"
-        />
-        {group.is_visible_to_all ? (
-          <Badge className="absolute top-2 left-2 bg-green-500 hover:bg-green-600">
-            <Star className="h-3 w-3 mr-1 fill-current" /> Público
-          </Badge>
-        ) : (
-          <Badge className="absolute top-2 left-2 bg-blue-500 hover:bg-blue-600">
-            🔒 Privado
-          </Badge>
-        )}
-        {group.codigo_unico && (
-          <Badge className="absolute top-2 right-2 bg-gray-700 text-white text-xs">
-            {group.codigo_unico}
-          </Badge>
-        )}
-      </div>
-      <div className="p-3">
-        <h3 className="font-bold text-base mb-1 text-[#001427] dark:text-white">
-          {group.nome}
-        </h3>
-        
-        <div className="space-y-1 mb-2 text-xs text-gray-600 dark:text-gray-300">
-          {group.tipo_grupo && (
-            <p><span className="font-medium">Tipo:</span> {getTipoText(group.tipo_grupo)}</p>
+  const renderGroupCard = (group: any, showJoinButton = false) => {
+    console.log('🎨 Renderizando card do grupo:', group.nome, 'showJoinButton:', showJoinButton);
+    
+    return (
+      <div
+        key={group.id}
+        className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow cursor-pointer"
+        onClick={() => navigate(`/turmas/grupos/${group.id}`)}
+      >
+        <div className="h-24 bg-gray-200 relative">
+          <div 
+            className="w-full h-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40]"
+          />
+          {group.is_visible_to_all ? (
+            <Badge className="absolute top-2 left-2 bg-green-500 hover:bg-green-600">
+              <Star className="h-3 w-3 mr-1 fill-current" /> Público
+            </Badge>
+          ) : (
+            <Badge className="absolute top-2 left-2 bg-blue-500 hover:bg-blue-600">
+              🔒 Privado
+            </Badge>
           )}
-          {group.disciplina_area && (
-            <p><span className="font-medium">Disciplina:</span> {group.disciplina_area}</p>
-          )}
-          {group.topico_especifico && (
-            <p><span className="font-medium">Tópico:</span> {group.topico_especifico}</p>
-          )}
-          {group.tags && group.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-1">
-              {group.tags.slice(0, 2).map((tag: string, index: number) => (
-                <Badge key={index} variant="outline" className="text-xs">
-                  {tag}
-                </Badge>
-              ))}
-              {group.tags.length > 2 && (
-                <Badge variant="outline" className="text-xs">
-                  +{group.tags.length - 2}
-                </Badge>
-              )}
-            </div>
+          {group.codigo_unico && (
+            <Badge className="absolute top-2 right-2 bg-gray-700 text-white text-xs">
+              {group.codigo_unico}
+            </Badge>
           )}
         </div>
-
-        <div className="flex justify-between items-center">
-          <div className="flex items-center">
-            <Users2 className="h-3 w-3 mr-1 text-gray-500" />
-            <span className="text-xs text-gray-500">
-              Grupo de estudos
-            </span>
-          </div>
-          <div className="flex gap-1">
-            {showJoinButton ? (
-              <Button
-                size="sm"
-                className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white text-xs h-7 px-2"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleJoinGroup(group.id);
-                }}
-              >
-                Participar
-              </Button>
-            ) : (
-              <Button
-                size="sm"
-                className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white text-xs h-7 px-2"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigate(`/turmas/grupos/${group.id}`);
-                }}
-              >
-                Acessar
-              </Button>
+        <div className="p-3">
+          <h3 className="font-bold text-base mb-1 text-[#001427] dark:text-white">
+            {group.nome}
+          </h3>
+          
+          <div className="space-y-1 mb-2 text-xs text-gray-600 dark:text-gray-300">
+            {group.tipo_grupo && (
+              <p><span className="font-medium">Tipo:</span> {getTipoText(group.tipo_grupo)}</p>
+            )}
+            {group.disciplina_area && (
+              <p><span className="font-medium">Disciplina:</span> {group.disciplina_area}</p>
+            )}
+            {group.topico_especifico && (
+              <p><span className="font-medium">Tópico:</span> {group.topico_especifico}</p>
+            )}
+            {group.tags && group.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-1">
+                {group.tags.slice(0, 2).map((tag: string, index: number) => (
+                  <Badge key={index} variant="outline" className="text-xs">
+                    {tag}
+                  </Badge>
+                ))}
+                {group.tags.length > 2 && (
+                  <Badge variant="outline" className="text-xs">
+                    +{group.tags.length - 2}
+                  </Badge>
+                )}
+              </div>
             )}
           </div>
+
+          <div className="flex justify-between items-center">
+            <div className="flex items-center">
+              <Users2 className="h-3 w-3 mr-1 text-gray-500" />
+              <span className="text-xs text-gray-500">
+                Grupo de estudos
+              </span>
+            </div>
+            <div className="flex gap-1">
+              {showJoinButton ? (
+                <Button
+                  size="sm"
+                  className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white text-xs h-7 px-2"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleJoinGroup(group.id);
+                  }}
+                >
+                  Participar
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white text-xs h-7 px-2"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/turmas/grupos/${group.id}`);
+                  }}
+                >
+                  Acessar
+                </Button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   if (!currentUser) {
+    console.log('⚠️ Usuário não autenticado, mostrando tela de acesso necessário');
     return (
       <div className="container mx-auto p-4 max-w-7xl">
         <div className="text-center py-10">
@@ -396,6 +423,14 @@ export default function GruposEstudo() {
       </div>
     );
   }
+
+  console.log('🎨 Renderizando componente principal com:', {
+    myGroupsCount: myGroups.length,
+    allGroupsCount: allGroups.length,
+    filteredMyGroupsCount: filteredMyGroups.length,
+    filteredAllGroupsCount: filteredAllGroups.length,
+    isLoading
+  });
 
   return (
     <div className="container mx-auto p-4 max-w-7xl">
@@ -476,7 +511,10 @@ export default function GruposEstudo() {
             </div>
           ) : filteredMyGroups.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {filteredMyGroups.map((group) => renderGroupCard(group))}
+              {filteredMyGroups.map((group) => {
+                console.log('🎨 Renderizando grupo em Meus Grupos:', group.nome);
+                return renderGroupCard(group);
+              })}
             </div>
           ) : (
             <div className="text-center py-10">
@@ -485,8 +523,10 @@ export default function GruposEstudo() {
                 Nenhum grupo encontrado
               </h3>
               <p className="text-gray-500 max-w-md mx-auto mt-2 mb-4">
-                Você ainda não participa de nenhum grupo de estudos ou sua busca
-                não retornou resultados.
+                {myGroups.length === 0 
+                  ? "Você ainda não participa de nenhum grupo de estudos."
+                  : "Sua busca não retornou resultados."
+                }
               </p>
               <Button
                 onClick={() => setIsCreateModalOpen(true)}
@@ -508,6 +548,7 @@ export default function GruposEstudo() {
               {filteredAllGroups.map((group) => {
                 // Verificar se o usuário já é membro para mostrar o botão correto
                 const isMember = myGroups.some(myGroup => myGroup.id === group.id);
+                console.log('🎨 Renderizando grupo em Todos os Grupos:', group.nome, 'é membro:', isMember);
                 return renderGroupCard(group, !isMember);
               })}
             </div>
@@ -518,8 +559,10 @@ export default function GruposEstudo() {
                 Nenhum grupo disponível
               </h3>
               <p className="text-gray-500 max-w-md mx-auto mt-2">
-                Não há grupos disponíveis para participar no momento ou sua
-                busca não retornou resultados.
+                {allGroups.length === 0 
+                  ? "Não há grupos disponíveis para participar no momento."
+                  : "Sua busca não retornou resultados."
+                }
               </p>
             </div>
           )}
