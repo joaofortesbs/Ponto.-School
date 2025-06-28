@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -41,25 +40,31 @@ export default function GruposEstudo() {
       // Configurar realtime para atualizações automáticas
       const channel = supabase.channel('grupos_changes')
         .on('postgres_changes', { 
-          event: 'INSERT', 
+          event: '*', 
           schema: 'public', 
           table: 'grupos_estudo' 
-        }, () => {
-          console.log('Novo grupo detectado, recarregando listas...');
+        }, (payload) => {
+          console.log('Mudança detectada em grupos_estudo:', payload);
           loadMyGroups();
           loadAllGroups();
         })
         .on('postgres_changes', { 
-          event: 'INSERT', 
+          event: '*', 
           schema: 'public', 
           table: 'membros_grupos' 
-        }, () => {
-          console.log('Novo membro detectado, recarregando listas...');
+        }, (payload) => {
+          console.log('Mudança detectada em membros_grupos:', payload);
           loadMyGroups();
         })
-        .subscribe();
+        .subscribe((status) => {
+          console.log('Status do canal Realtime:', status);
+          if (status !== 'SUBSCRIBED') {
+            console.warn('Realtime não conectado, usando fallback manual');
+          }
+        });
 
       return () => {
+        console.log('Removendo canal Realtime');
         supabase.removeChannel(channel);
       };
     }
@@ -72,6 +77,7 @@ export default function GruposEstudo() {
         console.error('Erro ao obter usuário:', error);
         return;
       }
+      console.log('Usuário atual:', user?.id);
       setCurrentUser(user);
     } catch (error) {
       console.error('Erro ao obter usuário:', error);
@@ -84,7 +90,7 @@ export default function GruposEstudo() {
     
     setIsLoading(true);
     try {
-      console.log('Carregando meus grupos para usuário:', currentUser.id);
+      console.log('🔄 Carregando meus grupos para usuário:', currentUser.id);
 
       // Buscar grupos onde o usuário é criador
       const { data: createdGroups, error: createdError } = await supabase
@@ -93,7 +99,7 @@ export default function GruposEstudo() {
         .eq('criador_id', currentUser.id);
 
       if (createdError) {
-        console.error('Erro ao carregar grupos criados:', createdError);
+        console.error('❌ Erro ao carregar grupos criados:', createdError);
         throw createdError;
       }
 
@@ -122,7 +128,7 @@ export default function GruposEstudo() {
         .neq('grupos_estudo.criador_id', currentUser.id);
 
       if (memberError) {
-        console.error('Erro ao carregar grupos de membro:', memberError);
+        console.error('❌ Erro ao carregar grupos de membro:', memberError);
         throw memberError;
       }
 
@@ -130,10 +136,10 @@ export default function GruposEstudo() {
       const memberGroupsData = memberGroups?.map(mg => mg.grupos_estudo).filter(Boolean) || [];
       const allMyGroups = [...(createdGroups || []), ...memberGroupsData];
       
-      console.log('Meus grupos carregados:', allMyGroups.length);
+      console.log('✅ Meus grupos carregados:', allMyGroups.length, allMyGroups);
       setMyGroups(allMyGroups);
     } catch (error) {
-      console.error('Erro ao carregar meus grupos:', error);
+      console.error('❌ Erro ao carregar meus grupos:', error);
       toast({
         title: "Erro",
         description: "Erro ao carregar seus grupos",
@@ -144,26 +150,26 @@ export default function GruposEstudo() {
     }
   };
 
-  // Carregar TODOS os grupos (não apenas os visíveis para todos)
+  // Carregar TODOS os grupos disponíveis
   const loadAllGroups = async () => {
     if (!currentUser) return;
     
     setIsLoading(true);
     try {
-      console.log('Carregando todos os grupos disponíveis');
+      console.log('🔄 Carregando todos os grupos disponíveis');
 
-      // Buscar TODOS os grupos, excluindo apenas os que o usuário já participa
+      // Buscar TODOS os grupos (removendo filtros restritivos)
       const { data: allAvailableGroups, error } = await supabase
         .from('grupos_estudo')
         .select('*')
-        .neq('criador_id', currentUser.id);
+        .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Erro ao carregar todos os grupos:', error);
+        console.error('❌ Erro ao carregar todos os grupos:', error);
         throw error;
       }
 
-      // Filtrar grupos onde o usuário não é membro
+      // Filtrar grupos onde o usuário não é membro para evitar duplicatas em "Todos os Grupos"
       const { data: userMemberships } = await supabase
         .from('membros_grupos')
         .select('grupo_id')
@@ -171,13 +177,13 @@ export default function GruposEstudo() {
 
       const userGroupIds = userMemberships?.map(m => m.grupo_id) || [];
       const filteredGroups = allAvailableGroups?.filter(group => 
-        !userGroupIds.includes(group.id)
+        group.criador_id !== currentUser.id && !userGroupIds.includes(group.id)
       ) || [];
 
-      console.log('Todos os grupos disponíveis encontrados:', filteredGroups.length);
+      console.log('✅ Todos os grupos disponíveis encontrados:', filteredGroups.length, filteredGroups);
       setAllGroups(filteredGroups);
     } catch (error) {
-      console.error('Erro ao carregar todos os grupos:', error);
+      console.error('❌ Erro ao carregar todos os grupos:', error);
       toast({
         title: "Erro",
         description: "Erro ao carregar grupos disponíveis",
@@ -205,31 +211,37 @@ export default function GruposEstudo() {
   );
 
   const handleCreateGroup = async (newGroup: any) => {
-    console.log("Grupo criado com sucesso:", newGroup);
+    console.log("✅ Grupo criado com sucesso:", newGroup);
     toast({
       title: "Sucesso",
       description: `Grupo "${newGroup.nome}" criado com sucesso!`,
     });
     setIsCreateModalOpen(false);
     
-    // Recarregar ambas as listas imediatamente
-    await loadMyGroups();
-    await loadAllGroups();
+    // Forçar recarregamento imediato com delay para garantir persistência
+    setTimeout(async () => {
+      console.log('🔄 Recarregando listas após criação...');
+      await loadMyGroups();
+      await loadAllGroups();
+    }, 500);
   };
 
   const handleGroupAdded = async () => {
     setIsAddModalOpen(false);
     
-    // Recarregar ambas as listas
-    await loadMyGroups();
-    await loadAllGroups();
+    // Forçar recarregamento imediato
+    setTimeout(async () => {
+      console.log('🔄 Recarregando listas após adição...');
+      await loadMyGroups();
+      await loadAllGroups();
+    }, 500);
   };
 
   const handleJoinGroup = async (groupId: string) => {
     if (!currentUser) return;
     
     try {
-      console.log('Tentando ingressar no grupo:', groupId);
+      console.log('🔄 Tentando ingressar no grupo:', groupId);
       
       const { error } = await supabase
         .from('membros_grupos')
@@ -239,7 +251,7 @@ export default function GruposEstudo() {
         });
 
       if (error) {
-        console.error('Erro ao ingressar no grupo:', error);
+        console.error('❌ Erro ao ingressar no grupo:', error);
         toast({
           title: "Erro",
           description: "Erro ao ingressar no grupo: " + error.message,
@@ -253,11 +265,13 @@ export default function GruposEstudo() {
         description: "Você ingressou no grupo com sucesso!",
       });
       
-      // Recarregar ambas as listas
-      await loadMyGroups();
-      await loadAllGroups();
+      // Forçar recarregamento das listas
+      setTimeout(async () => {
+        await loadMyGroups();
+        await loadAllGroups();
+      }, 500);
     } catch (error) {
-      console.error('Erro ao ingressar no grupo:', error);
+      console.error('❌ Erro ao ingressar no grupo:', error);
       toast({
         title: "Erro",
         description: "Erro inesperado ao ingressar no grupo",
