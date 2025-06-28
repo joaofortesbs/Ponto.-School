@@ -82,4 +82,3 @@ const TurmasTabsNav: React.FC = () => {
 };
 
 export default TurmasTabsNav;
-```
