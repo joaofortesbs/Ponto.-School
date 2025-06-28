@@ -13,7 +13,9 @@ export default defineConfig(({ mode }) => ({
     entries: ["src/main.tsx"],
   },
   plugins: [
-    react(),
+    react({
+      tsDecorators: true,
+    }),
   ],
   resolve: {
     preserveSymlinks: true,
@@ -25,4 +27,11 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
   },
+  build: {
+    sourcemap: mode === 'development',
+    minify: mode === 'production',
+  },
+  esbuild: {
+    logOverride: { 'this-is-undefined-in-esm': 'silent' }
+  }
 }));
