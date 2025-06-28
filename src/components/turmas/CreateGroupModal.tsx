@@ -44,16 +44,16 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
       console.log('Chamando função create_group_safe...');
       const { data: result, error: createError } = await supabase
         .rpc('create_group_safe', {
-          p_nome: formData.nome,
-          p_descricao: formData.descricao || null,
-          p_tipo_grupo: formData.tipo_grupo,
-          p_disciplina_area: formData.disciplina_area || null,
-          p_topico_especifico: formData.topico_especifico || null,
-          p_tags: formData.tags || [],
-          p_is_public: formData.is_public || false,
-          p_is_visible_to_all: formData.is_visible_to_all || false,
-          p_is_visible_to_partners: formData.is_visible_to_partners || false,
-          p_is_private: formData.is_private || false,
+          p_nome: formData.p_nome,
+          p_descricao: formData.p_descricao || null,
+          p_tipo_grupo: formData.p_tipo_grupo,
+          p_disciplina_area: formData.p_disciplina_area || null,
+          p_topico_especifico: formData.p_topico_especifico || null,
+          p_tags: formData.p_tags || [],
+          p_is_public: formData.p_is_public || false,
+          p_is_visible_to_all: formData.p_is_visible_to_all || false,
+          p_is_visible_to_partners: formData.p_is_visible_to_partners || false,
+          p_is_private: formData.p_is_private || false,
           p_criador_id: user.id
         });
 
@@ -95,14 +95,14 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
       const newGroup = {
         id: groupResult.id,
         nome: groupResult.nome,
-        tipo_grupo: formData.tipo_grupo,
+        tipo_grupo: formData.p_tipo_grupo,
         codigo_unico: groupResult.codigo_unico,
-        is_private: formData.is_private,
-        is_visible_to_all: formData.is_visible_to_all,
-        descricao: formData.descricao,
-        disciplina_area: formData.disciplina_area,
-        topico_especifico: formData.topico_especifico,
-        tags: formData.tags,
+        is_private: formData.p_is_private,
+        is_visible_to_all: formData.p_is_visible_to_all,
+        descricao: formData.p_descricao,
+        disciplina_area: formData.p_disciplina_area,
+        topico_especifico: formData.p_topico_especifico,
+        tags: formData.p_tags,
         criador_id: user.id,
         created_at: new Date().toISOString()
       };

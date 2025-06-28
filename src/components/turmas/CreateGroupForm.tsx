@@ -77,17 +77,16 @@ const CreateGroupForm: React.FC<CreateGroupFormProps> = ({
 
     // Mapear visibilidade para campos booleanos corretos
     const submissionData = {
-      nome: formData.nome.trim(),
-      descricao: formData.descricao.trim(),
-      tipo_grupo: formData.tipo_grupo,
-      disciplina_area: formData.disciplina_area.trim() || null,
-      topico_especifico: formData.topico_especifico.trim() || null,
-      tags: formData.tags,
-      // Corrigir a lógica de visibilidade
-      is_private: formData.visibilidade === "privado",
-      is_visible_to_all: formData.visibilidade === "visivel_todos",
-      is_visible_to_partners: false,
-      is_public: formData.visibilidade === "visivel_todos",
+      p_nome: formData.nome.trim(),
+      p_descricao: formData.descricao.trim(),
+      p_tipo_grupo: formData.tipo_grupo,
+      p_disciplina_area: formData.disciplina_area.trim() || null,
+      p_topico_especifico: formData.topico_especifico.trim() || null,
+      p_tags: formData.tags,
+      p_is_private: formData.visibilidade === "privado",
+      p_is_visible_to_all: formData.visibilidade === "visivel_todos",
+      p_is_visible_to_partners: false,
+      p_is_public: formData.visibilidade === "visivel_todos",
     };
 
     console.log('Dados do formulário sendo enviados:', submissionData);
