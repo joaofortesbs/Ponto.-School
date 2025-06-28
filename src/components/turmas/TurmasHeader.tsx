@@ -2,7 +2,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Plus, BookOpen, Users2 } from "lucide-react";
+import { Search, Plus, BookOpen } from "lucide-react";
 
 interface TurmasHeaderProps {
   searchQuery: string;
