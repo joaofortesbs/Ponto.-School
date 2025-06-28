@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { X, Users, Hash } from "lucide-react";
+import { X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -29,7 +29,7 @@ const AddGroupModal: React.FC<AddGroupModalProps> = ({
     if (!codigo.trim()) {
       toast({
         title: "Erro",
-        description: "Digite o código do grupo",
+        description: "Por favor, insira um código de grupo",
         variant: "destructive"
       });
       return;
@@ -37,8 +37,11 @@ const AddGroupModal: React.FC<AddGroupModalProps> = ({
 
     setIsLoading(true);
     try {
+      console.log('Tentando entrar no grupo com código:', codigo);
+      
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError || !user) {
+        console.error('Erro de autenticação:', userError);
         toast({
           title: "Erro",
           description: "Usuário não autenticado",
@@ -47,28 +50,28 @@ const AddGroupModal: React.FC<AddGroupModalProps> = ({
         return;
       }
 
-      console.log('Tentando entrar no grupo com código:', codigo.trim().toUpperCase());
-
-      const { data: result, error } = await supabase
+      // Usar a função RPC join_group_by_code
+      const { data: result, error: joinError } = await supabase
         .rpc('join_group_by_code', {
           p_codigo_unico: codigo.trim().toUpperCase(),
           p_user_id: user.id
         });
 
-      if (error) {
-        console.error('Erro ao entrar no grupo:', error);
+      if (joinError) {
+        console.error('Erro ao entrar no grupo:', joinError);
         toast({
           title: "Erro",
-          description: `Erro ao entrar no grupo: ${error.message}`,
+          description: `Erro ao entrar no grupo: ${joinError.message}`,
           variant: "destructive"
         });
         return;
       }
 
       if (!result || result.length === 0) {
+        console.error('Nenhum resultado retornado da função');
         toast({
           title: "Erro",
-          description: "Resposta inválida do servidor",
+          description: "Erro inesperado ao processar código",
           variant: "destructive"
         });
         return;
@@ -76,26 +79,31 @@ const AddGroupModal: React.FC<AddGroupModalProps> = ({
 
       const joinResult = result[0];
       
-      if (joinResult.success) {
-        toast({
-          title: "Sucesso",
-          description: joinResult.message,
-        });
-        setCodigo("");
-        onGroupAdded();
-        onClose();
-      } else {
+      if (!joinResult.success) {
+        console.error('Falha ao entrar no grupo:', joinResult.message);
         toast({
           title: "Erro",
-          description: joinResult.message,
+          description: joinResult.message || "Erro ao entrar no grupo",
           variant: "destructive"
         });
+        return;
       }
+
+      console.log('Entrada no grupo bem-sucedida:', joinResult);
+      
+      toast({
+        title: "Sucesso",
+        description: `Você entrou no grupo "${joinResult.group_name}" com sucesso!`,
+      });
+      
+      setCodigo("");
+      onGroupAdded();
+      
     } catch (error) {
-      console.error('Erro inesperado:', error);
+      console.error('Erro inesperado ao entrar no grupo:', error);
       toast({
         title: "Erro",
-        description: "Erro inesperado ao entrar no grupo",
+        description: "Erro inesperado ao processar código",
         variant: "destructive"
       });
     } finally {
@@ -122,10 +130,7 @@ const AddGroupModal: React.FC<AddGroupModalProps> = ({
             className="bg-[#1E293B] rounded-xl overflow-hidden max-w-md w-full shadow-xl"
           >
             <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-4 flex justify-between items-center">
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Entrar em Grupo
-              </h2>
+              <h2 className="text-xl font-bold text-white">Entrar em Grupo</h2>
               <Button
                 variant="ghost"
                 size="icon"
@@ -143,20 +148,17 @@ const AddGroupModal: React.FC<AddGroupModalProps> = ({
                   <Label htmlFor="codigo" className="text-white">
                     Código do Grupo
                   </Label>
-                  <div className="relative">
-                    <Hash className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="codigo"
-                      value={codigo}
-                      onChange={(e) => setCodigo(e.target.value.toUpperCase())}
-                      placeholder="Digite o código (ex: ABC123)"
-                      className="bg-[#2a4066] border-gray-600 text-white placeholder-gray-400 pl-10"
-                      disabled={isLoading}
-                      maxLength={8}
-                    />
-                  </div>
+                  <Input
+                    id="codigo"
+                    value={codigo}
+                    onChange={(e) => setCodigo(e.target.value.toUpperCase())}
+                    placeholder="Digite o código do grupo"
+                    className="bg-[#2a4066] border-gray-600 text-white placeholder-gray-400"
+                    disabled={isLoading}
+                    maxLength={6}
+                  />
                   <p className="text-sm text-gray-400">
-                    Digite o código único do grupo que você deseja entrar
+                    Digite o código único de 6 caracteres do grupo que você deseja entrar
                   </p>
                 </div>
 
@@ -172,7 +174,7 @@ const AddGroupModal: React.FC<AddGroupModalProps> = ({
                   </Button>
                   <Button
                     type="submit"
-                    disabled={isLoading || !codigo.trim()}
+                    disabled={isLoading}
                     className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white"
                   >
                     {isLoading ? "Entrando..." : "Entrar no Grupo"}
