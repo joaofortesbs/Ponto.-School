@@ -49,7 +49,7 @@ const TurmasTabsNav: React.FC = () => {
 
   return (
     <div className="flex justify-center mt-4 mb-6">
-      <div className="bg-[#001427] p-1 rounded-xl flex space-x-1 shadow-md border border-[#FF6B00]/20">
+      <div className="bg-[#001427] dark:bg-[#001427] bg-white p-1 rounded-xl flex space-x-1 shadow-md border border-[#FF6B00]/20 dark:border-[#FF6B00]/20 border-gray-200">
         {tabs.map((tab) => {
           const isActive = tab.value === currentView;
           return (
@@ -59,8 +59,8 @@ const TurmasTabsNav: React.FC = () => {
               className={cn(
                 "relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2",
                 isActive
-                  ? "text-white"
-                  : "text-gray-300 hover:text-white hover:bg-white/10"
+                  ? "text-white dark:text-white text-white"
+                  : "text-gray-300 dark:text-gray-300 text-gray-600 hover:text-white dark:hover:text-white hover:text-[#FF6B00] hover:bg-white/10 dark:hover:bg-white/10 hover:bg-[#FF6B00]/10"
               )}
             >
               {isActive && (
