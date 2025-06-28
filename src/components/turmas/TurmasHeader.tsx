@@ -54,13 +54,6 @@ const TurmasHeader: React.FC<TurmasHeaderProps> = ({
           >
             <Plus className="h-4 w-4 mr-1" /> Adicionar Turma
           </Button>
-          <Button
-            variant="outline"
-            className="border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10 rounded-lg shadow-sm transition-all duration-300 hover:shadow-md transform hover:scale-[1.02] font-montserrat font-semibold"
-            onClick={() => (window.location.href = "/turmas/criar-grupo")}
-          >
-            <Users2 className="h-4 w-4 mr-1" /> Criar Grupo
-          </Button>
         </div>
       </div>
     </div>
