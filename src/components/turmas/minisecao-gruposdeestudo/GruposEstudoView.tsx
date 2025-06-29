@@ -65,6 +65,9 @@ const GruposEstudoView: React.FC = () => {
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [groupToLeave, setGroupToLeave] = useState<GrupoEstudo | null>(null);
   const [isGroupCreator, setIsGroupCreator] = useState(false);
+  const [showGroupInterface, setShowGroupInterface] = useState(false);
+  const [activeGroup, setActiveGroup] = useState<GrupoEstudo | null>(null); // Use GrupoEstudo type
+  const [activeTab, setActiveTab] = useState('discussoes');
 
   // Função para validar autenticação do usuário
   const validateUserAuth = async () => {
@@ -110,7 +113,7 @@ const GruposEstudoView: React.FC = () => {
 
       console.log('Associação bem-sucedida. Atualizando Meus Grupos...');
       await loadMyGroups(); // Atualizar a grade "Meus Grupos"
-      
+
       // Buscar nome do grupo para mostrar no modal de sucesso
       const { data: groupData } = await supabase
         .from('grupos_estudo')
@@ -183,7 +186,7 @@ const GruposEstudoView: React.FC = () => {
 
       console.log('Remoção bem-sucedida. Atualizando Meus Grupos...');
       await loadMyGroups(); // Atualizar a grade "Meus Grupos"
-      
+
       toast({
         title: "Sucesso",
         description: "Você saiu do grupo com sucesso!",
@@ -225,7 +228,7 @@ const GruposEstudoView: React.FC = () => {
       }
 
       console.log('Excluindo grupo e associações...');
-      
+
       // Primeiro, excluir todos os membros do grupo
       const { error: deleteMembersError } = await supabase
         .from('membros_grupos')
@@ -261,7 +264,7 @@ const GruposEstudoView: React.FC = () => {
       console.log('Exclusão bem-sucedida. Atualizando grades...');
       await loadMyGroups(); // Atualizar Meus Grupos
       await loadAllGroups(); // Atualizar Todos os Grupos
-      
+
       toast({
         title: "Sucesso",
         description: "O grupo foi excluído com sucesso!",
@@ -511,7 +514,7 @@ const GruposEstudoView: React.FC = () => {
     }
   };
 
-  // Função para acessar um grupo
+  // Nova função para acessar um grupo
   const handleAccessGroup = async (group: GrupoEstudo) => {
     console.log('Acessando grupo:', group.nome);
 
@@ -544,6 +547,62 @@ const GruposEstudoView: React.FC = () => {
         variant: "destructive"
       });
     }
+  };
+
+    // Nova função para acessar o grupo e substituir a interface
+    const accessGroup = async (groupId: string) => {
+      try {
+          console.log(`Acessando grupo ${groupId}...`);
+          const userId = await validateUserAuth();
+          if (!userId) {
+              console.error('Usuário não autenticado.');
+              toast({
+                  title: "Erro",
+                  description: "Usuário não autenticado.",
+                  variant: "destructive"
+              });
+              return;
+          }
+  
+          // Buscar dados do grupo
+          const { data: groupData, error } = await supabase
+              .from('grupos_estudo')
+              .select('*')
+              .eq('id', groupId)
+              .single();
+  
+          if (error) {
+              console.error('Erro ao buscar dados do grupo:', error);
+              toast({
+                  title: "Erro",
+                  description: "Erro ao carregar dados do grupo.",
+                  variant: "destructive"
+              });
+              return;
+          }
+  
+          setActiveGroup(groupData);
+          setShowGroupInterface(true);
+          setActiveTab('discussoes');
+          console.log(`Interface do grupo ${groupId} carregada com sucesso.`);
+      } catch (error) {
+          console.error('Erro ao acessar grupo:', error.message, error.stack);
+          toast({
+              title: "Erro",
+              description: "Erro ao acessar o grupo. Verifique o console.",
+              variant: "destructive"
+          });
+      }
+  };
+
+  // Função para voltar à interface original
+  const returnToGroups = () => {
+      console.log('Retornando à interface de Grupos de Estudos...');
+      setShowGroupInterface(false);
+      setActiveGroup(null);
+      setActiveTab('discussoes');
+      loadMyGroups();
+      loadAllGroups();
   };
 
   // Handlers para os modals
@@ -627,6 +686,63 @@ const GruposEstudoView: React.FC = () => {
   const handleGroupClick = (group: GrupoEstudo) => {
     handleAccessGroup(group);
   };
+
+    // Renderizar interface do grupo se estiver ativa
+    if (showGroupInterface && activeGroup) {
+      return (
+          <div className="w-full h-full bg-[#f7f9fa] dark:bg-[#001427] p-6 space-y-6 transition-colors duration-300">
+              {/* Header do grupo com navegação */}
+              <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="flex justify-between items-center mb-6"
+              >
+                  <div>
+                      <Button
+                          onClick={returnToGroups}
+                          variant="outline"
+                          size="sm"
+                          className="border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10 font-montserrat"
+                      >
+                          <ArrowLeft className="w-4 h-4 mr-2" />
+                          Voltar
+                      </Button>
+                      <h2 className="text-3xl font-bold text-[#001427] dark:text-white bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] bg-clip-text text-transparent font-montserrat ml-3">
+                          {activeGroup.nome}
+                      </h2>
+                  </div>
+              </motion.div>
+  
+              {/* Mini-seções no topo */}
+              <div className="flex items-center gap-4 mb-6">
+                  <Button
+                      variant={activeTab === 'discussoes' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setActiveTab('discussoes')}
+                      className={`${activeTab === 'discussoes' ? 'bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white' : 'border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10'} font-montserrat`}
+                  >
+                      <MessageCircle className="w-4 h-4 mr-2" />
+                      Discussões
+                  </Button>
+                  {/* Outras abas aqui */}
+              </div>
+  
+              {/* Conteúdo da aba ativa */}
+              <div className="mt-6">
+                  {activeTab === 'discussoes' && (
+                      <div className="bg-[#f7f9fa] dark:bg-[#001427] rounded-lg p-6 transition-colors duration-300">
+                          <h3 className="text-lg font-semibold text-[#001427] dark:text-white mb-4 font-montserrat">Discussões do Grupo</h3>
+                          <p className="text-[#778DA9] dark:text-gray-400 font-open-sans">
+                              Esta seção será implementada em breve.
+                          </p>
+                      </div>
+                  )}
+                  {/* Conteúdo das outras abas aqui */}
+              </div>
+          </div>
+      );
+  }
 
   return (
     <div className="w-full h-full bg-[#f7f9fa] dark:bg-[#001427] p-6 space-y-6 transition-colors duration-300">
@@ -797,18 +913,18 @@ const GruposEstudoView: React.FC = () => {
               <div className="w-12 h-12 mx-auto mb-4 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
                 <Users className="h-6 w-6 text-red-600 dark:text-red-400" />
               </div>
-              
+
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                 Confirmar Ação
               </h3>
-              
+
               <p className="text-gray-600 dark:text-gray-400 mb-6">
                 {isGroupCreator 
                   ? `Você é o criador do grupo "${groupToLeave.nome}". Deseja sair ou excluir o grupo?`
                   : `Tem certeza que deseja sair do grupo "${groupToLeave.nome}"?`
                 }
               </p>
-              
+
               <div className="flex gap-3 justify-center">
                 <Button
                   variant="outline"
@@ -821,7 +937,7 @@ const GruposEstudoView: React.FC = () => {
                 >
                   Cancelar
                 </Button>
-                
+
                 <Button
                   onClick={() => leaveGroup(groupToLeave.id)}
                   className="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white"
