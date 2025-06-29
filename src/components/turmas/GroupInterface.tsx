@@ -158,9 +158,9 @@ export default function GroupInterface({ groupId, groupName, onBack }: GroupInte
   };
 
   return (
-    <div className="group-interface h-full bg-[#001427] text-white">
+    <div className="group-interface h-screen bg-[#001427] text-white flex flex-col">
       {/* Header */}
-      <div className="group-header flex items-center p-4 border-b border-gray-600 bg-[#1a2a44]">
+      <div className="group-header flex items-center p-4 border-b border-gray-600 bg-[#1a2a44] flex-shrink-0">
         <Button
           onClick={onBack}
           variant="ghost"
@@ -176,7 +176,7 @@ export default function GroupInterface({ groupId, groupName, onBack }: GroupInte
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 p-4 border-b border-gray-600 bg-[#1a2a44]">
+      <div className="flex gap-2 p-4 border-b border-gray-600 bg-[#1a2a44] flex-shrink-0">
         <Button className="bg-[#FF6B00] text-white hover:bg-[#FF8C40]">
           Discussões
         </Button>
@@ -195,7 +195,7 @@ export default function GroupInterface({ groupId, groupName, onBack }: GroupInte
       </div>
 
       {/* Chat Content */}
-      <div className="group-content flex flex-col h-full">
+      <div className="group-content flex flex-col flex-1 min-h-0">
         {/* Messages Area */}
         <div className="chat-messages flex-1 overflow-y-auto p-4 space-y-3">
           {messages.length === 0 ? (
@@ -230,7 +230,7 @@ export default function GroupInterface({ groupId, groupName, onBack }: GroupInte
         </div>
 
         {/* Input Area */}
-        <div className="chat-input p-4 border-t border-gray-600 bg-[#1a2a44]">
+        <div className="chat-input p-4 border-t border-gray-600 bg-[#1a2a44] flex-shrink-0">
           <div className="flex gap-2">
             <Input
               value={newMessage}
