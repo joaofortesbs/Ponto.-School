@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, Suspense } from "react";
 import {
   Routes,
@@ -22,6 +23,7 @@ import Dashboard from "@/pages/dashboard";
 import Turmas from "@/pages/turmas";
 import TurmaDetail from "@/pages/turmas/[id]";
 import GruposEstudo2 from "@/pages/turmas/grupos2";
+import GruposEstudo from "@/pages/turmas/grupos";
 import Comunidades from "@/pages/comunidades";
 import PedidosAjuda from "@/pages/pedidos-ajuda";
 import EpictusIA from "@/pages/epictus-ia";
@@ -35,7 +37,6 @@ import Novidades from "@/pages/novidades";
 import Configuracoes from "@/pages/configuracoes";
 import PlanosEstudo from "@/pages/planos-estudo";
 import Portal from "@/pages/portal";
-import GruposEstudo from "@/pages/turmas/grupos";
 
 // Auth Pages
 import LoginPage from "@/pages/auth/login";
@@ -286,7 +287,6 @@ function App() {
                   <Route path="turmas/:id" element={<TurmaDetail />} />
                   <Route path="turmas/grupos2" element={<GruposEstudo2 />} />
                   <Route path="turmas/grupos" element={<GruposEstudo />} />
-                  <Route path="turmas/grupos/:id" element={<GruposEstudo />} />
                   <Route path="comunidades" element={<Comunidades />} />
                   <Route path="pedidos-ajuda" element={<PedidosAjuda />} />
                   <Route path="epictus-ia" element={<EpictusIA />} />
