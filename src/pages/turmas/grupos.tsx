@@ -52,11 +52,13 @@ export default function GruposEstudo() {
 
   const getCurrentUser = async () => {
     try {
+      console.log('Obtendo usuário atual...');
       const { data: { user }, error } = await supabase.auth.getUser();
       if (error) {
         console.error('Erro ao obter usuário:', error);
         return;
       }
+      console.log('Usuário atual:', user?.id);
       setCurrentUser(user);
     } catch (error) {
       console.error('Erro ao obter usuário:', error);
@@ -83,6 +85,8 @@ export default function GruposEstudo() {
     if (!currentUser) return;
 
     try {
+      console.log('Carregando meus grupos...');
+      
       // Buscar grupos onde o usuário é criador ou membro
       const { data: memberGroups, error: memberError } = await supabase
         .from('membros_grupos')
@@ -94,9 +98,12 @@ export default function GruposEstudo() {
         return;
       }
 
+      console.log('Grupos do usuário:', memberGroups);
+
       const groupIds = memberGroups?.map(mg => mg.grupo_id) || [];
 
       if (groupIds.length === 0) {
+        console.log('Usuário não é membro de nenhum grupo');
         setMyGroups([]);
         return;
       }
@@ -110,6 +117,8 @@ export default function GruposEstudo() {
         console.error('Erro ao buscar dados dos grupos:', groupError);
         return;
       }
+
+      console.log('Dados dos grupos carregados:', groups);
 
       const formattedGroups = groups?.map(group => ({
         id: group.id,
@@ -128,6 +137,7 @@ export default function GruposEstudo() {
       })) || [];
 
       setMyGroups(formattedGroups);
+      console.log(`Meus grupos carregados: ${formattedGroups.length}`);
     } catch (error) {
       console.error('Erro ao carregar meus grupos:', error);
     }
@@ -137,6 +147,8 @@ export default function GruposEstudo() {
     if (!currentUser) return;
 
     try {
+      console.log('Carregando todos os grupos...');
+      
       const { data: groups, error } = await supabase
         .from('grupos_estudo')
         .select('*')
@@ -146,6 +158,8 @@ export default function GruposEstudo() {
         console.error('Erro ao buscar todos os grupos:', error);
         return;
       }
+
+      console.log('Todos os grupos carregados:', groups);
 
       const formattedGroups = groups?.map(group => ({
         id: group.id,
@@ -170,11 +184,13 @@ export default function GruposEstudo() {
   };
 
   const handleAccessGroup = (group: Group) => {
+    console.log(`Acessando grupo: ${group.id} - ${group.nome}`);
     setSelectedGroup(group);
     setShowGroupInterface(true);
   };
 
   const handleBackFromGroup = () => {
+    console.log('Voltando da interface do grupo');
     setShowGroupInterface(false);
     setSelectedGroup(null);
     loadGroups(); // Recarregar grupos ao voltar
@@ -189,6 +205,8 @@ export default function GruposEstudo() {
     if (!currentUser) return;
 
     try {
+      console.log(`Entrando no grupo: ${group.id}`);
+      
       const { error } = await supabase
         .from('membros_grupos')
         .insert({
@@ -206,6 +224,7 @@ export default function GruposEstudo() {
         return;
       }
 
+      console.log('Entrada no grupo realizada com sucesso');
       toast({
         title: "Sucesso",
         description: "Você entrou no grupo com sucesso!",
