@@ -96,10 +96,10 @@ export default function GroupDetail({ group, currentUser, onBack }: GroupDetailP
   };
 
   return (
-    <div className="group-interface h-full">
+    <div className="group-interface h-screen flex flex-col">
       <GroupDetailHeader groupName={group.nome} onBack={onBack} />
       <GroupTabs activeTab={activeTab} onTabChange={setActiveTab} />
-      <div className="group-content h-full">
+      <div className="group-content flex-1 overflow-hidden">
         {renderTabContent()}
       </div>
     </div>

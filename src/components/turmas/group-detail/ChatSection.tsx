@@ -8,8 +8,8 @@ import { useToast } from "@/hooks/use-toast";
 
 interface ChatMessage {
   id: string;
-  mensagem: string;
-  created_at: string;
+  conteudo: string;
+  enviado_em: string;
   user_id: string;
   profiles?: {
     display_name?: string;
@@ -86,70 +86,31 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
 
       console.log('Verificação de membresia aprovada');
 
-      // Carregar mensagens usando a função segura do banco
-      const { data, error } = await supabase
-        .rpc('get_group_messages_safe', {
-          p_group_id: groupId,
-          p_user_id: currentUser.id
+      // Carregar mensagens da nova tabela
+      const { data: messagesData, error: messagesError } = await supabase
+        .from('mensagens_chat_grupos')
+        .select(`
+          id,
+          conteudo,
+          enviado_em,
+          user_id,
+          profiles!inner(display_name, email)
+        `)
+        .eq('grupo_id', groupId)
+        .order('enviado_em', { ascending: true });
+
+      if (messagesError) {
+        console.error('Erro ao carregar mensagens:', messagesError);
+        toast({
+          title: "Erro",
+          description: "Erro ao carregar mensagens do chat",
+          variant: "destructive"
         });
-
-      if (error) {
-        console.error('Erro ao carregar mensagens via função:', error);
-        
-        // Fallback: tentar consulta direta
-        const { data: directData, error: directError } = await supabase
-          .from('mensagens_grupos')
-          .select(`
-            id,
-            mensagem,
-            created_at,
-            user_id,
-            profiles!inner(display_name, email)
-          `)
-          .eq('grupo_id', groupId)
-          .order('created_at', { ascending: true });
-
-        if (directError) {
-          console.error('Erro na consulta direta:', directError);
-          toast({
-            title: "Erro",
-            description: "Erro ao carregar mensagens do chat",
-            variant: "destructive"
-          });
-          return;
-        }
-
-        console.log('Mensagens carregadas via consulta direta:', directData?.length || 0);
-        setMessages(directData || []);
         return;
       }
 
-      console.log('Mensagens carregadas via função segura:', data?.length || 0);
-      
-      // Buscar dados dos perfis para as mensagens
-      if (data && data.length > 0) {
-        const userIds = [...new Set(data.map(msg => msg.user_id))];
-        
-        const { data: profiles, error: profilesError } = await supabase
-          .from('profiles')
-          .select('id, display_name, email')
-          .in('id', userIds);
-
-        if (!profilesError && profiles) {
-          const messagesWithProfiles = data.map(msg => ({
-            ...msg,
-            profiles: profiles.find(p => p.id === msg.user_id) || { display_name: 'Usuário', email: '' }
-          }));
-          setMessages(messagesWithProfiles);
-        } else {
-          setMessages(data.map(msg => ({
-            ...msg,
-            profiles: { display_name: 'Usuário', email: '' }
-          })));
-        }
-      } else {
-        setMessages([]);
-      }
+      console.log('Mensagens carregadas:', messagesData?.length || 0);
+      setMessages(messagesData || []);
 
     } catch (error) {
       console.error('Erro inesperado ao carregar mensagens:', error);
@@ -179,11 +140,11 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
     console.log('Configurando novo canal Realtime para grupo:', groupId);
     
     const channel = supabase
-      .channel(`group-${groupId}`)
+      .channel(`chat-${groupId}`)
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
-        table: 'mensagens_grupos',
+        table: 'mensagens_chat_grupos',
         filter: `grupo_id=eq.${groupId}`
       }, async (payload) => {
         console.log('Nova mensagem recebida via Realtime:', payload);
@@ -232,11 +193,11 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
       console.log('Enviando mensagem para grupo:', groupId, 'usuário:', currentUser.id);
       
       const { error } = await supabase
-        .from('mensagens_grupos')
+        .from('mensagens_chat_grupos')
         .insert({
           grupo_id: groupId,
           user_id: currentUser.id,
-          mensagem: newMessage.trim()
+          conteudo: newMessage.trim()
         });
 
       if (error) {
@@ -298,8 +259,8 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
   }
 
   return (
-    <div className="chat-section h-full flex flex-col">
-      <div className="chat-messages flex-1 overflow-y-auto p-4 space-y-3">
+    <div className="chat-section h-full flex flex-col bg-[#001427]">
+      <div className="chat-messages flex-1 overflow-y-auto p-4 space-y-3 max-h-96">
         {isLoading ? (
           <div className="text-center text-gray-400 py-8">
             <p>Carregando mensagens...</p>
@@ -309,28 +270,35 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
             <p>Nenhuma mensagem ainda. Seja o primeiro a conversar!</p>
           </div>
         ) : (
-          messages.map((message) => (
-            <div
-              key={message.id}
-              className={`chat-message ${
-                message.user_id === currentUser?.id ? 'own-message' : 'other-message'
-              }`}
-            >
-              <div className="message-header flex items-center gap-2 mb-1">
-                <span className="sender font-medium text-[#FF6B00]">
-                  {getUserDisplayName(message)}
-                </span>
-                <span className="timestamp text-xs text-gray-400">
-                  {formatTime(message.created_at)}
-                </span>
+          messages.map((message) => {
+            const isOwnMessage = message.user_id === currentUser?.id;
+            return (
+              <div
+                key={message.id}
+                className={`chat-message flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
+              >
+                <div
+                  className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                    isOwnMessage
+                      ? 'bg-[#FF6B00] text-white rounded-br-none'
+                      : 'bg-[#2a4066] text-white rounded-bl-none'
+                  }`}
+                >
+                  <div className="message-header flex items-center gap-2 mb-1">
+                    <span className="sender font-medium text-xs">
+                      {getUserDisplayName(message)}
+                    </span>
+                    <span className="timestamp text-xs opacity-70">
+                      {formatTime(message.enviado_em)}
+                    </span>
+                  </div>
+                  <p className="text-sm whitespace-pre-wrap">
+                    {message.conteudo}
+                  </p>
+                </div>
               </div>
-              <div className="message-content bg-[#2a4066] rounded-lg p-3">
-                <p className="text-white text-sm whitespace-pre-wrap">
-                  {message.mensagem}
-                </p>
-              </div>
-            </div>
-          ))
+            );
+          })
         )}
         <div ref={messagesEndRef} />
       </div>
