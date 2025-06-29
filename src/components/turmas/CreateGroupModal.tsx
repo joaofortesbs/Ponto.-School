@@ -40,22 +40,29 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
         return;
       }
 
-      // Usar a função create_group_safe corrigida
-      console.log('Chamando função create_group_safe...');
-      const { data: result, error: createError } = await supabase
-        .rpc('create_group_safe', {
-          p_nome: formData.p_nome,
-          p_descricao: formData.p_descricao || null,
-          p_tipo_grupo: formData.p_tipo_grupo,
-          p_disciplina_area: formData.p_disciplina_area || null,
-          p_topico_especifico: formData.p_topico_especifico || null,
-          p_tags: formData.p_tags || [],
-          p_is_public: formData.p_is_public || false,
-          p_is_visible_to_all: formData.p_is_visible_to_all || false,
-          p_is_visible_to_partners: formData.p_is_visible_to_partners || false,
-          p_is_private: formData.p_is_private || false,
-          p_criador_id: user.id
-        });
+      // Gerar código único
+      const codigoUnico = Math.random().toString(36).substring(2, 8).toUpperCase();
+      console.log('Código único gerado:', codigoUnico);
+
+      // Criar o grupo
+      const { data: groupData, error: createError } = await supabase
+        .from('grupos_estudo')
+        .insert({
+          nome: formData.p_nome,
+          descricao: formData.p_descricao || null,
+          tipo_grupo: formData.p_tipo_grupo,
+          disciplina_area: formData.p_disciplina_area || null,
+          topico_especifico: formData.p_topico_especifico || null,
+          tags: formData.p_tags || [],
+          is_private: formData.p_is_private || false,
+          is_visible_to_all: formData.p_is_visible_to_all || false,
+          is_visible_to_partners: formData.p_is_visible_to_partners || false,
+          is_public: formData.p_is_public || false,
+          criador_id: user.id,
+          codigo_unico: codigoUnico
+        })
+        .select()
+        .single();
 
       if (createError) {
         console.error('Erro ao criar grupo:', createError);
@@ -67,36 +74,14 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
         return;
       }
 
-      if (!result || result.length === 0) {
-        console.error('Nenhum resultado retornado da função');
-        toast({
-          title: "Erro",
-          description: "Erro inesperado ao criar grupo",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      const groupResult = result[0];
-      
-      if (!groupResult.success) {
-        console.error('Falha na criação do grupo:', groupResult.message);
-        toast({
-          title: "Erro",
-          description: groupResult.message || "Erro ao criar grupo",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      console.log('Grupo criado com sucesso:', groupResult);
+      console.log('Grupo criado com sucesso:', groupData);
 
       // Criar objeto do grupo para o modal de comemoração
       const newGroup = {
-        id: groupResult.id,
-        nome: groupResult.nome,
+        id: groupData.id,
+        nome: groupData.nome,
         tipo_grupo: formData.p_tipo_grupo,
-        codigo_unico: groupResult.codigo_unico,
+        codigo_unico: codigoUnico,
         is_private: formData.p_is_private,
         is_visible_to_all: formData.p_is_visible_to_all,
         descricao: formData.p_descricao,
