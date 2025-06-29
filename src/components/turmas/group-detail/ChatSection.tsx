@@ -86,7 +86,7 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
 
       console.log('Verificação de membresia aprovada');
 
-      // Carregar mensagens da nova tabela
+      // Carregar mensagens da tabela mensagens_chat_grupos
       const { data: messagesData, error: messagesError } = await supabase
         .from('mensagens_chat_grupos')
         .select(`
@@ -99,7 +99,7 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
         .eq('grupo_id', groupId)
         .order('enviado_em', { ascending: true });
 
-      if (messingsError) {
+      if (messagesError) {
         console.error('Erro ao carregar mensagens:', messagesError);
         // Tentar sem join na profiles
         const { data: simpleMessages, error: simpleError } = await supabase
