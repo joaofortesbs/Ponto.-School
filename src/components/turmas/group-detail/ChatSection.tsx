@@ -99,18 +99,37 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
         .eq('grupo_id', groupId)
         .order('enviado_em', { ascending: true });
 
-      if (messagesError) {
+      if (messingsError) {
         console.error('Erro ao carregar mensagens:', messagesError);
-        toast({
-          title: "Erro",
-          description: "Erro ao carregar mensagens do chat",
-          variant: "destructive"
-        });
-        return;
-      }
+        // Tentar sem join na profiles
+        const { data: simpleMessages, error: simpleError } = await supabase
+          .from('mensagens_chat_grupos')
+          .select('id, conteudo, enviado_em, user_id')
+          .eq('grupo_id', groupId)
+          .order('enviado_em', { ascending: true });
 
-      console.log('Mensagens carregadas:', messagesData?.length || 0);
-      setMessages(messagesData || []);
+        if (simpleError) {
+          console.error('Erro ao carregar mensagens simples:', simpleError);
+          toast({
+            title: "Erro",
+            description: "Erro ao carregar mensagens do chat",
+            variant: "destructive"
+          });
+          return;
+        }
+
+        // Mapear mensagens simples
+        const mappedMessages = (simpleMessages || []).map(msg => ({
+          ...msg,
+          profiles: { display_name: 'Usuário', email: '' }
+        }));
+
+        console.log('Mensagens carregadas (modo simples):', mappedMessages.length);
+        setMessages(mappedMessages);
+      } else {
+        console.log('Mensagens carregadas:', messagesData?.length || 0);
+        setMessages(messagesData || []);
+      }
 
     } catch (error) {
       console.error('Erro inesperado ao carregar mensagens:', error);
@@ -168,6 +187,13 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
           setTimeout(scrollToBottom, 100);
         } catch (error) {
           console.error('Erro ao processar nova mensagem do Realtime:', error);
+          // Adicionar mensagem mesmo sem profile
+          const newMessage: ChatMessage = {
+            ...payload.new,
+            profiles: { display_name: 'Usuário', email: '' }
+          };
+          setMessages(prev => [...prev, newMessage]);
+          setTimeout(scrollToBottom, 100);
         }
       })
       .subscribe((status) => {
@@ -191,14 +217,16 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
     setIsLoading(true);
     try {
       console.log('Enviando mensagem para grupo:', groupId, 'usuário:', currentUser.id);
+      console.log('Conteúdo da mensagem:', newMessage.trim());
       
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('mensagens_chat_grupos')
         .insert({
           grupo_id: groupId,
           user_id: currentUser.id,
           conteudo: newMessage.trim()
-        });
+        })
+        .select();
 
       if (error) {
         console.error('Erro ao enviar mensagem:', error);
@@ -210,8 +238,8 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
         return;
       }
 
+      console.log('Mensagem enviada com sucesso:', data);
       setNewMessage('');
-      console.log('Mensagem enviada com sucesso');
       
       // A nova mensagem será adicionada automaticamente via Realtime
       
