@@ -53,6 +53,7 @@ localPort = 8081
 externalPort = 8081
 
 [workflows]
+runButton = "Run"
 
 [[workflows.workflow]]
 name = "Run App"
@@ -188,6 +189,15 @@ mode = "sequential"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "npx supabase migration up"
+
+[[workflows.workflow]]
+name = "Run"
+author = 44410529
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev"
 
 [auth]
 pageEnabled = false
