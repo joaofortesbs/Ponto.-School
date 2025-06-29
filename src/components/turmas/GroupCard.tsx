@@ -18,9 +18,10 @@ interface GroupCardProps {
     icone: React.ReactNode;
   };
   onClick: () => void;
+  view?: string; // Nova prop para identificar a view atual
 }
 
-const GroupCard: React.FC<GroupCardProps> = ({ group, onClick }) => {
+const GroupCard: React.FC<GroupCardProps> = ({ group, onClick, view }) => {
   const getPrivacyIcon = () => {
     switch (group.privacidade) {
       case "publico":
@@ -114,7 +115,7 @@ const GroupCard: React.FC<GroupCardProps> = ({ group, onClick }) => {
               onClick();
             }}
           >
-            Entrar no Grupo
+            {view === "todos-grupos" ? "Entrar no Grupo" : "Acessar Grupo"}
           </Button>
 
           <Button

@@ -467,6 +467,10 @@ const GruposEstudoView: React.FC = () => {
     icone: <BookOpen className="h-6 w-6 text-[#FF6B00]" />
   });
 
+  const handleGroupClick = (group: GrupoEstudo) => {
+    handleAccessGroup(group);
+  };
+
   return (
     <div className="w-full h-full bg-[#f7f9fa] dark:bg-[#001427] p-6 space-y-6 transition-colors duration-300">
       {/* Header */}
@@ -572,7 +576,8 @@ const GruposEstudoView: React.FC = () => {
               >
                 <GroupCard
                   group={convertToGroupCardFormat(group)}
-                  onClick={() => handleAccessGroup(group)}
+                  onClick={() => handleGroupClick(group)}
+                  view={currentView}
                 />
               </motion.div>
             ))
