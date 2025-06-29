@@ -3,7 +3,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Send } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 
 interface ChatSectionProps {
@@ -14,16 +15,15 @@ interface ChatSectionProps {
 interface Message {
   id: string;
   user_id: string;
-  conteudo: string;
+  mensagem: string;
   created_at: string;
 }
 
 export default function ChatSection({ groupId, currentUser }: ChatSectionProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const channelRef = useRef<any>(null);
   const { toast } = useToast();
 
   const scrollToBottom = () => {
@@ -31,29 +31,19 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
   };
 
   useEffect(() => {
+    loadMessages();
+    setupRealtimeSubscription();
+  }, [groupId]);
+
+  useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  useEffect(() => {
-    if (currentUser && groupId) {
-      loadMessages();
-      setupRealtimeSubscription();
-    }
-
-    return () => {
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
-      }
-    };
-  }, [currentUser, groupId]);
-
   const loadMessages = async () => {
     try {
-      console.log(`Carregando mensagens do grupo: ${groupId}`);
-      
       const { data, error } = await supabase
-        .from('mensagens')
-        .select('id, user_id, conteudo, created_at')
+        .from('mensagens_grupos')
+        .select('id, user_id, mensagem, created_at')
         .eq('grupo_id', groupId)
         .order('created_at', { ascending: true });
 
@@ -61,13 +51,12 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
         console.error('Erro ao carregar mensagens:', error);
         toast({
           title: "Erro",
-          description: "Erro ao carregar mensagens",
+          description: "Erro ao carregar mensagens do chat",
           variant: "destructive"
         });
         return;
       }
 
-      console.log(`Mensagens carregadas: ${data?.length || 0}`);
       setMessages(data || []);
     } catch (error) {
       console.error('Erro ao carregar mensagens:', error);
@@ -75,42 +64,35 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
   };
 
   const setupRealtimeSubscription = () => {
-    if (channelRef.current) {
-      supabase.removeChannel(channelRef.current);
-    }
-
-    console.log(`Configurando realtime para grupo: ${groupId}`);
-    
     const channel = supabase
       .channel(`chat-${groupId}`)
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
-        table: 'mensagens',
+        table: 'mensagens_grupos',
         filter: `grupo_id=eq.${groupId}`
       }, (payload) => {
-        console.log('Nova mensagem recebida:', payload);
-        const newMessage = payload.new as Message;
-        setMessages(prev => [...prev, newMessage]);
+        console.log('Nova mensagem recebida:', payload.new);
+        setMessages(prev => [...prev, payload.new as Message]);
       })
       .subscribe();
 
-    channelRef.current = channel;
+    return () => {
+      supabase.removeChannel(channel);
+    };
   };
 
   const sendMessage = async () => {
-    if (!newMessage.trim() || isLoading || !currentUser) return;
+    if (!newMessage.trim() || !currentUser) return;
 
-    setIsLoading(true);
+    setLoading(true);
     try {
-      console.log(`Enviando mensagem no grupo: ${groupId}`);
-      
       const { error } = await supabase
-        .from('mensagens')
+        .from('mensagens_grupos')
         .insert({
           grupo_id: groupId,
           user_id: currentUser.id,
-          conteudo: newMessage.trim()
+          mensagem: newMessage.trim()
         });
 
       if (error) {
@@ -123,12 +105,16 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
         return;
       }
 
-      console.log('Mensagem enviada com sucesso');
       setNewMessage('');
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
+      toast({
+        title: "Erro",
+        description: "Erro inesperado ao enviar mensagem",
+        variant: "destructive"
+      });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
@@ -139,69 +125,60 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
     }
   };
 
-  const formatTime = (timestamp: string) => {
-    return new Date(timestamp).toLocaleTimeString('pt-BR', {
+  const formatTime = (dateString: string) => {
+    return new Date(dateString).toLocaleTimeString('pt-BR', {
       hour: '2-digit',
       minute: '2-digit'
     });
   };
 
   const getUserDisplayName = (userId: string) => {
-    if (userId === currentUser?.id) {
-      return 'Você';
-    }
     return userId.substring(0, 8) + '...';
   };
 
   return (
-    <div className="chat-section h-full flex flex-col">
-      {/* Messages Area */}
-      <div className="chat-messages flex-1 overflow-y-auto p-4 space-y-3 bg-[#001427]">
-        {messages.length === 0 ? (
-          <div className="text-center text-gray-400 py-8">
-            <p>Nenhuma mensagem ainda. Seja o primeiro a conversar!</p>
-          </div>
-        ) : (
-          messages.map((message) => (
+    <div className="flex flex-col h-full bg-white dark:bg-[#001427]">
+      <ScrollArea className="flex-1 p-4">
+        <div className="space-y-4">
+          {messages.map((message) => (
             <div
               key={message.id}
-              className={`chat-message ${
-                message.user_id === currentUser?.id ? 'own-message' : 'other-message'
-              }`}
+              className={`flex ${message.user_id === currentUser?.id ? 'justify-end' : 'justify-start'}`}
             >
-              <div className="message-header flex items-center gap-2 mb-1">
-                <span className="sender font-medium text-[#FF6B00]">
-                  {getUserDisplayName(message.user_id)}
-                </span>
-                <span className="timestamp text-xs text-gray-400">
+              <div
+                className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                  message.user_id === currentUser?.id
+                    ? 'bg-[#FF6B00] text-white'
+                    : 'bg-gray-100 dark:bg-[#1E293B] text-gray-900 dark:text-white'
+                }`}
+              >
+                <div className="text-sm font-medium mb-1">
+                  {message.user_id === currentUser?.id ? 'Você' : getUserDisplayName(message.user_id)}
+                </div>
+                <div className="text-sm">{message.mensagem}</div>
+                <div className="text-xs opacity-70 mt-1">
                   {formatTime(message.created_at)}
-                </span>
-              </div>
-              <div className="message-content bg-[#2a4066] rounded-lg p-3">
-                <p className="text-white text-sm whitespace-pre-wrap">
-                  {message.conteudo}
-                </p>
+                </div>
               </div>
             </div>
-          ))
-        )}
-        <div ref={messagesEndRef} />
-      </div>
+          ))}
+          <div ref={messagesEndRef} />
+        </div>
+      </ScrollArea>
 
-      {/* Input Area */}
-      <div className="chat-input p-4 border-t border-gray-600 bg-[#1a2a44] flex-shrink-0">
+      <div className="p-4 border-t border-gray-200 dark:border-gray-700">
         <div className="flex gap-2">
           <Input
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Digite sua mensagem..."
-            disabled={isLoading}
-            className="flex-1 bg-[#001427] border-gray-600 text-white placeholder-gray-400"
+            disabled={loading}
+            className="flex-1"
           />
           <Button
             onClick={sendMessage}
-            disabled={isLoading || !newMessage.trim()}
+            disabled={loading || !newMessage.trim()}
             className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white"
           >
             <Send className="h-4 w-4" />
