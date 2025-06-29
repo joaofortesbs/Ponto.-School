@@ -29,6 +29,7 @@ import { useTheme } from "@/components/ThemeProvider";
 import GroupCard from "../GroupCard";
 import CreateGroupModal from "../CreateGroupModal";
 import AddGroupModal from "../AddGroupModal";
+import EntrarGrupoSuccessModal from "../EntrarGrupoSuccessModal";
 
 // Tipos para os grupos
 interface GrupoEstudo {
@@ -59,6 +60,8 @@ const GruposEstudoView: React.FC = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const { toast } = useToast();
   const { theme } = useTheme();
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [joinedGroupName, setJoinedGroupName] = useState("");
 
   // Função para validar autenticação do usuário
   const validateUserAuth = async () => {
@@ -316,75 +319,64 @@ const GruposEstudoView: React.FC = () => {
 
   // Função para acessar um grupo
   const handleAccessGroup = async (group: GrupoEstudo) => {
+    console.log('Acessando grupo:', group.nome);
+
     try {
-      console.log('Clique em Acessar Grupo para grupo:', group);
-      console.log('Acessando grupo:', group);
-
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
         toast({
           title: "Erro",
-          description: "Você precisa estar logado para acessar um grupo.",
-          variant: "destructive",
+          description: "Usuário não autenticado",
+          variant: "destructive"
         });
         return;
       }
 
-      // Verificar se já é membro
-      const { data: membership, error: membershipError } = await supabase
-        .from('membros_grupos')
-        .select('*')
-        .eq('grupo_id', group.id)
-        .eq('user_id', user.id)
-        .single();
+      if (currentView === "todos-grupos") {
+        // Para grupos visíveis a todos, tentamos entrar no grupo
+        const { data: result, error: joinError } = await supabase
+          .rpc('join_group_by_code', {
+            p_codigo_unico: group.codigo_unico || '',
+            p_user_id: user.id
+          });
 
-      if (membershipError && membershipError.code !== 'PGRST116') {
-        console.error('Erro na consulta de membresia:', membershipError);
-        toast({
-          title: "Erro",
-          description: "Problema ao verificar acesso ao grupo.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (!membership) {
-        // Adicionar como membro se o grupo for público
-        if (group.is_public || group.is_visible_to_all) {
-          const { error: joinError } = await supabase
-            .from('membros_grupos')
-            .insert({
-              grupo_id: group.id,
-              user_id: user.id,
-              joined_at: new Date().toISOString()
-            });
-
-          if (joinError) {
-            console.error('Erro ao entrar no grupo:', joinError);
-            toast({
-              title: "Erro",
-              description: "Não foi possível entrar no grupo.",
-              variant: "destructive",
-            });
-            return;
-          }
+        if (joinError) {
+          console.error('Erro ao entrar no grupo:', joinError);
+          toast({
+            title: "Erro",
+            description: `Erro ao entrar no grupo: ${joinError.message}`,
+            variant: "destructive"
+          });
+          return;
         }
+
+        if (result?.success) {
+          // Mostrar modal de comemoração
+          setJoinedGroupName(group.nome);
+          setShowSuccessModal(true);
+
+          // Recarregar os grupos
+          loadAllGroups();
+        } else {
+          toast({
+            title: "Aviso",
+            description: result?.message || "Não foi possível entrar no grupo",
+            variant: "destructive"
+          });
+        }
+      } else {
+        // Para grupos que o usuário já faz parte, apenas navegar
+        toast({
+          title: "Acessando grupo",
+          description: `Redirecionando para ${group.nome}...`,
+        });
       }
-
-      toast({
-        title: "Sucesso",
-        description: `Acesso ao grupo "${group.nome}" realizado com sucesso!`,
-      });
-
-      // Aqui você pode redirecionar para a página do grupo ou abrir um modal
-      // Por exemplo: navigate(`/grupo/${group.id}`);
-
     } catch (error) {
       console.error('Erro ao acessar grupo:', error);
       toast({
         title: "Erro",
-        description: "Erro inesperado ao acessar o grupo.",
-        variant: "destructive",
+        description: "Erro inesperado ao acessar o grupo",
+        variant: "destructive"
       });
     }
   };
@@ -618,6 +610,12 @@ const GruposEstudoView: React.FC = () => {
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
         onGroupAdded={handleGroupAdded}
+      />
+
+      <EntrarGrupoSuccessModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        groupName={joinedGroupName}
       />
     </div>
   );

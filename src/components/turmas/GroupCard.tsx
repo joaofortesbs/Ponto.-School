@@ -118,24 +118,26 @@ const GroupCard: React.FC<GroupCardProps> = ({ group, onClick, view }) => {
             {view === "todos-grupos" ? "Entrar no Grupo" : "Acessar Grupo"}
           </Button>
 
-          <Button
-            variant="outline"
-            className="border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10 font-montserrat text-xs"
-            onClick={(e) => {
-              e.stopPropagation();
-              // Handle chat or leave action based on view
-            }}
-          >
-            {view === "meus-grupos" ? (
-              <>
-                <LogOut className="h-4 w-4 mr-1" /> Sair
-              </>
-            ) : (
-              <>
-                <MessageCircle className="h-4 w-4 mr-1" /> Chat
-              </>
-            )}
-          </Button>
+          {view !== "todos-grupos" && (
+            <Button
+              variant="outline"
+              className="border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10 font-montserrat text-xs"
+              onClick={(e) => {
+                e.stopPropagation();
+                // Handle chat or leave action based on view
+              }}
+            >
+              {view === "meus-grupos" ? (
+                <>
+                  <LogOut className="h-4 w-4 mr-1" /> Sair
+                </>
+              ) : (
+                <>
+                  <MessageCircle className="h-4 w-4 mr-1" /> Chat
+                </>
+              )}
+            </Button>
+          )}
         </div>
       </div>
     </motion.div>
