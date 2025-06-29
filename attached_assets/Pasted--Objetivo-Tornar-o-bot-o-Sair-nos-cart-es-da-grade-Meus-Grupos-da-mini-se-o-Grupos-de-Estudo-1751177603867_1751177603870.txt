@@ -1,0 +1,128 @@
+
+
+Objetivo: Tornar o botão "Sair" nos cartões da grade "Meus Grupos" da mini-seção "Grupos de Estudos" totalmente funcional. Ao clicar, um modal com as opções "Sair" e "Cancelar" deve aparecer. Se o usuário escolher "Sair", ele será removido do grupo (excluído de membros_grupos) e o grupo será removido da grade "Meus Grupos". A solução deve ser implementada no frontend, preservando o design, layout e todas as funcionalidades existentes, especialmente a criação de grupos via modal, sem introduzir erros ou bugs.
+
+
+
+Instruções Gerais
+
+
+
+
+
+Escopo Restrito: Foque exclusivamente na função loadMyGroups e adicione uma nova função leaveGroup no frontend. Não modifique o design, layout ou outros componentes da mini-seção "Grupos de Estudos", nem outras partes do código (ex.: createGroup, joinGroupByCode, loadAllGroups, modal de comemoração).
+
+
+
+Preservação: Mantenha intactas todas as funcionalidades existentes, incluindo a criação de grupos via modal, a adesão via botão/código e a exibição em "Todos os Grupos", sem impacto no layout ou design atual.
+
+
+
+Eficiência: Implemente a lógica de saída com validação, logs detalhados e um mecanismo de retry para evitar falhas.
+
+
+
+Testes Completos: Após as alterações, teste a saída via botão e envie os logs.
+
+
+
+Problemas a Corrigir
+
+
+
+
+
+Botão "Sair" Não Funcional: O botão "Sair" não abre um modal ou remove o usuário do grupo e da grade "Meus Grupos".
+
+
+
+Soluções:
+
+
+
+
+
+Adicionar um botão "Sair" que abra um modal de confirmação.
+
+
+
+Implementar a lógica de remoção com validação e sincronização.
+
+
+
+Preservar outras funcionalidades sem alterações.
+
+
+
+Implementação no Frontend (JavaScript)
+
+ // Nova função para sair de um grupo const leaveGroup = async (groupId, retryCount = 0, maxRetries = 3) => { try { console.log(`Tentativa ${retryCount + 1} de sair do grupo ${groupId}...`); const userId = await validateUserAuth(); if (!userId) { console.error('Usuário não autenticado.'); alert('Usuário não autenticado.'); return; } 
+
+console.log('Removendo usuário do grupo...');
+const { error: deleteError } = await supabase
+  .from('membros_grupos')
+  .delete()
+  .eq('grupo_id', groupId)
+  .eq('user_id', userId);
+
+if (deleteError) {
+  console.error('Erro ao sair do grupo:', deleteError.message, deleteError.details);
+  if (retryCount < maxRetries) {
+    console.log(`Tentando novamente em 1 segundo (tentativa ${retryCount + 2})...`);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    return leaveGroup(groupId, retryCount + 1, maxRetries);
+  }
+  alert('Erro ao sair do grupo. Verifique o console.');
+  return;
+}
+
+console.log('Remoção bem-sucedida. Atualizando Meus Grupos...');
+await loadMyGroups(); // Atualizar a grade "Meus Grupos"
+alert('Você saiu do grupo com sucesso!');
+
+} catch (error) { console.error('Erro geral em leaveGroup:', error.message, error.stack); if (retryCount < maxRetries) { console.log(Tentando novamente em 1 segundo (tentativa ${retryCount + 2})...); await new Promise(resolve => setTimeout(resolve, 1000)); return leaveGroup(groupId, retryCount + 1, maxRetries); } alert('Erro ao processar saída. Verifique o console.'); } };
+
+// Função ajustada para renderizar cartões com botão "Sair" e modal const loadMyGroups = async () => { try { const userId = await validateUserAuth(); if (!userId) { console.error('Usuário não autenticado ao carregar Meus Grupos.'); return; } const { data, error } = await supabase .from('grupos_estudo AS g') .select('g.id, g.nome, g.tipo_grupo, g.codigo_unico, g.is_private, g.is_visible_to_all') .or(criador_id.eq.${userId},exists(select 1 from membros_grupos where grupo_id = g.id and user_id = '${userId}')) .order('created_at', { ascending: false });
+
+if (error) {
+  console.error('Erro ao carregar Meus Grupos:', error.message);
+  return;
+}
+
+console.log('Dados retornados do Supabase:', data);
+if (!data || data.length === 0) {
+  console.warn('Nenhum grupo encontrado para Meus Grupos.');
+  return;
+}
+
+const grid = document.getElementById('my-groups');
+if (!grid) {
+  console.error('Elemento #my-groups não encontrado no DOM.');
+  return;
+}
+
+if (!grid.classList.contains('group-grid')) {
+  grid.classList.add('group-grid');
+  grid.style.cssText = 'display: flex; flex-wrap: wrap; gap: 10px; padding: 10px;';
+}
+
+grid.innerHTML = data.map(group => `
+  <div class="group-card" style="display: inline-block; margin: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; width: 200px; background: #f9f9f9; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    <h3 style="margin: 0; font-size: 1.2em; color: #333;">${group.nome}</h3>
+    <p><strong>Tipo:</strong> ${group.tipo_grupo}</p>
+    <p><strong>Visibilidade:</strong> ${group.is_private ? 'Privado' : 'Público'}</p>
+    <button onclick="showLeaveModal('${group.id}')" style="background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; width: 100%; margin-top: 5px;">Sair</button>
+  </div>
+`).join('');
+
+console.log(`Grade "Meus Grupos" renderizada com ${data.length} grupos.`);
+
+} catch (error) { console.error('Erro geral em loadMyGroups:', error.message, error.stack); } };
+
+// Função para exibir o modal de confirmação const showLeaveModal = (groupId) => { const modal = document.createElement('div'); modal.className = 'leave-modal'; modal.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.5); z-index: 1000; font-family: Arial, sans-serif; text-align: center;'; modal.innerHTML = <h2 style="color: #e74c3c;">Confirmar Saída</h2> <p>Tem certeza que deseja sair deste grupo?</p> <button onclick="leaveGroup('${groupId}'); this.parentElement.remove();" style="background: #e74c3c; color: white; border: none; padding: 5px 15px; border-radius: 5px; cursor: pointer; margin-right: 10px;">Sair</button> <button onclick="this.parentElement.remove();" style="background: #3498db; color: white; border: none; padding: 5px 15px; border-radius: 5px; cursor: pointer;">Cancelar</button> ; document.body.appendChild(modal); };
+
+// Chamar loadMyGroups manualmente para teste imediato loadMyGroups();
+
+// Manter a inicialização existente document.addEventListener('DOMContentLoaded', () => { loadMyGroups(); });
+
+// Manter outras funções existentes (ex.: createGroup, joinGroupByCode, loadAllGroups, showCelebrationModal, joinGroupDirectly) sem alterações
