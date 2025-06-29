@@ -28,6 +28,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/components/ThemeProvider";
 import GroupCard from "../GroupCard";
+import CreateGroupModal from "../CreateGroupModal";
+import AddGroupModal from "../AddGroupModal";
 
 // Tipos para os grupos
 interface GrupoEstudo {
@@ -54,6 +56,8 @@ const GruposEstudoView: React.FC = () => {
   const [myGroups, setMyGroups] = useState<GrupoEstudo[]>([]);
   const [createdGroups, setCreatedGroups] = useState<GrupoEstudo[]>([]);
   const [loading, setLoading] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
   const { toast } = useToast();
   const { theme } = useTheme();
 
@@ -250,6 +254,26 @@ const GruposEstudoView: React.FC = () => {
     }
   };
 
+  // Handlers para os modals
+  const handleCreateGroup = (formData: any) => {
+    // Recarregar a lista após criação
+    if (currentView === "todos-grupos") {
+      loadAllGroups();
+    } else if (currentView === "meus-grupos") {
+      loadMyGroups();
+    }
+  };
+
+  const handleGroupAdded = () => {
+    // Recarregar a lista após adicionar grupo
+    if (currentView === "todos-grupos") {
+      loadAllGroups();
+    } else if (currentView === "meus-grupos") {
+      loadMyGroups();
+    }
+    setShowAddModal(false);
+  };
+
   // Efeito para carregar dados baseado na view atual
   useEffect(() => {
     console.log('Carregando view:', currentView);
@@ -319,6 +343,26 @@ const GruposEstudoView: React.FC = () => {
               Conecte-se com outros estudantes e acelere seu aprendizado
             </p>
           </div>
+        </div>
+
+        {/* Botões de Ação */}
+        <div className="flex items-center gap-3">
+          <Button
+            onClick={() => setShowAddModal(true)}
+            variant="outline"
+            className="border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10 font-montserrat"
+          >
+            <UserPlus className="h-4 w-4 mr-2" />
+            Adicionar
+          </Button>
+          
+          <Button
+            onClick={() => setShowCreateModal(true)}
+            className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-montserrat"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Criar Novo Grupo
+          </Button>
         </div>
       </motion.div>
 
@@ -401,7 +445,10 @@ const GruposEstudoView: React.FC = () => {
                   : "Comece criando seu primeiro grupo de estudos."}
               </p>
               {currentView === "meus-grupos" && (
-                <Button className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-montserrat">
+                <Button 
+                  onClick={() => setShowCreateModal(true)}
+                  className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-montserrat"
+                >
                   <Plus className="h-4 w-4 mr-1" /> Criar Grupo
                 </Button>
               )}
@@ -409,6 +456,19 @@ const GruposEstudoView: React.FC = () => {
           )}
         </AnimatePresence>
       </div>
+
+      {/* Modals */}
+      <CreateGroupModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSubmit={handleCreateGroup}
+      />
+
+      <AddGroupModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onGroupAdded={handleGroupAdded}
+      />
     </div>
   );
 };
