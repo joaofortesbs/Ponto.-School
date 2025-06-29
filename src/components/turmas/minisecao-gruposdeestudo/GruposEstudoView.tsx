@@ -62,6 +62,8 @@ const GruposEstudoView: React.FC = () => {
   const { theme } = useTheme();
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [joinedGroupName, setJoinedGroupName] = useState("");
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [groupToLeave, setGroupToLeave] = useState<GrupoEstudo | null>(null);
 
   // Função para validar autenticação do usuário
   const validateUserAuth = async () => {
@@ -138,6 +140,77 @@ const GruposEstudoView: React.FC = () => {
         variant: "destructive",
       });
     }
+  };
+
+  // Nova função para sair de um grupo
+  const leaveGroup = async (groupId: string, retryCount = 0, maxRetries = 3) => {
+    try {
+      console.log(`Tentativa ${retryCount + 1} de sair do grupo ${groupId}...`);
+
+      const userId = await validateUserAuth();
+      if (!userId) {
+        console.error('Usuário não autenticado.');
+        toast({
+          title: "Erro",
+          description: "Usuário não autenticado.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('Removendo usuário do grupo...');
+      const { error: deleteError } = await supabase
+        .from('membros_grupos')
+        .delete()
+        .eq('grupo_id', groupId)
+        .eq('user_id', userId);
+
+      if (deleteError) {
+        console.error('Erro ao sair do grupo:', deleteError.message, deleteError.details);
+        if (retryCount < maxRetries) {
+          console.log(`Tentando novamente em 1 segundo (tentativa ${retryCount + 2})...`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          return leaveGroup(groupId, retryCount + 1, maxRetries);
+        }
+        toast({
+          title: "Erro",
+          description: "Erro ao sair do grupo. Tente novamente.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('Remoção bem-sucedida. Atualizando Meus Grupos...');
+      await loadMyGroups(); // Atualizar a grade "Meus Grupos"
+      
+      toast({
+        title: "Sucesso",
+        description: "Você saiu do grupo com sucesso!",
+      });
+
+      // Fechar modal
+      setShowLeaveModal(false);
+      setGroupToLeave(null);
+
+    } catch (error) {
+      console.error('Erro geral em leaveGroup:', error);
+      if (retryCount < maxRetries) {
+        console.log(`Tentando novamente em 1 segundo (tentativa ${retryCount + 2})...`);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return leaveGroup(groupId, retryCount + 1, maxRetries);
+      }
+      toast({
+        title: "Erro",
+        description: "Erro ao processar saída. Verifique o console.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Função para mostrar modal de confirmação de saída
+  const handleShowLeaveModal = (group: GrupoEstudo) => {
+    setGroupToLeave(group);
+    setShowLeaveModal(true);
   };
 
   // Carrega grupos visíveis para todos
@@ -569,6 +642,7 @@ const GruposEstudoView: React.FC = () => {
                   group={convertToGroupCardFormat(group)}
                   onClick={() => handleGroupClick(group)}
                   view={currentView}
+                  onLeave={currentView === "meus-grupos" ? () => handleShowLeaveModal(group) : undefined}
                 />
               </motion.div>
             ))
@@ -616,6 +690,52 @@ const GruposEstudoView: React.FC = () => {
         onClose={() => setShowSuccessModal(false)}
         groupName={joinedGroupName}
       />
+
+      {/* Modal de Confirmação de Saída */}
+      {showLeaveModal && groupToLeave && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4 shadow-xl"
+          >
+            <div className="text-center">
+              <div className="w-12 h-12 mx-auto mb-4 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                <Users className="h-6 w-6 text-red-600 dark:text-red-400" />
+              </div>
+              
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                Confirmar Saída
+              </h3>
+              
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                Tem certeza que deseja sair do grupo <strong>"{groupToLeave.nome}"</strong>?
+              </p>
+              
+              <div className="flex gap-3 justify-center">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowLeaveModal(false);
+                    setGroupToLeave(null);
+                  }}
+                  className="flex-1"
+                >
+                  Cancelar
+                </Button>
+                
+                <Button
+                  onClick={() => leaveGroup(groupToLeave.id)}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                >
+                  Sair do Grupo
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 };

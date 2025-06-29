@@ -14,14 +14,15 @@ interface GroupCardProps {
     membros: number;
     proximaReuniao?: string;
     tags: string[];
-    privacidade: "publico" | "restrito" | "privado";
+    privacidade: string;
     icone: React.ReactNode;
   };
   onClick: () => void;
-  view?: string; // Nova prop para identificar a view atual
+  view?: string;
+  onLeave?: () => void;
 }
 
-const GroupCard: React.FC<GroupCardProps> = ({ group, onClick, view }) => {
+const GroupCard: React.FC<GroupCardProps> = ({ group, onClick, view, onLeave }) => {
   const getPrivacyIcon = () => {
     switch (group.privacidade) {
       case "publico":
@@ -118,24 +119,16 @@ const GroupCard: React.FC<GroupCardProps> = ({ group, onClick, view }) => {
             {view === "todos-grupos" ? "Entrar no Grupo" : "Acessar Grupo"}
           </Button>
 
-          {view !== "todos-grupos" && (
+          {onLeave && (
             <Button
               variant="outline"
-              className="border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10 font-montserrat text-xs"
+              className="border-red-300 text-red-600 hover:bg-red-50 dark:border-red-600 dark:text-red-400 dark:hover:bg-red-900/20 font-montserrat text-xs px-3"
               onClick={(e) => {
                 e.stopPropagation();
-                // Handle chat or leave action based on view
+                onLeave();
               }}
             >
-              {view === "meus-grupos" ? (
-                <>
-                  <LogOut className="h-4 w-4 mr-1" /> Sair
-                </>
-              ) : (
-                <>
-                  <MessageCircle className="h-4 w-4 mr-1" /> Chat
-                </>
-              )}
+              Sair
             </Button>
           )}
         </div>
