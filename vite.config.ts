@@ -18,4 +18,7 @@ export default defineConfig(({ command }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  esbuild: {
+    target: 'esnext',
+  },
 }));
