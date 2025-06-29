@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 
 interface EntrarGrupoPorCodigoModalProps {
   isOpen: boolean;
@@ -21,7 +20,6 @@ export default function EntrarGrupoPorCodigoModal({
   const [codigo, setCodigo] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const { toast } = useToast();
 
   const handleJoinGroup = async () => {
     if (!codigo.trim()) {
@@ -33,11 +31,8 @@ export default function EntrarGrupoPorCodigoModal({
     setError('');
 
     try {
-      console.log('Tentando entrar no grupo com código:', codigo);
-      
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        console.error('Usuário não autenticado');
         setError('Usuário não autenticado');
         return;
       }
@@ -50,12 +45,9 @@ export default function EntrarGrupoPorCodigoModal({
         .single();
 
       if (groupError || !group) {
-        console.error('Grupo não encontrado:', groupError);
         setError('Grupo não encontrado. Verifique o código e tente novamente.');
         return;
       }
-
-      console.log('Grupo encontrado:', group);
 
       // Verificar se já é membro
       const { data: existingMember } = await supabase
@@ -66,7 +58,6 @@ export default function EntrarGrupoPorCodigoModal({
         .single();
 
       if (existingMember) {
-        console.log('Usuário já é membro do grupo');
         setError('Você já faz parte deste grupo');
         return;
       }
@@ -85,14 +76,7 @@ export default function EntrarGrupoPorCodigoModal({
         return;
       }
 
-      console.log('Usuário adicionado ao grupo com sucesso');
-
       // Sucesso
-      toast({
-        title: "Sucesso",
-        description: `Você entrou no grupo "${group.nome}" com sucesso!`,
-      });
-      
       setCodigo('');
       setError('');
       onGroupJoined();
