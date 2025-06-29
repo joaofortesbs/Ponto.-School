@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 
 interface EntrarGrupoPorCodigoModalProps {
   isOpen: boolean;
@@ -21,7 +20,6 @@ export default function EntrarGrupoPorCodigoModal({
   const [codigo, setCodigo] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const { toast } = useToast();
 
   const handleJoinGroup = async () => {
     if (!codigo.trim()) {
@@ -42,7 +40,7 @@ export default function EntrarGrupoPorCodigoModal({
       // Buscar o grupo pelo código
       const { data: group, error: groupError } = await supabase
         .from('grupos_estudo')
-        .select('id, nome, criador_id')
+        .select('id, nome, user_id')
         .eq('codigo_unico', codigo.toUpperCase())
         .single();
 
@@ -69,8 +67,7 @@ export default function EntrarGrupoPorCodigoModal({
         .from('membros_grupos')
         .insert({
           grupo_id: group.id,
-          user_id: user.id,
-          joined_at: new Date().toISOString()
+          user_id: user.id
         });
 
       if (memberError) {
@@ -80,11 +77,6 @@ export default function EntrarGrupoPorCodigoModal({
       }
 
       // Sucesso
-      toast({
-        title: "Sucesso",
-        description: `Você entrou no grupo "${group.nome}" com sucesso!`,
-      });
-      
       setCodigo('');
       setError('');
       onGroupJoined();
