@@ -1,0 +1,139 @@
+
+
+Objetivo: Garantir que a mini-seção "Discussões" dentro da interface do grupo, acessível ao clicar em "Acessar Grupo" em "Meus Grupos", exiba apenas um chat de conversa totalmente funcional, inspirado em WhatsApp e Telegram. A interface deve incluir uma caixa de envio de mensagens e exibir automaticamente todas as mensagens em tempo real, sem exibir "Tópico Específico:", "Área/Disciplina:" ou "Descrição:". O design e layout da mini-seção "Grupos de Estudos" (incluindo modais de "Adicionar Grupo" e "Criar Novo Grupo") não devem ser alterados, e todas as funcionalidades existentes devem ser preservadas, sem introduzir erros ou bugs.
+
+
+
+Instruções Gerais
+
+
+
+
+
+Escopo Restrito: Foque exclusivamente na função accessGroup no frontend e na integração com a tabela mensagens no Supabase. Não modifique o design, layout ou qualquer elemento da mini-seção "Grupos de Estudos", incluindo os modais de "Adicionar Grupo" e "Criar Novo Grupo", nem outras partes do código (ex.: createGroup, joinGroupByCode, loadAllGroups, modais existentes).
+
+
+
+Preservação: Mantenha intactas todas as funcionalidades existentes (criação via modal, adesão via código/botão, saída/exclusão), sem impacto no layout ou design atual.
+
+
+
+Eficiência: Utilize Realtime do Supabase para atualizações ao vivo, com validação e logs para evitar falhas.
+
+
+
+Testes Completos: Após as alterações, teste o chat e envie os logs.
+
+
+
+Análise de Cenários
+
+
+
+
+
+Cenário 1: Novo Usuário Entra no Grupo - Mensagens existentes devem carregar e novas mensagens serem recebidas em tempo real.
+
+
+
+Cenário 2: Envio de Mensagem - Mensagem deve aparecer para todos os usuários do grupo instantaneamente.
+
+
+
+Cenário 3: Erro de Conexão - Implementar retry para reconexão ao Realtime.
+
+
+
+Cenário 4: Sem Autenticação - Bloquear envio de mensagens e exibir alerta.
+
+
+
+Modificações no Banco de Dados (Supabase)
+
+Verificação da Tabela mensagens
+
+A tabela mensagens já foi criada no prompt anterior. Certifique-se de que está configurada como:
+
+CREATE TABLE mensagens (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  grupo_id UUID REFERENCES grupos_estudo(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES auth.users(id),
+  conteudo TEXT NOT NULL,
+  enviado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_grupo FOREIGN KEY (grupo_id) REFERENCES grupos_estudo(id) ON DELETE CASCADE
+);
+
+ALTER TABLE mensagens ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Permitir leitura para membros do grupo" ON mensagens
+FOR SELECT
+USING (EXISTS (
+  SELECT 1 FROM membros_grupos WHERE grupo_id = mensagens.grupo_id AND user_id = auth.uid()
+));
+CREATE POLICY "Permitir inserção para membros do grupo" ON mensagens
+FOR INSERT
+WITH CHECK (EXISTS (
+  SELECT 1 FROM membros_grupos WHERE grupo_id = mensagens.grupo_id AND user_id = auth.uid()
+));
+
+
+
+Implementação no Frontend (JavaScript)
+
+ // Atualizar accessGroup para exibir apenas o chat funcional const accessGroup = async (groupId) => { try { console.log(`Acessando grupo ${groupId}...`); const userId = await validateUserAuth(); if (!userId) { console.error('Usuário não autenticado.'); alert('Usuário não autenticado.'); return; } 
+
+const groupInterface = document.createElement('div');
+groupInterface.id = 'group-interface';
+groupInterface.style.cssText = 'margin-left: 250px; padding: 20px;'; // Ajustar margem para menu lateral
+groupInterface.innerHTML = `
+  <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #ccc; padding-bottom: 10px;">
+    <div class="mini-sections">
+      <button class="active" style="background: #3498db; color: white; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 5px;">Discussões</button>
+      <button disabled style="background: #ddd; color: #666; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 5px;">Tarefas</button>
+      <button disabled style="background: #ddd; color: #666; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 5px;">Membros</button>
+      <button disabled style="background: #ddd; color: #666; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 5px;">Configurações</button>
+      <button disabled style="background: #ddd; color: #666; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 5px;">Notificações</button>
+    </div>
+    <button onclick="returnToGroups()" style="background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 5px;">Voltar</button>
+  </div>
+  <div id="discussions-content" style="margin-top: 20px; height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
+    <div id="chat-messages" style="display: flex; flex-direction: column-reverse;"></div>
+  </div>
+  <div style="margin-top: 10px; display: flex; align-items: center;">
+    <input id="chat-input" type="text" placeholder="Digite sua mensagem..." style="flex-grow: 1; padding: 5px; border: 1px solid #ccc; border-radius: 5px; margin-right: 5px;">
+    <button onclick="sendMessage('${groupId}')" style="background: #2ecc71; color: white; border: none; padding: 5px 10px; border-radius: 5px;">Enviar</button>
+  </div>
+`;
+document.getElementById('main-content').innerHTML = '';
+document.getElementById('main-content').appendChild(groupInterface);
+
+// Configurar Realtime para carregar e atualizar mensagens
+const channel = supabase
+  .channel(`chat-${groupId}`)
+  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mensagens', filter: `grupo_id=eq.${groupId}` }, (payload) => {
+    addMessageToChat(payload.new);
+  })
+  .subscribe(async (status) => {
+    if (status === 'SUBSCRIBED') {
+      console.log(`Subscribed to chat channel for group ${groupId}`);
+      const { data: messages } = await supabase
+        .from('mensagens')
+        .select('*')
+        .eq('grupo_id', groupId)
+        .order('enviado_em', { ascending: false });
+      messages.forEach(message => addMessageToChat(message));
+    }
+  });
+
+console.log(`Interface do grupo ${groupId} carregada com chat configurado.`);
+
+} catch (error) { console.error('Erro ao acessar grupo:', error.message, error.stack); alert('Erro ao acessar o grupo. Verifique o console.'); } };
+
+// Função para adicionar mensagem ao chat (inspirado em WhatsApp/Telegram) const addMessageToChat = (message) => { const userId = validateUserAuth(); const userName = message.user_id === userId ? 'Você' : 'Usuário'; // Placeholder, substituir por nome real se disponível const chatMessages = document.getElementById('chat-messages'); const messageDiv = document.createElement('div'); messageDiv.style.cssText = margin: 5px 0; padding: 10px; border-radius: 10px; max-width: 60%; ${message.user_id === userId ? 'background: #dcf8c6; margin-left: auto; text-align: right;' : 'background: #e9ecef; text-align: left;'}; messageDiv.innerHTML = <strong>${userName}</strong><br> ${message.conteudo}<br> <small>${new Date(message.enviado_em).toLocaleTimeString()}</small> ; chatMessages.prepend(messageDiv); // Adicionar no topo para rolagem inversa chatMessages.scrollTop = 0; // Manter no topo };
+
+// Função para enviar mensagem const sendMessage = async (groupId) => { try { const userId = await validateUserAuth(); if (!userId) { console.error('Usuário não autenticado.'); alert('Usuário não autenticado.'); return; } const input = document.getElementById('chat-input'); const content = input.value.trim(); if (!content) { alert('Digite uma mensagem.'); return; } const { error } = await supabase .from('mensagens') .insert({ grupo_id: groupId, user_id: userId, conteudo: content }); if (error) throw error; input.value = ''; console.log(Mensagem enviada para grupo ${groupId}.); } catch (error) { console.error('Erro ao enviar mensagem:', error.message, error.stack); alert('Erro ao enviar mensagem. Verifique o console.'); } };
+
+// Chamar loadMyGroups manualmente para teste imediato loadMyGroups();
+
+// Manter a inicialização existente document.addEventListener('DOMContentLoaded', () => { loadMyGroups(); });
+
+// Manter outras funções existentes (ex.: createGroup, joinGroupByCode, loadAllGroups, showCelebrationModal, joinGroupDirectly, leaveGroup, deleteGroup, returnToGroups, showLeaveModal) sem alterações
