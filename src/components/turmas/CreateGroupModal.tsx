@@ -40,7 +40,7 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
         return;
       }
 
-      // Usar a função create_group_safe corrigida
+      // Usar a função create_group_safe
       console.log('Chamando função create_group_safe...');
       const { data: result, error: createError } = await supabase
         .rpc('create_group_safe', {
