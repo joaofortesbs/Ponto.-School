@@ -64,6 +64,7 @@ const GruposEstudoView: React.FC = () => {
   const [joinedGroupName, setJoinedGroupName] = useState("");
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [groupToLeave, setGroupToLeave] = useState<GrupoEstudo | null>(null);
+  const [isGroupCreator, setIsGroupCreator] = useState(false);
 
   // Função para validar autenticação do usuário
   const validateUserAuth = async () => {
@@ -207,8 +208,100 @@ const GruposEstudoView: React.FC = () => {
     }
   };
 
+  // Nova função para excluir completamente um grupo
+  const deleteGroup = async (groupId: string, retryCount = 0, maxRetries = 3) => {
+    try {
+      console.log(`Tentativa ${retryCount + 1} de excluir o grupo ${groupId}...`);
+
+      const userId = await validateUserAuth();
+      if (!userId) {
+        console.error('Usuário não autenticado.');
+        toast({
+          title: "Erro",
+          description: "Usuário não autenticado.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('Excluindo grupo e associações...');
+      
+      // Primeiro, excluir todos os membros do grupo
+      const { error: deleteMembersError } = await supabase
+        .from('membros_grupos')
+        .delete()
+        .eq('grupo_id', groupId);
+
+      if (deleteMembersError) {
+        console.error('Erro ao excluir membros do grupo:', deleteMembersError.message);
+      }
+
+      // Depois, excluir o grupo (só o criador pode excluir)
+      const { error: deleteGroupError } = await supabase
+        .from('grupos_estudo')
+        .delete()
+        .eq('id', groupId)
+        .eq('criador_id', userId);
+
+      if (deleteGroupError) {
+        console.error('Erro ao excluir o grupo:', deleteGroupError.message, deleteGroupError.details);
+        if (retryCount < maxRetries) {
+          console.log(`Tentando novamente em 1 segundo (tentativa ${retryCount + 2})...`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          return deleteGroup(groupId, retryCount + 1, maxRetries);
+        }
+        toast({
+          title: "Erro",
+          description: "Erro ao excluir o grupo. Verifique o console.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('Exclusão bem-sucedida. Atualizando grades...');
+      await loadMyGroups(); // Atualizar Meus Grupos
+      await loadAllGroups(); // Atualizar Todos os Grupos
+      
+      toast({
+        title: "Sucesso",
+        description: "O grupo foi excluído com sucesso!",
+      });
+
+      // Fechar modal
+      setShowLeaveModal(false);
+      setGroupToLeave(null);
+
+    } catch (error) {
+      console.error('Erro geral em deleteGroup:', error);
+      if (retryCount < maxRetries) {
+        console.log(`Tentando novamente em 1 segundo (tentativa ${retryCount + 2})...`);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return deleteGroup(groupId, retryCount + 1, maxRetries);
+      }
+      toast({
+        title: "Erro",
+        description: "Erro ao processar exclusão. Verifique o console.",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Função para mostrar modal de confirmação de saída
-  const handleShowLeaveModal = (group: GrupoEstudo) => {
+  const handleShowLeaveModal = async (group: GrupoEstudo) => {
+    const userId = await validateUserAuth();
+    if (!userId) {
+      console.error('Usuário não autenticado.');
+      toast({
+        title: "Erro",
+        description: "Usuário não autenticado.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Verificar se o usuário é o criador do grupo
+    const isCreator = group.criador_id === userId;
+    setIsGroupCreator(isCreator);
     setGroupToLeave(group);
     setShowLeaveModal(true);
   };
@@ -706,11 +799,14 @@ const GruposEstudoView: React.FC = () => {
               </div>
               
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                Confirmar Saída
+                Confirmar Ação
               </h3>
               
               <p className="text-gray-600 dark:text-gray-400 mb-6">
-                Tem certeza que deseja sair do grupo <strong>"{groupToLeave.nome}"</strong>?
+                {isGroupCreator 
+                  ? `Você é o criador do grupo "${groupToLeave.nome}". Deseja sair ou excluir o grupo?`
+                  : `Tem certeza que deseja sair do grupo "${groupToLeave.nome}"?`
+                }
               </p>
               
               <div className="flex gap-3 justify-center">
@@ -719,6 +815,7 @@ const GruposEstudoView: React.FC = () => {
                   onClick={() => {
                     setShowLeaveModal(false);
                     setGroupToLeave(null);
+                    setIsGroupCreator(false);
                   }}
                   className="flex-1"
                 >
@@ -727,10 +824,19 @@ const GruposEstudoView: React.FC = () => {
                 
                 <Button
                   onClick={() => leaveGroup(groupToLeave.id)}
-                  className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                  className="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white"
                 >
                   Sair do Grupo
                 </Button>
+
+                {isGroupCreator && (
+                  <Button
+                    onClick={() => deleteGroup(groupToLeave.id)}
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    Excluir Grupo
+                  </Button>
+                )}
               </div>
             </div>
           </motion.div>
