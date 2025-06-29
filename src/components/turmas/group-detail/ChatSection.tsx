@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 
 interface ChatMessage {
   id: string;
-  mensagem: string;
+  conteudo: string;
   created_at: string;
   user_id: string;
   profiles?: {
@@ -86,70 +86,31 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
 
       console.log('Verificação de membresia aprovada');
 
-      // Carregar mensagens usando a função segura do banco
+      // Carregar mensagens
       const { data, error } = await supabase
-        .rpc('get_group_messages_safe', {
-          p_group_id: groupId,
-          p_user_id: currentUser.id
-        });
+        .from('mensagens')
+        .select(`
+          id,
+          conteudo,
+          created_at,
+          user_id,
+          profiles!inner(display_name, email)
+        `)
+        .eq('grupo_id', groupId)
+        .order('created_at', { ascending: true });
 
       if (error) {
-        console.error('Erro ao carregar mensagens via função:', error);
-        
-        // Fallback: tentar consulta direta
-        const { data: directData, error: directError } = await supabase
-          .from('mensagens_grupos')
-          .select(`
-            id,
-            mensagem,
-            created_at,
-            user_id,
-            profiles!inner(display_name, email)
-          `)
-          .eq('grupo_id', groupId)
-          .order('created_at', { ascending: true });
-
-        if (directError) {
-          console.error('Erro na consulta direta:', directError);
-          toast({
-            title: "Erro",
-            description: "Erro ao carregar mensagens do chat",
-            variant: "destructive"
-          });
-          return;
-        }
-
-        console.log('Mensagens carregadas via consulta direta:', directData?.length || 0);
-        setMessages(directData || []);
+        console.error('Erro ao carregar mensagens:', error);
+        toast({
+          title: "Erro",
+          description: "Erro ao carregar mensagens do chat",
+          variant: "destructive"
+        });
         return;
       }
 
-      console.log('Mensagens carregadas via função segura:', data?.length || 0);
-      
-      // Buscar dados dos perfis para as mensagens
-      if (data && data.length > 0) {
-        const userIds = [...new Set(data.map(msg => msg.user_id))];
-        
-        const { data: profiles, error: profilesError } = await supabase
-          .from('profiles')
-          .select('id, display_name, email')
-          .in('id', userIds);
-
-        if (!profilesError && profiles) {
-          const messagesWithProfiles = data.map(msg => ({
-            ...msg,
-            profiles: profiles.find(p => p.id === msg.user_id) || { display_name: 'Usuário', email: '' }
-          }));
-          setMessages(messagesWithProfiles);
-        } else {
-          setMessages(data.map(msg => ({
-            ...msg,
-            profiles: { display_name: 'Usuário', email: '' }
-          })));
-        }
-      } else {
-        setMessages([]);
-      }
+      console.log('Mensagens carregadas:', data?.length || 0);
+      setMessages(data || []);
 
     } catch (error) {
       console.error('Erro inesperado ao carregar mensagens:', error);
@@ -183,7 +144,7 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
-        table: 'mensagens_grupos',
+        table: 'mensagens',
         filter: `grupo_id=eq.${groupId}`
       }, async (payload) => {
         console.log('Nova mensagem recebida via Realtime:', payload);
@@ -232,11 +193,11 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
       console.log('Enviando mensagem para grupo:', groupId, 'usuário:', currentUser.id);
       
       const { error } = await supabase
-        .from('mensagens_grupos')
+        .from('mensagens')
         .insert({
           grupo_id: groupId,
           user_id: currentUser.id,
-          mensagem: newMessage.trim()
+          conteudo: newMessage.trim()
         });
 
       if (error) {
@@ -326,7 +287,7 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
               </div>
               <div className="message-content bg-[#2a4066] rounded-lg p-3">
                 <p className="text-white text-sm whitespace-pre-wrap">
-                  {message.mensagem}
+                  {message.conteudo}
                 </p>
               </div>
             </div>
