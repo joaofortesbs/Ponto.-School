@@ -10,10 +10,7 @@ export default defineConfig(({ command }) => ({
     port: 8080,
   },
   plugins: [
-    react({
-      // Disable TypeScript checking in SWC to avoid conflicts
-      tsDecorators: true,
-    }),
+    react(),
     command === 'serve' && componentTagger(),
   ].filter(Boolean),
   resolve: {
@@ -21,13 +18,4 @@ export default defineConfig(({ command }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  // Ensure esbuild doesn't interfere with TypeScript
-  esbuild: {
-    logOverride: { 'this-is-undefined-in-esm': 'silent' }
-  },
-  // Optimize build process
-  build: {
-    target: 'esnext',
-    minify: 'esbuild',
-  }
 }));
