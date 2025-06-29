@@ -1,55 +1,35 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import GroupCard from "../GroupCard";
-import GroupDetail from "../group-detail";
-import {
+  Users,
   Plus,
   Search,
-  Users,
   BookOpen,
+  Lightbulb,
+  Target,
+  Trophy,
+  Star,
   Globe,
   Lock,
-  Eye,
-  Users2,
+  UserPlus,
+  MessageCircle,
+  Calendar,
   ArrowRight,
+  CheckCircle,
+  AlertCircle,
   Sparkles,
-  Code,
-  Calculator,
-  Beaker,
-  Atom,
-  Dna,
-  Languages,
-  History,
-  MapPin,
-  PenTool,
-  Music,
-  Palette,
-  Camera,
-  Target,
-  TrendingUp,
-  Heart,
-  Brain,
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useTheme } from "@/components/ThemeProvider";
+import GroupCard from "../GroupCard";
+import CreateGroupModal from "../CreateGroupModal";
+import AddGroupModal from "../AddGroupModal";
+import EntrarGrupoSuccessModal from "../EntrarGrupoSuccessModal";
 
 // Tipos para os grupos
 interface GrupoEstudo {
@@ -69,587 +49,797 @@ interface GrupoEstudo {
   created_at: string;
 }
 
-interface Group {
-  id: string;
-  nome: string;
-  descricao: string;
-  disciplina: string;
-  membros: number;
-  proximaReuniao?: string;
-  tags: string[];
-  privacidade: string;
-  icone: React.ReactNode;
-  tipo_grupo?: string;
-  is_private?: boolean;
-  is_visible_to_all?: boolean;
-  criador_id?: string;
-}
-
-const iconMap: { [key: string]: React.ReactNode } = {
-  matematica: <Calculator className="h-6 w-6 text-[#FF6B00]" />,
-  fisica: <Atom className="h-6 w-6 text-[#FF6B00]" />,
-  quimica: <Beaker className="h-6 w-6 text-[#FF6B00]" />,
-  biologia: <Dna className="h-6 w-6 text-[#FF6B00]" />,
-  portugues: <Languages className="h-6 w-6 text-[#FF6B00]" />,
-  historia: <History className="h-6 w-6 text-[#FF6B00]" />,
-  geografia: <MapPin className="h-6 w-6 text-[#FF6B00]" />,
-  redacao: <PenTool className="h-6 w-6 text-[#FF6B00]" />,
-  musica: <Music className="h-6 w-6 text-[#FF6B00]" />,
-  artes: <Palette className="h-6 w-6 text-[#FF6B00]" />,
-  fotografia: <Camera className="h-6 w-6 text-[#FF6B00]" />,
-  programacao: <Code className="h-6 w-6 text-[#FF6B00]" />,
-  default: <BookOpen className="h-6 w-6 text-[#FF6B00]" />,
-};
-
-const disciplinas = [
-  "Matemática", "Física", "Química", "Biologia", "Português", "História",
-  "Geografia", "Redação", "Música", "Artes", "Fotografia", "Programação"
-];
-
 const GruposEstudoView: React.FC = () => {
-  const [activeView, setActiveView] = useState<"meus-grupos" | "todos-grupos">("meus-grupos");
-  const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
-  const [showGroupDetail, setShowGroupDetail] = useState(false);
-  const [currentUser, setCurrentUser] = useState<any>(null);
-  const [myGroups, setMyGroups] = useState<Group[]>([]);
-  const [allGroups, setAllGroups] = useState<Group[]>([]);
+  const [currentView, setCurrentView] = useState("todos-grupos");
   const [searchTerm, setSearchTerm] = useState("");
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
-  const [joinCode, setJoinCode] = useState("");
+  const [allGroups, setAllGroups] = useState<GrupoEstudo[]>([]);
+  const [myGroups, setMyGroups] = useState<GrupoEstudo[]>([]);
+  const [createdGroups, setCreatedGroups] = useState<GrupoEstudo[]>([]);
   const [loading, setLoading] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
   const { toast } = useToast();
+  const { theme } = useTheme();
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [joinedGroupName, setJoinedGroupName] = useState("");
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [groupToLeave, setGroupToLeave] = useState<GrupoEstudo | null>(null);
+  const [isGroupCreator, setIsGroupCreator] = useState(false);
 
-  // Form states
-  const [formData, setFormData] = useState({
-    nome: "",
-    descricao: "",
-    disciplina_area: "",
-    tipo_grupo: "publico",
-    tags: [] as string[],
-    topico_especifico: "",
-  });
+  // Função para validar autenticação do usuário
+  const validateUserAuth = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    return user?.id || null;
+  };
 
-  useEffect(() => {
-    getCurrentUser();
-  }, []);
-
-  useEffect(() => {
-    if (currentUser) {
-      loadMyGroups();
-      loadAllGroups();
-    }
-  }, [currentUser]);
-
-  const getCurrentUser = async () => {
+  // Nova função para adesão direta a partir do botão
+  const joinGroupDirectly = async (groupId: string, retryCount = 0, maxRetries = 3) => {
     try {
-      const { data: { user }, error } = await supabase.auth.getUser();
-      if (error) {
-        console.error('Erro ao obter usuário:', error);
+      console.log(`Tentativa ${retryCount + 1} de entrar no grupo ${groupId}...`);
+
+      const userId = await validateUserAuth();
+      if (!userId) {
+        console.error('Usuário não autenticado.');
+        toast({
+          title: "Erro",
+          description: "Usuário não autenticado.",
+          variant: "destructive",
+        });
         return;
       }
-      setCurrentUser(user);
-    } catch (error) {
-      console.error('Erro ao obter usuário:', error);
-    }
-  };
 
-  const loadMyGroups = async () => {
-    if (!currentUser) return;
-
-    try {
-      setLoading(true);
-      
-      // First get groups where user is creator
-      const { data: createdGroups, error: createdError } = await supabase
-        .from('grupos_estudo')
-        .select('*')
-        .eq('criador_id', currentUser.id);
-
-      if (createdError) {
-        console.error('Erro ao carregar grupos criados:', createdError);
-      }
-
-      // Then get groups where user is member
-      const { data: memberGroups, error: memberError } = await supabase
+      console.log('Validando adesão ao grupo...');
+      const { error: joinError } = await supabase
         .from('membros_grupos')
-        .select(`
-          grupos_estudo (*)
-        `)
-        .eq('user_id', currentUser.id);
+        .insert({ grupo_id: groupId, user_id: userId });
 
-      if (memberError) {
-        console.error('Erro ao carregar grupos como membro:', memberError);
+      if (joinError) {
+        console.error('Erro ao associar usuário ao grupo:', joinError.message, joinError.details);
+        if (retryCount < maxRetries) {
+          console.log(`Tentando novamente em 1 segundo (tentativa ${retryCount + 2})...`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          return joinGroupDirectly(groupId, retryCount + 1, maxRetries);
+        }
+        toast({
+          title: "Erro",
+          description: "Erro ao entrar no grupo. Tente novamente.",
+          variant: "destructive",
+        });
+        return;
       }
 
-      // Combine and deduplicate
-      const allUserGroups = [
-        ...(createdGroups || []),
-        ...(memberGroups?.map(mg => mg.grupos_estudo).filter(Boolean) || [])
-      ];
+      console.log('Associação bem-sucedida. Atualizando Meus Grupos...');
+      await loadMyGroups(); // Atualizar a grade "Meus Grupos"
+      
+      // Buscar nome do grupo para mostrar no modal de sucesso
+      const { data: groupData } = await supabase
+        .from('grupos_estudo')
+        .select('nome')
+        .eq('id', groupId)
+        .single();
 
-      const uniqueGroups = allUserGroups.filter((group, index, self) => 
-        index === self.findIndex((g) => g.id === group.id)
-      );
+      if (groupData) {
+        setJoinedGroupName(groupData.nome);
+        setShowSuccessModal(true);
+      }
 
-      const formattedGroups = uniqueGroups.map(group => ({
-        id: group.id,
-        nome: group.nome,
-        descricao: group.descricao || "",
-        disciplina: group.disciplina_area || group.tipo_grupo || "Geral",
-        membros: 1, // Will be updated by trigger
-        tags: group.tags || [],
-        privacidade: group.is_private ? "privado" : "publico",
-        icone: iconMap[group.disciplina_area?.toLowerCase()] || iconMap.default,
-        tipo_grupo: group.tipo_grupo,
-        is_private: group.is_private,
-        is_visible_to_all: group.is_visible_to_all,
-        criador_id: group.criador_id,
-      }));
+      toast({
+        title: "Sucesso",
+        description: "Você entrou no grupo com sucesso!",
+      });
 
-      setMyGroups(formattedGroups);
     } catch (error) {
-      console.error('Erro geral ao carregar meus grupos:', error);
-    } finally {
-      setLoading(false);
+      console.error('Erro geral em joinGroupDirectly:', error);
+      if (retryCount < maxRetries) {
+        console.log(`Tentando novamente em 1 segundo (tentativa ${retryCount + 2})...`);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return joinGroupDirectly(groupId, retryCount + 1, maxRetries);
+      }
+      toast({
+        title: "Erro",
+        description: "Erro ao processar adesão. Verifique o console.",
+        variant: "destructive",
+      });
     }
   };
 
-  const loadAllGroups = async () => {
+  // Nova função para sair de um grupo
+  const leaveGroup = async (groupId: string, retryCount = 0, maxRetries = 3) => {
     try {
+      console.log(`Tentativa ${retryCount + 1} de sair do grupo ${groupId}...`);
+
+      const userId = await validateUserAuth();
+      if (!userId) {
+        console.error('Usuário não autenticado.');
+        toast({
+          title: "Erro",
+          description: "Usuário não autenticado.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('Removendo usuário do grupo...');
+      const { error: deleteError } = await supabase
+        .from('membros_grupos')
+        .delete()
+        .eq('grupo_id', groupId)
+        .eq('user_id', userId);
+
+      if (deleteError) {
+        console.error('Erro ao sair do grupo:', deleteError.message, deleteError.details);
+        if (retryCount < maxRetries) {
+          console.log(`Tentando novamente em 1 segundo (tentativa ${retryCount + 2})...`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          return leaveGroup(groupId, retryCount + 1, maxRetries);
+        }
+        toast({
+          title: "Erro",
+          description: "Erro ao sair do grupo. Tente novamente.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('Remoção bem-sucedida. Atualizando Meus Grupos...');
+      await loadMyGroups(); // Atualizar a grade "Meus Grupos"
+      
+      toast({
+        title: "Sucesso",
+        description: "Você saiu do grupo com sucesso!",
+      });
+
+      // Fechar modal
+      setShowLeaveModal(false);
+      setGroupToLeave(null);
+
+    } catch (error) {
+      console.error('Erro geral em leaveGroup:', error);
+      if (retryCount < maxRetries) {
+        console.log(`Tentando novamente em 1 segundo (tentativa ${retryCount + 2})...`);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return leaveGroup(groupId, retryCount + 1, maxRetries);
+      }
+      toast({
+        title: "Erro",
+        description: "Erro ao processar saída. Verifique o console.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Nova função para excluir completamente um grupo
+  const deleteGroup = async (groupId: string, retryCount = 0, maxRetries = 3) => {
+    try {
+      console.log(`Tentativa ${retryCount + 1} de excluir o grupo ${groupId}...`);
+
+      const userId = await validateUserAuth();
+      if (!userId) {
+        console.error('Usuário não autenticado.');
+        toast({
+          title: "Erro",
+          description: "Usuário não autenticado.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('Excluindo grupo e associações...');
+      
+      // Primeiro, excluir todos os membros do grupo
+      const { error: deleteMembersError } = await supabase
+        .from('membros_grupos')
+        .delete()
+        .eq('grupo_id', groupId);
+
+      if (deleteMembersError) {
+        console.error('Erro ao excluir membros do grupo:', deleteMembersError.message);
+      }
+
+      // Depois, excluir o grupo (só o criador pode excluir)
+      const { error: deleteGroupError } = await supabase
+        .from('grupos_estudo')
+        .delete()
+        .eq('id', groupId)
+        .eq('criador_id', userId);
+
+      if (deleteGroupError) {
+        console.error('Erro ao excluir o grupo:', deleteGroupError.message, deleteGroupError.details);
+        if (retryCount < maxRetries) {
+          console.log(`Tentando novamente em 1 segundo (tentativa ${retryCount + 2})...`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          return deleteGroup(groupId, retryCount + 1, maxRetries);
+        }
+        toast({
+          title: "Erro",
+          description: "Erro ao excluir o grupo. Verifique o console.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('Exclusão bem-sucedida. Atualizando grades...');
+      await loadMyGroups(); // Atualizar Meus Grupos
+      await loadAllGroups(); // Atualizar Todos os Grupos
+      
+      toast({
+        title: "Sucesso",
+        description: "O grupo foi excluído com sucesso!",
+      });
+
+      // Fechar modal
+      setShowLeaveModal(false);
+      setGroupToLeave(null);
+
+    } catch (error) {
+      console.error('Erro geral em deleteGroup:', error);
+      if (retryCount < maxRetries) {
+        console.log(`Tentando novamente em 1 segundo (tentativa ${retryCount + 2})...`);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return deleteGroup(groupId, retryCount + 1, maxRetries);
+      }
+      toast({
+        title: "Erro",
+        description: "Erro ao processar exclusão. Verifique o console.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Função para mostrar modal de confirmação de saída
+  const handleShowLeaveModal = async (group: GrupoEstudo) => {
+    const userId = await validateUserAuth();
+    if (!userId) {
+      console.error('Usuário não autenticado.');
+      toast({
+        title: "Erro",
+        description: "Usuário não autenticado.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Verificar se o usuário é o criador do grupo
+    const isCreator = group.criador_id === userId;
+    setIsGroupCreator(isCreator);
+    setGroupToLeave(group);
+    setShowLeaveModal(true);
+  };
+
+  // Carrega grupos visíveis para todos
+  const loadAllGroups = async (retryCount = 0, maxRetries = 3) => {
+    try {
+      console.log(`Carregando view: ${currentView}`);
+      console.log(`Tentativa ${retryCount + 1} de carregar grupos visíveis para todos...`);
+
+      setLoading(true);
+
       const { data, error } = await supabase
         .from('grupos_estudo')
-        .select('*')
+        .select(`
+          id,
+          nome,
+          descricao,
+          tipo_grupo,
+          disciplina_area,
+          topico_especifico,
+          tags,
+          is_public,
+          is_visible_to_all,
+          is_visible_to_partners,
+          is_private,
+          criador_id,
+          codigo_unico,
+          created_at
+        `)
         .eq('is_visible_to_all', true)
         .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Erro ao carregar todos os grupos:', error);
-        return;
-      }
 
-      const formattedGroups = (data || []).map(group => ({
-        id: group.id,
-        nome: group.nome,
-        descricao: group.descricao || "",
-        disciplina: group.disciplina_area || group.tipo_grupo || "Geral",
-        membros: 1, // Will be updated by trigger
-        tags: group.tags || [],
-        privacidade: group.is_private ? "privado" : "publico",
-        icone: iconMap[group.disciplina_area?.toLowerCase()] || iconMap.default,
-        tipo_grupo: group.tipo_grupo,
-        is_private: group.is_private,
-        is_visible_to_all: group.is_visible_to_all,
-        criador_id: group.criador_id,
-      }));
+        if (retryCount < maxRetries) {
+          console.log(`Tentando novamente em 1 segundo (tentativa ${retryCount + 2})...`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          return loadAllGroups(retryCount + 1, maxRetries);
+        }
 
-      setAllGroups(formattedGroups);
-    } catch (error) {
-      console.error('Erro ao carregar todos os grupos:', error);
-    }
-  };
-
-  const handleAccessGroup = (groupId: string) => {
-    const group = myGroups.find(g => g.id === groupId);
-    if (group) {
-      setSelectedGroup(group);
-      setShowGroupDetail(true);
-    }
-  };
-
-  const handleBackFromGroup = () => {
-    setShowGroupDetail(false);
-    setSelectedGroup(null);
-  };
-
-  const handleCreateGroup = async () => {
-    if (!currentUser || !formData.nome.trim()) {
-      toast({
-        title: "Erro",
-        description: "Nome do grupo é obrigatório",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    try {
-      setLoading(true);
-      
-      const { data, error } = await supabase.rpc('create_group_safe', {
-        p_nome: formData.nome.trim(),
-        p_descricao: formData.descricao.trim(),
-        p_tipo_grupo: formData.tipo_grupo,
-        p_disciplina_area: formData.disciplina_area,
-        p_topico_especifico: formData.topico_especifico,
-        p_tags: formData.tags,
-        p_is_public: formData.tipo_grupo === 'publico',
-        p_is_visible_to_all: formData.tipo_grupo === 'publico',
-        p_is_visible_to_partners: false,
-        p_is_private: formData.tipo_grupo === 'privado',
-        p_criador_id: currentUser.id
-      });
-
-      if (error || !data?.[0]?.success) {
-        console.error('Erro ao criar grupo:', error || data?.[0]?.message);
         toast({
           title: "Erro",
-          description: data?.[0]?.message || "Erro ao criar grupo",
-          variant: "destructive"
+          description: "Não foi possível carregar os grupos. Tente novamente.",
+          variant: "destructive",
         });
         return;
       }
 
-      toast({
-        title: "Sucesso",
-        description: `Grupo "${formData.nome}" criado com código: ${data[0].codigo_unico}`,
-      });
+      console.log('Dados retornados do Supabase:', data);
 
-      // Reset form and close modal
-      setFormData({
-        nome: "",
-        descricao: "",
-        disciplina_area: "",
-        tipo_grupo: "publico",
-        tags: [],
-        topico_especifico: "",
-      });
-      setIsCreateModalOpen(false);
-      
-      // Reload groups
-      await loadMyGroups();
-      await loadAllGroups();
+      if (!data || data.length === 0) {
+        console.warn('Nenhum grupo visível para todos encontrado.');
+        setAllGroups([]);
+        return;
+      }
+
+      setAllGroups(data);
+      console.log(`Grade "Todos os Grupos" carregada com ${data.length} grupos visíveis.`);
+
     } catch (error) {
-      console.error('Erro ao criar grupo:', error);
+      console.error('Erro geral em loadAllGroups:', error);
+
+      if (retryCount < maxRetries) {
+        console.log(`Tentando novamente em 1 segundo (tentativa ${retryCount + 2})...`);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return loadAllGroups(retryCount + 1, maxRetries);
+      }
+
       toast({
         title: "Erro",
-        description: "Erro inesperado ao criar grupo",
-        variant: "destructive"
+        description: "Erro ao carregar grupos. Tente recarregar a página.",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleJoinGroup = async () => {
-    if (!currentUser || !joinCode.trim()) {
-      toast({
-        title: "Erro",
-        description: "Código do grupo é obrigatório",
-        variant: "destructive"
-      });
-      return;
-    }
-
+  // Função para carregar meus grupos (onde sou membro ou criador)
+  const loadMyGroups = async (retryCount = 0, maxRetries = 3) => {
     try {
+      console.log(`Tentativa ${retryCount + 1} de carregar meus grupos...`);
       setLoading(true);
-      
-      const { data, error } = await supabase.rpc('join_group_by_code', {
-        p_codigo_unico: joinCode.trim(),
-        p_user_id: currentUser.id
-      });
 
-      if (error || !data?.[0]?.success) {
-        console.error('Erro ao entrar no grupo:', error || data?.[0]?.message);
-        toast({
-          title: "Erro",
-          description: data?.[0]?.message || "Erro ao entrar no grupo",
-          variant: "destructive"
-        });
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.log('Usuário não autenticado');
         return;
       }
 
-      toast({
-        title: "Sucesso",
-        description: `${data[0].message}: ${data[0].group_name}`
-      });
+      console.log('Carregando grupos onde sou membro ou criador...');
 
-      setJoinCode("");
-      setIsJoinModalOpen(false);
-      
-      // Reload groups
-      await loadMyGroups();
-    } catch (error) {
-      console.error('Erro ao entrar no grupo:', error);
-      toast({
-        title: "Erro",
-        description: "Erro inesperado ao entrar no grupo",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+      // Buscar grupos onde sou criador
+      const { data: createdGroups, error: createdError } = await supabase
+        .from('grupos_estudo')
+        .select(`
+          id,
+          nome,
+          descricao,
+          tipo_grupo,
+          disciplina_area,
+          topico_especifico,
+          tags,
+          is_public,
+          is_visible_to_all,
+          is_visible_to_partners,
+          is_private,
+          criador_id,
+          codigo_unico,
+          created_at
+        `)
+        .eq('criador_id', user.id)
+        .order('created_at', { ascending: false });
 
-  const handleLeaveGroup = async (groupId: string) => {
-    if (!currentUser) return;
-
-    try {
-      const { error } = await supabase
+      // Buscar grupos onde sou membro
+      const { data: memberGroups, error: memberError } = await supabase
         .from('membros_grupos')
-        .delete()
-        .eq('grupo_id', groupId)
-        .eq('user_id', currentUser.id);
+        .select(`
+          grupos_estudo!inner(
+            id,
+            nome,
+            descricao,
+            tipo_grupo,
+            disciplina_area,
+            topico_especifico,
+            tags,
+            is_public,
+            is_visible_to_all,
+            is_visible_to_partners,
+            is_private,
+            criador_id,
+            codigo_unico,
+            created_at
+          )
+        `)
+        .eq('user_id', user.id);
 
-      if (error) {
-        console.error('Erro ao sair do grupo:', error);
+      if (createdError) {
+        console.error('Erro ao carregar grupos criados:', createdError);
+      }
+
+      if (memberError) {
+        console.error('Erro ao carregar grupos onde sou membro:', memberError);
+      }
+
+      if (createdError || memberError) {
+        if (retryCount < maxRetries) {
+          console.log(`Tentando novamente em 1 segundo (tentativa ${retryCount + 2})...`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          return loadMyGroups(retryCount + 1, maxRetries);
+        }
+
         toast({
           title: "Erro",
-          description: "Erro ao sair do grupo",
+          description: "Não foi possível carregar seus grupos.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Combinar grupos criados e grupos onde sou membro
+      const allMyGroups: GrupoEstudo[] = [];
+      const seenIds = new Set();
+
+      // Adicionar grupos criados
+      if (createdGroups) {
+        createdGroups.forEach(group => {
+          if (!seenIds.has(group.id)) {
+            allMyGroups.push(group);
+            seenIds.add(group.id);
+          }
+        });
+      }
+
+      // Adicionar grupos onde sou membro
+      if (memberGroups) {
+        memberGroups.forEach(item => {
+          const group = item.grupos_estudo;
+          if (group && !seenIds.has(group.id)) {
+            allMyGroups.push(group);
+            seenIds.add(group.id);
+          }
+        });
+      }
+
+      console.log(`Meus grupos carregados: ${allMyGroups.length} grupos encontrados`);
+      setMyGroups(allMyGroups);
+
+    } catch (error) {
+      console.error('Erro ao carregar meus grupos:', error);
+
+      if (retryCount < maxRetries) {
+        console.log(`Tentando novamente em 1 segundo (tentativa ${retryCount + 2})...`);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return loadMyGroups(retryCount + 1, maxRetries);
+      }
+
+      toast({
+        title: "Erro",
+        description: "Erro ao carregar seus grupos. Tente recarregar a página.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Função para acessar um grupo
+  const handleAccessGroup = async (group: GrupoEstudo) => {
+    console.log('Acessando grupo:', group.nome);
+
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        toast({
+          title: "Erro",
+          description: "Usuário não autenticado",
           variant: "destructive"
         });
         return;
       }
 
-      toast({
-        title: "Sucesso",
-        description: "Você saiu do grupo com sucesso"
-      });
-
-      await loadMyGroups();
+      if (currentView === "todos-grupos") {
+        // Para grupos visíveis a todos, usar a função joinGroupDirectly
+        await joinGroupDirectly(group.id);
+      } else {
+        // Para grupos que o usuário já faz parte, apenas navegar
+        toast({
+          title: "Acessando grupo",
+          description: `Redirecionando para ${group.nome}...`,
+        });
+      }
     } catch (error) {
-      console.error('Erro ao sair do grupo:', error);
+      console.error('Erro ao acessar grupo:', error);
+      toast({
+        title: "Erro",
+        description: "Erro inesperado ao acessar o grupo",
+        variant: "destructive"
+      });
     }
   };
 
-  const filteredGroups = (activeView === "meus-grupos" ? myGroups : allGroups).filter(group =>
-    group.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    group.disciplina.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    group.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  // Handlers para os modals
+  const handleCreateGroup = (formData: any) => {
+    console.log('Grupo criado, recarregando listas...');
+    // Recarregar a lista após criação
+    if (currentView === "todos-grupos") {
+      loadAllGroups();
+    } else if (currentView === "meus-grupos") {
+      loadMyGroups();
+    }
+    setShowCreateModal(false);
+  };
 
-  if (showGroupDetail && selectedGroup) {
-    return (
-      <GroupDetail 
-        group={selectedGroup}
-        currentUser={currentUser}
-        onBack={handleBackFromGroup}
-      />
+  const handleGroupAdded = () => {
+    console.log('Grupo adicionado via código, recarregando Meus Grupos...');
+    // Recarregar especificamente "Meus Grupos" após adicionar grupo via código
+    loadMyGroups();
+
+    // Se estiver na view "meus-grupos", recarregar também
+    if (currentView === "meus-grupos") {
+      loadMyGroups();
+    }
+
+    setShowAddModal(false);
+
+    toast({
+      title: "Sucesso",
+      description: "Grupo adicionado com sucesso! Verifique em 'Meus Grupos'.",
+    });
+  };
+
+  // Efeito para carregar dados baseado na view atual
+  useEffect(() => {
+    console.log('Carregando view:', currentView);
+
+    if (currentView === "todos-grupos") {
+      loadAllGroups();
+    } else if (currentView === "meus-grupos") {
+      loadMyGroups();
+    }
+  }, [currentView]);
+
+  // Carregar dados na inicialização
+  useEffect(() => {
+    loadAllGroups();
+  }, []);
+
+  // Filtrar grupos baseado no termo de busca
+  const filteredGroups = () => {
+    let groups = [];
+
+    if (currentView === "todos-grupos") {
+      groups = allGroups;
+    } else if (currentView === "meus-grupos") {
+      groups = myGroups;
+    }
+
+    if (!searchTerm) return groups;
+
+    return groups.filter(group => 
+      group.nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      group.descricao?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      group.disciplina_area?.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }
+  };
+
+  // Converter grupo para formato do GroupCard
+  const convertToGroupCardFormat = (group: GrupoEstudo) => ({
+    id: group.id,
+    nome: group.nome,
+    disciplina: group.disciplina_area || group.tipo_grupo || "Geral",
+    descricao: group.descricao || "Sem descrição disponível",
+    membros: 1, // Placeholder - você pode buscar o número real de membros se necessário
+    proximaReuniao: undefined,
+    tags: group.tags || [],
+    privacidade: group.is_private ? "privado" : group.is_visible_to_all ? "publico" : "restrito",
+    icone: <BookOpen className="h-6 w-6 text-[#FF6B00]" />
+  });
+
+  const handleGroupClick = (group: GrupoEstudo) => {
+    handleAccessGroup(group);
+  };
 
   return (
-    <div className="w-full h-full bg-gradient-to-br from-[#001427] via-[#003D5C] to-[#FF6B00]/20 p-6 space-y-6">
+    <div className="w-full h-full bg-[#f7f9fa] dark:bg-[#001427] p-6 space-y-6 transition-colors duration-300">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-white mb-2 font-montserrat">
-            Grupos de Estudos
-          </h2>
-          <p className="text-white/70">
-            Conecte-se com outros estudantes e colabore em seus estudos
-          </p>
-        </div>
-        
-        <div className="flex flex-wrap gap-3">
-          <Dialog open={isJoinModalOpen} onOpenChange={setIsJoinModalOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-white/10 text-white border border-white/20 hover:bg-white/20 font-montserrat">
-                <Users className="h-4 w-4 mr-2" />
-                Entrar em Grupo
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="bg-white dark:bg-[#1E293B]">
-              <DialogHeader>
-                <DialogTitle className="text-gray-900 dark:text-white">
-                  Entrar em um Grupo
-                </DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <Input
-                  placeholder="Digite o código do grupo"
-                  value={joinCode}
-                  onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                  className="font-mono"
-                />
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setIsJoinModalOpen(false)}
-                    className="flex-1"
-                  >
-                    Cancelar
-                  </Button>
-                  <Button 
-                    onClick={handleJoinGroup}
-                    disabled={loading || !joinCode.trim()}
-                    className="flex-1 bg-[#FF6B00] hover:bg-[#FF8C40] text-white"
-                  >
-                    {loading ? "Entrando..." : "Entrar"}
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-
-          <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-montserrat">
-                <Plus className="h-4 w-4 mr-2" />
-                Criar Grupo
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="bg-white dark:bg-[#1E293B] max-w-md">
-              <DialogHeader>
-                <DialogTitle className="text-gray-900 dark:text-white">
-                  Criar Novo Grupo
-                </DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <Input
-                  placeholder="Nome do grupo"
-                  value={formData.nome}
-                  onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
-                />
-                
-                <Textarea
-                  placeholder="Descrição do grupo (opcional)"
-                  value={formData.descricao}
-                  onChange={(e) => setFormData(prev => ({ ...prev, descricao: e.target.value }))}
-                  rows={3}
-                />
-
-                <Select
-                  value={formData.disciplina_area}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, disciplina_area: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione a disciplina" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {disciplinas.map((disciplina) => (
-                      <SelectItem key={disciplina} value={disciplina.toLowerCase()}>
-                        {disciplina}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <Select
-                  value={formData.tipo_grupo}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, tipo_grupo: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Tipo do grupo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="publico">
-                      <div className="flex items-center gap-2">
-                        <Globe className="h-4 w-4" />
-                        Público
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="privado">
-                      <div className="flex items-center gap-2">
-                        <Lock className="h-4 w-4" />
-                        Privado
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setIsCreateModalOpen(false)}
-                    className="flex-1"
-                  >
-                    Cancelar
-                  </Button>
-                  <Button 
-                    onClick={handleCreateGroup}
-                    disabled={loading || !formData.nome.trim()}
-                    className="flex-1 bg-[#FF6B00] hover:bg-[#FF8C40] text-white"
-                  >
-                    {loading ? "Criando..." : "Criar Grupo"}
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
-      </div>
-
-      {/* View Toggle */}
-      <div className="flex items-center gap-4">
-        <div className="flex bg-white/10 rounded-lg p-1">
-          <Button
-            variant={activeView === "meus-grupos" ? "default" : "ghost"}
-            className={`${
-              activeView === "meus-grupos"
-                ? "bg-[#FF6B00] text-white"
-                : "text-white hover:bg-white/10"
-            } font-montserrat`}
-            onClick={() => setActiveView("meus-grupos")}
-          >
-            <Users className="h-4 w-4 mr-2" />
-            Meus Grupos
-          </Button>
-          <Button
-            variant={activeView === "todos-grupos" ? "default" : "ghost"}
-            className={`${
-              activeView === "todos-grupos"
-                ? "bg-[#FF6B00] text-white"
-                : "text-white hover:bg-white/10"
-            } font-montserrat`}
-            onClick={() => setActiveView("todos-grupos")}
-          >
-            <Globe className="h-4 w-4 mr-2" />
-            Todos os Grupos
-          </Button>
-        </div>
-
-        <div className="flex-1 max-w-md">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 h-4 w-4" />
-            <Input
-              placeholder="Buscar grupos..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/50"
-            />
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="flex items-center justify-between mb-6"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] flex items-center justify-center shadow-md">
+            <Users className="h-6 w-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold text-[#001427] dark:text-white bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] bg-clip-text text-transparent font-montserrat">
+              Grupos de Estudos
+            </h1>
+            <p className="text-[#778DA9] dark:text-gray-400 text-sm font-open-sans">
+              Conecte-se com outros estudantes e acelere seu aprendizado
+            </p>
           </div>
         </div>
+
+        {/* Botões de Ação */}
+        <div className="flex items-center gap-3">
+          <Button
+            onClick={() => setShowAddModal(true)}
+            variant="outline"
+            className="border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10 font-montserrat"
+          >
+            <UserPlus className="h-4 w-4 mr-2" />
+            Adicionar
+          </Button>
+
+          <Button
+            onClick={() => setShowCreateModal(true)}
+            className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-montserrat"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Criar Novo Grupo
+          </Button>
+        </div>
+      </motion.div>
+
+      {/* Navigation Tabs */}
+      <div className="flex items-center gap-4 mb-6">
+        <Button
+          variant={currentView === "todos-grupos" ? "default" : "outline"}
+          onClick={() => setCurrentView("todos-grupos")}
+          className={`${
+            currentView === "todos-grupos"
+              ? "bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white"
+              : "border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10"
+          } font-montserrat`}
+        >
+          <Globe className="h-4 w-4 mr-2" />
+          Todos os Grupos
+        </Button>
+
+        <Button
+          variant={currentView === "meus-grupos" ? "default" : "outline"}
+          onClick={() => setCurrentView("meus-grupos")}
+          className={`${
+            currentView === "meus-grupos"
+              ? "bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white"
+              : "border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10"
+          } font-montserrat`}
+        >
+          <Users className="h-4 w-4 mr-2" />
+          Meus Grupos
+        </Button>
+      </div>
+
+      {/* Search Bar */}
+      <div className="relative mb-6">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <Input
+          placeholder="Buscar grupos por nome, descrição ou área..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-10 border-[#FF6B00]/20 focus:border-[#FF6B00] font-open-sans"
+        />
       </div>
 
       {/* Groups Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div id="all-groups" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         <AnimatePresence>
-          {filteredGroups.map((group) => (
-            <GroupCard
-              key={group.id}
-              group={group}
-              onClick={() => {}}
-              view={activeView}
-              onLeave={activeView === "meus-grupos" ? () => handleLeaveGroup(group.id) : undefined}
-              onAccess={activeView === "meus-grupos" ? handleAccessGroup : undefined}
-            />
-          ))}
+          {loading ? (
+            <div className="col-span-full flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="w-8 h-8 border-4 border-[#FF6B00]/30 border-t-[#FF6B00] rounded-full animate-spin mx-auto mb-4"></div>
+                <p className="text-gray-500 dark:text-gray-400">Carregando grupos...</p>
+              </div>
+            </div>
+          ) : filteredGroups().length > 0 ? (
+            filteredGroups().map((group) => (
+              <motion.div
+                key={group.id}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ duration: 0.2 }}
+              >
+                <GroupCard
+                  group={convertToGroupCardFormat(group)}
+                  onClick={() => handleGroupClick(group)}
+                  view={currentView}
+                  onLeave={currentView === "meus-grupos" ? () => handleShowLeaveModal(group) : undefined}
+                />
+              </motion.div>
+            ))
+          ) : (
+            <div className="col-span-full text-center py-12">
+              <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
+                <Users className="h-8 w-8 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-1">
+                {currentView === "todos-grupos" ? "Nenhum grupo público encontrado" : "Você ainda não faz parte de grupos"}
+              </h3>
+              <p className="text-gray-500 dark:text-gray-400 mb-4">
+                {currentView === "todos-grupos" 
+                  ? "Tente ajustar sua busca ou volte mais tarde." 
+                  : "Comece criando seu primeiro grupo ou entre em um grupo usando um código."}
+              </p>
+              {currentView === "meus-grupos" && (
+                <Button 
+                  onClick={() => setShowCreateModal(true)}
+                  className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-montserrat"
+                >
+                  <Plus className="h-4 w-4 mr-1" /> Criar Grupo
+                </Button>
+              )}
+            </div>
+          )}
         </AnimatePresence>
       </div>
 
-      {filteredGroups.length === 0 && !loading && (
-        <div className="text-center py-12">
-          <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-4">
-            <Users className="h-8 w-8 text-white/50" />
-          </div>
-          <h3 className="text-xl font-medium text-white mb-2">
-            {activeView === "meus-grupos" ? "Nenhum grupo encontrado" : "Nenhum grupo público encontrado"}
-          </h3>
-          <p className="text-white/70 mb-6">
-            {activeView === "meus-grupos" 
-              ? "Crie seu primeiro grupo ou entre em um grupo existente"
-              : "Não há grupos públicos disponíveis no momento"
-            }
-          </p>
-          {activeView === "meus-grupos" && (
-            <Button
-              onClick={() => setIsCreateModalOpen(true)}
-              className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-montserrat"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Criar Primeiro Grupo
-            </Button>
-          )}
+      {/* Modals */}
+      <CreateGroupModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSubmit={handleCreateGroup}
+      />
+
+      <AddGroupModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onGroupAdded={handleGroupAdded}
+      />
+
+      <EntrarGrupoSuccessModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        groupName={joinedGroupName}
+      />
+
+      {/* Modal de Confirmação de Saída */}
+      {showLeaveModal && groupToLeave && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4 shadow-xl"
+          >
+            <div className="text-center">
+              <div className="w-12 h-12 mx-auto mb-4 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                <Users className="h-6 w-6 text-red-600 dark:text-red-400" />
+              </div>
+              
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                Confirmar Ação
+              </h3>
+              
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                {isGroupCreator 
+                  ? `Você é o criador do grupo "${groupToLeave.nome}". Deseja sair ou excluir o grupo?`
+                  : `Tem certeza que deseja sair do grupo "${groupToLeave.nome}"?`
+                }
+              </p>
+              
+              <div className="flex gap-3 justify-center">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowLeaveModal(false);
+                    setGroupToLeave(null);
+                    setIsGroupCreator(false);
+                  }}
+                  className="flex-1"
+                >
+                  Cancelar
+                </Button>
+                
+                <Button
+                  onClick={() => leaveGroup(groupToLeave.id)}
+                  className="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white"
+                >
+                  Sair do Grupo
+                </Button>
+
+                {isGroupCreator && (
+                  <Button
+                    onClick={() => deleteGroup(groupToLeave.id)}
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    Excluir Grupo
+                  </Button>
+                )}
+              </div>
+            </div>
+          </motion.div>
         </div>
       )}
     </div>
