@@ -114,7 +114,7 @@ const GroupCard: React.FC<GroupCardProps> = ({ group, onClick }) => {
               onClick();
             }}
           >
-            Acessar Grupo
+            Entrar no Grupo
           </Button>
 
           <Button
