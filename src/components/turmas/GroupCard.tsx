@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Calendar, Users, MessageCircle, Lock, Globe } from "lucide-react";
+import { Calendar, Users, MessageCircle, Lock, Globe, LogOut } from "lucide-react";
 
 interface GroupCardProps {
   group: {
@@ -123,10 +123,18 @@ const GroupCard: React.FC<GroupCardProps> = ({ group, onClick, view }) => {
             className="border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10 font-montserrat text-xs"
             onClick={(e) => {
               e.stopPropagation();
-              // Handle chat action
+              // Handle chat or leave action based on view
             }}
           >
-            <MessageCircle className="h-4 w-4 mr-1" /> Chat
+            {view === "meus-grupos" ? (
+              <>
+                <LogOut className="h-4 w-4 mr-1" /> Sair
+              </>
+            ) : (
+              <>
+                <MessageCircle className="h-4 w-4 mr-1" /> Chat
+              </>
+            )}
           </Button>
         </div>
       </div>
