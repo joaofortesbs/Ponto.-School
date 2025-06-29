@@ -1,3 +1,4 @@
+
 import React from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -18,11 +19,12 @@ interface GroupCardProps {
     icone: React.ReactNode;
   };
   onClick: () => void;
+  onViewForum: (e: React.MouseEvent, id: string) => void;
   view?: string;
   onLeave?: () => void;
 }
 
-const GroupCard: React.FC<GroupCardProps> = ({ group, onClick, view, onLeave }) => {
+const GroupCard: React.FC<GroupCardProps> = ({ group, onClick, onViewForum, view, onLeave }) => {
   const getPrivacyIcon = () => {
     switch (group.privacidade) {
       case "publico":
