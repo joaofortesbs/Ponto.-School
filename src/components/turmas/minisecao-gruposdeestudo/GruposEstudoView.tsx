@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -137,15 +136,22 @@ const GruposEstudoView: React.FC = () => {
     }
   };
 
-  // Função para carregar meus grupos (onde sou membro)
-  const loadMyGroups = async () => {
+  // Função para carregar meus grupos (onde sou membro ou criador)
+  const loadMyGroups = async (retryCount = 0, maxRetries = 3) => {
     try {
+      console.log(`Tentativa ${retryCount + 1} de carregar meus grupos...`);
       setLoading(true);
       
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        console.log('Usuário não autenticado');
+        return;
+      }
 
-      const { data, error } = await supabase
+      console.log('Carregando grupos onde sou membro ou criador...');
+
+      // Buscar grupos onde sou criador
+      const { data: createdGroups, error: createdError } = await supabase
         .from('grupos_estudo')
         .select(`
           id,
@@ -166,14 +172,94 @@ const GruposEstudoView: React.FC = () => {
         .eq('criador_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Erro ao carregar meus grupos:', error);
+      // Buscar grupos onde sou membro
+      const { data: memberGroups, error: memberError } = await supabase
+        .from('membros_grupos')
+        .select(`
+          grupos_estudo!inner(
+            id,
+            nome,
+            descricao,
+            tipo_grupo,
+            disciplina_area,
+            topico_especifico,
+            tags,
+            is_public,
+            is_visible_to_all,
+            is_visible_to_partners,
+            is_private,
+            criador_id,
+            codigo_unico,
+            created_at
+          )
+        `)
+        .eq('user_id', user.id);
+
+      if (createdError) {
+        console.error('Erro ao carregar grupos criados:', createdError);
+      }
+
+      if (memberError) {
+        console.error('Erro ao carregar grupos onde sou membro:', memberError);
+      }
+
+      if (createdError || memberError) {
+        if (retryCount < maxRetries) {
+          console.log(`Tentando novamente em 1 segundo (tentativa ${retryCount + 2})...`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          return loadMyGroups(retryCount + 1, maxRetries);
+        }
+        
+        toast({
+          title: "Erro",
+          description: "Não foi possível carregar seus grupos.",
+          variant: "destructive",
+        });
         return;
       }
 
-      setMyGroups(data || []);
+      // Combinar grupos criados e grupos onde sou membro
+      const allMyGroups: GrupoEstudo[] = [];
+      const seenIds = new Set();
+
+      // Adicionar grupos criados
+      if (createdGroups) {
+        createdGroups.forEach(group => {
+          if (!seenIds.has(group.id)) {
+            allMyGroups.push(group);
+            seenIds.add(group.id);
+          }
+        });
+      }
+
+      // Adicionar grupos onde sou membro
+      if (memberGroups) {
+        memberGroups.forEach(item => {
+          const group = item.grupos_estudo;
+          if (group && !seenIds.has(group.id)) {
+            allMyGroups.push(group);
+            seenIds.add(group.id);
+          }
+        });
+      }
+
+      console.log(`Meus grupos carregados: ${allMyGroups.length} grupos encontrados`);
+      setMyGroups(allMyGroups);
+
     } catch (error) {
       console.error('Erro ao carregar meus grupos:', error);
+      
+      if (retryCount < maxRetries) {
+        console.log(`Tentando novamente em 1 segundo (tentativa ${retryCount + 2})...`);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return loadMyGroups(retryCount + 1, maxRetries);
+      }
+      
+      toast({
+        title: "Erro",
+        description: "Erro ao carregar seus grupos. Tente recarregar a página.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -256,22 +342,32 @@ const GruposEstudoView: React.FC = () => {
 
   // Handlers para os modals
   const handleCreateGroup = (formData: any) => {
+    console.log('Grupo criado, recarregando listas...');
     // Recarregar a lista após criação
     if (currentView === "todos-grupos") {
       loadAllGroups();
     } else if (currentView === "meus-grupos") {
       loadMyGroups();
     }
+    setShowCreateModal(false);
   };
 
   const handleGroupAdded = () => {
-    // Recarregar a lista após adicionar grupo
-    if (currentView === "todos-grupos") {
-      loadAllGroups();
-    } else if (currentView === "meus-grupos") {
+    console.log('Grupo adicionado via código, recarregando Meus Grupos...');
+    // Recarregar especificamente "Meus Grupos" após adicionar grupo via código
+    loadMyGroups();
+    
+    // Se estiver na view "meus-grupos", recarregar também
+    if (currentView === "meus-grupos") {
       loadMyGroups();
     }
+    
     setShowAddModal(false);
+    
+    toast({
+      title: "Sucesso",
+      description: "Grupo adicionado com sucesso! Verifique em 'Meus Grupos'.",
+    });
   };
 
   // Efeito para carregar dados baseado na view atual
@@ -437,12 +533,12 @@ const GruposEstudoView: React.FC = () => {
                 <Users className="h-8 w-8 text-gray-400" />
               </div>
               <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-1">
-                {currentView === "todos-grupos" ? "Nenhum grupo público encontrado" : "Você ainda não criou grupos"}
+                {currentView === "todos-grupos" ? "Nenhum grupo público encontrado" : "Você ainda não faz parte de grupos"}
               </h3>
               <p className="text-gray-500 dark:text-gray-400 mb-4">
                 {currentView === "todos-grupos" 
                   ? "Tente ajustar sua busca ou volte mais tarde." 
-                  : "Comece criando seu primeiro grupo de estudos."}
+                  : "Comece criando seu primeiro grupo ou entre em um grupo usando um código."}
               </p>
               {currentView === "meus-grupos" && (
                 <Button 
