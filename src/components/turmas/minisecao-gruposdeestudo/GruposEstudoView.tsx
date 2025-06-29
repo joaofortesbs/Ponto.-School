@@ -77,7 +77,11 @@ const GruposEstudoView: React.FC = () => {
       const userId = await validateUserAuth();
       if (!userId) {
         console.error('Usuário não autenticado.');
-        alert('Usuário não autenticado.');
+        toast({
+          title: "Erro",
+          description: "Usuário não autenticado.",
+          variant: "destructive",
+        });
         return;
       }
 
@@ -93,13 +97,33 @@ const GruposEstudoView: React.FC = () => {
           await new Promise(resolve => setTimeout(resolve, 1000));
           return joinGroupDirectly(groupId, retryCount + 1, maxRetries);
         }
-        alert('Erro ao entrar no grupo. Verifique o console.');
+        toast({
+          title: "Erro",
+          description: "Erro ao entrar no grupo. Tente novamente.",
+          variant: "destructive",
+        });
         return;
       }
 
       console.log('Associação bem-sucedida. Atualizando Meus Grupos...');
       await loadMyGroups(); // Atualizar a grade "Meus Grupos"
-      alert('Você entrou no grupo com sucesso!');
+      
+      // Buscar nome do grupo para mostrar no modal de sucesso
+      const { data: groupData } = await supabase
+        .from('grupos_estudo')
+        .select('nome')
+        .eq('id', groupId)
+        .single();
+
+      if (groupData) {
+        setJoinedGroupName(groupData.nome);
+        setShowSuccessModal(true);
+      }
+
+      toast({
+        title: "Sucesso",
+        description: "Você entrou no grupo com sucesso!",
+      });
 
     } catch (error) {
       console.error('Erro geral em joinGroupDirectly:', error);
@@ -108,7 +132,11 @@ const GruposEstudoView: React.FC = () => {
         await new Promise(resolve => setTimeout(resolve, 1000));
         return joinGroupDirectly(groupId, retryCount + 1, maxRetries);
       }
-      alert('Erro ao processar adesão. Verifique o console.');
+      toast({
+        title: "Erro",
+        description: "Erro ao processar adesão. Verifique o console.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -333,37 +361,8 @@ const GruposEstudoView: React.FC = () => {
       }
 
       if (currentView === "todos-grupos") {
-        // Para grupos visíveis a todos, tentamos entrar no grupo
-        const { data: result, error: joinError } = await supabase
-          .rpc('join_group_by_code', {
-            p_codigo_unico: group.codigo_unico || '',
-            p_user_id: user.id
-          });
-
-        if (joinError) {
-          console.error('Erro ao entrar no grupo:', joinError);
-          toast({
-            title: "Erro",
-            description: `Erro ao entrar no grupo: ${joinError.message}`,
-            variant: "destructive"
-          });
-          return;
-        }
-
-        if (result?.success) {
-          // Mostrar modal de comemoração
-          setJoinedGroupName(group.nome);
-          setShowSuccessModal(true);
-
-          // Recarregar os grupos
-          loadAllGroups();
-        } else {
-          toast({
-            title: "Aviso",
-            description: result?.message || "Não foi possível entrar no grupo",
-            variant: "destructive"
-          });
-        }
+        // Para grupos visíveis a todos, usar a função joinGroupDirectly
+        await joinGroupDirectly(group.id);
       } else {
         // Para grupos que o usuário já faz parte, apenas navegar
         toast({
