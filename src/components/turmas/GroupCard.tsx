@@ -1,4 +1,3 @@
-
 import React from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -21,10 +20,9 @@ interface GroupCardProps {
   onClick: () => void;
   view?: string;
   onLeave?: () => void;
-  onAccess?: (groupId: string) => void;
 }
 
-const GroupCard: React.FC<GroupCardProps> = ({ group, onClick, view, onLeave, onAccess }) => {
+const GroupCard: React.FC<GroupCardProps> = ({ group, onClick, view, onLeave }) => {
   const getPrivacyIcon = () => {
     switch (group.privacidade) {
       case "publico":
@@ -111,41 +109,26 @@ const GroupCard: React.FC<GroupCardProps> = ({ group, onClick, view, onLeave, on
         </div>
 
         <div className="flex gap-2 mt-4">
-          {view === "meus-grupos" ? (
-            <>
-              <Button
-                className="flex-1 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-montserrat text-xs"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (onAccess) {
-                    onAccess(group.id);
-                  }
-                }}
-              >
-                Acessar Grupo
-              </Button>
-              {onLeave && (
-                <Button
-                  variant="outline"
-                  className="border-red-300 text-red-600 hover:bg-red-50 dark:border-red-600 dark:text-red-400 dark:hover:bg-red-900/20 font-montserrat text-xs px-3"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onLeave();
-                  }}
-                >
-                  Sair
-                </Button>
-              )}
-            </>
-          ) : (
+          <Button
+            className="flex-1 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-montserrat text-xs"
+            onClick={(e) => {
+              e.stopPropagation();
+              onClick();
+            }}
+          >
+            {view === "todos-grupos" ? "Entrar no Grupo" : "Acessar Grupo"}
+          </Button>
+
+          {onLeave && (
             <Button
-              className="flex-1 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-montserrat text-xs"
+              variant="outline"
+              className="border-red-300 text-red-600 hover:bg-red-50 dark:border-red-600 dark:text-red-400 dark:hover:bg-red-900/20 font-montserrat text-xs px-3"
               onClick={(e) => {
                 e.stopPropagation();
-                onClick();
+                onLeave();
               }}
             >
-              {view === "todos-grupos" ? "Entrar no Grupo" : "Acessar Grupo"}
+              Sair
             </Button>
           )}
         </div>

@@ -296,38 +296,6 @@ export type Database = {
           },
         ]
       }
-      mensagens: {
-        Row: {
-          conteudo: string
-          created_at: string | null
-          grupo_id: string | null
-          id: string
-          user_id: string | null
-        }
-        Insert: {
-          conteudo: string
-          created_at?: string | null
-          grupo_id?: string | null
-          id?: string
-          user_id?: string | null
-        }
-        Update: {
-          conteudo?: string
-          created_at?: string | null
-          grupo_id?: string | null
-          id?: string
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "mensagens_grupo_id_fkey"
-            columns: ["grupo_id"]
-            isOneToOne: false
-            referencedRelation: "grupos_estudo"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       mensagens_grupos: {
         Row: {
           created_at: string | null
