@@ -19,6 +19,7 @@ import {
   MessageCircle,
   Calendar,
   ArrowRight,
+  ArrowLeft,
   CheckCircle,
   AlertCircle,
   Sparkles,
@@ -533,11 +534,8 @@ const GruposEstudoView: React.FC = () => {
         // Para grupos visíveis a todos, usar a função joinGroupDirectly
         await joinGroupDirectly(group.id);
       } else {
-        // Para grupos que o usuário já faz parte, apenas navegar
-        toast({
-          title: "Acessando grupo",
-          description: `Redirecionando para ${group.nome}...`,
-        });
+        // Para grupos que o usuário já faz parte, chamar accessGroup
+        await accessGroup(group.id);
       }
     } catch (error) {
       console.error('Erro ao acessar grupo:', error);
@@ -731,11 +729,37 @@ const GruposEstudoView: React.FC = () => {
               {/* Conteúdo da aba ativa */}
               <div className="mt-6">
                   {activeTab === 'discussoes' && (
-                      <div className="bg-[#f7f9fa] dark:bg-[#001427] rounded-lg p-6 transition-colors duration-300">
-                          <h3 className="text-lg font-semibold text-[#001427] dark:text-white mb-4 font-montserrat">Discussões do Grupo</h3>
-                          <p className="text-[#778DA9] dark:text-gray-400 font-open-sans">
-                              Esta seção será implementada em breve.
-                          </p>
+                      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg transition-colors duration-300">
+                          <h3 className="text-lg font-semibold text-[#001427] dark:text-white mb-4 font-montserrat">
+                              Discussões do Grupo: {activeGroup.nome}
+                          </h3>
+                          <div className="space-y-4">
+                              <div className="border-b pb-4">
+                                  <p className="text-sm text-[#778DA9] dark:text-gray-400 mb-2">Descrição:</p>
+                                  <p className="text-[#001427] dark:text-white font-open-sans">
+                                      {activeGroup.descricao || "Sem descrição disponível"}
+                                  </p>
+                              </div>
+                              <div className="border-b pb-4">
+                                  <p className="text-sm text-[#778DA9] dark:text-gray-400 mb-2">Área/Disciplina:</p>
+                                  <p className="text-[#001427] dark:text-white font-open-sans">
+                                      {activeGroup.disciplina_area || activeGroup.tipo_grupo}
+                                  </p>
+                              </div>
+                              {activeGroup.topico_especifico && (
+                                  <div className="border-b pb-4">
+                                      <p className="text-sm text-[#778DA9] dark:text-gray-400 mb-2">Tópico Específico:</p>
+                                      <p className="text-[#001427] dark:text-white font-open-sans">
+                                          {activeGroup.topico_especifico}
+                                      </p>
+                                  </div>
+                              )}
+                              <div className="bg-[#f7f9fa] dark:bg-[#001427] p-4 rounded-lg">
+                                  <p className="text-[#778DA9] dark:text-gray-400 font-open-sans text-center">
+                                      💬 A funcionalidade de chat será implementada em breve.
+                                  </p>
+                              </div>
+                          </div>
                       </div>
                   )}
                   {/* Conteúdo das outras abas aqui */}
