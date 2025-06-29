@@ -60,14 +60,63 @@ const GruposEstudoView: React.FC = () => {
   const { toast } = useToast();
   const { theme } = useTheme();
 
-  // Função para carregar todos os grupos visíveis para todos
+  // Função para validar autenticação do usuário
+  const validateUserAuth = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    return user?.id || null;
+  };
+
+  // Nova função para adesão direta a partir do botão
+  const joinGroupDirectly = async (groupId: string, retryCount = 0, maxRetries = 3) => {
+    try {
+      console.log(`Tentativa ${retryCount + 1} de entrar no grupo ${groupId}...`);
+
+      const userId = await validateUserAuth();
+      if (!userId) {
+        console.error('Usuário não autenticado.');
+        alert('Usuário não autenticado.');
+        return;
+      }
+
+      console.log('Validando adesão ao grupo...');
+      const { error: joinError } = await supabase
+        .from('membros_grupos')
+        .insert({ grupo_id: groupId, user_id: userId });
+
+      if (joinError) {
+        console.error('Erro ao associar usuário ao grupo:', joinError.message, joinError.details);
+        if (retryCount < maxRetries) {
+          console.log(`Tentando novamente em 1 segundo (tentativa ${retryCount + 2})...`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          return joinGroupDirectly(groupId, retryCount + 1, maxRetries);
+        }
+        alert('Erro ao entrar no grupo. Verifique o console.');
+        return;
+      }
+
+      console.log('Associação bem-sucedida. Atualizando Meus Grupos...');
+      await loadMyGroups(); // Atualizar a grade "Meus Grupos"
+      alert('Você entrou no grupo com sucesso!');
+
+    } catch (error) {
+      console.error('Erro geral em joinGroupDirectly:', error);
+      if (retryCount < maxRetries) {
+        console.log(`Tentando novamente em 1 segundo (tentativa ${retryCount + 2})...`);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return joinGroupDirectly(groupId, retryCount + 1, maxRetries);
+      }
+      alert('Erro ao processar adesão. Verifique o console.');
+    }
+  };
+
+  // Carrega grupos visíveis para todos
   const loadAllGroups = async (retryCount = 0, maxRetries = 3) => {
     try {
       console.log(`Carregando view: ${currentView}`);
       console.log(`Tentativa ${retryCount + 1} de carregar grupos visíveis para todos...`);
-      
+
       setLoading(true);
-      
+
       const { data, error } = await supabase
         .from('grupos_estudo')
         .select(`
@@ -91,13 +140,13 @@ const GruposEstudoView: React.FC = () => {
 
       if (error) {
         console.error('Erro ao carregar todos os grupos:', error);
-        
+
         if (retryCount < maxRetries) {
           console.log(`Tentando novamente em 1 segundo (tentativa ${retryCount + 2})...`);
           await new Promise(resolve => setTimeout(resolve, 1000));
           return loadAllGroups(retryCount + 1, maxRetries);
         }
-        
+
         toast({
           title: "Erro",
           description: "Não foi possível carregar os grupos. Tente novamente.",
@@ -107,7 +156,7 @@ const GruposEstudoView: React.FC = () => {
       }
 
       console.log('Dados retornados do Supabase:', data);
-      
+
       if (!data || data.length === 0) {
         console.warn('Nenhum grupo visível para todos encontrado.');
         setAllGroups([]);
@@ -116,16 +165,16 @@ const GruposEstudoView: React.FC = () => {
 
       setAllGroups(data);
       console.log(`Grade "Todos os Grupos" carregada com ${data.length} grupos visíveis.`);
-      
+
     } catch (error) {
       console.error('Erro geral em loadAllGroups:', error);
-      
+
       if (retryCount < maxRetries) {
         console.log(`Tentando novamente em 1 segundo (tentativa ${retryCount + 2})...`);
         await new Promise(resolve => setTimeout(resolve, 1000));
         return loadAllGroups(retryCount + 1, maxRetries);
       }
-      
+
       toast({
         title: "Erro",
         description: "Erro ao carregar grupos. Tente recarregar a página.",
@@ -141,7 +190,7 @@ const GruposEstudoView: React.FC = () => {
     try {
       console.log(`Tentativa ${retryCount + 1} de carregar meus grupos...`);
       setLoading(true);
-      
+
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         console.log('Usuário não autenticado');
@@ -209,7 +258,7 @@ const GruposEstudoView: React.FC = () => {
           await new Promise(resolve => setTimeout(resolve, 1000));
           return loadMyGroups(retryCount + 1, maxRetries);
         }
-        
+
         toast({
           title: "Erro",
           description: "Não foi possível carregar seus grupos.",
@@ -248,13 +297,13 @@ const GruposEstudoView: React.FC = () => {
 
     } catch (error) {
       console.error('Erro ao carregar meus grupos:', error);
-      
+
       if (retryCount < maxRetries) {
         console.log(`Tentando novamente em 1 segundo (tentativa ${retryCount + 2})...`);
         await new Promise(resolve => setTimeout(resolve, 1000));
         return loadMyGroups(retryCount + 1, maxRetries);
       }
-      
+
       toast({
         title: "Erro",
         description: "Erro ao carregar seus grupos. Tente recarregar a página.",
@@ -270,7 +319,7 @@ const GruposEstudoView: React.FC = () => {
     try {
       console.log('Clique em Acessar Grupo para grupo:', group);
       console.log('Acessando grupo:', group);
-      
+
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         toast({
@@ -329,7 +378,7 @@ const GruposEstudoView: React.FC = () => {
 
       // Aqui você pode redirecionar para a página do grupo ou abrir um modal
       // Por exemplo: navigate(`/grupo/${group.id}`);
-      
+
     } catch (error) {
       console.error('Erro ao acessar grupo:', error);
       toast({
@@ -356,14 +405,14 @@ const GruposEstudoView: React.FC = () => {
     console.log('Grupo adicionado via código, recarregando Meus Grupos...');
     // Recarregar especificamente "Meus Grupos" após adicionar grupo via código
     loadMyGroups();
-    
+
     // Se estiver na view "meus-grupos", recarregar também
     if (currentView === "meus-grupos") {
       loadMyGroups();
     }
-    
+
     setShowAddModal(false);
-    
+
     toast({
       title: "Sucesso",
       description: "Grupo adicionado com sucesso! Verifique em 'Meus Grupos'.",
@@ -373,7 +422,7 @@ const GruposEstudoView: React.FC = () => {
   // Efeito para carregar dados baseado na view atual
   useEffect(() => {
     console.log('Carregando view:', currentView);
-    
+
     if (currentView === "todos-grupos") {
       loadAllGroups();
     } else if (currentView === "meus-grupos") {
@@ -389,15 +438,15 @@ const GruposEstudoView: React.FC = () => {
   // Filtrar grupos baseado no termo de busca
   const filteredGroups = () => {
     let groups = [];
-    
+
     if (currentView === "todos-grupos") {
       groups = allGroups;
     } else if (currentView === "meus-grupos") {
       groups = myGroups;
     }
-    
+
     if (!searchTerm) return groups;
-    
+
     return groups.filter(group => 
       group.nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       group.descricao?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -451,7 +500,7 @@ const GruposEstudoView: React.FC = () => {
             <UserPlus className="h-4 w-4 mr-2" />
             Adicionar
           </Button>
-          
+
           <Button
             onClick={() => setShowCreateModal(true)}
             className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-montserrat"
@@ -476,7 +525,7 @@ const GruposEstudoView: React.FC = () => {
           <Globe className="h-4 w-4 mr-2" />
           Todos os Grupos
         </Button>
-        
+
         <Button
           variant={currentView === "meus-grupos" ? "default" : "outline"}
           onClick={() => setCurrentView("meus-grupos")}
