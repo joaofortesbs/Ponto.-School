@@ -1,0 +1,187 @@
+Objetivo: Transformar o modal de três pontos no cabeçalho do chat de conversa na mini-seção "Discussões" em um modal funcional com as opções "Configurações", "Resumir conversa com IA" e "Selecionar mensagens". Ao clicar em "Configurações", exibir um modal moderno e personalizado no centro do card de conversa, com as informações do grupo (nome, tipo, visibilidade, código único) configuradas corretamente, conforme o design representado nas imagens enviadas. O design e layout da mini-seção "Grupos de Estudos" (incluindo modais de "Adicionar Grupo" e "Criar Novo Grupo") não devem ser alterados, e todas as funcionalidades existentes devem ser preservadas, sem introduzir erros ou bugs.
+
+
+
+Instruções Gerais
+
+
+
+
+
+Escopo Restrito: Foque exclusivamente na função accessGroup e adicione funções para gerenciar o modal funcional e o submodal de "Configurações" no frontend. Não modifique o design, layout ou qualquer elemento da mini-seção "Grupos de Estudos", incluindo os modals de "Adicionar Grupo" e "Criar Novo Grupo", nem outras partes do código (ex.: createGroup, joinGroupByCode, loadAllGroups, modals existentes).
+
+
+
+Preservação: Mantenha intactas todas as funcionalidades existentes (criação via modal, adesão via código/botão, saída/exclusão, chat), sem impacto no layout ou design atual.
+
+
+
+Eficiência: Implemente as funcionalidades com validação e logs para evitar falhas. O submodal de "Configurações" deve ser estilizado conforme as imagens enviadas.
+
+
+
+Testes Completos: Após as alterações, teste o modal e o submodal e envie os logs.
+
+
+
+Análise de Cenários
+
+
+
+
+
+Cenário 1: Clicar em Três Pontos - O modal com as três opções deve aparecer e funcionar corretamente.
+
+
+
+Cenário 2: Clicar em "Configurações" - O submodal deve exibir as informações do grupo no centro do card.
+
+
+
+Cenário 3: Clicar em "Resumir conversa com IA" - Exibir uma mensagem de placeholder (funcionalidade a ser implementada depois).
+
+
+
+Cenário 4: Clicar em "Selecionar mensagens" - Exibir uma mensagem de placeholder (funcionalidade a ser implementada depois).
+
+
+
+Cenário 5: Fechar Modais - Ambos os modais devem fechar ao clicar fora ou em um botão de fechar.
+
+
+
+Modificações no Frontend (JavaScript)
+
+ // Atualizar accessGroup para incluir o modal funcional e submodal de configurações const accessGroup = async (groupId) => { try { console.log(`Acessando grupo ${groupId}...`); const userId = await validateUserAuth(); if (!userId) { console.error('Usuário não autenticado.'); alert('Usuário não autenticado.'); return; } 
+
+// Cache para nomes e imagens de perfil
+const userCache = new Map();
+const { data: users } = await supabase
+  .from('auth.users')
+  .select('id, user_metadata')
+  .in('id', (await supabase.from('membros_grupos').select('user_id').eq('grupo_id', groupId)).data.map(u => u.user_id));
+users.forEach(user => {
+  const metadata = user.user_metadata || {};
+  userCache.set(user.id, {
+    name: metadata.name || `Usuário ${user.id.slice(0, 5)}`,
+    avatar_url: metadata.avatar_url || null
+  });
+});
+
+const { data: groupData } = await supabase
+  .from('grupos_estudo')
+  .select('nome, tipo_grupo, is_private, codigo_unico')
+  .eq('id', groupId)
+  .single();
+
+const groupInterface = document.createElement('div');
+groupInterface.id = 'group-interface';
+groupInterface.style.cssText = 'margin-left: 250px; padding: 20px; position: relative;';
+groupInterface.innerHTML = `
+  <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #ccc; padding-bottom: 10px;">
+    <div style="display: flex; align-items: center;">
+      <span id="online-count" style="margin-right: 10px;">Membros Online: 0</span>
+    </div>
+    <div>
+      <button id="search-icon" style="background: none; border: none; cursor: pointer; margin-right: 10px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+      </button>
+      <button id="menu-icon" style="background: none; border: none; cursor: pointer;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="1"></circle>
+          <circle cx="12" cy="5" r="1"></circle>
+          <circle cx="12" cy="19" r="1"></circle>
+        </svg>
+      </button>
+    </div>
+  </div>
+  <div id="search-bar" style="display: none; margin: 10px 0; position: relative;">
+    <input id="search-input" type="text" placeholder="Pesquisar mensagens..." style="width: 200px; padding: 5px; border: 1px solid #ccc; border-radius: 5px;">
+  </div>
+  <div id="discussions-content" style="margin-top: 20px; height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; position: relative;">
+    <div id="chat-messages" style="display: flex; flex-direction: column-reverse;"></div>
+  </div>
+  <div style="margin-top: 10px; display: flex; align-items: center;">
+    <input id="chat-input" type="text" placeholder="Digite sua mensagem..." style="flex-grow: 1; padding: 5px; border: 1px solid #ccc; border-radius: 5px; margin-right: 5px;">
+    <button onclick="sendMessage('${groupId}')" style="background: #2ecc71; color: white; border: none; padding: 5px 10px; border-radius: 5px;">Enviar</button>
+  </div>
+`;
+document.getElementById('main-content').innerHTML = '';
+document.getElementById('main-content').appendChild(groupInterface);
+
+// Configurar Realtime para carregar e atualizar mensagens
+const channel = supabase
+  .channel(`chat-${groupId}`)
+  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mensagens', filter: `grupo_id=eq.${groupId}` }, (payload) => {
+    addMessageToChat(payload.new, userCache);
+  })
+  .subscribe(async (status) => {
+    if (status === 'SUBSCRIBED') {
+      console.log(`Subscribed to chat channel for group ${groupId}`);
+      const { data: messages } = await supabase
+        .from('mensagens')
+        .select('*')
+        .eq('grupo_id', groupId)
+        .order('enviado_em', { ascending: false });
+      messages.forEach(message => addMessageToChat(message, userCache));
+    }
+  });
+
+// Configurar membros online
+const onlineChannel = supabase
+  .channel(`online-${groupId}`)
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'user_sessions', filter: `grupo_id=eq.${groupId}` }, () => {
+    updateOnlineCount(groupId);
+  })
+  .subscribe();
+updateOnlineCount(groupId);
+
+// Configurar barra de pesquisa
+const searchIcon = document.getElementById('search-icon');
+const searchBar = document.getElementById('search-bar');
+const searchInput = document.getElementById('search-input');
+searchIcon.addEventListener('click', () => {
+  searchBar.style.display = searchBar.style.display === 'none' ? 'block' : 'none';
+  if (searchBar.style.display === 'block') searchInput.focus();
+});
+searchInput.addEventListener('input', () => {
+  const query = searchInput.value.toLowerCase();
+  const messages = document.getElementById('chat-messages').children;
+  Array.from(messages).forEach(msg => {
+    const content = msg.textContent.toLowerCase();
+    msg.style.display = content.includes(query) ? 'flex' : 'none';
+  });
+});
+
+// Configurar modal de três pontos
+const menuIcon = document.getElementById('menu-icon');
+menuIcon.addEventListener('click', () => showMenuModal(groupId, groupData));
+
+console.log(`Interface do grupo ${groupId} carregada com chat e cabeçalho configurados.`);
+
+} catch (error) { console.error('Erro ao acessar grupo:', error.message, error.stack); alert('Erro ao acessar o grupo. Verifique o console.'); } };
+
+// Função para atualizar contagem de membros online const updateOnlineCount = async (groupId) => { try { const { data } = await supabase .from('user_sessions') .select('user_id', { count: 'exact' }) .eq('grupo_id', groupId) .gte('last_active', new Date(Date.now() - 30000).toISOString()); // Últimos 30 segundos document.getElementById('online-count').textContent = Membros Online: ${data.length}; console.log(Contagem de membros online atualizada: ${data.length}); } catch (error) { console.error('Erro ao atualizar contagem de online:', error.message); } };
+
+// Função para adicionar mensagem ao chat const addMessageToChat = (message, userCache) => { const userId = validateUserAuth(); const userData = userCache.get(message.user_id) || { name: Usuário ${message.user_id.slice(0, 5)}, avatar_url: null }; const chatMessages = document.getElementById('chat-messages'); const messageDiv = document.createElement('div'); messageDiv.style.cssText = display: flex; align-items: flex-start; margin: 5px 0; ${message.user_id === userId ? 'flex-direction: row-reverse;' : 'flex-direction: row;'}; messageDiv.innerHTML = <div style="margin: ${message.user_id === userId ? '0 0 0 10px' : '0 10px 0 0'};"> <img src="${userData.avatar_url ||https://ui-avatars.com/api/?name=${encodeURIComponent(userData.name)}}" alt="${userData.name}" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover;"> </div> <div style="max-width: 70%; ${message.user_id === userId ? 'text-align: right;' : 'text-align: left;' }"> <strong>${userData.name}</strong><br> <div style="background: ${message.user_id === userId ? '#dcf8c6' : '#e9ecef'}; padding: 10px; border-radius: 10px; display: inline-block;"> ${message.conteudo} </div><br> <small>${new Date(message.enviado_em).toLocaleTimeString()}</small> </div> ; chatMessages.prepend(messageDiv); chatMessages.scrollTop = 0; };
+
+// Função para enviar mensagem const sendMessage = async (groupId) => { try { const userId = await validateUserAuth(); if (!userId) { console.error('Usuário não autenticado.'); alert('Usuário não autenticado.'); return; } const input = document.getElementById('chat-input'); const content = input.value.trim(); if (!content) { alert('Digite uma mensagem.'); return; } const { error } = await supabase .from('mensagens') .insert({ grupo_id: groupId, user_id: userId, conteudo: content }); if (error) throw error; input.value = ''; console.log(Mensagem enviada para grupo ${groupId}.); updateUserSession(groupId); // Atualizar status online } catch (error) { console.error('Erro ao enviar mensagem:', error.message, error.stack); alert('Erro ao enviar mensagem. Verifique o console.'); } };
+
+// Função para atualizar sessão do usuário const updateUserSession = async (groupId) => { try { const userId = await validateUserAuth(); const { error } = await supabase .from('user_sessions') .upsert({ user_id: userId, grupo_id: groupId, last_active: new Date().toISOString() }, { onConflict: ['user_id', 'grupo_id'] }); if (error) throw error; console.log(Sessão de usuário ${userId} atualizada para grupo ${groupId}.); } catch (error) { console.error('Erro ao atualizar sessão:', error.message); } };
+
+// Função para exibir o modal de três pontos const showMenuModal = (groupId, groupData) => { const modal = document.createElement('div'); modal.style.cssText = 'position: absolute; top: 40px; right: 0; background: #fff; border: 1px solid #ccc; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 1000; padding: 10px;'; modal.innerHTML = <ul style="list-style: none; padding: 0; margin: 0;"> <li style="padding: 5px 10px; cursor: pointer;" onclick="showSettingsModal('${groupId}', '${JSON.stringify(groupData)}')">Configurações</li> <li style="padding: 5px 10px; cursor: pointer;" onclick="alert('Funcionalidade "Resumir conversa com IA" em desenvolvimento.')">Resumir conversa com IA</li> <li style="padding: 5px 10px; cursor: pointer;" onclick="alert('Funcionalidade "Selecionar mensagens" em desenvolvimento.')">Selecionar mensagens</li> </ul> ; document.getElementById('group-interface').appendChild(modal);
+
+// Fechar modal ao clicar fora const closeModal = (e) => { if (!modal.contains(e.target) && e.target !== document.getElementById('menu-icon')) { modal.remove(); document.removeEventListener('click', closeModal); } }; setTimeout(() => document.addEventListener('click', closeModal), 100); };
+
+// Função para exibir o modal de configurações const showSettingsModal = (groupId, groupData) => { const modal = document.createElement('div'); modal.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #f9f9f9; border-radius: 15px; box-shadow: 0 0 20px rgba(0,0,0,0.2); z-index: 2000; padding: 20px; width: 400px; font-family: Arial, sans-serif; text-align: left;'; modal.innerHTML = <div style="border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-bottom: 15px;"> <h2 style="color: #3498db; margin: 0;">Configurações do Grupo</h2> <button onclick="this.parentElement.parentElement.remove();" style="float: right; background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;">Fechar</button> </div> <div style="margin-bottom: 15px;"> <label style="font-weight: bold; color: #333;">Nome do Grupo:</label> <p style="margin: 5px 0; color: #666;">${JSON.parse(groupData).nome}</p> </div> <div style="margin-bottom: 15px;"> <label style="font-weight: bold; color: #333;">Tipo de Grupo:</label> <p style="margin: 5px 0; color: #666;">${JSON.parse(groupData).tipo_grupo}</p> </div> <div style="margin-bottom: 15px;"> <label style="font-weight: bold; color: #333;">Visibilidade:</label> <p style="margin: 5px 0; color: #666;">${JSON.parse(groupData).is_private ? 'Privado' : 'Público'}</p> </div> <div style="margin-bottom: 15px;"> <label style="font-weight: bold; color: #333;">Código Único:</label> <p style="margin: 5px 0; color: #666;">${JSON.parse(groupData).codigo_unico}</p> </div> ; document.body.appendChild(modal);
+
+// Fechar modal ao clicar fora const closeModal = (e) => { if (!modal.contains(e.target)) { modal.remove(); document.removeEventListener('click', closeModal); } }; setTimeout(() => document.addEventListener('click', closeModal), 100); };
+
+// Chamar loadMyGroups manualmente para teste imediato loadMyGroups();
+
+// Manter a inicialização existente document.addEventListener('DOMContentLoaded', () => { loadMyGroups(); });
+
+// Manter outras funções existentes (ex.: createGroup, joinGroupByCode, loadAllGroups, showCelebrationModal, joinGroupDirectly, leaveGroup, deleteGroup, returnToGroups, showLeaveModal) sem alterações
