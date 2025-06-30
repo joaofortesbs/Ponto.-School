@@ -2,7 +2,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Search } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Send, Search, MoreHorizontal, Settings, CheckSquare, MessageSquare } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -33,6 +34,7 @@ export default function ChatSection({ groupId }: ChatSectionProps) {
   const [userProfiles, setUserProfiles] = useState<Map<string, any>>(new Map());
   const [onlineCount, setOnlineCount] = useState(0);
   const [showSearchBar, setShowSearchBar] = useState(false);
+  const [showOptionsMenu, setShowOptionsMenu] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const channelRef = useRef<any>(null);
   const onlineChannelRef = useRef<any>(null);
@@ -448,6 +450,43 @@ export default function ChatSection({ groupId }: ChatSectionProps) {
             >
               <Search className="h-4 w-4" />
             </Button>
+            
+            <Popover open={showOptionsMenu} onOpenChange={setShowOptionsMenu}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-gray-400 hover:text-white hover:bg-gray-700"
+                >
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-56 p-1 bg-[#1e293b] border-gray-700" align="end">
+                <div className="space-y-1">
+                  <button 
+                    className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-800 rounded-md flex items-center gap-2 opacity-50 cursor-not-allowed"
+                    disabled={true}
+                  >
+                    <Settings className="h-4 w-4" />
+                    Configurações
+                  </button>
+                  <button 
+                    className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-800 rounded-md flex items-center gap-2 opacity-50 cursor-not-allowed"
+                    disabled={true}
+                  >
+                    <CheckSquare className="h-4 w-4" />
+                    Selecionar
+                  </button>
+                  <button 
+                    className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-800 rounded-md flex items-center gap-2 opacity-50 cursor-not-allowed"
+                    disabled={true}
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                    Resumir conversa com IA
+                  </button>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
         
