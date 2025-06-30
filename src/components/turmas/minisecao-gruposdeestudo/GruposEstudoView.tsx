@@ -555,69 +555,316 @@ const GruposEstudoView: React.FC = () => {
     // Nova função para acessar o grupo e substituir a interface
     const accessGroup = async (groupId: string) => {
       try {
-          console.log(`Acessando grupo ${groupId}...`);
-          const userId = await validateUserAuth();
-          if (!userId) {
-              console.error('Usuário não autenticado.');
-              toast({
-                  title: "Erro",
-                  description: "Usuário não autenticado.",
-                  variant: "destructive"
-              });
-              return;
-          }
-
-          // Ocultar o cabeçalho de Minhas Turmas
-          const headers = document.querySelectorAll('.groups-header, [data-testid="groups-header"], .turmas-header');
-          if (headers.length > 0) {
-            headers.forEach(header => {
-              (header as HTMLElement).classList.add('hidden');
-              (header as HTMLElement).classList.remove('visible');
-            });
-            console.log('Cabeçalho "Minhas Turmas" ocultado.');
-          } else {
-            console.warn('Cabeçalho não encontrado para ocultar.');
-          }
-
-          // Buscar dados do grupo
-          const { data: groupData, error } = await supabase
-              .from('grupos_estudo')
-              .select('*')
-              .eq('id', groupId)
-              .single();
-
-          if (error) {
-              console.error('Erro ao buscar dados do grupo:', error);
-              toast({
-                  title: "Erro",
-                  description: "Erro ao carregar dados do grupo.",
-                  variant: "destructive"
-              });
-              return;
-          }
-
-          setActiveGroup(groupData);
-          setShowGroupInterface(true);
-          setActiveTab('discussoes');
-          console.log(`Interface do grupo ${groupId} carregada com sucesso.`);
-      } catch (error) {
-          console.error('Erro ao acessar grupo:', error.message, error.stack);
+        console.log(`Acessando grupo ${groupId}...`);
+        const userId = await validateUserAuth();
+        if (!userId) {
+          console.error('Usuário não autenticado.');
           toast({
-              title: "Erro",
-              description: "Erro ao acessar o grupo. Verifique o console.",
-              variant: "destructive"
+            title: "Erro",
+            description: "Usuário não autenticado.",
+            variant: "destructive"
           });
-           // Retry ao restaurar o cabeçalho em caso de erro
-           const headers = document.querySelectorAll('.groups-header, [data-testid="groups-header"], .turmas-header');
-           if (headers.length > 0) {
-             headers.forEach(header => {
-               (header as HTMLElement).classList.remove('hidden');
-               (header as HTMLElement).classList.add('visible');
-             });
-             console.log('Cabeçalho restaurado após erro.');
-           }
+          return;
+        }
+
+        // Ocultar o cabeçalho de Minhas Turmas
+        const headers = document.querySelectorAll('.groups-header, [data-testid="groups-header"], .turmas-header');
+        if (headers.length > 0) {
+          headers.forEach(header => {
+            (header as HTMLElement).classList.add('hidden');
+            (header as HTMLElement).classList.remove('visible');
+          });
+          console.log('Cabeçalho "Minhas Turmas" ocultado.');
+        } else {
+          console.warn('Cabeçalho não encontrado para ocultar.');
+        }
+
+        // Cache para nomes e imagens de perfil
+        const userCache = new Map();
+
+        // Buscar dados dos usuários do grupo
+        const { data: groupMembers } = await supabase
+          .from('membros_grupos')
+          .select('user_id')
+          .eq('grupo_id', groupId);
+
+        if (groupMembers && groupMembers.length > 0) {
+          const { data: users } = await supabase
+            .from('auth.users')
+            .select('id, user_metadata')
+            .in('id', groupMembers.map(m => m.user_id));
+
+          if (users) {
+            users.forEach(user => {
+              const metadata = user.user_metadata || {};
+              userCache.set(user.id, {
+                name: metadata.name || `Usuário ${user.id.slice(0, 5)}`,
+                avatar_url: metadata.avatar_url || null
+              });
+            });
+          }
+        }
+
+        // Contagem de membros online
+        let onlineCount = 0;
+        const updateOnlineCount = async () => {
+          const now = new Date();
+          const thirtySecondsAgo = new Date(now - 30 * 1000).toISOString();
+          const { count } = await supabase
+            .from('user_sessions')
+            .select('user_id', { count: 'exact' })
+            .eq('grupo_id', groupId)
+            .gte('last_active', thirtySecondsAgo);
+          onlineCount = count || 0;
+          const onlineElement = document.getElementById('online-number');
+          if (onlineElement) {
+            onlineElement.textContent = onlineCount;
+          }
+          return onlineCount;
+        };
+
+        const groupInterface = document.createElement('div');
+        groupInterface.id = 'group-interface';
+        groupInterface.style.cssText = 'margin-left: 250px; padding: 20px;';
+        groupInterface.innerHTML = `
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #ccc; padding-bottom: 10px;">
+            <div class="mini-sections">
+              <button class="mini-section-btn" data-section="discussions" style="background: #3498db; color: white; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 5px;">Discussões</button>
+              <button class="mini-section-btn" data-section="members" style="background: #ddd; color: #666; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 5px;">Membros</button>
+              <button class="mini-section-btn" data-section="tasks" style="background: #ddd; color: #666; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 5px;">Tarefas</button>
+              <button class="mini-section-btn" data-section="settings" style="background: #ddd; color: #666; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 5px;">Configurações</button>
+              <button class="mini-section-btn" data-section="notifications" style="background: #ddd; color: #666; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 5px;">Notificações</button>
+            </div>
+            <div style="display: flex; align-items: center;">
+              <span id="online-count" style="margin-right: 10px; color: #2ecc71;">Online: <span id="online-number">0</span></span>
+              <button id="search-icon" style="background: none; border: none; cursor: pointer; margin-right: 10px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+              </button>
+              <button id="menu-icon" style="background: none; border: none; cursor: pointer;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div id="content-container" style="margin-top: 20px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; min-height: 200px; max-height: 500px;">
+            <div id="discussions-content" style="display: block;">
+              <div id="chat-messages" style="display: flex; flex-direction: column-reverse;"></div>
+            </div>
+            <div id="members-content" style="display: none;">
+              <div id="members-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;"></div>
+            </div>
+            <div id="tasks-content" style="display: none;">
+              <p>Seção de Tarefas em desenvolvimento...</p>
+            </div>
+            <div id="settings-content" style="display: none;">
+              <p>Seção de Configurações em desenvolvimento...</p>
+            </div>
+            <div id="notifications-content" style="display: none;">
+              <p>Seção de Notificações em desenvolvimento...</p>
+            </div>
+          </div>
+          <div style="margin-top: 10px; display: flex; align-items: center;">
+            <input id="chat-input" type="text" placeholder="Digite sua mensagem..." style="flex-grow: 1; padding: 5px; border: 1px solid #ccc; border-radius: 5px; margin-right: 5px;">
+            <button onclick="sendMessage('${groupId}')" style="background: #2ecc71; color: white; border: none; padding: 5px 10px; border-radius: 5px;">Enviar</button>
+          </div>
+          <div id="search-bar" style="display: none; margin-top: 10px;">
+            <input id="search-input" type="text" placeholder="Pesquisar mensagens..." style="width: 200px; padding: 5px; border: 1px solid #ccc; border-radius: 5px;">
+            <button onclick="hideSearchBar()" style="background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 5px; margin-left: 5px;">Fechar</button>
+          </div>
+        `;
+
+        document.getElementById('main-content').innerHTML = '';
+        document.getElementById('main-content').appendChild(groupInterface);
+
+        // Função para atualizar status dos membros
+        const updateMemberStatus = async (groupId) => {
+          try {
+            console.log(`Atualizando status dos membros do grupo ${groupId}...`);
+            const now = new Date();
+            const thirtySecondsAgo = new Date(now - 30 * 1000).toISOString();
+
+            // Buscar membros do grupo
+            const { data: members } = await supabase
+              .from('membros_grupos')
+              .select('user_id')
+              .eq('grupo_id', groupId);
+
+            if (!members || members.length === 0) {
+              console.log('Nenhum membro encontrado no grupo');
+              return;
+            }
+
+            // Buscar sessões ativas
+            const { data: sessions } = await supabase
+              .from('user_sessions')
+              .select('user_id, last_active')
+              .eq('grupo_id', groupId);
+
+            const onlineUserIds = new Set(
+              sessions?.filter(s => s.last_active > thirtySecondsAgo).map(s => s.user_id) || []
+            );
+
+            // Buscar dados dos usuários
+            const { data: users } = await supabase
+              .from('auth.users')
+              .select('id, user_metadata')
+              .in('id', members.map(m => m.user_id));
+
+            const membersGrid = document.getElementById('members-grid');
+            if (!membersGrid) return;
+
+            membersGrid.innerHTML = '';
+
+            if (!users || users.length === 0) {
+              membersGrid.innerHTML = '<p style="text-align: center; color: #666;">Nenhum membro encontrado</p>';
+              return;
+            }
+
+            users.forEach(user => {
+              const metadata = user.user_metadata || {};
+              const name = metadata.name || `Usuário ${user.id.slice(0, 5)}`;
+              const avatarUrl = metadata.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}`;
+              const isOnline = onlineUserIds.has(user.id);
+
+              const card = document.createElement('div');
+              card.style.cssText = 'border: 1px solid #ccc; border-radius: 5px; padding: 10px; text-align: center; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1);';
+              card.innerHTML = `
+                <img src="${avatarUrl}" alt="${name}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin-bottom: 5px;" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(name)}'">
+                <p style="font-family: Arial, sans-serif; font-size: 16px; color: #333; margin: 5px 0; word-wrap: break-word;">${name}</p>
+                <div style="display: flex; align-items: center; justify-content: center;">
+                  <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: ${isOnline ? '#2ecc71' : '#95a5a6'}; margin-right: 5px;"></span>
+                  <span style="font-size: 12px; color: #666;">${isOnline ? 'Online' : 'Offline'}</span>
+                </div>
+              `;
+              membersGrid.appendChild(card);
+            });
+
+            console.log(`Status dos membros atualizado: ${users.length} membros, ${onlineUserIds.size} online`);
+
+          } catch (error) {
+            console.error('Erro ao atualizar membros:', error.message, error.stack);
+            const membersGrid = document.getElementById('members-grid');
+            if (membersGrid) {
+              membersGrid.innerHTML = '<p style="text-align: center; color: #e74c3c;">Erro ao carregar membros. Tentando novamente...</p>';
+            }
+            setTimeout(() => updateMemberStatus(groupId), 2000); // Retry após 2 segundos
+          }
+        };
+
+        // Atualizar contagem de online periodicamente
+        setInterval(async () => {
+          await updateOnlineCount();
+          // Atualizar status dos membros apenas se a aba de membros estiver ativa
+          const membersContent = document.getElementById('members-content');
+          if (membersContent && membersContent.style.display !== 'none') {
+            updateMemberStatus(groupId);
+          }
+        }, 15000);
+
+        // Configurar Realtime para chat e online
+        const channel = supabase
+          .channel(`chat-${groupId}`)
+          .on('postgres_changes', { 
+            event: 'INSERT', 
+            schema: 'public', 
+            table: 'mensagens', 
+            filter: `grupo_id=eq.${groupId}` 
+          }, (payload) => {
+            addMessageToChat(payload.new, userCache);
+          })
+          .on('postgres_changes', { 
+            event: 'INSERT', 
+            schema: 'public', 
+            table: 'user_sessions', 
+            filter: `grupo_id=eq.${groupId}` 
+          }, () => {
+            updateOnlineCount().then(() => {
+              const membersContent = document.getElementById('members-content');
+              if (membersContent && membersContent.style.display !== 'none') {
+                updateMemberStatus(groupId);
+              }
+            });
+          })
+          .on('postgres_changes', { 
+            event: 'DELETE', 
+            schema: 'public',```tool_code
+ table: 'user_sessions',
+            filter: `grupo_id=eq.${groupId}`
+          }, () => {
+            updateOnlineCount().then(() => {
+              const membersContent = document.getElementById('members-content');
+              if (membersContent && membersContent.style.display !== 'none') {
+                updateMemberStatus(groupId);
+              }
+            });
+          })
+          .subscribe(async (status) => {
+            if (status === 'SUBSCRIBED') {
+              console.log(`Subscribed to chat and online channel for group ${groupId}`);
+
+              // Carregar mensagens iniciais
+              const { data: messages } = await supabase
+                .from('mensagens')
+                .select('*')
+                .eq('grupo_id', groupId)
+                .order('enviado_em', { ascending: false });
+
+              if (messages) {
+                messages.forEach(message => addMessageToChat(message, userCache));
+              }
+
+              // Atualizar contagem inicial
+              await updateOnlineCount();
+
+              // Carregar membros iniciais
+              updateMemberStatus(groupId);
+            }
+          });
+
+        // Evento para ícone de pesquisa
+        document.getElementById('search-icon').addEventListener('click', () => {
+          document.getElementById('search-bar').style.display = 'block';
+          document.getElementById('search-input').focus();
+          filterMessages(groupId);
+        });
+
+        // Evento para ícone de três pontos
+        document.getElementById('menu-icon').addEventListener('click', () => showOptionsModal(groupId));
+
+        // Evento para trocar entre mini-seções
+        document.querySelectorAll('.mini-section-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            // Atualizar visual dos botões
+            document.querySelectorAll('.mini-section-btn').forEach(b => {
+              b.style.background = '#ddd';
+              b.style.color = '#666';
+            });
+            btn.style.background = '#3498db';
+            btn.style.color = 'white';
+
+            // Mostrar conteúdo correspondente
+            document.querySelectorAll('#content-container > div').forEach(div => div.style.display = 'none');
+            document.getElementById(`${btn.dataset.section}-content`).style.display = 'block';
+
+            // Se for a seção de membros, carregar/atualizar os dados
+            if (btn.dataset.section === 'members') {
+              updateMemberStatus(groupId);
+            }
+          });
+        });
+
+        console.log(`Interface do grupo ${groupId} carregada com chat e seção de membros configurados.`);
+      } catch (error) {
+        console.error('Erro ao acessar grupo:', error.message, error.stack);
+        alert('Erro ao acessar o grupo. Verifique o console.');
+        // Retry ao restaurar o cabeçalho em caso de erro
+        const header = document.querySelector('.groups-header');
+        if (header) header.style.display = 'block';
       }
-  };
+    };
 
   // Função para fazer upload da imagem de capa
   const handleCoverImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -739,7 +986,7 @@ const GruposEstudoView: React.FC = () => {
 
     if (!searchTerm) return groups;
 
-    return groups.filter(group => 
+    return groups.filter(group =>
       group.nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       group.descricao?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       group.disciplina_area?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -778,9 +1025,9 @@ const GruposEstudoView: React.FC = () => {
                       {/* Imagem de capa ou placeholder */}
                       {groupCoverImage ? (
                           <div className="w-full h-full relative rounded-2xl overflow-hidden">
-                              <img 
-                                  src={groupCoverImage} 
-                                  alt="Capa do grupo" 
+                              <img
+                                  src={groupCoverImage}
+                                  alt="Capa do grupo"
                                   className="w-full h-full object-cover"
                               />
                               <div className="absolute inset-0 bg-black/20"></div>
@@ -829,7 +1076,7 @@ const GruposEstudoView: React.FC = () => {
                               Voltar
                           </Button>
                       </div>
-                      
+
                   </motion.div>
                   {/* Imagem de perfil do grupo - posicionada metade dentro e metade fora da capa */}
                   <div className="absolute -bottom-16 left-6 z-30">
@@ -840,9 +1087,9 @@ const GruposEstudoView: React.FC = () => {
                                       onClick={() => document.getElementById('profile-upload')?.click()}
                                       className="w-full h-full rounded-full overflow-hidden border-2 border-[#f7f9fa] dark:border-[#001427] hover:scale-105 transition-all duration-300"
                                   >
-                                      <img 
-                                          src={groupProfileImage} 
-                                          alt="Perfil do grupo" 
+                                      <img
+                                          src={groupProfileImage}
+                                          alt="Perfil do grupo"
                                           className="w-full h-full object-cover"
                                       />
                                   </button>
@@ -957,7 +1204,7 @@ const GruposEstudoView: React.FC = () => {
               <div className="flex-1 px-6 pb-6 min-h-0">
                   {activeTab === 'discussoes' && (
                       <div className="h-full">
-                          <ChatSection 
+                          <ChatSection
                             groupId={activeGroup.id}
                           />
                       </div>
@@ -1186,12 +1433,12 @@ const GruposEstudoView: React.FC = () => {
                 {currentView === "todos-grupos" ? "Nenhum grupo público encontrado" : "Você ainda não faz parte de grupos"}
               </h3>
               <p className="text-gray-500 dark:text-gray-400 mb-4">
-                {currentView === "todos-grupos" 
-                  ? "Tente ajustar sua busca ou volte mais tarde." 
+                {currentView === "todos-grupos"
+                  ? "Tente ajustar sua busca ou volte mais tarde."
                   : "Comece criando seu primeiro grupo ou entre em um grupo usando um código."}
               </p>
               {currentView === "meus-grupos" && (
-                <Button 
+                <Button
                   onClick={() => setShowCreateModal(true)}
                   className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-montserrat"
                 >
@@ -1241,7 +1488,7 @@ const GruposEstudoView: React.FC = () => {
               </h3>
 
               <p className="text-gray-600 dark:text-gray-400 mb-6">
-                {isGroupCreator 
+                {isGroupCreator
                   ? `Você é o criador do grupo "${groupToLeave.nome}". Deseja sair ou excluir o grupo?`
                   : `Tem certeza que deseja sair do grupo "${groupToLeave.nome}"?`
                 }
