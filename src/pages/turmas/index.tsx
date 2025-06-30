@@ -800,4 +800,6 @@ const turmaDetalhada = {
       id: "n5",
       avaliacao: "Prova Parcial",
       nota: null,
-The code was modified to pass the showGroupInterface property to the TurmasView component based on the current route.
+      peso: 30,
+      data: "30/03/2023",
+    },
