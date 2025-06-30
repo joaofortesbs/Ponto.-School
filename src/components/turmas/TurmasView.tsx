@@ -961,7 +961,11 @@ const forumTopicos = [
   }
 ];
 
-const TurmasView: React.FC = () => {
+interface TurmasViewProps {
+  showGroupInterface?: boolean;
+}
+
+const TurmasView: React.FC<TurmasViewProps> = ({ showGroupInterface = false }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredTurmas, setFilteredTurmas] = useState(turmasData);
   const [selectedTurma, setSelectedTurma] = useState<string | null>(null);
@@ -1163,6 +1167,7 @@ const TurmasView: React.FC = () => {
   return (
     <div className="container mx-auto p-6 max-w-[1400px]">
       {/* Page Header */}
+      {!showGroupInterface && (
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] flex items-center justify-center shadow-md">
@@ -1196,6 +1201,7 @@ const TurmasView: React.FC = () => {
           </Button>
         </div>
       </div>
+      )}
 
       {/* Main Content */}
       {!selectedTurma ? (
@@ -1497,9 +1503,7 @@ const TurmasView: React.FC = () => {
                                   </div>
                                 </div>
                               ))}
-                            </div>
-                          )}
-                        ```javascript
+                            </div>                          )}
                         </div>
                       ))}
                     </div>
