@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Search, MoreVertical, Send, X, Settings, MessageSquare, CheckSquare } from "lucide-react";
+import { Search, Send, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -34,10 +34,8 @@ const DiscussoesTab: React.FC<DiscussoesTabProps> = ({ groupId, groupData }) => 
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearch, setShowSearch] = useState(false);
   const [onlineCount, setOnlineCount] = useState(0);
-  const [showMenuModal, setShowMenuModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const menuModalRef = useRef<HTMLDivElement>(null);
   const settingsModalRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -80,19 +78,16 @@ const DiscussoesTab: React.FC<DiscussoesTabProps> = ({ groupId, groupData }) => 
   // Close modals when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (menuModalRef.current && !menuModalRef.current.contains(event.target as Node)) {
-        setShowMenuModal(false);
-      }
       if (settingsModalRef.current && !settingsModalRef.current.contains(event.target as Node)) {
         setShowSettingsModal(false);
       }
     };
 
-    if (showMenuModal || showSettingsModal) {
+    if (showSettingsModal) {
       document.addEventListener('mousedown', handleClickOutside);
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
-  }, [showMenuModal, showSettingsModal]);
+  }, [showSettingsModal]);
 
   const loadMessages = async () => {
     try {
@@ -155,27 +150,9 @@ const DiscussoesTab: React.FC<DiscussoesTabProps> = ({ groupId, groupData }) => 
     }
   };
 
-  const handleMenuClick = () => {
-    setShowMenuModal(!showMenuModal);
-    console.log("Modal de três pontos acionado");
-  };
-
   const handleSettingsClick = () => {
-    setShowMenuModal(false);
     setShowSettingsModal(true);
     console.log("Modal de configurações acionado");
-  };
-
-  const handleResumeConversation = () => {
-    setShowMenuModal(false);
-    alert('Funcionalidade "Resumir conversa com IA" em desenvolvimento.');
-    console.log("Funcionalidade de resumir conversa acionada");
-  };
-
-  const handleSelectMessages = () => {
-    setShowMenuModal(false);
-    alert('Funcionalidade "Selecionar mensagens" em desenvolvimento.');
-    console.log("Funcionalidade de selecionar mensagens acionada");
   };
 
   const filteredMessages = messages.filter((message) =>
@@ -192,7 +169,7 @@ const DiscussoesTab: React.FC<DiscussoesTabProps> = ({ groupId, groupData }) => 
             Membros Online: {onlineCount}
           </span>
         </div>
-        <div className="flex items-center space-x-2 relative">
+        <div className="flex items-center space-x-2">
           <Button
             variant="ghost"
             size="sm"
@@ -200,54 +177,6 @@ const DiscussoesTab: React.FC<DiscussoesTabProps> = ({ groupId, groupData }) => 
           >
             <Search className="h-4 w-4" />
           </Button>
-          <Button 
-            variant="ghost" 
-            size="sm"
-            onClick={handleMenuClick}
-          >
-            <MoreVertical className="h-4 w-4" />
-          </Button>
-
-          {/* Three-dots Menu Modal */}
-          {showMenuModal && (
-            <div 
-              ref={menuModalRef}
-              className="absolute top-10 right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 min-w-[200px]"
-            >
-              <ul className="py-2">
-                <li>
-                  <button
-                    onClick={handleSettingsClick}
-                    className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2 opacity-50 cursor-not-allowed"
-                    disabled
-                  >
-                    <Settings className="h-4 w-4" />
-                    <span>Configurações</span>
-                  </button>
-                </li>
-                <li>
-                  <button
-                    onClick={handleResumeConversation}
-                    className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2 opacity-50 cursor-not-allowed"
-                    disabled
-                  >
-                    <MessageSquare className="h-4 w-4" />
-                    <span>Resumir conversa com IA</span>
-                  </button>
-                </li>
-                <li>
-                  <button
-                    onClick={handleSelectMessages}
-                    className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2 opacity-50 cursor-not-allowed"
-                    disabled
-                  >
-                    <CheckSquare className="h-4 w-4" />
-                    <span>Selecionar mensagens</span>
-                  </button>
-                </li>
-              </ul>
-            </div>
-          )}
         </div>
       </div>
 
