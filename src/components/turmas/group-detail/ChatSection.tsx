@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -56,7 +55,7 @@ export default function ChatSection({ groupId }: ChatSectionProps) {
   useEffect(() => {
     const loadGroupData = async () => {
       if (!groupId) return;
-      
+
       try {
         const { data, error } = await supabase
           .from('grupos_estudo')
@@ -112,7 +111,7 @@ export default function ChatSection({ groupId }: ChatSectionProps) {
   // Atualizar status online
   const updateOnlineStatus = async () => {
     if (!currentUser || !groupId) return;
-    
+
     try {
       const { error } = await supabase
         .from('user_sessions')
@@ -135,7 +134,7 @@ export default function ChatSection({ groupId }: ChatSectionProps) {
   // Atualizar contagem de membros online
   const updateOnlineCount = async () => {
     if (!groupId) return;
-    
+
     try {
       const thirtySecondsAgo = new Date(Date.now() - 30000).toISOString();
       const { data, error } = await supabase
@@ -490,7 +489,7 @@ export default function ChatSection({ groupId }: ChatSectionProps) {
             >
               <Search className="h-4 w-4" />
             </Button>
-            
+
             <Popover open={showOptionsMenu} onOpenChange={setShowOptionsMenu}>
               <PopoverTrigger asChild>
                 <Button
@@ -529,7 +528,7 @@ export default function ChatSection({ groupId }: ChatSectionProps) {
             </Popover>
           </div>
         </div>
-        
+
         {/* Barra de pesquisa */}
         {showSearchBar && (
           <div className="mt-3 flex items-center gap-2">
@@ -657,7 +656,7 @@ export default function ChatSection({ groupId }: ChatSectionProps) {
         )}
       </div>
 
-      
+
     {/* Group Settings Modal */}
       {showGroupSettingsModal && groupData && (
         <GroupSettingsModal
