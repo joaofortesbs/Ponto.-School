@@ -39,11 +39,26 @@ import ChatSection from "@/components/turmas/group-detail/ChatSection";
 const MembersSection: React.FC<{ groupId: string }> = ({ groupId }) => {
   const [members, setMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [groupCreatorId, setGroupCreatorId] = useState<string | null>(null);
 
   useEffect(() => {
     const loadMembers = async () => {
       try {
         setLoading(true);
+        
+        // Buscar dados do grupo para obter o criador_id
+        const { data: groupData, error: groupError } = await supabase
+          .from('grupos_estudo')
+          .select('criador_id')
+          .eq('id', groupId)
+          .single();
+
+        if (groupError) {
+          console.error('Erro ao carregar dados do grupo:', groupError);
+          return;
+        }
+
+        setGroupCreatorId(groupData?.criador_id || null);
         
         // Buscar membros do grupo
         const { data: membersData, error: membersError } = await supabase
@@ -92,7 +107,8 @@ const MembersSection: React.FC<{ groupId: string }> = ({ groupId }) => {
             id: member.user_id,
             name: profile?.display_name || `Usuário ${member.user_id.slice(0, 8)}`,
             avatar_url: profile?.avatar_url,
-            isOnline: onlineUsers.has(member.user_id)
+            isOnline: onlineUsers.has(member.user_id),
+            isCreator: member.user_id === groupData?.criador_id
           };
         });
 
@@ -146,8 +162,25 @@ const MembersSection: React.FC<{ groupId: string }> = ({ groupId }) => {
             {members.map((member) => (
               <div
                 key={member.id}
-                className="flex items-center gap-3 p-4 bg-[#f7f9fa] dark:bg-[#29335C]/20 rounded-lg border border-[#FF6B00]/10 hover:border-[#FF6B00]/30 transition-all"
+                className={`relative flex items-center gap-3 p-4 bg-[#f7f9fa] dark:bg-[#29335C]/20 rounded-lg border transition-all ${
+                  member.isCreator 
+                    ? 'border-[#FF6B00] border-2 shadow-lg shadow-[#FF6B00]/20' 
+                    : 'border-[#FF6B00]/10 hover:border-[#FF6B00]/30'
+                }`}
               >
+                {/* Ícone de administrador para o criador */}
+                {member.isCreator && (
+                  <div className="absolute -top-2 -right-2 w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center shadow-lg">
+                    <svg 
+                      className="w-3 h-3 text-white" 
+                      fill="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                  </div>
+                )}
+                
                 <div className="relative">
                   <div className="w-12 h-12 rounded-full overflow-hidden bg-[#FF6B00]/10 flex items-center justify-center">
                     {member.avatar_url ? (
@@ -169,6 +202,11 @@ const MembersSection: React.FC<{ groupId: string }> = ({ groupId }) => {
                 <div className="flex-1 min-w-0">
                   <h4 className="font-semibold text-[#001427] dark:text-white text-sm truncate">
                     {member.name}
+                    {member.isCreator && (
+                      <span className="ml-2 text-[#FF6B00] text-xs font-bold">
+                        ADMIN
+                      </span>
+                    )}
                   </h4>
                   <p className={`text-xs ${member.isOnline ? 'text-green-600' : 'text-gray-500'}`}>
                     {member.isOnline ? 'Online' : 'Offline'}
