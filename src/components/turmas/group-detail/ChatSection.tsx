@@ -489,43 +489,6 @@ export default function ChatSection({ groupId }: ChatSectionProps) {
             >
               <Search className="h-4 w-4" />
             </Button>
-
-            <Popover open={showOptionsMenu} onOpenChange={setShowOptionsMenu}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-gray-400 hover:text-white hover:bg-gray-700"
-                >
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-56 p-1 bg-[#1e293b] border-gray-700" align="end">
-                <div className="space-y-1">
-                  <button 
-                    className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-800 rounded-md flex items-center gap-2"
-                    onClick={handleSettingsClick}
-                  >
-                    <Settings className="h-4 w-4" />
-                    Configurações
-                  </button>
-                  <button 
-                    className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-800 rounded-md flex items-center gap-2 opacity-50 cursor-not-allowed"
-                    disabled={true}
-                  >
-                    <CheckSquare className="h-4 w-4" />
-                    Selecionar
-                  </button>
-                  <button 
-                    className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-800 rounded-md flex items-center gap-2 opacity-50 cursor-not-allowed"
-                    disabled={true}
-                  >
-                    <MessageSquare className="h-4 w-4" />
-                    Resumir conversa com IA
-                  </button>
-                </div>
-              </PopoverContent>
-            </Popover>
           </div>
         </div>
 
