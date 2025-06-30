@@ -31,6 +31,7 @@ import GroupCard from "../GroupCard";
 import CreateGroupModal from "../CreateGroupModal";
 import AddGroupModal from "../AddGroupModal";
 import EntrarGrupoSuccessModal from "../EntrarGrupoSuccessModal";
+import ChatSection from "@/components/turmas/group-detail/ChatSection";
 
 // Tipos para os grupos
 interface GrupoEstudo {
@@ -561,14 +562,14 @@ const GruposEstudoView: React.FC = () => {
               });
               return;
           }
-  
+
           // Buscar dados do grupo
           const { data: groupData, error } = await supabase
               .from('grupos_estudo')
               .select('*')
               .eq('id', groupId)
               .single();
-  
+
           if (error) {
               console.error('Erro ao buscar dados do grupo:', error);
               toast({
@@ -578,7 +579,7 @@ const GruposEstudoView: React.FC = () => {
               });
               return;
           }
-  
+
           setActiveGroup(groupData);
           setShowGroupInterface(true);
           setActiveTab('discussoes');
@@ -711,7 +712,7 @@ const GruposEstudoView: React.FC = () => {
                       </h2>
                   </div>
               </motion.div>
-  
+
               {/* Mini-seções no topo */}
               <div className="flex items-center gap-4 mb-6">
                   <Button
@@ -725,7 +726,7 @@ const GruposEstudoView: React.FC = () => {
                   </Button>
                   {/* Outras abas aqui */}
               </div>
-  
+
               {/* Conteúdo da aba ativa */}
               <div className="mt-6">
                   {activeTab === 'discussoes' && (
@@ -740,25 +741,9 @@ const GruposEstudoView: React.FC = () => {
                                       {activeGroup.descricao || "Sem descrição disponível"}
                                   </p>
                               </div>
-                              <div className="border-b pb-4">
-                                  <p className="text-sm text-[#778DA9] dark:text-gray-400 mb-2">Área/Disciplina:</p>
-                                  <p className="text-[#001427] dark:text-white font-open-sans">
-                                      {activeGroup.disciplina_area || activeGroup.tipo_grupo}
-                                  </p>
-                              </div>
-                              {activeGroup.topico_especifico && (
-                                  <div className="border-b pb-4">
-                                      <p className="text-sm text-[#778DA9] dark:text-gray-400 mb-2">Tópico Específico:</p>
-                                      <p className="text-[#001427] dark:text-white font-open-sans">
-                                          {activeGroup.topico_especifico}
-                                      </p>
-                                  </div>
-                              )}
-                              <div className="bg-[#f7f9fa] dark:bg-[#001427] p-4 rounded-lg">
-                                  <p className="text-[#778DA9] dark:text-gray-400 font-open-sans text-center">
-                                      💬 A funcionalidade de chat será implementada em breve.
-                                  </p>
-                              </div>
+                             
+                              <ChatSection groupId={activeGroup.id} />
+                           
                           </div>
                       </div>
                   )}

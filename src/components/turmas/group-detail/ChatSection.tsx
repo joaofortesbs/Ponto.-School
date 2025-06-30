@@ -66,16 +66,24 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
       setIsLoading(true);
       console.log('Carregando mensagens para grupo:', groupId, 'usuário:', currentUser.id);
 
-      // Primeiro verificar se o usuário é membro do grupo
+      // Primeiro verificar se o usuário é membro do grupo ou criador
       const { data: membership, error: membershipError } = await supabase
         .from('membros_grupos')
         .select('*')
         .eq('grupo_id', groupId)
         .eq('user_id', currentUser.id)
+        .maybeSingle();
+
+      const { data: groupData, error: groupError } = await supabase
+        .from('grupos_estudo')
+        .select('criador_id')
+        .eq('id', groupId)
         .single();
 
-      if (membershipError || !membership) {
-        console.error('Usuário não é membro do grupo:', membershipError);
+      const isCreator = groupData?.criador_id === currentUser.id;
+      
+      if (!membership && !isCreator) {
+        console.error('Usuário não é membro do grupo e nem criador:', membershipError);
         toast({
           title: "Acesso negado",
           description: "Você não é membro deste grupo",
@@ -94,7 +102,7 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
           conteudo,
           enviado_em,
           user_id,
-          profiles!inner(display_name, email)
+          profiles(display_name, email)
         `)
         .eq('grupo_id', groupId)
         .order('enviado_em', { ascending: true });
