@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +14,7 @@ interface ChatMessage {
     display_name?: string;
     email?: string;
     avatar_url?: string;
+    full_name?: string;
   };
 }
 
@@ -27,7 +27,7 @@ export default function ChatSection({ groupId }: ChatSectionProps) {
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
-  const [userCache, setUserCache] = useState<Map<string, any>>(new Map());
+  const [userProfiles, setUserProfiles] = useState<Map<string, any>>(new Map());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const channelRef = useRef<any>(null);
   const { toast } = useToast();
@@ -52,51 +52,21 @@ export default function ChatSection({ groupId }: ChatSectionProps) {
   // Função para carregar perfis de usuários
   const loadUserProfiles = async (userIds: string[]) => {
     try {
-      // Buscar perfis da tabela profiles
-      const { data: profilesData, error: profilesError } = await supabase
+      const { data: profiles, error } = await supabase
         .from('profiles')
-        .select('id, display_name, email, avatar_url')
+        .select('id, display_name, full_name, email, avatar_url')
         .in('id', userIds);
 
-      if (profilesError) {
-        console.warn('Erro ao carregar profiles:', profilesError);
+      if (error) {
+        console.error('Erro ao carregar perfis:', error);
+        return;
       }
 
-      // Buscar dados do auth.users para usuários sem profile
-      const { data: { users }, error: usersError } = await supabase.auth.admin.listUsers();
-      
-      if (usersError) {
-        console.warn('Erro ao carregar auth users:', usersError);
-      }
-
-      const newCache = new Map(userCache);
-
-      // Processar profiles existentes
-      if (profilesData) {
-        profilesData.forEach(profile => {
-          newCache.set(profile.id, {
-            display_name: profile.display_name || profile.email || 'Usuário',
-            email: profile.email || '',
-            avatar_url: profile.avatar_url || null
-          });
-        });
-      }
-
-      // Processar dados do auth.users para usuários sem profile
-      if (users) {
-        users.forEach(user => {
-          if (!newCache.has(user.id)) {
-            const metadata = user.user_metadata || {};
-            newCache.set(user.id, {
-              display_name: metadata.name || metadata.display_name || user.email || 'Usuário',
-              email: user.email || '',
-              avatar_url: metadata.avatar_url || null
-            });
-          }
-        });
-      }
-
-      setUserCache(newCache);
+      const profileMap = new Map(userProfiles);
+      profiles?.forEach(profile => {
+        profileMap.set(profile.id, profile);
+      });
+      setUserProfiles(profileMap);
     } catch (error) {
       console.error('Erro ao carregar perfis de usuário:', error);
     }
@@ -145,7 +115,7 @@ export default function ChatSection({ groupId }: ChatSectionProps) {
         .single();
 
       const isCreator = groupData?.criador_id === currentUser.id;
-      
+
       if (!membership && !isCreator) {
         console.error('Usuário não é membro do grupo e nem criador:', membershipError);
         toast({
@@ -176,7 +146,7 @@ export default function ChatSection({ groupId }: ChatSectionProps) {
       }
 
       console.log('Mensagens carregadas:', messagesData?.length || 0);
-      
+
       // Carregar perfis dos usuários das mensagens
       if (messagesData && messagesData.length > 0) {
         const userIds = [...new Set(messagesData.map(msg => msg.user_id))];
@@ -211,7 +181,7 @@ export default function ChatSection({ groupId }: ChatSectionProps) {
     }
 
     console.log('Configurando novo canal Realtime para grupo:', groupId);
-    
+
     const channel = supabase
       .channel(`chat-${groupId}`)
       .on('postgres_changes', {
@@ -221,34 +191,23 @@ export default function ChatSection({ groupId }: ChatSectionProps) {
         filter: `grupo_id=eq.${groupId}`
       }, async (payload) => {
         console.log('Nova mensagem recebida via Realtime:', payload);
-        
+
         try {
-          // Carregar perfil do usuário que enviou a mensagem se não estiver no cache
-          if (!userCache.has(payload.new.user_id)) {
-            await loadUserProfiles([payload.new.user_id]);
+          const newMessage: ChatMessage = payload.new;
+
+          // Carregar perfil do usuário se não estiver no cache
+          if (!userProfiles.has(newMessage.user_id)) {
+            await loadUserProfiles([newMessage.user_id]);
           }
 
-          const newMessage: ChatMessage = {
-            ...payload.new,
-            userProfile: userCache.get(payload.new.user_id) || {
-              display_name: 'Usuário',
-              email: '',
-              avatar_url: null
-            }
-          };
-
           setMessages(prev => [...prev, newMessage]);
-          
+
           // Scroll para a nova mensagem
           setTimeout(scrollToBottom, 100);
         } catch (error) {
           console.error('Erro ao processar nova mensagem do Realtime:', error);
           // Adicionar mensagem mesmo sem profile
-          const newMessage: ChatMessage = {
-            ...payload.new,
-            userProfile: { display_name: 'Usuário', email: '', avatar_url: null }
-          };
-          setMessages(prev => [...prev, newMessage]);
+          setMessages(prev => [...prev, payload.new]);
           setTimeout(scrollToBottom, 100);
         }
       })
@@ -274,7 +233,7 @@ export default function ChatSection({ groupId }: ChatSectionProps) {
     try {
       console.log('Enviando mensagem para grupo:', groupId, 'usuário:', currentUser.id);
       console.log('Conteúdo da mensagem:', newMessage.trim());
-      
+
       const { data, error } = await supabase
         .from('mensagens_chat_grupos')
         .insert({
@@ -296,9 +255,9 @@ export default function ChatSection({ groupId }: ChatSectionProps) {
 
       console.log('Mensagem enviada com sucesso:', data);
       setNewMessage('');
-      
+
       // A nova mensagem será adicionada automaticamente via Realtime
-      
+
     } catch (error) {
       console.error('Erro inesperado ao enviar mensagem:', error);
       toast({
@@ -329,25 +288,25 @@ export default function ChatSection({ groupId }: ChatSectionProps) {
     if (message.user_id === currentUser?.id) {
       return 'Você';
     }
-    
-    const userProfile = userCache.get(message.user_id);
-    if (userProfile) {
-      return userProfile.display_name || userProfile.email || 'Usuário';
+
+    const profile = userProfiles.get(message.user_id);
+    if (profile) {
+      return profile.display_name || profile.full_name || profile.email || 'Usuário';
     }
-    
-    return `Usuário ${message.user_id.slice(0, 5)}`;
+
+    return 'Usuário';
   };
 
-  const getUserAvatarUrl = (message: ChatMessage) => {
-    const userProfile = userCache.get(message.user_id);
-    if (userProfile?.avatar_url) {
-      return userProfile.avatar_url;
+  const getUserAvatar = (message: ChatMessage) => {
+    const profile = userProfiles.get(message.user_id);
+    if (profile?.avatar_url) {
+      return profile.avatar_url;
     }
-    
-    // Gerar avatar com iniciais usando ui-avatars.com
+
+    // Gerar avatar com inicial do nome
     const displayName = getUserDisplayName(message);
-    const initials = displayName === 'Você' ? 'EU' : displayName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-    return `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=FF6B00&color=ffffff&size=128`;
+    const initials = displayName.charAt(0).toUpperCase();
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=FF6B00&color=fff&size=40`;
   };
 
   if (!currentUser) {
@@ -400,23 +359,13 @@ export default function ChatSection({ groupId }: ChatSectionProps) {
                 key={message.id}
                 className={`chat-message flex items-start gap-3 ${isOwnMessage ? 'flex-row-reverse' : 'flex-row'}`}
               >
-                {/* Avatar do usuário */}
                 <div className="flex-shrink-0">
                   <img
-                    src={getUserAvatarUrl(message)}
+                    src={getUserAvatar(message)}
                     alt={getUserDisplayName(message)}
-                    className="w-8 h-8 rounded-full object-cover border-2 border-gray-600"
-                    onError={(e) => {
-                      // Fallback se a imagem falhar
-                      const target = e.target as HTMLImageElement;
-                      const displayName = getUserDisplayName(message);
-                      const initials = displayName === 'Você' ? 'EU' : displayName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-                      target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=666&color=ffffff&size=128`;
-                    }}
+                    className="w-8 h-8 rounded-full object-cover"
                   />
                 </div>
-
-                {/* Conteúdo da mensagem */}
                 <div className={`max-w-xs lg:max-w-md ${isOwnMessage ? 'text-right' : 'text-left'}`}>
                   <div className="message-header flex items-center gap-2 mb-1">
                     <span className={`sender font-medium text-xs opacity-90 text-white ${isOwnMessage ? 'order-2' : 'order-1'}`}>
