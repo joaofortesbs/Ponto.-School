@@ -833,11 +833,11 @@ const GruposEstudoView: React.FC = () => {
                   {/* Imagem de perfil do grupo - posicionada metade dentro e metade fora da capa */}
                   <div className="absolute -bottom-16 left-6 z-30">
                       <div className="relative">
-                          <div className="w-32 h-32 rounded-full bg-[#f7f9fa] dark:bg-[#001427] p-2 shadow-2xl">
+                          <div className="w-32 h-32 rounded-full bg-[#f7f9fa] dark:bg-[#001427] p-1 shadow-2xl">
                               {groupProfileImage ? (
                                   <button
                                       onClick={() => document.getElementById('profile-upload')?.click()}
-                                      className="w-full h-full rounded-full overflow-hidden border-4 border-[#f7f9fa] dark:border-[#001427] hover:scale-105 transition-all duration-300"
+                                      className="w-full h-full rounded-full overflow-hidden border-2 border-[#f7f9fa] dark:border-[#001427] hover:scale-105 transition-all duration-300"
                                   >
                                       <img 
                                           src={groupProfileImage} 
