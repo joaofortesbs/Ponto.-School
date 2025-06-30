@@ -806,7 +806,7 @@ const GruposEstudoView: React.FC = () => {
                               </div>
                           </button>
                       )}
-                      
+
                       {/* Input escondido para upload da capa */}
                       <input
                           id="cover-upload"
@@ -828,48 +828,48 @@ const GruposEstudoView: React.FC = () => {
                               Voltar
                           </Button>
                       </div>
-
-                      {/* Imagem de perfil do grupo - posicionada metade dentro e metade fora da capa */}
-                      <div className="absolute -bottom-16 left-6 z-30">
-                          <div className="relative">
-                              <div className="w-32 h-32 rounded-full bg-[#f7f9fa] dark:bg-[#001427] p-2 shadow-2xl">
-                                  {groupProfileImage ? (
-                                      <button
-                                          onClick={() => document.getElementById('profile-upload')?.click()}
-                                          className="w-full h-full rounded-full overflow-hidden border-4 border-[#f7f9fa] dark:border-[#001427] hover:scale-105 transition-all duration-300"
-                                      >
-                                          <img 
-                                              src={groupProfileImage} 
-                                              alt="Perfil do grupo" 
-                                              className="w-full h-full object-cover"
-                                          />
-                                      </button>
-                                  ) : (
-                                      <button
-                                          onClick={() => document.getElementById('profile-upload')?.click()}
-                                          className="w-full h-full rounded-full bg-gradient-to-br from-[#FF6B00]/20 to-[#FF8C40]/20 flex items-center justify-center border-4 border-[#f7f9fa] dark:border-[#001427] cursor-pointer hover:from-[#FF6B00]/30 hover:to-[#FF8C40]/30 transition-all duration-300"
-                                      >
-                                          <div className="text-center text-[#FF6B00]">
-                                              <svg className="w-10 h-10 mx-auto mb-1" fill="currentColor" viewBox="0 0 24 24">
-                                                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                                              </svg>
-                                              <span className="text-sm font-medium">Foto</span>
-                                          </div>
-                                      </button>
-                                  )}
-                              </div>
-                              
-                              {/* Input escondido para upload do perfil */}
-                              <input
-                                  id="profile-upload"
-                                  type="file"
-                                  accept="image/*"
-                                  onChange={handleProfileImageUpload}
-                                  className="hidden"
-                              />
-                          </div>
-                      </div>
+                      
                   </motion.div>
+                  {/* Imagem de perfil do grupo - posicionada metade dentro e metade fora da capa */}
+                  <div className="absolute -bottom-16 left-6 z-30">
+                      <div className="relative">
+                          <div className="w-32 h-32 rounded-full bg-[#f7f9fa] dark:bg-[#001427] p-2 shadow-2xl">
+                              {groupProfileImage ? (
+                                  <button
+                                      onClick={() => document.getElementById('profile-upload')?.click()}
+                                      className="w-full h-full rounded-full overflow-hidden border-4 border-[#f7f9fa] dark:border-[#001427] hover:scale-105 transition-all duration-300"
+                                  >
+                                      <img 
+                                          src={groupProfileImage} 
+                                          alt="Perfil do grupo" 
+                                          className="w-full h-full object-cover"
+                                      />
+                                  </button>
+                              ) : (
+                                  <button
+                                      onClick={() => document.getElementById('profile-upload')?.click()}
+                                      className="w-full h-full rounded-full bg-gradient-to-br from-[#FF6B00]/20 to-[#FF8C40]/20 flex items-center justify-center border-4 border-[#f7f9fa] dark:border-[#001427] cursor-pointer hover:from-[#FF6B00]/30 hover:to-[#FF8C40]/30 transition-all duration-300"
+                                  >
+                                      <div className="text-center text-[#FF6B00]">
+                                          <svg className="w-10 h-10 mx-auto mb-1" fill="currentColor" viewBox="0 0 24 24">
+                                              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                                          </svg>
+                                          <span className="text-sm font-medium">Foto</span>
+                                      </div>
+                                  </button>
+                              )}
+                          </div>
+
+                          {/* Inputhiddido para upload do perfil */}
+                          <input
+                              id="profile-upload"
+                              type="file"
+                              accept="image/*"
+                              onChange={handleProfileImageUpload}
+                              className="hidden"
+                          />
+                      </div>
+                  </div>
               </div>
 
               {/* Informações do grupo */}
