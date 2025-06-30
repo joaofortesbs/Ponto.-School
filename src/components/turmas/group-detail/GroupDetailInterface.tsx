@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
@@ -25,7 +24,7 @@ export default function GroupDetailInterface({
   const renderTabContent = () => {
     switch (activeTab) {
       case 'discussions':
-        return <ChatSection groupId={groupId} currentUser={currentUser} groupName={groupName} />;
+        return <ChatSection groupId={groupId} currentUser={currentUser} />;
       case 'events':
         return <PlaceholderSection title="Eventos" message="Funcionalidade em desenvolvimento" />;
       case 'members':
