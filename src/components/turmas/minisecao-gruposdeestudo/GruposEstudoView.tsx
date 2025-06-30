@@ -741,9 +741,13 @@ const GruposEstudoView: React.FC = () => {
                                       {activeGroup.descricao || "Sem descrição disponível"}
                                   </p>
                               </div>
-                             
-                              <ChatSection groupId={activeGroup.id} />
-                           
+
+                              <div className="h-full min-h-[600px] flex flex-col">
+                                <ChatSection 
+                                  groupId={activeGroup.id} 
+                                />
+                              </div>
+
                           </div>
                       </div>
                   )}

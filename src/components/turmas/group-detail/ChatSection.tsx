@@ -295,8 +295,9 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
   }
 
   return (
-    <div className="chat-section h-full flex flex-col bg-[#001427]">
-      <div className="chat-messages flex-1 overflow-y-auto p-4 space-y-3 max-h-96">
+    <div className="chat-section h-full flex flex-col bg-[#001427] min-h-[500px]">
+      {/* Área de mensagens */}
+      <div className="chat-messages flex-1 overflow-y-auto p-4 space-y-3" style={{ minHeight: '400px', maxHeight: '70vh' }}>
         {isLoading ? (
           <div className="text-center text-gray-400 py-8">
             <p>Carregando mensagens...</p>
@@ -339,24 +340,30 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="chat-input p-4 border-t border-gray-600">
-        <div className="flex gap-2">
+      {/* Área de input - sempre visível */}
+      <div className="chat-input p-4 border-t border-gray-600 bg-[#001427] flex-shrink-0">
+        <div className="flex gap-2 items-center">
           <Input
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Digite sua mensagem..."
             disabled={isLoading}
-            className="flex-1 bg-[#1a2a44] border-gray-600 text-white placeholder-gray-400"
+            className="flex-1 bg-[#1a2a44] border-gray-600 text-white placeholder-gray-400 h-10"
           />
           <Button
             onClick={sendMessage}
             disabled={isLoading || !newMessage.trim()}
-            className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white"
+            className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white h-10 px-4"
           >
             <Send className="h-4 w-4" />
           </Button>
         </div>
+        {isLoading && (
+          <div className="text-xs text-gray-400 mt-1">
+            Enviando mensagem...
+          </div>
+        )}
       </div>
     </div>
   );
