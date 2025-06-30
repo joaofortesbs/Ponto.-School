@@ -204,48 +204,85 @@ const DiscussoesTab: React.FC<DiscussoesTabProps> = ({ groupId, groupData }) => 
             variant="ghost" 
             size="sm"
             onClick={handleMenuClick}
+            className={`relative hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 ${showMenuModal ? 'bg-gray-100 dark:bg-gray-700' : ''}`}
+            aria-label="Opções do chat"
           >
-            <MoreVertical className="h-4 w-4" />
+            <MoreVertical className={`h-4 w-4 transition-transform duration-200 ${showMenuModal ? 'rotate-90' : ''}`} />
           </Button>
 
-          {/* Three-dots Menu Modal */}
+          {/* Three-dots Menu Modal - Versão Completamente Reescrita */}
           {showMenuModal && (
             <div 
               ref={menuModalRef}
-              className="absolute top-10 right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 min-w-[200px]"
+              className="chat-options-modal"
             >
-              <ul className="py-2">
-                <li>
-                  <button
-                    onClick={handleSettingsClick}
-                    className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2 opacity-50 cursor-not-allowed"
-                    disabled
-                  >
-                    <Settings className="h-4 w-4" />
-                    <span>Configurações</span>
-                  </button>
-                </li>
-                <li>
-                  <button
-                    onClick={handleResumeConversation}
-                    className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2 opacity-50 cursor-not-allowed"
-                    disabled
-                  >
-                    <MessageSquare className="h-4 w-4" />
-                    <span>Resumir conversa com IA</span>
-                  </button>
-                </li>
-                <li>
-                  <button
-                    onClick={handleSelectMessages}
-                    className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2 opacity-50 cursor-not-allowed"
-                    disabled
-                  >
-                    <CheckSquare className="h-4 w-4" />
-                    <span>Selecionar mensagens</span>
-                  </button>
-                </li>
-              </ul>
+              {/* Header do Modal */}
+              <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-750">
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  Opções do Chat
+                </h3>
+              </div>
+
+              {/* Lista de Opções */}
+              <div className="py-2">
+                {/* Configurações */}
+                <button
+                  onClick={handleSettingsClick}
+                  disabled={true}
+                  className="chat-option-item"
+                >
+                  <Settings className="chat-option-icon" />
+                  <div className="flex-1">
+                    <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Configurações
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      Em desenvolvimento
+                    </div>
+                  </div>
+                </button>
+
+                {/* Resumir conversa com IA */}
+                <button
+                  onClick={handleResumeConversation}
+                  disabled={true}
+                  className="chat-option-item"
+                >
+                  <MessageSquare className="chat-option-icon" />
+                  <div className="flex-1">
+                    <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Resumir conversa com IA
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      Em desenvolvimento
+                    </div>
+                  </div>
+                </button>
+
+                {/* Selecionar mensagens */}
+                <button
+                  onClick={handleSelectMessages}
+                  disabled={true}
+                  className="chat-option-item"
+                >
+                  <CheckSquare className="chat-option-icon" />
+                  <div className="flex-1">
+                    <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Selecionar mensagens
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      Em desenvolvimento
+                    </div>
+                  </div>
+                </button>
+              </div>
+
+              {/* Footer do Modal */}
+              <div className="px-4 py-2 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-750">
+                <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                  Mais opções em breve
+                </p>
+              </div>
             </div>
           )}
         </div>
