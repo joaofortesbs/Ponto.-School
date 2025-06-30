@@ -648,7 +648,7 @@ const GruposEstudoView: React.FC = () => {
 
           const onlineUsers = new Set(sessions?.map(s => s.user_id) || []);
 
-          const membersGrid = document.getElementById('members-grid');
+          const membersGrid = document.getElementById('membros-grid');
           if (!membersGrid) return;
 
           membersGrid.innerHTML = '';
