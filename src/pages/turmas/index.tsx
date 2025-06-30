@@ -803,3 +803,136 @@ const turmaDetalhada = {
       peso: 30,
       data: "30/03/2023",
     },
+    {
+      id: "n6",
+      avaliacao: "Projeto Final",
+      nota: null,
+      peso: 40,
+      data: "15/06/2023",
+    },
+  ],
+  estatisticas: {
+    mediaGeral: 8.5,
+    frequencia: 95,
+    tarefasEntregues: 12,
+    tarefasPendentes: 3,
+  },
+};
+
+const TurmasPage: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const view = searchParams.get("view") || "todas";
+  const showGroupInterface = searchParams.has("showGroupInterface");
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredTurmas, setFilteredTurmas] = useState(turmasData);
+  const [selectedTurma, setSelectedTurma] = useState<string | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showTour, setShowTour] = useState(false);
+  const [showEpictusIA, setShowEpictusIA] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [activeView, setActiveView] = useState(view);
+
+  // Filter turmas based on view
+  useEffect(() => {
+    let filtered = turmasData;
+    
+    switch (view) {
+      case "oficiais":
+        filtered = turmasData.filter(turma => turma.categoria === "oficial");
+        break;
+      case "projetos":
+        filtered = turmasData.filter(turma => turma.categoria === "projeto");
+        break;
+      case "proprias":
+        filtered = turmasData.filter(turma => turma.categoria === "propria");
+        break;
+      default:
+        filtered = turmasData;
+    }
+
+    if (searchQuery) {
+      filtered = filtered.filter(turma =>
+        turma.nome.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        turma.professor.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        turma.disciplina.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    setFilteredTurmas(filtered);
+  }, [view, searchQuery]);
+
+  if (selectedTurma) {
+    return (
+      <TurmaDetail
+        turma={turmaDetalhada}
+        onBack={() => setSelectedTurma(null)}
+      />
+    );
+  }
+
+  // Se showGroupInterface for true, mostrar apenas a interface de grupos de estudos
+  if (showGroupInterface) {
+    return <GruposEstudoView />;
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
+      <TurmasHeader
+        onSearch={setSearchQuery}
+        onAddTurma={() => setShowAddModal(true)}
+        onShowEpictusIA={() => setShowEpictusIA(true)}
+        showGroupInterface={showGroupInterface}
+      />
+      
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {activeView === "desempenho" && <DesempenhoView />}
+        {activeView === "grupos" && <EstudosView />}
+        {activeView === "topicos" && <TopicosEstudoView />}
+        
+        {!["desempenho", "grupos", "topicos"].includes(activeView) && (
+          <>
+            <TurmaFilters
+              filteredCount={filteredTurmas.length}
+              totalCount={turmasData.length}
+            />
+            
+            {filteredTurmas.length === 0 ? (
+              <EmptyTurmasState onAddTurma={() => setShowAddModal(true)} />
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {filteredTurmas.map((turma) => (
+                  <TurmaCard
+                    key={turma.id}
+                    turma={turma}
+                    onClick={() => setSelectedTurma(turma.id)}
+                  />
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </main>
+
+      {showAddModal && (
+        <AddTurmaModal onClose={() => setShowAddModal(false)} />
+      )}
+
+      {showEpictusIA && (
+        <EpictusIAHelper onClose={() => setShowEpictusIA(false)} />
+      )}
+
+      {showOnboarding && (
+        <OnboardingModal onClose={() => setShowOnboarding(false)} />
+      )}
+
+      {showTour && (
+        <TourGuide onClose={() => setShowTour(false)} />
+      )}
+    </div>
+  );
+};
+
+export default TurmasPage;
