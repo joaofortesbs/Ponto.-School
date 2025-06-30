@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send } from "lucide-react";
+import { Send, Search, MoreVertical } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -24,12 +25,18 @@ interface ChatSectionProps {
 
 export default function ChatSection({ groupId }: ChatSectionProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [filteredMessages, setFilteredMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [userProfiles, setUserProfiles] = useState<Map<string, any>>(new Map());
+  const [onlineCount, setOnlineCount] = useState(0);
+  const [showSearchBar, setShowSearchBar] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const channelRef = useRef<any>(null);
+  const onlineChannelRef = useRef<any>(null);
   const { toast } = useToast();
 
   // Carregar usuário atual
@@ -47,7 +54,7 @@ export default function ChatSection({ groupId }: ChatSectionProps) {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [filteredMessages]);
 
   // Função para carregar perfis de usuários
   const loadUserProfiles = async (userIds: string[]) => {
@@ -72,6 +79,52 @@ export default function ChatSection({ groupId }: ChatSectionProps) {
     }
   };
 
+  // Atualizar status online
+  const updateOnlineStatus = async () => {
+    if (!currentUser || !groupId) return;
+    
+    try {
+      const { error } = await supabase
+        .from('user_sessions')
+        .upsert({
+          user_id: currentUser.id,
+          grupo_id: groupId,
+          last_active: new Date().toISOString()
+        }, {
+          onConflict: 'user_id,grupo_id'
+        });
+
+      if (error) {
+        console.error('Erro ao atualizar status online:', error);
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar status online:', error);
+    }
+  };
+
+  // Atualizar contagem de membros online
+  const updateOnlineCount = async () => {
+    if (!groupId) return;
+    
+    try {
+      const thirtySecondsAgo = new Date(Date.now() - 30000).toISOString();
+      const { data, error } = await supabase
+        .from('user_sessions')
+        .select('user_id')
+        .eq('grupo_id', groupId)
+        .gt('last_active', thirtySecondsAgo);
+
+      if (error) {
+        console.error('Erro ao contar membros online:', error);
+        return;
+      }
+
+      setOnlineCount(data?.length || 0);
+    } catch (error) {
+      console.error('Erro ao contar membros online:', error);
+    }
+  };
+
   useEffect(() => {
     if (!currentUser || !groupId) {
       console.log('Usuário ou grupo não disponível');
@@ -80,6 +133,7 @@ export default function ChatSection({ groupId }: ChatSectionProps) {
 
     loadMessages();
     setupRealtimeSubscription();
+    setupOnlineTracking();
 
     return () => {
       if (channelRef.current) {
@@ -87,8 +141,49 @@ export default function ChatSection({ groupId }: ChatSectionProps) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
       }
+      if (onlineChannelRef.current) {
+        console.log('Removendo canal online:', onlineChannelRef.current);
+        supabase.removeChannel(onlineChannelRef.current);
+        onlineChannelRef.current = null;
+      }
     };
   }, [groupId, currentUser]);
+
+  const setupOnlineTracking = () => {
+    if (!currentUser || !groupId) return;
+
+    // Atualizar status inicial
+    updateOnlineStatus();
+    updateOnlineCount();
+
+    // Configurar interval para atualizar status
+    const statusInterval = setInterval(updateOnlineStatus, 15000);
+
+    // Configurar realtime para contagem online
+    const onlineChannel = supabase
+      .channel(`online-${groupId}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'user_sessions',
+        filter: `grupo_id=eq.${groupId}`
+      }, () => {
+        updateOnlineCount();
+      })
+      .subscribe((status) => {
+        console.log('Status do canal online:', status);
+      });
+
+    onlineChannelRef.current = onlineChannel;
+
+    // Cleanup
+    return () => {
+      clearInterval(statusInterval);
+      if (onlineChannel) {
+        supabase.removeChannel(onlineChannel);
+      }
+    };
+  };
 
   const loadMessages = async () => {
     if (!currentUser || !groupId) {
@@ -154,6 +249,7 @@ export default function ChatSection({ groupId }: ChatSectionProps) {
       }
 
       setMessages(messagesData || []);
+      setFilteredMessages(messagesData || []);
 
     } catch (error) {
       console.error('Erro inesperado ao carregar mensagens:', error);
@@ -201,6 +297,7 @@ export default function ChatSection({ groupId }: ChatSectionProps) {
           }
 
           setMessages(prev => [...prev, newMessage]);
+          setFilteredMessages(prev => [...prev, newMessage]);
 
           // Scroll para a nova mensagem
           setTimeout(scrollToBottom, 100);
@@ -208,6 +305,7 @@ export default function ChatSection({ groupId }: ChatSectionProps) {
           console.error('Erro ao processar nova mensagem do Realtime:', error);
           // Adicionar mensagem mesmo sem profile
           setMessages(prev => [...prev, payload.new]);
+          setFilteredMessages(prev => [...prev, payload.new]);
           setTimeout(scrollToBottom, 100);
         }
       })
@@ -277,6 +375,19 @@ export default function ChatSection({ groupId }: ChatSectionProps) {
     }
   };
 
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    if (!query.trim()) {
+      setFilteredMessages(messages);
+      return;
+    }
+
+    const filtered = messages.filter(message =>
+      message.conteudo.toLowerCase().includes(query.toLowerCase())
+    );
+    setFilteredMessages(filtered);
+  };
+
   const formatTime = (timestamp: string) => {
     return new Date(timestamp).toLocaleTimeString('pt-BR', {
       hour: '2-digit',
@@ -323,13 +434,65 @@ export default function ChatSection({ groupId }: ChatSectionProps) {
     <div className="chat-section w-full h-full flex flex-col bg-[#001427] rounded-lg border border-gray-700">
       {/* Header do Chat */}
       <div className="chat-header p-4 border-b border-gray-600 bg-[#1a2a44] rounded-t-lg">
-        <h4 className="text-white font-semibold flex items-center gap-2">
-          <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-          Chat do Grupo
-        </h4>
-        <p className="text-gray-400 text-xs mt-1">
-          {messages.length} mensagem{messages.length !== 1 ? 's' : ''}
-        </p>
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+            <span className="text-white font-semibold">Chat do Grupo</span>
+            <span className="text-gray-400 text-sm">({onlineCount} online)</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowSearchBar(!showSearchBar)}
+              className="text-gray-400 hover:text-white hover:bg-gray-700"
+            >
+              <Search className="h-4 w-4" />
+            </Button>
+            <div className="relative">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowMenu(!showMenu)}
+                className="text-gray-400 hover:text-white hover:bg-gray-700"
+              >
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+              {showMenu && (
+                <div className="absolute right-0 top-full mt-1 bg-[#2a4066] border border-gray-600 rounded-lg shadow-lg z-10 min-w-[150px]">
+                  <div className="p-2 text-gray-400 text-sm cursor-not-allowed">Opção 1 (Inativa)</div>
+                  <div className="p-2 text-gray-400 text-sm cursor-not-allowed">Opção 2 (Inativa)</div>
+                  <div className="p-2 text-gray-400 text-sm cursor-not-allowed">Opção 3 (Inativa)</div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+        
+        {/* Barra de pesquisa */}
+        {showSearchBar && (
+          <div className="mt-3 flex items-center gap-2">
+            <Input
+              type="text"
+              placeholder="Pesquisar mensagens..."
+              value={searchQuery}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="flex-1 bg-[#001427] border-gray-600 text-white placeholder-gray-400 focus:border-[#FF6B00] focus:ring-1 focus:ring-[#FF6B00]"
+            />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setShowSearchBar(false);
+                setSearchQuery('');
+                setFilteredMessages(messages);
+              }}
+              className="text-gray-400 hover:text-white hover:bg-gray-700"
+            >
+              Fechar
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Área de mensagens */}
@@ -343,16 +506,20 @@ export default function ChatSection({ groupId }: ChatSectionProps) {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF6B00] mx-auto mb-4"></div>
             <p>Carregando mensagens...</p>
           </div>
-        ) : messages.length === 0 ? (
+        ) : filteredMessages.length === 0 ? (
           <div className="text-center text-gray-400 py-8">
             <div className="w-16 h-16 bg-[#1a2a44] rounded-full flex items-center justify-center mx-auto mb-4">
               <Send className="h-8 w-8 text-[#FF6B00]" />
             </div>
-            <p className="text-lg font-medium mb-2">Nenhuma mensagem ainda</p>
-            <p className="text-sm">Seja o primeiro a conversar no grupo!</p>
+            <p className="text-lg font-medium mb-2">
+              {searchQuery ? 'Nenhuma mensagem encontrada' : 'Nenhuma mensagem ainda'}
+            </p>
+            <p className="text-sm">
+              {searchQuery ? 'Tente outro termo de pesquisa' : 'Seja o primeiro a conversar no grupo!'}
+            </p>
           </div>
         ) : (
-          messages.map((message) => {
+          filteredMessages.map((message) => {
             const isOwnMessage = message.user_id === currentUser?.id;
             return (
               <div
@@ -428,6 +595,14 @@ export default function ChatSection({ groupId }: ChatSectionProps) {
           </>
         )}
       </div>
+
+      {/* Overlay para fechar menu */}
+      {showMenu && (
+        <div
+          className="fixed inset-0 z-5"
+          onClick={() => setShowMenu(false)}
+        />
+      )}
     </div>
   );
 }

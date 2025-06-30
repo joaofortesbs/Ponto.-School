@@ -824,6 +824,35 @@ export type Database = {
         }
         Relationships: []
       }
+      user_sessions: {
+        Row: {
+          grupo_id: string
+          id: string
+          last_active: string | null
+          user_id: string
+        }
+        Insert: {
+          grupo_id: string
+          id?: string
+          last_active?: string | null
+          user_id: string
+        }
+        Update: {
+          grupo_id?: string
+          id?: string
+          last_active?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_user_sessions_grupo"
+            columns: ["grupo_id"]
+            isOneToOne: false
+            referencedRelation: "grupos_estudo"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_skills: {
         Row: {
           category: string
