@@ -5,6 +5,7 @@ import { Search, Send, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import GroupSettingsModal from "../GroupSettingsModal";
 
 interface Message {
   id: string;
@@ -35,6 +36,7 @@ const DiscussoesTab: React.FC<DiscussoesTabProps> = ({ groupId, groupData }) => 
   const [showSearch, setShowSearch] = useState(false);
   const [onlineCount, setOnlineCount] = useState(0);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showGroupSettingsModal, setShowGroupSettingsModal] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const settingsModalRef = useRef<HTMLDivElement>(null);
 
@@ -160,6 +162,26 @@ const DiscussoesTab: React.FC<DiscussoesTabProps> = ({ groupId, groupData }) => 
     message.user_profile?.display_name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const handleSaveGroupSettings = async (settings: any) => {
+    try {
+      // Aqui você implementaria a lógica para salvar as configurações do grupo
+      console.log('Salvando configurações do grupo:', settings);
+
+      // toast({
+      //   title: "Sucesso",
+      //   description: "Configurações do grupo salvas com sucesso!",
+      //   variant: "default"
+      // });
+    } catch (error) {
+      console.error('Erro ao salvar configurações:', error);
+      // toast({
+      //   title: "Erro",
+      //   description: "Erro ao salvar configurações do grupo",
+      //   variant: "destructive"
+      // });
+    }
+  };
+
   return (
     <div className="flex flex-col h-full relative">
       {/* Header */}
@@ -176,6 +198,14 @@ const DiscussoesTab: React.FC<DiscussoesTabProps> = ({ groupId, groupData }) => 
             onClick={() => setShowSearch(!showSearch)}
           >
             <Search className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowGroupSettingsModal(true)}
+            className="h-8 w-8 p-0 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
+          >
+            <Settings className="h-4 w-4" />
           </Button>
         </div>
       </div>
@@ -249,6 +279,15 @@ const DiscussoesTab: React.FC<DiscussoesTabProps> = ({ groupId, groupData }) => 
             </div>
           </div>
         </div>
+      )}
+
+      {showGroupSettingsModal && groupData && (
+        <GroupSettingsModal
+          isOpen={showGroupSettingsModal}
+          onClose={() => setShowGroupSettingsModal(false)}
+          groupData={groupData}
+          onSave={handleSaveGroupSettings}
+        />
       )}
 
       {/* Search Bar */}
