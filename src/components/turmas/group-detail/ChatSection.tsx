@@ -374,7 +374,7 @@ export default function ChatSection({ groupId }: ChatSectionProps) {
       </div>
 
       {/* Área de mensagens */}
-      <div className="chat-messages flex-1 overflow-y-auto p-4 space-y-3 bg-[#001427]" style={{ maxHeight: '500px' }}></div>
+      <div className="chat-messages flex-1 overflow-y-auto p-4 space-y-3 bg-[#001427]" style={{ maxHeight: '500px' }}>
         {!currentUser ? (
           <div className="text-center text-gray-400 py-8">
             <p>Carregando usuário...</p>
