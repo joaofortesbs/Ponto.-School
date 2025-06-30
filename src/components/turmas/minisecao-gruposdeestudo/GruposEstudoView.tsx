@@ -655,14 +655,14 @@ const GruposEstudoView: React.FC = () => {
     let groups = [];
 
     if (currentView === "todos-grupos") {
-      groups = allGroups || [];
+      groups = allGroups;
     } else if (currentView === "meus-grupos") {
-      groups = myGroups || [];
+      groups = myGroups;
     }
 
-    if (!searchTerm) return groups || [];
+    if (!searchTerm) return groups;
 
-    return (groups || []).filter(group => 
+    return groups.filter(group => 
       group.nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       group.descricao?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       group.disciplina_area?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -688,13 +688,6 @@ const GruposEstudoView: React.FC = () => {
 
     // Renderizar interface do grupo se estiver ativa
     if (showGroupInterface && activeGroup) {
-      // Atualizar URL para indicar que a interface do grupo está ativa
-      if (!window.location.href.includes("showGroupInterface=true")) {
-        const url = new URL(window.location.href);
-        url.searchParams.set("showGroupInterface", "true");
-        window.history.replaceState({}, "", url.toString());
-      }
-
       return (
           <div className="w-full h-screen bg-[#f7f9fa] dark:bg-[#001427] flex flex-col transition-colors duration-300">
               {/* Header do grupo com navegação */}
@@ -706,13 +699,7 @@ const GruposEstudoView: React.FC = () => {
               >
                   <div className="flex items-center gap-4">
                       <Button
-                          onClick={() => {
-                            returnToGroups();
-                            // Remover parâmetro da URL quando voltar
-                            const url = new URL(window.location.href);
-                            url.searchParams.delete("showGroupInterface");
-                            window.history.replaceState({}, "", url.toString());
-                          }}
+                          onClick={returnToGroups}
                           variant="outline"
                           size="sm"
                           className="border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10 font-montserrat"
@@ -849,8 +836,8 @@ const GruposEstudoView: React.FC = () => {
                 <p className="text-gray-500 dark:text-gray-400">Carregando grupos...</p>
               </div>
             </div>
-          ) : (filteredGroups() || []).length > 0 ? (
-            (filteredGroups() || []).map((group) => (
+          ) : filteredGroups().length > 0 ? (
+            filteredGroups().map((group) => (
               <motion.div
                 key={group.id}
                 initial={{ opacity: 0, scale: 0.9 }}

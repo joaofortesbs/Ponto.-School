@@ -803,136 +803,408 @@ const turmaDetalhada = {
       peso: 30,
       data: "30/03/2023",
     },
+  ],
+  gruposEstudo: [
     {
-      id: "n6",
-      avaliacao: "Projeto Final",
-      nota: null,
-      peso: 40,
-      data: "15/06/2023",
+      id: "g1",
+      nome: "Grupo de Mecânica Quântica",
+      membros: ["Ana Silva", "Pedro Oliveira", "Você"],
+      proximaReuniao: "16/03/2023, 18:00",
+    },
+    {
+      id: "g2",
+      nome: "Preparação para o Projeto Final",
+      membros: ["Mariana Santos", "João Costa", "Carla Mendes", "Você"],
+      proximaReuniao: "23/03/2023, 19:00",
     },
   ],
-  estatisticas: {
-    mediaGeral: 8.5,
-    frequencia: 95,
-    tarefasEntregues: 12,
-    tarefasPendentes: 3,
-  },
 };
 
-const TurmasPage: React.FC = () => {
+export default function TurmasPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const searchParams = new URLSearchParams(location.search);
-  const view = searchParams.get("view") || "todas";
-  const showGroupInterface = searchParams.has("showGroupInterface");
-
   const [searchQuery, setSearchQuery] = useState("");
-  const [filteredTurmas, setFilteredTurmas] = useState(turmasData || []);
+  const [filteredTurmas, setFilteredTurmas] = useState(turmasData);
   const [selectedTurma, setSelectedTurma] = useState<string | null>(null);
-  const [showOnboarding, setShowOnboarding] = useState(false);
+  const searchParams = new URLSearchParams(location.search);
+  const currentView = searchParams.get("view") || "todas";
+  const currentAction = searchParams.get("action");
+  const [showOnboarding, setShowOnboarding] = useState(true);
   const [showTour, setShowTour] = useState(false);
-  const [showEpictusIA, setShowEpictusIA] = useState(false);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [activeView, setActiveView] = useState(view);
+  const [favoritos, setFavoritos] = useState<string[]>(["mat", "fis"]);
+  const [activeFilters, setActiveFilters] = useState<any>({});
 
-  // Filter turmas based on view
+  // Filter classes based on search query, view, and active filters
   useEffect(() => {
-    let filtered = turmasData || [];
-    
-    switch (view) {
-      case "oficiais":
-        filtered = (turmasData || []).filter(turma => turma.categoria === "oficial");
-        break;
-      case "projetos":
-        filtered = (turmasData || []).filter(turma => turma.categoria === "projeto");
-        break;
-      case "proprias":
-        filtered = (turmasData || []).filter(turma => turma.categoria === "propria");
-        break;
-      default:
-        filtered = turmasData || [];
+    let filtered = turmasData;
+
+    // Filter by view/category
+    if (currentView === "proprias") {
+      filtered = filtered.filter((turma) => turma.categoria === "propria");
+    } else if (currentView === "oficiais") {
+      filtered = filtered.filter((turma) => turma.categoria === "oficial");
+    } else if (currentView === "projetos") {
+      filtered = filtered.filter((turma) => turma.categoria === "projeto");
+    } else if (currentView === "grupos") {
+      filtered = filtered.filter((turma) => turma.categoria === "propria");
     }
 
-    if (searchQuery && filtered) {
-      filtered = filtered.filter(turma =>
-        turma.nome.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        turma.professor.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        turma.disciplina.toLowerCase().includes(searchQuery.toLowerCase())
+    // Filter by search query
+    if (searchQuery.trim() !== "") {
+      filtered = filtered.filter(
+        (turma) =>
+          turma.nome.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          turma.professor.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          turma.disciplina.toLowerCase().includes(searchQuery.toLowerCase()),
       );
     }
 
-    setFilteredTurmas(filtered || []);
-  }, [view, searchQuery]);
+    // Apply additional filters
+    if (activeFilters.professores && activeFilters.professores.length > 0) {
+      // This is a simplified example - in a real app, you'd have professor IDs
+      filtered = filtered.filter((turma) =>
+        activeFilters.professores.some((prof: string) =>
+          turma.professor.includes(prof),
+        ),
+      );
+    }
 
-  if (selectedTurma) {
-    return (
-      <TurmaDetail
-        turma={turmaDetalhada}
-        onBack={() => setSelectedTurma(null)}
-      />
+    if (activeFilters.disciplinas && activeFilters.disciplinas.length > 0) {
+      filtered = filtered.filter((turma) =>
+        activeFilters.disciplinas.includes(turma.id),
+      );
+    }
+
+    if (activeFilters.favoritos) {
+      filtered = filtered.filter((turma) => favoritos.includes(turma.id));
+    }
+
+    // Sort by progress if needed
+    if (activeFilters.progressoSort) {
+      filtered = [...filtered].sort((a, b) => {
+        if (activeFilters.progressoSort === "desc") {
+          return b.progresso - a.progresso;
+        } else {
+          return a.progresso - b.progresso;
+        }
+      });
+    }
+
+    // Add isFavorite property to each turma
+    filtered = filtered.map((turma) => ({
+      ...turma,
+      isFavorite: favoritos.includes(turma.id),
+      notificacoes: {
+        mensagens: turma.novasMensagens,
+        tarefas: Math.floor(Math.random() * 3), // Simulated data
+        materiais: Math.floor(Math.random() * 2), // Simulated data
+      },
+    }));
+
+    setFilteredTurmas(filtered);
+  }, [searchQuery, currentView, activeFilters, favoritos]);
+
+  // Check if onboarding should be shown
+  useEffect(() => {
+    const hideOnboarding = localStorage.getItem("hideMinhasTurmasOnboarding");
+    if (hideOnboarding === "true") {
+      setShowOnboarding(false);
+    }
+  }, []);
+
+  const handleTurmaSelect = (turmaId: string) => {
+    // Find the selected turma
+    const selectedTurmaData = turmasData.find((turma) => turma.id === turmaId);
+
+    // In a real app, you would fetch the detailed data for this specific turma
+    // For now, we'll just set the ID and let the detail component handle it
+    setSelectedTurma(turmaId);
+  };
+
+  const handleBackToList = () => {
+    setSelectedTurma(null);
+  };
+
+  const handleViewForum = (e: React.MouseEvent, turmaId: string) => {
+    e.stopPropagation();
+    // In a real app, this would navigate to the forum view
+    console.log(`View forum for turma ${turmaId}`);
+  };
+
+  const handleToggleFavorite = (turmaId: string) => {
+    setFavoritos((prev) =>
+      prev.includes(turmaId)
+        ? prev.filter((id) => id !== turmaId)
+        : [...prev, turmaId],
     );
-  }
+  };
 
-  // Se showGroupInterface for true, mostrar apenas a interface de grupos de estudos
-  if (showGroupInterface) {
-    return <GruposEstudoView />;
-  }
+  const handleFilterChange = (filters: any) => {
+    setActiveFilters(filters);
+  };
+
+  const [showAddTurmaModal, setShowAddTurmaModal] = useState(false);
+
+  const handleAddTurma = () => {
+    setShowAddTurmaModal(true);
+  };
+
+  const handleAddTurmaSubmit = (code: string) => {
+    // In a real app, this would add the turma with the given code
+    console.log(`Adding turma with code: ${code}`);
+    // For demo purposes, let's just show a notification or redirect
+    setShowAddTurmaModal(false);
+  };
+
+  const handleStartTour = () => {
+    setShowOnboarding(false);
+    setShowTour(true);
+  };
+
+  const handleCompleteTour = () => {
+    setShowTour(false);
+  };
+
+  const handleSkipTour = () => {
+    setShowTour(false);
+  };
+
+  const handleExplore = () => {
+    // In a real app, this would navigate to a page with available classes
+    console.log("Explore turmas");
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
-      <TurmasHeader
-        onSearch={setSearchQuery}
-        onAddTurma={() => setShowAddModal(true)}
-        onShowEpictusIA={() => setShowEpictusIA(true)}
-        showGroupInterface={showGroupInterface}
+    <div className="w-full h-full bg-[#f7f9fa] dark:bg-[#001427] p-6 space-y-6 transition-colors duration-300">
+      {/* Onboarding Modal */}
+      <OnboardingModal
+        isOpen={showOnboarding}
+        onClose={() => setShowOnboarding(false)}
+        onStartTour={handleStartTour}
       />
-      
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {activeView === "desempenho" && <DesempenhoView />}
-        {activeView === "grupos" && <EstudosView />}
-        {activeView === "topicos" && <TopicosEstudoView />}
-        
-        {!["desempenho", "grupos", "topicos"].includes(activeView) && (
-          <>
-            <TurmaFilters
-              filteredCount={filteredTurmas.length}
-              totalCount={turmasData.length}
-            />
-            
-            {filteredTurmas.length === 0 ? (
-              <EmptyTurmasState onAddTurma={() => setShowAddModal(true)} />
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {(filteredTurmas || []).map((turma) => (
-                  <TurmaCard
-                    key={turma.id}
-                    turma={turma}
-                    onClick={() => setSelectedTurma(turma.id)}
-                  />
-                ))}
-              </div>
-            )}
-          </>
-        )}
-      </main>
 
-      {showAddModal && (
-        <AddTurmaModal onClose={() => setShowAddModal(false)} />
-      )}
-
-      {showEpictusIA && (
-        <EpictusIAHelper onClose={() => setShowEpictusIA(false)} />
-      )}
-
-      {showOnboarding && (
-        <OnboardingModal onClose={() => setShowOnboarding(false)} />
-      )}
-
+      {/* Tour Guide */}
       {showTour && (
-        <TourGuide onClose={() => setShowTour(false)} />
+        <TourGuide
+          isActive={showTour}
+          onComplete={handleCompleteTour}
+          onSkip={handleSkipTour}
+        />
+      )}
+
+      {/* Add Turma Modal */}
+      <AddTurmaModal
+        isOpen={showAddTurmaModal || currentAction === "add"}
+        onClose={() => {
+          setShowAddTurmaModal(false);
+          if (currentAction === "add") {
+            navigate("/turmas");
+          }
+        }}
+        onAddTurma={handleAddTurmaSubmit}
+      />
+
+      {/* Header */}
+      <div className="turmas-header">
+        <TurmasHeader
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          onAddTurma={handleAddTurma}
+        />
+      </div>
+
+      {/* Main Content */}
+      {selectedTurma ? (
+        <TurmaDetail
+          turmaDetalhada={turmaDetalhada}
+          onBack={handleBackToList}
+        />
+      ) : (
+        <>
+          <div className="flex items-center justify-end mb-4">
+            <div className="flex items-center gap-2 epictus-ia-helper">
+              <EpictusIAHelper
+                context="turmas"
+                suggestions={[
+                  "Como posso melhorar meu desempenho nas turmas?",
+                  "Quais materiais complementares você recomenda?",
+                  "Ajude-me a criar um plano de estudos para esta disciplina",
+                  "Quais são os tópicos mais importantes desta matéria?",
+                ]}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            {/* Category Tabs */}
+            <Tabs value={currentView} className="w-full">
+              <TabsList className="turmas-tabs w-full max-w-4xl mx-auto bg-white dark:bg-[#1E293B] p-1.5 rounded-xl shadow-md border border-[#FF6B00]/10 dark:border-[#FF6B00]/20 flex justify-between animate-gradient-x hidden">
+                <motion.div className="contents" layout>
+                  <TabsTrigger
+                    value="todas"
+                    onClick={() => navigate("/turmas?view=todas")}
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#FF6B00]/10 data-[state=active]:to-[#FF8C40]/10 data-[state=active]:text-[#FF6B00] data-[state=active]:border-[#FF6B00] border rounded-lg px-4 py-2 font-montserrat flex items-center gap-2 transition-all duration-300 hover:shadow-md data-[state=active]:shadow-md transform hover:scale-[1.02] data-[state=active]:scale-[1.02]"
+                  >
+                    <Home className="h-4 w-4" /> Todas
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="oficiais"
+                    onClick={() => navigate("/turmas?view=oficiais")}
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#FF6B00]/10 data-[state=active]:to-[#FF8C40]/10 data-[state=active]:text-[#FF6B00] data-[state=active]:border-[#FF6B00] border rounded-lg px-4 py-2 font-montserrat flex items-center gap-2 transition-all duration-300 hover:shadow-md data-[state=active]:shadow-md transform hover:scale-[1.02] data-[state=active]:scale-[1.02]"
+                  >
+                    <GraduationCap className="h-4 w-4" /> Turmas Oficiais
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="proprias"
+                    onClick={() => navigate("/turmas?view=proprias")}
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#FF6B00]/10 data-[state=active]:to-[#FF8C40]/10 data-[state=active]:text-[#FF6B00] data-[state=active]:border-[#FF6B00] border rounded-lg px-4 py-2 font-montserrat flex items-center gap-2 transition-all duration-300 hover:shadow-md data-[state=active]:shadow-md transform hover:scale-[1.02] data-[state=active]:scale-[1.02]"
+                  >
+                    <FolderKanban className="h-4 w-4" /> Minhas Turmas
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="grupos-estudo"
+                    onClick={() => navigate("/turmas?view=grupos-estudo")}
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#FF6B00]/10 data-[state=active]:to-[#FF8C40]/10 data-[state=active]:text-[#FF6B00] data-[state=active]:border-[#FF6B00] border rounded-lg px-4 py-2 font-montserrat flex items-center gap-2 transition-all duration-300 hover:shadow-md data-[state=active]:shadow-md transform hover:scale-[1.02] data-[state=active]:scale-[1.02]"
+                  >
+                    <Users2 className="h-4 w-4" /> Grupos de Estudo
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="desempenho"
+                    onClick={() => navigate("/turmas?view=desempenho")}
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#FF6B00]/10 data-[state=active]:to-[#FF8C40]/10 data-[state=active]:text-[#FF6B00] data-[state=active]:border-[#FF6B00] border rounded-lg px-4 py-2 font-montserrat flex items-center gap-2 transition-all duration-300 hover:shadow-md data-[state=active]:shadow-md transform hover:scale-[1.02] data-[state=active]:scale-[1.02]"
+                  >
+                    <BarChart className="h-4 w-4" /> Desempenho
+                  </TabsTrigger>
+                </motion.div>
+              </TabsList>
+
+              {/* Tab Content */}
+              <TabsContent value="todas" className="mt-6">
+                <div className="mb-4 turmas-filters">
+                  <TurmaFilters
+                    professores={[
+                      { id: "prof1", nome: "Prof. Ricardo Oliveira" },
+                      { id: "prof2", nome: "Profa. Carla Mendes" },
+                      { id: "prof3", nome: "Prof. Carlos Santos" },
+                      { id: "prof4", nome: "Prof. Roberto Alves" },
+                      { id: "prof5", nome: "Profa. Mariana Costa" },
+                    ]}
+                    disciplinas={[
+                      { id: "mat", nome: "Matemática" },
+                      { id: "port", nome: "Língua Portuguesa" },
+                      { id: "fis", nome: "Física" },
+                      { id: "quim", nome: "Química" },
+                      { id: "bio", nome: "Biologia" },
+                    ]}
+                    onFilterChange={handleFilterChange}
+                    favoritos={favoritos}
+                  />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 turmas-grid">
+                  {filteredTurmas.map((turma) => (
+                    <TurmaCard
+                      key={turma.id}
+                      turma={turma}
+                      onClick={handleTurmaSelect}
+                      onViewForum={handleViewForum}
+                      onToggleFavorite={handleToggleFavorite}
+                    />
+                  ))}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="oficiais" className="mt-6">
+                <div className="mb-4 flex justify-between items-center">
+                  <TurmaFilters
+                    professores={[
+                      { id: "prof1", nome: "Prof. Ricardo Oliveira" },
+                      { id: "prof2", nome: "Profa. Carla Mendes" },
+                      { id: "prof3", nome: "Prof. Carlos Santos" },
+                      { id: "prof4", nome: "Prof. Roberto Alves" },
+                      { id: "prof5", nome: "Profa. Mariana Costa" },
+                    ]}
+                    disciplinas={[
+                      { id: "mat", nome: "Matemática" },
+                      { id: "port", nome: "Língua Portuguesa" },
+                      { id: "fis", nome: "Física" },
+                      { id: "quim", nome: "Química" },
+                      { id: "bio", nome: "Biologia" },
+                    ]}
+                    onFilterChange={handleFilterChange}
+                    favoritos={favoritos}
+                  />
+                  <EpictusIAHelper context="turmas oficiais" />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 turmas-grid">
+                  {filteredTurmas
+                    .filter((turma) => turma.categoria === "oficial")
+                    .map((turma) => (
+                      <TurmaCard
+                        key={turma.id}
+                        turma={turma}
+                        onClick={handleTurmaSelect}
+                        onViewForum={handleViewForum}
+                        onToggleFavorite={handleToggleFavorite}
+                      />
+                    ))}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="proprias" className="mt-6">
+                <div className="mb-4 flex justify-end">
+                  <EpictusIAHelper context="minhas turmas" />
+                </div>
+                <div className="text-center py-8">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="flex flex-col items-center justify-center"
+                  >
+                    <div className="w-24 h-24 rounded-full bg-[#FF6B00]/10 dark:bg-[#FF6B00]/20 flex items-center justify-center mb-6 animate-pulse-custom">
+                      <FolderKanban className="h-12 w-12 text-[#FF6B00]" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-white mb-3 font-montserrat animate-highlight">
+                      Você ainda não criou nenhuma turma própria
+                    </h3>
+                    <p className="text-gray-600 dark:text-gray-400 max-w-md mb-8 font-open-sans">
+                      Crie sua primeira turma personalizada e comece a
+                      compartilhar conhecimento com outros estudantes.
+                    </p>
+                    <Button
+                      className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white px-6 py-6 rounded-xl shadow-md transition-all duration-300 hover:shadow-lg transform hover:scale-[1.02] font-montserrat font-semibold text-lg animate-gradient-x"
+                      onClick={() => navigate("/turmas/criar-turma")}
+                    >
+                      <Plus className="h-5 w-5 mr-2" /> Criar Minha Primeira
+                      Turma
+                    </Button>
+                  </motion.div>
+                </div>
+              </TabsContent>
+
+
+
+              <TabsContent value="desempenho" className="mt-6">
+                <DesempenhoView />
+              </TabsContent>
+              <TabsContent value="grupos-estudo" className="mt-6">
+                <GruposEstudoView className="mb-8" />
+                <TopicosEstudoView className="mb-8" />
+              </TabsContent>
+            </Tabs>
+          </div>
+        </>
       )}
     </div>
   );
-};
+}
 
-export default TurmasPage;
+// Esta é uma função local apenas para fallback
+function GruposEstudoPlaceholder() {
+  return (
+    <div>
+      {/* Implement Grupos de Estudo view here */}
+      <p>Grupos de Estudo view</p>
+    </div>
+  );
+}

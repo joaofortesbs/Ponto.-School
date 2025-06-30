@@ -961,19 +961,10 @@ const forumTopicos = [
   }
 ];
 
-interface TurmasViewProps {
-  showGroupInterface?: boolean;
-}
-
-const TurmasView: React.FC<TurmasViewProps> = ({ showGroupInterface = false }) => {
+const TurmasView: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredTurmas, setFilteredTurmas] = useState(turmasData);
   const [selectedTurma, setSelectedTurma] = useState<string | null>(null);
-  
-  // Detectar se a interface do grupo está ativa através de múltiplas fontes
-  const isGroupInterfaceActive = showGroupInterface || 
-                                 new URLSearchParams(window.location.search).has("showGroupInterface") ||
-                                 window.location.href.includes("interface-grupo-ativa");
   const [activeTab, setActiveTab] = useState("conteudo");
   const [activeView, setActiveView] = useState("");
   const [expandedModules, setExpandedModules] = useState<string[]>(["m1"]);
@@ -1172,7 +1163,6 @@ const TurmasView: React.FC<TurmasViewProps> = ({ showGroupInterface = false }) =
   return (
     <div className="container mx-auto p-6 max-w-[1400px]">
       {/* Page Header */}
-      {!isGroupInterfaceActive && (
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] flex items-center justify-center shadow-md">
@@ -1206,23 +1196,15 @@ const TurmasView: React.FC<TurmasViewProps> = ({ showGroupInterface = false }) =
           </Button>
         </div>
       </div>
-      )}
 
       {/* Main Content */}
       {!selectedTurma ? (
         // Turmas List View with Topics and Study Groups
         <div className="space-y-8">
 
-          {/* Verificar se deve mostrar a interface dos grupos */}
-          {isGroupInterfaceActive ? (
-            <div>
-              {/* Interface dos grupos de estudos será renderizada aqui se necessário */}
-            </div>
-          ) : (
-            <>
-              {/* Regular Classes Section */}
-              <div className="bg-white dark:bg-[#1E293B] rounded-xl p-6 shadow-md border border-[#FF6B00]/10 dark:border-[#FF6B00]/20">
-                <h2 className="text-2xl font-bold text-[#001427] dark:text-white mb-6 font-montserrat">Minhas Turmas</h2>
+          {/* Regular Classes Section */}
+          <div className="bg-white dark:bg-[#1E293B] rounded-xl p-6 shadow-md border border-[#FF6B00]/10 dark:border-[#FF6B00]/20">
+            <h2 className="text-2xl font-bold text-[#001427] dark:text-white mb-6 font-montserrat">Minhas Turmas</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredTurmas.map((turma) => (
@@ -1323,8 +1305,6 @@ const TurmasView: React.FC<TurmasViewProps> = ({ showGroupInterface = false }) =
               ))}
             </div>
           </div>
-            </>
-          )}
         </div>
       ) : (
         // Turma Detail View
@@ -1517,7 +1497,9 @@ const TurmasView: React.FC<TurmasViewProps> = ({ showGroupInterface = false }) =
                                   </div>
                                 </div>
                               ))}
-                            </div>                          )}
+                            </div>
+                          )}
+                        ```javascript
                         </div>
                       ))}
                     </div>
