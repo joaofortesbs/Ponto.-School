@@ -6,6 +6,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Send, Search, MoreHorizontal, Settings, CheckSquare, MessageSquare } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import GroupSettingsModal from './GroupSettingsModal';
 
 interface ChatMessage {
   id: string;
@@ -35,6 +36,8 @@ export default function ChatSection({ groupId }: ChatSectionProps) {
   const [onlineCount, setOnlineCount] = useState(0);
   const [showSearchBar, setShowSearchBar] = useState(false);
   const [showOptionsMenu, setShowOptionsMenu] = useState(false);
+  const [showGroupSettingsModal, setShowGroupSettingsModal] = useState(false);
+  const [groupData, setGroupData] = useState<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const channelRef = useRef<any>(null);
   const onlineChannelRef = useRef<any>(null);
@@ -48,6 +51,32 @@ export default function ChatSection({ groupId }: ChatSectionProps) {
     };
     getCurrentUser();
   }, []);
+
+  // Carregar dados do grupo
+  useEffect(() => {
+    const loadGroupData = async () => {
+      if (!groupId) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('grupos_estudo')
+          .select('*')
+          .eq('id', groupId)
+          .single();
+
+        if (error) {
+          console.error('Erro ao carregar dados do grupo:', error);
+          return;
+        }
+
+        setGroupData(data);
+      } catch (error) {
+        console.error('Erro ao carregar dados do grupo:', error);
+      }
+    };
+
+    loadGroupData();
+  }, [groupId]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -376,6 +405,17 @@ export default function ChatSection({ groupId }: ChatSectionProps) {
     }
   };
 
+  const handleSettingsClick = () => {
+    setShowGroupSettingsModal(true);
+    setShowOptionsMenu(false);
+    console.log("Modal de configurações do grupo acionado");
+  };
+
+  const handleSaveGroupSettings = (settings: any) => {
+    console.log("Configurações do grupo salvas:", settings);
+    // Aqui você pode implementar a lógica para salvar as configurações
+  };
+
   const handleSearch = (query: string) => {
     setSearchQuery(query);
     if (!query.trim()) {
@@ -464,8 +504,8 @@ export default function ChatSection({ groupId }: ChatSectionProps) {
               <PopoverContent className="w-56 p-1 bg-[#1e293b] border-gray-700" align="end">
                 <div className="space-y-1">
                   <button 
-                    className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-800 rounded-md flex items-center gap-2 opacity-50 cursor-not-allowed"
-                    disabled={true}
+                    className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-800 rounded-md flex items-center gap-2"
+                    onClick={handleSettingsClick}
                   >
                     <Settings className="h-4 w-4" />
                     Configurações
@@ -618,6 +658,15 @@ export default function ChatSection({ groupId }: ChatSectionProps) {
       </div>
 
       
+    {/* Group Settings Modal */}
+      {showGroupSettingsModal && groupData && (
+        <GroupSettingsModal
+          isOpen={showGroupSettingsModal}
+          onClose={() => setShowGroupSettingsModal(false)}
+          group={groupData}
+          onSave={handleSaveGroupSettings}
+        />
+      )}
     </div>
   );
 }
