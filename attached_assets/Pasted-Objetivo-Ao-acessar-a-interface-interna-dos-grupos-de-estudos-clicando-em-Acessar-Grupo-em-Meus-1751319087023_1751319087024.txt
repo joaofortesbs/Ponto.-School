@@ -1,0 +1,284 @@
+Objetivo: Ao acessar a interface interna dos grupos de estudos (clicando em "Acessar Grupo" em "Meus Grupos"), todo o cabeçalho "Minhas Turmas" deve desaparecer, e acima do título do grupo, adicionar uma capa/imagem de banner com bordas arredondadas e uma imagem circular do grupo no canto inferior esquerdo do banner. Ambas as imagens serão configuráveis pelo usuário na seção "Aparência & Tema" do modal de configurações, onde o usuário enviará imagens de sua máquina, salvas no banco de dados Supabase. O cabeçalho "Minhas Turmas" deve reaparecer ao sair (clicando em "Voltar"). Todas as funcionalidades existentes devem ser preservadas, e o design/layout da mini-seção "Grupos de Estudos" deve ser restaurado ao sair, sem erros ou bugs.
+
+
+
+Instruções Gerais
+
+
+
+
+
+Escopo Restrito: Foque nas funções accessGroup, returnToGroups, e showSettingsModal no frontend para gerenciar a visibilidade do cabeçalho e adicionar/configurar a capa/banner e imagem circular. Não modifique o design ou layout interno da interface de grupos de estudos, nem os modais de "Adicionar Grupo" e "Criar Novo Grupo", nem outras partes do código (ex.: createGroup, joinGroupByCode, loadAllGroups).
+
+
+
+Preservação: Mantenha intactas todas as funcionalidades existentes (criação via modal, adesão, saída/exclusão, chat, pesquisa, contagem de online), sem impacto no layout ou design ao sair.
+
+
+
+Eficiência: Use Supabase Storage para salvar as imagens enviadas e atualize a tabela grupos_estudo com os URLs. Inclua validação e logs para evitar falhas.
+
+
+
+Testes Completos: Após as alterações, teste a transição, a exibição da capa/imagem, e o envio/configuração no modal, e envie os logs.
+
+
+
+Análise de Cenários
+
+
+
+
+
+Cenário 1: Entrada na Interface Interna - O cabeçalho "Minhas Turmas" deve desaparecer, e a capa/banner com imagem circular deve aparecer acima do título com dados do Supabase.
+
+
+
+Cenário 2: Saída da Interface Interna - O cabeçalho "Minhas Turmas" deve reaparecer, e a capa/banner deve ser removida.
+
+
+
+Cenário 3: Configuração no Modal - No modal de configurações, a seção "Aparência & Tema" deve permitir enviar imagens para capa e grupo, salvando no Supabase.
+
+
+
+Cenário 4: Erro de Transição ou Upload - Implementar retry para restaurar o estado ou reprocessar o upload.
+
+
+
+Modificações no Frontend (JavaScript)
+
+ // Atualizar accessGroup para ocultar o cabeçalho e adicionar capa/banner const accessGroup = async (groupId) => { try { console.log(`Acessando grupo ${groupId}...`); const userId = await validateUserAuth(); if (!userId) { console.error('Usuário não autenticado.'); alert('Usuário não autenticado.'); return; } 
+
+// Ocultar todo o cabeçalho de Minhas Turmas
+const header = document.querySelector('.groups-header');
+if (header) header.style.display = 'none';
+
+// Cache para nomes e imagens de perfil
+const userCache = new Map();
+const { data: users } = await supabase
+  .from('auth.users')
+  .select('id, user_metadata')
+  .in('id', (await supabase.from('membros_grupos').select('user_id').eq('grupo_id', groupId)).data.map(u => u.user_id));
+users.forEach(user => {
+  const metadata = user.user_metadata || {};
+  userCache.set(user.id, {
+    name: metadata.name || `Usuário ${user.id.slice(0, 5)}`,
+    avatar_url: metadata.avatar_url || null
+  });
+});
+
+// Contagem de membros online
+let onlineCount = 0;
+const updateOnlineCount = () => {
+  const now = new Date();
+  onlineCount = (supabase
+    .from('user_sessions')
+    .select('user_id', { count: 'exact' })
+    .eq('grupo_id', groupId)
+    .gte('last_active', new Date(now - 30 * 1000).toISOString())
+  ).then(({ count }) => count || 0);
+};
+setInterval(updateOnlineCount, 15000);
+updateOnlineCount();
+
+// Carregar dados do grupo, incluindo capa e imagem
+const { data: groupData } = await supabase
+  .from('grupos_estudo')
+  .select('nome, banner_url, group_image_url')
+  .eq('id', groupId)
+  .single();
+const groupName = groupData.nome;
+const bannerUrl = groupData.banner_url || 'https://via.placeholder.com/800x200'; // Default se não configurado
+const groupImageUrl = groupData.group_image_url || 'https://via.placeholder.com/50'; // Default se não configurado
+
+const groupInterface = document.createElement('div');
+groupInterface.id = 'group-interface';
+groupInterface.style.cssText = 'margin-left: 250px; padding: 20px;';
+groupInterface.innerHTML = `
+  <div style="position: relative;">
+    <img src="${bannerUrl}" alt="Capa do Grupo" style="width: 100%; height: 200px; object-fit: cover; border-radius: 10px; margin-bottom: 10px;">
+    <img src="${groupImageUrl}" alt="Imagem do Grupo" style="position: absolute; bottom: 10px; left: 10px; width: 50px; height: 50px; border-radius: 50%; border: 2px solid #fff;">
+    <h2 style="margin-top: 10px; color: #333; text-align: center;">${groupName}</h2>
+  </div>
+  <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #ccc; padding-bottom: 10px;">
+    <div class="mini-sections">
+      <button class="active" style="background: #3498db; color: white; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 5px;">Discussões</button>
+      <button disabled style="background: #ddd; color: #666; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 5px;">Tarefas</button>
+      <button disabled style="background: #ddd; color: #666; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 5px;">Membros</button>
+      <button disabled style="background: #ddd; color: #666; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 5px;">Configurações</button>
+      <button disabled style="background: #ddd; color: #666; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 5px;">Notificações</button>
+    </div>
+    <div style="display: flex; align-items: center;">
+      <span id="online-count" style="margin-right: 10px; color: #2ecc71;">Online: <span id="online-number">0</span></span>
+      <button id="search-icon" style="background: none; border: none; cursor: pointer; margin-right: 10px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+      </button>
+      <button id="menu-icon" style="background: none; border: none; cursor: pointer;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle>
+        </svg>
+      </button>
+    </div>
+  </div>
+  <div id="discussions-content" style="margin-top: 20px; height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
+    <div id="chat-messages" style="display: flex; flex-direction: column-reverse;"></div>
+  </div>
+  <div style="margin-top: 10px; display: flex; align-items: center;">
+    <input id="chat-input" type="text" placeholder="Digite sua mensagem..." style="flex-grow: 1; padding: 5px; border: 1px solid #ccc; border-radius: 5px; margin-right: 5px;">
+    <button onclick="sendMessage('${groupId}')" style="background: #2ecc71; color: white; border: none; padding: 5px 10px; border-radius: 5px;">Enviar</button>
+  </div>
+  <div id="search-bar" style="display: none; margin-top: 10px;">
+    <input id="search-input" type="text" placeholder="Pesquisar mensagens..." style="width: 200px; padding: 5px; border: 1px solid #ccc; border-radius: 5px;">
+    <button onclick="hideSearchBar()" style="background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 5px; margin-left: 5px;">Fechar</button>
+  </div>
+`;
+document.getElementById('main-content').innerHTML = '';
+document.getElementById('main-content').appendChild(groupInterface);
+
+// Atualizar contagem de online
+setInterval(() => {
+  updateOnlineCount().then(count => {
+    document.getElementById('online-number').textContent = count;
+  });
+}, 15000);
+
+// Configurar Realtime para chat e online
+const channel = supabase
+  .channel(`chat-${groupId}`)
+  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mensagens', filter: `grupo_id=eq.${groupId}` }, (payload) => {
+    addMessageToChat(payload.new, userCache);
+  })
+  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'user_sessions', filter: `grupo_id=eq.${groupId}` }, () => {
+    updateOnlineCount().then(count => document.getElementById('online-number').textContent = count);
+  })
+  .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'user_sessions', filter: `grupo_id=eq.${groupId}` }, () => {
+    updateOnlineCount().then(count => document.getElementById('online-number').textContent = count);
+  })
+  .subscribe(async (status) => {
+    if (status === 'SUBSCRIBED') {
+      console.log(`Subscribed to chat and online channel for group ${groupId}`);
+      const { data: messages } = await supabase
+        .from('mensagens')
+        .select('*')
+        .eq('grupo_id', groupId)
+        .order('enviado_em', { ascending: false });
+      messages.forEach(message => addMessageToChat(message, userCache));
+      updateOnlineCount().then(count => document.getElementById('online-number').textContent = count);
+    }
+  });
+
+// Evento para ícone de pesquisa
+document.getElementById('search-icon').addEventListener('click', () => {
+  document.getElementById('search-bar').style.display = 'block';
+  document.getElementById('search-input').focus();
+  filterMessages(groupId);
+});
+
+// Evento para ícone de três pontos
+document.getElementById('menu-icon').addEventListener('click', () => showOptionsModal(groupId));
+
+console.log(`Interface do grupo ${groupId} carregada com capa e chat configurado.`);
+
+} catch (error) { console.error('Erro ao acessar grupo:', error.message, error.stack); alert('Erro ao acessar o grupo. Verifique o console.'); // Retry ao restaurar o cabeçalho em caso de erro const header = document.querySelector('.groups-header'); if (header) header.style.display = 'flex'; } };
+
+// Atualizar returnToGroups para restaurar o cabeçalho const returnToGroups = () => { try { console.log('Retornando para a lista de grupos...'); const header = document.querySelector('.groups-header'); if (header) header.style.display = 'flex'; // Restaurar o cabeçalho document.getElementById('main-content').innerHTML = ''; // Limpar a interface interna loadMyGroups(); // Recarregar a lista de grupos } catch (error) { console.error('Erro ao retornar para grupos:', error.message, error.stack); alert('Erro ao retornar. Verifique o console.'); } };
+
+// Atualizar showSettingsModal para incluir seção "Aparência & Tema" const showSettingsModal = async (groupId) => { try { const { data: groupData, error } = await supabase .from('grupos_estudo') .select('nome, tipo_grupo, is_private, is_visible_to_all, codigo_unico, banner_url, group_image_url') .eq('id', groupId) .single(); if (error) throw error;
+
+const modal = document.createElement('div');
+modal.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.5); z-index: 2000; width: 400px; font-family: Arial, sans-serif; text-align: left;';
+modal.innerHTML = `
+  <h2 style="color: #333; margin-top: 0;">Configurações do Grupo</h2>
+  <div style="margin-bottom: 15px;">
+    <label style="font-weight: bold;">Nome do Grupo:</label>
+    <p>${groupData.nome}</p>
+  </div>
+  <div style="margin-bottom: 15px;">
+    <label style="font-weight: bold;">Tipo de Grupo:</label>
+    <p>${groupData.tipo_grupo}</p>
+  </div>
+  <div style="margin-bottom: 15px;">
+    <label style="font-weight: bold;">Visibilidade:</label>
+    <p>${groupData.is_private ? 'Privado' : 'Público'}</p>
+  </div>
+  <div style="margin-bottom: 15px;">
+    <label style="font-weight: bold;">Visível para Todos:</label>
+    <p>${groupData.is_visible_to_all ? 'Sim' : 'Não'}</p>
+  </div>
+  <div style="margin-bottom: 15px; position: relative;">
+    <label style="font-weight: bold;">Código Único:</label>
+    <p id="code-text" style="margin: 0; cursor: pointer;" onclick="copyCode(this, '${groupData.codigo_unico}')">${groupData.codigo_unico}</p>
+    <span id="copy-feedback" style="display: none; position: absolute; top: -20px; right: 0; color: #2ecc71; font-size: 12px;">Copiado!</span>
+  </div>
+  <div style="margin-bottom: 15px;">
+    <label style="font-weight: bold;">Aparência & Tema:</label>
+    <div>
+      <label>Imagem de Capa:</label>
+      <input type="file" id="banner-upload" accept="image/*" style="margin-top: 5px;">
+      <button onclick="uploadImage('banner', '${groupId}')" style="background: #2ecc71; color: white; border: none; padding: 5px 10px; border-radius: 5px; margin-top: 5px;">Salvar Capa</button>
+      <img src="${groupData.banner_url || 'https://via.placeholder.com/100'}" alt="Capa Atual" style="width: 100px; height: 50px; object-fit: cover; margin-top: 5px; border-radius: 5px;">
+    </div>
+    <div style="margin-top: 10px;">
+      <label>Imagem do Grupo:</label>
+      <input type="file" id="group-image-upload" accept="image/*" style="margin-top: 5px;">
+      <button onclick="uploadImage('group_image', '${groupId}')" style="background: #2ecc71; color: white; border: none; padding: 5px 10px; border-radius: 5px; margin-top: 5px;">Salvar Imagem</button>
+      <img src="${groupData.group_image_url || 'https://via.placeholder.com/50'}" alt="Imagem Atual" style="width: 50px; height: 50px; object-fit: cover; margin-top: 5px; border-radius: 50%;">
+    </div>
+  </div>
+  <button onclick="this.parentElement.remove();" style="background: #e74c3c; color: white; border: none; padding: 5px 15px; border-radius: 5px; cursor: pointer;">Fechar</button>
+`;
+document.body.appendChild(modal);
+
+// Responsividade
+if (window.innerWidth < 600) {
+  modal.style.width = '90%';
+}
+
+// Fechamento com Escape
+const closeOnEscape = (e) => {
+  if (e.key === 'Escape') {
+    modal.remove();
+    document.removeEventListener('keydown', closeOnEscape);
+  }
+};
+document.addEventListener('keydown', closeOnEscape);
+
+// Fechamento ao clicar fora
+const closeOnOutsideClick = (e) => {
+  if (!modal.contains(e.target)) {
+    modal.remove();
+    document.removeEventListener('click', closeOnOutsideClick);
+  }
+};
+setTimeout(() => document.addEventListener('click', closeOnOutsideClick), 100);
+
+} catch (error) { console.error('Erro ao carregar configurações:', error.message, error.stack); alert('Erro ao carregar configurações. Verifique o console.'); setTimeout(() => showSettingsModal(groupId), 2000); // Retry após 2 segundos } };
+
+// Função para upload de imagens const uploadImage = async (type, groupId) => { try { const input = document.getElementById(${type === 'banner' ? 'banner-upload' : 'group-image-upload'}); const file = input.files[0]; if (!file) { alert('Selecione uma imagem para enviar.'); return; }
+
+const fileExt = file.name.split('.').pop();
+const fileName = `${groupId}/${type}_${Date.now()}.${fileExt}`;
+const { error: uploadError } = await supabase.storage
+  .from('group-images')
+  .upload(fileName, file, { upsert: true });
+if (uploadError) throw uploadError;
+
+const { publicURL } = supabase.storage.from('group-images').getPublicUrl(fileName);
+const field = type === 'banner' ? 'banner_url' : 'group_image_url';
+const { error: updateError } = await supabase
+  .from('grupos_estudo')
+  .update({ [field]: publicURL })
+  .eq('id', groupId);
+if (updateError) throw updateError;
+
+alert(`Imagem de ${type === 'banner' ? 'capa' : 'grupo'} salva com sucesso!`);
+showSettingsModal(groupId); // Recarregar modal com nova imagem
+
+} catch (error) { console.error(Erro ao enviar imagem ${type}:, error.message, error.stack); alert(Erro ao salvar imagem ${type}. Verifique o console.); } };
+
+// Função para copiar o código único const copyCode = (element, code) => { navigator.clipboard.writeText(code).then(() => { const feedback = document.getElementById('copy-feedback'); feedback.style.display = 'inline'; setTimeout(() => feedback.style.display = 'none', 2000); }).catch(err => console.error('Erro ao copiar código:', err)); };
+
+// Funções auxiliares mantidas (updateOnlineCount, filterMessages, hideSearchBar, loadInitialMessages, showOptionsModal, addMessageToChat, sendMessage, etc.) sem alterações
