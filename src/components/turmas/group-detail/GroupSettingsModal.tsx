@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -716,7 +715,7 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
                 {group?.nome || "Grupo"}
               </p>
             </div>
-            
+
             <nav className="flex-1 p-2">
               {sidebarSections.map((section) => {
                 const Icon = section.icon;

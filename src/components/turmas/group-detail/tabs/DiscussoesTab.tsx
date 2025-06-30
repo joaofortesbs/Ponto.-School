@@ -285,7 +285,7 @@ const DiscussoesTab: React.FC<DiscussoesTabProps> = ({ groupId, groupData }) => 
         <GroupSettingsModal
           isOpen={showGroupSettingsModal}
           onClose={() => setShowGroupSettingsModal(false)}
-          groupData={groupData}
+          group={groupData}
           onSave={handleSaveGroupSettings}
         />
       )}
