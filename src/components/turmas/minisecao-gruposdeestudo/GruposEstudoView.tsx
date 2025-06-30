@@ -50,8 +50,6 @@ interface GrupoEstudo {
   criador_id: string;
   codigo_unico?: string;
   created_at: string;
-  cover_image_url?: string;
-  profile_image_url?: string;
 }
 
 const GruposEstudoView: React.FC = () => {
@@ -73,6 +71,8 @@ const GruposEstudoView: React.FC = () => {
   const [showGroupInterface, setShowGroupInterface] = useState(false);
   const [activeGroup, setActiveGroup] = useState<GrupoEstudo | null>(null); // Use GrupoEstudo type
   const [activeTab, setActiveTab] = useState('discussoes');
+  const [groupCoverImage, setGroupCoverImage] = useState<string | null>(null);
+  const [groupProfileImage, setGroupProfileImage] = useState<string | null>(null);
 
   // Função para validar autenticação do usuário
   const validateUserAuth = async () => {
@@ -338,9 +338,7 @@ const GruposEstudoView: React.FC = () => {
           is_private,
           criador_id,
           codigo_unico,
-          created_at,
-          cover_image_url,
-          profile_image_url
+          created_at
         `)
         .eq('is_visible_to_all', true)
         .order('created_at', { ascending: false });
@@ -423,9 +421,7 @@ const GruposEstudoView: React.FC = () => {
           is_private,
           criador_id,
           codigo_unico,
-          created_at,
-          cover_image_url,
-          profile_image_url
+          created_at
         `)
         .eq('criador_id', user.id)
         .order('created_at', { ascending: false });
@@ -448,9 +444,7 @@ const GruposEstudoView: React.FC = () => {
             is_private,
             criador_id,
             codigo_unico,
-            created_at,
-            cover_image_url,
-            profile_image_url
+            created_at
           )
         `)
         .eq('user_id', user.id);
@@ -625,92 +619,30 @@ const GruposEstudoView: React.FC = () => {
   };
 
   // Função para fazer upload da imagem de capa
-  const handleCoverImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCoverImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file && activeGroup) {
+    if (file) {
       const reader = new FileReader();
-      reader.onload = async (e) => {
+      reader.onload = (e) => {
         const result = e.target?.result as string;
-        
-        try {
-          // Atualizar no banco de dados
-          const { error } = await supabase
-            .from('grupos_estudo')
-            .update({ cover_image_url: result })
-            .eq('id', activeGroup.id);
-
-          if (error) {
-            console.error('Erro ao salvar imagem de capa:', error);
-            toast({
-              title: "Erro",
-              description: "Erro ao salvar imagem de capa.",
-              variant: "destructive",
-            });
-            return;
-          }
-
-          // Atualizar o grupo ativo
-          setActiveGroup({ ...activeGroup, cover_image_url: result });
-          
-          console.log('Imagem de capa salva para o grupo:', activeGroup.nome);
-          toast({
-            title: "Sucesso",
-            description: "Imagem de capa atualizada com sucesso!",
-          });
-        } catch (error) {
-          console.error('Erro ao processar imagem de capa:', error);
-          toast({
-            title: "Erro",
-            description: "Erro ao processar imagem.",
-            variant: "destructive",
-          });
-        }
+        setGroupCoverImage(result);
+        // Aqui você pode adicionar lógica para salvar no Supabase Storage
+        console.log('Imagem de capa selecionada:', file.name);
       };
       reader.readAsDataURL(file);
     }
   };
 
   // Função para fazer upload da imagem de perfil
-  const handleProfileImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProfileImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file && activeGroup) {
+    if (file) {
       const reader = new FileReader();
-      reader.onload = async (e) => {
+      reader.onload = (e) => {
         const result = e.target?.result as string;
-        
-        try {
-          // Atualizar no banco de dados
-          const { error } = await supabase
-            .from('grupos_estudo')
-            .update({ profile_image_url: result })
-            .eq('id', activeGroup.id);
-
-          if (error) {
-            console.error('Erro ao salvar imagem de perfil:', error);
-            toast({
-              title: "Erro",
-              description: "Erro ao salvar imagem de perfil.",
-              variant: "destructive",
-            });
-            return;
-          }
-
-          // Atualizar o grupo ativo
-          setActiveGroup({ ...activeGroup, profile_image_url: result });
-          
-          console.log('Imagem de perfil salva para o grupo:', activeGroup.nome);
-          toast({
-            title: "Sucesso",
-            description: "Imagem de perfil atualizada com sucesso!",
-          });
-        } catch (error) {
-          console.error('Erro ao processar imagem de perfil:', error);
-          toast({
-            title: "Erro",
-            description: "Erro ao processar imagem.",
-            variant: "destructive",
-          });
-        }
+        setGroupProfileImage(result);
+        // Aqui você pode adicionar lógica para salvar no Supabase Storage
+        console.log('Imagem de perfil selecionada:', file.name);
       };
       reader.readAsDataURL(file);
     }
@@ -843,10 +775,10 @@ const GruposEstudoView: React.FC = () => {
                       className="relative h-64 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] overflow-hidden rounded-2xl"
                   >
                       {/* Imagem de capa ou placeholder */}
-                      {activeGroup.cover_image_url ? (
+                      {groupCoverImage ? (
                           <div className="w-full h-full relative rounded-2xl overflow-hidden">
                               <img 
-                                  src={activeGroup.cover_image_url} 
+                                  src={groupCoverImage} 
                                   alt="Capa do grupo" 
                                   className="w-full h-full object-cover"
                               />
@@ -901,13 +833,13 @@ const GruposEstudoView: React.FC = () => {
                       <div className="absolute bottom-4 left-6 z-30">
                           <div className="relative">
                               <div className="w-32 h-32 rounded-full bg-[#f7f9fa] dark:bg-[#001427] p-2 shadow-2xl">
-                                  {activeGroup.profile_image_url ? (
+                                  {groupProfileImage ? (
                                       <button
                                           onClick={() => document.getElementById('profile-upload')?.click()}
                                           className="w-full h-full rounded-full overflow-hidden border-4 border-[#f7f9fa] dark:border-[#001427] hover:scale-105 transition-all duration-300"
                                       >
                                           <img 
-                                              src={activeGroup.profile_image_url} 
+                                              src={groupProfileImage} 
                                               alt="Perfil do grupo" 
                                               className="w-full h-full object-cover"
                                           />
