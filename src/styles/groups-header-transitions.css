@@ -1,0 +1,29 @@
+
+/* Transições suaves para o cabeçalho dos grupos */
+.groups-header,
+.turmas-header,
+[data-testid="groups-header"],
+[data-testid="groups-navigation"],
+[data-testid="groups-controls"] {
+  transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+}
+
+.groups-header.hidden,
+.turmas-header.hidden,
+[data-testid="groups-header"].hidden,
+[data-testid="groups-navigation"].hidden,
+[data-testid="groups-controls"].hidden {
+  opacity: 0;
+  visibility: hidden;
+  display: none !important;
+}
+
+.groups-header.visible,
+.turmas-header.visible,
+[data-testid="groups-header"].visible,
+[data-testid="groups-navigation"].visible,
+[data-testid="groups-controls"].visible {
+  opacity: 1;
+  visibility: visible;
+  display: flex !important;
+}

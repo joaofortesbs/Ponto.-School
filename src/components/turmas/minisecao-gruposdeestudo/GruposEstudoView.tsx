@@ -563,6 +563,18 @@ const GruposEstudoView: React.FC = () => {
               return;
           }
 
+          // Ocultar o cabeçalho de Minhas Turmas
+          const headers = document.querySelectorAll('.groups-header, [data-testid="groups-header"], .turmas-header');
+          if (headers.length > 0) {
+            headers.forEach(header => {
+              (header as HTMLElement).classList.add('hidden');
+              (header as HTMLElement).classList.remove('visible');
+            });
+            console.log('Cabeçalho "Minhas Turmas" ocultado.');
+          } else {
+            console.warn('Cabeçalho não encontrado para ocultar.');
+          }
+
           // Buscar dados do grupo
           const { data: groupData, error } = await supabase
               .from('grupos_estudo')
@@ -591,18 +603,49 @@ const GruposEstudoView: React.FC = () => {
               description: "Erro ao acessar o grupo. Verifique o console.",
               variant: "destructive"
           });
+           // Retry ao restaurar o cabeçalho em caso de erro
+           const headers = document.querySelectorAll('.groups-header, [data-testid="groups-header"], .turmas-header');
+           if (headers.length > 0) {
+             headers.forEach(header => {
+               (header as HTMLElement).classList.remove('hidden');
+               (header as HTMLElement).classList.add('visible');
+             });
+             console.log('Cabeçalho restaurado após erro.');
+           }
       }
   };
 
   // Função para voltar à interface original
   const returnToGroups = () => {
-      console.log('Retornando à interface de Grupos de Estudos...');
-      setShowGroupInterface(false);
-      setActiveGroup(null);
-      setActiveTab('discussoes');
-      loadMyGroups();
-      loadAllGroups();
-  };
+      try {
+        console.log('Retornando para a lista de grupos...');
+  
+        // Restaurar o cabeçalho de Minhas Turmas
+        const headers = document.querySelectorAll('.groups-header, [data-testid="groups-header"], .turmas-header');
+        if (headers.length > 0) {
+          headers.forEach(header => {
+            (header as HTMLElement).classList.remove('hidden');
+            (header as HTMLElement).classList.add('visible');
+          });
+          console.log('Cabeçalho "Minhas Turmas" restaurado.');
+        } else {
+          console.warn('Cabeçalho não encontrado para restaurar.');
+        }
+  
+        setShowGroupInterface(false);
+        setActiveGroup(null);
+        setActiveTab('discussoes');
+        loadMyGroups();
+        loadAllGroups();
+      } catch (error) {
+        console.error('Erro ao retornar para grupos:', error);
+        toast({
+          title: "Erro",
+          description: "Erro ao retornar. Tente novamente.",
+          variant: "destructive",
+        });
+      }
+    };
 
   // Handlers para os modals
   const handleCreateGroup = (formData: any) => {

@@ -1507,8 +1507,7 @@ const TurmasView: React.FC = () => {
                 </div>
 
                 <div className="space-y-6">
-                  {/* Recommendations */}
-                  <div className="bg-white dark:bg-[#1E293B] rounded-xl p-6 shadow-md border border-[#FF6B00]/10 dark:border-[#FF6B00]/20">
+                  {/* Recommendations */}                  <div className="bg-white dark:bg-[#1E293B] rounded-xl p-6 shadow-md border border-[#FF6B00]/10 dark:border-[#FF6B00]/20">
                     <h3 className="text-xl font-bold text-[#001427] dark:text-white mb-4 font-montserrat">Recomendações</h3>
 
                     <div className="space-y-3">

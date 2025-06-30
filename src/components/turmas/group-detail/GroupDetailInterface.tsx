@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import GroupDetailHeader from './GroupDetailHeader';
@@ -37,6 +37,23 @@ export default function GroupDetailInterface({
         return <PlaceholderSection title="Discussões" message="Selecione uma aba" />;
     }
   };
+
+  useEffect(() => {
+    // Scroll to top when entering group interface
+    window.scrollTo(0, 0);
+
+    // Cleanup function para restaurar cabeçalho se componente for desmontado
+    return () => {
+      const headers = document.querySelectorAll('.groups-header, [data-testid="groups-header"], .turmas-header');
+      if (headers.length > 0) {
+        headers.forEach(header => {
+          (header as HTMLElement).classList.remove('hidden');
+          (header as HTMLElement).classList.add('visible');
+        });
+        console.log('Cabeçalho restaurado na limpeza do componente.');
+      }
+    };
+  }, []);
 
   return (
     <div className="group-interface">
