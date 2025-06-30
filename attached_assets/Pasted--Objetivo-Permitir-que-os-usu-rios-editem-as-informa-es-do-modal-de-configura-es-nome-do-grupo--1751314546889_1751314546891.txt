@@ -1,0 +1,168 @@
+
+
+Objetivo: Permitir que os usuários editem as informações do modal de configurações (nome do grupo, descrição, tags, tópicos específicos, disciplina/área, privacidade e visibilidade para todos) diretamente no modal atual, sem alterar seu design moderno e sofisticado. As alterações devem ser salvas no Supabase apenas ao clicar em "Salvar Configurações". Todas as funcionalidades existentes devem ser preservadas, o design/layout da mini-seção "Grupos de Estudos" (incluindo modals de "Adicionar Grupo" e "Criar Novo Grupo") não deve ser modificado, e nenhuma alteração desnecessária ou prejudicial deve ser feita no banco de dados.
+
+
+
+Instruções Gerais
+
+
+
+
+
+Escopo Restrito: Foque exclusivamente na função showSettingsModal no frontend, adicionando campos editáveis e lógica de salvamento. Não modifique o design, layout ou qualquer elemento fora do modal de configurações, nem outras partes do código (ex.: createGroup, joinGroupByCode, loadAllGroups).
+
+
+
+Preservação: Mantenha intactas todas as funcionalidades existentes (chat, pesquisa, contagem de online, modals de opções, etc.), sem impacto no layout ou design atual.
+
+
+
+Segurança no Banco de Dados: Realize apenas atualizações específicas nas colunas existentes da tabela grupos_estudo (nome, descricao, tags, topicos_especificos, disciplina_area, is_private, is_visible_to_all), sem alterar a estrutura ou adicionar/remover colunas.
+
+
+
+Eficiência: Implemente validações nos campos editáveis e logs para evitar falhas, salvando apenas ao clicar em "Salvar Configurações".
+
+
+
+Testes Completos: Após as alterações, teste o modal e envie os logs.
+
+
+
+Descrição das Alterações
+
+
+
+
+
+Campos Editáveis: Substituir os parágrafos de exibição por campos de entrada (<input> ou <textarea> para descrição) e checkboxes para is_private e is_visible_to_all.
+
+
+
+Tags e Tópicos: Usar inputs de texto com vírgulas como separadores para tags e topicos_especificos.
+
+
+
+Botão "Salvar Configurações": Adicionar um botão ao lado de "Fechar" para salvar as alterações no Supabase.
+
+
+
+Validação: Garantir que o nome não seja vazio e que as tags/tópicos sejam strings válidas.
+
+
+
+Implementação no Frontend (JavaScript)
+
+ // Função para exibir o modal de configurações com edição const showSettingsModal = async (groupId) => { try { const { data: groupData, error } = await supabase .from('grupos_estudo') .select('nome, descricao, tags, topicos_especificos, disciplina_area, is_private, is_visible_to_all, codigo_unico') .eq('id', groupId) .single(); if (error) throw error; 
+
+const modal = document.createElement('div');
+modal.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.5); z-index: 2000; width: 400px; font-family: Arial, sans-serif; text-align: left;';
+modal.innerHTML = `
+  <h2 style="color: #333; margin-top: 0;">Configurações do Grupo</h2>
+  <div style="margin-bottom: 15px;">
+    <label style="font-weight: bold;">Nome do Grupo:</label>
+    <input id="group-name" type="text" value="${groupData.nome || ''}" style="width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 5px;">
+  </div>
+  <div style="margin-bottom: 15px;">
+    <label style="font-weight: bold;">Descrição:</label>
+    <textarea id="group-description" style="width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 5px; height: 60px;">${groupData.descricao || ''}</textarea>
+  </div>
+  <div style="margin-bottom: 15px;">
+    <label style="font-weight: bold;">Tags:</label>
+    <input id="group-tags" type="text" value="${(groupData.tags || []).join(', ')}" style="width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 5px;" placeholder="Ex: tag1, tag2, tag3">
+  </div>
+  <div style="margin-bottom: 15px;">
+    <label style="font-weight: bold;">Tópicos Específicos:</label>
+    <input id="group-topics" type="text" value="${(groupData.topicos_especificos || []).join(', ')}" style="width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 5px;" placeholder="Ex: tópico1, tópico2">
+  </div>
+  <div style="margin-bottom: 15px;">
+    <label style="font-weight: bold;">Disciplina/Área:</label>
+    <input id="group-discipline" type="text" value="${groupData.disciplina_area || ''}" style="width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 5px;">
+  </div>
+  <div style="margin-bottom: 15px;">
+    <label style="font-weight: bold;">Privado:</label>
+    <input id="group-private" type="checkbox" ${groupData.is_private ? 'checked' : ''} style="margin-left: 10px;">
+  </div>
+  <div style="margin-bottom: 15px;">
+    <label style="font-weight: bold;">Visível para Todos:</label>
+    <input id="group-visible" type="checkbox" ${groupData.is_visible_to_all ? 'checked' : ''} style="margin-left: 10px;">
+  </div>
+  <div style="margin-bottom: 15px; position: relative;">
+    <label style="font-weight: bold;">Código Único:</label>
+    <p id="code-text" style="margin: 0; cursor: pointer;" onclick="copyCode(this, '${groupData.codigo_unico}')">${groupData.codigo_unico}</p>
+    <span id="copy-feedback" style="display: none; position: absolute; top: -20px; right: 0; color: #2ecc71; font-size: 12px;">Copiado!</span>
+  </div>
+  <div style="text-align: right;">
+    <button id="save-settings" style="background: #2ecc71; color: white; border: none; padding: 5px 15px; border-radius: 5px; cursor: pointer; margin-right: 10px;">Salvar Configurações</button>
+    <button onclick="this.parentElement.parentElement.remove();" style="background: #e74c3c; color: white; border: none; padding: 5px 15px; border-radius: 5px; cursor: pointer;">Fechar</button>
+  </div>
+`;
+document.body.appendChild(modal);
+
+// Responsividade
+if (window.innerWidth < 600) {
+  modal.style.width = '90%';
+}
+
+// Fechamento com Escape
+const closeOnEscape = (e) => {
+  if (e.key === 'Escape') {
+    modal.remove();
+    document.removeEventListener('keydown', closeOnEscape);
+  }
+};
+document.addEventListener('keydown', closeOnEscape);
+
+// Fechamento ao clicar fora
+const closeOnOutsideClick = (e) => {
+  if (!modal.contains(e.target)) {
+    modal.remove();
+    document.removeEventListener('click', closeOnOutsideClick);
+  }
+};
+setTimeout(() => document.addEventListener('click', closeOnOutsideClick), 100);
+
+// Salvar configurações
+document.getElementById('save-settings').addEventListener('click', async () => {
+  try {
+    const nome = document.getElementById('group-name').value.trim();
+    if (!nome) {
+      alert('O nome do grupo não pode ser vazio.');
+      return;
+    }
+    const descricao = document.getElementById('group-description').value.trim();
+    const tags = document.getElementById('group-tags').value.split(',').map(t => t.trim()).filter(t => t);
+    const topicos_especificos = document.getElementById('group-topics').value.split(',').map(t => t.trim()).filter(t => t);
+    const disciplina_area = document.getElementById('group-discipline').value.trim();
+    const is_private = document.getElementById('group-private').checked;
+    const is_visible_to_all = document.getElementById('group-visible').checked;
+
+    const { error } = await supabase
+      .from('grupos_estudo')
+      .update({
+        nome,
+        descricao,
+        tags,
+        topicos_especificos,
+        disciplina_area,
+        is_private,
+        is_visible_to_all
+      })
+      .eq('id', groupId);
+    if (error) throw error;
+
+    alert('Configurações salvas com sucesso!');
+    modal.remove();
+    console.log(`Configurações salvas para grupo ${groupId}.`);
+  } catch (error) {
+    console.error('Erro ao salvar configurações:', error.message, error.stack);
+    alert('Erro ao salvar configurações. Verifique o console.');
+  }
+});
+
+} catch (error) { console.error('Erro ao carregar configurações:', error.message, error.stack); alert('Erro ao carregar configurações. Verifique o console.'); setTimeout(() => showSettingsModal(groupId), 2000); // Retry após 2 segundos } };
+
+// Função para copiar o código único const copyCode = (element, code) => { navigator.clipboard.writeText(code).then(() => { const feedback = document.getElementById('copy-feedback'); feedback.style.display = 'inline'; setTimeout(() => feedback.style.display = 'none', 2000); }).catch(err => console.error('Erro ao copiar código:', err)); };
+
+// Manter outras funções existentes (ex.: accessGroup, addMessageToChat, sendMessage, loadMyGroups, etc.) sem alterações
