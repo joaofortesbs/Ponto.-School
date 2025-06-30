@@ -906,13 +906,13 @@ export const DiscussoesTab: React.FC<DiscussoesTabProps> = ({
                       className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 flex items-center gap-2"
                       onClick={handleResumeWithAI}
                     >
-                      <MessageCircle className="h-4 w-4" /> Resumir conversa com IA
+                      <Brain className="h-4 w-4" /> Resumir conversa com IA
                     </button>
                     <button
                       className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 flex items-center gap-2"
                       onClick={handleSelectMessages}
                     >
-                      <Check className="h-4 w-4" /> Selecionar mensagens
+                      <MessageSquareCheck className="h-4 w-4" /> Selecionar mensagens
                     </button>
                   </div>
                 </PopoverContent>
