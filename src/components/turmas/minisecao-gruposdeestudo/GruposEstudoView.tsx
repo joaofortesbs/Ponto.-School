@@ -24,6 +24,7 @@ import {
   AlertCircle,
   Sparkles,
   Settings,
+  Info,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -916,6 +917,24 @@ const GruposEstudoView: React.FC = () => {
                       Discussões
                   </Button>
                   <Button
+                      variant={activeTab === 'membros' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setActiveTab('membros')}
+                      className={`${activeTab === 'membros' ? 'bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white' : 'border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10'} font-montserrat`}
+                  >
+                      <Users className="w-4 h-4 mr-2" />
+                      Membros
+                  </Button>
+                  <Button
+                      variant={activeTab === 'eventos' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setActiveTab('eventos')}
+                      className={`${activeTab === 'eventos' ? 'bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white' : 'border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10'} font-montserrat`}
+                  >
+                      <Calendar className="w-4 h-4 mr-2" />
+                      Eventos
+                  </Button>
+                  <Button
                       variant="outline"
                       size="sm"
                       className="border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10 font-montserrat"
@@ -924,14 +943,14 @@ const GruposEstudoView: React.FC = () => {
                       Materiais
                   </Button>
                   <Button
-                      variant="outline"
+                      variant={activeTab === 'sobre' ? 'default' : 'outline'}
                       size="sm"
-                      className="border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10 font-montserrat"
+                      onClick={() => setActiveTab('sobre')}
+                      className={`${activeTab === 'sobre' ? 'bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white' : 'border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10'} font-montserrat`}
                   >
-                      <Users className="w-4 h-4 mr-2" />
-                      Membros
+                      <Info className="w-4 h-4 mr-2" />
+                      Sobre
                   </Button>
-                  {/* Outras abas aqui */}
               </div>
 
               {/* Conteúdo da aba ativa - flex-1 para ocupar espaço restante */}
@@ -941,6 +960,104 @@ const GruposEstudoView: React.FC = () => {
                           <ChatSection 
                             groupId={activeGroup.id}
                           />
+                      </div>
+                  )}
+                  {activeTab === 'membros' && (
+                      <div className="h-full">
+                          <div className="bg-white dark:bg-[#1a2236] rounded-lg p-6 h-full">
+                              <div className="flex items-center justify-between mb-6">
+                                  <h3 className="text-xl font-bold text-[#001427] dark:text-white">Membros do Grupo</h3>
+                                  <Button className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white hover:from-[#FF8C40] hover:to-[#FF6B00]">
+                                      <UserPlus className="w-4 h-4 mr-2" />
+                                      Convidar Membros
+                                  </Button>
+                              </div>
+                              <div className="text-center py-8">
+                                  <Users className="w-16 h-16 mx-auto mb-4 text-[#FF6B00]/50" />
+                                  <p className="text-[#778DA9] dark:text-gray-400">
+                                      Lista de membros será exibida aqui
+                                  </p>
+                              </div>
+                          </div>
+                      </div>
+                  )}
+                  {activeTab === 'eventos' && (
+                      <div className="h-full">
+                          <div className="bg-white dark:bg-[#1a2236] rounded-lg p-6 h-full">
+                              <div className="flex items-center justify-between mb-6">
+                                  <h3 className="text-xl font-bold text-[#001427] dark:text-white">Eventos do Grupo</h3>
+                                  <Button className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white hover:from-[#FF8C40] hover:to-[#FF6B00]">
+                                      <Plus className="w-4 h-4 mr-2" />
+                                      Criar Evento
+                                  </Button>
+                              </div>
+                              <div className="text-center py-8">
+                                  <Calendar className="w-16 h-16 mx-auto mb-4 text-[#FF6B00]/50" />
+                                  <p className="text-[#778DA9] dark:text-gray-400 mb-2">
+                                      Nenhum evento agendado
+                                  </p>
+                                  <p className="text-sm text-[#778DA9] dark:text-gray-400">
+                                      Crie eventos para organizar encontros e atividades do grupo
+                                  </p>
+                              </div>
+                          </div>
+                      </div>
+                  )}
+                  {activeTab === 'sobre' && (
+                      <div className="h-full">
+                          <div className="bg-white dark:bg-[#1a2236] rounded-lg p-6 h-full">
+                              <div className="flex items-center justify-between mb-6">
+                                  <h3 className="text-xl font-bold text-[#001427] dark:text-white">Sobre o Grupo</h3>
+                              </div>
+                              <div className="space-y-6">
+                                  <div>
+                                      <h4 className="text-lg font-semibold text-[#001427] dark:text-white mb-3">Descrição</h4>
+                                      <p className="text-[#778DA9] dark:text-gray-400 leading-relaxed">
+                                          {activeGroup.descricao || "Este grupo não possui uma descrição detalhada ainda."}
+                                      </p>
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-6">
+                                      <div>
+                                          <h4 className="text-lg font-semibold text-[#001427] dark:text-white mb-3">Informações</h4>
+                                          <div className="space-y-3">
+                                              <div className="flex justify-between">
+                                                  <span className="text-[#778DA9] dark:text-gray-400">Tipo:</span>
+                                                  <span className="text-[#001427] dark:text-white font-medium">{activeGroup.tipo_grupo}</span>
+                                              </div>
+                                              <div className="flex justify-between">
+                                                  <span className="text-[#778DA9] dark:text-gray-400">Área:</span>
+                                                  <span className="text-[#001427] dark:text-white font-medium">{activeGroup.disciplina_area}</span>
+                                              </div>
+                                              <div className="flex justify-between">
+                                                  <span className="text-[#778DA9] dark:text-gray-400">Criado em:</span>
+                                                  <span className="text-[#001427] dark:text-white font-medium">
+                                                      {new Date(activeGroup.created_at).toLocaleDateString('pt-BR')}
+                                                  </span>
+                                              </div>
+                                          </div>
+                                      </div>
+                                      <div>
+                                          <h4 className="text-lg font-semibold text-[#001427] dark:text-white mb-3">Tags</h4>
+                                          <div className="flex flex-wrap gap-2">
+                                              {activeGroup.tags && activeGroup.tags.length > 0 ? (
+                                                  activeGroup.tags.map((tag, index) => (
+                                                      <span
+                                                          key={index}
+                                                          className="px-3 py-1 bg-[#FF6B00]/10 text-[#FF6B00] rounded-full text-sm font-medium"
+                                                      >
+                                                          {tag}
+                                                      </span>
+                                                  ))
+                                              ) : (
+                                                  <span className="text-[#778DA9] dark:text-gray-400 text-sm">
+                                                      Nenhuma tag definida
+                                                  </span>
+                                              )}
+                                          </div>
+                                      </div>
+                                  </div>
+                              </div>
+                          </div>
                       </div>
                   )}
                   {/* Conteúdo das outras abas aqui */}
