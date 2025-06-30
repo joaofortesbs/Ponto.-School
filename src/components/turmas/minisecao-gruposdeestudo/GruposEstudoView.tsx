@@ -901,14 +901,6 @@ const GruposEstudoView: React.FC = () => {
                               </span>
                           </div>
                       </div>
-                      <Button
-                          variant="outline"
-                          size="sm"
-                          className="border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10 font-montserrat"
-                      >
-                          <Settings className="w-4 h-4 mr-2" />
-                          Configurações
-                      </Button>
                   </div>
               </motion.div>
 
