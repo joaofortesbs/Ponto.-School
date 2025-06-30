@@ -790,8 +790,8 @@ const GruposEstudoView: React.FC = () => {
           })
           .on('postgres_changes', { 
             event: 'DELETE', 
-            schema: 'public',```tool_code
- table: 'user_sessions',
+            schema: 'public',
+            table: 'user_sessions',
             filter: `grupo_id=eq.${groupId}`
           }, () => {
             updateOnlineCount().then(() => {
