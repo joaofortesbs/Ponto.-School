@@ -32,7 +32,6 @@ import CreateGroupModal from "../CreateGroupModal";
 import AddGroupModal from "../AddGroupModal";
 import EntrarGrupoSuccessModal from "../EntrarGrupoSuccessModal";
 import ChatSection from "@/components/turmas/group-detail/ChatSection";
-import GroupSettingsModal from "../group-detail/GroupSettingsModal";
 
 // Tipos para os grupos
 interface GrupoEstudo {
@@ -52,16 +51,6 @@ interface GrupoEstudo {
   created_at: string;
 }
 
-interface Group {
-  id: string;
-  name: string;
-  description: string;
-  memberCount: number;
-  isOnline: boolean;
-  bannerUrl?: string;
-  groupImageUrl?: string;
-}
-
 const GruposEstudoView: React.FC = () => {
   const [currentView, setCurrentView] = useState("todos-grupos");
   const [searchTerm, setSearchTerm] = useState("");
@@ -79,9 +68,8 @@ const GruposEstudoView: React.FC = () => {
   const [groupToLeave, setGroupToLeave] = useState<GrupoEstudo | null>(null);
   const [isGroupCreator, setIsGroupCreator] = useState(false);
   const [showGroupInterface, setShowGroupInterface] = useState(false);
-  const [activeGroup, setActiveGroup] = useState<Group | null>(null); // Use GrupoEstudo type
+  const [activeGroup, setActiveGroup] = useState<GrupoEstudo | null>(null); // Use GrupoEstudo type
   const [activeTab, setActiveTab] = useState('discussoes');
-  const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   // Função para validar autenticação do usuário
   const validateUserAuth = async () => {
@@ -347,9 +335,7 @@ const GruposEstudoView: React.FC = () => {
           is_private,
           criador_id,
           codigo_unico,
-          created_at,
-          banner_url,
-          group_image_url
+          created_at
         `)
         .eq('is_visible_to_all', true)
         .order('created_at', { ascending: false });
@@ -432,9 +418,7 @@ const GruposEstudoView: React.FC = () => {
           is_private,
           criador_id,
           codigo_unico,
-          created_at,
-          banner_url,
-          group_image_url
+          created_at
         `)
         .eq('criador_id', user.id)
         .order('created_at', { ascending: false });
@@ -457,9 +441,7 @@ const GruposEstudoView: React.FC = () => {
             is_private,
             criador_id,
             codigo_unico,
-            created_at,
-            banner_url,
-            group_image_url
+            created_at
           )
         `)
         .eq('user_id', user.id);
@@ -610,15 +592,7 @@ const GruposEstudoView: React.FC = () => {
               return;
           }
 
-          setActiveGroup({
-            id: groupData.id,
-            name: groupData.nome,
-            description: groupData.descricao || '',
-            memberCount: 0,
-            isOnline: true,
-            bannerUrl: groupData.banner_url || '',
-            groupImageUrl: groupData.group_image_url || ''
-          });
+          setActiveGroup(groupData);
           setShowGroupInterface(true);
           setActiveTab('discussoes');
           console.log(`Interface do grupo ${groupId} carregada com sucesso.`);
@@ -777,16 +751,8 @@ const GruposEstudoView: React.FC = () => {
                           Voltar
                       </Button>
                       <h2 className="text-2xl font-bold text-[#001427] dark:text-white bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] bg-clip-text text-transparent font-montserrat">
-                          {activeGroup.name}
+                          {activeGroup.nome}
                       </h2>
-                      <Button
-                          onClick={() => setShowSettingsModal(true)}
-                          variant="outline"
-                          size="sm"
-                          className="border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10 font-montserrat"
-                      >
-                          Configurações
-                      </Button>
                   </div>
               </motion.div>
 
@@ -815,19 +781,6 @@ const GruposEstudoView: React.FC = () => {
                   )}
                   {/* Conteúdo das outras abas aqui */}
               </div>
-              {showSettingsModal && activeGroup && (
-        <GroupSettingsModal
-          groupId={activeGroup.id}
-          isOpen={showSettingsModal}
-          onClose={() => setShowSettingsModal(false)}
-          onUpdate={() => {
-            // Recarregar dados do grupo após atualização
-            if (activeGroup) {
-              accessGroup(activeGroup.id);
-            }
-          }}
-        />
-      )}
           </div>
       );
   }
@@ -896,7 +849,8 @@ const GruposEstudoView: React.FC = () => {
           onClick={() => setCurrentView("meus-grupos")}
           className={`${
             currentView === "meus-grupos"
-              ? "bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white"              : "border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10"
+              ? "bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white"
+              : "border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10"
           } font-montserrat`}
         >
           <Users className="h-4 w-4 mr-2" />
