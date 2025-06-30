@@ -1,0 +1,140 @@
+Objetivo: Ajustar o chat de conversa na mini-seção "Discussões" da interface do grupo, acessível ao clicar em "Acessar Grupo" em "Meus Grupos", para exibir o nome real do usuário (em vez de "Usuário") e a imagem de perfil do usuário ao lado de cada mensagem, visível para todos no grupo. Os dados do nome e da imagem de perfil serão obtidos do auth.users no Supabase. O design e layout da mini-seção "Grupos de Estudos" (incluindo modais de "Adicionar Grupo" e "Criar Novo Grupo") não devem ser alterados, e todas as funcionalidades existentes devem ser preservadas, sem introduzir erros ou bugs.
+
+
+
+Instruções Gerais
+
+
+
+
+
+Escopo Restrito: Foque exclusivamente na função accessGroup e na função addMessageToChat no frontend, utilizando dados do auth.users no Supabase. Não modifique o design, layout ou qualquer elemento da mini-seção "Grupos de Estudos", incluindo os modais de "Adicionar Grupo" e "Criar Novo Grupo", nem outras partes do código (ex.: createGroup, joinGroupByCode, loadAllGroups, modais existentes).
+
+
+
+Preservação: Mantenha intactas todas as funcionalidades existentes (criação via modal, adesão via código/botão, saída/exclusão), sem impacto no layout ou design atual.
+
+
+
+Eficiência: Utilize Realtime do Supabase para atualizações ao vivo, com validação e logs para evitar falhas. Certifique-se de que o nome e a imagem de perfil sejam recuperados corretamente.
+
+
+
+Testes Completos: Após as alterações, teste o chat e envie os logs.
+
+
+
+Análise de Cenários
+
+
+
+
+
+Cenário 1: Novo Usuário Entra no Grupo - Nome e imagem de perfil devem carregar corretamente para todas as mensagens existentes.
+
+
+
+Cenário 2: Envio de Mensagem - Nome e imagem do remetente devem aparecer instantaneamente para todos os usuários.
+
+
+
+Cenário 3: Usuário sem Imagem de Perfil - Exibir um placeholder (ex.: inicial do nome) se a imagem não estiver disponível.
+
+
+
+Cenário 4: Erro de Conexão - Implementar retry para reconexão ao Realtime.
+
+
+
+Modificações no Banco de Dados (Supabase)
+
+Verificação do auth.users
+
+A tabela auth.users já contém colunas como id, email, e opcionalmente user_metadata (onde pode estar o nome e a URL da imagem de perfil). Certifique-se de que:
+
+
+
+
+
+O user_metadata inclua {"name": "Nome do Usuário", "avatar_url": "URL_da_Imagem"} para cada usuário (pode ser configurado no signup ou perfil).
+
+
+
+Se não houver avatar_url, um placeholder será gerado no frontend.
+
+
+
+Implementação no Frontend (JavaScript)
+
+ // Atualizar accessGroup para incluir cache de nomes e imagens const accessGroup = async (groupId) => { try { console.log(`Acessando grupo ${groupId}...`); const userId = await validateUserAuth(); if (!userId) { console.error('Usuário não autenticado.'); alert('Usuário não autenticado.'); return; } 
+
+// Cache para nomes e imagens de perfil
+const userCache = new Map();
+const { data: users } = await supabase
+  .from('auth.users')
+  .select('id, user_metadata')
+  .in('id', (await supabase.from('membros_grupos').select('user_id').eq('grupo_id', groupId)).data.map(u => u.user_id));
+users.forEach(user => {
+  const metadata = user.user_metadata || {};
+  userCache.set(user.id, {
+    name: metadata.name || `Usuário ${user.id.slice(0, 5)}`,
+    avatar_url: metadata.avatar_url || null
+  });
+});
+
+const groupInterface = document.createElement('div');
+groupInterface.id = 'group-interface';
+groupInterface.style.cssText = 'margin-left: 250px; padding: 20px;'; // Ajustar margem para menu lateral
+groupInterface.innerHTML = `
+  <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #ccc; padding-bottom: 10px;">
+    <div class="mini-sections">
+      <button class="active" style="background: #3498db; color: white; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 5px;">Discussões</button>
+      <button disabled style="background: #ddd; color: #666; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 5px;">Tarefas</button>
+      <button disabled style="background: #ddd; color: #666; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 5px;">Membros</button>
+      <button disabled style="background: #ddd; color: #666; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 5px;">Configurações</button>
+      <button disabled style="background: #ddd; color: #666; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 5px;">Notificações</button>
+    </div>
+    <button onclick="returnToGroups()" style="background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 5px;">Voltar</button>
+  </div>
+  <div id="discussions-content" style="margin-top: 20px; height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
+    <div id="chat-messages" style="display: flex; flex-direction: column-reverse;"></div>
+  </div>
+  <div style="margin-top: 10px; display: flex; align-items: center;">
+    <input id="chat-input" type="text" placeholder="Digite sua mensagem..." style="flex-grow: 1; padding: 5px; border: 1px solid #ccc; border-radius: 5px; margin-right: 5px;">
+    <button onclick="sendMessage('${groupId}')" style="background: #2ecc71; color: white; border: none; padding: 5px 10px; border-radius: 5px;">Enviar</button>
+  </div>
+`;
+document.getElementById('main-content').innerHTML = '';
+document.getElementById('main-content').appendChild(groupInterface);
+
+// Configurar Realtime para carregar e atualizar mensagens
+const channel = supabase
+  .channel(`chat-${groupId}`)
+  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mensagens', filter: `grupo_id=eq.${groupId}` }, (payload) => {
+    addMessageToChat(payload.new, userCache);
+  })
+  .subscribe(async (status) => {
+    if (status === 'SUBSCRIBED') {
+      console.log(`Subscribed to chat channel for group ${groupId}`);
+      const { data: messages } = await supabase
+        .from('mensagens')
+        .select('*')
+        .eq('grupo_id', groupId)
+        .order('enviado_em', { ascending: false });
+      messages.forEach(message => addMessageToChat(message, userCache));
+    }
+  });
+
+console.log(`Interface do grupo ${groupId} carregada com chat configurado.`);
+
+} catch (error) { console.error('Erro ao acessar grupo:', error.message, error.stack); alert('Erro ao acessar o grupo. Verifique o console.'); } };
+
+// Atualizar addMessageToChat para incluir nome e imagem const addMessageToChat = (message, userCache) => { const userId = validateUserAuth(); const userData = userCache.get(message.user_id) || { name: Usuário ${message.user_id.slice(0, 5)}, avatar_url: null }; const chatMessages = document.getElementById('chat-messages'); const messageDiv = document.createElement('div'); messageDiv.style.cssText = display: flex; align-items: flex-start; margin: 5px 0; ${message.user_id === userId ? 'flex-direction: row-reverse;' : 'flex-direction: row;'}; messageDiv.innerHTML = <div style="margin: ${message.user_id === userId ? '0 0 0 10px' : '0 10px 0 0'};"> <img src="${userData.avatar_url ||https://ui-avatars.com/api/?name=${encodeURIComponent(userData.name)}}" alt="${userData.name}" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover;"> </div> <div style="max-width: 70%; ${message.user_id === userId ? 'text-align: right;' : 'text-align: left;' }"> <strong>${userData.name}</strong><br> <div style="background: ${message.user_id === userId ? '#dcf8c6' : '#e9ecef'}; padding: 10px; border-radius: 10px; display: inline-block;"> ${message.conteudo} </div><br> <small>${new Date(message.enviado_em).toLocaleTimeString()}</small> </div> ; chatMessages.prepend(messageDiv); // Adicionar no topo para rolagem inversa chatMessages.scrollTop = 0; // Manter no topo };
+
+// Função para enviar mensagem const sendMessage = async (groupId) => { try { const userId = await validateUserAuth(); if (!userId) { console.error('Usuário não autenticado.'); alert('Usuário não autenticado.'); return; } const input = document.getElementById('chat-input'); const content = input.value.trim(); if (!content) { alert('Digite uma mensagem.'); return; } const { error } = await supabase .from('mensagens') .insert({ grupo_id: groupId, user_id: userId, conteudo: content }); if (error) throw error; input.value = ''; console.log(Mensagem enviada para grupo ${groupId}.); } catch (error) { console.error('Erro ao enviar mensagem:', error.message, error.stack); alert('Erro ao enviar mensagem. Verifique o console.'); } };
+
+// Chamar loadMyGroups manualmente para teste imediato loadMyGroups();
+
+// Manter a inicialização existente document.addEventListener('DOMContentLoaded', () => { loadMyGroups(); });
+
+// Manter outras funções existentes (ex.: createGroup, joinGroupByCode, loadAllGroups, showCelebrationModal, joinGroupDirectly, leaveGroup, deleteGroup, returnToGroups, showLeaveModal) sem alterações
