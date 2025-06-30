@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Search, Send, X } from "lucide-react";
+import { Search, Send, X, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -153,8 +153,8 @@ const DiscussoesTab: React.FC<DiscussoesTabProps> = ({ groupId, groupData }) => 
   };
 
   const handleSettingsClick = () => {
-    setShowSettingsModal(true);
-    console.log("Modal de configurações acionado");
+    setShowGroupSettingsModal(true);
+    console.log("Modal de configurações do grupo acionado");
   };
 
   const filteredMessages = messages.filter((message) =>
@@ -202,7 +202,7 @@ const DiscussoesTab: React.FC<DiscussoesTabProps> = ({ groupId, groupData }) => 
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setShowGroupSettingsModal(true)}
+            onClick={handleSettingsClick}
             className="h-8 w-8 p-0 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
           >
             <Settings className="h-4 w-4" />
