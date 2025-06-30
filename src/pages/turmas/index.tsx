@@ -827,7 +827,7 @@ const TurmasPage: React.FC = () => {
   const showGroupInterface = searchParams.has("showGroupInterface");
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [filteredTurmas, setFilteredTurmas] = useState(turmasData);
+  const [filteredTurmas, setFilteredTurmas] = useState(turmasData || []);
   const [selectedTurma, setSelectedTurma] = useState<string | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showTour, setShowTour] = useState(false);
@@ -837,23 +837,23 @@ const TurmasPage: React.FC = () => {
 
   // Filter turmas based on view
   useEffect(() => {
-    let filtered = turmasData;
+    let filtered = turmasData || [];
     
     switch (view) {
       case "oficiais":
-        filtered = turmasData.filter(turma => turma.categoria === "oficial");
+        filtered = (turmasData || []).filter(turma => turma.categoria === "oficial");
         break;
       case "projetos":
-        filtered = turmasData.filter(turma => turma.categoria === "projeto");
+        filtered = (turmasData || []).filter(turma => turma.categoria === "projeto");
         break;
       case "proprias":
-        filtered = turmasData.filter(turma => turma.categoria === "propria");
+        filtered = (turmasData || []).filter(turma => turma.categoria === "propria");
         break;
       default:
-        filtered = turmasData;
+        filtered = turmasData || [];
     }
 
-    if (searchQuery) {
+    if (searchQuery && filtered) {
       filtered = filtered.filter(turma =>
         turma.nome.toLowerCase().includes(searchQuery.toLowerCase()) ||
         turma.professor.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -861,7 +861,7 @@ const TurmasPage: React.FC = () => {
       );
     }
 
-    setFilteredTurmas(filtered);
+    setFilteredTurmas(filtered || []);
   }, [view, searchQuery]);
 
   if (selectedTurma) {
@@ -903,7 +903,7 @@ const TurmasPage: React.FC = () => {
               <EmptyTurmasState onAddTurma={() => setShowAddModal(true)} />
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {filteredTurmas.map((turma) => (
+                {(filteredTurmas || []).map((turma) => (
                   <TurmaCard
                     key={turma.id}
                     turma={turma}

@@ -694,7 +694,7 @@ const GruposEstudoView: React.FC = () => {
         url.searchParams.set("showGroupInterface", "true");
         window.history.replaceState({}, "", url.toString());
       }
-      
+
       return (
           <div className="w-full h-screen bg-[#f7f9fa] dark:bg-[#001427] flex flex-col transition-colors duration-300">
               {/* Header do grupo com navegação */}
@@ -849,8 +849,8 @@ const GruposEstudoView: React.FC = () => {
                 <p className="text-gray-500 dark:text-gray-400">Carregando grupos...</p>
               </div>
             </div>
-          ) : filteredGroups().length > 0 ? (
-            filteredGroups().map((group) => (
+          ) : (filteredGroups() || []).length > 0 ? (
+            (filteredGroups() || []).map((group) => (
               <motion.div
                 key={group.id}
                 initial={{ opacity: 0, scale: 0.9 }}
