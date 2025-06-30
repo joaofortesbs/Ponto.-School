@@ -1,0 +1,174 @@
+
+
+Objetivo: Ajustar a interface interna dos grupos de estudos para aumentar a altura do card de chat do grupo, removendo a altura fixa e permitindo que ela se expanda dinamicamente conforme o conteúdo. Todas as funcionalidades existentes devem ser preservadas, e o design/layout da mini-seção "Grupos de Estudos" (incluindo modais de "Adicionar Grupo" e "Criar Novo Grupo") não deve ser alterado, sem erros ou bugs.
+
+
+
+Instruções Gerais
+
+
+
+
+
+Escopo Restrito: Foque exclusivamente na função accessGroup no frontend para modificar o estilo do elemento #discussions-content. Não altere o design ou layout dos modais de "Adicionar Grupo" e "Criar Novo Grupo", nem outras partes do código (ex.: createGroup, joinGroupByCode, loadAllGroups).
+
+
+
+Preservação: Mantenha intactas todas as funcionalidades existentes (criação via modal, adesão, saída/exclusão, chat, pesquisa, contagem de online, modal de configurações), sem impacto no layout ou design ao sair.
+
+
+
+Eficiência: Use CSS dinâmico para remover a altura fixa e permitir expansão, com validação e logs para evitar falhas.
+
+
+
+Testes Completos: Após as alterações, teste a expansão do chat e envie os logs.
+
+
+
+Análise de Cenários
+
+
+
+
+
+Cenário 1: Conteúdo Pequeno - O card de chat deve exibir o conteúdo sem barra de rolagem se couber na altura inicial.
+
+
+
+Cenário 2: Conteúdo Grande - O card de chat deve expandir verticalmente e adicionar uma barra de rolagem (overflow-y: auto) quando o conteúdo exceder a altura visível.
+
+
+
+Cenário 3: Nova Mensagem - A altura deve ajustar automaticamente ao adicionar mensagens.
+
+
+
+Cenário 4: Erro de Renderização - Implementar retry para restaurar o estado correto.
+
+
+
+Modificações no Frontend (JavaScript)
+
+ // Atualizar accessGroup para ajustar dinamicamente a altura do card de chat const accessGroup = async (groupId) => { try { console.log(`Acessando grupo ${groupId}...`); const userId = await validateUserAuth(); if (!userId) { console.error('Usuário não autenticado.'); alert('Usuário não autenticado.'); return; } 
+
+// Ocultar o cabeçalho de Minhas Turmas
+const header = document.querySelector('.groups-header');
+if (header) header.style.display = 'none';
+
+// Cache para nomes e imagens de perfil
+const userCache = new Map();
+const { data: users } = await supabase
+  .from('auth.users')
+  .select('id, user_metadata')
+  .in('id', (await supabase.from('membros_grupos').select('user_id').eq('grupo_id', groupId)).data.map(u => u.user_id));
+users.forEach(user => {
+  const metadata = user.user_metadata || {};
+  userCache.set(user.id, {
+    name: metadata.name || `Usuário ${user.id.slice(0, 5)}`,
+    avatar_url: metadata.avatar_url || null
+  });
+});
+
+// Contagem de membros online
+let onlineCount = 0;
+const updateOnlineCount = () => {
+  const now = new Date();
+  onlineCount = (supabase
+    .from('user_sessions')
+    .select('user_id', { count: 'exact' })
+    .eq('grupo_id', groupId)
+    .gte('last_active', new Date(now - 30 * 1000).toISOString())
+  ).then(({ count }) => count || 0);
+};
+setInterval(updateOnlineCount, 15000);
+updateOnlineCount();
+
+const groupInterface = document.createElement('div');
+groupInterface.id = 'group-interface';
+groupInterface.style.cssText = 'margin-left: 250px; padding: 20px;';
+groupInterface.innerHTML = `
+  <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #ccc; padding-bottom: 10px;">
+    <div class="mini-sections">
+      <button class="active" style="background: #3498db; color: white; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 5px;">Discussões</button>
+      <button disabled style="background: #ddd; color: #666; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 5px;">Tarefas</button>
+      <button disabled style="background: #ddd; color: #666; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 5px;">Membros</button>
+      <button disabled style="background: #ddd; color: #666; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 5px;">Configurações</button>
+      <button disabled style="background: #ddd; color: #666; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 5px;">Notificações</button>
+    </div>
+    <div style="display: flex; align-items: center;">
+      <span id="online-count" style="margin-right: 10px; color: #2ecc71;">Online: <span id="online-number">0</span></span>
+      <button id="search-icon" style="background: none; border: none; cursor: pointer; margin-right: 10px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+      </button>
+      <button id="menu-icon" style="background: none; border: none; cursor: pointer;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle>
+        </svg>
+      </button>
+    </div>
+  </div>
+  <div id="discussions-content" style="margin-top: 20px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; min-height: 200px;">
+    <div id="chat-messages" style="display: flex; flex-direction: column-reverse;"></div>
+  </div>
+  <div style="margin-top: 10px; display: flex; align-items: center;">
+    <input id="chat-input" type="text" placeholder="Digite sua mensagem..." style="flex-grow: 1; padding: 5px; border: 1px solid #ccc; border-radius: 5px; margin-right: 5px;">
+    <button onclick="sendMessage('${groupId}')" style="background: #2ecc71; color: white; border: none; padding: 5px 10px; border-radius: 5px;">Enviar</button>
+  </div>
+  <div id="search-bar" style="display: none; margin-top: 10px;">
+    <input id="search-input" type="text" placeholder="Pesquisar mensagens..." style="width: 200px; padding: 5px; border: 1px solid #ccc; border-radius: 5px;">
+    <button onclick="hideSearchBar()" style="background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 5px; margin-left: 5px;">Fechar</button>
+  </div>
+`;
+document.getElementById('main-content').innerHTML = '';
+document.getElementById('main-content').appendChild(groupInterface);
+
+// Atualizar contagem de online
+setInterval(() => {
+  updateOnlineCount().then(count => {
+    document.getElementById('online-number').textContent = count;
+  });
+}, 15000);
+
+// Configurar Realtime para chat e online
+const channel = supabase
+  .channel(`chat-${groupId}`)
+  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mensagens', filter: `grupo_id=eq.${groupId}` }, (payload) => {
+    addMessageToChat(payload.new, userCache);
+  })
+  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'user_sessions', filter: `grupo_id=eq.${groupId}` }, () => {
+    updateOnlineCount().then(count => document.getElementById('online-number').textContent = count);
+  })
+  .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'user_sessions', filter: `grupo_id=eq.${groupId}` }, () => {
+    updateOnlineCount().then(count => document.getElementById('online-number').textContent = count);
+  })
+  .subscribe(async (status) => {
+    if (status === 'SUBSCRIBED') {
+      console.log(`Subscribed to chat and online channel for group ${groupId}`);
+      const { data: messages } = await supabase
+        .from('mensagens')
+        .select('*')
+        .eq('grupo_id', groupId)
+        .order('enviado_em', { ascending: false });
+      messages.forEach(message => addMessageToChat(message, userCache));
+      updateOnlineCount().then(count => document.getElementById('online-number').textContent = count);
+    }
+  });
+
+// Evento para ícone de pesquisa
+document.getElementById('search-icon').addEventListener('click', () => {
+  document.getElementById('search-bar').style.display = 'block';
+  document.getElementById('search-input').focus();
+  filterMessages(groupId);
+});
+
+// Evento para ícone de três pontos
+document.getElementById('menu-icon').addEventListener('click', () => showOptionsModal(groupId));
+
+console.log(`Interface do grupo ${groupId} carregada com chat configurado.`);
+
+} catch (error) { console.error('Erro ao acessar grupo:', error.message, error.stack); alert('Erro ao acessar o grupo. Verifique o console.'); // Restaurar o cabeçalho em caso de erro const header = document.querySelector('.groups-header'); if (header) header.style.display = 'flex'; } };
+
+// Funções auxiliares mantidas (returnToGroups, updateOnlineCount, filterMessages, hideSearchBar, loadInitialMessages, showOptionsModal, showSettingsModal, addMessageToChat, sendMessage, etc.) sem alterações
