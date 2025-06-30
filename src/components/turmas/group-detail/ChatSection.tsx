@@ -14,6 +14,8 @@ interface ChatMessage {
   profiles?: {
     display_name?: string;
     email?: string;
+    avatar_url?: string;
+    full_name?: string;
   };
 }
 
@@ -26,6 +28,7 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [userProfiles, setUserProfiles] = useState<Map<string, any>>(new Map());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const channelRef = useRef<any>(null);
   const { toast } = useToast();
@@ -55,6 +58,28 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
       }
     };
   }, [groupId, currentUser]);
+
+  const loadUserProfiles = async (userIds: string[]) => {
+    try {
+      const { data: profiles, error } = await supabase
+        .from('profiles')
+        .select('id, display_name, full_name, email, avatar_url')
+        .in('id', userIds);
+
+      if (error) {
+        console.error('Erro ao carregar perfis:', error);
+        return;
+      }
+
+      const profileMap = new Map();
+      profiles?.forEach(profile => {
+        profileMap.set(profile.id, profile);
+      });
+      setUserProfiles(profileMap);
+    } catch (error) {
+      console.error('Erro ao carregar perfis de usuário:', error);
+    }
+  };
 
   const loadMessages = async () => {
     if (!currentUser || !groupId) {
@@ -89,47 +114,29 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
       // Carregar mensagens da tabela mensagens_chat_grupos
       const { data: messagesData, error: messagesError } = await supabase
         .from('mensagens_chat_grupos')
-        .select(`
-          id,
-          conteudo,
-          enviado_em,
-          user_id,
-          profiles!inner(display_name, email)
-        `)
+        .select('id, conteudo, enviado_em, user_id')
         .eq('grupo_id', groupId)
         .order('enviado_em', { ascending: true });
 
       if (messagesError) {
         console.error('Erro ao carregar mensagens:', messagesError);
-        // Tentar sem join na profiles
-        const { data: simpleMessages, error: simpleError } = await supabase
-          .from('mensagens_chat_grupos')
-          .select('id, conteudo, enviado_em, user_id')
-          .eq('grupo_id', groupId)
-          .order('enviado_em', { ascending: true });
-
-        if (simpleError) {
-          console.error('Erro ao carregar mensagens simples:', simpleError);
-          toast({
-            title: "Erro",
-            description: "Erro ao carregar mensagens do chat",
-            variant: "destructive"
-          });
-          return;
-        }
-
-        // Mapear mensagens simples
-        const mappedMessages = (simpleMessages || []).map(msg => ({
-          ...msg,
-          profiles: { display_name: 'Usuário', email: '' }
-        }));
-
-        console.log('Mensagens carregadas (modo simples):', mappedMessages.length);
-        setMessages(mappedMessages);
-      } else {
-        console.log('Mensagens carregadas:', messagesData?.length || 0);
-        setMessages(messagesData || []);
+        toast({
+          title: "Erro",
+          description: "Erro ao carregar mensagens do chat",
+          variant: "destructive"
+        });
+        return;
       }
+
+      console.log('Mensagens carregadas:', messagesData?.length || 0);
+      
+      // Carregar perfis dos usuários das mensagens
+      if (messagesData && messagesData.length > 0) {
+        const userIds = [...new Set(messagesData.map(msg => msg.user_id))];
+        await loadUserProfiles(userIds);
+      }
+
+      setMessages(messagesData || []);
 
     } catch (error) {
       console.error('Erro inesperado ao carregar mensagens:', error);
@@ -169,17 +176,12 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
         console.log('Nova mensagem recebida via Realtime:', payload);
         
         try {
-          // Buscar dados do usuário que enviou a mensagem
-          const { data: userProfile, error } = await supabase
-            .from('profiles')
-            .select('display_name, email')
-            .eq('id', payload.new.user_id)
-            .single();
-
-          const newMessage: ChatMessage = {
-            ...payload.new,
-            profiles: userProfile || { display_name: 'Usuário', email: '' }
-          };
+          const newMessage: ChatMessage = payload.new;
+          
+          // Carregar perfil do usuário se não estiver no cache
+          if (!userProfiles.has(newMessage.user_id)) {
+            await loadUserProfiles([newMessage.user_id]);
+          }
 
           setMessages(prev => [...prev, newMessage]);
           
@@ -188,11 +190,7 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
         } catch (error) {
           console.error('Erro ao processar nova mensagem do Realtime:', error);
           // Adicionar mensagem mesmo sem profile
-          const newMessage: ChatMessage = {
-            ...payload.new,
-            profiles: { display_name: 'Usuário', email: '' }
-          };
-          setMessages(prev => [...prev, newMessage]);
+          setMessages(prev => [...prev, payload.new]);
           setTimeout(scrollToBottom, 100);
         }
       })
@@ -273,7 +271,25 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
     if (message.user_id === currentUser?.id) {
       return 'Você';
     }
-    return message.profiles?.display_name || message.profiles?.email || 'Usuário';
+    
+    const profile = userProfiles.get(message.user_id);
+    if (profile) {
+      return profile.display_name || profile.full_name || profile.email || 'Usuário';
+    }
+    
+    return 'Usuário';
+  };
+
+  const getUserAvatar = (message: ChatMessage) => {
+    const profile = userProfiles.get(message.user_id);
+    if (profile?.avatar_url) {
+      return profile.avatar_url;
+    }
+    
+    // Gerar avatar com inicial do nome
+    const displayName = getUserDisplayName(message);
+    const initials = displayName.charAt(0).toUpperCase();
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=FF6B00&color=fff&size=40`;
   };
 
   if (!currentUser) {
@@ -303,8 +319,15 @@ export default function ChatSection({ groupId, currentUser }: ChatSectionProps) 
             return (
               <div
                 key={message.id}
-                className={`chat-message flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
+                className={`chat-message flex items-start gap-3 ${isOwnMessage ? 'flex-row-reverse' : 'flex-row'}`}
               >
+                <div className="flex-shrink-0">
+                  <img
+                    src={getUserAvatar(message)}
+                    alt={getUserDisplayName(message)}
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                </div>
                 <div
                   className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
                     isOwnMessage
