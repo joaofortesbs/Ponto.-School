@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Search, MoreVertical } from "lucide-react";
+import { Send, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -33,7 +33,6 @@ export default function ChatSection({ groupId }: ChatSectionProps) {
   const [userProfiles, setUserProfiles] = useState<Map<string, any>>(new Map());
   const [onlineCount, setOnlineCount] = useState(0);
   const [showSearchBar, setShowSearchBar] = useState(false);
-  const [showMenu, setShowMenu] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const channelRef = useRef<any>(null);
   const onlineChannelRef = useRef<any>(null);
@@ -449,23 +448,6 @@ export default function ChatSection({ groupId }: ChatSectionProps) {
             >
               <Search className="h-4 w-4" />
             </Button>
-            <div className="relative">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowMenu(!showMenu)}
-                className="text-gray-400 hover:text-white hover:bg-gray-700"
-              >
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-              {showMenu && (
-                <div className="absolute right-0 top-full mt-1 bg-[#2a4066] border border-gray-600 rounded-lg shadow-lg z-10 min-w-[150px]">
-                  <div className="p-2 text-gray-400 text-sm cursor-not-allowed">Opção 1 (Inativa)</div>
-                  <div className="p-2 text-gray-400 text-sm cursor-not-allowed">Opção 2 (Inativa)</div>
-                  <div className="p-2 text-gray-400 text-sm cursor-not-allowed">Opção 3 (Inativa)</div>
-                </div>
-              )}
-            </div>
           </div>
         </div>
         
@@ -596,13 +578,7 @@ export default function ChatSection({ groupId }: ChatSectionProps) {
         )}
       </div>
 
-      {/* Overlay para fechar menu */}
-      {showMenu && (
-        <div
-          className="fixed inset-0 z-5"
-          onClick={() => setShowMenu(false)}
-        />
-      )}
+      
     </div>
   );
 }
