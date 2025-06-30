@@ -762,13 +762,6 @@ export default function GruposEstudo2() {
               >
                 <MessageCircle className="h-4 w-4 mr-1" /> Chat do Grupo
               </Button>
-
-              <Button
-                variant="ghost"
-                className="bg-black/30 text-white hover:bg-black/50 backdrop-blur-sm"
-              >
-                <Settings className="h-4 w-4 mr-1" /> Configurações
-              </Button>
             </div>
 
             <div className="absolute bottom-0 left-0 right-0 p-6">
