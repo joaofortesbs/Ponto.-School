@@ -767,75 +767,77 @@ const GruposEstudoView: React.FC = () => {
       return (
           <div className="w-full h-screen bg-[#f7f9fa] dark:bg-[#001427] flex flex-col transition-colors duration-300">
               {/* Banner de Capa do Grupo */}
-              <motion.div
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="relative h-48 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] overflow-hidden"
-              >
-                  {/* Imagem de capa ou placeholder */}
-                  {groupCoverImage ? (
-                      <div className="w-full h-full relative">
-                          <img 
-                              src={groupCoverImage} 
-                              alt="Capa do grupo" 
-                              className="w-full h-full object-cover"
-                          />
-                          <div className="absolute inset-0 bg-black/20"></div>
+              <div className="px-6 pb-0">
+                  <motion.div
+                      initial={{ opacity: 0, y: -20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="relative h-48 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] overflow-hidden rounded-2xl"
+                  >
+                      {/* Imagem de capa ou placeholder */}
+                      {groupCoverImage ? (
+                          <div className="w-full h-full relative rounded-2xl overflow-hidden">
+                              <img 
+                                  src={groupCoverImage} 
+                                  alt="Capa do grupo" 
+                                  className="w-full h-full object-cover"
+                              />
+                              <div className="absolute inset-0 bg-black/20"></div>
+                              <button
+                                  onClick={() => document.getElementById('cover-upload')?.click()}
+                                  className="absolute top-4 right-4 bg-black/30 hover:bg-black/50 text-white px-3 py-2 rounded-lg text-xs font-medium transition-all backdrop-blur-sm"
+                              >
+                                  Alterar Capa
+                              </button>
+                          </div>
+                      ) : (
                           <button
                               onClick={() => document.getElementById('cover-upload')?.click()}
-                              className="absolute top-4 right-4 bg-black/30 hover:bg-black/50 text-white px-3 py-2 rounded-lg text-xs font-medium transition-all backdrop-blur-sm"
+                              className="w-full h-full bg-gradient-to-br from-[#FF6B00]/20 to-[#FF8C40]/20 flex items-center justify-center hover:from-[#FF6B00]/30 hover:to-[#FF8C40]/30 transition-all duration-300 rounded-2xl"
                           >
-                              Alterar Capa
-                          </button>
-                      </div>
-                  ) : (
-                      <button
-                          onClick={() => document.getElementById('cover-upload')?.click()}
-                          className="w-full h-full bg-gradient-to-br from-[#FF6B00]/20 to-[#FF8C40]/20 flex items-center justify-center hover:from-[#FF6B00]/30 hover:to-[#FF8C40]/30 transition-all duration-300"
-                      >
-                          <div className="text-center text-white/80">
-                              <div className="w-16 h-16 mx-auto mb-3 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                                  <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
-                                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                                  </svg>
+                              <div className="text-center text-white/80">
+                                  <div className="w-16 h-16 mx-auto mb-3 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                                      <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                                          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                      </svg>
+                                  </div>
+                                  <p className="text-sm font-medium">Adicionar Imagem de Capa</p>
+                                  <p className="text-xs opacity-75">Clique para personalizar</p>
                               </div>
-                              <p className="text-sm font-medium">Adicionar Imagem de Capa</p>
-                              <p className="text-xs opacity-75">Clique para personalizar</p>
-                          </div>
-                      </button>
-                  )}
-                  
-                  {/* Input escondido para upload da capa */}
-                  <input
-                      id="cover-upload"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleCoverImageUpload}
-                      className="hidden"
-                  />
+                          </button>
+                      )}
+                      
+                      {/* Input escondido para upload da capa */}
+                      <input
+                          id="cover-upload"
+                          type="file"
+                          accept="image/*"
+                          onChange={handleCoverImageUpload}
+                          className="hidden"
+                      />
 
-                  {/* Botão voltar sobreposto */}
-                  <div className="absolute top-4 left-4 z-10">
-                      <Button
-                          onClick={returnToGroups}
-                          variant="outline"
-                          size="sm"
-                          className="bg-black/20 border-white/30 text-white hover:bg-black/30 backdrop-blur-sm font-montserrat"
-                      >
-                          <ArrowLeft className="w-4 h-4 mr-2" />
-                          Voltar
-                      </Button>
-                  </div>
+                      {/* Botão voltar sobreposto */}
+                      <div className="absolute top-4 left-4 z-10">
+                          <Button
+                              onClick={returnToGroups}
+                              variant="outline"
+                              size="sm"
+                              className="bg-black/20 border-white/30 text-white hover:bg-black/30 backdrop-blur-sm font-montserrat"
+                          >
+                              <ArrowLeft className="w-4 h-4 mr-2" />
+                              Voltar
+                          </Button>
+                      </div>
+                  </motion.div>
 
                   {/* Imagem de perfil do grupo */}
-                  <div className="absolute bottom-0 left-6 transform translate-y-1/2">
+                  <div className="absolute bottom-0 left-12 transform translate-y-1/2 z-20">
                       <div className="relative">
-                          <div className="w-20 h-20 rounded-full bg-[#f7f9fa] dark:bg-[#001427] p-1 shadow-lg">
+                          <div className="w-28 h-28 rounded-full bg-[#f7f9fa] dark:bg-[#001427] p-1.5 shadow-xl">
                               {groupProfileImage ? (
                                   <button
                                       onClick={() => document.getElementById('profile-upload')?.click()}
-                                      className="w-full h-full rounded-full overflow-hidden border-2 border-[#f7f9fa] dark:border-[#001427] hover:scale-105 transition-all duration-300"
+                                      className="w-full h-full rounded-full overflow-hidden border-3 border-[#f7f9fa] dark:border-[#001427] hover:scale-105 transition-all duration-300"
                                   >
                                       <img 
                                           src={groupProfileImage} 
@@ -846,13 +848,13 @@ const GruposEstudoView: React.FC = () => {
                               ) : (
                                   <button
                                       onClick={() => document.getElementById('profile-upload')?.click()}
-                                      className="w-full h-full rounded-full bg-gradient-to-br from-[#FF6B00]/20 to-[#FF8C40]/20 flex items-center justify-center border-2 border-[#f7f9fa] dark:border-[#001427] cursor-pointer hover:from-[#FF6B00]/30 hover:to-[#FF8C40]/30 transition-all duration-300"
+                                      className="w-full h-full rounded-full bg-gradient-to-br from-[#FF6B00]/20 to-[#FF8C40]/20 flex items-center justify-center border-3 border-[#f7f9fa] dark:border-[#001427] cursor-pointer hover:from-[#FF6B00]/30 hover:to-[#FF8C40]/30 transition-all duration-300"
                                   >
                                       <div className="text-center text-[#FF6B00]">
-                                          <svg className="w-6 h-6 mx-auto mb-1" fill="currentColor" viewBox="0 0 24 24">
+                                          <svg className="w-8 h-8 mx-auto mb-1" fill="currentColor" viewBox="0 0 24 24">
                                               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                                           </svg>
-                                          <span className="text-xs font-medium">Foto</span>
+                                          <span className="text-sm font-medium">Foto</span>
                                       </div>
                                   </button>
                               )}
@@ -868,14 +870,14 @@ const GruposEstudoView: React.FC = () => {
                           />
                       </div>
                   </div>
-              </motion.div>
+              </div>
 
               {/* Informações do grupo */}
               <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: 0.1 }}
-                  className="px-6 pt-12 pb-4"
+                  className="px-6 pt-16 pb-4"
               >
                   <div className="flex items-start justify-between">
                       <div className="flex-1">
