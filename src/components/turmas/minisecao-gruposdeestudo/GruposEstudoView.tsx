@@ -32,7 +32,7 @@ import CreateGroupModal from "../CreateGroupModal";
 import AddGroupModal from "../AddGroupModal";
 import EntrarGrupoSuccessModal from "../EntrarGrupoSuccessModal";
 import ChatSection from "@/components/turmas/group-detail/ChatSection";
-import GroupSettingsModal from "../GroupSettingsModal";
+import GroupSettingsModal from "../group-detail/GroupSettingsModal";
 
 // Tipos para os grupos
 interface GrupoEstudo {
