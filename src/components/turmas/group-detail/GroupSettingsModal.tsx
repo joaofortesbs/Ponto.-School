@@ -59,7 +59,7 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
     is_visible_to_partners: group?.is_visible_to_partners || false,
     tipo_grupo: group?.tipo_grupo || "estudo",
     // Configurações de aparência
-    tema: "azul",
+    tema: "laranja",
     cor_primaria: "#FF6B00",
     imagem_capa: "",
     // Configurações de privacidade
@@ -143,42 +143,36 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
       id: "informacoes-basicas",
       label: "Informações Básicas",
       icon: Info,
-      gradient: "from-blue-500 to-cyan-500",
       description: "Nome, descrição e configurações gerais",
     },
     {
       id: "aparencia",
       label: "Aparência & Tema",
       icon: Palette,
-      gradient: "from-purple-500 to-pink-500",
       description: "Cores, temas e personalização visual",
     },
     {
       id: "privacidade",
       label: "Privacidade & Acesso",
       icon: Shield,
-      gradient: "from-emerald-500 to-teal-500",
       description: "Controle de visibilidade e membros",
     },
     {
       id: "metas",
       label: "Metas & Objetivos",
       icon: Target,
-      gradient: "from-orange-500 to-red-500",
       description: "Definir objetivos e métricas",
     },
     {
       id: "regras",
       label: "Regras & Conduta",
       icon: Gavel,
-      gradient: "from-indigo-500 to-purple-500",
       description: "Estabelecer diretrizes do grupo",
     },
     {
       id: "avancado",
       label: "Configurações Avançadas",
       icon: Zap,
-      gradient: "from-yellow-500 to-orange-500",
       description: "Recursos técnicos e automação",
     },
   ];
@@ -193,12 +187,12 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-950/30 dark:to-cyan-950/30 p-6 rounded-2xl border border-blue-200/50 dark:border-blue-800/50">
+            <div className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 p-6 rounded-2xl border border-orange-200/50 dark:border-orange-800/50">
               <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl text-white">
+                <div className="p-2 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl text-white">
                   <Info className="h-5 w-5" />
                 </div>
-                <h3 className="text-lg font-semibold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                <h3 className="text-lg font-semibold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
                   Informações Básicas do Grupo
                 </h3>
               </div>
@@ -215,7 +209,7 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
                     onChange={(e) =>
                       setGroupSettings({ ...groupSettings, nome: e.target.value })
                     }
-                    className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-gray-200/50 dark:border-gray-700/50 rounded-xl h-12 text-lg font-medium transition-all duration-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-orange-200/50 dark:border-orange-700/50 rounded-xl h-12 text-lg font-medium transition-all duration-200 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
                     placeholder="Digite o nome do grupo"
                   />
                 </div>
@@ -231,7 +225,7 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
                     onChange={(e) =>
                       setGroupSettings({ ...groupSettings, descricao: e.target.value })
                     }
-                    className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-gray-200/50 dark:border-gray-700/50 rounded-xl min-h-[120px] resize-none transition-all duration-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-orange-200/50 dark:border-orange-700/50 rounded-xl min-h-[120px] resize-none transition-all duration-200 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
                     placeholder="Descreva o propósito e objetivos do grupo"
                     rows={4}
                   />
@@ -251,7 +245,7 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
                           disciplina_area: e.target.value,
                         })
                       }
-                      className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-gray-200/50 dark:border-gray-700/50 rounded-xl h-12 transition-all duration-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-orange-200/50 dark:border-orange-700/50 rounded-xl h-12 transition-all duration-200 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
                       placeholder="Ex: Matemática, Física, etc."
                     />
                   </div>
@@ -269,7 +263,7 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
                           topico_especifico: e.target.value,
                         })
                       }
-                      className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-gray-200/50 dark:border-gray-700/50 rounded-xl h-12 transition-all duration-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-orange-200/50 dark:border-orange-700/50 rounded-xl h-12 transition-all duration-200 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
                       placeholder="Ex: Cálculo Diferencial, Física Quântica"
                     />
                   </div>
@@ -280,7 +274,7 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
                     <Sparkles className="h-4 w-4" />
                     Tags do Grupo
                   </Label>
-                  <div className="flex flex-wrap gap-2 min-h-[60px] p-4 bg-white/50 dark:bg-gray-800/50 rounded-xl border border-gray-200/50 dark:border-gray-700/50">
+                  <div className="flex flex-wrap gap-2 min-h-[60px] p-4 bg-white/50 dark:bg-gray-800/50 rounded-xl border border-orange-200/50 dark:border-orange-700/50">
                     {groupSettings.tags.map((tag, index) => (
                       <motion.div
                         key={index}
@@ -291,7 +285,7 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
                       >
                         <Badge
                           variant="secondary"
-                          className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-3 py-2 rounded-full text-sm font-medium flex items-center gap-2 hover:shadow-lg transition-all duration-200"
+                          className="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-3 py-2 rounded-full text-sm font-medium flex items-center gap-2 hover:shadow-lg transition-all duration-200"
                         >
                           {tag}
                           <button
@@ -309,12 +303,12 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
                       value={newTag}
                       onChange={(e) => setNewTag(e.target.value)}
                       onKeyPress={(e) => e.key === "Enter" && addTag()}
-                      className="flex-1 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-gray-200/50 dark:border-gray-700/50 rounded-xl h-10"
+                      className="flex-1 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-orange-200/50 dark:border-orange-700/50 rounded-xl h-10"
                       placeholder="Adicionar nova tag"
                     />
                     <Button
                       onClick={addTag}
-                      className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white rounded-xl px-6 shadow-lg hover:shadow-xl transition-all duration-200"
+                      className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-xl px-6 shadow-lg hover:shadow-xl transition-all duration-200"
                     >
                       <Plus className="h-4 w-4" />
                     </Button>
@@ -333,12 +327,12 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30 p-6 rounded-2xl border border-purple-200/50 dark:border-purple-800/50">
+            <div className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 p-6 rounded-2xl border border-orange-200/50 dark:border-orange-800/50">
               <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl text-white">
+                <div className="p-2 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl text-white">
                   <Palette className="h-5 w-5" />
                 </div>
-                <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                <h3 className="text-lg font-semibold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
                   Personalização Visual
                 </h3>
               </div>
@@ -349,22 +343,22 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
                     Tema do Grupo
                   </Label>
                   <div className="grid grid-cols-2 gap-3">
-                    {["azul", "roxo", "verde", "laranja"].map((tema) => (
+                    {["laranja", "vermelho", "amarelo", "bronze"].map((tema) => (
                       <button
                         key={tema}
                         onClick={() => setGroupSettings({ ...groupSettings, tema })}
                         className={`p-4 rounded-xl border-2 transition-all duration-200 ${
                           groupSettings.tema === tema
-                            ? "border-purple-500 bg-purple-50 dark:bg-purple-950/50"
-                            : "border-gray-200 dark:border-gray-700 hover:border-purple-300"
+                            ? "border-orange-500 bg-orange-50 dark:bg-orange-950/50"
+                            : "border-gray-200 dark:border-gray-700 hover:border-orange-300"
                         }`}
                       >
                         <div
                           className={`w-full h-8 rounded-lg mb-2 ${
-                            tema === "azul" ? "bg-gradient-to-r from-blue-500 to-cyan-500" :
-                            tema === "roxo" ? "bg-gradient-to-r from-purple-500 to-pink-500" :
-                            tema === "verde" ? "bg-gradient-to-r from-emerald-500 to-teal-500" :
-                            "bg-gradient-to-r from-orange-500 to-red-500"
+                            tema === "laranja" ? "bg-gradient-to-r from-orange-500 to-amber-500" :
+                            tema === "vermelho" ? "bg-gradient-to-r from-red-500 to-orange-500" :
+                            tema === "amarelo" ? "bg-gradient-to-r from-yellow-500 to-orange-500" :
+                            "bg-gradient-to-r from-amber-600 to-orange-600"
                           }`}
                         />
                         <span className="text-sm font-medium capitalize">{tema}</span>
@@ -392,7 +386,7 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
                         onChange={(e) =>
                           setGroupSettings({ ...groupSettings, cor_primaria: e.target.value })
                         }
-                        className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-gray-200/50 dark:border-gray-700/50 rounded-xl h-12"
+                        className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-orange-200/50 dark:border-orange-700/50 rounded-xl h-12"
                         placeholder="#FF6B00"
                       />
                     </div>
@@ -409,7 +403,7 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
                   onChange={(e) =>
                     setGroupSettings({ ...groupSettings, imagem_capa: e.target.value })
                   }
-                  className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-gray-200/50 dark:border-gray-700/50 rounded-xl h-12"
+                  className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-orange-200/50 dark:border-orange-700/50 rounded-xl h-12"
                   placeholder="https://exemplo.com/imagem.jpg"
                 />
               </div>
@@ -425,21 +419,21 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 p-6 rounded-2xl border border-emerald-200/50 dark:border-emerald-800/50">
+            <div className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 p-6 rounded-2xl border border-orange-200/50 dark:border-orange-800/50">
               <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl text-white">
+                <div className="p-2 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl text-white">
                   <Shield className="h-5 w-5" />
                 </div>
-                <h3 className="text-lg font-semibold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                <h3 className="text-lg font-semibold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
                   Controle de Privacidade e Acesso
                 </h3>
               </div>
 
               <div className="space-y-6">
                 <div className="grid gap-6">
-                  <div className="flex items-center justify-between p-6 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl border border-emerald-200/30 dark:border-emerald-800/30 hover:shadow-lg transition-all duration-200">
+                  <div className="flex items-center justify-between p-6 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl border border-orange-200/30 dark:border-orange-800/30 hover:shadow-lg transition-all duration-200">
                     <div className="flex items-center gap-4">
-                      <div className="p-3 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl text-white">
+                      <div className="p-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl text-white">
                         <Eye className="h-5 w-5" />
                       </div>
                       <div>
@@ -452,13 +446,13 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
                       onCheckedChange={(checked) =>
                         setGroupSettings({ ...groupSettings, is_private: checked })
                       }
-                      className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-emerald-500 data-[state=checked]:to-teal-500"
+                      className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-orange-500 data-[state=checked]:to-amber-500"
                     />
                   </div>
 
-                  <div className="flex items-center justify-between p-6 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl border border-emerald-200/30 dark:border-emerald-800/30 hover:shadow-lg transition-all duration-200">
+                  <div className="flex items-center justify-between p-6 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl border border-orange-200/30 dark:border-orange-800/30 hover:shadow-lg transition-all duration-200">
                     <div className="flex items-center gap-4">
-                      <div className="p-3 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl text-white">
+                      <div className="p-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl text-white">
                         <Globe className="h-5 w-5" />
                       </div>
                       <div>
@@ -471,13 +465,13 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
                       onCheckedChange={(checked) =>
                         setGroupSettings({ ...groupSettings, is_visible_to_all: checked })
                       }
-                      className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-emerald-500 data-[state=checked]:to-teal-500"
+                      className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-orange-500 data-[state=checked]:to-amber-500"
                     />
                   </div>
 
-                  <div className="flex items-center justify-between p-6 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl border border-emerald-200/30 dark:border-emerald-800/30 hover:shadow-lg transition-all duration-200">
+                  <div className="flex items-center justify-between p-6 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl border border-orange-200/30 dark:border-orange-800/30 hover:shadow-lg transition-all duration-200">
                     <div className="flex items-center gap-4">
-                      <div className="p-3 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl text-white">
+                      <div className="p-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl text-white">
                         <UserPlus className="h-5 w-5" />
                       </div>
                       <div>
@@ -490,13 +484,13 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
                       onCheckedChange={(checked) =>
                         setGroupSettings({ ...groupSettings, aceitar_novos_membros: checked })
                       }
-                      className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-emerald-500 data-[state=checked]:to-teal-500"
+                      className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-orange-500 data-[state=checked]:to-amber-500"
                     />
                   </div>
 
-                  <div className="flex items-center justify-between p-6 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl border border-emerald-200/30 dark:border-emerald-800/30 hover:shadow-lg transition-all duration-200">
+                  <div className="flex items-center justify-between p-6 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl border border-orange-200/30 dark:border-orange-800/30 hover:shadow-lg transition-all duration-200">
                     <div className="flex items-center gap-4">
-                      <div className="p-3 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl text-white">
+                      <div className="p-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl text-white">
                         <Lock className="h-5 w-5" />
                       </div>
                       <div>
@@ -509,13 +503,13 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
                       onCheckedChange={(checked) =>
                         setGroupSettings({ ...groupSettings, aprovacao_manual: checked })
                       }
-                      className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-emerald-500 data-[state=checked]:to-teal-500"
+                      className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-orange-500 data-[state=checked]:to-amber-500"
                     />
                   </div>
 
-                  <div className="flex items-center justify-between p-6 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl border border-emerald-200/30 dark:border-emerald-800/30 hover:shadow-lg transition-all duration-200">
+                  <div className="flex items-center justify-between p-6 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl border border-orange-200/30 dark:border-orange-800/30 hover:shadow-lg transition-all duration-200">
                     <div className="flex items-center gap-4">
-                      <div className="p-3 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl text-white">
+                      <div className="p-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl text-white">
                         <Bell className="h-5 w-5" />
                       </div>
                       <div>
@@ -528,7 +522,7 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
                       onCheckedChange={(checked) =>
                         setGroupSettings({ ...groupSettings, permitir_convites: checked })
                       }
-                      className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-emerald-500 data-[state=checked]:to-teal-500"
+                      className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-orange-500 data-[state=checked]:to-amber-500"
                     />
                   </div>
                 </div>
@@ -545,12 +539,12 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-950/30 dark:to-red-950/30 p-6 rounded-2xl border border-orange-200/50 dark:border-orange-800/50">
+            <div className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 p-6 rounded-2xl border border-orange-200/50 dark:border-orange-800/50">
               <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl text-white">
+                <div className="p-2 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl text-white">
                   <Target className="h-5 w-5" />
                 </div>
-                <h3 className="text-lg font-semibold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
+                <h3 className="text-lg font-semibold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
                   Metas e Objetivos do Grupo
                 </h3>
               </div>
@@ -571,7 +565,7 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
                           meta_membros: parseInt(e.target.value) || 0,
                         })
                       }
-                      className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-gray-200/50 dark:border-gray-700/50 rounded-xl h-12 pl-4 pr-16"
+                      className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-orange-200/50 dark:border-orange-700/50 rounded-xl h-12 pl-4 pr-16"
                       placeholder="50"
                     />
                     <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-500">
@@ -598,7 +592,7 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
                           meta_atividade_semanal: parseInt(e.target.value) || 0,
                         })
                       }
-                      className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-gray-200/50 dark:border-gray-700/50 rounded-xl h-12 pl-4 pr-16"
+                      className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-orange-200/50 dark:border-orange-700/50 rounded-xl h-12 pl-4 pr-16"
                       placeholder="10"
                     />
                     <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-500">
@@ -625,7 +619,7 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
                           meta_materiais: parseInt(e.target.value) || 0,
                         })
                       }
-                      className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-gray-200/50 dark:border-gray-700/50 rounded-xl h-12 pl-4 pr-16"
+                      className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-orange-200/50 dark:border-orange-700/50 rounded-xl h-12 pl-4 pr-16"
                       placeholder="20"
                     />
                     <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-500">
@@ -638,7 +632,7 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
                 </div>
               </div>
 
-              <div className="mt-8 p-6 bg-gradient-to-r from-orange-100 to-red-100 dark:from-orange-900/30 dark:to-red-900/30 rounded-xl border border-orange-200/50 dark:border-orange-800/50">
+              <div className="mt-8 p-6 bg-gradient-to-r from-orange-100 to-amber-100 dark:from-orange-900/30 dark:to-amber-900/30 rounded-xl border border-orange-200/50 dark:border-orange-800/50">
                 <div className="flex items-center gap-3 mb-3">
                   <CheckCircle2 className="h-5 w-5 text-orange-600" />
                   <span className="font-semibold text-orange-900 dark:text-orange-100">
@@ -652,7 +646,7 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
                   </div>
                   <div className="w-full bg-orange-200/50 dark:bg-orange-800/30 rounded-full h-2">
                     <div 
-                      className="bg-gradient-to-r from-orange-500 to-red-500 h-2 rounded-full transition-all duration-300"
+                      className="bg-gradient-to-r from-orange-500 to-amber-500 h-2 rounded-full transition-all duration-300"
                       style={{ width: `${Math.min((25 / groupSettings.meta_membros) * 100, 100)}%` }}
                     />
                   </div>
@@ -670,12 +664,12 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 p-6 rounded-2xl border border-indigo-200/50 dark:border-indigo-800/50">
+            <div className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 p-6 rounded-2xl border border-orange-200/50 dark:border-orange-800/50">
               <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl text-white">
+                <div className="p-2 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl text-white">
                   <Gavel className="h-5 w-5" />
                 </div>
-                <h3 className="text-lg font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                <h3 className="text-lg font-semibold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
                   Regras e Código de Conduta
                 </h3>
               </div>
@@ -695,9 +689,9 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -20 }}
                         transition={{ duration: 0.2, delay: index * 0.1 }}
-                        className="flex items-center gap-3 p-4 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl border border-indigo-200/30 dark:border-indigo-800/30"
+                        className="flex items-center gap-3 p-4 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl border border-orange-200/30 dark:border-orange-800/30"
                       >
-                        <div className="p-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg text-white">
+                        <div className="p-2 bg-gradient-to-r from-orange-500 to-amber-500 rounded-lg text-white">
                           <span className="text-sm font-bold">{index + 1}</span>
                         </div>
                         <p className="flex-1 text-gray-700 dark:text-gray-300">{regra}</p>
@@ -716,12 +710,12 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
                       value={newRule}
                       onChange={(e) => setNewRule(e.target.value)}
                       onKeyPress={(e) => e.key === "Enter" && addRule()}
-                      className="flex-1 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-gray-200/50 dark:border-gray-700/50 rounded-xl h-12"
+                      className="flex-1 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-orange-200/50 dark:border-orange-700/50 rounded-xl h-12"
                       placeholder="Digite uma nova regra para o grupo"
                     />
                     <Button
                       onClick={addRule}
-                      className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white rounded-xl px-6 shadow-lg hover:shadow-xl transition-all duration-200"
+                      className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-xl px-6 shadow-lg hover:shadow-xl transition-all duration-200"
                     >
                       <Plus className="h-4 w-4" />
                     </Button>
@@ -741,7 +735,7 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
                         codigo_conduta: e.target.value,
                       })
                     }
-                    className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-gray-200/50 dark:border-gray-700/50 rounded-xl min-h-[150px] resize-none"
+                    className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-orange-200/50 dark:border-orange-700/50 rounded-xl min-h-[150px] resize-none"
                     placeholder="Descreva o comportamento esperado dos membros do grupo..."
                     rows={6}
                   />
@@ -759,7 +753,7 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-950/30 dark:to-orange-950/30 p-6 rounded-2xl border border-yellow-200/50 dark:border-yellow-800/50">
+            <div className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 p-6 rounded-2xl border border-orange-200/50 dark:border-orange-800/50">
               <div className="p-4 bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-950/50 dark:to-orange-950/50 rounded-xl border border-red-200/50 dark:border-red-800/50 mb-6">
                 <div className="flex items-center gap-3 text-red-700 dark:text-red-300 mb-2">
                   <AlertTriangle className="h-5 w-5" />
@@ -772,18 +766,18 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
 
               <div className="space-y-6">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl text-white">
+                  <div className="p-2 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl text-white">
                     <Zap className="h-5 w-5" />
                   </div>
-                  <h3 className="text-lg font-semibold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
+                  <h3 className="text-lg font-semibold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
                     Automação e Recursos Técnicos
                   </h3>
                 </div>
 
                 <div className="grid gap-6">
-                  <div className="flex items-center justify-between p-6 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl border border-yellow-200/30 dark:border-yellow-800/30 hover:shadow-lg transition-all duration-200">
+                  <div className="flex items-center justify-between p-6 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl border border-orange-200/30 dark:border-orange-800/30 hover:shadow-lg transition-all duration-200">
                     <div className="flex items-center gap-4">
-                      <div className="p-3 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl text-white">
+                      <div className="p-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl text-white">
                         <Zap className="h-5 w-5" />
                       </div>
                       <div>
@@ -796,13 +790,13 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
                       onCheckedChange={(checked) =>
                         setGroupSettings({ ...groupSettings, backup_automatico: checked })
                       }
-                      className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-blue-500 data-[state=checked]:to-cyan-500"
+                      className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-orange-500 data-[state=checked]:to-amber-500"
                     />
                   </div>
 
-                  <div className="flex items-center justify-between p-6 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl border border-yellow-200/30 dark:border-yellow-800/30 hover:shadow-lg transition-all duration-200">
+                  <div className="flex items-center justify-between p-6 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl border border-orange-200/30 dark:border-orange-800/30 hover:shadow-lg transition-all duration-200">
                     <div className="flex items-center gap-4">
-                      <div className="p-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl text-white">
+                      <div className="p-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl text-white">
                         <Bell className="h-5 w-5" />
                       </div>
                       <div>
@@ -815,13 +809,13 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
                       onCheckedChange={(checked) =>
                         setGroupSettings({ ...groupSettings, notificacoes_ativas: checked })
                       }
-                      className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-green-500 data-[state=checked]:to-emerald-500"
+                      className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-orange-500 data-[state=checked]:to-amber-500"
                     />
                   </div>
 
-                  <div className="flex items-center justify-between p-6 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl border border-yellow-200/30 dark:border-yellow-800/30 hover:shadow-lg transition-all duration-200">
+                  <div className="flex items-center justify-between p-6 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl border border-orange-200/30 dark:border-orange-800/30 hover:shadow-lg transition-all duration-200">
                     <div className="flex items-center gap-4">
-                      <div className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl text-white">
+                      <div className="p-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl text-white">
                         <Crown className="h-5 w-5" />
                       </div>
                       <div>
@@ -834,7 +828,7 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
                       onCheckedChange={(checked) =>
                         setGroupSettings({ ...groupSettings, moderacao_automatica: checked })
                       }
-                      className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-purple-500 data-[state=checked]:to-pink-500"
+                      className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-orange-500 data-[state=checked]:to-amber-500"
                     />
                   </div>
                 </div>
@@ -859,17 +853,17 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 50 }}
           transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          className="bg-white dark:bg-[#0A0E1A] rounded-3xl shadow-2xl w-full max-w-7xl h-[95vh] flex overflow-hidden border border-gray-200/20 dark:border-gray-800/30"
+          className="bg-white dark:bg-[#0A0E1A] rounded-3xl shadow-2xl w-full max-w-6xl h-[90vh] flex overflow-hidden border border-orange-200/20 dark:border-orange-800/30"
         >
           {/* Sidebar */}
-          <div className="w-80 bg-gradient-to-b from-gray-50 to-gray-100 dark:from-[#0F1419] dark:to-[#1A1F2E] border-r border-gray-200/50 dark:border-gray-700/30 flex flex-col overflow-hidden">
-            <div className="p-6 border-b border-gray-200/50 dark:border-gray-700/30 bg-white/50 dark:bg-[#0A0E1A]/50 backdrop-blur-sm">
+          <div className="w-72 bg-gradient-to-b from-orange-50 to-amber-50 dark:from-[#0F1419] dark:to-[#1A1F2E] border-r border-orange-200/50 dark:border-orange-700/30 flex flex-col overflow-hidden">
+            <div className="p-6 border-b border-orange-200/50 dark:border-orange-700/30 bg-white/50 dark:bg-[#0A0E1A]/50 backdrop-blur-sm">
               <div className="flex items-center gap-3 mb-2">
-                <div className="p-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl text-white shadow-lg">
+                <div className="p-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-2xl text-white shadow-lg">
                   <Settings className="h-6 w-6" />
                 </div>
                 <div>
-                  <h2 className="font-bold text-xl bg-gradient-to-r from-gray-800 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
+                  <h2 className="font-bold text-xl bg-gradient-to-r from-orange-800 to-amber-600 dark:from-orange-400 dark:to-amber-300 bg-clip-text text-transparent">
                     Configurações
                   </h2>
                   <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
@@ -889,7 +883,7 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
                       onClick={() => setActiveSection(item.id)}
                       className={`w-full text-left p-4 rounded-2xl transition-all duration-200 group ${
                         isActive
-                          ? "bg-white dark:bg-[#1A1F2E] shadow-lg border border-gray-200/50 dark:border-gray-700/50 scale-[1.02]"
+                          ? "bg-white dark:bg-[#1A1F2E] shadow-lg border border-orange-200/50 dark:border-orange-700/50 scale-[1.02]"
                           : "hover:bg-white/70 dark:hover:bg-[#1A1F2E]/70 hover:shadow-md"
                       }`}
                       whileHover={{ x: isActive ? 0 : 4 }}
@@ -898,7 +892,7 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
                       <div className="flex items-center gap-4">
                         <div className={`p-3 rounded-xl transition-all duration-200 ${
                           isActive 
-                            ? `bg-gradient-to-r ${item.gradient} text-white shadow-lg`
+                            ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg"
                             : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 group-hover:bg-gray-200 dark:group-hover:bg-gray-700"
                         }`}>
                           <item.icon className="h-5 w-5" />
@@ -926,10 +920,10 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
           {/* Main Content */}
           <div className="flex-1 flex flex-col overflow-hidden">
             {/* Header */}
-            <div className="p-6 border-b border-gray-200/50 dark:border-gray-700/30 bg-white/30 dark:bg-[#0A0E1A]/30 backdrop-blur-sm">
+            <div className="p-6 border-b border-orange-200/50 dark:border-orange-700/30 bg-white/30 dark:bg-[#0A0E1A]/30 backdrop-blur-sm">
               <div className="flex items-center justify-between">
                 <div>
-                  <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
+                  <h1 className="text-2xl font-bold bg-gradient-to-r from-orange-800 to-amber-600 dark:from-orange-400 dark:to-amber-300 bg-clip-text text-transparent">
                     {menuItems.find(item => item.id === activeSection)?.label}
                   </h1>
                   <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -948,22 +942,22 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto p-6 bg-gradient-to-br from-gray-50/50 to-gray-100/50 dark:from-[#0A0E1A] dark:to-[#0F1419]">
+            <div className="flex-1 overflow-y-auto p-6 bg-gradient-to-br from-gray-50/50 to-orange-50/50 dark:from-[#0A0E1A] dark:to-[#0F1419]">
               {renderContent()}
             </div>
 
             {/* Footer */}
-            <div className="p-6 border-t border-gray-200/50 dark:border-gray-700/30 bg-white/50 dark:bg-[#0A0E1A]/50 backdrop-blur-sm flex items-center justify-end gap-4">
+            <div className="p-6 border-t border-orange-200/50 dark:border-orange-700/30 bg-white/50 dark:bg-[#0A0E1A]/50 backdrop-blur-sm flex items-center justify-end gap-4">
               <Button
                 variant="outline"
                 onClick={onClose}
-                className="px-6 py-3 rounded-xl border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200"
+                className="px-6 py-3 rounded-xl border-orange-300 dark:border-orange-600 hover:bg-orange-50 dark:hover:bg-orange-800/20 transition-all duration-200"
               >
                 Cancelar
               </Button>
               <Button
                 onClick={handleSave}
-                className="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
+                className="px-8 py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
               >
                 <Save className="h-4 w-4" />
                 Salvar Configurações
