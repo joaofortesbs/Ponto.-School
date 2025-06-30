@@ -689,15 +689,15 @@ const GruposEstudoView: React.FC = () => {
     // Renderizar interface do grupo se estiver ativa
     if (showGroupInterface && activeGroup) {
       return (
-          <div className="w-full h-full bg-[#f7f9fa] dark:bg-[#001427] p-6 space-y-6 transition-colors duration-300">
+          <div className="w-full h-screen bg-[#f7f9fa] dark:bg-[#001427] flex flex-col transition-colors duration-300">
               {/* Header do grupo com navegação */}
               <motion.div
                   initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3 }}
-                  className="flex justify-between items-center mb-6"
+                  className="flex justify-between items-center p-6 pb-4"
               >
-                  <div>
+                  <div className="flex items-center gap-4">
                       <Button
                           onClick={returnToGroups}
                           variant="outline"
@@ -707,14 +707,14 @@ const GruposEstudoView: React.FC = () => {
                           <ArrowLeft className="w-4 h-4 mr-2" />
                           Voltar
                       </Button>
-                      <h2 className="text-3xl font-bold text-[#001427] dark:text-white bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] bg-clip-text text-transparent font-montserrat ml-3">
+                      <h2 className="text-2xl font-bold text-[#001427] dark:text-white bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] bg-clip-text text-transparent font-montserrat">
                           {activeGroup.nome}
                       </h2>
                   </div>
               </motion.div>
 
               {/* Mini-seções no topo */}
-              <div className="flex items-center gap-4 mb-6">
+              <div className="flex items-center gap-4 px-6 pb-4">
                   <Button
                       variant={activeTab === 'discussoes' ? 'default' : 'outline'}
                       size="sm"
@@ -727,27 +727,35 @@ const GruposEstudoView: React.FC = () => {
                   {/* Outras abas aqui */}
               </div>
 
-              {/* Conteúdo da aba ativa */}
-              <div className="mt-6">
+              {/* Conteúdo da aba ativa - flex-1 para ocupar espaço restante */}
+              <div className="flex-1 px-6 pb-6 min-h-0">
                   {activeTab === 'discussoes' && (
-                      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg transition-colors duration-300">
-                          <h3 className="text-lg font-semibold text-[#001427] dark:text-white mb-4 font-montserrat">
-                              Discussões do Grupo: {activeGroup.nome}
-                          </h3>
-                          <div className="space-y-4">
-                              <div className="border-b pb-4">
-                                  <p className="text-sm text-[#778DA9] dark:text-gray-400 mb-2">Descrição:</p>
-                                  <p className="text-[#001427] dark:text-white font-open-sans">
-                                      {activeGroup.descricao || "Sem descrição disponível"}
-                                  </p>
+                      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg transition-colors duration-300 h-full flex flex-col">
+                          {/* Header do grupo */}
+                          <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+                              <div className="flex items-center justify-between">
+                                  <div>
+                                      <h3 className="text-lg font-bold text-[#001427] dark:text-white font-montserrat">
+                                          Chat do Grupo
+                                      </h3>
+                                      <p className="text-sm text-[#778DA9] dark:text-gray-400 mt-1">
+                                          {activeGroup.descricao || "Sem descrição disponível"}
+                                      </p>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                                      <span className="text-xs text-[#778DA9] dark:text-gray-400">
+                                          Online
+                                      </span>
+                                  </div>
                               </div>
+                          </div>
 
-                              <div className="h-full min-h-[600px] flex flex-col">
-                                <ChatSection 
-                                  groupId={activeGroup.id} 
-                                />
-                              </div>
-
+                          {/* Chat Section - ocupa todo o espaço restante */}
+                          <div className="flex-1 p-4 min-h-0">
+                            <ChatSection 
+                              groupId={activeGroup.id}
+                            />
                           </div>
                       </div>
                   )}
