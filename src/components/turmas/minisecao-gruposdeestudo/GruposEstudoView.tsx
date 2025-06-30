@@ -35,6 +35,161 @@ import AddGroupModal from "../AddGroupModal";
 import EntrarGrupoSuccessModal from "../EntrarGrupoSuccessModal";
 import ChatSection from "@/components/turmas/group-detail/ChatSection";
 
+// Componente para exibir membros do grupo
+const MembersSection: React.FC<{ groupId: string }> = ({ groupId }) => {
+  const [members, setMembers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadMembers = async () => {
+      try {
+        setLoading(true);
+        
+        // Buscar membros do grupo
+        const { data: membersData, error: membersError } = await supabase
+          .from('membros_grupos')
+          .select('user_id')
+          .eq('grupo_id', groupId);
+
+        if (membersError) {
+          console.error('Erro ao carregar membros:', membersError);
+          return;
+        }
+
+        if (!membersData || membersData.length === 0) {
+          setMembers([]);
+          return;
+        }
+
+        // Buscar dados dos perfis dos membros
+        const userIds = membersData.map(m => m.user_id);
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, display_name, avatar_url')
+          .in('id', userIds);
+
+        if (profilesError) {
+          console.error('Erro ao carregar perfis:', profilesError);
+          return;
+        }
+
+        // Buscar sessões ativas para status online
+        const now = new Date();
+        const thirtySecondsAgo = new Date(now.getTime() - 30 * 1000).toISOString();
+        
+        const { data: sessionsData } = await supabase
+          .from('user_sessions')
+          .select('user_id')
+          .eq('grupo_id', groupId)
+          .gte('last_active', thirtySecondsAgo);
+
+        const onlineUsers = new Set(sessionsData?.map(s => s.user_id) || []);
+
+        // Combinar dados
+        const membersWithProfiles = membersData.map(member => {
+          const profile = profilesData?.find(p => p.id === member.user_id);
+          return {
+            id: member.user_id,
+            name: profile?.display_name || `Usuário ${member.user_id.slice(0, 8)}`,
+            avatar_url: profile?.avatar_url,
+            isOnline: onlineUsers.has(member.user_id)
+          };
+        });
+
+        setMembers(membersWithProfiles);
+        
+      } catch (error) {
+        console.error('Erro geral ao carregar membros:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadMembers();
+  }, [groupId]);
+
+  if (loading) {
+    return (
+      <div className="h-full">
+        <div className="bg-white dark:bg-[#1a2236] rounded-lg p-6 h-full">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-bold text-[#001427] dark:text-white">Membros do Grupo</h3>
+            <Button className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white hover:from-[#FF8C40] hover:to-[#FF6B00]">
+              <UserPlus className="w-4 h-4 mr-2" />
+              Convidar Membros
+            </Button>
+          </div>
+          <div className="text-center py-8">
+            <div className="w-8 h-8 border-4 border-[#FF6B00]/30 border-t-[#FF6B00] rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-[#778DA9] dark:text-gray-400">Carregando membros...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-full">
+      <div className="bg-white dark:bg-[#1a2236] rounded-lg p-6 h-full">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-xl font-bold text-[#001427] dark:text-white">
+            Membros do Grupo ({members.length})
+          </h3>
+          <Button className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white hover:from-[#FF8C40] hover:to-[#FF6B00]">
+            <UserPlus className="w-4 h-4 mr-2" />
+            Convidar Membros
+          </Button>
+        </div>
+
+        {members.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[400px] overflow-y-auto">
+            {members.map((member) => (
+              <div
+                key={member.id}
+                className="flex items-center gap-3 p-4 bg-[#f7f9fa] dark:bg-[#29335C]/20 rounded-lg border border-[#FF6B00]/10 hover:border-[#FF6B00]/30 transition-all"
+              >
+                <div className="relative">
+                  <div className="w-12 h-12 rounded-full overflow-hidden bg-[#FF6B00]/10 flex items-center justify-center">
+                    {member.avatar_url ? (
+                      <img 
+                        src={member.avatar_url} 
+                        alt={member.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-[#FF6B00] font-semibold text-lg">
+                        {member.name.charAt(0).toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                  <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white dark:border-[#1a2236] ${
+                    member.isOnline ? 'bg-green-500' : 'bg-gray-400'
+                  }`}></div>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-semibold text-[#001427] dark:text-white text-sm truncate">
+                    {member.name}
+                  </h4>
+                  <p className={`text-xs ${member.isOnline ? 'text-green-600' : 'text-gray-500'}`}>
+                    {member.isOnline ? 'Online' : 'Offline'}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <Users className="w-16 h-16 mx-auto mb-4 text-[#FF6B00]/50" />
+            <p className="text-[#778DA9] dark:text-gray-400">
+              Nenhum membro encontrado neste grupo
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // Tipos para os grupos
 interface GrupoEstudo {
   id: string;
@@ -1166,23 +1321,7 @@ const GruposEstudoView: React.FC = () => {
                       </div>
                   )}
                   {activeTab === 'membros' && (
-                      <div className="h-full">
-                          <div className="bg-white dark:bg-[#1a2236] rounded-lg p-6 h-full">
-                              <div className="flex items-center justify-between mb-6">
-                                  <h3 className="text-xl font-bold text-[#001427] dark:text-white">Membros do Grupo</h3>
-                                  <Button className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white hover:from-[#FF8C40] hover:to-[#FF6B00]">
-                                      <UserPlus className="w-4 h-4 mr-2" />
-                                      Convidar Membros
-                                  </Button>
-                              </div>
-                              <div className="text-center py-8">
-                                  <Users className="w-16 h-16 mx-auto mb-4 text-[#FF6B00]/50" />
-                                  <p className="text-[#778DA9] dark:text-gray-400">
-                                      Lista de membros será exibida aqui
-                                  </p>
-                              </div>
-                          </div>
-                      </div>
+                      <MembersSection groupId={activeGroup.id} />
                   )}
                   {activeTab === 'eventos' && (
                       <div className="h-full">
