@@ -655,14 +655,14 @@ const GruposEstudoView: React.FC = () => {
     let groups = [];
 
     if (currentView === "todos-grupos") {
-      groups = allGroups;
+      groups = allGroups || [];
     } else if (currentView === "meus-grupos") {
-      groups = myGroups;
+      groups = myGroups || [];
     }
 
-    if (!searchTerm) return groups;
+    if (!searchTerm) return groups || [];
 
-    return groups.filter(group => 
+    return (groups || []).filter(group => 
       group.nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       group.descricao?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       group.disciplina_area?.toLowerCase().includes(searchTerm.toLowerCase())
