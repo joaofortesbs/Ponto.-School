@@ -39,6 +39,9 @@ import {
   ArrowLeft,
   BookOpen,
   Calendar,
+  MoreVertical,
+  Brain,
+  MessageSquareCheck
 } from "lucide-react";
 
 interface DiscussoesTabProps {
@@ -123,6 +126,8 @@ export const DiscussoesTab: React.FC<DiscussoesTabProps> = ({
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
   const [editText, setEditText] = useState("");
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+    const [showOptionsModal, setShowOptionsModal] = useState(false);
+
   const [groupSettings, setGroupSettings] = useState<any>(null);
 
   // Audio recording states
@@ -525,7 +530,7 @@ export const DiscussoesTab: React.FC<DiscussoesTabProps> = ({
       }
 
       console.log(`Carregando configurações do grupo ${group.id}...`);
-      
+
       // Simulação de dados do grupo baseado na prop group
       const groupData = {
         nome: group.nome || groupName,
@@ -546,23 +551,23 @@ export const DiscussoesTab: React.FC<DiscussoesTabProps> = ({
     }
   };
 
-  const handleShowSettings = async () => {
-    setShowGroupMenu(false);
-    await loadGroupSettings();
+  const handleShowSettings = () => {
+    console.log('Abrindo configurações do grupo...');
+    setShowOptionsModal(false);
     setShowSettingsModal(true);
   };
 
   const handleResumeWithAI = () => {
-    setShowGroupMenu(false);
-    alert('Funcionalidade "Resumir conversa com IA" em desenvolvimento.');
-    console.log('Usuário clicou em "Resumir conversa com IA"');
+    console.log('Resumindo conversa com IA...');
+    setShowOptionsModal(false);
+    alert('Funcionalidade "Resumir conversa com IA" será implementada em breve!');
   };
 
   const handleSelectMessages = () => {
-    setShowGroupMenu(false);
+    console.log('Ativando modo de seleção de mensagens...');
+    setShowOptionsModal(false);
     setIsSelectionMode(!isSelectionMode);
-    setSelectedMessages([]);
-    console.log('Modo de seleção de mensagens ativado');
+    alert('Modo de seleção de mensagens ativado!');
   };
 
   const renderMessageContent = (message: Message) => {
@@ -912,8 +917,59 @@ export const DiscussoesTab: React.FC<DiscussoesTabProps> = ({
                   </div>
                 </PopoverContent>
               </Popover>
+                <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      console.log("Abrindo modal de opções...");
+                      setShowOptionsModal(true);
+                    }}
+                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors flex items-center justify-center"
+                    title="Opções"
+                  >
+                    <MoreVertical className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                  </button>
             </div>
           </div>
+            {/* Modal de Opções */}
+        {showOptionsModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowOptionsModal(false)}>
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 min-w-[300px] max-w-md shadow-xl" onClick={(e) => e.stopPropagation()}>
+              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Opções do Chat</h3>
+              <div className="space-y-2">
+                <button
+                  onClick={handleShowSettings}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors text-gray-700 dark:text-gray-300"
+                >
+                  <Settings className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                  <span>Configurações</span>
+                </button>
+                <button
+                  onClick={handleResumeWithAI}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors text-gray-700 dark:text-gray-300"
+                >
+                  <Brain className="h-5 w-5 text-blue-600" />
+                  <span>Resumir conversa com IA</span>
+                </button>
+                <button
+                  onClick={handleSelectMessages}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors text-gray-700 dark:text-gray-300"
+                >
+                  <MessageSquareCheck className="h-5 w-5 text-green-600" />
+                  <span>Selecionar mensagens</span>
+                </button>
+              </div>
+              <div className="flex justify-end mt-6">
+                <button
+                  onClick={() => setShowOptionsModal(false)}
+                  className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-medium"
+                >
+                  Fechar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
           {/* Search indicator */}
           {searchQuery && (
