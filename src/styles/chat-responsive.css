@@ -1,0 +1,64 @@
+
+/* Chat Responsivo - Expansão Dinâmica */
+.chat-section {
+  transition: height 0.3s ease-in-out;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Cenários de expansão */
+.chat-section.small-content .chat-messages {
+  max-height: 300px;
+}
+
+.chat-section.medium-content .chat-messages {
+  max-height: 500px;
+}
+
+.chat-section.large-content .chat-messages {
+  max-height: calc(100vh - 250px);
+}
+
+/* Responsividade para diferentes tamanhos de tela */
+@media (max-height: 600px) {
+  .chat-section {
+    max-height: calc(100vh - 150px);
+  }
+  
+  .chat-messages {
+    max-height: calc(100vh - 200px);
+  }
+}
+
+@media (min-height: 900px) {
+  .chat-section {
+    max-height: calc(100vh - 180px);
+  }
+  
+  .chat-messages {
+    max-height: calc(100vh - 250px);
+  }
+}
+
+/* Scroll suave */
+.chat-messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+  background: rgba(255, 107, 0, 0.6);
+  border-radius: 3px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 107, 0, 0.8);
+}

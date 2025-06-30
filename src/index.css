@@ -16,6 +16,7 @@
 @import "./styles/modern-scanner.css";
 @import "./styles/rotina-calendar.css";
 @import "./styles/groups-header-transitions.css";
+@import "./styles/chat-responsive.css";
 
 
 /* Estilos para manter proporções consistentes em grid layouts */

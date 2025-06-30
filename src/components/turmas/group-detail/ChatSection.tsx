@@ -471,9 +471,9 @@ export default function ChatSection({ groupId }: ChatSectionProps) {
   }
 
   return (
-    <div className="chat-section w-full h-full flex flex-col bg-[#001427] rounded-lg border border-gray-700">
+    <div className="chat-section w-full min-h-[400px] flex flex-col bg-[#001427] rounded-lg border border-gray-700" style={{ height: 'auto', maxHeight: 'calc(100vh - 200px)' }}>
       {/* Header do Chat */}
-      <div className="chat-header p-4 border-b border-gray-600 bg-[#1a2a44] rounded-t-lg">
+      <div className="chat-header p-4 border-b border-gray-600 bg-[#1a2a44] rounded-t-lg flex-shrink-0">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>

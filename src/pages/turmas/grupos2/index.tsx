@@ -1062,7 +1062,7 @@ export default function GruposEstudo2() {
             </div>
 
             {/* Right Column - Chat */}
-            <Card className="bg-white dark:bg-[#1E293B] border-[#FF6B00]/10 dark:border-[#FF6B00]/20 shadow-md h-[calc(100vh-400px)] flex flex-col">
+            <Card className="bg-white dark:bg-[#1E293B] border-[#FF6B00]/10 dark:border-[#FF6B00]/20 shadow-md min-h-[500px] flex flex-col" style={{ height: 'auto', maxHeight: 'calc(100vh - 200px)' }}>
               <div className="p-4 border-b border-[#FF6B00]/10 dark:border-[#FF6B00]/20 flex items-center justify-between">
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white font-montserrat flex items-center gap-2">
                   <MessageCircle className="h-5 w-5 text-[#FF6B00]" /> Chat do
