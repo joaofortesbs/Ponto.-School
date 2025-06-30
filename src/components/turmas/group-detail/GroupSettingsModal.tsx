@@ -32,6 +32,7 @@ import {
   Sparkles,
   Layers,
   Gauge,
+  Copy,
 } from "lucide-react";
 
 interface GroupSettingsModalProps {
@@ -58,6 +59,7 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
     is_visible_to_all: group?.is_visible_to_all || false,
     is_visible_to_partners: group?.is_visible_to_partners || false,
     tipo_grupo: group?.tipo_grupo || "estudo",
+    codigo_unico: group?.codigo_unico || "",
     // Configurações de aparência
     tema: "laranja",
     cor_primaria: "#FF6B00",
@@ -99,9 +101,56 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
     };
   }, [isOpen, onClose]);
 
-  const handleSave = () => {
-    onSave(groupSettings);
-    onClose();
+  const handleSave = async () => {
+    try {
+      // Validações
+      if (!groupSettings.nome.trim()) {
+        alert('O nome do grupo não pode ser vazio.');
+        return;
+      }
+
+      // Log para debug
+      console.log('Salvando configurações do grupo:', group?.id, groupSettings);
+
+      // Preparar dados para atualização
+      const updateData = {
+        nome: groupSettings.nome.trim(),
+        descricao: groupSettings.descricao.trim(),
+        tags: groupSettings.tags.filter(tag => tag.trim() !== ''),
+        disciplina_area: groupSettings.disciplina_area.trim(),
+        topico_especifico: groupSettings.topico_especifico.trim(),
+        is_private: groupSettings.is_private,
+        is_visible_to_all: groupSettings.is_visible_to_all
+      };
+
+      // Importar supabase dinamicamente
+      const { supabase } = await import('@/integrations/supabase/client');
+
+      // Atualizar no Supabase
+      const { error } = await supabase
+        .from('grupos_estudo')
+        .update(updateData)
+        .eq('id', group?.id);
+
+      if (error) {
+        console.error('Erro ao salvar configurações no Supabase:', error);
+        alert('Erro ao salvar configurações. Verifique o console.');
+        return;
+      }
+
+      console.log(`Configurações salvas com sucesso para grupo ${group?.id}`);
+      alert('Configurações salvas com sucesso!');
+      
+      // Chama a função original onSave se existir
+      if (onSave) {
+        onSave(groupSettings);
+      }
+      
+      onClose();
+    } catch (error) {
+      console.error('Erro ao salvar configurações:', error.message, error.stack);
+      alert('Erro ao salvar configurações. Verifique o console.');
+    }
   };
 
   const addTag = () => {
@@ -136,6 +185,16 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
       ...groupSettings,
       regras: groupSettings.regras.filter((_, i) => i !== index),
     });
+  };
+
+  const copyCode = async (code: string) => {
+    try {
+      await navigator.clipboard.writeText(code);
+      // Poderia adicionar um toast aqui no futuro
+      console.log('Código copiado:', code);
+    } catch (err) {
+      console.error('Erro ao copiar código:', err);
+    }
   };
 
   const menuItems = [
@@ -266,6 +325,32 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
                       className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-orange-200/50 dark:border-orange-700/50 rounded-xl h-12 transition-all duration-200 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
                       placeholder="Ex: Cálculo Diferencial, Física Quântica"
                     />
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                      <Sparkles className="h-4 w-4" />
+                      Código Único
+                    </Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={groupSettings.codigo_unico}
+                        readOnly
+                        className="flex-1 bg-gray-100 dark:bg-gray-700 border-orange-200/50 dark:border-orange-700/50 rounded-xl h-12 font-mono text-center cursor-pointer"
+                        onClick={() => copyCode(groupSettings.codigo_unico)}
+                        title="Clique para copiar"
+                      />
+                      <Button
+                        type="button"
+                        onClick={() => copyCode(groupSettings.codigo_unico)}
+                        className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-xl px-4 py-3 shadow-lg hover:shadow-xl transition-all duration-200"
+                        title="Copiar código"
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
 
@@ -430,6 +515,16 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
               </div>
 
               <div className="space-y-6">
+                <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-xl border border-blue-200/50 dark:border-blue-800/50 mb-6">
+                  <div className="flex items-center gap-3 text-blue-700 dark:text-blue-300 mb-2">
+                    <Info className="h-5 w-5" />
+                    <span className="font-semibold text-sm">Configurações Editáveis</span>
+                  </div>
+                  <p className="text-xs text-blue-600 dark:text-blue-400">
+                    Estas configurações podem ser editadas e serão salvas ao clicar em "Salvar Configurações".
+                  </p>
+                </div>
+
                 <div className="grid gap-6">
                   <div className="flex items-center justify-between p-6 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl border border-orange-200/30 dark:border-orange-800/30 hover:shadow-lg transition-all duration-200">
                     <div className="flex items-center gap-4">
