@@ -348,399 +348,824 @@ export default function GruposEstudo2() {
     (group) => group.id === selectedGroup,
   );
 
-  // Função para acessar um grupo específico
-  const accessGroup = async (groupId: string) => {
-    try {
-      console.log(`Acessando grupo ${groupId}...`);
-
-      // Ocultar o cabeçalho "Minhas Turmas"
-      const header = document.querySelector('.groups-header');
-      if (header) {
-        (header as HTMLElement).style.display = 'none';
-        console.log('Cabeçalho "Minhas Turmas" ocultado.');
-      }
-
-      // Placeholder URLs para banner e imagem do grupo (a serem configurados no modal de configurações)
-      const bannerUrl = 'https://via.placeholder.com/800x200/FF6B00/ffffff?text=Banner+do+Grupo';
-      const groupImageUrl = 'https://via.placeholder.com/80x80/0A2540/ffffff?text=GE';
-
-      // Cache para nomes e imagens de perfil dos usuários
-      const userCache = new Map();
-
-      // Criar interface do grupo
-      const groupInterface = document.createElement('div');
-      groupInterface.id = 'group-interface';
-      groupInterface.className = 'group-interface-container';
-      groupInterface.style.cssText = `
-        margin-left: 250px; 
-        padding: 20px; 
-        min-height: 100vh;
-        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-      `;
-
-      groupInterface.innerHTML = `
-        <div style="position: relative; margin-bottom: 20px;">
-          <!-- Banner do Grupo -->
-          <div style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
-            <img src="${bannerUrl}" alt="Capa do Grupo" 
-                 style="width: 100%; height: 200px; object-fit: cover; display: block;">
-            <div style="position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.3) 100%);"></div>
-
-            <!-- Imagem circular do grupo -->
-            <div style="position: absolute; bottom: -20px; left: 20px; z-index: 10;">
-              <img src="${groupImageUrl}" alt="Imagem do Grupo" 
-                   style="width: 80px; height: 80px; border-radius: 50%; border: 4px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-            </div>
-
-            <!-- Botão de voltar -->
-            <button id="back-to-groups" style="
-              position: absolute; 
-              top: 15px; 
-              left: 15px; 
-              background: rgba(255,255,255,0.9); 
-              border: none; 
-              border-radius: 8px; 
-              padding: 8px 12px; 
-              cursor: pointer; 
-              display: flex; 
-              align-items: center; 
-              gap: 5px;
-              font-weight: 500;
-              color: #333;
-              transition: all 0.2s ease;
-              box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            " onmouseover="this.style.background='rgba(255,255,255,1)'" onmouseout="this.style.background='rgba(255,255,255,0.9)'">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M19 12H5"></path>
-                <path d="M12 19l-7-7 7-7"></path>
-              </svg>
-              Voltar
-            </button>
-          </div>
-
-          <!-- Título e descrição do grupo -->
-          <div style="margin-top: 30px; padding-left: 20px;">
-            <h1 style="
-              font-size: 2rem; 
-              font-weight: 700; 
-              color: #2d3748; 
-              margin: 0 0 8px 0;
-              text-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            ">Nome do Grupo</h1>
-            <p style="color: #718096; font-size: 1.1rem; margin: 0; line-height: 1.5;">Descrição do grupo.</p>
-          </div>
-        </div>
-
-        <!-- Navegação das seções -->
-        <div style="
-          background: white; 
-          border-radius: 12px; 
-          padding: 16px 20px; 
-          margin-bottom: 20px;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-          display: flex; 
-          justify-content: space-between; 
-          align-items: center;
-        ">
-          <div class="mini-sections" style="display: flex; gap: 8px;">
-            <button class="section-btn active" data-section="discussions" style="
-              background: #FF6B00; 
-              color: white; 
-              border: none; 
-              padding: 8px 16px; 
-              border-radius: 8px; 
-              font-weight: 500;
-              cursor: pointer;
-              transition: all 0.2s ease;
-            ">Discussões</button>
-            <button class="section-btn" data-section="tasks" disabled style="
-              background: #e2e8f0; 
-              color: #a0aec0; 
-              border: none; 
-              padding: 8px 16px; 
-              border-radius: 8px; 
-              font-weight: 500;
-              cursor: not-allowed;
-            ">Tarefas</button>
-            <button class="section-btn" data-section="members" disabled style="
-              background: #e2e8f0; 
-              color: #a0aec0; 
-              border: none; 
-              padding: 8px 16px; 
-              border-radius: 8px; 
-              font-weight: 500;
-              cursor: not-allowed;
-            ">Membros</button>
-            <button class="section-btn" data-section="settings" disabled style="
-              background: #e2e8f0; 
-              color: #a0aec0; 
-              border: none; 
-              padding: 8px 16px; 
-              border-radius: 8px; 
-              font-weight: 500;
-              cursor: not-allowed;
-            ">Configurações</button>
-            <button class="section-btn" data-section="notifications" disabled style="
-              background: #e2e8f0; 
-              color: #a0aec0; 
-              border: none; 
-              padding: 8px 16px; 
-              border-radius: 8px; 
-              font-weight: 500;
-              cursor: not-allowed;
-            ">Notificações</button>
-          </div>
-
-          <div style="display: flex; align-items: center; gap: 15px;">
-            <span id="online-count" style="
-              color: #48bb78; 
-              font-weight: 500;
-              display: flex;
-              align-items: center;
-              gap: 5px;
-            ">
-              <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor">
-                <circle cx="4" cy="4" r="4"/>
-              </svg>
-              Online: <span id="online-number">0</span>
-            </span>
-
-            <button id="search-icon" style="
-              background: none; 
-              border: none; 
-              cursor: pointer; 
-              padding: 6px;
-              border-radius: 6px;
-              transition: background 0.2s ease;
-            " onmouseover="this.style.background='#f7fafc'" onmouseout="this.style.background='none'">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-              </svg>
-            </button>
-
-            <button id="menu-icon" style="
-              background: none; 
-              border: none; 
-              cursor: pointer;
-              padding: 6px;
-              border-radius: 6px;
-              transition: background 0.2s ease;
-            " onmouseover="this.style.background='#f7fafc'" onmouseout="this.style.background='none'">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="1"></circle>
-                <circle cx="12" cy="5" r="1"></circle>
-                <circle cx="12" cy="19" r="1"></circle>
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        <!-- Área de pesquisa (inicialmente oculta) -->
-        <div id="search-bar" style="
-          display: none; 
-          background: white; 
-          border-radius: 12px; 
-          padding: 16px 20px; 
-          margin-bottom: 20px;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-          display: none;
-        ">
-          <div style="display: flex; gap: 10px; align-items: center;">
-            <input id="search-input" type="text" placeholder="Pesquisar mensagens..." style="
-              flex: 1; 
-              padding: 10px 12px; 
-              border: 1px solid #e2e8f0; 
-              border-radius: 8px; 
-              font-size: 14px;
-              outline: none;
-            ">
-            <button onclick="hideSearchBar()" style="
-              background: #ef4444; 
-              color: white; 
-              border: none; 
-              padding: 10px 16px; 
-              border-radius: 8px; 
-              cursor: pointer;
-              font-weight: 500;
-            ">Fechar</button>
-          </div>
-        </div>
-
-        <!-- Conteúdo das discussões -->
-        <div style="
-          background: white; 
-          border-radius: 12px; 
-          overflow: hidden;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-        ">
-          <div id="discussions-content" style="
-            height: 400px; 
-            overflow-y: auto; 
-            padding: 20px;
-            background: #fafafa;
-          ">
-            <div id="chat-messages" style="
-              display: flex; 
-              flex-direction: column-reverse;
-              gap: 12px;
-            "></div>
-          </div>
-
-          <!-- Área de input de mensagem -->
-          <div style="
-            padding: 16px 20px; 
-            border-top: 1px solid #e2e8f0;
-            background: white;
-          ">
-            <div style="display: flex; gap: 12px; align-items: center;">
-              <input id="chat-input" type="text" placeholder="Digite sua mensagem..." style="
-                flex: 1; 
-                padding: 12px 16px; 
-                border: 1px solid #e2e8f0; 
-                border-radius: 8px; 
-                font-size: 14px;
-                outline: none;
-                transition: border-color 0.2s ease;
-              " onfocus="this.style.borderColor='#FF6B00'" onblur="this.style.borderColor='#e2e8f0'">
-              <button onclick="sendMessage()" style="
-                background: #FF6B00; 
-                color: white; 
-                border: none; 
-                padding: 12px 20px; 
-                border-radius: 8px; 
-                cursor: pointer;
-                font-weight: 500;
-                transition: background 0.2s ease;
-              " onmouseover="this.style.background='#e55a00'" onmouseout="this.style.background='#FF6B00'">
-                Enviar
-              </button>
-            </div>
-          </div>
-        </div>
-      `;
-
-      // Limpar conteúdo e adicionar interface do grupo
-      const mainContent = document.getElementById('main-content');
-      if (mainContent) {
-        mainContent.innerHTML = '';
-        mainContent.appendChild(groupInterface);
-      }
-
-      // Configurar evento do botão voltar
-      const backButton = document.getElementById('back-to-groups');
-      if (backButton) {
-        backButton.addEventListener('click', returnToGroups);
-      }
-
-      // Configurar evento do ícone de pesquisa
-      const searchIcon = document.getElementById('search-icon');
-      if (searchIcon) {
-        searchIcon.addEventListener('click', () => {
-          const searchBar = document.getElementById('search-bar');
-          if (searchBar) {
-            searchBar.style.display = 'block';
-            const searchInput = document.getElementById('search-input') as HTMLInputElement;
-            if (searchInput) {
-              searchInput.focus();
-            }
-          }
-        });
-      }
-
-      // Configurar evento do ícone de menu
-      const menuIcon = document.getElementById('menu-icon');
-      if (menuIcon) {
-        menuIcon.addEventListener('click', () => {
-          // Aqui seria implementado o modal de configurações do grupo
-          console.log('Abrir modal de configurações do grupo');
-        });
-      }
-
-
-      console.log(`Interface do grupo ${groupId} carregada com sucesso.`);
-
-    } catch (error) {
-      console.error('Erro ao acessar grupo:', error);
-
-      // Em caso de erro, restaurar o cabeçalho
-      const header = document.querySelector('.groups-header');
-      if (header) {
-        (header as HTMLElement).style.display = 'flex';
-      }
-
-      
-    }
-  };
-
-  // Função para retornar à lista de grupos
-  const returnToGroups = () => {
-    try {
-      console.log('Retornando para a lista de grupos...');
-
-      // Restaurar o cabeçalho "Minhas Turmas"
-      const header = document.querySelector('.groups-header');
-      if (header) {
-        (header as HTMLElement).style.display = 'flex';
-        console.log('Cabeçalho "Minhas Turmas" restaurado.');
-      }
-
-      // Limpar a interface do grupo
-      const mainContent = document.getElementById('main-content');
-      if (mainContent) {
-        mainContent.innerHTML = '';
-      }
-
-      // Recarregar a view de grupos
-      
-
-    } catch (error) {
-      console.error('Erro ao retornar para grupos:', error);
-      
-    }
-  };
-
-
-  // Função global para esconder barra de pesquisa
-  (window as any).hideSearchBar = () => {
-    const searchBar = document.getElementById('search-bar');
-    if (searchBar) {
-      searchBar.style.display = 'none';
-    }
-  };
-
-  // Função global para enviar mensagem
-  (window as any).sendMessage = () => {
-   console.log("sendMessage function called");
-  };
-
-  React.useEffect(() => {
-    (window as any).accessGroup = accessGroup;
-    return () => {
-      delete (window as any).accessGroup;
-    };
-  }, []);
-
   return (
-    <div className="flex-1 space-y-6">
-      <div className="groups-header">
-        {/*<TurmasHeader />*/}
-      </div>
-
-      <div id="main-content" className="space-y-6">
-        <div className="flex justify-between items-center">
+    <div className="container mx-auto p-6 max-w-[1400px]">
+      {/* Page Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] flex items-center justify-center shadow-md">
+            <UserPlus className="h-6 w-6 text-white" />
+          </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Grupos de Estudos
+            <h1 className="text-3xl font-bold text-[#001427] dark:text-white bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] bg-clip-text text-transparent font-montserrat">
+              Grupos de Estudo 2
             </h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              Conecte-se com outros estudantes e compartilhe conhecimento
+            <p className="text-[#778DA9] dark:text-gray-400 text-sm font-open-sans">
+              Colabore, compartilhe e aprenda com seus colegas
             </p>
           </div>
         </div>
-
-        {/*<GruposEstudoView />*/}
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#FF6B00]">
+              <Search className="h-4 w-4" />
+            </div>
+            <Input
+              placeholder="Buscar grupos..."
+              className="pl-9 w-[250px] border-[#FF6B00]/30 focus:border-[#FF6B00] focus:ring-[#FF6B00]/30 rounded-lg"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <Button className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white rounded-lg shadow-md transition-all duration-300 hover:shadow-lg transform hover:scale-[1.02]">
+            <Plus className="h-4 w-4 mr-1" /> Criar Novo Grupo
+          </Button>
+        </div>
       </div>
+
+      {/* Main Content */}
+      {!selectedGroup ? (
+        // Groups List View
+        <div className="space-y-6">
+          {/* Tabs */}
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="w-full"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <TabsList className="bg-white dark:bg-[#1E293B] p-1 rounded-xl shadow-md border border-[#FF6B00]/10 dark:border-[#FF6B00]/20">
+                <TabsTrigger
+                  value="meus-grupos"
+                  className="data-[state=active]:bg-[#FF6B00]/10 data-[state=active]:text-[#FF6B00] rounded-lg px-4 py-2"
+                >
+                  <Users className="h-4 w-4 mr-2" /> Meus Grupos
+                </TabsTrigger>
+
+                <TabsTrigger
+                  value="recomendados"
+                  className="data-[state=active]:bg-[#FF6B00]/10 data-[state=active]:text-[#FF6B00] rounded-lg px-4 py-2"
+                >
+                  <Sparkles className="h-4 w-4 mr-2" /> Recomendados
+                </TabsTrigger>
+
+                <TabsTrigger
+                  value="populares"
+                  className="data-[state=active]:bg-[#FF6B00]/10 data-[state=active]:text-[#FF6B00] rounded-lg px-4 py-2"
+                >
+                  <Star className="h-4 w-4 mr-2" /> Populares
+                </TabsTrigger>
+
+                <TabsTrigger
+                  value="atividades"
+                  className="data-[state=active]:bg-[#FF6B00]/10 data-[state=active]:text-[#FF6B00] rounded-lg px-4 py-2"
+                >
+                  <Bell className="h-4 w-4 mr-2" /> Atividades Recentes
+                </TabsTrigger>
+              </TabsList>
+
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10"
+                onClick={() => setFilterOpen(!filterOpen)}
+              >
+                <Filter className="h-4 w-4 mr-1" /> Filtrar
+              </Button>
+            </div>
+
+            {/* My Groups Tab */}
+            <TabsContent value="meus-grupos" className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredGroups.map((group) => (
+                  <motion.div
+                    key={group.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="bg-white dark:bg-[#1E293B] rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-[#FF6B00]/10 dark:border-[#FF6B00]/20 transform hover:translate-y-[-3px] cursor-pointer"
+                    onClick={() => handleGroupSelect(group.id)}
+                  >
+                    <div className="relative h-40 overflow-hidden">
+                      <img
+                        src={group.image}
+                        alt={group.name}
+                        className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                      <div className="absolute bottom-0 left-0 right-0 p-4">
+                        <h3 className="text-xl font-bold text-white font-montserrat">
+                          {group.name}
+                        </h3>
+                        <p className="text-sm text-gray-200 font-open-sans">
+                          {group.course}
+                        </p>
+                      </div>
+                      {group.hasNewMessages && (
+                        <div className="absolute top-3 right-3 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+                          Novas mensagens
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex -space-x-2">
+                          {group.members.slice(0, 3).map((member) => (
+                            <div key={member.id} className="relative">
+                              <Avatar className="border-2 border-white dark:border-[#1E293B] w-8 h-8">
+                                <AvatarImage src={member.avatar} />
+                                <AvatarFallback>
+                                  {member.name.charAt(0)}
+                                </AvatarFallback>
+                              </Avatar>
+                              {member.online && (
+                                <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white dark:border-[#1E293B]"></div>
+                              )}
+                            </div>
+                          ))}
+                          {group.members.length > 3 && (
+                            <Avatar className="border-2 border-white dark:border-[#1E293B] w-8 h-8 bg-[#FF6B00]/10 text-[#FF6B00]">
+                              <AvatarFallback>
+                                +{group.members.length - 3}
+                              </AvatarFallback>
+                            </Avatar>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                          <Clock className="h-3.5 w-3.5 text-[#FF6B00]" />
+                          <span>Última atividade: {group.lastActivity}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 mb-3">
+                        <Calendar className="h-4 w-4 text-[#FF6B00]" />
+                        <span>Próxima reunião: {group.nextMeeting}</span>
+                      </div>
+
+                      <div className="flex gap-2 mt-3">
+                        <Button
+                          className="flex-1 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-montserrat font-semibold uppercase text-xs"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleGroupSelect(group.id);
+                          }}
+                        >
+                          Acessar Grupo
+                        </Button>
+
+                        <Button
+                          variant="outline"
+                          className="border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10 font-montserrat text-xs"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // In a real app, this would navigate to the chat
+                          }}
+                        >
+                          <MessageCircle className="h-4 w-4 mr-1" /> Chat
+                        </Button>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </TabsContent>
+
+            {/* Recommended Groups Tab */}
+            <TabsContent value="recomendados" className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredRecommended.map((group) => (
+                  <motion.div
+                    key={group.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="bg-white dark:bg-[#1E293B] rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-[#FF6B00]/10 dark:border-[#FF6B00]/20 transform hover:translate-y-[-3px] cursor-pointer"
+                  >
+                    <div className="relative h-40 overflow-hidden">
+                      <img
+                        src={group.image}
+                        alt={group.name}
+                        className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                      <div className="absolute bottom-0 left-0 right-0 p-4">
+                        <h3 className="text-xl font-bold text-white font-montserrat">
+                          {group.name}
+                        </h3>
+                        <p className="text-sm text-gray-200 font-open-sans">
+                          {group.course}
+                        </p>
+                      </div>
+                      <div className="absolute top-3 right-3 bg-[#FF6B00] text-white text-xs px-2 py-1 rounded-full font-medium flex items-center">
+                        <Sparkles className="h-3 w-3 mr-1" /> {group.matchScore}
+                        % match
+                      </div>
+                    </div>
+
+                    <div className="p-4">
+                      <p className="text-sm text-gray-600 dark:text-gray-300 mb-3 line-clamp-2">
+                        {group.description}
+                      </p>
+
+                      <div className="flex flex-wrap gap-1 mb-3">
+                        {group.topics.map((topic, index) => (
+                          <Badge
+                            key={index}
+                            className="bg-[#FF6B00]/10 text-[#FF6B00] dark:bg-[#FF6B00]/20 dark:text-[#FF8C40]"
+                          >
+                            {topic}
+                          </Badge>
+                        ))}
+                      </div>
+
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-300">
+                          <Users className="h-4 w-4 text-[#FF6B00]" />
+                          <span>{group.members} membros</span>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2 mt-3">
+                        <Button className="flex-1 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-montserrat font-semibold uppercase text-xs">
+                          Participar do Grupo
+                        </Button>
+
+                        <Button
+                          variant="outline"
+                          className="border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10 font-montserrat text-xs"
+                        >
+                          <Search className="h-4 w-4 mr-1" /> Ver Detalhes
+                        </Button>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </TabsContent>
+
+            {/* Popular Groups Tab */}
+            <TabsContent value="populares" className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {popularGroups.map((group) => (
+                  <motion.div
+                    key={group.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="bg-white dark:bg-[#1E293B] rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-[#FF6B00]/10 dark:border-[#FF6B00]/20 transform hover:translate-y-[-3px] cursor-pointer"
+                  >
+                    <div className="relative h-40 overflow-hidden">
+                      <img
+                        src={group.image}
+                        alt={group.name}
+                        className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                      <div className="absolute bottom-0 left-0 right-0 p-4">
+                        <h3 className="text-xl font-bold text-white font-montserrat">
+                          {group.name}
+                        </h3>
+                        <p className="text-sm text-gray-200 font-open-sans">
+                          {group.course}
+                        </p>
+                      </div>
+                      <div className="absolute top-3 right-3 bg-blue-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+                        Popular
+                      </div>
+                    </div>
+
+                    <div className="p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-300">
+                          <Users className="h-4 w-4 text-[#FF6B00]" />
+                          <span>{group.members} membros</span>
+                        </div>
+                        <Badge
+                          className={`
+                          ${
+                            group.activity === "Alta"
+                              ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                              : group.activity === "Média"
+                                ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
+                                : "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
+                          }
+                        `}
+                        >
+                          Atividade {group.activity}
+                        </Badge>
+                      </div>
+
+                      <div className="flex gap-2 mt-3">
+                        <Button className="flex-1 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-montserrat font-semibold uppercase text-xs">
+                          Participar do Grupo
+                        </Button>
+
+                        <Button
+                          variant="outline"
+                          className="border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10 font-montserrat text-xs"
+                        >
+                          <Search className="h-4 w-4 mr-1" /> Ver Detalhes
+                        </Button>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </TabsContent>
+
+            {/* Recent Activities Tab */}
+            <TabsContent value="atividades" className="space-y-6">
+              <Card className="bg-white dark:bg-[#1E293B] border-[#FF6B00]/10 dark:border-[#FF6B00]/20 shadow-md">
+                <CardContent className="p-6">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white font-montserrat mb-4">
+                    Atividades Recentes
+                  </h3>
+
+                  <div className="space-y-4">
+                    {recentActivities.map((activity) => (
+                      <div
+                        key={activity.id}
+                        className="flex items-start gap-3 p-3 rounded-lg hover:bg-[#FF6B00]/5 dark:hover:bg-[#FF6B00]/10 transition-colors cursor-pointer border border-transparent hover:border-[#FF6B00]/20"
+                        onClick={() => handleGroupSelect(activity.groupId)}
+                      >
+                        <div className="w-10 h-10 rounded-full bg-[#FF6B00]/10 dark:bg-[#FF6B00]/20 flex items-center justify-center">
+                          {activity.type === "message" ? (
+                            <MessageCircle className="h-5 w-5 text-[#FF6B00]" />
+                          ) : activity.type === "event" ? (
+                            <Calendar className="h-5 w-5 text-[#FF6B00]" />
+                          ) : activity.type === "member" ? (
+                            <UserPlus className="h-5 w-5 text-[#FF6B00]" />
+                          ) : (
+                            <FileText className="h-5 w-5 text-[#FF6B00]" />
+                          )}
+                        </div>
+
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-medium text-gray-900 dark:text-white">
+                              {activity.user}                            </span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                              {activity.time}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-600 dark:text-gray-300">
+                            {activity.content}
+                          </p>
+                          <p className="text-xs text-[#FF6B00] mt-1">
+                            Em: {activity.groupName}
+                          </p>
+                        </div>
+
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 text-[#FF6B00] hover:bg-[#FF6B00]/10 hover:text-[#FF8C40]"
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
+      ) : (
+        // Group Detail View
+        <div className="space-y-6">
+          {/* Group Header */}
+          <div className="relative h-64 rounded-xl overflow-hidden">
+            <img
+              src={selectedGroupDetails?.image}
+              alt={selectedGroupDetails?.name}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+
+            <div className="absolute top-4 left-4">
+              <Button
+                variant="ghost"
+                className="bg-black/30 text-white hover:bg-black/50 backdrop-blur-sm"
+                onClick={handleBackToList}
+              >
+                <ArrowRight className="h-4 w-4 mr-1 rotate-180" /> Voltar para
+                Grupos
+              </Button>
+            </div>
+
+            <div className="absolute top-4 right-4 flex gap-2">
+              <Button
+                variant="ghost"
+                className="bg-black/30 text-white hover:bg-black/50 backdrop-blur-sm"
+              >
+                <MessageCircle className="h-4 w-4 mr-1" /> Chat do Grupo
+              </Button>
+
+              <Button
+                variant="ghost"
+                className="bg-black/30 text-white hover:bg-black/50 backdrop-blur-sm"
+              >
+                <Settings className="h-4 w-4 mr-1" /> Configurações
+              </Button>
+            </div>
+
+            <div className="absolute bottom-0 left-0 right-0 p-6">
+              <h1 className="text-3xl font-bold text-white font-montserrat mb-2">
+                {selectedGroupDetails?.name}
+              </h1>
+
+              <div className="flex items-center gap-4">
+                <Badge className="bg-[#FF6B00]/20 text-[#FF6B00] backdrop-blur-sm">
+                  {selectedGroupDetails?.course}
+                </Badge>
+
+                <div className="flex items-center gap-1 text-white text-sm">
+                  <Users className="h-4 w-4 text-[#FF6B00]" />
+                  <span>{selectedGroupDetails?.members.length} membros</span>
+                </div>
+
+                <div className="flex items-center gap-1 text-white text-sm">
+                  <Calendar className="h-4 w-4 text-[#FF6B00]" />
+                  <span>
+                    Próxima reunião: {selectedGroupDetails?.nextMeeting}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Group Content */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left Column - Group Info */}
+            <div className="space-y-6">
+              {/* Group Description */}
+              <Card className="bg-white dark:bg-[#1E293B] border-[#FF6B00]/10 dark:border-[#FF6B00]/20 shadow-md">
+                <CardContent className="p-6">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white font-montserrat mb-3">
+                    Sobre o Grupo
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-300 font-open-sans">
+                    {selectedGroupDetails?.description}
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Group Members */}
+              <Card className="bg-white dark:bg-[#1E293B] border-[#FF6B00]/10 dark:border-[#FF6B00]/20 shadow-md">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white font-montserrat">
+                      Membros
+                    </h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-[#FF6B00] hover:bg-[#FF6B00]/10"
+                    >
+                      <UserPlus className="h-4 w-4 mr-1" /> Convidar
+                    </Button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {selectedGroupDetails?.members.map((member) => (
+                      <div
+                        key={member.id}
+                        className="flex items-center justify-between"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="relative">
+                            <Avatar className="h-10 w-10">
+                              <AvatarImage src={member.avatar} />
+                              <AvatarFallback>
+                                {member.name.charAt(0)}
+                              </AvatarFallback>
+                            </Avatar>
+                            {member.online && (
+                              <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-[#1E293B]"></div>
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900 dark:text-white">
+                              {member.name}
+                            </p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              {member.online ? "Online" : "Offline"}
+                            </p>
+                          </div>
+                        </div>
+
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 text-[#FF6B00] hover:bg-[#FF6B00]/10"
+                        >
+                          <MessageCircle className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Mentor IA Recommendations */}
+              <Card className="bg-white dark:bg-[#1E293B] border-[#FF6B00]/10 dark:border-[#FF6B00]/20 shadow-md">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Brain className="h-5 w-5 text-[#FF6B00]" />
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white font-montserrat">
+                      Recomendações do Mentor IA
+                    </h3>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="bg-[#FF6B00]/5 dark:bg-[#FF6B00]/10 rounded-lg p-3 border border-[#FF6B00]/10 dark:border-[#FF6B00]/20">
+                      <div className="flex items-start gap-2">
+                        <BookOpen className="h-4 w-4 text-[#FF6B00] mt-0.5" />
+                        <div>
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">
+                            Material Complementar
+                          </p>
+                          <p className="text-xs text-gray-600 dark:text-gray-300">
+                            "Fundamentos de Mecânica Quântica" - Recomendado
+                            para o próximo encontro
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-[#FF6B00]/5 dark:bg-[#FF6B00]/10 rounded-lg p-3 border border-[#FF6B00]/10 dark:border-[#FF6B00]/20">
+                      <div className="flex items-start gap-2">
+                        <Video className="h-4 w-4 text-[#FF6B00] mt-0.5" />
+                        <div>
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">
+                            Vídeo Sugerido
+                          </p>
+                          <p className="text-xs text-gray-600 dark:text-gray-300">
+                            "Entendendo a Equação de Schrödinger" - Complementa
+                            as discussões recentes
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-[#FF6B00]/5 dark:bg-[#FF6B00]/10 rounded-lg p-3 border border-[#FF6B00]/10 dark:border-[#FF6B00]/20">
+                      <div className="flex items-start gap-2">
+                        <Zap className="h-4 w-4 text-[#FF6B00] mt-0.5" />
+                        <div>
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">
+                            Dica de Estudo
+                          </p>
+                          <p className="text-xs text-gray-600 dark:text-gray-300">
+                            Revisar o conceito de Dualidade Onda-Partícula antes
+                            da próxima reunião
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Middle Column - Upcoming Events and Resources */}
+            <div className="space-y-6">
+              {/* Upcoming Events */}
+              <Card className="bg-white dark:bg-[#1E293B] border-[#FF6B00]/10 dark:border-[#FF6B00]/20 shadow-md">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white font-montserrat">
+                      Próximos Eventos
+                    </h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-[#FF6B00] hover:bg-[#FF6B00]/10"
+                    >
+                      <Plus className="h-4 w-4 mr-1" /> Agendar
+                    </Button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {selectedGroupDetails?.upcomingEvents.map((event) => (
+                      <div
+                        key={event.id}
+                        className="bg-white dark:bg-[#1E293B] rounded-lg p-4 border border-gray-200 dark:border-gray-700 hover:border-[#FF6B00]/30 transition-colors cursor-pointer shadow-sm hover:shadow-md"
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-medium text-gray-900 dark:text-white">
+                            {event.title}
+                          </h4>
+                          <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                            Agendado
+                          </Badge>
+                        </div>
+
+                        <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-4 w-4 text-[#FF6B00]" />
+                            <span>{event.date}</span>
+                          </div>
+
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-4 w-4 text-[#FF6B00]" />
+                            <span>{event.time}</span>
+                          </div>
+                        </div>
+
+                        <div className="flex justify-end gap-2 mt-3">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10"
+                          >
+                            Detalhes
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="h-8 bg-[#FF6B00] hover:bg-[#FF8C40] text-white"
+                          >
+                            Participar
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Resources */}
+              <Card className="bg-white dark:bg-[#1E293B] border-[#FF6B00]/10 dark:border-[#FF6B00]/20 shadow-md">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white font-montserrat">
+                      Materiais Compartilhados
+                    </h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-[#FF6B00] hover:bg-[#FF6B00]/10"
+                    >
+                      <Plus className="h-4 w-4 mr-1" /> Adicionar
+                    </Button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {selectedGroupDetails?.resources.map((resource) => (
+                      <div
+                        key={resource.id}
+                        className="flex items-center justify-between p-3 rounded-lg hover:bg-[#FF6B00]/5 dark:hover:bg-[#FF6B00]/10 transition-colors cursor-pointer border border-transparent hover:border-[#FF6B00]/20"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-[#FF6B00]/10 dark:bg-[#FF6B00]/20 flex items-center justify-center">
+                            {resource.type === "pdf" ? (
+                              <FileText className="h-5 w-5 text-[#FF6B00]" />
+                            ) : resource.type === "video" ? (
+                              <Video className="h-5 w-5 text-[#FF6B00]" />
+                            ) : resource.type === "doc" ? (
+                              <BookOpen className="h-5 w-5 text-[#FF6B00]" />
+                            ) : (
+                              <FileText className="h-5 w-5 text-[#FF6B00]" />
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900 dark:text-white">
+                              {resource.title}
+                            </p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
+                              {resource.type === "pdf"
+                                ? "Documento PDF"
+                                : resource.type === "video"
+                                  ? "Vídeo"
+                                  : resource.type === "doc"
+                                    ? "Documento"
+                                    : resource.type === "folder"
+                                      ? "Pasta"
+                                      : "Arquivo"}
+                            </p>
+                          </div>
+                        </div>
+
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 text-[#FF6B00] hover:bg-[#FF6B00]/10"
+                        >
+                          Baixar
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Right Column - Chat */}
+            <Card className="bg-white dark:bg-[#1E293B] border-[#FF6B00]/10 dark:border-[#FF6B00]/20 shadow-md h-[calc(100vh-400px)] flex flex-col">
+              <div className="p-4 border-b border-[#FF6B00]/10 dark:border-[#FF6B00]/20 flex items-center justify-between">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white font-montserrat flex items-center gap-2">
+                  <MessageCircle className="h-5 w-5 text-[#FF6B00]" /> Chat do
+                  Grupo
+                </h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-[#FF6B00] hover:bg-[#FF6B00]/10"
+                >
+                  <Settings className="h-4 w-4" />
+                </Button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                {/* Chat messages would go here */}
+                <div className="flex items-start gap-3">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=Ana" />
+                    <AvatarFallback>A</AvatarFallback>
+                  </Avatar>
+                  <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-3 max-w-[80%]">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        Ana Silva
+                      </span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        14:30
+                      </span>
+                    </div>
+                    <p className="text-gray-700 dark:text-gray-300">
+                      Olá pessoal! Compartilhei um novo material sobre Dualidade
+                      Onda-Partícula que pode ajudar na nossa discussão de
+                      amanhã.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3 justify-end">
+                  <div className="bg-[#FF6B00]/10 dark:bg-[#FF6B00]/20 rounded-lg p-3 max-w-[80%]">
+                    <div className="flex items-center gap-2 mb-1 justify-end">
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        14:35
+                      </span>
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        Você
+                      </span>
+                    </div>
+                    <p className="text-gray-700 dark:text-gray-300">
+                      Obrigado Ana! Vou dar uma olhada. Alguém tem dúvidas sobre
+                      o exercício 3 da lista?
+                    </p>
+                  </div>
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=You" />
+                    <AvatarFallback>V</AvatarFallback>
+                  </Avatar>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=Pedro" />
+                    <AvatarFallback>P</AvatarFallback>
+                  </Avatar>
+                  <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-3 max-w-[80%]">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        Pedro Oliveira
+                      </span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        14:40
+                      </span>
+                    </div>
+                    <p className="text-gray-700 dark:text-gray-300">
+                      Eu tenho dúvida sim! Podemos discutir isso na reunião de
+                      amanhã? Estou com dificuldade na parte de aplicar o
+                      princípio da incerteza.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-center">
+                  <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-full">
+                    Hoje, 15:00
+                  </span>
+                </div>
+              </div>
+
+              <div className="p-4 border-t border-[#FF6B00]/10 dark:border-[#FF6B00]/20">
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Digite sua mensagem..."
+                    className="border-[#FF6B00]/30 focus:border-[#FF6B00] focus:ring-[#FF6B00]/30 rounded-lg"
+                  />
+                  <Button className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white">
+                    Enviar
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
