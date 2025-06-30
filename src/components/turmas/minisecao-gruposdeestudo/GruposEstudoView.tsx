@@ -554,30 +554,56 @@ const GruposEstudoView: React.FC = () => {
 
     // Nova função para acessar o grupo e substituir a interface
     const accessGroup = async (groupId: string) => {
-      try {
-          console.log(`Acessando grupo ${groupId}...`);
-          const userId = await validateUserAuth();
-          if (!userId) {
-              console.error('Usuário não autenticado.');
-              toast({
-                  title: "Erro",
-                  description: "Usuário não autenticado.",
-                  variant: "destructive"
-              });
-              return;
-          }
+    try {
+      console.log(`Acessando grupo ${groupId}...`);
 
-          // Ocultar o cabeçalho de Minhas Turmas
-          const headers = document.querySelectorAll('.groups-header, [data-testid="groups-header"], .turmas-header');
-          if (headers.length > 0) {
-            headers.forEach(header => {
-              (header as HTMLElement).classList.add('hidden');
-              (header as HTMLElement).classList.remove('visible');
+      const userId = await validateUserAuth();
+      if (!userId) {
+        console.error('Usuário não autenticado.');
+        toast({
+          title: "Erro",
+          description: "Usuário não autenticado.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Ocultar o cabeçalho de Minhas Turmas
+      const headers = document.querySelectorAll('.groups-header, [data-testid="groups-header"], .turmas-header');
+      if (headers.length > 0) {
+        headers.forEach(header => {
+          (header as HTMLElement).classList.add('hidden');
+          (header as HTMLElement).classList.remove('visible');
+        });
+        console.log('Cabeçalho "Minhas Turmas" ocultado.');
+      } else {
+        console.warn('Cabeçalho não encontrado para ocultar.');
+      }
+
+      // Cache para nomes e imagens de perfil
+      const userCache = new Map();
+      try {
+        const { data: memberIds } = await supabase
+          .from('membros_grupos')
+          .select('user_id')
+          .eq('grupo_id', groupId);
+
+        if (memberIds && memberIds.length > 0) {
+          const { data: users } = await supabase
+            .from('profiles')
+            .select('id, display_name, avatar_url')
+            .in('id', memberIds.map(m => m.user_id));
+
+          users?.forEach(user => {
+            userCache.set(user.id, {
+              name: user.display_name || `Usuário ${user.id.slice(0, 5)}`,
+              avatar_url: user.avatar_url || null
             });
-            console.log('Cabeçalho "Minhas Turmas" ocultado.');
-          } else {
-            console.warn('Cabeçalho não encontrado para ocultar.');
-          }
+          });
+        }
+      } catch (error) {
+        console.error('Erro ao carregar cache de usuários:', error);
+      }
 
           // Buscar dados do grupo
           const { data: groupData, error } = await supabase
@@ -600,23 +626,200 @@ const GruposEstudoView: React.FC = () => {
           setShowGroupInterface(true);
           setActiveTab('discussoes');
           console.log(`Interface do grupo ${groupId} carregada com sucesso.`);
-      } catch (error) {
-          console.error('Erro ao acessar grupo:', error.message, error.stack);
-          toast({
-              title: "Erro",
-              description: "Erro ao acessar o grupo. Verifique o console.",
-              variant: "destructive"
+
+        // Função para carregar e exibir membros
+      (window as any).loadMembers = async (groupId: string, userCache: Map<string, any>) => {
+        try {
+          const now = new Date();
+          const thirtySecondsAgo = new Date(now.getTime() - 30 * 1000).toISOString();
+
+          // Carregar membros do grupo
+          const { data: members } = await supabase
+            .from('membros_grupos')
+            .select('user_id')
+            .eq('grupo_id', groupId);
+
+          // Carregar sessões ativas (últimos 30 segundos)
+          const { data: sessions } = await supabase
+            .from('user_sessions')
+            .select('user_id')
+            .eq('grupo_id', groupId)
+            .gte('last_active', thirtySecondsAgo);
+
+          const onlineUsers = new Set(sessions?.map(s => s.user_id) || []);
+
+          const membersGrid = document.getElementById('members-grid');
+          if (!membersGrid) return;
+
+          membersGrid.innerHTML = '';
+
+          members?.forEach(member => {
+            const userData = userCache.get(member.user_id) || { 
+              name: `Usuário ${member.user_id.slice(0, 5)}`, 
+              avatar_url: null 
+            };
+            const isOnline = onlineUsers.has(member.user_id);
+
+            const memberCard = document.createElement('div');
+            memberCard.style.cssText = 'min-width: 200px; height: auto; background: #f9f9f9; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 15px; display: flex; align-items: center;';
+
+            const avatarUrl = userData.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.name)}&background=3498db&color=fff&size=50`;
+
+            memberCard.innerHTML = `
+              <img src="${avatarUrl}" alt="${userData.name}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; flex-shrink: 0;">
+              <div style="margin-left: 10px; overflow: hidden;">
+                <strong style="color: #333; font-size: 16px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${userData.name}</strong>
+                <span style="color: ${isOnline ? '#2ecc71' : '#e74c3c'}; font-size: 14px;">${isOnline ? 'Online' : 'Offline'}</span>
+              </div>
+            `;
+            membersGrid.appendChild(memberCard);
           });
-           // Retry ao restaurar o cabeçalho em caso de erro
-           const headers = document.querySelectorAll('.groups-header, [data-testid="groups-header"], .turmas-header');
-           if (headers.length > 0) {
-             headers.forEach(header => {
-               (header as HTMLElement).classList.remove('hidden');
-               (header as HTMLElement).classList.add('visible');
-             });
-             console.log('Cabeçalho restaurado após erro.');
-           }
-      }
+
+          console.log(`Membros do grupo ${groupId} carregados com sucesso. Total: ${members?.length || 0}`);
+
+        } catch (error) {
+          console.error('Erro ao carregar membros:', error.message, error.stack);
+
+          // Retry após 2 segundos em caso de erro
+          setTimeout(() => {
+            (window as any).loadMembers(groupId, userCache);
+          }, 2000);
+        }
+      };
+
+      // Função para alternar entre seções
+      (window as any).switchSection = (section: string, groupId: string) => {
+        const sections = ['discussoes', 'membros'];
+
+        sections.forEach(s => {
+          const content = document.getElementById(`${s}-content`);
+          const button = document.querySelector(`button[onclick*="switchSection('${s}'"]`) as HTMLElement;
+
+          if (content) {
+            content.style.display = s === section ? 'block' : 'none';
+          }
+
+          if (button) {
+            button.style.background = s === section ? '#3498db' : '#ddd';
+            button.style.color = s === section ? 'white' : '#666';
+          }
+        });
+
+        // Se a seção de membros foi selecionada, carregar os membros
+        if (section === 'membros') {
+          (window as any).loadMembers(groupId, userCache);
+        }
+      };
+
+          const groupInterface = document.getElementById('group-interface');
+          if (!groupInterface) return;
+
+          groupInterface.innerHTML = `
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #ccc; padding-bottom: 10px;">
+          <div class="mini-sections">
+            <button class="active" style="background: #3498db; color: white; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 5px;" onclick="switchSection('discussoes', '${groupId}')">Discussões</button>
+            <button style="background: #ddd; color: #666; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 5px;" onclick="switchSection('membros', '${groupId}')">Membros</button>
+            <button disabled style="background: #ddd; color: #666; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 5px;">Tarefas</button>
+            <button disabled style="background: #ddd; color: #666; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 5px;">Configurações</button>
+            <button disabled style="background: #ddd; color: #666; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 5px;">Notificações</button>
+          </div>
+          <div style="display: flex; align-items: center;">
+            <span id="online-count" style="margin-right: 10px; color: #2ecc71;">Online: <span id="online-number">0</span></span>
+            <button id="search-icon" style="background: none; border: none; cursor: pointer; margin-right: 10px;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+            </button>
+            <button id="menu-icon" style="background: none; border: none; cursor: pointer;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div id="discussions-content" style="margin-top: 20px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; min-height: 200px; display: block;">
+          <div id="chat-messages" style="display: flex; flex-direction: column-reverse;"></div>
+        </div>
+        <div id="membros-content" style="margin-top: 20px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; min-height: 200px; display: none;">
+          <div id="membros-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; padding: 10px;"></div>
+        </div>
+        <div style="margin-top: 10px; display: flex; align-items: center;">
+          <input id="chat-input" type="text" placeholder="Digite sua mensagem..." style="flex-grow: 1; padding: 5px; border: 1px solid #ccc; border-radius: 5px; margin-right: 5px;">
+          <button onclick="sendMessage('${groupId}')" style="background: #2ecc71; color: white; border: none; padding: 5px 10px; border-radius: 5px;">Enviar</button>
+        </div>
+        <div id="search-bar" style="display: none; margin-top: 10px;">
+          <input id="search-input" type="text" placeholder="Pesquisar mensagens..." style="width: 200px; padding: 5px; border: 1px solid #ccc; border-radius: 5px;">
+          <button onclick="hideSearchBar()" style="background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 5px; margin-left: 5px;">Fechar</button>
+        </div>
+      `;
+
+      // Configurar Realtime para chat
+      const channel = supabase
+        .channel(`chat-${groupId}`)
+        .on('postgres_changes', { 
+          event: 'INSERT', 
+          schema: 'public', 
+          table: 'mensagens', 
+          filter: `grupo_id=eq.${groupId}` 
+        }, (payload) => {
+          addMessageToChat(payload.new, userCache);
+        })
+        .on('postgres_changes', { 
+          event: 'INSERT', 
+          schema: 'public', 
+          table: 'user_sessions', 
+          filter: `grupo_id=eq.${groupId}` 
+        }, () => {
+          updateOnlineCount(groupId);
+          // Atualizar status dos membros se estiver na seção membros
+          const membersContent = document.getElementById('membros-content');
+          if (membersContent && membersContent.style.display !== 'none') {
+            (window as any).loadMembers(groupId, userCache);
+          }
+        })
+        .on('postgres_changes', { 
+          event: 'DELETE', 
+          schema: 'public',
+          table: 'user_sessions',
+          filter: `grupo_id=eq.${groupId}`
+        }, () => {
+          updateOnlineCount(groupId);
+          // Atualizar status dos membros se estiver na seção membros
+          const membersContent = document.getElementById('membros-content');
+          if (membersContent && membersContent.style.display !== 'none') {
+            (window as any).loadMembers(groupId, userCache);
+          }
+        })
+        .subscribe(async (status) => {
+          console.log(`Realtime status: ${status}`);
+          if (status === 'SUBSCRIBED') {
+            await updateOnlineCount(groupId);
+          }
+        });
+
+        // Salvar referência ao canal para limpeza posterior
+        (window as any).currentChannel = channel;
+
+      console.log(`Interface do grupo ${groupId} carregada com chat configurado.`);
+
+    } catch (error) {
+      console.error('Erro ao acessar grupo:', error.message, error.stack);
+      toast({
+          title: "Erro",
+          description: "Erro ao acessar o grupo. Verifique o console.",
+          variant: "destructive"
+        });
+
+       // Retry ao restaurar o cabeçalho em caso de erro
+       const headers = document.querySelectorAll('.groups-header, [data-testid="groups-header"], .turmas-header');
+       if (headers.length > 0) {
+         headers.forEach(header => {
+           (header as HTMLElement).classList.remove('hidden');
+           (header as HTMLElement).classList.add('visible');
+         });
+         console.log('Cabeçalho restaurado após erro.');
+       }
+    }
   };
 
   // Função para fazer upload da imagem de capa
@@ -829,7 +1032,7 @@ const GruposEstudoView: React.FC = () => {
                               Voltar
                           </Button>
                       </div>
-                      
+
                   </motion.div>
                   {/* Imagem de perfil do grupo - posicionada metade dentro e metade fora da capa */}
                   <div className="absolute -bottom-16 left-6 z-30">
