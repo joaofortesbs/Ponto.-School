@@ -23,6 +23,7 @@ import {
   CheckCircle,
   AlertCircle,
   Sparkles,
+  Settings,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -70,6 +71,8 @@ const GruposEstudoView: React.FC = () => {
   const [showGroupInterface, setShowGroupInterface] = useState(false);
   const [activeGroup, setActiveGroup] = useState<GrupoEstudo | null>(null); // Use GrupoEstudo type
   const [activeTab, setActiveTab] = useState('discussoes');
+  const [groupCoverImage, setGroupCoverImage] = useState<string | null>(null);
+  const [groupProfileImage, setGroupProfileImage] = useState<string | null>(null);
 
   // Função para validar autenticação do usuário
   const validateUserAuth = async () => {
@@ -615,6 +618,36 @@ const GruposEstudoView: React.FC = () => {
       }
   };
 
+  // Função para fazer upload da imagem de capa
+  const handleCoverImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        setGroupCoverImage(result);
+        // Aqui você pode adicionar lógica para salvar no Supabase Storage
+        console.log('Imagem de capa selecionada:', file.name);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Função para fazer upload da imagem de perfil
+  const handleProfileImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        setGroupProfileImage(result);
+        // Aqui você pode adicionar lógica para salvar no Supabase Storage
+        console.log('Imagem de perfil selecionada:', file.name);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   // Função para voltar à interface original
   const returnToGroups = () => {
       try {
@@ -733,31 +766,152 @@ const GruposEstudoView: React.FC = () => {
     if (showGroupInterface && activeGroup) {
       return (
           <div className="w-full h-screen bg-[#f7f9fa] dark:bg-[#001427] flex flex-col transition-colors duration-300">
-              {/* Header do grupo com navegação */}
+              {/* Banner de Capa do Grupo */}
               <motion.div
                   initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3 }}
-                  className="flex justify-between items-center p-6 pb-4"
+                  className="relative h-48 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] overflow-hidden"
               >
-                  <div className="flex items-center gap-4">
+                  {/* Imagem de capa ou placeholder */}
+                  {groupCoverImage ? (
+                      <div className="w-full h-full relative">
+                          <img 
+                              src={groupCoverImage} 
+                              alt="Capa do grupo" 
+                              className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-black/20"></div>
+                          <button
+                              onClick={() => document.getElementById('cover-upload')?.click()}
+                              className="absolute top-4 right-4 bg-black/30 hover:bg-black/50 text-white px-3 py-2 rounded-lg text-xs font-medium transition-all backdrop-blur-sm"
+                          >
+                              Alterar Capa
+                          </button>
+                      </div>
+                  ) : (
+                      <button
+                          onClick={() => document.getElementById('cover-upload')?.click()}
+                          className="w-full h-full bg-gradient-to-br from-[#FF6B00]/20 to-[#FF8C40]/20 flex items-center justify-center hover:from-[#FF6B00]/30 hover:to-[#FF8C40]/30 transition-all duration-300"
+                      >
+                          <div className="text-center text-white/80">
+                              <div className="w-16 h-16 mx-auto mb-3 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                                  <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                  </svg>
+                              </div>
+                              <p className="text-sm font-medium">Adicionar Imagem de Capa</p>
+                              <p className="text-xs opacity-75">Clique para personalizar</p>
+                          </div>
+                      </button>
+                  )}
+                  
+                  {/* Input escondido para upload da capa */}
+                  <input
+                      id="cover-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleCoverImageUpload}
+                      className="hidden"
+                  />
+
+                  {/* Botão voltar sobreposto */}
+                  <div className="absolute top-4 left-4 z-10">
                       <Button
                           onClick={returnToGroups}
                           variant="outline"
                           size="sm"
-                          className="border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10 font-montserrat"
+                          className="bg-black/20 border-white/30 text-white hover:bg-black/30 backdrop-blur-sm font-montserrat"
                       >
                           <ArrowLeft className="w-4 h-4 mr-2" />
                           Voltar
                       </Button>
-                      <h2 className="text-2xl font-bold text-[#001427] dark:text-white bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] bg-clip-text text-transparent font-montserrat">
-                          {activeGroup.nome}
-                      </h2>
+                  </div>
+
+                  {/* Imagem de perfil do grupo */}
+                  <div className="absolute bottom-0 left-6 transform translate-y-1/2">
+                      <div className="relative">
+                          <div className="w-20 h-20 rounded-full bg-[#f7f9fa] dark:bg-[#001427] p-1 shadow-lg">
+                              {groupProfileImage ? (
+                                  <button
+                                      onClick={() => document.getElementById('profile-upload')?.click()}
+                                      className="w-full h-full rounded-full overflow-hidden border-2 border-[#f7f9fa] dark:border-[#001427] hover:scale-105 transition-all duration-300"
+                                  >
+                                      <img 
+                                          src={groupProfileImage} 
+                                          alt="Perfil do grupo" 
+                                          className="w-full h-full object-cover"
+                                      />
+                                  </button>
+                              ) : (
+                                  <button
+                                      onClick={() => document.getElementById('profile-upload')?.click()}
+                                      className="w-full h-full rounded-full bg-gradient-to-br from-[#FF6B00]/20 to-[#FF8C40]/20 flex items-center justify-center border-2 border-[#f7f9fa] dark:border-[#001427] cursor-pointer hover:from-[#FF6B00]/30 hover:to-[#FF8C40]/30 transition-all duration-300"
+                                  >
+                                      <div className="text-center text-[#FF6B00]">
+                                          <svg className="w-6 h-6 mx-auto mb-1" fill="currentColor" viewBox="0 0 24 24">
+                                              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                                          </svg>
+                                          <span className="text-xs font-medium">Foto</span>
+                                      </div>
+                                  </button>
+                              )}
+                          </div>
+                          
+                          {/* Input escondido para upload do perfil */}
+                          <input
+                              id="profile-upload"
+                              type="file"
+                              accept="image/*"
+                              onChange={handleProfileImageUpload}
+                              className="hidden"
+                          />
+                      </div>
                   </div>
               </motion.div>
 
-              {/* Mini-seções no topo */}
-              <div className="flex items-center gap-4 px-6 pb-4">
+              {/* Informações do grupo */}
+              <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.1 }}
+                  className="px-6 pt-12 pb-4"
+              >
+                  <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                          <h2 className="text-2xl font-bold text-[#001427] dark:text-white bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] bg-clip-text text-transparent font-montserrat mb-2">
+                              {activeGroup.nome}
+                          </h2>
+                          {activeGroup.descricao && (
+                              <p className="text-[#778DA9] dark:text-gray-400 text-sm font-open-sans mb-3">
+                                  {activeGroup.descricao}
+                              </p>
+                          )}
+                          <div className="flex items-center gap-3">
+                              {activeGroup.disciplina_area && (
+                                  <span className="px-3 py-1 bg-[#FF6B00]/10 text-[#FF6B00] rounded-full text-xs font-medium">
+                                      {activeGroup.disciplina_area}
+                                  </span>
+                              )}
+                              <span className="flex items-center gap-1 text-[#778DA9] dark:text-gray-400 text-xs">
+                                  <Users className="w-3 h-3" />
+                                  1 membro
+                              </span>
+                          </div>
+                      </div>
+                      <Button
+                          variant="outline"
+                          size="sm"
+                          className="border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10 font-montserrat"
+                      >
+                          <Settings className="w-4 h-4 mr-2" />
+                          Configurações
+                      </Button>
+                  </div>
+              </motion.div>
+
+              {/* Mini-seções */}
+              <div className="flex items-center gap-4 px-6 pb-4 border-b border-[#FF6B00]/10">
                   <Button
                       variant={activeTab === 'discussoes' ? 'default' : 'outline'}
                       size="sm"
@@ -766,6 +920,22 @@ const GruposEstudoView: React.FC = () => {
                   >
                       <MessageCircle className="w-4 h-4 mr-2" />
                       Discussões
+                  </Button>
+                  <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10 font-montserrat"
+                  >
+                      <BookOpen className="w-4 h-4 mr-2" />
+                      Materiais
+                  </Button>
+                  <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10 font-montserrat"
+                  >
+                      <Users className="w-4 h-4 mr-2" />
+                      Membros
                   </Button>
                   {/* Outras abas aqui */}
               </div>
