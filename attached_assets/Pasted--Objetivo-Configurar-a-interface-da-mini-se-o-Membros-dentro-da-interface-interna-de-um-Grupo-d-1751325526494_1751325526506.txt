@@ -1,0 +1,257 @@
+
+
+Objetivo: Configurar a interface da mini-seção "Membros" dentro da interface interna de um Grupo de Estudos, exibindo todos os membros do grupo de forma visual e organizada em uma grade de mini-cards. Cada mini-card deve conter a imagem de perfil do usuário, o nome do usuário e o status (online ou offline). Todas as funcionalidades existentes devem ser preservadas, e o design/layout da mini-seção "Grupos de Estudos" (incluindo modais de "Adicionar Grupo" e "Criar Novo Grupo") não deve ser alterado, sem erros ou bugs.
+
+
+
+Instruções Gerais
+
+
+
+
+
+Escopo Restrito: Foque exclusivamente na função accessGroup no frontend para adicionar a mini-seção "Membros" com a grade de mini-cards. Não modifique o design ou layout das outras mini-seções ("Discussões", "Tarefas", "Configurações", "Notificações"), nem os modais de "Adicionar Grupo" e "Criar Novo Grupo", nem outras partes do código (ex.: createGroup, joinGroupByCode, loadAllGroups).
+
+
+
+Preservação: Mantenha intactas todas as funcionalidades existentes (criação via modal, adesão, saída/exclusão, chat, pesquisa, contagem de online, modal de configurações), sem impacto no layout ou design ao sair.
+
+
+
+Eficiência: Use dados do Supabase para carregar os membros e seus status, com validação e logs para evitar falhas.
+
+
+
+Testes Completos: Após as alterações, teste a exibição dos membros e envie os logs.
+
+
+
+Análise de Cenários
+
+
+
+
+
+Cenário 1: Carregamento Inicial - A mini-seção "Membros" deve exibir todos os membros em uma grade ao selecioná-la.
+
+
+
+Cenário 2: Status Online/Offline - O status deve atualizar dinamicamente com base na tabela user_sessions do Supabase.
+
+
+
+Cenário 3: Vários Membros - A grade deve ajustar-se responsivamente para múltiplos mini-cards.
+
+
+
+Cenário 4: Erro de Dados - Implementar retry para carregar os membros em caso de falha.
+
+
+
+Descrição da Interface
+
+
+
+
+
+Estrutura Geral: A mini-seção "Membros" deve ser ativada ao clicar no botão "Membros" no cabeçalho interno, substituindo o conteúdo de #discussions-content por uma grade de mini-cards.
+
+
+
+Grade de Mini-Cards: Usar display: grid com grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)) para organizar os mini-cards responsivamente, com espaçamento de 10px entre eles.
+
+
+
+Mini-Card por Membro:
+
+
+
+
+
+Imagem de Perfil: Exibir uma imagem circular de 50px x 50px, usando user_metadata.avatar_url ou um avatar gerado por https://ui-avatars.com/api/?name={nome} como fallback.
+
+
+
+Nome do Usuário: Texto abaixo da imagem, alinhado ao centro, com fonte Arial, sans-serif, tamanho 16px, e cor #333.
+
+
+
+Status Online/Offline: Um ponto colorido (verde #2ecc71 para online, cinza #95a5a6 para offline) ao lado do nome, atualizado via user_sessions com base em last_active (online se dentro de 30 segundos).
+
+
+
+Altura Dinâmica: O container da grade deve expandir-se conforme o número de membros, com overflow-y: auto se exceder a altura visível.
+
+
+
+Modificações no Frontend (JavaScript)
+
+ // Atualizar accessGroup para incluir a mini-seção Membros const accessGroup = async (groupId) => { try { console.log(`Acessando grupo ${groupId}...`); const userId = await validateUserAuth(); if (!userId) { console.error('Usuário não autenticado.'); alert('Usuário não autenticado.'); return; } 
+
+// Ocultar o cabeçalho de Minhas Turmas
+const header = document.querySelector('.groups-header');
+if (header) header.style.display = 'none';
+
+// Cache para nomes e imagens de perfil
+const userCache = new Map();
+const { data: users } = await supabase
+  .from('auth.users')
+  .select('id, user_metadata')
+  .in('id', (await supabase.from('membros_grupos').select('user_id').eq('grupo_id', groupId)).data.map(u => u.user_id));
+users.forEach(user => {
+  const metadata = user.user_metadata || {};
+  userCache.set(user.id, {
+    name: metadata.name || `Usuário ${user.id.slice(0, 5)}`,
+    avatar_url: metadata.avatar_url || null
+  });
+});
+
+// Contagem de membros online
+let onlineCount = 0;
+const updateOnlineCount = () => {
+  const now = new Date();
+  onlineCount = (supabase
+    .from('user_sessions')
+    .select('user_id', { count: 'exact' })
+    .eq('grupo_id', groupId)
+    .gte('last_active', new Date(now - 30 * 1000).toISOString())
+  ).then(({ count }) => count || 0);
+};
+setInterval(updateOnlineCount, 15000);
+updateOnlineCount();
+
+const groupInterface = document.createElement('div');
+groupInterface.id = 'group-interface';
+groupInterface.style.cssText = 'margin-left: 250px; padding: 20px;';
+groupInterface.innerHTML = `
+  <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #ccc; padding-bottom: 10px;">
+    <div class="mini-sections">
+      <button class="mini-section-btn" data-section="discussions" style="background: #3498db; color: white; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 5px;">Discussões</button>
+      <button class="mini-section-btn" data-section="members" style="background: #ddd; color: #666; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 5px;">Membros</button>
+      <button class="mini-section-btn" data-section="tasks" style="background: #ddd; color: #666; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 5px;">Tarefas</button>
+      <button class="mini-section-btn" data-section="settings" style="background: #ddd; color: #666; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 5px;">Configurações</button>
+      <button class="mini-section-btn" data-section="notifications" style="background: #ddd; color: #666; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 5px;">Notificações</button>
+    </div>
+    <div style="display: flex; align-items: center;">
+      <span id="online-count" style="margin-right: 10px; color: #2ecc71;">Online: <span id="online-number">0</span></span>
+      <button id="search-icon" style="background: none; border: none; cursor: pointer; margin-right: 10px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+      </button>
+      <button id="menu-icon" style="background: none; border: none; cursor: pointer;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle>
+        </svg>
+      </button>
+    </div>
+  </div>
+  <div id="content-container" style="margin-top: 20px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; min-height: 200px;">
+    <div id="discussions-content" style="display: block;">
+      <div id="chat-messages" style="display: flex; flex-direction: column-reverse;"></div>
+    </div>
+    <div id="members-content" style="display: none;">
+      <div id="members-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;"></div>
+    </div>
+    <div id="tasks-content" style="display: none;"></div>
+    <div id="settings-content" style="display: none;"></div>
+    <div id="notifications-content" style="display: none;"></div>
+  </div>
+  <div style="margin-top: 10px; display: flex; align-items: center;">
+    <input id="chat-input" type="text" placeholder="Digite sua mensagem..." style="flex-grow: 1; padding: 5px; border: 1px solid #ccc; border-radius: 5px; margin-right: 5px;">
+    <button onclick="sendMessage('${groupId}')" style="background: #2ecc71; color: white; border: none; padding: 5px 10px; border-radius: 5px;">Enviar</button>
+  </div>
+  <div id="search-bar" style="display: none; margin-top: 10px;">
+    <input id="search-input" type="text" placeholder="Pesquisar mensagens..." style="width: 200px; padding: 5px; border: 1px solid #ccc; border-radius: 5px;">
+    <button onclick="hideSearchBar()" style="background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 5px; margin-left: 5px;">Fechar</button>
+  </div>
+`;
+document.getElementById('main-content').innerHTML = '';
+document.getElementById('main-content').appendChild(groupInterface);
+
+// Atualizar contagem de online
+setInterval(() => {
+  updateOnlineCount().then(count => {
+    document.getElementById('online-number').textContent = count;
+    updateMemberStatus(groupId); // Atualizar status dos membros
+  });
+}, 15000);
+
+// Configurar Realtime para chat e online
+const channel = supabase
+  .channel(`chat-${groupId}`)
+  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mensagens', filter: `grupo_id=eq.${groupId}` }, (payload) => {
+    addMessageToChat(payload.new, userCache);
+  })
+  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'user_sessions', filter: `grupo_id=eq.${groupId}` }, () => {
+    updateOnlineCount().then(() => updateMemberStatus(groupId));
+  })
+  .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'user_sessions', filter: `grupo_id=eq.${groupId}` }, () => {
+    updateOnlineCount().then(() => updateMemberStatus(groupId));
+  })
+  .subscribe(async (status) => {
+    if (status === 'SUBSCRIBED') {
+      console.log(`Subscribed to chat and online channel for group ${groupId}`);
+      const { data: messages } = await supabase
+        .from('mensagens')
+        .select('*')
+        .eq('grupo_id', groupId)
+        .order('enviado_em', { ascending: false });
+      messages.forEach(message => addMessageToChat(message, userCache));
+      updateOnlineCount().then(count => document.getElementById('online-number').textContent = count);
+      updateMemberStatus(groupId); // Carregar membros iniciais
+    }
+  });
+
+// Evento para ícone de pesquisa
+document.getElementById('search-icon').addEventListener('click', () => {
+  document.getElementById('search-bar').style.display = 'block';
+  document.getElementById('search-input').focus();
+  filterMessages(groupId);
+});
+
+// Evento para ícone de três pontos
+document.getElementById('menu-icon').addEventListener('click', () => showOptionsModal(groupId));
+
+// Evento para trocar entre mini-seções
+document.querySelectorAll('.mini-section-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.mini-section-btn').forEach(b => b.style.background = '#ddd');
+    btn.style.background = '#3498db';
+    document.querySelectorAll('#content-container > div').forEach(div => div.style.display = 'none');
+    document.getElementById(`${btn.dataset.section}-content`).style.display = 'block';
+    if (btn.dataset.section === 'members') updateMemberStatus(groupId);
+  });
+});
+
+console.log(`Interface do grupo ${groupId} carregada com chat configurado.`);
+
+} catch (error) { console.error('Erro ao acessar grupo:', error.message, error.stack); alert('Erro ao acessar o grupo. Verifique o console.'); const header = document.querySelector('.groups-header'); if (header) header.style.display = 'flex'; } };
+
+// Função para atualizar status dos membros const updateMemberStatus = async (groupId) => { try { const now = new Date(); const thirtySecondsAgo = new Date(now - 30 * 1000).toISOString(); const { data: members } = await supabase .from('membros_grupos') .select('user_id') .eq('grupo_id', groupId); const { data: sessions } = await supabase .from('user_sessions') .select('user_id, last_active') .eq('grupo_id', groupId); const onlineUserIds = new Set(sessions.filter(s => s.last_active > thirtySecondsAgo).map(s => s.user_id));
+
+const { data: users } = await supabase
+  .from('auth.users')
+  .select('id, user_metadata')
+  .in('id', members.map(m => m.user_id));
+const membersGrid = document.getElementById('members-grid');
+membersGrid.innerHTML = '';
+users.forEach(user => {
+  const metadata = user.user_metadata || {};
+  const name = metadata.name || `Usuário ${user.id.slice(0, 5)}`;
+  const avatarUrl = metadata.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}`;
+  const isOnline = onlineUserIds.has(user.id);
+  const card = document.createElement('div');
+  card.style.cssText = 'border: 1px solid #ccc; border-radius: 5px; padding: 10px; text-align: center;';
+  card.innerHTML = `
+    <img src="${avatarUrl}" alt="${name}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin-bottom: 5px;">
+    <p style="font-family: Arial, sans-serif; font-size: 16px; color: #333; margin: 5px 0;">${name}</p>
+    <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: ${isOnline ? '#2ecc71' : '#95a5a6'}; margin-right: 5px;"></span>
+    <span style="font-size: 12px; color: #666;">${isOnline ? 'Online' : 'Offline'}</span>
+  `;
+  membersGrid.appendChild(card);
+});
+
+} catch (error) { console.error('Erro ao atualizar membros:', error.message, error.stack); alert('Erro ao carregar membros. Verifique o console.'); setTimeout(() => updateMemberStatus(groupId), 2000); // Retry após 2 segundos } };
+
+// Funções auxiliares mantidas (returnToGroups, updateOnlineCount, filterMessages, hideSearchBar, loadInitialMessages, showOptionsModal, showSettingsModal, addMessageToChat, sendMessage, etc.) sem alterações
