@@ -730,33 +730,10 @@ const GruposEstudoView: React.FC = () => {
               {/* Conteúdo da aba ativa - flex-1 para ocupar espaço restante */}
               <div className="flex-1 px-6 pb-6 min-h-0">
                   {activeTab === 'discussoes' && (
-                      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg transition-colors duration-300 h-full flex flex-col">
-                          {/* Header do grupo */}
-                          <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
-                              <div className="flex items-center justify-between">
-                                  <div>
-                                      <h3 className="text-lg font-bold text-[#001427] dark:text-white font-montserrat">
-                                          Chat do Grupo
-                                      </h3>
-                                      <p className="text-sm text-[#778DA9] dark:text-gray-400 mt-1">
-                                          {activeGroup.descricao || "Sem descrição disponível"}
-                                      </p>
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                                      <span className="text-xs text-[#778DA9] dark:text-gray-400">
-                                          Online
-                                      </span>
-                                  </div>
-                              </div>
-                          </div>
-
-                          {/* Chat Section - ocupa todo o espaço restante */}
-                          <div className="flex-1 p-4 min-h-0">
-                            <ChatSection 
-                              groupId={activeGroup.id}
-                            />
-                          </div>
+                      <div className="h-full">
+                          <ChatSection 
+                            groupId={activeGroup.id}
+                          />
                       </div>
                   )}
                   {/* Conteúdo das outras abas aqui */}
