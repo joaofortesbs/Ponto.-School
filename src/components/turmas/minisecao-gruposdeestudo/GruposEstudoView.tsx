@@ -829,8 +829,8 @@ const GruposEstudoView: React.FC = () => {
                           </Button>
                       </div>
 
-                      {/* Imagem de perfil do grupo - posicionada sobre a capa */}
-                      <div className="absolute bottom-4 left-6 z-30">
+                      {/* Imagem de perfil do grupo - posicionada metade dentro e metade fora da capa */}
+                      <div className="absolute -bottom-16 left-6 z-30">
                           <div className="relative">
                               <div className="w-32 h-32 rounded-full bg-[#f7f9fa] dark:bg-[#001427] p-2 shadow-2xl">
                                   {groupProfileImage ? (
@@ -877,7 +877,7 @@ const GruposEstudoView: React.FC = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: 0.1 }}
-                  className="px-6 pt-6 pb-4"
+                  className="px-6 pt-20 pb-4"
               >
                   <div className="flex items-start justify-between">
                       <div className="flex-1">
