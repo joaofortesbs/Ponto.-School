@@ -218,7 +218,8 @@ const DiscussoesTab: React.FC<DiscussoesTabProps> = ({ groupId, groupData }) => 
                 <li>
                   <button
                     onClick={handleSettingsClick}
-                    className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2"
+                    className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2 opacity-50 cursor-not-allowed"
+                    disabled
                   >
                     <Settings className="h-4 w-4" />
                     <span>Configurações</span>
@@ -227,7 +228,8 @@ const DiscussoesTab: React.FC<DiscussoesTabProps> = ({ groupId, groupData }) => 
                 <li>
                   <button
                     onClick={handleResumeConversation}
-                    className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2"
+                    className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2 opacity-50 cursor-not-allowed"
+                    disabled
                   >
                     <MessageSquare className="h-4 w-4" />
                     <span>Resumir conversa com IA</span>
@@ -236,7 +238,8 @@ const DiscussoesTab: React.FC<DiscussoesTabProps> = ({ groupId, groupData }) => 
                 <li>
                   <button
                     onClick={handleSelectMessages}
-                    className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2"
+                    className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2 opacity-50 cursor-not-allowed"
+                    disabled
                   >
                     <CheckSquare className="h-4 w-4" />
                     <span>Selecionar mensagens</span>
