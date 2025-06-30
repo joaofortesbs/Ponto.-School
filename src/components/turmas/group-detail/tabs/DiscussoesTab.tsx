@@ -122,6 +122,8 @@ export const DiscussoesTab: React.FC<DiscussoesTabProps> = ({
   const [showExpandedChat, setShowExpandedChat] = useState(false);
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
   const [editText, setEditText] = useState("");
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [groupSettings, setGroupSettings] = useState<any>(null);
 
   // Audio recording states
   const [isRecording, setIsRecording] = useState(false);
@@ -515,6 +517,54 @@ export const DiscussoesTab: React.FC<DiscussoesTabProps> = ({
     setIsRecording(false);
   };
 
+  const loadGroupSettings = async () => {
+    try {
+      if (!group?.id) {
+        console.error('ID do grupo não disponível');
+        return;
+      }
+
+      console.log(`Carregando configurações do grupo ${group.id}...`);
+      
+      // Simulação de dados do grupo baseado na prop group
+      const groupData = {
+        nome: group.nome || groupName,
+        tipo_grupo: group.tipo_grupo || 'discussao',
+        is_private: group.is_private || false,
+        is_visible_to_all: group.is_visible_to_all || true,
+        codigo_unico: group.codigo_unico || 'ABC123',
+        disciplina_area: group.disciplina_area || 'Geral',
+        topico_especifico: group.topico_especifico || 'Discussão geral',
+        created_at: group.created_at || new Date().toISOString()
+      };
+
+      setGroupSettings(groupData);
+      console.log('Configurações do grupo carregadas:', groupData);
+    } catch (error) {
+      console.error('Erro ao carregar configurações do grupo:', error);
+      alert('Erro ao carregar configurações. Tente novamente.');
+    }
+  };
+
+  const handleShowSettings = async () => {
+    setShowGroupMenu(false);
+    await loadGroupSettings();
+    setShowSettingsModal(true);
+  };
+
+  const handleResumeWithAI = () => {
+    setShowGroupMenu(false);
+    alert('Funcionalidade "Resumir conversa com IA" em desenvolvimento.');
+    console.log('Usuário clicou em "Resumir conversa com IA"');
+  };
+
+  const handleSelectMessages = () => {
+    setShowGroupMenu(false);
+    setIsSelectionMode(!isSelectionMode);
+    setSelectedMessages([]);
+    console.log('Modo de seleção de mensagens ativado');
+  };
+
   const renderMessageContent = (message: Message) => {
     switch (message.type) {
       case "text":
@@ -841,31 +891,23 @@ export const DiscussoesTab: React.FC<DiscussoesTabProps> = ({
                 </PopoverTrigger>
                 <PopoverContent className="w-56 p-0 bg-[#1e293b] dark:bg-gray-800 border-gray-700 dark:border-gray-600">
                   <div className="py-1">
-                    <button className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 flex items-center gap-2">
+                    <button 
+                      className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 flex items-center gap-2"
+                      onClick={handleShowSettings}
+                    >
                       <Settings className="h-4 w-4" /> Configurações
                     </button>
-                    <button className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 flex items-center gap-2">
-                      <MessageCircle className="h-4 w-4" /> Resumir conversa com
-                      IA
+                    <button 
+                      className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 flex items-center gap-2"
+                      onClick={handleResumeWithAI}
+                    >
+                      <MessageCircle className="h-4 w-4" /> Resumir conversa com IA
                     </button>
                     <button
                       className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 flex items-center gap-2"
-                      onClick={() => {
-                        setShowGroupMenu(false);
-                        setIsSelectionMode(!isSelectionMode);
-                        setSelectedMessages([]);
-                      }}
+                      onClick={handleSelectMessages}
                     >
                       <Check className="h-4 w-4" /> Selecionar mensagens
-                    </button>
-                    <button className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 flex items-center gap-2">
-                      <Pin className="h-4 w-4" /> Salvar mensagens
-                    </button>
-                    <button className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 flex items-center gap-2">
-                      <Info className="h-4 w-4" /> Informações do grupo
-                    </button>
-                    <button className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 flex items-center gap-2">
-                      <Settings className="h-4 w-4" /> Configurações do grupo
                     </button>
                   </div>
                 </PopoverContent>
@@ -1917,6 +1959,115 @@ export const DiscussoesTab: React.FC<DiscussoesTabProps> = ({
                 >
                   <X className="h-4 w-4" />
                 </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Settings Modal */}
+          {showSettingsModal && groupSettings && (
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center animate-fadeIn">
+              <div className="bg-[#1e293b] dark:bg-gray-900 w-full max-w-lg rounded-lg shadow-lg overflow-hidden animate-slideInUp">
+                <div className="p-4 border-b border-gray-700 flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Settings className="h-5 w-5 mr-2 text-[#FF6B00]" />
+                    <h3 className="text-lg font-semibold text-white">
+                      Configurações do Grupo
+                    </h3>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 rounded-full hover:bg-gray-700 text-gray-400"
+                    onClick={() => setShowSettingsModal(false)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                <div className="p-6 space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs text-gray-400 uppercase tracking-wide">Nome do Grupo</label>
+                      <p className="text-white font-medium mt-1">{groupSettings.nome}</p>
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-400 uppercase tracking-wide">Tipo de Grupo</label>
+                      <p className="text-white font-medium mt-1 capitalize">{groupSettings.tipo_grupo}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs text-gray-400 uppercase tracking-wide">Visibilidade</label>
+                      <div className="flex items-center mt-1">
+                        <div className={`h-2 w-2 rounded-full mr-2 ${groupSettings.is_private ? 'bg-red-500' : 'bg-green-500'}`}></div>
+                        <p className="text-white font-medium">{groupSettings.is_private ? 'Privado' : 'Público'}</p>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-400 uppercase tracking-wide">Visível para Todos</label>
+                      <div className="flex items-center mt-1">
+                        <div className={`h-2 w-2 rounded-full mr-2 ${groupSettings.is_visible_to_all ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                        <p className="text-white font-medium">{groupSettings.is_visible_to_all ? 'Sim' : 'Não'}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-xs text-gray-400 uppercase tracking-wide">Código Único</label>
+                    <div className="flex items-center justify-between mt-1 p-2 bg-gray-800 rounded-lg">
+                      <p className="text-white font-mono text-lg">{groupSettings.codigo_unico}</p>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 text-[#FF6B00] hover:bg-[#FF6B00]/20"
+                        onClick={() => {
+                          navigator.clipboard.writeText(groupSettings.codigo_unico);
+                          alert('Código copiado para a área de transferência!');
+                        }}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  {groupSettings.disciplina_area && (
+                    <div>
+                      <label className="text-xs text-gray-400 uppercase tracking-wide">Disciplina/Área</label>
+                      <p className="text-white font-medium mt-1">{groupSettings.disciplina_area}</p>
+                    </div>
+                  )}
+
+                  {groupSettings.topico_especifico && (
+                    <div>
+                      <label className="text-xs text-gray-400 uppercase tracking-wide">Tópico Específico</label>
+                      <p className="text-white font-medium mt-1">{groupSettings.topico_especifico}</p>
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="text-xs text-gray-400 uppercase tracking-wide">Criado em</label>
+                    <p className="text-white font-medium mt-1">
+                      {new Date(groupSettings.created_at).toLocaleDateString('pt-BR', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-4 border-t border-gray-700 flex justify-end">
+                  <Button
+                    variant="outline"
+                    className="border-gray-600 text-white hover:bg-gray-700"
+                    onClick={() => setShowSettingsModal(false)}
+                  >
+                    Fechar
+                  </Button>
+                </div>
               </div>
             </div>
           )}

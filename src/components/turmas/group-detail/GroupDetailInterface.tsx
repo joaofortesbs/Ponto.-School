@@ -25,7 +25,7 @@ export default function GroupDetailInterface({
   const renderTabContent = () => {
     switch (activeTab) {
       case 'discussions':
-        return <ChatSection groupId={groupId} currentUser={currentUser} />;
+        return <ChatSection groupId={groupId} currentUser={currentUser} groupName={groupName} />;
       case 'events':
         return <PlaceholderSection title="Eventos" message="Funcionalidade em desenvolvimento" />;
       case 'members':
