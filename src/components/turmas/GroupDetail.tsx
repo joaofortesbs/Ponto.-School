@@ -409,7 +409,7 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
                     className="bg-white dark:bg-[#0f1525] p-4 rounded-lg border border-gray-200 dark:border-gray-800 flex items-center hover:bg-gray-50 dark:hover:bg-[#1e293b] transition-colors shadow-sm hover:shadow-md"
                   >
                     <div className="relative mr-3">
-                      <Avatar className="h-12 w-12 ring-1 ring-blue-500/20">
+                      <Avatar className="h-12 w-12 ring-2 ring-blue-500/20">
                         <AvatarImage src={member.avatar} />
                         <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
                       </Avatar>
@@ -508,15 +508,15 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
                         </div>
                         <div className="flex items-center justify-between">
                           <div className="flex -space-x-2">
-                            <Avatar className="h-6 w-6 border border-white dark:border-[#1a2236]">
+                            <Avatar className="h-6 w-6 border-2 border-white dark:border-[#1a2236]">
                               <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=Ana" />
                               <AvatarFallback>A</AvatarFallback>
                             </Avatar>
-                            <Avatar className="h-6 w-6 border border-white dark:border-[#1a2236]">
+                            <Avatar className="h-6 w-6 border-2 border-white dark:border-[#1a2236]">
                               <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=Pedro" />
                               <AvatarFallback>P</AvatarFallback>
                             </Avatar>
-                            <Avatar className="h-6 w-6 border border-white dark:border-[#1a2236]">
+                            <Avatar className="h-6 w-6 border-2 border-white dark:border-[#1a2236]">
                               <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=Maria" />
                               <AvatarFallback>M</AvatarFallback>
                             </Avatar>
@@ -577,7 +577,7 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
                                       return (
                                         <Avatar
                                           key={participantId}
-                                          className="h-6 w-6 border border-white dark:border-[#0f1525]"
+                                          className="h-6 w-6 border-2 border-white dark:border-[#0f1525]"
                                         >
                                           <AvatarImage
                                             src={participant?.avatar}
@@ -589,7 +589,7 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
                                       );
                                     })}
                                   {event.participants.length > 3 && (
-                                    <div className="h-6 w-6 rounded-full bg-gray-300 dark:bg-gray-700 border border-white dark:border-[#0f1525] flex items-center justify-center text-xs text-gray-700 dark:text-white">
+                                    <div className="h-6 w-6 rounded-full bg-gray-300 dark:bg-gray-700 border-2 border-white dark:border-[#0f1525] flex items-center justify-center text-xs text-gray-700 dark:text-white">
                                       +{event.participants.length - 3}
                                     </div>
                                   )}
@@ -750,7 +750,7 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
                         Administradores
                       </p>
                       <div className="flex items-center mt-1">
-                        <Avatar className="h-6 w-6 ring-0.5 ring-blue-500/20">
+                        <Avatar className="h-6 w-6 ring-1 ring-blue-500/20">
                           <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=Mariana" />
                           <AvatarFallback>M</AvatarFallback>
                         </Avatar>
