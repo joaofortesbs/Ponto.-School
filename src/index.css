@@ -1910,6 +1910,25 @@ textarea:hover,
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 }
 
+/* Estilos para transições suaves do cabeçalho de grupos */
+.groups-header {
+  transition: all 0.3s ease-in-out;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.groups-header.hidden {
+  opacity: 0;
+  transform: translateY(-100%);
+  visibility: hidden;
+}
+
+.groups-header.visible {
+  opacity: 1;
+  transform: translateY(0);
+  visibility: visible;
+}
+
 /* Estilos específicos para modo claro */
 .light-mode-card {
   background-color: white;

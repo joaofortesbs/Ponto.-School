@@ -619,7 +619,7 @@ const GruposEstudoView: React.FC = () => {
   const returnToGroups = () => {
       try {
         console.log('Retornando para a lista de grupos...');
-  
+
         // Restaurar o cabeçalho de Minhas Turmas
         const headers = document.querySelectorAll('.groups-header, [data-testid="groups-header"], .turmas-header');
         if (headers.length > 0) {
@@ -631,7 +631,7 @@ const GruposEstudoView: React.FC = () => {
         } else {
           console.warn('Cabeçalho não encontrado para restaurar.');
         }
-  
+
         setShowGroupInterface(false);
         setActiveGroup(null);
         setActiveTab('discussoes');

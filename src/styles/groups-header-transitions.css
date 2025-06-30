@@ -1,3 +1,62 @@
+/* Transições suaves para o cabeçalho dos grupos de estudos */
+.groups-header {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: top;
+  will-change: transform, opacity, visibility;
+}
+
+.groups-header.slide-out {
+  transform: translateY(-100%);
+  opacity: 0;
+  visibility: hidden;
+}
+
+.groups-header.slide-in {
+  transform: translateY(0);
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Prevenir layout shifts durante transições */
+.groups-header-container {
+  min-height: 60px; /* Ajuste conforme a altura real do cabeçalho */
+  overflow: hidden;
+}
+
+/* Animações para entrada e saída suaves */
+@keyframes slideOut {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
+  }
+  to {
+    transform: translateY(-100%);
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+    visibility: hidden;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+.groups-header.animate-out {
+  animation: slideOut 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.groups-header.animate-in {
+  animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
 
 /* Transições suaves para o cabeçalho dos grupos */
 .groups-header,
