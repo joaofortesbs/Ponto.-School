@@ -158,7 +158,7 @@ const MembersSection: React.FC<{ groupId: string }> = ({ groupId }) => {
         </div>
 
         {members.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[400px] overflow-y-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-h-[400px] overflow-y-auto" style={{ padding: '12px 0' }}>
             {members.map((member) => (
               <div
                 key={member.id}
@@ -167,12 +167,21 @@ const MembersSection: React.FC<{ groupId: string }> = ({ groupId }) => {
                     ? 'border-[#FF6B00] border-2 shadow-lg shadow-[#FF6B00]/20' 
                     : 'border-[#FF6B00]/10 hover:border-[#FF6B00]/30'
                 }`}
+                style={{ position: 'relative', zIndex: 1 }}
               >
                 {/* Ícone de administrador para o criador */}
                 {member.isCreator && (
-                  <div className="absolute -top-2 -right-2 w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center shadow-lg">
+                  <div 
+                    className="absolute w-7 h-7 bg-[#FF6B00] rounded-full flex items-center justify-center shadow-lg border-2 border-white dark:border-[#29335C]"
+                    style={{ 
+                      top: '-10px', 
+                      right: '-10px', 
+                      zIndex: 10,
+                      position: 'absolute'
+                    }}
+                  >
                     <svg 
-                      className="w-3 h-3 text-white" 
+                      className="w-4 h-4 text-white" 
                       fill="currentColor" 
                       viewBox="0 0 24 24"
                     >
