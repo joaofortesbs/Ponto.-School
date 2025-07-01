@@ -200,77 +200,106 @@ const MembersSection: React.FC<{ groupId: string }> = ({ groupId }) => {
                   </div>
                 )}
 
-                {/* Ícones de administração - aparecem no hover */}
-                <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                  {/* Verificar se o usuário logado é o criador do grupo */}
-                  {groupCreatorId === '300e8f1f-f0ae-4ee3-97fa-ca0598d1393d' && (
-                    <>
-                      {/* Se não for o próprio criador, mostrar ícones de administração */}
-                      {!member.isCreator && (
-                        <>
-                          {/* Promover membro */}
-                          <button
-                            className="w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center hover:bg-[#FF8C40] transition-colors"
-                            title="Promover membro"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              // Funcionalidade inativa por enquanto
-                            }}
-                          >
-                            <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                            </svg>
-                          </button>
-
-                          {/* Tirar membro */}
-                          <button
-                            className="w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center hover:bg-[#FF8C40] transition-colors"
-                            title="Tirar membro"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              // Funcionalidade inativa por enquanto
-                            }}
-                          >
-                            <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M19 13H5v-2h14v2z"/>
-                            </svg>
-                          </button>
-                        </>
-                      )}
-
-                      {/* Inspecionar perfil - para todos exceto o próprio criador */}
-                      {!member.isCreator && (
+                {/* Ícones de administração - sempre visíveis */}
+                <div className="absolute top-2 right-2 flex gap-1 transition-opacity duration-200">
+                  {/* Buscar dados do usuário atual para verificar cargo */}
+                  {(() => {
+                    const { data: { user } } = supabase.auth.getUser();
+                    const currentUserId = user?.id;
+                    const isCurrentUser = member.id === currentUserId;
+                    const isCurrentUserAdminOrOwner = groupCreatorId === currentUserId;
+                    
+                    if (isCurrentUser) {
+                      // Usuário atual vê apenas ícone de inspecionar perfil
+                      return (
                         <button
                           className="w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center hover:bg-[#FF8C40] transition-colors"
                           title="Inspecionar perfil"
                           onClick={(e) => {
                             e.stopPropagation();
-                            // Funcionalidade inativa por enquanto
+                            console.log(`Inspecionar perfil do usuário: ${member.id}`);
+                            // Funcionalidade a ser implementada
                           }}
                         >
                           <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zm0 8a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-12.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.11-11-7.5z"/>
+                            <circle cx="12" cy="12" r="5"></circle>
+                            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7"></path>
                           </svg>
                         </button>
-                      )}
-                    </>
-                  )}
+                      );
+                    } else {
+                      // Para outros usuários
+                      if (isCurrentUserAdminOrOwner) {
+                        // Admin/dono vê três ícones para outros usuários
+                        return (
+                          <>
+                            <button
+                              className="w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center hover:bg-[#FF8C40] transition-colors"
+                              title="Inspecionar perfil"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                console.log(`Inspecionar perfil do usuário: ${member.id}`);
+                                // Funcionalidade a ser implementada
+                              }}
+                            >
+                              <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="5"></circle>
+                                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7"></path>
+                              </svg>
+                            </button>
+                            
+                            <button
+                              className="w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center hover:bg-[#FF8C40] transition-colors"
+                              title="Ações do membro"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                console.log(`Ação 1 para usuário: ${member.id}`);
+                                // Funcionalidade a ser implementada
+                              }}
+                            >
+                              <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="1"></circle>
+                                <circle cx="12" cy="5" r="1"></circle>
+                                <circle cx="12" cy="19" r="1"></circle>
+                              </svg>
+                            </button>
 
-                  {/* Para membros comuns (não criadores): mostrar apenas inspecionar perfil para outros membros */}
-                  {groupCreatorId !== '300e8f1f-f0ae-4ee3-97fa-ca0598d1393d' && !member.isCreator && (
-                    <button
-                      className="w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center hover:bg-[#FF8C40] transition-colors"
-                      title="Inspecionar perfil"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        // Funcionalidade inativa por enquanto
-                      }}
-                    >
-                      <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zm0 8a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-12.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.11-11-7.5z"/>
-                      </svg>
-                    </button>
-                  )}
+                            <button
+                              className="w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center hover:bg-[#FF8C40] transition-colors"
+                              title="Configurações do membro"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                console.log(`Ação 2 para usuário: ${member.id}`);
+                                // Funcionalidade a ser implementada
+                              }}
+                            >
+                              <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 5v14M5 12h14"></path>
+                              </svg>
+                            </button>
+                          </>
+                        );
+                      } else {
+                        // Membro comum vê apenas ícone de inspecionar perfil para outros
+                        return (
+                          <button
+                            className="w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center hover:bg-[#FF8C40] transition-colors"
+                            title="Inspecionar perfil"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              console.log(`Inspecionar perfil do usuário: ${member.id}`);
+                              // Funcionalidade a ser implementada
+                            }}
+                          >
+                            <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
+                              <circle cx="12" cy="12" r="5"></circle>
+                              <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7"></path>
+                            </svg>
+                          </button>
+                        );
+                      }
+                    }
+                  })()}
                 </div>
 
                 <div className="relative">
