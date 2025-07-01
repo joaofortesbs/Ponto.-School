@@ -59,8 +59,9 @@ const MembersSection: React.FC<{ groupId: string }> = ({ groupId }) => {
         }
 
         setGroupCreatorId(groupData?.criador_id || null);
+        console.log(`Criador do grupo: ${groupData?.criador_id}`);
 
-        // Buscar membros do grupo
+        // Buscar membros do grupo (incluindo todos os usuários independente do cargo)
         const { data: membersData, error: membersError } = await supabase
           .from('membros_grupos')
           .select('user_id')
@@ -71,13 +72,26 @@ const MembersSection: React.FC<{ groupId: string }> = ({ groupId }) => {
           return;
         }
 
-        if (!membersData || membersData.length === 0) {
+        console.log(`Membros encontrados no grupo: ${membersData?.length || 0}`);
+
+        // Se não há membros na tabela membros_grupos, incluir o criador automaticamente
+        const allUserIds = new Set();
+        if (membersData && membersData.length > 0) {
+          membersData.forEach(m => allUserIds.add(m.user_id));
+        }
+        
+        // Sempre incluir o criador na lista, mesmo que não esteja em membros_grupos
+        if (groupData?.criador_id) {
+          allUserIds.add(groupData.criador_id);
+        }
+
+        if (allUserIds.size === 0) {
           setMembers([]);
           return;
         }
 
-        // Buscar dados dos perfis dos membros
-        const userIds = membersData.map(m => m.user_id);
+        // Buscar dados dos perfis de todos os usuários
+        const userIds = Array.from(allUserIds);
         const { data: profilesData, error: profilesError } = await supabase
           .from('profiles')
           .select('id, display_name, avatar_url')
@@ -87,6 +101,8 @@ const MembersSection: React.FC<{ groupId: string }> = ({ groupId }) => {
           console.error('Erro ao carregar perfis:', profilesError);
           return;
         }
+
+        console.log(`Perfis carregados: ${profilesData?.length || 0}`);
 
         // Buscar sessões ativas para status online
         const now = new Date();
@@ -99,23 +115,30 @@ const MembersSection: React.FC<{ groupId: string }> = ({ groupId }) => {
           .gte('last_active', thirtySecondsAgo);
 
         const onlineUsers = new Set(sessionsData?.map(s => s.user_id) || []);
+        console.log(`Usuários online: ${onlineUsers.size}`);
 
-        // Combinar dados
-        const membersWithProfiles = membersData.map(member => {
-          const profile = profilesData?.find(p => p.id === member.user_id);
+        // Combinar dados de todos os usuários (membros, admins e dono)
+        const allMembersWithProfiles = userIds.map(userId => {
+          const profile = profilesData?.find(p => p.id === userId);
           return {
-            id: member.user_id,
-            name: profile?.display_name || `Usuário ${member.user_id.slice(0, 8)}`,
+            id: userId,
+            name: profile?.display_name || `Usuário ${userId.slice(0, 8)}`,
             avatar_url: profile?.avatar_url,
-            isOnline: onlineUsers.has(member.user_id),
-            isCreator: member.user_id === groupData?.criador_id
+            isOnline: onlineUsers.has(userId),
+            isCreator: userId === groupData?.criador_id
           };
         });
 
-        setMembers(membersWithProfiles);
+        console.log(`Total de usuários para exibir: ${allMembersWithProfiles.length}`);
+        setMembers(allMembersWithProfiles);
 
       } catch (error) {
         console.error('Erro geral ao carregar membros:', error);
+        // Retry em caso de erro
+        setTimeout(() => {
+          console.log('Tentando recarregar membros após erro...');
+          loadMembers();
+        }, 2000);
       } finally {
         setLoading(false);
       }
