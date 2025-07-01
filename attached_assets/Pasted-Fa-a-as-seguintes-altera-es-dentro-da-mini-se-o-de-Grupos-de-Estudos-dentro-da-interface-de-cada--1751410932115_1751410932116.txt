@@ -1,0 +1,29 @@
+Faça as seguintes alterações dentro da mini-seção de Grupos de Estudos, dentro da interface de cada respectivo grupo de estudos:
+
+Objetivo: Ajustar a mini-seção "Ajustes" dentro da interface interna dos Grupos de Estudos para que, ao clicar nela, abra automaticamente o modal de Configurações do respectivo grupo de estudos, conforme representado na imagem enviada. As alterações devem ser feitas de forma segura, evitando quaisquer erros, preservando todas as funcionalidades existentes e sem modificar elementos que já estão funcionando corretamente, mantendo o design/layout da mini-seção "Grupos de Estudos" (incluindo modals de "Adicionar Grupo" e "Criar Novo Grupo").
+
+Instruções Gerais
+
+Escopo Restrito: Foque exclusivamente na função accessGroup no frontend para adicionar o evento de clique na mini-seção "Ajustes" que chama o modal de Configurações, sem alterar a lógica ou estrutura de outras partes do código, incluindo o carregamento de usuários, chat, ou outras mini-seções ("Discussões", "Membros", "Tarefas", "Notificações").
+
+Preservação: Mantenha intactas todas as funcionalidades existentes (criação via modal, adesão, saída/exclusão, chat, pesquisa, contagem de online) e garanta que o modal de Configurações seja aberto apenas se já estiver implementado e funcional, sem impactar o restante da interface.
+
+Segurança e Validação: Adicione verificações para garantir que o botão "Ajustes" só chame showSettingsModal se a função estiver definida, trate erros com logs e evite alterações que possam quebrar o código existente.
+
+Testes Completos: Após as alterações, teste a mini-seção "Ajustes" e envie os logs.
+
+Análise de Cenários
+
+Cenário 1: Clique em Ajustes - Clicar no botão "Ajustes" deve abrir o modal de Configurações apenas se a função showSettingsModal estiver disponível.
+
+Cenário 2: Modal Existente - Reutilizar o modal de Configurações existente sem modificá-lo, apenas chamando-o com o groupId correto.
+
+Cenário 3: Erro Potencial - Verificar que a ausência de showSettingsModal ou falha na chamada não afete a interface principal.
+
+Cenário 4: Múltiplos Grupos - Testar com diferentes grupos para confirmar que o modal exibe as configurações do grupo ativo.
+
+Descrição da Interface
+
+Mini-Seção Ajustes: Botão existente com texto "Ajustes", estilizado como os outros botões da mini-seção, que ao clicar chama o modal de Configurações se disponível.
+
+Modal de Configurações: Modal pré-existente que deve ser aberto com o groupId correspondente, conforme o design visual da imagem enviada
