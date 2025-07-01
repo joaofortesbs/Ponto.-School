@@ -208,7 +208,7 @@ const MembersSection: React.FC<{ groupId: string }> = ({ groupId }) => {
                 style={{ position: 'relative', zIndex: 1 }}
               >
                 {member.isCreator && (
-                  <div className="absolute -top-2 -left-2 w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center">
+                  <div className="absolute -top-1 left-1 w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center z-10 shadow-lg">
                     <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                     </svg>
