@@ -1662,19 +1662,19 @@ const GruposEstudoView: React.FC = () => {
           </div>
 
           {/* Modal de Configurações do Grupo */}
-              {activeGroup && (
-                <GroupSettingsModal
-                  isOpen={showGroupSettingsModal}
-                  onClose={() => setShowGroupSettingsModal(false)}
-                  group={activeGroup}
-                  onSave={(settings) => {
-                    console.log('Configurações salvas:', settings);
-                    setShowGroupSettingsModal(false);
-                    // Aqui você pode adicionar lógica para salvar as configurações
-                  }}
-                />
-              )}
-          </div>
+          {activeGroup && (
+            <GroupSettingsModal
+              isOpen={showGroupSettingsModal}
+              onClose={() => setShowGroupSettingsModal(false)}
+              group={activeGroup}
+              onSave={(settings) => {
+                console.log('Configurações salvas:', settings);
+                setShowGroupSettingsModal(false);
+                // Aqui você pode adicionar lógica para salvar as configurações
+              }}
+            />
+          )}
+        </div>
       );
   }
 
