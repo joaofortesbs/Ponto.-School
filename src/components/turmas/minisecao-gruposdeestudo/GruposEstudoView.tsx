@@ -40,26 +40,11 @@ const MembersSection: React.FC<{ groupId: string }> = ({ groupId }) => {
   const [members, setMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [groupCreatorId, setGroupCreatorId] = useState<string | null>(null);
-  const [currentUserRole, setCurrentUserRole] = useState<string>('membro');
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
     const loadMembers = async () => {
       try {
         setLoading(true);
-        console.log(`Iniciando carregamento de membros para grupo ${groupId}...`);
-
-        // Verificar usuário atual
-        const { data: { user } } = await supabase.auth.getUser();
-        const userId = user?.id;
-        setCurrentUserId(userId);
-
-        if (!userId) {
-          console.error('Usuário não autenticado');
-          return;
-        }
-
-        console.log(`Usuário atual: ${userId}`);
 
         // Buscar dados do grupo para obter o criador_id
         const { data: groupData, error: groupError } = await supabase
@@ -76,29 +61,10 @@ const MembersSection: React.FC<{ groupId: string }> = ({ groupId }) => {
         setGroupCreatorId(groupData?.criador_id || null);
         console.log(`Criador do grupo: ${groupData?.criador_id}`);
 
-        // Verificar cargo do usuário atual
-        let userRole = 'membro';
-        if (groupData?.criador_id === userId) {
-          userRole = 'owner';
-        } else {
-          const { data: memberData } = await supabase
-            .from('membros_grupos')
-            .select('cargo')
-            .eq('grupo_id', groupId)
-            .eq('user_id', userId)
-            .single();
-
-          if (memberData?.cargo) {
-            userRole = memberData.cargo;
-          }
-        }
-        setCurrentUserRole(userRole);
-        console.log(`Cargo do usuário atual: ${userRole}`);
-
-        // Buscar membros do grupo com seus cargos
+        // Buscar membros do grupo (incluindo todos os usuários independente do cargo)
         const { data: membersData, error: membersError } = await supabase
           .from('membros_grupos')
-          .select('user_id, cargo')
+          .select('user_id')
           .eq('grupo_id', groupId);
 
         if (membersError) {
@@ -108,28 +74,18 @@ const MembersSection: React.FC<{ groupId: string }> = ({ groupId }) => {
 
         console.log(`Membros encontrados no grupo: ${membersData?.length || 0}`);
 
-        // Coletar todos os IDs de usuários
+        // Se não há membros na tabela membros_grupos, incluir o criador automaticamente
         const allUserIds = new Set();
-        const userRoles = new Map();
-
-        // Adicionar membros da tabela membros_grupos
         if (membersData && membersData.length > 0) {
-          membersData.forEach(m => {
-            allUserIds.add(m.user_id);
-            userRoles.set(m.user_id, m.cargo || 'membro');
-          });
+          membersData.forEach(m => allUserIds.add(m.user_id));
         }
 
         // Sempre incluir o criador na lista, mesmo que não esteja em membros_grupos
         if (groupData?.criador_id) {
           allUserIds.add(groupData.criador_id);
-          userRoles.set(groupData.criador_id, 'owner');
         }
 
-        console.log(`Total de usuários únicos: ${allUserIds.size}`);
-
         if (allUserIds.size === 0) {
-          console.warn('Nenhum usuário encontrado para exibir');
           setMembers([]);
           return;
         }
@@ -161,19 +117,16 @@ const MembersSection: React.FC<{ groupId: string }> = ({ groupId }) => {
         const onlineUsers = new Set(sessionsData?.map(s => s.user_id) || []);
         console.log(`Usuários online: ${onlineUsers.size}`);
 
-        // Combinar dados de todos os usuários
+        // Combinar dados de todos os usuários (membros, admins e dono)
         const allMembersWithProfiles = userIds.map(userId => {
           const profile = profilesData?.find(p => p.id === userId);
-          const memberData = {
+          return {
             id: userId,
             name: profile?.display_name || `Usuário ${userId.slice(0, 8)}`,
             avatar_url: profile?.avatar_url,
             isOnline: onlineUsers.has(userId),
-            isCreator: userId === groupData?.criador_id,
-            cargo: userRoles.get(userId) || 'membro'
+            isCreator: userId === groupData?.criador_id
           };
-          console.log(`Usuário processado:`, memberData);
-          return memberData;
         });
 
         console.log(`Total de usuários para exibir: ${allMembersWithProfiles.length}`);
@@ -191,26 +144,8 @@ const MembersSection: React.FC<{ groupId: string }> = ({ groupId }) => {
       }
     };
 
-    if (groupId) {
-      loadMembers();
-    }
+    loadMembers();
   }, [groupId]);
-
-  // Funções placeholder para os ícones
-  const inspectProfile = (userId: string) => {
-    console.log(`Inspecionar perfil do usuário: ${userId}`);
-    // TODO: Implementar modal de visualização de perfil
-  };
-
-  const promoteUser = (userId: string) => {
-    console.log(`Promover usuário: ${userId}`);
-    // TODO: Implementar funcionalidade de promoção
-  };
-
-  const removeUser = (userId: string) => {
-    console.log(`Remover usuário: ${userId}`);
-    // TODO: Implementar funcionalidade de remoção
-  };
 
   if (loading) {
     return (
@@ -246,170 +181,131 @@ const MembersSection: React.FC<{ groupId: string }> = ({ groupId }) => {
         </div>
 
         {members.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[400px] overflow-y-auto">
-            {members.map((member) => {
-              const isCurrentUser = member.id === currentUserId;
-              const isCurrentUserAdminOrOwner = currentUserRole === 'admin' || currentUserRole === 'owner';
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-h-[400px] overflow-y-auto group" style={{ padding: '12px 0' }}>
+            {members.map((member) => (
+              <div
+                key={member.id}
+                className={`relative flex items-center gap-3 p-4 bg-[#f7f9fa] dark:bg-[#29335C]/20 rounded-lg border transition-all ${
+                  member.isCreator 
+                    ? 'border-[#FF6B00] border-2' 
+                    : 'border-[#FF6B00]/10 hover:border-[#FF6B00]/30'
+                }`}
+                style={{ position: 'relative', zIndex: 1 }}
+              >
+                {member.isCreator && (
+                  <div className="absolute -top-2 -right-2 w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center">
+                    <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                  </div>
+                )}
 
-              console.log(`🎨 Renderizando card do membro:`, {
-                id: member.id.slice(0, 8),
-                name: member.name,
-                isCurrentUser,
-                isCurrentUserAdminOrOwner,
-                currentUserRole,
-                memberCargo: member.cargo,
-                isCreator: member.isCreator
-              });
+                {/* Ícones de administração - aparecem no hover */}
+                <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  {/* Verificar se o usuário logado é o criador do grupo */}
+                  {groupCreatorId === '300e8f1f-f0ae-4ee3-97fa-ca0598d1393d' && (
+                    <>
+                      {/* Se não for o próprio criador, mostrar ícones de administração */}
+                      {!member.isCreator && (
+                        <>
+                          {/* Promover membro */}
+                          <button
+                            className="w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center hover:bg-[#FF8C40] transition-colors"
+                            title="Promover membro"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // Funcionalidade inativa por enquanto
+                            }}
+                          >
+                            <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                            </svg>
+                          </button>
 
-              return (
-                <div
-                  key={member.id}
-                  className={`relative group bg-white dark:bg-[#29335C]/50 rounded-lg p-4 border transition-all hover:shadow-lg ${
-                    member.isCreator 
-                      ? 'border-[#FF6B00] border-2 bg-gradient-to-br from-[#FF6B00]/5 to-[#FF8C40]/5' 
-                      : 'border-gray-200 dark:border-gray-700 hover:border-[#FF6B00]/50'
-                  }`}
-                  style={{ minWidth: '200px', height: 'auto' }}
-                >
-                  {/* Badge do criador */}
-                  {member.isCreator && (
-                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center z-10">
-                      <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                      </svg>
-                    </div>
-                  )}
+                          {/* Tirar membro */}
+                          <button
+                            className="w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center hover:bg-[#FF8C40] transition-colors"
+                            title="Tirar membro"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // Funcionalidade inativa por enquanto
+                            }}
+                          >
+                            <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M19 13H5v-2h14v2z"/>
+                            </svg>
+                          </button>
+                        </>
+                      )}
 
-                  {/* Ícones de ação */}
-                  <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20">
-                    {isCurrentUser ? (
-                      // Próprio usuário: apenas ícone de inspecionar
-                      <button
-                        className="w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center hover:bg-[#FF8C40] transition-colors"
-                        title="Inspecionar perfil"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          inspectProfile(member.id);
-                        }}
-                      >
-                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                          <circle cx="12" cy="12" r="3"></circle>
-                        </svg>
-                      </button>
-                    ) : !isCurrentUserAdminOrOwner ? (
-                      // Membro comum vendo outros: apenas ícone de inspecionar
-                      <button
-                        className="w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center hover:bg-[#FF8C40] transition-colors"
-                        title="Inspecionar perfil"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          inspectProfile(member.id);
-                        }}
-                      >
-                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                          <circle cx="12" cy="12" r="3"></circle>
-                        </svg>
-                      </button>
-                    ) : (
-                      // Admin/dono vendo outros: três ícones
-                      <>
+                      {/* Inspecionar perfil - para todos exceto o próprio criador */}
+                      {!member.isCreator && (
                         <button
                           className="w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center hover:bg-[#FF8C40] transition-colors"
                           title="Inspecionar perfil"
                           onClick={(e) => {
                             e.stopPropagation();
-                            inspectProfile(member.id);
+                            // Funcionalidade inativa por enquanto
                           }}
                         >
                           <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                            <circle cx="12" cy="12" r="3"></circle>
+                            <path d="M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zm0 8a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-12.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.11-11-7.5z"/>
                           </svg>
                         </button>
-                        <button
-                          className="w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center hover:bg-[#FF8C40] transition-colors"
-                          title="Promover/Gerenciar"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            promoteUser(member.id);
-                          }}
-                        >
-                          <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                          </svg>
-                        </button>
-                        <button
-                          className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
-                          title="Remover membro"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            removeUser(member.id);
-                          }}
-                        >
-                          <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M19 13H5v-2h14v2z"/>
-                          </svg>
-                        </button>
-                      </>
+                      )}
+                    </>
+                  )}
+
+                  {/* Para membros comuns (não criadores): mostrar apenas inspecionar perfil para outros membros */}
+                  {groupCreatorId !== '300e8f1f-f0ae-4ee3-97fa-ca0598d1393d' && !member.isCreator && (
+                    <button
+                      className="w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center hover:bg-[#FF8C40] transition-colors"
+                      title="Inspecionar perfil"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // Funcionalidade inativa por enquanto
+                      }}
+                    >
+                      <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zm0 8a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-12.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.11-11-7.5z"/>
+                      </svg>
+                    </button>
+                  )}
+                </div>
+
+                <div className="relative">
+                  <div className="w-12 h-12 rounded-full overflow-hidden bg-[#FF6B00]/10 flex items-center justify-center">
+                    {member.avatar_url ? (
+                      <img 
+                        src={member.avatar_url} 
+                        alt={member.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-[#FF6B00] font-semibold text-lg">
+                        {member.name.charAt(0).toUpperCase()}
+                      </span>
                     )}
                   </div>
-
-                  {/* Conteúdo principal do card */}
-                  <div className="flex items-center gap-3">
-                    {/* Avatar com status online */}
-                    <div className="relative">
-                      <div className="w-12 h-12 rounded-full overflow-hidden bg-[#FF6B00]/10 flex items-center justify-center">
-                        {member.avatar_url ? (
-                          <img 
-                            src={member.avatar_url} 
-                            alt={member.name}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              // Fallback para avatar padrão se a imagem falhar
-                              const target = e.target as HTMLImageElement;
-                              target.style.display = 'none';
-                              const parent = target.parentElement;
-                              if (parent) {
-                                parent.innerHTML = `<span class="text-[#FF6B00] font-semibold text-lg">${member.name.charAt(0).toUpperCase()}</span>`;
-                              }
-                            }}
-                          />
-                        ) : (
-                          <span className="text-[#FF6B00] font-semibold text-lg">
-                            {member.name.charAt(0).toUpperCase()}
-                          </span>
-                        )}
-                      </div>
-                      <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white dark:border-[#1a2236] ${
-                        member.isOnline ? 'bg-green-500' : 'bg-gray-400'
-                      }`}></div>
-                    </div>
-
-                    {/* Informações do usuário */}
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-[#001427] dark:text-white text-sm truncate">
-                        {member.name}
-                        {member.isCreator && (
-                          <span className="ml-2 text-[#FF6B00] text-xs font-bold">
-                            DONO
-                          </span>
-                        )}
-                        {!member.isCreator && member.cargo === 'admin' && (
-                          <span className="ml-2 text-[#FF6B00] text-xs font-bold">
-                            ADMIN
-                          </span>
-                        )}
-                      </h4>
-                      <p className={`text-xs ${member.isOnline ? 'text-green-600' : 'text-gray-500'}`}>
-                        {member.isOnline ? 'Online' : 'Offline'}
-                      </p>
-                    </div>
-                  </div>
+                  <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white dark:border-[#1a2236] ${
+                    member.isOnline ? 'bg-green-500' : 'bg-gray-400'
+                  }`}></div>
                 </div>
-              );
-            })}
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-semibold text-[#001427] dark:text-white text-sm truncate">
+                    {member.name}
+                    {member.isCreator && (
+                      <span className="ml-2 text-[#FF6B00] text-xs font-bold">
+                        ADMIN
+                      </span>
+                    )}
+                  </h4>
+                  <p className={`text-xs ${member.isOnline ? 'text-green-600' : 'text-gray-500'}`}>
+                    {member.isOnline ? 'Online' : 'Offline'}
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
         ) : (
           <div className="text-center py-8">
