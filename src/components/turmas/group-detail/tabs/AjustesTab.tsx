@@ -912,7 +912,7 @@ const AjustesTab: React.FC<AjustesTabProps> = ({ group, onSave }) => {
   return (
     <div className="flex h-full bg-gradient-to-br from-gray-50/50 to-orange-50/50 dark:from-[#0A0E1A] dark:to-[#0F1419]">
       {/* Sidebar */}
-      <div className="w-72 bg-gradient-to-b from-orange-50 to-amber-50 dark:from-[#0F1419] dark:to-[#1A1F2E] border-r border-orange-200/50 dark:border-orange-700/30 flex flex-col overflow-hidden min-h-[900px]"></div>
+      <div className="w-72 bg-gradient-to-b from-orange-50 to-amber-50 dark:from-[#0F1419] dark:to-[#1A1F2E] border-r border-orange-200/50 dark:border-orange-700/30 flex flex-col overflow-hidden min-h-[900px]">
         <div className="p-6 border-b border-orange-200/50 dark:border-orange-700/30 bg-white/50 dark:bg-[#0A0E1A]/50 backdrop-blur-sm">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-2xl text-white shadow-lg">
@@ -930,7 +930,7 @@ const AjustesTab: React.FC<AjustesTabProps> = ({ group, onSave }) => {
         </div>
 
         <div className="flex-1 overflow-y-auto p-2 min-h-[800px]">
-          <nav className="space-y-2"></div>
+          <nav className="space-y-2">
             {menuItems.map((item) => {
               const isActive = activeSection === item.id;
               return (
