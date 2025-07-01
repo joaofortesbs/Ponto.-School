@@ -1674,6 +1674,7 @@ const GruposEstudoView: React.FC = () => {
               }}
             />
           )}
+        </div>
       );
   }
 
