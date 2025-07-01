@@ -40,11 +40,23 @@ const MembersSection: React.FC<{ groupId: string }> = ({ groupId }) => {
   const [members, setMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [groupCreatorId, setGroupCreatorId] = useState<string | null>(null);
+  const [currentUserRole, setCurrentUserRole] = useState<string>('membro');
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
     const loadMembers = async () => {
       try {
         setLoading(true);
+
+        // Verificar usuário atual
+        const { data: { user } } = await supabase.auth.getUser();
+        const userId = user?.id;
+        setCurrentUserId(userId);
+
+        if (!userId) {
+          console.error('Usuário não autenticado');
+          return;
+        }
 
         // Buscar dados do grupo para obter o criador_id
         const { data: groupData, error: groupError } = await supabase
@@ -61,10 +73,29 @@ const MembersSection: React.FC<{ groupId: string }> = ({ groupId }) => {
         setGroupCreatorId(groupData?.criador_id || null);
         console.log(`Criador do grupo: ${groupData?.criador_id}`);
 
-        // Buscar membros do grupo (incluindo todos os usuários independente do cargo)
+        // Verificar cargo do usuário atual
+        let userRole = 'membro';
+        if (groupData?.criador_id === userId) {
+          userRole = 'owner';
+        } else {
+          const { data: memberData } = await supabase
+            .from('membros_grupos')
+            .select('cargo')
+            .eq('grupo_id', groupId)
+            .eq('user_id', userId)
+            .single();
+          
+          if (memberData?.cargo) {
+            userRole = memberData.cargo;
+          }
+        }
+        setCurrentUserRole(userRole);
+        console.log(`Cargo do usuário atual: ${userRole}`);
+
+        // Buscar membros do grupo com seus cargos
         const { data: membersData, error: membersError } = await supabase
           .from('membros_grupos')
-          .select('user_id')
+          .select('user_id, cargo')
           .eq('grupo_id', groupId);
 
         if (membersError) {
@@ -76,13 +107,19 @@ const MembersSection: React.FC<{ groupId: string }> = ({ groupId }) => {
 
         // Se não há membros na tabela membros_grupos, incluir o criador automaticamente
         const allUserIds = new Set();
+        const userRoles = new Map();
+
         if (membersData && membersData.length > 0) {
-          membersData.forEach(m => allUserIds.add(m.user_id));
+          membersData.forEach(m => {
+            allUserIds.add(m.user_id);
+            userRoles.set(m.user_id, m.cargo || 'membro');
+          });
         }
 
         // Sempre incluir o criador na lista, mesmo que não esteja em membros_grupos
         if (groupData?.criador_id) {
           allUserIds.add(groupData.criador_id);
+          userRoles.set(groupData.criador_id, 'owner');
         }
 
         if (allUserIds.size === 0) {
@@ -125,7 +162,8 @@ const MembersSection: React.FC<{ groupId: string }> = ({ groupId }) => {
             name: profile?.display_name || `Usuário ${userId.slice(0, 8)}`,
             avatar_url: profile?.avatar_url,
             isOnline: onlineUsers.has(userId),
-            isCreator: userId === groupData?.criador_id
+            isCreator: userId === groupData?.criador_id,
+            cargo: userRoles.get(userId) || 'membro'
           };
         });
 
@@ -146,6 +184,22 @@ const MembersSection: React.FC<{ groupId: string }> = ({ groupId }) => {
 
     loadMembers();
   }, [groupId]);
+
+  // Funções placeholder para os ícones
+  const inspectProfile = (userId: string) => {
+    console.log(`Inspecionar perfil do usuário: ${userId}`);
+    // TODO: Implementar modal de visualização de perfil
+  };
+
+  const promoteUser = (userId: string) => {
+    console.log(`Promover usuário: ${userId}`);
+    // TODO: Implementar funcionalidade de promoção
+  };
+
+  const removeUser = (userId: string) => {
+    console.log(`Remover usuário: ${userId}`);
+    // TODO: Implementar funcionalidade de remoção
+  };
 
   if (loading) {
     return (
@@ -182,96 +236,110 @@ const MembersSection: React.FC<{ groupId: string }> = ({ groupId }) => {
 
         {members.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-h-[400px] overflow-y-auto group" style={{ padding: '12px 0' }}>
-            {members.map((member) => (
-              <div
-                key={member.id}
-                className={`relative flex items-center gap-3 p-4 bg-[#f7f9fa] dark:bg-[#29335C]/20 rounded-lg border transition-all ${
-                  member.isCreator 
-                    ? 'border-[#FF6B00] border-2' 
-                    : 'border-[#FF6B00]/10 hover:border-[#FF6B00]/30'
-                }`}
-                style={{ position: 'relative', zIndex: 1 }}
-              >
-                {member.isCreator && (
-                  <div className="absolute -top-2 -right-2 w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center">
-                    <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                    </svg>
-                  </div>
-                )}
-
-                {/* Ícones de administração - aparecem no hover */}
-                <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                  {/* Verificar se o usuário logado é o criador do grupo */}
-                  {groupCreatorId === '300e8f1f-f0ae-4ee3-97fa-ca0598d1393d' && (
-                    <>
-                      {/* Se não for o próprio criador, mostrar ícones de administração */}
-                      {!member.isCreator && (
-                        <>
-                          {/* Promover membro */}
-                          <button
-                            className="w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center hover:bg-[#FF8C40] transition-colors"
-                            title="Promover membro"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              // Funcionalidade inativa por enquanto
-                            }}
-                          >
-                            <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                            </svg>
-                          </button>
-
-                          {/* Tirar membro */}
-                          <button
-                            className="w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center hover:bg-[#FF8C40] transition-colors"
-                            title="Tirar membro"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              // Funcionalidade inativa por enquanto
-                            }}
-                          >
-                            <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M19 13H5v-2h14v2z"/>
-                            </svg>
-                          </button>
-                        </>
-                      )}
-
-                      {/* Inspecionar perfil - para todos exceto o próprio criador */}
-                      {!member.isCreator && (
-                        <button
-                          className="w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center hover:bg-[#FF8C40] transition-colors"
-                          title="Inspecionar perfil"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            // Funcionalidade inativa por enquanto
-                          }}
-                        >
-                          <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zm0 8a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-12.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.11-11-7.5z"/>
-                          </svg>
-                        </button>
-                      )}
-                    </>
-                  )}
-
-                  {/* Para membros comuns (não criadores): mostrar apenas inspecionar perfil para outros membros */}
-                  {groupCreatorId !== '300e8f1f-f0ae-4ee3-97fa-ca0598d1393d' && !member.isCreator && (
-                    <button
-                      className="w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center hover:bg-[#FF8C40] transition-colors"
-                      title="Inspecionar perfil"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        // Funcionalidade inativa por enquanto
-                      }}
-                    >
+            {members.map((member) => {
+              const isCurrentUser = member.id === currentUserId;
+              const isCurrentUserAdminOrOwner = currentUserRole === 'admin' || currentUserRole === 'owner';
+              
+              return (
+                <div
+                  key={member.id}
+                  className={`relative flex items-center gap-3 p-4 bg-[#f7f9fa] dark:bg-[#29335C]/20 rounded-lg border transition-all ${
+                    member.isCreator 
+                      ? 'border-[#FF6B00] border-2' 
+                      : 'border-[#FF6B00]/10 hover:border-[#FF6B00]/30'
+                  }`}
+                  style={{ position: 'relative', zIndex: 1 }}
+                >
+                  {member.isCreator && (
+                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center">
                       <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zm0 8a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-12.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.11-11-7.5z"/>
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                       </svg>
-                    </button>
+                    </div>
                   )}
-                </div>
+
+                  {/* Ícones baseados no cargo do usuário */}
+                  <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    {isCurrentUser ? (
+                      // Para o próprio usuário (independente do cargo): apenas ícone de inspecionar perfil
+                      <button
+                        className="w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center hover:bg-[#FF8C40] transition-colors"
+                        title="Inspecionar perfil"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          inspectProfile(member.id);
+                        }}
+                      >
+                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zm0 8a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-12.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.11-11-7.5z"/>
+                        </svg>
+                      </button>
+                    ) : (
+                      // Para outros usuários
+                      <>
+                        {!isCurrentUserAdminOrOwner ? (
+                          // Membro comum vendo outros usuários: apenas ícone de inspecionar perfil
+                          <button
+                            className="w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center hover:bg-[#FF8C40] transition-colors"
+                            title="Inspecionar perfil"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              inspectProfile(member.id);
+                            }}
+                          >
+                            <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zm0 8a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-12.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.11-11-7.5z"/>
+                            </svg>
+                          </button>
+                        ) : (
+                          // Admin/dono vendo outros usuários: três ícones
+                          <>
+                            {/* Ícone de inspecionar perfil */}
+                            <button
+                              className="w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center hover:bg-[#FF8C40] transition-colors"
+                              title="Inspecionar perfil"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                inspectProfile(member.id);
+                              }}
+                            >
+                              <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zm0 8a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-12.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.11-11-7.5z"/>
+                              </svg>
+                            </button>
+
+                            {/* Ícone de promover/gerenciar */}
+                            <button
+                              className="w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center hover:bg-[#FF8C40] transition-colors"
+                              title="Promover membro"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                promoteUser(member.id);
+                              }}
+                            >
+                              <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                              </svg>
+                            </button>
+
+                            {/* Ícone de remover usuário */}
+                            <button
+                              className="w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center hover:bg-[#FF8C40] transition-colors"
+                              title="Remover membro"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                removeUser(member.id);
+                              }}
+                            >
+                              <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M19 13H5v-2h14v2z"/>
+                              </svg>
+                            </button>
+                          </>
+                        )}
+                      </>
+                    )}
+                  </div>
 
                 <div className="relative">
                   <div className="w-12 h-12 rounded-full overflow-hidden bg-[#FF6B00]/10 flex items-center justify-center">
@@ -292,20 +360,26 @@ const MembersSection: React.FC<{ groupId: string }> = ({ groupId }) => {
                   }`}></div>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-semibold text-[#001427] dark:text-white text-sm truncate">
-                    {member.name}
-                    {member.isCreator && (
-                      <span className="ml-2 text-[#FF6B00] text-xs font-bold">
-                        ADMIN
-                      </span>
-                    )}
-                  </h4>
-                  <p className={`text-xs ${member.isOnline ? 'text-green-600' : 'text-gray-500'}`}>
-                    {member.isOnline ? 'Online' : 'Offline'}
-                  </p>
+                    <h4 className="font-semibold text-[#001427] dark:text-white text-sm truncate">
+                      {member.name}
+                      {member.isCreator && (
+                        <span className="ml-2 text-[#FF6B00] text-xs font-bold">
+                          DONO
+                        </span>
+                      )}
+                      {!member.isCreator && member.cargo === 'admin' && (
+                        <span className="ml-2 text-[#FF6B00] text-xs font-bold">
+                          ADMIN
+                        </span>
+                      )}
+                    </h4>
+                    <p className={`text-xs ${member.isOnline ? 'text-green-600' : 'text-gray-500'}`}>
+                      {member.isOnline ? 'Online' : 'Offline'}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <div className="text-center py-8">
