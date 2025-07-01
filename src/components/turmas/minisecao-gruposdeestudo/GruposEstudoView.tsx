@@ -36,6 +36,7 @@ import CreateGroupModal from "../CreateGroupModal";
 import AddGroupModal from "../AddGroupModal";
 import EntrarGrupoSuccessModal from "../EntrarGrupoSuccessModal";
 import ChatSection from "@/components/turmas/group-detail/ChatSection";
+import { Shield } from "lucide-react";
 
 // Componente para exibir membros do grupo
 const MembersSection: React.FC<{ groupId: string }> = ({ groupId }) => {
@@ -264,7 +265,7 @@ const MembersSection: React.FC<{ groupId: string }> = ({ groupId }) => {
                               // Funcionalidade a ser implementada
                             }}
                           >
-                            <Star className="w-4 h-4" />
+                            <Shield className="w-4 h-4" />
                           </button>
                           <button
                             className="text-[#FF6B00] hover:text-[#FF8C40] transition-colors"
