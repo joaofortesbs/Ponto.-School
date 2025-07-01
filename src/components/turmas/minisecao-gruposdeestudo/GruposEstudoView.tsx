@@ -215,7 +215,7 @@ const MembersSection: React.FC<{ groupId: string }> = ({ groupId }) => {
                 )}
 
                 {/* Ícones de administração - sempre visíveis */}
-                <div className="absolute top-2 right-2 flex gap-1 transition-opacity duration-200">
+                <div className="absolute top-2 right-2 flex gap-2 transition-opacity duration-200">
                   {(() => {
                     if (!currentUserId) {
                       // Se ainda não carregou o usuário atual, não mostra ícones
@@ -229,7 +229,7 @@ const MembersSection: React.FC<{ groupId: string }> = ({ groupId }) => {
                       // Se for o próprio usuário, apenas ícone de inspecionar
                       return (
                         <button
-                          className="text-white hover:text-[#FF6B00] transition-colors"
+                          className="text-[#FF6B00] hover:text-[#FF8C40] transition-colors"
                           title="Inspecionar Perfil"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -245,7 +245,7 @@ const MembersSection: React.FC<{ groupId: string }> = ({ groupId }) => {
                       return (
                         <>
                           <button
-                            className="text-white hover:text-[#FF6B00] transition-colors"
+                            className="text-[#FF6B00] hover:text-[#FF8C40] transition-colors"
                             title="Inspecionar Perfil"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -256,7 +256,7 @@ const MembersSection: React.FC<{ groupId: string }> = ({ groupId }) => {
                             <Eye className="w-4 h-4" />
                           </button>
                           <button
-                            className="text-white hover:text-[#FF6B00] transition-colors"
+                            className="text-[#FF6B00] hover:text-[#FF8C40] transition-colors"
                             title="Promover Usuário"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -267,7 +267,7 @@ const MembersSection: React.FC<{ groupId: string }> = ({ groupId }) => {
                             <Star className="w-4 h-4" />
                           </button>
                           <button
-                            className="text-white hover:text-[#FF6B00] transition-colors"
+                            className="text-[#FF6B00] hover:text-[#FF8C40] transition-colors"
                             title="Retirar Usuário"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -283,7 +283,7 @@ const MembersSection: React.FC<{ groupId: string }> = ({ groupId }) => {
                       // Se for membro comum vendo outros membros, apenas ícone de inspecionar
                       return (
                         <button
-                          className="text-white hover:text-[#FF6B00] transition-colors"
+                          className="text-[#FF6B00] hover:text-[#FF8C40] transition-colors"
                           title="Inspecionar Perfil"
                           onClick={(e) => {
                             e.stopPropagation();
