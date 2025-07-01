@@ -79,7 +79,7 @@ const MembersSection: React.FC<{ groupId: string }> = ({ groupId }) => {
         if (membersData && membersData.length > 0) {
           membersData.forEach(m => allUserIds.add(m.user_id));
         }
-        
+
         // Sempre incluir o criador na lista, mesmo que não esteja em membros_grupos
         if (groupData?.criador_id) {
           allUserIds.add(groupData.criador_id);
@@ -359,6 +359,7 @@ const GruposEstudoView: React.FC = () => {
   const [activeTab, setActiveTab] = useState('discussoes');
   const [groupCoverImage, setGroupCoverImage] = useState<string | null>(null);
   const [groupProfileImage, setGroupProfileImage] = useState<string | null>(null);
+  const [isCurrentUserAdmin, setIsCurrentUserAdmin] = useState(false);
 
   // Função para validar autenticação do usuário
   const validateUserAuth = async () => {
@@ -797,7 +798,7 @@ const GruposEstudoView: React.FC = () => {
 
       toast({
         title: "Erro",
-        description: "Erro ao carregar seus grupos. Tente recarregar a página.",
+        description:"Erro ao carregar seus grupos. Tente recarregar a página.",
         variant: "destructive",
       });
     } finally {
