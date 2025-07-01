@@ -25,6 +25,8 @@ import {
   Sparkles,
   Settings,
   Info,
+  Eye,
+  UserMinus,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -53,7 +55,7 @@ const MembersSection: React.FC<{ groupId: string }> = ({ groupId }) => {
           console.error('Erro ao obter usuário atual:', userError);
           return;
         }
-        
+
         if (user) {
           setCurrentUserId(user.id);
         }
@@ -222,96 +224,76 @@ const MembersSection: React.FC<{ groupId: string }> = ({ groupId }) => {
 
                     const isCurrentUser = member.id === currentUserId;
                     const isCurrentUserAdminOrOwner = groupCreatorId === currentUserId;
-                    
+
                     if (isCurrentUser) {
-                      // Usuário atual vê apenas ícone de inspecionar perfil
+                      // Se for o próprio usuário, apenas ícone de inspecionar
                       return (
                         <button
-                          className="w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center hover:bg-[#FF8C40] transition-colors"
-                          title="Inspecionar perfil"
+                          className="text-white hover:text-[#FF6B00] transition-colors"
+                          title="Inspecionar Perfil"
                           onClick={(e) => {
                             e.stopPropagation();
                             console.log(`Inspecionar perfil do usuário: ${member.id}`);
                             // Funcionalidade a ser implementada
                           }}
                         >
-                          <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
-                            <circle cx="12" cy="12" r="5"></circle>
-                            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7"></path>
-                          </svg>
+                          <Eye className="w-4 h-4" />
                         </button>
                       );
-                    } else {
-                      // Para outros usuários
-                      if (isCurrentUserAdminOrOwner) {
-                        // Admin/dono vê três ícones para outros usuários
-                        return (
-                          <>
-                            <button
-                              className="w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center hover:bg-[#FF8C40] transition-colors"
-                              title="Inspecionar perfil"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                console.log(`Inspecionar perfil do usuário: ${member.id}`);
-                                // Funcionalidade a ser implementada
-                              }}
-                            >
-                              <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                <circle cx="12" cy="12" r="5"></circle>
-                                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7"></path>
-                              </svg>
-                            </button>
-                            
-                            <button
-                              className="w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center hover:bg-[#FF8C40] transition-colors"
-                              title="Ações do membro"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                console.log(`Ação 1 para usuário: ${member.id}`);
-                                // Funcionalidade a ser implementada
-                              }}
-                            >
-                              <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                <circle cx="12" cy="12" r="1"></circle>
-                                <circle cx="12" cy="5" r="1"></circle>
-                                <circle cx="12" cy="19" r="1"></circle>
-                              </svg>
-                            </button>
-
-                            <button
-                              className="w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center hover:bg-[#FF8C40] transition-colors"
-                              title="Configurações do membro"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                console.log(`Ação 2 para usuário: ${member.id}`);
-                                // Funcionalidade a ser implementada
-                              }}
-                            >
-                              <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M12 5v14M5 12h14"></path>
-                              </svg>
-                            </button>
-                          </>
-                        );
-                      } else {
-                        // Membro comum vê apenas ícone de inspecionar perfil para outros
-                        return (
+                    } else if (isCurrentUserAdminOrOwner) {
+                      // Se o usuário atual é admin/owner, mostra 3 ícones para outros membros
+                      return (
+                        <>
                           <button
-                            className="w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center hover:bg-[#FF8C40] transition-colors"
-                            title="Inspecionar perfil"
+                            className="text-white hover:text-[#FF6B00] transition-colors"
+                            title="Inspecionar Perfil"
                             onClick={(e) => {
                               e.stopPropagation();
                               console.log(`Inspecionar perfil do usuário: ${member.id}`);
                               // Funcionalidade a ser implementada
                             }}
                           >
-                            <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
-                              <circle cx="12" cy="12" r="5"></circle>
-                              <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7"></path>
-                            </svg>
+                            <Eye className="w-4 h-4" />
                           </button>
-                        );
-                      }
+                          <button
+                            className="text-white hover:text-[#FF6B00] transition-colors"
+                            title="Promover Usuário"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              console.log(`Ação 1 para usuário: ${member.id}`);
+                              // Funcionalidade a ser implementada
+                            }}
+                          >
+                            <Star className="w-4 h-4" />
+                          </button>
+                          <button
+                            className="text-white hover:text-[#FF6B00] transition-colors"
+                            title="Retirar Usuário"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              console.log(`Ação 2 para usuário: ${member.id}`);
+                              // Funcionalidade a ser implementada
+                            }}
+                          >
+                            <UserMinus className="w-4 h-4" />
+                          </button>
+                        </>
+                      );
+                    } else {
+                      // Se for membro comum vendo outros membros, apenas ícone de inspecionar
+                      return (
+                        <button
+                          className="text-white hover:text-[#FF6B00] transition-colors"
+                          title="Inspecionar Perfil"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            console.log(`Inspecionar perfil do usuário: ${member.id}`);
+                            // Funcionalidade a ser implementada
+                          }}
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                      );
                     }
                   })()}
                 </div>
