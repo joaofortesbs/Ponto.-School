@@ -46,10 +46,8 @@ import {
   Download,
   MoreVertical,
   UserPlus,
-  Settings,
 } from "lucide-react";
 import { DiscussoesTab } from "./group-detail/tabs/DiscussoesTab";
-import GroupSettingsModal from "./group-detail/GroupSettingsModal";
 
 interface GroupDetailProps {
   group: any; // Replace with proper type
@@ -59,7 +57,6 @@ interface GroupDetailProps {
 const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
   const [activeTab, setActiveTab] = useState("discussoes");
   const [searchQuery, setSearchQuery] = useState("");
-  const [showSettingsModal, setShowSettingsModal] = useState(false);
   const { theme } = useTheme();
 
   // Mock data for the component
@@ -262,13 +259,6 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
               onClick={() => setActiveTab("sobre")}
             >
               <Info className="h-4 w-4 mr-2" /> Sobre
-            </TabsTrigger>
-            <TabsTrigger
-              value="configuracoes"
-              className="px-4 py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[#FF6B00] data-[state=active]:text-[#FF6B00] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
-              onClick={() => setShowSettingsModal(true)}
-            >
-              <Settings className="h-4 w-4 mr-2" /> Configurações
             </TabsTrigger>
           </div>
         </TabsList>
@@ -843,13 +833,6 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
           </div>
         )}
       </div>
-
-      {/* Modal de Configurações */}
-      <GroupSettingsModal
-        isOpen={showSettingsModal}
-        onClose={() => setShowSettingsModal(false)}
-        group={group}
-      />
     </div>
   );
 };
