@@ -1,0 +1,39 @@
+
+};
+setInterval(() => {
+  updateOnlineCount().then(count => {
+    const onlineNumber = document.getElementById('online-number');
+    if (onlineNumber) onlineNumber.textContent = count;
+  });
+}, 15000);
+updateOnlineCount().then(count => {
+  const onlineNumber = document.getElementById('online-number');
+  if (onlineNumber) onlineNumber.textContent = count;
+});
+
+const groupInterface = document.createElement('div');
+groupInterface.id = 'group-interface';
+groupInterface.style.cssText = 'margin-left: 250px; padding: 20px;';
+groupInterface.innerHTML = `
+  <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #ccc; padding-bottom: 10px;">
+    <div class="mini-sections">
+      <button class="active" style="background: #3498db; color: white; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 5px;" onclick="switchSection('discussions', '${groupId}')">Discussões</button>
+      <button style="background: #ddd; color: #666; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 5px;" onclick="switchSection('members', '${groupId}')">Membros</button>
+      <button disabled style="background: #ddd; color: #666; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 5px;">Tarefas</button>
+      <button style="background: #ddd; color: #666; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 5px;" id="settings-button-${groupId}">Ajustes</button>
+      <button disabled style="background: #ddd; color: #666; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 5px;">Notificações</button>
+    </div>
+    <div style="display: flex; align-items: center;">
+      <span id="online-count" style="margin-right: 10px; color: #2ecc71;">Online: <span id="online-number">0</span></span>
+      <button id="search-icon" style="background: none; border: none; cursor: pointer; margin-right: 10px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+      </button>
+      <button id="menu-icon" style="background: none; border: none; cursor: pointer;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle>
+        </svg>
+      </button>
+    </div>
+  </div>
