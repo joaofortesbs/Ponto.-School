@@ -387,7 +387,7 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
           <div className="p-4">
             <div className="bg-gray-100 dark:bg-[#1a2236] rounded-lg p-4 shadow-sm">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold">Membros do Grupo</h3>
+                <h3 className="text-lg font-bold">Membros do Grupo ({members.length})</h3>
                 <div className="flex gap-2">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />

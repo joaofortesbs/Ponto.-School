@@ -97,7 +97,7 @@ const GroupCard: React.FC<GroupCardProps> = ({ group, onClick, view, onLeave }) 
         <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-100 dark:border-gray-800">
           <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
             <Users className="h-3.5 w-3.5 text-[#FF6B00]" />
-            <span>{group.membros} membros</span>
+            <span>{group.membros || 0} membros</span>
           </div>
 
           {group.proximaReuniao && (
