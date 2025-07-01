@@ -974,7 +974,7 @@ const AjustesTab: React.FC<AjustesTabProps> = ({ group, onSave }) => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden min-h-[800px]">
         {/* Header */}
         <div className="p-6 border-b border-orange-200/50 dark:border-orange-700/30 bg-white/30 dark:bg-[#0A0E1A]/30 backdrop-blur-sm">
           <div className="flex items-center justify-between">
@@ -990,7 +990,7 @@ const AjustesTab: React.FC<AjustesTabProps> = ({ group, onSave }) => {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-6 min-h-[700px]">
           {renderContent()}
         </div>
 
