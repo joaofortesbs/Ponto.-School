@@ -229,7 +229,7 @@ const MembersSection: React.FC<{ groupId: string }> = ({ groupId }) => {
                       // Se for o próprio usuário, apenas ícone de inspecionar
                       return (
                         <button
-                          className="text-[#FF6B00] hover:text-[#FF8C40] transition-colors"
+                          className="text-white hover:text-[#FF6B00] transition-colors"
                           title="Inspecionar Perfil"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -245,7 +245,7 @@ const MembersSection: React.FC<{ groupId: string }> = ({ groupId }) => {
                       return (
                         <>
                           <button
-                            className="text-[#FF6B00] hover:text-[#FF8C40] transition-colors"
+                            className="text-white hover:text-[#FF6B00] transition-colors"
                             title="Inspecionar Perfil"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -283,7 +283,7 @@ const MembersSection: React.FC<{ groupId: string }> = ({ groupId }) => {
                       // Se for membro comum vendo outros membros, apenas ícone de inspecionar
                       return (
                         <button
-                          className="text-[#FF6B00] hover:text-[#FF8C40] transition-colors"
+                          className="text-white hover:text-[#FF6B00] transition-colors"
                           title="Inspecionar Perfil"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -1523,7 +1523,7 @@ const GruposEstudoView: React.FC = () => {
                                                   <span className="text-[#001427] dark:text-white font-medium">{activeGroup.tipo_grupo}</span>
                                               </div>
                                               <div className="flex justify-between">
-                                                  <spanclassName="text-[#778DA9] dark:text-gray-400">Área:</span>
+                                                  <span className="text-[#778DA9] dark:text-gray-400">Área:</span>
                                                   <span className="text-[#001427] dark:text-white font-medium">{activeGroup.disciplina_area}</span>
                                               </div>
                                               <div className="flex justify-between">
