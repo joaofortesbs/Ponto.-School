@@ -38,8 +38,47 @@ import EntrarGrupoSuccessModal from "../EntrarGrupoSuccessModal";
 import ChatSection from "@/components/turmas/group-detail/ChatSection";
 import { Shield } from "lucide-react";
 
+// Componente para exibir informações do grupo de forma consistente
+const GroupInfoSection: React.FC<{ activeGroup: any; membersCount: number }> = ({ activeGroup, membersCount }) => {
+  return (
+    <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.1 }}
+        className="px-6 pt-20 pb-4"
+    >
+        <div className="flex items-start justify-between">
+            <div className="flex-1">
+                <h2 className="text-2xl font-bold text-[#001427] dark:text-white bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] bg-clip-text text-transparent font-montserrat mb-2">
+                    {activeGroup.nome}
+                </h2>
+                {activeGroup.descricao && (
+                    <p className="text-[#778DA9] dark:text-gray-400 text-sm font-open-sans mb-3">
+                        {activeGroup.descricao}
+                    </p>
+                )}
+                <div className="flex items-center gap-3">
+                    {activeGroup.disciplina_area && (
+                        <span className="px-3 py-1 bg-[#FF6B00]/10 text-[#FF6B00] rounded-full text-xs font-medium">
+                            {activeGroup.disciplina_area}
+                        </span>
+                    )}
+                    <span className="flex items-center gap-1 text-[#778DA9] dark:text-gray-400 text-xs">
+                        <Users className="w-3 h-3" />
+                        {membersCount} {membersCount === 1 ? 'membro' : 'membros'}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </motion.div>
+  );
+};
+
 // Componente para exibir membros do grupo
-const MembersSection: React.FC<{ groupId: string }> = ({ groupId }) => {
+const MembersSection: React.FC<{ 
+  groupId: string; 
+  onMembersCountChange: (count: number) => void; 
+}> = ({ groupId, onMembersCountChange }) => {
   const [members, setMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [groupCreatorId, setGroupCreatorId] = useState<string | null>(null);
@@ -146,6 +185,7 @@ const MembersSection: React.FC<{ groupId: string }> = ({ groupId }) => {
 
         console.log(`Total de usuários para exibir: ${allMembersWithProfiles.length}`);
         setMembers(allMembersWithProfiles);
+        onMembersCountChange(allMembersWithProfiles.length);
 
       } catch (error) {
         console.error('Erro geral ao carregar membros:', error);
@@ -386,6 +426,7 @@ const GruposEstudoView: React.FC = () => {
   const [groupCoverImage, setGroupCoverImage] = useState<string | null>(null);
   const [groupProfileImage, setGroupProfileImage] = useState<string | null>(null);
   const [isCurrentUserAdmin, setIsCurrentUserAdmin] = useState(false);
+  const [groupMembersCount, setGroupMembersCount] = useState<number>(0);
 
   // Função para validar autenticação do usuário
   const validateUserAuth = async () => {
@@ -1242,6 +1283,50 @@ const GruposEstudoView: React.FC = () => {
     loadAllGroups();
   }, []);
 
+  // Carregar quantidade inicial de membros quando grupo for ativo
+  useEffect(() => {
+    const loadInitialMembersCount = async () => {
+      if (!activeGroup?.id) return;
+
+      try {
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        if (userError || !user) return;
+
+        // Buscar dados do grupo para obter o criador_id
+        const { data: groupData, error: groupError } = await supabase
+          .from('grupos_estudo')
+          .select('criador_id')
+          .eq('id', activeGroup.id)
+          .single();
+
+        if (groupError) return;
+
+        // Buscar membros do grupo
+        const { data: membersData, error: membersError } = await supabase
+          .from('membros_grupos')
+          .select('user_id')
+          .eq('grupo_id', activeGroup.id);
+
+        if (membersError) return;
+
+        // Sempre incluir o criador na contagem
+        const allUserIds = new Set();
+        if (membersData && membersData.length > 0) {
+          membersData.forEach(m => allUserIds.add(m.user_id));
+        }
+        if (groupData?.criador_id) {
+          allUserIds.add(groupData.criador_id);
+        }
+
+        setGroupMembersCount(allUserIds.size);
+      } catch (error) {
+        console.error('Erro ao carregar quantidade inicial de membros:', error);
+      }
+    };
+
+    loadInitialMembersCount();
+  }, [activeGroup?.id]);
+
   // Filtrar grupos baseado no termo de busca
   const filteredGroups = () => {
     let groups = [];
@@ -1389,36 +1474,10 @@ const GruposEstudoView: React.FC = () => {
               </div>
 
               {/* Informações do grupo */}
-              <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: 0.1 }}
-                  className="px-6 pt-20 pb-4"
-              >
-                  <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                          <h2 className="text-2xl font-bold text-[#001427] dark:text-white bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] bg-clip-text text-transparent font-montserrat mb-2">
-                              {activeGroup.nome}
-                          </h2>
-                          {activeGroup.descricao && (
-                              <p className="text-[#778DA9] dark:text-gray-400 text-sm font-open-sans mb-3">
-                                  {activeGroup.descricao}
-                              </p>
-                          )}
-                          <div className="flex items-center gap-3">
-                              {activeGroup.disciplina_area && (
-                                  <span className="px-3 py-1 bg-[#FF6B00]/10 text-[#FF6B00] rounded-full text-xs font-medium">
-                                      {activeGroup.disciplina_area}
-                                  </span>
-                              )}
-                              <span className="flex items-center gap-1 text-[#778DA9] dark:text-gray-400 text-xs">
-                                  <Users className="w-3 h-3" />
-                                  1 membro
-                              </span>
-                          </div>
-                      </div>
-                  </div>
-              </motion.div>
+              <GroupInfoSection 
+                  activeGroup={activeGroup} 
+                  membersCount={groupMembersCount}
+              />
 
               {/* Mini-seções */}
               <div className="flex items-center gap-4 px-6 pb-4 border-b border-[#FF6B00]/10">
@@ -1478,7 +1537,10 @@ const GruposEstudoView: React.FC = () => {
                       </div>
                   )}
                   {activeTab === 'membros' && (
-                      <MembersSection groupId={activeGroup.id} />
+                      <MembersSection 
+                          groupId={activeGroup.id} 
+                          onMembersCountChange={setGroupMembersCount}
+                      />
                   )}
                   {activeTab === 'eventos' && (
                       <div className="h-full">
