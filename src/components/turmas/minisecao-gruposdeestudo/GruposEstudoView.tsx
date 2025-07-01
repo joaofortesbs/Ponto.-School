@@ -806,7 +806,6 @@ const GruposEstudoView: React.FC = () => {
           disciplina_area,
           topico_especifico,
           tags,
-          ```text
           is_public,
           is_visible_to_all,
           is_visible_to_partners,
