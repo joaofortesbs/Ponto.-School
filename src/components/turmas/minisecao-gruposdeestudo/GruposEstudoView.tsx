@@ -1352,11 +1352,11 @@ const GruposEstudoView: React.FC = () => {
     nome: group.nome,
     disciplina: group.disciplina_area || group.tipo_grupo || "Geral",
     descricao: group.descricao || "Sem descrição disponível",
-    membros: 1, // Placeholder - você pode buscar o número real de membros se necessário
+    membros: 0, // Será calculado dinamicamente pelo GroupCard
     proximaReuniao: undefined,
     tags: group.tags || [],
-    privacidade: group.is_private ? "privado" : group.is_visible_to_all ? "publico" : "restrito",
-    icone: <BookOpen className="h-6 w-6 text-[#FF6B00]" />
+    privacidade: group.is_private ? "privado" : group.is_visible_to_all ? "publico" : "privado",
+    codigo: group.codigo_unico
   });
 
   const handleGroupClick = (group: GrupoEstudo) => {

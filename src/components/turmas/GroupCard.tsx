@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Calendar, Users, MessageCircle, Lock, Globe, LogOut } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface GroupCardProps {
   group: {
@@ -23,6 +24,54 @@ interface GroupCardProps {
 }
 
 const GroupCard: React.FC<GroupCardProps> = ({ group, onClick, view, onLeave }) => {
+  const [realMembersCount, setRealMembersCount] = useState<number>(group.membros || 0);
+
+  useEffect(() => {
+    const loadMembersCount = async () => {
+      if (!group.id) return;
+
+      try {
+        // Buscar dados do grupo para obter o criador_id
+        const { data: groupData, error: groupError } = await supabase
+          .from('grupos_estudo')
+          .select('criador_id')
+          .eq('id', group.id)
+          .single();
+
+        if (groupError) {
+          console.error('Erro ao buscar dados do grupo:', groupError);
+          return;
+        }
+
+        // Buscar membros do grupo
+        const { data: membersData, error: membersError } = await supabase
+          .from('membros_grupos')
+          .select('user_id')
+          .eq('grupo_id', group.id);
+
+        if (membersError) {
+          console.error('Erro ao buscar membros do grupo:', membersError);
+          return;
+        }
+
+        // Sempre incluir o criador na contagem
+        const allUserIds = new Set();
+        if (membersData && membersData.length > 0) {
+          membersData.forEach(m => allUserIds.add(m.user_id));
+        }
+        if (groupData?.criador_id) {
+          allUserIds.add(groupData.criador_id);
+        }
+
+        setRealMembersCount(allUserIds.size);
+      } catch (error) {
+        console.error('Erro ao carregar quantidade de membros do card:', error);
+      }
+    };
+
+    loadMembersCount();
+  }, [group.id]);
+
   const getPrivacyIcon = () => {
     switch (group.privacidade) {
       case "publico":
@@ -97,7 +146,7 @@ const GroupCard: React.FC<GroupCardProps> = ({ group, onClick, view, onLeave }) 
         <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-100 dark:border-gray-800">
           <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
             <Users className="h-3.5 w-3.5 text-[#FF6B00]" />
-            <span>{group.membros || 0} membros</span>
+            <span>{realMembersCount} membros</span>
           </div>
 
           {group.proximaReuniao && (
