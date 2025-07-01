@@ -4,30 +4,23 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  Users,
-  Plus,
-  Search,
-  BookOpen,
-  Lightbulb,
-  Target,
-  Trophy,
-  Star,
-  Globe,
-  Lock,
-  UserPlus,
-  MessageCircle,
-  Calendar,
-  ArrowRight,
-  ArrowLeft,
-  CheckCircle,
-  AlertCircle,
-  Sparkles,
-  Settings,
-  Info,
-  Eye,
-  UserMinus,
-} from "lucide-react";
+    Users,
+    Calendar,
+    MessageCircle,
+    FileText,
+    Settings,
+    UserPlus,
+    LogOut,
+    Clock,
+    Star,
+    ChevronRight,
+    X,
+    AlertCircle,
+    CheckCircle,
+    Coffee,
+} from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/components/ThemeProvider";
@@ -37,6 +30,7 @@ import AddGroupModal from "../AddGroupModal";
 import EntrarGrupoSuccessModal from "../EntrarGrupoSuccessModal";
 import ChatSection from "@/components/turmas/group-detail/ChatSection";
 import { Shield } from "lucide-react";
+import AjustesTab from '../group-detail/tabs/AjustesTab';
 
 // Componente para exibir informações do grupo de forma consistente
 const GroupInfoSection: React.FC<{ activeGroup: any; membersCount: number }> = ({ activeGroup, membersCount }) => {
@@ -845,7 +839,8 @@ const GruposEstudoView: React.FC = () => {
         memberGroups.forEach(item => {
           const group = item.grupos_estudo;
           if (group && !seenIds.has(group.id)) {
-            allMyGroups.push(group);
+            allMyGroups.push(```tool_code
+group);
             seenIds.add(group.id);
           }
         });
@@ -1638,23 +1633,11 @@ const GruposEstudoView: React.FC = () => {
                           </div>
                       </div>
                   )}
-                  {activeTab === 'ajustes' && (
-                      <div className="h-full">
-                          <div className="bg-white dark:bg-[#1a2236] rounded-lg p-6 h-full">
-                              <div className="flex items-center justify-center h-full">
-                                  <div className="text-center">
-                                      <Settings className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                                      <h3 className="text-lg font-bold text-gray-600 dark:text-gray-400 mb-2">
-                                          Ajustes em Desenvolvimento
-                                      </h3>
-                                      <p className="text-sm text-gray-500 dark:text-gray-500">
-                                          Esta seção estará disponível em breve com opções de configuração do grupo.
-                                      </p>
-                                  </div>
-                              </div>
-                          </div>
-                      </div>
-                  )}
+                 {activeTab === 'ajustes' && (
+                        <div className="h-full">
+                            <AjustesTab groupId={activeGroup.id} />
+                        </div>
+                    )}
                   {/* Conteúdo das outras abas aqui */}
               </div>
           </div>

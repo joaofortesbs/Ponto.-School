@@ -1,7 +1,7 @@
-
 import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, MessageCircle, Users, Calendar, FileText, Settings } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import AjustesTab from './tabs/AjustesTab';
 import GroupDetailHeader from './GroupDetailHeader';
 import GroupTabs from './GroupTabs';
 import ChatSection from './ChatSection';
@@ -91,16 +91,7 @@ export default function GroupDetail({ group, currentUser, onBack }: GroupDetailP
           </div>
         );
       case 'ajustes':
-        return (
-          <div className="p-6 space-y-4">
-            <h3 className="text-xl font-bold text-white mb-4">Ajustes do Grupo</h3>
-            <div className="bg-[#2a4066] rounded-lg p-4 space-y-3">
-              <div className="text-center py-8">
-                <p className="text-gray-300">Esta seção estará disponível em breve.</p>
-              </div>
-            </div>
-          </div>
-        );
+        return <AjustesTab group={group} onSave={(settings) => console.log('Settings saved:', settings)} />;
       default:
         return <PlaceholderSection title="Discussões" message="Selecione uma aba" />;
     }
