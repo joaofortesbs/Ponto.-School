@@ -90,6 +90,17 @@ export default function GroupDetail({ group, currentUser, onBack }: GroupDetailP
             </div>
           </div>
         );
+      case 'ajustes':
+        return (
+          <div className="p-6 space-y-4">
+            <h3 className="text-xl font-bold text-white mb-4">Ajustes do Grupo</h3>
+            <div className="bg-[#2a4066] rounded-lg p-4 space-y-3">
+              <div className="text-center py-8">
+                <p className="text-gray-300">Esta seção estará disponível em breve.</p>
+              </div>
+            </div>
+          </div>
+        );
       default:
         return <PlaceholderSection title="Discussões" message="Selecione uma aba" />;
     }

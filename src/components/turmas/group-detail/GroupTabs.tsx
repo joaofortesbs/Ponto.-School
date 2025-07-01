@@ -1,7 +1,6 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { MessageCircle, Calendar, Users, FileText, Info } from "lucide-react";
+import { MessageCircle, Calendar, Users, FileText, Info, Settings } from "lucide-react";
 
 interface GroupTabsProps {
   activeTab: string;
@@ -15,6 +14,7 @@ export default function GroupTabs({ activeTab, onTabChange }: GroupTabsProps) {
     { id: "members", label: "Membros", icon: Users, enabled: false },
     { id: "files", label: "Arquivos", icon: FileText, enabled: false },
     { id: "about", label: "Sobre", icon: Info, enabled: false },
+    { id: "ajustes", label: "Ajustes", icon: Settings, enabled: false },
   ];
 
   return (

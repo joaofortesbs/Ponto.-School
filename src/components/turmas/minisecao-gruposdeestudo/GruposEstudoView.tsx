@@ -1525,6 +1525,15 @@ const GruposEstudoView: React.FC = () => {
                       <Info className="w-4 h-4 mr-2" />
                       Sobre
                   </Button>
+                  <Button
+                      variant={activeTab === 'ajustes' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setActiveTab('ajustes')}
+                      className={`${activeTab === 'ajustes' ? 'bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white' : 'border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10'} font-montserrat`}
+                  >
+                      <Settings className="w-4 h-4 mr-2" />
+                      Ajustes
+                  </Button>
               </div>
 
               {/* Conteúdo da aba ativa - flex-1 para ocupar espaço restante */}
@@ -1567,55 +1576,80 @@ const GruposEstudoView: React.FC = () => {
                   {activeTab === 'sobre' && (
                       <div className="h-full">
                           <div className="bg-white dark:bg-[#1a2236] rounded-lg p-6 h-full">
-                              <div className="flex items-center justify-between mb-6">
-                                  <h3 className="text-xl font-bold text-[#001427] dark:text-white">Sobre o Grupo</h3>
-                              </div>
-                              <div className="space-y-6">
-                                  <div>
-                                      <h4 className="text-lg font-semibold text-[#001427] dark:text-white mb-3">Descrição</h4>
-                                      <p className="text-[#778DA9] dark:text-gray-400 leading-relaxed">
-                                          {activeGroup.descricao || "Este grupo não possui uma descrição detalhada ainda."}
-                                      </p>
-                                  </div>
-                                  <div className="grid grid-cols-2 gap-6">
+                              <div className="space-y-4">
+                                  <h3 className="text-xl font-bold text-[#001427] dark:text-white mb-4">Sobre o Grupo</h3>
+
+                                  <div className="space-y-3">
                                       <div>
-                                          <h4 className="text-lg font-semibold text-[#001427] dark:text-white mb-3">Informações</h4>
-                                          <div className="space-y-3">
-                                              <div className="flex justify-between">
-                                                  <span className="text-[#778DA9] dark:text-gray-400">Tipo:</span>
-                                                  <span className="text-[#001427] dark:text-white font-medium">{activeGroup.tipo_grupo}</span>
-                                              </div>
-                                              <div className="flex justify-between">
-                                                  <span className="text-[#778DA9] dark:text-gray-400">Área:</span>
-                                                  <span className="text-[#001427] dark:text-white font-medium">{activeGroup.disciplina_area}</span>
-                                              </div>
-                                              <div className="flex justify-between">
-                                                  <span className="text-[#778DA9] dark:text-gray-400">Criado em:</span>
-                                                  <span className="text-[#001427] dark:text-white font-medium">
-                                                      {new Date(activeGroup.created_at).toLocaleDateString('pt-BR')}
-                                                  </span>
-                                              </div>
-                                          </div>
+                                          <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Nome:</label>
+                                          <p className="text-[#001427] dark:text-white font-medium">{activeGroup.nome}</p>
                                       </div>
+
                                       <div>
-                                          <h4 className="text-lg font-semibold text-[#001427] dark:text-white mb-3">Tags</h4>
-                                          <div className="flex flex-wrap gap-2">
-                                              {activeGroup.tags && activeGroup.tags.length > 0 ? (
-                                                  activeGroup.tags.map((tag, index) => (
-                                                      <span
-                                                          key={index}
-                                                          className="px-3 py-1 bg-[#FF6B00]/10 text-[#FF6B00] rounded-full text-sm font-medium"
-                                                      >
+                                          <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Descrição:</label>
+                                          <p className="text-[#001427] dark:text-white">{activeGroup.descricao}</p>
+                                      </div>
+
+                                      <div>
+                                          <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Tipo:</label>
+                                          <p className="text-[#001427] dark:text-white capitalize">{activeGroup.tipo_grupo}</p>
+                                      </div>
+
+                                      <div>
+                                          <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Área/Disciplina:</label>
+                                          <p className="text-[#001427] dark:text-white">{activeGroup.disciplina_area}</p>
+                                      </div>
+
+                                      {activeGroup.topico_especifico && (
+                                          <div>
+                                              <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Tópico:</label>
+                                              <p className="text-[#001427] dark:text-white">{activeGroup.topico_especifico}</p>
+                                          </div>
+                                      )}
+
+                                      {activeGroup.tags && activeGroup.tags.length > 0 && (
+                                          <div>
+                                              <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Tags:</label>
+                                              <div className="flex flex-wrap gap-2 mt-1">
+                                                  {activeGroup.tags.map((tag, index) => (
+                                                      <span key={index} className="bg-[#FF6B00] text-white px-2 py-1 rounded text-xs">
                                                           {tag}
                                                       </span>
-                                                  ))
-                                              ) : (
-                                                  <span className="text-[#778DA9] dark:text-gray-400 text-sm">
-                                                      Nenhuma tag definida
-                                                  </span>
-                                              )}
+                                                  ))}
+                                              </div>
                                           </div>
+                                      )}
+
+                                      <div>
+                                          <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Criado em:</label>
+                                          <p className="text-[#001427] dark:text-white">
+                                              {new Date(activeGroup.created_at).toLocaleDateString('pt-BR')}
+                                          </p>
                                       </div>
+
+                                      <div>
+                                          <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Código do Grupo:</label>
+                                          <p className="text-[#001427] dark:text-white font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+                                              {activeGroup.codigo_unico}
+                                          </p>
+                                      </div>
+                                  </div>
+                              </div>
+                          </div>
+                      </div>
+                  )}
+                  {activeTab === 'ajustes' && (
+                      <div className="h-full">
+                          <div className="bg-white dark:bg-[#1a2236] rounded-lg p-6 h-full">
+                              <div className="flex items-center justify-center h-full">
+                                  <div className="text-center">
+                                      <Settings className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                                      <h3 className="text-lg font-bold text-gray-600 dark:text-gray-400 mb-2">
+                                          Ajustes em Desenvolvimento
+                                      </h3>
+                                      <p className="text-sm text-gray-500 dark:text-gray-500">
+                                          Esta seção estará disponível em breve com opções de configuração do grupo.
+                                      </p>
                                   </div>
                               </div>
                           </div>
