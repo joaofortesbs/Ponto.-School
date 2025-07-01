@@ -37,6 +37,7 @@ import AddGroupModal from "../AddGroupModal";
 import EntrarGrupoSuccessModal from "../EntrarGrupoSuccessModal";
 import ChatSection from "@/components/turmas/group-detail/ChatSection";
 import { Shield } from "lucide-react";
+import GroupSettingsModal from "../GroupSettingsModal";
 
 // Componente para exibir informações do grupo de forma consistente
 const GroupInfoSection: React.FC<{ activeGroup: any; membersCount: number }> = ({ activeGroup, membersCount }) => {
@@ -427,6 +428,7 @@ const GruposEstudoView: React.FC = () => {
   const [groupProfileImage, setGroupProfileImage] = useState<string | null>(null);
   const [isCurrentUserAdmin, setIsCurrentUserAdmin] = useState(false);
   const [groupMembersCount, setGroupMembersCount] = useState<number>(0);
+  const [showGroupSettingsModal, setShowGroupSettingsModal] = useState(false);
 
   // Função para validar autenticação do usuário
   const validateUserAuth = async () => {
@@ -1267,6 +1269,11 @@ const GruposEstudoView: React.FC = () => {
     });
   };
 
+    const handleSaveGroupSettings = (settings: any) => {
+        console.log('Configurações do grupo salvas:', settings);
+        setShowGroupSettingsModal(false);
+    };
+
   // Efeito para carregar dados baseado na view atual
   useEffect(() => {
     console.log('Carregando view:', currentView);
@@ -1528,7 +1535,7 @@ const GruposEstudoView: React.FC = () => {
                   <Button
                       variant={activeTab === 'ajustes' ? 'default' : 'outline'}
                       size="sm"
-                      onClick={() => setActiveTab('ajustes')}
+                      onClick={() => setShowGroupSettingsModal(true)}
                       className={`${activeTab === 'ajustes' ? 'bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white' : 'border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10'} font-montserrat`}
                   >
                       <Settings className="w-4 h-4 mr-2" />
@@ -1538,7 +1545,7 @@ const GruposEstudoView: React.FC = () => {
 
               {/* Conteúdo da aba ativa - flex-1 para ocupar espaço restante */}
               <div className="flex-1 px-6 pb-6 min-h-0">
-                  {activeTab === 'discussoes' && (
+                  {activeTab === 'discussoes' &&(
                       <div className="h-full">
                           <ChatSection 
                             groupId={activeGroup.id}
@@ -1875,6 +1882,16 @@ const GruposEstudoView: React.FC = () => {
           </motion.div>
         </div>
       )}
+      {/* Modal de Configurações do Grupo */}
+          {activeGroup && (
+            <GroupSettingsModal
+              isOpen={showGroupSettingsModal}
+              onClose={() => setShowGroupSettingsModal(false)}
+              group={activeGroup}
+              onSave={handleSaveGroupSettings}
+            />
+          )}
+        </div>
     </div>
   );
 };
