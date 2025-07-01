@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -114,7 +115,7 @@ const AjustesTab: React.FC<AjustesTabProps> = ({ group, onSave }) => {
 
       console.log(`Configurações salvas com sucesso para grupo ${group?.id}`);
       alert('Configurações salvas com sucesso!');
-
+      
       // Chama a função original onSave se existir
       if (onSave) {
         onSave(groupSettings);
@@ -217,7 +218,7 @@ const AjustesTab: React.FC<AjustesTabProps> = ({ group, onSave }) => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 p-8 rounded-2xl border border-orange-200/50 dark:border-orange-800/50 min-h-[500px]">
+            <div className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 p-6 rounded-2xl border border-orange-200/50 dark:border-orange-800/50">
               <div className="flex items-center gap-3 mb-4">
                 <div className="p-2 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl text-white">
                   <Info className="h-5 w-5" />
@@ -226,7 +227,7 @@ const AjustesTab: React.FC<AjustesTabProps> = ({ group, onSave }) => {
                   Informações Básicas do Grupo
                 </h3>
               </div>
-
+              
               <div className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="nome" className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
@@ -383,7 +384,7 @@ const AjustesTab: React.FC<AjustesTabProps> = ({ group, onSave }) => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 p-8 rounded-2xl border border-orange-200/50 dark:border-orange-800/50 min-h-[500px]">
+            <div className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 p-6 rounded-2xl border border-orange-200/50 dark:border-orange-800/50">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-2 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl text-white">
                   <Palette className="h-5 w-5" />
@@ -475,7 +476,7 @@ const AjustesTab: React.FC<AjustesTabProps> = ({ group, onSave }) => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 p-8 rounded-2xl border border-orange-200/50 dark:border-orange-800/50 min-h-[500px]">
+            <div className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 p-6 rounded-2xl border border-orange-200/50 dark:border-orange-800/50">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-2 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl text-white">
                   <Shield className="h-5 w-5" />
@@ -605,7 +606,7 @@ const AjustesTab: React.FC<AjustesTabProps> = ({ group, onSave }) => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 p-8 rounded-2xl border border-orange-200/50 dark:border-orange-800/50 min-h-[500px]">
+            <div className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 p-6 rounded-2xl border border-orange-200/50 dark:border-orange-800/50">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-2 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl text-white">
                   <Target className="h-5 w-5" />
@@ -730,7 +731,7 @@ const AjustesTab: React.FC<AjustesTabProps> = ({ group, onSave }) => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 p-8 rounded-2xl border border-orange-200/50 dark:border-orange-800/50 min-h-[500px]">
+            <div className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 p-6 rounded-2xl border border-orange-200/50 dark:border-orange-800/50">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-2 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl text-white">
                   <Gavel className="h-5 w-5" />
@@ -746,7 +747,7 @@ const AjustesTab: React.FC<AjustesTabProps> = ({ group, onSave }) => {
                     <Gavel className="h-4 w-4" />
                     Regras do Grupo
                   </Label>
-
+                  
                   <div className="space-y-3">
                     {groupSettings.regras.map((regra, index) => (
                       <motion.div
@@ -819,7 +820,7 @@ const AjustesTab: React.FC<AjustesTabProps> = ({ group, onSave }) => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 p-8 rounded-2xl border border-orange-200/50 dark:border-orange-800/50 min-h-[500px]">
+            <div className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 p-6 rounded-2xl border border-orange-200/50 dark:border-orange-800/50">
               <div className="p-4 bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-950/50 dark:to-orange-950/50 rounded-xl border border-red-200/50 dark:border-red-800/50 mb-6">
                 <div className="flex items-center gap-3 text-red-700 dark:text-red-300 mb-2">
                   <AlertTriangle className="h-5 w-5" />
@@ -909,7 +910,7 @@ const AjustesTab: React.FC<AjustesTabProps> = ({ group, onSave }) => {
   };
 
   return (
-    <div className="flex flex-col h-full min-h-[700px] bg-gradient-to-br from-gray-50/50 to-orange-50/50 dark:from-[#0A0E1A] dark:to-[#0F1419]">
+    <div className="flex h-full bg-gradient-to-br from-gray-50/50 to-orange-50/50 dark:from-[#0A0E1A] dark:to-[#0F1419]">
       {/* Sidebar */}
       <div className="w-72 bg-gradient-to-b from-orange-50 to-amber-50 dark:from-[#0F1419] dark:to-[#1A1F2E] border-r border-orange-200/50 dark:border-orange-700/30 flex flex-col overflow-hidden">
         <div className="p-6 border-b border-orange-200/50 dark:border-orange-700/30 bg-white/50 dark:bg-[#0A0E1A]/50 backdrop-blur-sm">
