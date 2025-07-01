@@ -40,11 +40,23 @@ const MembersSection: React.FC<{ groupId: string }> = ({ groupId }) => {
   const [members, setMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [groupCreatorId, setGroupCreatorId] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
     const loadMembers = async () => {
       try {
         setLoading(true);
+
+        // Obter usuário atual primeiro
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        if (userError) {
+          console.error('Erro ao obter usuário atual:', userError);
+          return;
+        }
+        
+        if (user) {
+          setCurrentUserId(user.id);
+        }
 
         // Buscar dados do grupo para obter o criador_id
         const { data: groupData, error: groupError } = await supabase
@@ -202,10 +214,12 @@ const MembersSection: React.FC<{ groupId: string }> = ({ groupId }) => {
 
                 {/* Ícones de administração - sempre visíveis */}
                 <div className="absolute top-2 right-2 flex gap-1 transition-opacity duration-200">
-                  {/* Buscar dados do usuário atual para verificar cargo */}
                   {(() => {
-                    const { data: { user } } = supabase.auth.getUser();
-                    const currentUserId = user?.id;
+                    if (!currentUserId) {
+                      // Se ainda não carregou o usuário atual, não mostra ícones
+                      return null;
+                    }
+
                     const isCurrentUser = member.id === currentUserId;
                     const isCurrentUserAdminOrOwner = groupCreatorId === currentUserId;
                     
