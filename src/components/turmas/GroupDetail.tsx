@@ -48,6 +48,7 @@ import {
   UserPlus,
 } from "lucide-react";
 import { DiscussoesTab } from "./group-detail/tabs/DiscussoesTab";
+import GroupSettingsModal from "./group-detail/GroupSettingsModal";
 
 interface GroupDetailProps {
   group: any; // Replace with proper type
@@ -57,6 +58,7 @@ interface GroupDetailProps {
 const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
   const [activeTab, setActiveTab] = useState("discussoes");
   const [searchQuery, setSearchQuery] = useState("");
+  const [showGroupSettingsModal, setShowGroupSettingsModal] = useState(false);
   const { theme } = useTheme();
 
   // Mock data for the component
@@ -171,6 +173,12 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
     console.log("Searching for:", searchQuery);
   };
 
+  const handleSaveGroupSettings = (settings: any) => {
+    console.log("Salvando configurações do grupo:", settings);
+    // Aqui você implementaria a lógica para salvar as configurações no backend
+    setShowGroupSettingsModal(false);
+  };
+
   return (
     <div className="w-full h-full bg-white dark:bg-[#0f1525] text-gray-900 dark:text-white p-0 overflow-hidden flex flex-col">
       {/* Fixed Header with Cover Image */}
@@ -259,6 +267,15 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
               onClick={() => setActiveTab("sobre")}
             >
               <Info className="h-4 w-4 mr-2" /> Sobre
+            </TabsTrigger>
+            <TabsTrigger
+              value="configuracoes"
+              className="px-4 py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[#FF6B00] data-[state=active]:text-[#FF6B00] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
+              onClick={() => setShowGroupSettingsModal(true)}
+            >
+              <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 8V16M8 12H16M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg> Configurações
             </TabsTrigger>
           </div>
         </TabsList>
@@ -833,6 +850,16 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
           </div>
         )}
       </div>
+
+      {/* Modal de Configurações do Grupo */}
+      {showGroupSettingsModal && (
+        <GroupSettingsModal
+          isOpen={showGroupSettingsModal}
+          onClose={() => setShowGroupSettingsModal(false)}
+          group={group}
+          onSave={handleSaveGroupSettings}
+        />
+      )}
     </div>
   );
 };
