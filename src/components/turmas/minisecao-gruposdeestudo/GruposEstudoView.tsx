@@ -87,7 +87,7 @@ const MembersSection: React.FC<{ groupId: string }> = ({ groupId }) => {
             .eq('grupo_id', groupId)
             .eq('user_id', userId)
             .single();
-          
+
           if (memberData?.cargo) {
             userRole = memberData.cargo;
           }
@@ -250,23 +250,24 @@ const MembersSection: React.FC<{ groupId: string }> = ({ groupId }) => {
             {members.map((member) => {
               const isCurrentUser = member.id === currentUserId;
               const isCurrentUserAdminOrOwner = currentUserRole === 'admin' || currentUserRole === 'owner';
-              
-              console.log(`Renderizando membro:`, {
-                id: member.id,
+
+              console.log(`🎨 Renderizando card do membro:`, {
+                id: member.id.slice(0, 8),
                 name: member.name,
                 isCurrentUser,
                 isCurrentUserAdminOrOwner,
                 currentUserRole,
-                memberCargo: member.cargo
+                memberCargo: member.cargo,
+                isCreator: member.isCreator
               });
-              
+
               return (
                 <div
                   key={member.id}
-                  className={`relative group bg-[#f7f9fa] dark:bg-[#29335C]/20 rounded-lg p-4 border transition-all hover:shadow-md ${
+                  className={`relative group bg-white dark:bg-[#29335C]/50 rounded-lg p-4 border transition-all hover:shadow-lg ${
                     member.isCreator 
-                      ? 'border-[#FF6B00] border-2' 
-                      : 'border-[#FF6B00]/10 hover:border-[#FF6B00]/30'
+                      ? 'border-[#FF6B00] border-2 bg-gradient-to-br from-[#FF6B00]/5 to-[#FF8C40]/5' 
+                      : 'border-gray-200 dark:border-gray-700 hover:border-[#FF6B00]/50'
                   }`}
                   style={{ minWidth: '200px', height: 'auto' }}
                 >
@@ -805,6 +806,7 @@ const GruposEstudoView: React.FC = () => {
           disciplina_area,
           topico_especifico,
           tags,
+          ```text
           is_public,
           is_visible_to_all,
           is_visible_to_partners,
