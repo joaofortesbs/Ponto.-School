@@ -1066,3 +1066,265 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
 };
 
 export default GroupSettingsModal;
+import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { X, Settings, Users, Shield, Trash2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { supabase } from '@/integrations/supabase/client';
+
+interface GroupSettingsModalProps {
+  groupId: string;
+  onClose: () => void;
+}
+
+export const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
+  groupId,
+  onClose
+}) => {
+  const [groupData, setGroupData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [formData, setFormData] = useState({
+    nome: '',
+    descricao: '',
+    is_public: false,
+    is_visible_to_all: false,
+    is_visible_to_partners: false,
+    is_private: false
+  });
+
+  useEffect(() => {
+    loadGroupData();
+  }, [groupId]);
+
+  const loadGroupData = async () => {
+    try {
+      console.log('Loading group data for settings:', groupId);
+      
+      const { data: group, error } = await supabase
+        .from('grupos_estudo')
+        .select('*')
+        .eq('id', groupId)
+        .single();
+
+      if (error) {
+        console.error('Error loading group data:', error);
+        return;
+      }
+
+      console.log('Group data loaded:', group);
+      setGroupData(group);
+      setFormData({
+        nome: group.nome || '',
+        descricao: group.descricao || '',
+        is_public: group.is_public || false,
+        is_visible_to_all: group.is_visible_to_all || false,
+        is_visible_to_partners: group.is_visible_to_partners || false,
+        is_private: group.is_private || false
+      });
+    } catch (error) {
+      console.error('Error in loadGroupData:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      console.log('Saving group settings:', formData);
+
+      const { error } = await supabase
+        .from('grupos_estudo')
+        .update(formData)
+        .eq('id', groupId);
+
+      if (error) {
+        console.error('Error saving group settings:', error);
+        alert('Erro ao salvar configurações');
+        return;
+      }
+
+      console.log('Group settings saved successfully');
+      alert('Configurações salvas com sucesso!');
+      onClose();
+    } catch (error) {
+      console.error('Error in handleSave:', error);
+      alert('Erro ao salvar configurações');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center">
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-6">
+          <div className="text-center">Carregando configurações...</div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.9 }}
+        className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
+              <Settings className="h-5 w-5 text-orange-600" />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                Configurações do Grupo
+              </h2>
+              <p className="text-sm text-gray-500">
+                {groupData?.nome}
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 space-y-6">
+          {/* Basic Info */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+              Informações Básicas
+            </h3>
+            
+            <div className="space-y-2">
+              <Label htmlFor="nome">Nome do Grupo</Label>
+              <Input
+                id="nome"
+                value={formData.nome}
+                onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                placeholder="Digite o nome do grupo"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="descricao">Descrição</Label>
+              <Textarea
+                id="descricao"
+                value={formData.descricao}
+                onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
+                placeholder="Digite a descrição do grupo"
+                rows={3}
+              />
+            </div>
+          </div>
+
+          {/* Privacy Settings */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+              Configurações de Privacidade
+            </h3>
+            
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>Grupo Público</Label>
+                  <p className="text-sm text-gray-500">
+                    Qualquer usuário pode ver e entrar neste grupo
+                  </p>
+                </div>
+                <Switch
+                  checked={formData.is_public}
+                  onCheckedChange={(checked) => setFormData({ ...formData, is_public: checked })}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>Visível para Todos</Label>
+                  <p className="text-sm text-gray-500">
+                    O grupo aparece na lista pública de grupos
+                  </p>
+                </div>
+                <Switch
+                  checked={formData.is_visible_to_all}
+                  onCheckedChange={(checked) => setFormData({ ...formData, is_visible_to_all: checked })}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>Visível para Parceiros</Label>
+                  <p className="text-sm text-gray-500">
+                    Parceiros da plataforma podem ver este grupo
+                  </p>
+                </div>
+                <Switch
+                  checked={formData.is_visible_to_partners}
+                  onCheckedChange={(checked) => setFormData({ ...formData, is_visible_to_partners: checked })}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>Grupo Privado</Label>
+                  <p className="text-sm text-gray-500">
+                    Apenas membros convidados podem participar
+                  </p>
+                </div>
+                <Switch
+                  checked={formData.is_private}
+                  onCheckedChange={(checked) => setFormData({ ...formData, is_private: checked })}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Group Info */}
+          <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
+            <h4 className="font-medium text-gray-900 dark:text-white mb-2">
+              Informações do Grupo
+            </h4>
+            <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+              <div>Código do Grupo: <span className="font-mono">{groupData?.codigo_unico}</span></div>
+              <div>Criado em: {new Date(groupData?.created_at).toLocaleDateString('pt-BR')}</div>
+              <div>Tipo: {groupData?.tipo_grupo}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700">
+          <Button
+            variant="outline"
+            onClick={onClose}
+            disabled={saving}
+          >
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleSave}
+            disabled={saving}
+            className="bg-orange-600 hover:bg-orange-700"
+          >
+            {saving ? 'Salvando...' : 'Salvar Alterações'}
+          </Button>
+        </div>
+      </motion.div>
+    </div>
+  );
+};

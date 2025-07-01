@@ -5,6 +5,7 @@ import GroupDetailHeader from './GroupDetailHeader';
 import GroupTabs from './GroupTabs';
 import ChatSection from './ChatSection';
 import PlaceholderSection from './PlaceholderSection';
+import { GroupSettingsModal } from './GroupSettingsModal';
 
 interface GroupDetailInterfaceProps {
   groupId: string;
@@ -20,6 +21,10 @@ export default function GroupDetailInterface({
   currentUser
 }: GroupDetailInterfaceProps) {
   const [activeTab, setActiveTab] = useState('discussions');
+  const [onlineCount, setOnlineCount] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showSearch, setShowSearch] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -62,6 +67,17 @@ export default function GroupDetailInterface({
       <div className="group-content">
         {renderTabContent()}
       </div>
+
+      {/* Settings Modal */}
+      {showSettingsModal && (
+        <GroupSettingsModal
+          groupId={groupId}
+          onClose={() => {
+            setShowSettingsModal(false);
+            console.log('Settings modal closed');
+          }}
+        />
+      )}
     </div>
   );
 }
