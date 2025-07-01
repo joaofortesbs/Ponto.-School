@@ -1,0 +1,151 @@
+
+
+Objetivo: Configurar apenas os ícones no canto superior direito dos cards de perfil que já aparecem na mini-seção "Membros" dentro da interface interna dos Grupos de Estudos, sem alterar a lógica de exibição dos cards dos perfis dos usuários, que devem continuar aparecendo normalmente. Para membros comuns (sem cargo), o próprio card e os cards dos outros usuários devem exibir apenas o ícone de "Inspecionar Perfil" (representado por um olho). Para administradores ou dono do grupo, o próprio card deve exibir apenas o ícone de "Inspecionar Perfil", enquanto os cards dos outros usuários devem exibir três ícones. As alterações devem ser feitas de forma cuidadosa, preservando todas as funcionalidades existentes, sem alterar elementos fora de contexto ou introduzir erros/bugs, e mantendo o design/layout da mini-seção "Grupos de Estudos" (incluindo modals de "Adicionar Grupo" e "Criar Novo Grupo").
+
+
+
+Instruções Gerais
+
+
+
+
+
+Escopo Restrito: Foque exclusivamente na função loadMembers no frontend para adicionar ou ajustar apenas a lógica dos ícones nos cards de perfil que já estão sendo exibidos. Não modifique a lógica de carregamento ou renderização dos cards, nem o design ou layout das outras mini-seções ("Discussões", "Tarefas", "Configurações", "Notificações"), nem os modals de "Adicionar Grupo" e "Criar Novo Grupo", nem outras partes do código (ex.: createGroup, joinGroupByCode, loadAllGroups).
+
+
+
+Preservação: Mantenha intactas todas as funcionalidades existentes (criação via modal, adesão, saída/exclusão, chat, pesquisa, contagem de online, modal de configurações) e garanta que os cards de perfil continuem aparecendo normalmente, apenas ajustando os ícones.
+
+
+
+Eficiência: Use Supabase para verificar o cargo do usuário (ex.: tabela membros_grupos com colunas como cargo) e adicione os ícones com eventos de clique simulados para futura implementação, com validação e logs para evitar falhas.
+
+
+
+Testes Completos: Após as alterações, teste a mini-seção "Membros" e envie os logs.
+
+
+
+Análise de Cenários
+
+
+
+
+
+Cenário 1: Membro Comum - O próprio card e os cards dos outros usuários devem exibir apenas o ícone de olho ("Inspecionar Perfil").
+
+
+
+Cenário 2: Administrador ou Dono - O próprio card deve exibir apenas o ícone de olho, enquanto os cards dos outros usuários devem exibir três ícones (olho, mais dois placeholders).
+
+
+
+Cenário 3: Troca de Cargo - Alterar o cargo do usuário via Supabase e verificar se os ícones são atualizados dinamicamente.
+
+
+
+Cenário 4: Erro de Dados - Implementar retry para carregar os cargos em caso de falha.
+
+
+
+Descrição dos Ícones
+
+
+
+
+
+Ícone de "Inspecionar Perfil" (Olho): Representado por <svg> com ícone de olho (ex.: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7"></path></svg>), com evento onclick="inspectProfile('${userId}')" (a implementar).
+
+
+
+Outros Dois Ícones (Placeholders): Representados por <svg> genérico (ex.: três pontos para ações futuras) e um ícone de engrenagem, ambos com eventos onclick placeholders (ex.: action1('${userId}'), action2('${userId}')).
+
+
+
+Posicionamento: Alinhados à direita no topo de cada card, com position: absolute; top: 10px; right: 10px;.
+
+
+
+Modificações no Frontend (JavaScript)
+
+ // Função para carregar e exibir membros com ícones baseados no cargo (apenas ícones ajustados) const loadMembers = async (groupId, userCache, currentUserId, isCurrentUserAdminOrOwner) => { try { console.log(`Carregando membros para o grupo ${groupId}...`); const now = new Date(); const { data: members, error: membersError } = await supabase .from('membros_grupos') .select('user_id, cargo') .eq('grupo_id', groupId); if (membersError) throw membersError; if (!members || members.length === 0) { console.warn('Nenhum membro encontrado para o grupo.'); document.getElementById('members-grid').innerHTML = '
+
+Nenhum membro encontrado.
+
+'; return; } console.log(`Membros encontrados: ${members.length}`); 
+
+const { data: sessions, error: sessionsError } = await supabase
+  .from('user_sessions')
+  .select('user_id')
+  .eq('grupo_id', groupId)
+  .gte('last_active', new Date(now - 30 * 1000).toISOString());
+if (sessionsError) throw sessionsError;
+const onlineUsers = new Set(sessions.map(s => s.user_id));
+console.log(`Usuários online: ${onlineUsers.size}`);
+
+const membersGrid = document.getElementById('members-grid');
+const existingCards = membersGrid.getElementsByTagName('div'); // Preservar cards existentes
+members.forEach((member, index) => {
+  const userData = userCache.get(member.user_id);
+  if (!userData) {
+    console.warn(`Dados não encontrados para o usuário ${member.user_id}`);
+    return;
+  }
+  const isOnline = onlineUsers.has(member.user_id);
+  const isCurrentUser = member.user_id === currentUserId;
+  const isAdminOrOwner = member.cargo === 'admin' || member.cargo === 'owner';
+  let memberCard = existingCards[index];
+
+  if (memberCard) {
+    // Ajustar apenas os ícones no card existente
+    const iconsContainer = memberCard.querySelector('div[style*="position: absolute; top: 10px; right: 10px;"]') || document.createElement('div');
+    if (!iconsContainer.parentNode) memberCard.appendChild(iconsContainer);
+    iconsContainer.style.cssText = 'position: absolute; top: 10px; right: 10px; display: flex; gap: 5px;';
+    iconsContainer.innerHTML = '';
+
+    if (isCurrentUser) {
+      // Apenas ícone de inspecionar perfil para o usuário atual (membro ou admin/dono)
+      const eyeIcon = document.createElement('button');
+      eyeIcon.style.cssText = 'background: none; border: none; cursor: pointer;';
+      eyeIcon.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7"></path></svg>';
+      eyeIcon.setAttribute('onclick', `inspectProfile('${member.user_id}')`);
+      iconsContainer.appendChild(eyeIcon);
+    } else {
+      // Ícones para outros usuários
+      if (!isCurrentUserAdminOrOwner) {
+        // Apenas ícone de inspecionar perfil para membros comuns
+        const eyeIcon = document.createElement('button');
+        eyeIcon.style.cssText = 'background: none; border: none; cursor: pointer;';
+        eyeIcon.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7"></path></svg>';
+        eyeIcon.setAttribute('onclick', `inspectProfile('${member.user_id}')`);
+        iconsContainer.appendChild(eyeIcon);
+      } else {
+        // Três ícones para admin/dono vendo outros usuários
+        const eyeIcon = document.createElement('button');
+        eyeIcon.style.cssText = 'background: none; border: none; cursor: pointer;';
+        eyeIcon.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7"></path></svg>';
+        eyeIcon.setAttribute('onclick', `inspectProfile('${member.user_id}')`);
+        iconsContainer.appendChild(eyeIcon);
+
+        const action1Icon = document.createElement('button');
+        action1Icon.style.cssText = 'background: none; border: none; cursor: pointer;';
+        action1Icon.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>';
+        action1Icon.setAttribute('onclick', `action1('${member.user_id}')`);
+        iconsContainer.appendChild(action1Icon);
+
+        const action2Icon = document.createElement('button');
+        action2Icon.style.cssText = 'background: none; border: none; cursor: pointer;';
+        action2Icon.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg>';
+        action2Icon.setAttribute('onclick', `action2('${member.user_id}')`);
+        iconsContainer.appendChild(action2Icon);
+      }
+    }
+  }
+});
+console.log(`Ícones ajustados com sucesso para o grupo ${groupId}.`);
+
+} catch (error) { console.error('Erro ao ajustar ícones:', error.message, error.stack); alert('Erro ao ajustar ícones. Verifique o console.'); setTimeout(() => loadMembers(groupId, userCache, currentUserId, isCurrentUserAdminOrOwner), 2000); } };
+
+// Função para alternar entre seções (sem alterar lógica existente) const switchSection = (section, groupId) => { const sections = ['discussions', 'members']; sections.forEach(s => { const content = document.getElementById(${s}-content); if (content) content.style.display = s === section ? 'block' : 'none'; const button = document.querySelector(button[onclick*="switchSection('${s}'"]); if (button) { button.style.background = s === section ? '#3498db' : '#ddd'; button.style.color = s === section ? 'white' : '#666'; } }); if (section === 'members') { loadMembers(groupId, userCache, userId, isAdminOrOwner); } console.log(Seção ${section} ativada para o grupo ${groupId}.); };
+
+// Funções auxiliares mantidas (returnToGroups, updateOnlineCount, filterMessages, hideSearchBar, loadInitialMessages, showOptionsModal, showSettingsModal, addMessageToChat, sendMessage, etc.) sem alterações
