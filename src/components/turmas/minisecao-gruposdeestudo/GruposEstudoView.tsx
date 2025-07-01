@@ -839,8 +839,7 @@ const GruposEstudoView: React.FC = () => {
         memberGroups.forEach(item => {
           const group = item.grupos_estudo;
           if (group && !seenIds.has(group.id)) {
-            allMyGroups.push(```tool_code
-group);
+            allMyGroups.push(group);
             seenIds.add(group.id);
           }
         });
