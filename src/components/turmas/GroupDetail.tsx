@@ -49,6 +49,7 @@ import {
   Settings,
 } from "lucide-react";
 import { DiscussoesTab } from "./group-detail/tabs/DiscussoesTab";
+import AjustesTab from "./group-detail/tabs/AjustesTab";
 import GroupSettingsModal from "./group-detail/GroupSettingsModal";
 
 interface GroupDetailProps {
@@ -879,21 +880,7 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
         )}
 
         {activeTab === "configuracoes" && (
-          <div className="p-4">
-            <div className="bg-gray-100 dark:bg-[#1a2236] rounded-lg p-4 shadow-sm">
-              <div className="flex items-center justify-center h-64">
-                <div className="text-center">
-                  <Settings className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-bold text-gray-600 dark:text-gray-400 mb-2">
-                    Configurações em Desenvolvimento
-                  </h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-500">
-                    Esta seção estará disponível em breve com opções de configuração do grupo.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+          <AjustesTab groupId={group.id} group={group} />
         )}
       </div>
 

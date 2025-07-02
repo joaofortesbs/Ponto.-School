@@ -19,10 +19,14 @@ import {
   Save,
   X,
   Plus,
-  AlertTriangle
+  AlertTriangle,
+  Info,
+  BookOpen,
+  Brain,
+  Target,
+  Sparkles
 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 interface GroupSettings {
@@ -58,9 +62,10 @@ interface GroupSettings {
 
 interface AjustesTabProps {
   groupId: string;
+  group: any;
 }
 
-export default function AjustesTab({ groupId }: AjustesTabProps) {
+export default function AjustesTab({ groupId, group }: AjustesTabProps) {
   const [settings, setSettings] = useState<GroupSettings>({
     nome: '',
     descricao: '',
@@ -87,51 +92,82 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [activeSection, setActiveSection] = useState('gerais');
   const [newTag, setNewTag] = useState('');
-  const { user } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
     loadGroupSettings();
-  }, [groupId]);
+  }, [groupId, group]);
 
   const loadGroupSettings = async () => {
     try {
-      const { data: groupData, error } = await supabase
-        .from('grupos_estudo')
-        .select('*')
-        .eq('id', groupId)
-        .single();
+      // Se temos os dados do grupo passados como prop, usamos eles
+      if (group) {
+        setSettings({
+          nome: group.nome || '',
+          descricao: group.descricao || '',
+          disciplina_area: group.disciplina_area || '',
+          topico_especifico: group.topico_especifico || '',
+          tags: group.tags || [],
+          codigo_unico: group.codigo_unico || '',
+          is_public: group.is_public ?? false,
+          is_private: group.is_private ?? false,
+          is_visible_to_all: group.is_visible_to_all ?? false,
+          is_visible_to_partners: group.is_visible_to_partners ?? false,
+          max_members: group.max_members ?? 50,
+          require_approval: group.require_approval ?? false,
+          allow_member_invites: group.allow_member_invites ?? true,
+          notify_new_members: group.notify_new_members ?? true,
+          notify_new_messages: group.notify_new_messages ?? true,
+          notify_new_materials: group.notify_new_materials ?? true,
+          backup_automatico: group.backup_automatico ?? true,
+          notificacoes_ativas: group.notificacoes_ativas ?? true,
+          moderacao_automatica: group.moderacao_automatica ?? false
+        });
+      } else {
+        // Caso contrário, buscamos do banco
+        const { data: groupData, error } = await supabase
+          .from('grupos_estudo')
+          .select('*')
+          .eq('id', groupId)
+          .single();
 
-      if (error) throw error;
+        if (error) {
+          console.error('Erro ao carregar configurações do grupo:', error);
+          toast({
+            title: "Erro",
+            description: "Erro ao carregar configurações do grupo",
+            variant: "destructive"
+          });
+          return;
+        }
 
-      setSettings({
-        nome: groupData.nome || '',
-        descricao: groupData.descricao || '',
-        disciplina_area: groupData.disciplina_area || '',
-        topico_especifico: groupData.topico_especifico || '',
-        tags: groupData.tags || [],
-        codigo_unico: groupData.codigo_unico || '',
-        is_public: groupData.is_public ?? false,
-        is_private: groupData.is_private ?? false,
-        is_visible_to_all: groupData.is_visible_to_all ?? false,
-        is_visible_to_partners: groupData.is_visible_to_partners ?? false,
-        max_members: groupData.max_members ?? 50,
-        require_approval: groupData.require_approval ?? false,
-        allow_member_invites: groupData.allow_member_invites ?? true,
-        notify_new_members: groupData.notify_new_members ?? true,
-        notify_new_messages: groupData.notify_new_messages ?? true,
-        notify_new_materials: groupData.notify_new_materials ?? true,
-        backup_automatico: groupData.backup_automatico ?? true,
-        notificacoes_ativas: groupData.notificacoes_ativas ?? true,
-        moderacao_automatica: groupData.moderacao_automatica ?? false,
-      });
-
-      console.log(`Campos da mini-seção Ajustes preenchidos para o grupo ${groupData.id || 'desconhecido'}.`);
+        setSettings({
+          nome: groupData.nome || '',
+          descricao: groupData.descricao || '',
+          disciplina_area: groupData.disciplina_area || '',
+          topico_especifico: groupData.topico_especifico || '',
+          tags: groupData.tags || [],
+          codigo_unico: groupData.codigo_unico || '',
+          is_public: groupData.is_public ?? false,
+          is_private: groupData.is_private ?? false,
+          is_visible_to_all: groupData.is_visible_to_all ?? false,
+          is_visible_to_partners: groupData.is_visible_to_partners ?? false,
+          max_members: groupData.max_members ?? 50,
+          require_approval: groupData.require_approval ?? false,
+          allow_member_invites: groupData.allow_member_invites ?? true,
+          notify_new_members: groupData.notify_new_members ?? true,
+          notify_new_messages: groupData.notify_new_messages ?? true,
+          notify_new_materials: groupData.notify_new_materials ?? true,
+          backup_automatico: groupData.backup_automatico ?? true,
+          notificacoes_ativas: groupData.notificacoes_ativas ?? true,
+          moderacao_automatica: groupData.moderacao_automatica ?? false
+        });
+      }
     } catch (error) {
       console.error('Erro ao carregar configurações:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível carregar as configurações do grupo.",
+        description: "Erro ao carregar configurações do grupo",
         variant: "destructive"
       });
     } finally {
@@ -166,17 +202,27 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
         })
         .eq('id', groupId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao salvar configurações:', error);
+        toast({
+          title: "Erro",
+          description: "Erro ao salvar configurações. Tente novamente.",
+          variant: "destructive"
+        });
+        return;
+      }
 
       toast({
         title: "Sucesso",
         description: "Configurações salvas com sucesso!",
+        variant: "default"
       });
+
     } catch (error) {
       console.error('Erro ao salvar configurações:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível salvar as configurações.",
+        description: "Erro inesperado ao salvar configurações",
         variant: "destructive"
       });
     } finally {
@@ -186,646 +232,451 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
 
   const addTag = () => {
     if (newTag.trim() && !settings.tags.includes(newTag.trim())) {
-      setSettings(prev => ({
-        ...prev,
-        tags: [...prev.tags, newTag.trim()]
-      }));
+      setSettings({
+        ...settings,
+        tags: [...settings.tags, newTag.trim()]
+      });
       setNewTag('');
     }
   };
 
   const removeTag = (tagToRemove: string) => {
-    setSettings(prev => ({
-      ...prev,
-      tags: prev.tags.filter(tag => tag !== tagToRemove)
-    }));
+    setSettings({
+      ...settings,
+      tags: settings.tags.filter(tag => tag !== tagToRemove)
+    });
   };
 
-  const menuItems = [
-    { id: 'gerais', label: 'Informações Básicas', icon: Settings },
-    { id: 'aparencia', label: 'Aparência & Tema', icon: Eye },
-    { id: 'privacidade', label: 'Privacidade & Acesso', icon: Shield },
-    { id: 'metas', label: 'Metas & Objetivos', icon: Users },
-    { id: 'regras', label: 'Regras & Conduta', icon: Bell },
-    { id: 'avancado', label: 'Configurações Avançadas', icon: AlertTriangle }
-  ];
-
-  const renderConfiguracoesGerais = () => (
-    <div className="space-y-8">
-      <Card className="shadow-xl border-2 border-orange-200 dark:border-orange-500/30 bg-white dark:bg-[#001327] backdrop-blur-sm">
-        <CardHeader className="bg-gradient-to-r from-orange-50 to-orange-100/50 dark:from-orange-900/20 dark:to-orange-800/20 border-b border-orange-200 dark:border-orange-500/30">
-          <CardTitle className="text-xl font-bold text-gray-800 dark:text-white flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-lg flex items-center justify-center shadow-md">
-              <Settings className="w-4 h-4 text-white" />
-            </div>
-            <span>Informações Básicas</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6 p-8 bg-white dark:bg-[#001327]">
-          <div className="space-y-3">
-            <Label htmlFor="nome" className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center space-x-2">
-              <span>Nome do Grupo</span>
-              <span className="text-orange-500">*</span>
-            </Label>
-            <Input
-              id="nome"
-              value={settings.nome}
-              onChange={(e) => setSettings(prev => ({ ...prev, nome: e.target.value }))}
-              placeholder="Digite o nome do grupo"
-              className="h-12 border-2 border-orange-200 dark:border-orange-500/50 bg-white dark:bg-[#001327] text-gray-900 dark:text-white focus:border-[#FF6B00] focus:ring-2 focus:ring-[#FF6B00]/20 rounded-lg transition-all duration-200"
-            />
-          </div>
-
-          <div className="space-y-3">
-            <Label htmlFor="descricao" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-              Descrição
-            </Label>
-            <Textarea
-              id="descricao"
-              value={settings.descricao}
-              onChange={(e) => setSettings(prev => ({ ...prev, descricao: e.target.value }))}
-              placeholder="Descreva o grupo e seus objetivos"
-              rows={4}
-              className="border-2 border-orange-200 dark:border-orange-500/50 bg-white dark:bg-[#001327] text-gray-900 dark:text-white focus:border-[#FF6B00] focus:ring-2 focus:ring-[#FF6B00]/20 rounded-lg transition-all duration-200 resize-none"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-3">
-              <Label htmlFor="disciplina" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                Disciplina/Área
-              </Label>
-              <Input
-                id="disciplina"
-                value={settings.disciplina_area}
-                onChange={(e) => setSettings(prev => ({ ...prev, disciplina_area: e.target.value }))}
-                placeholder="Ex: Matemática, Física, etc."
-                className="h-12 border-2 border-orange-200 dark:border-orange-500/50 bg-white dark:bg-[#001327] text-gray-900 dark:text-white focus:border-[#FF6B00] focus:ring-2 focus:ring-[#FF6B00]/20 rounded-lg transition-all duration-200"
-              />
-            </div>
-            <div className="space-y-3">
-              <Label htmlFor="topico" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                Tópico Específico
-              </Label>
-              <Input
-                id="topico"
-                value={settings.topico_especifico}
-                onChange={(e) => setSettings(prev => ({ ...prev, topico_especifico: e.target.value }))}
-                placeholder="Ex: Álgebra Linear, Mecânica, etc."
-                className="h-12 border-2 border-orange-200 dark:border-orange-500/50 bg-white dark:bg-[#001327] text-gray-900 dark:text-white focus:border-[#FF6B00] focus:ring-2 focus:ring-[#FF6B00]/20 rounded-lg transition-all duration-200"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <Label htmlFor="codigoUnico" className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center space-x-2">
-              <span>Código Único</span>
-              <div className="w-4 h-4 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-sm flex items-center justify-center">
-                <span className="text-white text-xs font-bold">#</span>
-              </div>
-            </Label>
-            <div className="flex items-center space-x-3">
-              <Input
-                id="codigoUnico"
-                value={settings.codigo_unico || 'Carregando...'}
-                readOnly
-                className="flex-1 h-12 border-2 border-orange-200 dark:border-orange-500/50 bg-orange-50/50 dark:bg-orange-900/20 text-gray-900 dark:text-white font-mono text-center text-lg tracking-wider rounded-lg cursor-default"
-              />
-              <Button
-                type="button"
-                onClick={() => {
-                  if (settings.codigo_unico) {
-                    navigator.clipboard.writeText(settings.codigo_unico);
-                    toast({
-                      title: "Código copiado!",
-                      description: "O código único foi copiado para a área de transferência.",
-                    });
-                  }
-                }}
-                className="h-12 px-4 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white shadow-lg hover:shadow-xl transition-all duration-200 ring-2 ring-orange-200 dark:ring-orange-500/30"
-                disabled={!settings.codigo_unico}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-              </Button>
-            </div>
-            <p className="text-xs text-orange-600 dark:text-orange-400">
-              Compartilhe este código para que outros usuários possam encontrar e entrar no seu grupo
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-              Tags do Grupo
-            </Label>
-            <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-4 border-2 border-orange-200 dark:border-orange-500/30 min-h-[80px]">
-              <div className="flex flex-wrap gap-3 mb-3">
-                {settings.tags.map((tag, index) => (
-                  <Badge 
-                    key={index} 
-                    className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-medium rounded-full shadow-md hover:shadow-lg transition-all duration-200"
-                  >
-                    {tag}
-                    <button
-                      type="button"
-                      onClick={() => removeTag(tag)}
-                      className="text-white hover:text-orange-200 transition-colors duration-200"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </Badge>
-                ))}
-                {settings.tags.length === 0 && (
-                  <span className="text-orange-500 dark:text-orange-400 text-sm italic">
-                    Nenhuma tag adicionada ainda
-                  </span>
-                )}
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <Input
-                value={newTag}
-                onChange={(e) => setNewTag(e.target.value)}
-                placeholder="Digite uma nova tag"
-                onKeyPress={(e) => e.key === 'Enter' && addTag()}
-                className="flex-1 h-12 border-2 border-orange-200 dark:border-orange-500/50 bg-white dark:bg-[#001327] text-gray-900 dark:text-white focus:border-[#FF6B00] focus:ring-2 focus:ring-[#FF6B00]/20 rounded-lg transition-all duration-200"
-              />
-              <Button 
-                type="button" 
-                onClick={addTag} 
-                className="h-12 px-6 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white shadow-lg hover:shadow-xl transition-all duration-200 ring-2 ring-orange-200 dark:ring-orange-500/30"
-              >
-                <Plus className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-
-  const renderPrivacidade = () => (
-    <div className="space-y-6">
-      <Card className="shadow-xl border-2 border-orange-200 dark:border-orange-500/30 bg-white dark:bg-[#001327]">
-        <CardHeader className="bg-gradient-to-r from-orange-50 to-orange-100/50 dark:from-orange-900/20 dark:to-orange-800/20 border-b border-orange-200 dark:border-orange-500/30">
-          <CardTitle className="flex items-center gap-2 text-gray-800 dark:text-white">
-            <div className="w-8 h-8 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-lg flex items-center justify-center shadow-md">
-              <Shield className="w-4 h-4 text-white" />
-            </div>
-            Privacidade & Acesso
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4 p-6 bg-white dark:bg-[#001327]">
-          <div className="space-y-6">
-            <div className="flex items-center justify-between p-4 rounded-lg border border-orange-200 dark:border-orange-500/30 bg-orange-50/50 dark:bg-orange-900/10">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                  <Globe className="w-5 h-5 text-green-600 dark:text-green-400" />
-                </div>
-                <div>
-                  <Label className="text-gray-800 dark:text-white font-semibold">Grupo Público</Label>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Qualquer pessoa pode encontrar e participar</p>
-                </div>
-              </div>
-              <Switch
-                checked={settings.is_public}
-                onCheckedChange={(checked) => setSettings(prev => ({ 
-                  ...prev, 
-                  is_public: checked,
-                  is_private: !checked
-                }))}
-                className="data-[state=checked]:bg-[#FF6B00]"
-              />
-            </div>
-
-            <div className="flex items-center justify-between p-4 rounded-lg border border-orange-200 dark:border-orange-500/30 bg-orange-50/50 dark:bg-orange-900/10">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
-                  <Lock className="w-5 h-5 text-red-600 dark:text-red-400" />
-                </div>
-                <div>
-                  <Label className="text-gray-800 dark:text-white font-semibold">Grupo Privado</Label>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Apenas por convite</p>
-                </div>
-              </div>
-              <Switch
-                checked={settings.is_private}
-                onCheckedChange={(checked) => setSettings(prev => ({ 
-                  ...prev, 
-                  is_private: checked,
-                  is_public: !checked
-                }))}
-                className="data-[state=checked]:bg-[#FF6B00]"
-              />
-            </div>
-
-            <div className="flex items-center justify-between p-4 rounded-lg border border-orange-200 dark:border-orange-500/30 bg-orange-50/50 dark:bg-orange-900/10">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-                  <Users className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                </div>
-                <div>
-                  <Label className="text-gray-800 dark:text-white font-semibold">Visível para Parceiros</Label>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Visível apenas para usuários conectados</p>
-                </div>
-              </div>
-              <Switch
-                checked={settings.is_visible_to_partners}
-                onCheckedChange={(checked) => setSettings(prev => ({ ...prev, is_visible_to_partners: checked }))}
-                className="data-[state=checked]:bg-[#FF6B00]"
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-
-  const renderMembros = () => (
-    <div className="space-y-6">
-      <Card className="shadow-xl border-2 border-orange-200 dark:border-orange-500/30 bg-white dark:bg-[#001327]">
-        <CardHeader className="bg-gradient-to-r from-orange-50 to-orange-100/50 dark:from-orange-900/20 dark:to-orange-800/20 border-b border-orange-200 dark:border-orange-500/30">
-          <CardTitle className="flex items-center gap-2 text-gray-800 dark:text-white">
-            <div className="w-8 h-8 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-lg flex items-center justify-center shadow-md">
-              <Users className="w-4 h-4 text-white" />
-            </div>
-            Gerenciamento de Membros
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4 p-6 bg-white dark:bg-[#001327]">
-          <div className="space-y-3">
-            <Label htmlFor="max-members" className="text-sm font-semibold text-gray-700 dark:text-gray-300">Número Máximo de Membros</Label>
-            <Select value={settings.max_members.toString()} onValueChange={(value) => setSettings(prev => ({ ...prev, max_members: parseInt(value) }))}>
-              <SelectTrigger className="h-12 border-2 border-orange-200 dark:border-orange-500/50 bg-white dark:bg-[#001327] text-gray-900 dark:text-white focus:border-[#FF6B00] focus:ring-2 focus:ring-[#FF6B00]/20">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-white dark:bg-[#001327] border-orange-200 dark:border-orange-500/50">
-                <SelectItem value="10" className="hover:bg-orange-50 dark:hover:bg-orange-900/20">10 membros</SelectItem>
-                <SelectItem value="25" className="hover:bg-orange-50 dark:hover:bg-orange-900/20">25 membros</SelectItem>
-                <SelectItem value="50" className="hover:bg-orange-50 dark:hover:bg-orange-900/20">50 membros</SelectItem>
-                <SelectItem value="100" className="hover:bg-orange-50 dark:hover:bg-orange-900/20">100 membros</SelectItem>
-                <SelectItem value="999" className="hover:bg-orange-50 dark:hover:bg-orange-900/20">Ilimitado</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex items-center justify-between p-4 rounded-lg border border-orange-200 dark:border-orange-500/30 bg-orange-50/50 dark:bg-orange-900/10">
-            <div>
-              <Label className="text-gray-800 dark:text-white font-semibold">Aprovação Obrigatória</Label>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Novos membros precisam ser aprovados</p>
-            </div>
-            <Switch
-              checked={settings.require_approval}
-              onCheckedChange={(checked) => setSettings(prev => ({ ...prev, require_approval: checked }))}
-              className="data-[state=checked]:bg-[#FF6B00]"
-            />
-          </div>
-
-          <div className="flex items-center justify-between p-4 rounded-lg border border-orange-200 dark:border-orange-500/30 bg-orange-50/50 dark:bg-orange-900/10">
-            <div>
-              <Label className="text-gray-800 dark:text-white font-semibold">Membros Podem Convidar</Label>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Permite que membros convidem outros usuários</p>
-            </div>
-            <Switch
-              checked={settings.allow_member_invites}
-              onCheckedChange={(checked) => setSettings(prev => ({ ...prev, allow_member_invites: checked }))}
-              className="data-[state=checked]:bg-[#FF6B00]"
-            />
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-
-  const renderNotificacoes = () => (
-    <div className="space-y-6">
-      <Card className="shadow-xl border-2 border-orange-200 dark:border-orange-500/30 bg-white dark:bg-[#001327]">
-        <CardHeader className="bg-gradient-to-r from-orange-50 to-orange-100/50 dark:from-orange-900/20 dark:to-orange-800/20 border-b border-orange-200 dark:border-orange-500/30">
-          <CardTitle className="flex items-center gap-2 text-gray-800 dark:text-white">
-            <div className="w-8 h-8 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-lg flex items-center justify-center shadow-md">
-              <Bell className="w-4 h-4 text-white" />
-            </div>
-            Preferências de Notificação
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4 p-6 bg-white dark:bg-[#001327]">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 rounded-lg border border-orange-200 dark:border-orange-500/30 bg-orange-50/50 dark:bg-orange-900/10">
-              <div>
-                <Label className="text-gray-800 dark:text-white font-semibold">Novos Membros</Label>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Notificar quando alguém entrar no grupo</p>
-              </div>
-              <Switch
-                checked={settings.notify_new_members}
-                onCheckedChange={(checked) => setSettings(prev => ({ ...prev, notify_new_members: checked }))}
-                className="data-[state=checked]:bg-[#FF6B00]"
-              />
-            </div>
-
-            <div className="flex items-center justify-between p-4 rounded-lg border border-orange-200 dark:border-orange-500/30 bg-orange-50/50 dark:bg-orange-900/10">
-              <div>
-                <Label className="text-gray-800 dark:text-white font-semibold">Novas Mensagens</Label>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Notificar sobre novas discussões</p>
-              </div>
-              <Switch
-                checked={settings.notify_new_messages}
-                onCheckedChange={(checked) => setSettings(prev => ({ ...prev, notify_new_messages: checked }))}
-                className="data-[state=checked]:bg-[#FF6B00]"
-              />
-            </div>
-
-            <div className="flex items-center justify-between p-4 rounded-lg border border-orange-200 dark:border-orange-500/30 bg-orange-50/50 dark:bg-orange-900/10">
-              <div>
-                <Label className="text-gray-800 dark:text-white font-semibold">Novos Materiais</Label>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Notificar quando materiais forem adicionados</p>
-              </div>
-              <Switch
-                checked={settings.notify_new_materials}
-                onCheckedChange={(checked) => setSettings(prev => ({ ...prev, notify_new_materials: checked }))}
-                className="data-[state=checked]:bg-[#FF6B00]"
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-
-  const renderAvancado = () => (
-    <div className="space-y-6">
-      <Card className="shadow-xl border-2 border-orange-200 dark:border-orange-500/30 bg-white dark:bg-[#001327]">
-        <CardHeader className="bg-gradient-to-r from-orange-50 to-orange-100/50 dark:from-orange-900/20 dark:to-orange-800/20 border-b border-orange-200 dark:border-orange-500/30">
-          <CardTitle className="flex items-center gap-2 text-gray-800 dark:text-white">
-            <div className="w-8 h-8 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-lg flex items-center justify-center shadow-md">
-              <AlertTriangle className="w-4 h-4 text-white" />
-            </div>
-            Configurações Avançadas
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4 p-6 bg-white dark:bg-[#001327]">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 rounded-lg border border-orange-200 dark:border-orange-500/30 bg-orange-50/50 dark:bg-orange-900/10">
-              <div>
-                <Label className="text-gray-800 dark:text-white font-semibold">Backup Automático</Label>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Backup automático das discussões e materiais</p>
-              </div>
-              <Switch
-                checked={settings.backup_automatico}
-                onCheckedChange={(checked) => setSettings(prev => ({ ...prev, backup_automatico: checked }))}
-                className="data-[state=checked]:bg-[#FF6B00]"
-              />
-            </div>
-
-            <div className="flex items-center justify-between p-4 rounded-lg border border-orange-200 dark:border-orange-500/30 bg-orange-50/50 dark:bg-orange-900/10">
-              <div>
-                <Label className="text-gray-800 dark:text-white font-semibold">Notificações Ativas</Label>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Sistema de notificações do grupo</p>
-              </div>
-              <Switch
-                checked={settings.notificacoes_ativas}
-                onCheckedChange={(checked) => setSettings(prev => ({ ...prev, notificacoes_ativas: checked }))}
-                className="data-[state=checked]:bg-[#FF6B00]"
-              />
-            </div>
-
-            <div className="flex items-center justify-between p-4 rounded-lg border border-orange-200 dark:border-orange-500/30 bg-orange-50/50 dark:bg-orange-900/10">
-              <div>
-                <Label className="text-gray-800 dark:text-white font-semibold">Moderação Automática</Label>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Filtro automático de conteúdo inadequado</p>
-              </div>
-              <Switch
-                checked={settings.moderacao_automatica}
-                onCheckedChange={(checked) => setSettings(prev => ({ ...prev, moderacao_automatica: checked }))}
-                className="data-[state=checked]:bg-[#FF6B00]"
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="shadow-xl border-2 border-red-300 dark:border-red-500/50 bg-red-50 dark:bg-red-900/20">
-        <CardHeader className="bg-gradient-to-r from-red-100 to-red-50 dark:from-red-900/30 dark:to-red-800/30 border-b border-red-200 dark:border-red-500/30">
-          <CardTitle className="flex items-center gap-2 text-red-700 dark:text-red-400">
-            <div className="w-8 h-8 bg-gradient-to-r from-red-500 to-red-600 rounded-lg flex items-center justify-center shadow-md">
-              <Trash2 className="w-4 h-4 text-white" />
-            </div>
-            Zona de Perigo
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-6 bg-red-50 dark:bg-red-900/20">
-          <p className="text-sm text-red-700 dark:text-red-400 mb-4">
-            Estas ações são irreversíveis. Tenha cuidado ao executá-las.
-          </p>
-          <Button variant="destructive" className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 shadow-lg hover:shadow-xl transition-all duration-200">
-            <Trash2 className="w-4 h-4 mr-2" />
-            Excluir Grupo
-          </Button>
-        </CardContent>
-      </Card>
-    </div>
-  );
-
-  const renderAparencia = () => (
-    <Card className="shadow-xl border-2 border-orange-200 dark:border-orange-500/30 bg-white dark:bg-[#001327]">
-      <CardHeader className="bg-gradient-to-r from-orange-50 to-orange-100/50 dark:from-orange-900/20 dark:to-orange-800/20 border-b border-orange-200 dark:border-orange-500/30">
-        <CardTitle className="flex items-center gap-3 text-gray-800 dark:text-white">
-          <div className="w-8 h-8 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-lg flex items-center justify-center shadow-md">
-            <Eye className="w-4 h-4 text-white" />
-          </div>
-          <span>Aparência & Tema</span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="text-center py-16 bg-white dark:bg-[#001327]">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="w-20 h-20 bg-gradient-to-r from-orange-100 to-orange-200 dark:from-orange-900/30 dark:to-orange-800/30 rounded-2xl flex items-center justify-center">
-            <Eye className="w-10 h-10 text-orange-500" />
-          </div>
-          <h4 className="text-xl font-bold text-gray-800 dark:text-white">
-            Aparência & Tema
-          </h4>
-          <p className="text-orange-600 dark:text-orange-400 max-w-md">
-            Configurações de aparência estarão disponíveis em breve. Personalize cores, temas e layout do seu grupo.
-          </p>
-        </div>
-      </CardContent>
-    </Card>
-  );
-
-    const renderMetas = () => (
-        <Card className="shadow-xl border-2 border-orange-200 dark:border-orange-500/30 bg-white dark:bg-[#001327]">
-          <CardHeader className="bg-gradient-to-r from-orange-50 to-orange-100/50 dark:from-orange-900/20 dark:to-orange-800/20 border-b border-orange-200 dark:border-orange-500/30">
-            <CardTitle className="flex items-center gap-3 text-gray-800 dark:text-white">
-              <div className="w-8 h-8 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-lg flex items-center justify-center shadow-md">
-                <Users className="w-4 h-4 text-white" />
-              </div>
-              <span>Metas & Objetivos</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-center py-16 bg-white dark:bg-[#001327]">
-            <div className="flex flex-col items-center space-y-4">
-              <div className="w-20 h-20 bg-gradient-to-r from-orange-100 to-orange-200 dark:from-orange-900/30 dark:to-orange-800/30 rounded-2xl flex items-center justify-center">
-                <Users className="w-10 h-10 text-orange-500" />
-              </div>
-              <h4 className="text-xl font-bold text-gray-800 dark:text-white">
-                Metas & Objetivos
-              </h4>
-              <p className="text-orange-600 dark:text-orange-400 max-w-md">
-                Configurações de metas estarão disponíveis em breve. Defina objetivos e acompanhe o progresso do grupo.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-    );
-
-    const renderRegras = () => (
-        <Card className="shadow-xl border-2 border-orange-200 dark:border-orange-500/30 bg-white dark:bg-[#001327]">
-          <CardHeader className="bg-gradient-to-r from-orange-50 to-orange-100/50 dark:from-orange-900/20 dark:to-orange-800/20 border-b border-orange-200 dark:border-orange-500/30">
-            <CardTitle className="flex items-center gap-3 text-gray-800 dark:text-white">
-              <div className="w-8 h-8 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-lg flex items-center justify-center shadow-md">
-                <Bell className="w-4 h-4 text-white" />
-              </div>
-              <span>Regras & Conduta</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-center py-16 bg-white dark:bg-[#001327]">
-            <div className="flex flex-col items-center space-y-4">
-              <div className="w-20 h-20 bg-gradient-to-r from-orange-100 to-orange-200 dark:from-orange-900/30 dark:to-orange-800/30 rounded-2xl flex items-center justify-center">
-                <Bell className="w-10 h-10 text-orange-500" />
-              </div>
-              <h4 className="text-xl font-bold text-gray-800 dark:text-white">
-                Regras & Conduta
-              </h4>
-              <p className="text-orange-600 dark:text-orange-400 max-w-md">
-                Configurações de regras estarão disponíveis em breve. Estabeleça diretrizes e normas para o grupo.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-    );
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      addTag();
+    }
+  };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF6B00] mx-auto mb-4"></div>
-          <p className="text-gray-500">Carregando configurações...</p>
+          <p className="text-gray-600 dark:text-gray-400">Carregando configurações...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-[800px] h-full bg-white dark:bg-[#001327] rounded-xl shadow-2xl overflow-hidden border border-orange-200/30 dark:border-orange-500/20">
-      {/* Menu Lateral */}
-      <div className="w-72 bg-gradient-to-b from-orange-50 via-orange-100 to-orange-50 dark:from-[#001327] dark:via-[#002442] dark:to-[#001327] border-r border-orange-200 dark:border-orange-500/30 flex-shrink-0 shadow-2xl">
-        <div className="p-8 border-b border-orange-200/50 dark:border-orange-500/30 bg-gradient-to-r from-orange-100 to-orange-50 dark:from-[#001327] dark:to-[#002442]">
-          <div className="flex items-center space-x-3 mb-2">
-            <div className="w-10 h-10 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-lg flex items-center justify-center shadow-lg">
-              <Settings className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-gray-800 dark:text-white">Configurações</h3>
-              <p className="text-xs text-orange-600 dark:text-orange-400 mt-0.5">Gerencie seu grupo</p>
+    <div className="p-4">
+      <div className="bg-gray-100 dark:bg-[#1a2236] rounded-lg p-4 shadow-sm">
+        <div className="flex h-[calc(100vh-200px)]">
+          {/* Menu Lateral Esquerdo */}
+          <div className="w-64 flex-shrink-0 pr-6">
+            <div className="bg-white dark:bg-[#0f1525] rounded-lg p-4 border border-gray-200 dark:border-gray-800 shadow-sm h-full">
+              <h3 className="text-lg font-bold mb-6 text-gray-900 dark:text-white">
+                Menu
+              </h3>
+              <div className="space-y-3">
+                <Button
+                  variant="ghost"
+                  className={`w-full justify-start rounded-xl h-12 ${
+                    activeSection === 'gerais' 
+                      ? 'bg-[#FF6B00] hover:bg-[#FF8C40] text-white font-medium' 
+                      : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'
+                  }`}
+                  onClick={() => setActiveSection('gerais')}
+                >
+                  <Info className="h-4 w-4 mr-3" />
+                  Informações Gerais
+                </Button>
+                <Button
+                  variant="ghost"
+                  className={`w-full justify-start rounded-xl h-12 ${
+                    activeSection === 'privacidade' 
+                      ? 'bg-[#FF6B00] hover:bg-[#FF8C40] text-white font-medium' 
+                      : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'
+                  }`}
+                  onClick={() => setActiveSection('privacidade')}
+                >
+                  <Shield className="h-4 w-4 mr-3" />
+                  Privacidade & Acesso
+                </Button>
+                <Button
+                  variant="ghost"
+                  className={`w-full justify-start rounded-xl h-12 ${
+                    activeSection === 'membros' 
+                      ? 'bg-[#FF6B00] hover:bg-[#FF8C40] text-white font-medium' 
+                      : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'
+                  }`}
+                  onClick={() => setActiveSection('membros')}
+                >
+                  <Users className="h-4 w-4 mr-3" />
+                  Configurações de Membros
+                </Button>
+                <Button
+                  variant="ghost"
+                  className={`w-full justify-start rounded-xl h-12 ${
+                    activeSection === 'notificacoes' 
+                      ? 'bg-[#FF6B00] hover:bg-[#FF8C40] text-white font-medium' 
+                      : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'
+                  }`}
+                  onClick={() => setActiveSection('notificacoes')}
+                >
+                  <Bell className="h-4 w-4 mr-3" />
+                  Notificações
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-        <nav className="p-6 space-y-2">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.id}
-                onClick={() => setActiveSection(item.id)}
-                className={`w-full flex items-center space-x-4 px-5 py-4 rounded-xl transition-all duration-300 transform hover:scale-105 group ${
-                  activeSection === item.id
-                    ? 'bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white shadow-2xl border border-orange-300/20'
-                    : 'text-gray-600 dark:text-gray-300 hover:bg-gradient-to-r hover:from-orange-100 hover:to-orange-50 dark:hover:from-orange-900/30 dark:hover:to-orange-800/30 hover:text-orange-700 dark:hover:text-orange-300 hover:shadow-lg'
-                }`}
-              >
-                <div className={`p-2 rounded-lg transition-all duration-300 ${
-                  activeSection === item.id 
-                    ? 'bg-white/20' 
-                    : 'group-hover:bg-orange-200/30 dark:group-hover:bg-orange-500/20'
-                }`}>
-                  <Icon className="w-5 h-5" />
+
+          {/* Conteúdo Principal */}
+          <div className="flex-1">
+            <div className="bg-white dark:bg-[#0f1525] rounded-lg p-6 border border-gray-200 dark:border-gray-800 shadow-sm h-full overflow-y-auto">
+              {/* Informações Gerais */}
+              {activeSection === 'gerais' && (
+                <div>
+                  <div className="text-center mb-8">
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                      Informações Gerais
+                    </h2>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      Configure as informações básicas do seu grupo de estudos
+                    </p>
+                  </div>
+
+                  <div className="space-y-8">
+                    {/* Informações Básicas */}
+                    <div>
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="p-2 bg-[#FF6B00] rounded-lg">
+                          <Info className="h-5 w-5 text-white" />
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                          Informações Básicas
+                        </h3>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Nome do Grupo */}
+                        <div className="space-y-2">
+                          <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                            <Users className="h-4 w-4" />
+                            Nome do Grupo
+                          </Label>
+                          <Input
+                            value={settings.nome}
+                            onChange={(e) => setSettings({ ...settings, nome: e.target.value })}
+                            className="bg-white dark:bg-[#1a2236] border-gray-300 dark:border-gray-700 rounded-xl h-12 text-gray-900 dark:text-white"
+                            placeholder="Digite o nome do grupo"
+                          />
+                        </div>
+
+                        {/* Código do Grupo */}
+                        <div className="space-y-2">
+                          <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                            <Target className="h-4 w-4" />
+                            Código do Grupo
+                          </Label>
+                          <Input
+                            value={settings.codigo_unico}
+                            readOnly
+                            className="bg-gray-100 dark:bg-[#1a2236] border-gray-300 dark:border-gray-700 rounded-xl h-12 cursor-default text-gray-900 dark:text-white"
+                          />
+                        </div>
+
+                        {/* Disciplina/Área */}
+                        <div className="space-y-2">
+                          <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                            <BookOpen className="h-4 w-4" />
+                            Disciplina/Área
+                          </Label>
+                          <Input
+                            value={settings.disciplina_area}
+                            onChange={(e) => setSettings({ ...settings, disciplina_area: e.target.value })}
+                            className="bg-white dark:bg-[#1a2236] border-gray-300 dark:border-gray-700 rounded-xl h-12 text-gray-900 dark:text-white"
+                            placeholder="Ex: Matemática, Física, etc."
+                          />
+                        </div>
+
+                        {/* Tópico Específico */}
+                        <div className="space-y-2">
+                          <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                            <Brain className="h-4 w-4" />
+                            Tópico Específico
+                          </Label>
+                          <Input
+                            value={settings.topico_especifico}
+                            onChange={(e) => setSettings({ ...settings, topico_especifico: e.target.value })}
+                            className="bg-white dark:bg-[#1a2236] border-gray-300 dark:border-gray-700 rounded-xl h-12 text-gray-900 dark:text-white"
+                            placeholder="Ex: Cálculo Diferencial, Mecânica Quântica, etc."
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Descrição do Grupo */}
+                    <div>
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="p-2 bg-[#FF6B00] rounded-lg">
+                          <Info className="h-5 w-5 text-white" />
+                        </div>
+                        <h4 className="text-lg font-bold text-gray-900 dark:text-white">
+                          Descrição do Grupo
+                        </h4>
+                      </div>
+                      <Textarea
+                        value={settings.descricao}
+                        onChange={(e) => setSettings({ ...settings, descricao: e.target.value })}
+                        rows={4}
+                        className="w-full bg-white dark:bg-[#1a2236] border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white resize-none"
+                        placeholder="Descreva os objetivos e o foco do seu grupo de estudos..."
+                      />
+                    </div>
+
+                    {/* Tags/Etiquetas */}
+                    <div>
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="p-2 bg-[#FF6B00] rounded-lg">
+                          <Sparkles className="h-5 w-5 text-white" />
+                        </div>
+                        <h4 className="text-lg font-bold text-gray-900 dark:text-white">
+                          Tags/Etiquetas
+                        </h4>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div className="flex gap-2">
+                          <Input
+                            value={newTag}
+                            onChange={(e) => setNewTag(e.target.value)}
+                            onKeyPress={handleKeyPress}
+                            className="flex-1 bg-white dark:bg-[#1a2236] border-gray-300 dark:border-gray-700 rounded-xl h-10 text-gray-900 dark:text-white"
+                            placeholder="Digite uma tag e pressione Enter"
+                          />
+                          <Button
+                            onClick={addTag}
+                            className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white px-4 h-10 rounded-xl"
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2">
+                          {settings.tags.map((tag, index) => (
+                            <Badge
+                              key={index}
+                              className="bg-[#FF6B00]/20 text-[#FF6B00] border border-[#FF6B00]/30 px-3 py-1 rounded-xl flex items-center gap-2"
+                            >
+                              {tag}
+                              <button
+                                onClick={() => removeTag(tag)}
+                                className="hover:text-red-500 transition-colors"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <span className="font-semibold text-sm">{item.label}</span>
-              </button>
-            );
-          })}
-        </nav>
+              )}
 
-        {/* Decoração no menu lateral */}
-        <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-orange-100/50 dark:from-[#001327] to-transparent opacity-50"></div>
-      </div>
+              {/* Privacidade & Acesso */}
+              {activeSection === 'privacidade' && (
+                <div>
+                  <div className="text-center mb-8">
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                      Privacidade & Acesso
+                    </h2>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      Configure quem pode ver e acessar seu grupo
+                    </p>
+                  </div>
 
-      {/* Conteúdo Principal */}
-      <div className="flex-1 overflow-y-auto bg-white dark:bg-[#001327]">
-        <div className="p-8 min-h-full">
-          {/* Header do conteúdo */}
-          <div className="mb-8 pb-6 border-b border-orange-200/50 dark:border-orange-500/30">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-xl flex items-center justify-center shadow-lg ring-2 ring-orange-200 dark:ring-orange-500/30">
-                {menuItems.find(item => item.id === activeSection)?.icon && 
-                  React.createElement(menuItems.find(item => item.id === activeSection)!.icon, { className: "w-6 h-6 text-white" })
-                }
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
-                  {menuItems.find(item => item.id === activeSection)?.label}
-                </h2>
-                <p className="text-orange-600 dark:text-orange-400 text-sm mt-1">
-                  Configure as opções do seu grupo de estudos
-                </p>
-              </div>
-            </div>
-          </div>
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between p-6 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-200/50 dark:border-gray-700/50">
+                      <div className="flex items-center gap-4">
+                        <div className="p-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl text-white">
+                          <Globe className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900 dark:text-white">Grupo Público</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Qualquer pessoa pode encontrar e se juntar ao grupo</p>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={settings.is_public}
+                        onCheckedChange={(checked) => setSettings({ ...settings, is_public: checked, is_private: !checked })}
+                        className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-green-500 data-[state=checked]:to-emerald-500"
+                      />
+                    </div>
 
-          {/* Conteúdo das seções */}
-          <div className="space-y-6">
-            {activeSection === 'gerais' && renderConfiguracoesGerais()}
-            {activeSection === 'aparencia' && renderAparencia()}
-            {activeSection === 'privacidade' && renderPrivacidade()}
-            {activeSection === 'membros' && renderMembros()}
-            {activeSection === 'notificacoes' && renderNotificacoes()}
-            {activeSection === 'avancado' && renderAvancado()}
-            {activeSection === 'metas' && renderMetas()}
-            {activeSection === 'regras' && renderRegras()}
-          </div>
+                    <div className="flex items-center justify-between p-6 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-200/50 dark:border-gray-700/50">
+                      <div className="flex items-center gap-4">
+                        <div className="p-3 bg-gradient-to-r from-red-500 to-pink-500 rounded-xl text-white">
+                          <Lock className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900 dark:text-white">Grupo Privado</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Apenas membros convidados podem ver o grupo</p>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={settings.is_private}
+                        onCheckedChange={(checked) => setSettings({ ...settings, is_private: checked, is_public: !checked })}
+                        className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-red-500 data-[state=checked]:to-pink-500"
+                      />
+                    </div>
 
-          {/* Botão de Salvar */}
-          <div className="sticky bottom-0 bg-white/95 dark:bg-[#001327]/95 border-t border-orange-200/50 dark:border-orange-500/30 p-6 mt-8 backdrop-blur-sm">
-            <div className="flex justify-end space-x-4">
-              <Button 
-                variant="outline" 
-                onClick={loadGroupSettings}
-                className="px-6 py-3 border-2 border-orange-300 dark:border-orange-500 text-orange-600 dark:text-orange-400 hover:border-orange-400 dark:hover:border-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-all duration-200"
-              >
-                <X className="w-4 h-4 mr-2" />
-                Cancelar
-              </Button>
-              <Button 
-                onClick={saveSettings} 
-                disabled={isSaving}
-                className="px-8 py-3 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 ring-2 ring-orange-200 dark:ring-orange-500/30"
-              >
-                {isSaving ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
-                    Salvando...
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-5 h-5 mr-3" />
-                    Salvar Alterações
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+                    <div className="flex items-center justify-between p-6 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-200/50 dark:border-gray-700/50">
+                      <div className="flex items-center gap-4">
+                        <div className="p-3 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl text-white">
+                          <Eye className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900 dark:text-white">Visível para Todos</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">O grupo aparece nas buscas públicas</p>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={settings.is_visible_to_all}
+                        onCheckedChange={(checked) => setSettings({ ...settings, is_visible_to_all: checked })}
+                        className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-blue-500 data-[state=checked]:to-cyan-500"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between p-6 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-200/50 dark:border-gray-700/50">
+                      <div className="flex items-center gap-4">
+                        <div className="p-3 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-xl text-white">
+                          <Users className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900 dark:text-white">Visível para Parceiros</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Apenas usuários conectados podem ver</p>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={settings.is_visible_to_partners}
+                        onCheckedChange={(checked) => setSettings({ ...settings, is_visible_to_partners: checked })}
+                        className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-purple-500 data-[state=checked]:to-indigo-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Configurações de Membros */}
+              {activeSection === 'membros' && (
+                <div>
+                  <div className="text-center mb-8">
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                      Configurações de Membros
+                    </h2>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      Configure como novos membros podem se juntar ao grupo
+                    </p>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                        Número Máximo de Membros
+                      </Label>
+                      <Input
+                        type="number"
+                        value={settings.max_members}
+                        onChange={(e) => setSettings({ ...settings, max_members: parseInt(e.target.value) || 50 })}
+                        className="bg-white dark:bg-[#1a2236] border-gray-300 dark:border-gray-700 rounded-xl h-12 text-gray-900 dark:text-white"
+                        min="1"
+                        max="1000"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between p-6 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-200/50 dark:border-gray-700/50">
+                      <div className="flex items-center gap-4">
+                        <div className="p-3 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl text-white">
+                          <Shield className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900 dark:text-white">Requer Aprovação</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Novos membros precisam ser aprovados</p>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={settings.require_approval}
+                        onCheckedChange={(checked) => setSettings({ ...settings, require_approval: checked })}
+                        className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-yellow-500 data-[state=checked]:to-orange-500"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between p-6 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-200/50 dark:border-gray-700/50">
+                      <div className="flex items-center gap-4">
+                        <div className="p-3 bg-gradient-to-r from-green-500 to-teal-500 rounded-xl text-white">
+                          <Users className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900 dark:text-white">Permitir Convites de Membros</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Membros podem convidar outras pessoas</p>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={settings.allow_member_invites}
+                        onCheckedChange={(checked) => setSettings({ ...settings, allow_member_invites: checked })}
+                        className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-green-500 data-[state=checked]:to-teal-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Notificações */}
+              {activeSection === 'notificacoes' && (
+                <div>
+                  <div className="text-center mb-8">
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                      Configurações de Notificações
+                    </h2>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      Configure quando e como receber notificações do grupo
+                    </p>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between p-6 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-200/50 dark:border-gray-700/50">
+                      <div className="flex items-center gap-4">
+                        <div className="p-3 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl text-white">
+                          <Bell className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900 dark:text-white">Notificações Ativas</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Receber notificações gerais do grupo</p>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={settings.notificacoes_ativas}
+                        onCheckedChange={(checked) => setSettings({ ...settings, notificacoes_ativas: checked })}
+                        className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-blue-500 data-[state=checked]:to-cyan-500"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between p-6 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-200/50 dark:border-gray-700/50">
+                      <div className="flex items-center gap-4">
+                        <div className="p-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl text-white">
+                          <Users className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900 dark:text-white">Novos Membros</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Notificar quando alguém se juntar ao grupo</p>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={settings.notify_new_members}
+                        onCheckedChange={(checked) => setSettings({ ...settings, notify_new_members: checked })}
+                        className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-green-500 data-[state=checked]:to-emerald-500"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between p-6 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-200/50 dark:border-gray-700/50">
+                      <div className="flex items-center gap-4">
+                        <div className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl text-white">
+                          <Bell className="h-5 w-5"
