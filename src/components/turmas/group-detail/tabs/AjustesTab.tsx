@@ -199,11 +199,12 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
   };
 
   const menuItems = [
-    { id: 'gerais', label: 'Configurações Gerais', icon: Settings },
-    { id: 'privacidade', label: 'Privacidade', icon: Shield },
-    { id: 'membros', label: 'Membros', icon: Users },
-    { id: 'notificacoes', label: 'Notificações', icon: Bell },
-    { id: 'avancado', label: 'Avançado', icon: AlertTriangle }
+    { id: 'gerais', label: 'Informações Básicas', icon: Settings },
+    { id: 'aparencia', label: 'Aparência & Tema', icon: Eye },
+    { id: 'privacidade', label: 'Privacidade & Acesso', icon: Shield },
+    { id: 'metas', label: 'Metas & Objetivos', icon: Users },
+    { id: 'regras', label: 'Regras & Conduta', icon: Bell },
+    { id: 'avancado', label: 'Configurações Avançadas', icon: AlertTriangle }
   ];
 
   const renderConfiguracoesGerais = () => (
@@ -329,7 +330,7 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Shield className="w-5 h-5" />
-            Configurações de Privacidade
+            Privacidade & Acesso
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -567,6 +568,72 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
     </div>
   );
 
+  const renderAparencia = () => (
+    <div>
+      <div className="flex items-center gap-3 mb-6">
+        <div className="p-2 bg-[#FF6B00] rounded-lg">
+          <Eye className="h-5 w-5 text-white" />
+        </div>
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+          Aparência & Tema
+        </h3>
+      </div>
+      <div className="text-center py-12">
+        <Eye className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+        <h4 className="text-lg font-bold text-gray-600 dark:text-gray-400 mb-2">
+          Aparência & Tema
+        </h4>
+        <p className="text-sm text-gray-500 dark:text-gray-500">
+          Configurações de aparência estarão disponíveis em breve.
+        </p>
+      </div>
+    </div>
+  );
+
+    const renderMetas = () => (
+        <div>
+            <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 bg-[#FF6B00] rounded-lg">
+                    <Users className="h-5 w-5 text-white" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                    Metas & Objetivos
+                </h3>
+            </div>
+            <div className="text-center py-12">
+                <Users className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <h4 className="text-lg font-bold text-gray-600 dark:text-gray-400 mb-2">
+                    Metas & Objetivos
+                </h4>
+                <p className="text-sm text-gray-500 dark:text-gray-500">
+                    Configurações de metas estarão disponíveis em breve.
+                </p>
+            </div>
+        </div>
+    );
+
+    const renderRegras = () => (
+        <div>
+            <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 bg-[#FF6B00] rounded-lg">
+                    <Bell className="h-5 w-5 text-white" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                    Regras & Conduta
+                </h3>
+            </div>
+            <div className="text-center py-12">
+                <Bell className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <h4 className="text-lg font-bold text-gray-600 dark:text-gray-400 mb-2">
+                    Regras & Conduta
+                </h4>
+                <p className="text-sm text-gray-500 dark:text-gray-500">
+                    Configurações de regras estarão disponíveis em breve.
+                </p>
+            </div>
+        </div>
+    );
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -618,7 +685,7 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
             );
           })}
         </nav>
-        
+
         {/* Decoração no menu lateral */}
         <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-[#1a252f] to-transparent opacity-50"></div>
       </div>
@@ -648,10 +715,13 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
           {/* Conteúdo das seções */}
           <div className="space-y-6">
             {activeSection === 'gerais' && renderConfiguracoesGerais()}
+            {activeSection === 'aparencia' && renderAparencia()}
             {activeSection === 'privacidade' && renderPrivacidade()}
             {activeSection === 'membros' && renderMembros()}
             {activeSection === 'notificacoes' && renderNotificacoes()}
             {activeSection === 'avancado' && renderAvancado()}
+            {activeSection === 'metas' && renderMetas()}
+            {activeSection === 'regras' && renderRegras()}
           </div>
 
           {/* Botão de Salvar */}
