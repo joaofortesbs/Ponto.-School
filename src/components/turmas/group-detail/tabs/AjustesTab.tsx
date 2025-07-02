@@ -910,24 +910,9 @@ const AjustesTab: React.FC<AjustesTabProps> = ({ group, onSave }) => {
   };
 
   return (
-    <div className="flex h-full bg-gradient-to-br from-gray-50/50 to-orange-50/50 dark:from-[#0A0E1A] dark:to-[#0F1419]">
+    <div className="flex h-full bg-transparent">
       {/* Sidebar */}
-      <div className="w-72 bg-gradient-to-b from-orange-50 to-amber-50 dark:from-[#0F1419] dark:to-[#1A1F2E] border-r border-orange-200/50 dark:border-orange-700/30 flex flex-col overflow-hidden min-h-[900px]">
-        <div className="p-6 border-b border-orange-200/50 dark:border-orange-700/30 bg-white/50 dark:bg-[#0A0E1A]/50 backdrop-blur-sm">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-2xl text-white shadow-lg">
-              <Settings className="h-6 w-6" />
-            </div>
-            <div>
-              <h2 className="font-bold text-xl bg-gradient-to-r from-orange-800 to-amber-600 dark:from-orange-400 dark:to-amber-300 bg-clip-text text-transparent">
-                Configurações
-              </h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                Ponto. Education
-              </p>
-            </div>
-          </div>
-        </div>
+      <div className="w-72 bg-transparent border-r border-orange-200/50 dark:border-orange-700/30 flex flex-col overflow-hidden min-h-[900px]">
 
         <div className="flex-1 overflow-y-auto p-2 min-h-[800px]">
           <nav className="space-y-2">
@@ -974,28 +959,14 @@ const AjustesTab: React.FC<AjustesTabProps> = ({ group, onSave }) => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden min-h-[800px]">
-        {/* Header */}
-        <div className="p-6 border-b border-orange-200/50 dark:border-orange-700/30 bg-white/30 dark:bg-[#0A0E1A]/30 backdrop-blur-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-orange-800 to-amber-600 dark:from-orange-400 dark:to-amber-300 bg-clip-text text-transparent">
-                {menuItems.find(item => item.id === activeSection)?.label}
-              </h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                {menuItems.find(item => item.id === activeSection)?.description}
-              </p>
-            </div>
-          </div>
-        </div>
-
+      <div className="flex-1 flex flex-col overflow-hidden min-h-[800px] bg-transparent">
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 min-h-[700px]">
           {renderContent()}
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-orange-200/50 dark:border-orange-700/30 bg-white/50 dark:bg-[#0A0E1A]/50 backdrop-blur-sm flex items-center justify-end gap-4">
+        <div className="p-6 border-t border-orange-200/50 dark:border-orange-700/30 bg-transparent flex items-center justify-end gap-4">
           <Button
             onClick={handleSave}
             className="px-8 py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
