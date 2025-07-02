@@ -32,6 +32,7 @@ interface GroupSettings {
   disciplina_area: string;
   topico_especifico: string;
   tags: string[];
+  codigo_unico: string;
 
   // Configurações de Privacidade
   is_public: boolean;
@@ -66,6 +67,7 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
     disciplina_area: '',
     topico_especifico: '',
     tags: [],
+    codigo_unico: '',
     is_public: false,
     is_private: false,
     is_visible_to_all: false,
@@ -108,6 +110,7 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
         disciplina_area: groupData.disciplina_area || '',
         topico_especifico: groupData.topico_especifico || '',
         tags: groupData.tags || [],
+        codigo_unico: groupData.codigo_unico || '',
         is_public: groupData.is_public ?? false,
         is_private: groupData.is_private ?? false,
         is_visible_to_all: groupData.is_visible_to_all ?? false,
@@ -272,6 +275,44 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
                 className="h-12 border-2 border-orange-200 dark:border-orange-500/50 bg-white dark:bg-[#001327] text-gray-900 dark:text-white focus:border-[#FF6B00] focus:ring-2 focus:ring-[#FF6B00]/20 rounded-lg transition-all duration-200"
               />
             </div>
+          </div>
+
+          <div className="space-y-3">
+            <Label htmlFor="codigoUnico" className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center space-x-2">
+              <span>Código Único</span>
+              <div className="w-4 h-4 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-sm flex items-center justify-center">
+                <span className="text-white text-xs font-bold">#</span>
+              </div>
+            </Label>
+            <div className="flex items-center space-x-3">
+              <Input
+                id="codigoUnico"
+                value={settings.codigo_unico || 'Carregando...'}
+                readOnly
+                className="flex-1 h-12 border-2 border-orange-200 dark:border-orange-500/50 bg-orange-50/50 dark:bg-orange-900/20 text-gray-900 dark:text-white font-mono text-center text-lg tracking-wider rounded-lg cursor-default"
+              />
+              <Button
+                type="button"
+                onClick={() => {
+                  if (settings.codigo_unico) {
+                    navigator.clipboard.writeText(settings.codigo_unico);
+                    toast({
+                      title: "Código copiado!",
+                      description: "O código único foi copiado para a área de transferência.",
+                    });
+                  }
+                }}
+                className="h-12 px-4 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white shadow-lg hover:shadow-xl transition-all duration-200 ring-2 ring-orange-200 dark:ring-orange-500/30"
+                disabled={!settings.codigo_unico}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+              </Button>
+            </div>
+            <p className="text-xs text-orange-600 dark:text-orange-400">
+              Compartilhe este código para que outros usuários possam encontrar e entrar no seu grupo
+            </p>
           </div>
 
           <div className="space-y-4">
