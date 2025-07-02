@@ -6,6 +6,7 @@ import GroupTabs from './GroupTabs';
 import ChatSection from './ChatSection';
 import PlaceholderSection from './PlaceholderSection';
 import AjustesTab from './tabs/AjustesTab';
+import SobreTab from './tabs/SobreTab';
 
 interface GroupDetailInterfaceProps {
   groupId: string;
@@ -68,7 +69,14 @@ export default function GroupDetailInterface({
       case 'files':
         return <PlaceholderSection title="Arquivos" message="Funcionalidade em desenvolvimento" />;
       case 'about':
-        return <PlaceholderSection title="Sobre" message="Funcionalidade em desenvolvimento" />;
+        return groupData ? (
+          <SobreTab 
+            group={groupData} 
+            onUpdate={handleUpdate}
+          />
+        ) : (
+          <PlaceholderSection title="Sobre" message="Carregando dados do grupo..." />
+        );
       case 'ajustes':
         return groupData ? (
           <AjustesTab 
