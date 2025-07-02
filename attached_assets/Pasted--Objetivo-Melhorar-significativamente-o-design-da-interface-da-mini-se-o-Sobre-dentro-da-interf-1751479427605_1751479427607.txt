@@ -1,0 +1,375 @@
+
+
+Objetivo: Melhorar significativamente o design da interface da mini-seção "Sobre" dentro da interface de cada grupo de estudos, na mini-seção de Grupos de Estudos, adicionando um menu-lateral esquerdo que exiba a seção "Informações Básicas" como padrão (única seção disponível por enquanto). O design deve ser modernizado e sofisticado, utilizando um layout elegante, tipografia refinada (ex.: fontes como "Roboto" ou "Poppins"), uma paleta de cores harmoniosa (ex.: tons de azul escuro, branco e cinza claro), e elementos visuais contemporâneos (ex.: sombras sutis, bordas arredondadas, gradientes leves). Os campos (Nome do Grupo, Descrição, Disciplina/Área, Tópico Específico, Código Único, Tags do Grupo e Controle de Privacidade e Acesso) devem ser preenchidos automaticamente com dados do Supabase, preservando as funcionalidades existentes e a compatibilidade com o restante da interface.
+
+
+
+Instruções Gerais
+
+
+
+
+
+Escopo Restrito: Foque exclusivamente na função accessGroup e na função switchSection no frontend para reestruturar a mini-seção "Sobre" com um menu-lateral esquerdo e a seção "Informações Básicas". Não modifique o design ou layout das outras mini-seções ("Discussões", "Membros", "Ajustes", "Notificações"), nem dos modals de "Adicionar Grupo" e "Criar Novo Grupo", nem outras partes do código (ex.: createGroup, joinGroupByCode, loadAllGroups).
+
+
+
+Design Moderno e Sofisticado:
+
+
+
+
+
+Utilize um menu-lateral fixo à esquerda com largura de 200px, fundo azul escuro (#2c3e50), texto branco e itens em hover com gradiente (#3498db to #2980b9).
+
+
+
+A seção principal à direita deve ter fundo branco com sombra leve (box-shadow: 0 2px 10px rgba(0,0,0,0.1)), bordas arredondadas (border-radius: 8px) e padding de 20px.
+
+
+
+Empregue tipografia moderna (ex.: "Roboto", "Poppins" via Google Fonts ou similar) com tamanhos de fonte ajustados (h2: 24px, p: 16px).
+
+
+
+Mantenha os campos existentes organizados em um layout de grade ou colunas limpas.
+
+
+
+Sincronização de Dados: Certifique-se de que o groupId seja corretamente sincronizado e os dados sejam preenchidos automaticamente na seção "Informações Básicas" a partir do Supabase.
+
+
+
+Preservação: Mantenha todas as funcionalidades existentes (chat, pesquisa, contagem de online, etc.) e garanta compatibilidade com o restante da interface.
+
+
+
+Testes Completos: Após as alterações, realize testes abrangentes e envie os logs.
+
+
+
+Descrição da Nova Interface da Mini-Seção "Sobre"
+
+
+
+
+
+Menu-Lateral Esquerdo:
+
+
+
+
+
+Largura fixa: 200px.
+
+
+
+Fundo: #2c3e50.
+
+
+
+Itens: Lista vertical com "Informações Básicas" como item ativo por padrão, texto branco, padding 10px, hover com gradiente (#3498db to #2980b9).
+
+
+
+Seção Principal (Informações Básicas):
+
+
+
+
+
+Fundo: Branco (#ffffff).
+
+
+
+Sombra: box-shadow: 0 2px 10px rgba(0,0,0,0.1).
+
+
+
+Bordas arredondadas: border-radius: 8px.
+
+
+
+Campos: Nome do Grupo, Descrição, Disciplina/Área, Tópico Específico, Código Único, Tags do Grupo e Controle de Privacidade e Acesso, organizados em layout de grade com labels à esquerda e inputs à direita.
+
+
+
+Tipografia: "Roboto" ou similar, h2 24px para títulos, p 16px para texto.
+
+
+
+Modificações no Frontend (JavaScript e HTML)
+
+ // Atualizar accessGroup para melhorar o design da mini-seção "Sobre" com menu-lateral let currentGroupId = null; // Variável global para armazenar o groupId ativo
+
+const accessGroup = async (groupId) => { try { console.log(Acessando grupo ${groupId}...); const userId = await validateUserAuth(); if (!userId) { console.error('Usuário não autenticado.'); alert('Usuário não autenticado.'); return; }
+
+// Validar e armazenar o groupId
+if (!groupId || typeof groupId !== 'string') {
+  console.error('ID do grupo inválido:', groupId);
+  alert('ID do grupo inválido. Verifique o console.');
+  return;
+}
+currentGroupId = groupId;
+
+// Ocultar o cabeçalho de Minhas Turmas
+const header = document.querySelector('.groups-header');
+if (header) header.style.display = 'none';
+
+// Cache para nomes e imagens de perfil
+const userCache = new Map();
+const { data: users, error: usersError } = await supabase
+  .from('auth.users')
+  .select('id, user_metadata')
+  .in('id', (await supabase.from('membros_grupos').select('user_id').eq('grupo_id', groupId)).data.map(u => u.user_id));
+if (usersError) throw usersError;
+if (!users) throw new Error('Nenhum usuário encontrado no grupo.');
+users.forEach(user => {
+  const metadata = user.user_metadata || {};
+  userCache.set(user.id, {
+    name: metadata.name || `Usuário ${user.id.slice(0, 5)}`,
+    avatar_url: metadata.avatar_url || null
+  });
+});
+console.log(`Cache de usuários populado com ${userCache.size} entradas.`);
+
+// Buscar dados do grupo com retries
+const fetchGroupData = async (groupId, retries = 3, delay = 2000) => {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const { data: groupData, error: groupError } = await supabase
+        .from('grupos')
+        .select('nome, descricao, disciplina, topico_especifico, codigo_unico, tags, privacidade')
+        .eq('id', groupId)
+        .single();
+      if (groupError) throw groupError;
+      if (!groupData) throw new Error(`Dados do grupo ${groupId} não encontrados.`);
+      return groupData;
+    } catch (error) {
+      console.warn(`Tentativa ${attempt} de buscar dados do grupo ${groupId} falhou:`, error.message);
+      if (attempt === retries) throw error;
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+};
+const groupData = await fetchGroupData(groupId);
+
+// Contagem de membros online
+let onlineCount = 0;
+const updateOnlineCount = () => {
+  const now = new Date();
+  return supabase
+    .from('user_sessions')
+    .select('user_id', { count: 'exact' })
+    .eq('grupo_id', groupId)
+    .gte('last_active', new Date(now - 30 * 1000).toISOString())
+    .then(({ count }) => {
+      onlineCount = count || 0;
+      return onlineCount;
+    })
+    .catch(err => {
+      console.error('Erro ao atualizar contagem de online:', err.message);
+      return 0;
+    });
+};
+setInterval(() => {
+  updateOnlineCount().then(count => {
+    const onlineNumber = document.getElementById('online-number');
+    if (onlineNumber) onlineNumber.textContent = count;
+  });
+}, 15000);
+updateOnlineCount().then(count => {
+  const onlineNumber = document.getElementById('online-number');
+  if (onlineNumber) onlineNumber.textContent = count;
+});
+
+// Criar interface com menu-lateral e seção "Sobre"
+const groupInterface = document.querySelector('#group-interface') || document.createElement('div');
+if (!groupInterface.id) {
+  groupInterface.id = 'group-interface';
+  groupInterface.style.cssText = 'display: flex; margin-left: 250px; padding: 20px;';
+  document.getElementById('main-content').innerHTML = '';
+  document.getElementById('main-content').appendChild(groupInterface);
+}
+
+groupInterface.innerHTML = `
+  <div style="width: 200px; background: #2c3e50; color: white; padding: 10px; border-radius: 8px 0 0 8px;">
+    <h3 style="font-size: 18px; margin: 10px 0;">Menu</h3>
+    <ul style="list-style: none; padding: 0;">
+      <li style="padding: 10px; background: #3498db; border-radius: 4px; margin-bottom: 5px; transition: background 0.3s;" onmouseover="this.style.background='linear-gradient(to right, #3498db, #2980b9)';" onmouseout="this.style.background='#3498db';">Informações Básicas</li>
+    </ul>
+  </div>
+  <div id="about-content" style="flex-grow: 1; background: #ffffff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 8px; padding: 20px; margin-left: 20px;">
+    <h2 style="font-family: 'Roboto', sans-serif; font-size: 24px; color: #2c3e50; margin-bottom: 20px;">Informações Básicas</h2>
+    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 10px;">
+      <label style="font-family: 'Roboto', sans-serif; font-size: 16px; color: #34495e;">Nome do Grupo:</label>
+      <input type="text" id="group-name" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" readonly><br>
+      <label style="font-family: 'Roboto', sans-serif; font-size: 16px; color: #34495e;">Descrição:</label>
+      <textarea id="group-description" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; resize: vertical;" readonly></textarea><br>
+      <label style="font-family: 'Roboto', sans-serif; font-size: 16px; color: #34495e;">Disciplina/Área:</label>
+      <input type="text" id="group-discipline" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" readonly><br>
+      <label style="font-family: 'Roboto', sans-serif; font-size: 16px; color: #34495e;">Tópico Específico:</label>
+      <input type="text" id="group-topic" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" readonly><br>
+      <label style="font-family: 'Roboto', sans-serif; font-size: 16px; color: #34495e;">Código Único:</label>
+      <input type="text" id="group-code" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" readonly><br>
+      <label style="font-family: 'Roboto', sans-serif; font-size: 16px; color: #34495e;">Tags do Grupo:</label>
+      <input type="text" id="group-tags" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" readonly><br>
+      <label style="font-family: 'Roboto', sans-serif; font-size: 16px; color: #34495e;">Privacidade e Acesso:</label>
+      <select id="group-privacy" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" disabled>
+        <option value="public">Público</option>
+        <option value="private">Privado</option>
+      </select>
+    </div>
+  </div>
+  <div id="discussions-content" style="margin-top: 20px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; min-height: 200px; display: none;">
+    <div id="chat-messages" style="display: flex; flex-direction: column-reverse;"></div>
+  </div>
+  <div id="members-content" style="margin-top: 20px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; min-height: 200px; display: none;">
+    <div id="members-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;"></div>
+  </div>
+  <div style="margin-top: 10px; display: flex; align-items: center;">
+    <input id="chat-input" type="text" placeholder="Digite sua mensagem..." style="flex-grow: 1; padding: 5px; border: 1px solid #ccc; border-radius: 5px; margin-right: 5px;">
+    <button onclick="sendMessage('${groupId}')" style="background: #2ecc71; color: white; border: none; padding: 5px 10px; border-radius: 5px;">Enviar</button>
+  </div>
+  <div id="search-bar" style="display: none; margin-top: 10px;">
+    <input id="search-input" type="text" placeholder="Pesquisar mensagens..." style="width: 200px; padding: 5px; border: 1px solid #ccc; border-radius: 5px;">
+    <button onclick="hideSearchBar()" style="background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 5px; margin-left: 5px;">Fechar</button>
+  </div>
+`;
+document.getElementById('main-content').innerHTML = '';
+document.getElementById('main-content').appendChild(groupInterface);
+
+// Preencher os campos da mini-seção "Sobre" com os dados do grupo
+const fillSettings = (groupId) => {
+  try {
+    const nameInput = document.querySelector('#group-name');
+    const descriptionInput = document.querySelector('#group-description');
+    const disciplineInput = document.querySelector('#group-discipline');
+    const topicInput = document.querySelector('#group-topic');
+    const codeInput = document.querySelector('#group-code');
+    const tagsInput = document.querySelector('#group-tags');
+    const privacySelect = document.querySelector('#group-privacy');
+
+    if (!nameInput || !descriptionInput || !disciplineInput || !topicInput || !codeInput || !tagsInput || !privacySelect) {
+      console.error(`Campos da mini-seção "Sobre" não encontrados para o grupo ${groupId}. Verifique os seletores.`);
+      return;
+    }
+
+    fetchGroupData(groupId).then(groupData => {
+      nameInput.value = groupData.nome || 'Nome não especificado';
+      descriptionInput.value = groupData.descricao || 'Descrição não especificada';
+      disciplineInput.value = groupData.disciplina || 'Disciplina não especificada';
+      topicInput.value = groupData.topico_especifico || 'Tópico não especificado';
+      codeInput.value = groupData.codigo_unico || 'Código não disponível';
+      tagsInput.value = Array.isArray(groupData.tags) ? groupData.tags.join(', ') : groupData.tags || 'Sem tags';
+      privacySelect.value = groupData.privacidade || 'public';
+      console.log(`Campos da mini-seção "Sobre" preenchidos para o grupo ${groupId}.`);
+    }).catch(error => {
+      console.error(`Erro ao buscar dados para preencher campos do grupo ${groupId}:`, error.message);
+      alert('Erro ao carregar os dados da seção "Sobre". Verifique o console.');
+    });
+  } catch (error) {
+    console.error(`Erro ao preencher campos da mini-seção "Sobre" para o grupo ${groupId}:`, error.message);
+    alert('Erro ao carregar os dados da seção "Sobre". Verifique o console.');
+  }
+};
+
+// Atualizar seção com preenchimento automático
+const switchSection = (section, groupId) => {
+  const sections = ['discussions', 'members', 'about'];
+  sections.forEach(s => {
+    const content = document.getElementById(`${s}-content`);
+    if (content) content.style.display = s === section ? 'block' : 'none';
+    const button = document.querySelector(`button[onclick*="switchSection('${s}'"]`);
+    if (button) {
+      button.style.background = s === section ? '#3498db' : '#ddd';
+      button.style.color = s === section ? 'white' : '#666';
+    }
+  });
+  if (section === 'about' && currentGroupId) {
+    fillSettings(currentGroupId); // Preencher campos ao ativar a seção "Sobre"
+  }
+  console.log(`Seção ${section} ativada para o grupo ${groupId}.`);
+};
+
+// Preencher campos inicialmente ao carregar a interface
+if (currentGroupId) {
+  fillSettings(currentGroupId);
+}
+switchSection('about', groupId); // Iniciar com "Sobre" como padrão
+
+// Configurar Realtime para chat e online
+const channel = supabase
+  .channel(`chat-${groupId}`)
+  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mensagens', filter: `grupo_id=eq.${groupId}` }, (payload) => {
+    addMessageToChat(payload.new, userCache);
+  })
+  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'user_sessions', filter: `grupo_id=eq.${groupId}` }, () => {
+    updateOnlineCount().then(count => {
+      const onlineNumber = document.getElementById('online-number');
+      if (onlineNumber) onlineNumber.textContent = count;
+    }).catch(err => console.error('Erro na atualização de online via Realtime:', err.message));
+    loadMembers(groupId, userCache, userId, isAdminOrOwner);
+  })
+  .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'user_sessions', filter: `grupo_id=eq.${groupId}` }, () => {
+    updateOnlineCount().then(count => {
+      const onlineNumber = document.getElementById('online-number');
+      if (onlineNumber) onlineNumber.textContent = count;
+    }).catch(err => console.error('Erro na remoção de online via Realtime:', err.message));
+    loadMembers(groupId, userCache, userId, isAdminOrOwner);
+  })
+  .subscribe(async (status) => {
+    if (status === 'SUBSCRIBED') {
+      console.log(`Subscribed to chat and online channel for group ${groupId}`);
+      const { data: messages, error: messagesError } = await supabase
+        .from('mensagens')
+        .select('*')
+        .eq('grupo_id', groupId)
+        .order('enviado_em', { ascending: false });
+      if (messagesError) throw messagesError;
+      messages.forEach(message => addMessageToChat(message, userCache));
+      updateOnlineCount().then(count => {
+        const onlineNumber = document.getElementById('online-number');
+        if (onlineNumber) onlineNumber.textContent = count;
+      }).catch(err => console.error('Erro inicial na contagem de online:', err.message));
+      loadMembers(groupId, userCache, userId, isAdminOrOwner);
+    }
+  })
+  .catch(err => console.error('Erro ao subscrever ao canal Realtime:', err.message));
+
+// Evento para ícone de pesquisa
+const searchIcon = document.getElementById('search-icon');
+if (searchIcon) {
+  searchIcon.addEventListener('click', () => {
+    const searchBar = document.getElementById('search-bar');
+    if (searchBar) {
+      searchBar.style.display = 'block';
+      const searchInput = document.getElementById('search-input');
+      if (searchInput) searchInput.focus();
+      filterMessages(groupId);
+    }
+  });
+}
+
+// Evento para ícone de três pontos
+const menuIcon = document.getElementById('menu-icon');
+if (menuIcon && typeof showOptionsModal === 'function') {
+  menuIcon.addEventListener('click', () => {
+    try {
+      console.log(`Abrindo modal de opções para o grupo ${groupId}...`);
+      showOptionsModal(groupId);
+    } catch (error) {
+      console.error(`Erro ao abrir modal de opções para o grupo ${groupId}:`, error.message);
+      alert('Erro ao abrir as opções. Verifique o console.');
+    }
+  });
+} else if (menuIcon) {
+  console.warn(`Função showOptionsModal não encontrada para o grupo ${groupId}. Ícone desativado.`);
+  menuIcon.disabled = true;
+}
+
+console.log(`Interface do grupo ${groupId} carregada com design moderno para "Sobre".`);
+
+} catch (error) { console.error('Erro ao acessar grupo:', error.message, error.stack); alert('Erro ao acessar o grupo. Verifique o console.'); const header = document.querySelector('.groups-header'); if (header) header.style.display = 'flex'; } };
+
+// Funções existentes mantidas sem alterações (loadMembers, returnToGroups, updateOnlineCount, filterMessages, hideSearchBar, loadInitialMessages, showSettingsModal, showOptionsModal, addMessageToChat, sendMessage, etc.)
