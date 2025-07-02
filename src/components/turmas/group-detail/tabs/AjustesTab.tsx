@@ -393,7 +393,8 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
                 onCheckedChange={(checked) => setSettings(prev => ({ 
                   ...prev, 
                   is_public: checked,
-                  is_private: checked ? false : prev.is_private
+                  is_private: checked ? false : prev.is_private,
+                  is_visible_to_all: checked ? true : prev.is_visible_to_all
                 }))}
                 className="data-[state=checked]:bg-[#FF6B00]"
               />
@@ -414,7 +415,8 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
                 onCheckedChange={(checked) => setSettings(prev => ({ 
                   ...prev, 
                   is_private: checked,
-                  is_public: checked ? false : prev.is_public
+                  is_public: checked ? false : prev.is_public,
+                  is_visible_to_all: checked ? false : prev.is_visible_to_all
                 }))}
                 className="data-[state=checked]:bg-[#FF6B00]"
               />
