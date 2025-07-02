@@ -37,9 +37,10 @@ import {
 interface AjustesTabProps {
   group: any;
   onSave?: (settings: any) => void;
+  onUpdate?: () => void;
 }
 
-const AjustesTab: React.FC<AjustesTabProps> = ({ group, onSave }) => {
+const AjustesTab: React.FC<AjustesTabProps> = ({ group, onSave, onUpdate }) => {
   const [activeSection, setActiveSection] = useState("informacoes-basicas");
   const [groupSettings, setGroupSettings] = useState({
     nome: group?.nome || "",
@@ -53,25 +54,62 @@ const AjustesTab: React.FC<AjustesTabProps> = ({ group, onSave }) => {
     tipo_grupo: group?.tipo_grupo || "estudo",
     codigo_unico: group?.codigo_unico || "",
     // Configurações de aparência
-    tema: "laranja",
-    cor_primaria: "#FF6B00",
-    imagem_capa: "",
+    tema: group?.tema || "laranja",
+    cor_primaria: group?.cor_primaria || "#FF6B00",
+    imagem_capa: group?.imagem_capa || "",
     // Configurações de privacidade
-    aceitar_novos_membros: true,
-    aprovacao_manual: false,
-    permitir_convites: true,
+    aceitar_novos_membros: group?.aceitar_novos_membros ?? true,
+    aprovacao_manual: group?.aprovacao_manual ?? false,
+    permitir_convites: group?.permitir_convites ?? true,
     // Configurações de metas
-    meta_membros: 50,
-    meta_atividade_semanal: 10,
-    meta_materiais: 20,
+    meta_membros: group?.meta_membros || 50,
+    meta_atividade_semanal: group?.meta_atividade_semanal || 10,
+    meta_materiais: group?.meta_materiais || 20,
     // Regras
-    regras: [],
-    codigo_conduta: "",
+    regras: group?.regras || [],
+    codigo_conduta: group?.codigo_conduta || "",
     // Avançado
-    backup_automatico: true,
-    notificacoes_ativas: true,
-    moderacao_automatica: false,
+    backup_automatico: group?.backup_automatico ?? true,
+    notificacoes_ativas: group?.notificacoes_ativas ?? true,
+    moderacao_automatica: group?.moderacao_automatica ?? false,
   });
+
+  // Atualizar settings quando o grupo mudar
+  useEffect(() => {
+    if (group) {
+      setGroupSettings({
+        nome: group.nome || "",
+        descricao: group.descricao || "",
+        tags: group.tags || [],
+        disciplina_area: group.disciplina_area || "",
+        topico_especifico: group.topico_especifico || "",
+        is_private: group.is_private || false,
+        is_visible_to_all: group.is_visible_to_all || false,
+        is_visible_to_partners: group.is_visible_to_partners || false,
+        tipo_grupo: group.tipo_grupo || "estudo",
+        codigo_unico: group.codigo_unico || "",
+        // Configurações de aparência
+        tema: group.tema || "laranja",
+        cor_primaria: group.cor_primaria || "#FF6B00",
+        imagem_capa: group.imagem_capa || "",
+        // Configurações de privacidade
+        aceitar_novos_membros: group.aceitar_novos_membros ?? true,
+        aprovacao_manual: group.aprovacao_manual ?? false,
+        permitir_convites: group.permitir_convites ?? true,
+        // Configurações de metas
+        meta_membros: group.meta_membros || 50,
+        meta_atividade_semanal: group.meta_atividade_semanal || 10,
+        meta_materiais: group.meta_materiais || 20,
+        // Regras
+        regras: group.regras || [],
+        codigo_conduta: group.codigo_conduta || "",
+        // Avançado
+        backup_automatico: group.backup_automatico ?? true,
+        notificacoes_ativas: group.notificacoes_ativas ?? true,
+        moderacao_automatica: group.moderacao_automatica ?? false,
+      });
+    }
+  }, [group]);
 
   const [newTag, setNewTag] = useState("");
   const [newRule, setNewRule] = useState("");
@@ -87,7 +125,7 @@ const AjustesTab: React.FC<AjustesTabProps> = ({ group, onSave }) => {
       // Log para debug
       console.log('Salvando configurações do grupo:', group?.id, groupSettings);
 
-      // Preparar dados para atualização
+      // Preparar dados para atualização (incluindo todas as configurações)
       const updateData = {
         nome: groupSettings.nome.trim(),
         descricao: groupSettings.descricao.trim(),
@@ -95,7 +133,29 @@ const AjustesTab: React.FC<AjustesTabProps> = ({ group, onSave }) => {
         disciplina_area: groupSettings.disciplina_area.trim(),
         topico_especifico: groupSettings.topico_especifico.trim(),
         is_private: groupSettings.is_private,
-        is_visible_to_all: groupSettings.is_visible_to_all
+        is_visible_to_all: groupSettings.is_visible_to_all,
+        is_visible_to_partners: groupSettings.is_visible_to_partners,
+        tipo_grupo: groupSettings.tipo_grupo,
+        // Configurações de aparência
+        tema: groupSettings.tema,
+        cor_primaria: groupSettings.cor_primaria,
+        imagem_capa: groupSettings.imagem_capa,
+        // Configurações de privacidade
+        aceitar_novos_membros: groupSettings.aceitar_novos_membros,
+        aprovacao_manual: groupSettings.aprovacao_manual,
+        permitir_convites: groupSettings.permitir_convites,
+        // Configurações de metas
+        meta_membros: groupSettings.meta_membros,
+        meta_atividade_semanal: groupSettings.meta_atividade_semanal,
+        meta_materiais: groupSettings.meta_materiais,
+        // Regras
+        regras: groupSettings.regras.filter(regra => regra.trim() !== ''),
+        codigo_conduta: groupSettings.codigo_conduta.trim(),
+        // Avançado
+        backup_automatico: groupSettings.backup_automatico,
+        notificacoes_ativas: groupSettings.notificacoes_ativas,
+        moderacao_automatica: groupSettings.moderacao_automatica,
+        updated_at: new Date().toISOString()
       };
 
       // Importar supabase dinamicamente
@@ -116,12 +176,17 @@ const AjustesTab: React.FC<AjustesTabProps> = ({ group, onSave }) => {
       console.log(`Configurações salvas com sucesso para grupo ${group?.id}`);
       alert('Configurações salvas com sucesso!');
       
+      // Chama a função onUpdate para atualizar os dados do grupo no componente pai
+      if (onUpdate) {
+        onUpdate();
+      }
+      
       // Chama a função original onSave se existir
       if (onSave) {
         onSave(groupSettings);
       }
     } catch (error) {
-      console.error('Erro ao salvar configurações:', error.message, error.stack);
+      console.error('Erro ao salvar configurações:', error?.message, error?.stack);
       alert('Erro ao salvar configurações. Verifique o console.');
     }
   };
