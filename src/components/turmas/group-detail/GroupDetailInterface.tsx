@@ -5,6 +5,7 @@ import GroupDetailHeader from './GroupDetailHeader';
 import GroupTabs from './GroupTabs';
 import ChatSection from './ChatSection';
 import PlaceholderSection from './PlaceholderSection';
+import AjustesTab from './tabs/AjustesTab';
 
 interface GroupDetailInterfaceProps {
   groupId: string;
@@ -20,6 +21,41 @@ export default function GroupDetailInterface({
   currentUser
 }: GroupDetailInterfaceProps) {
   const [activeTab, setActiveTab] = useState('discussions');
+  const [groupData, setGroupData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Função para carregar dados do grupo
+  const loadGroupData = async () => {
+    try {
+      setLoading(true);
+      const { supabase } = await import('@/integrations/supabase/client');
+      
+      const { data, error } = await supabase
+        .from('grupos_estudo')
+        .select('*')
+        .eq('id', groupId)
+        .single();
+      
+      if (error) {
+        console.error('Erro ao carregar dados do grupo:', error);
+        return;
+      }
+      
+      if (data) {
+        console.log('Dados do grupo carregados:', data);
+        setGroupData(data);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar grupo:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Função para atualizar dados após salvar configurações
+  const handleUpdate = () => {
+    loadGroupData();
+  };
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -33,6 +69,15 @@ export default function GroupDetailInterface({
         return <PlaceholderSection title="Arquivos" message="Funcionalidade em desenvolvimento" />;
       case 'about':
         return <PlaceholderSection title="Sobre" message="Funcionalidade em desenvolvimento" />;
+      case 'ajustes':
+        return groupData ? (
+          <AjustesTab 
+            group={groupData} 
+            onUpdate={handleUpdate}
+          />
+        ) : (
+          <PlaceholderSection title="Ajustes" message="Carregando dados do grupo..." />
+        );
       default:
         return <PlaceholderSection title="Discussões" message="Selecione uma aba" />;
     }
@@ -41,6 +86,11 @@ export default function GroupDetailInterface({
   useEffect(() => {
     // Scroll to top when entering group interface
     window.scrollTo(0, 0);
+
+    // Carregar dados do grupo
+    if (groupId) {
+      loadGroupData();
+    }
 
     // Cleanup function para restaurar cabeçalho se componente for desmontado
     return () => {
@@ -53,7 +103,7 @@ export default function GroupDetailInterface({
         console.log('Cabeçalho restaurado na limpeza do componente.');
       }
     };
-  }, []);
+  }, [groupId]);
 
   return (
     <div className="group-interface">
