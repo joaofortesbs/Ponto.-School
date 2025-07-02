@@ -624,222 +624,265 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
         )}
 
         {activeTab === "sobre" && (
-          <div className="p-4">
-            <div className="flex gap-6 h-full">
-              {/* Menu Lateral Esquerdo */}
-              <div className="w-64 flex-shrink-0">
-                <div className="bg-white dark:bg-[#1a2236] rounded-lg p-4 shadow-sm">
-                  <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">Menu</h3>
-                  <div className="space-y-2">
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20 font-medium"
-                    >
-                      <Info className="h-4 w-4 mr-2" />
-                      Informações Básicas
-                    </Button>
-                  </div>
+          <div className="flex h-full bg-gradient-to-br from-orange-50/50 via-white to-blue-50/50 dark:from-gray-900 dark:via-[#0f1525] dark:to-gray-800">
+            {/* Menu Lateral Esquerdo */}
+            <div className="w-64 flex-shrink-0 p-6">
+              <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-lg border border-orange-200/50 dark:border-orange-700/30 p-6">
+                <h3 className="text-lg font-bold mb-6 bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent">
+                  Menu
+                </h3>
+                <div className="space-y-3">
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 font-medium rounded-xl h-12 shadow-lg"
+                  >
+                    <Info className="h-4 w-4 mr-3" />
+                    Informações Básicas
+                  </Button>
                 </div>
               </div>
+            </div>
 
-              {/* Conteúdo Principal - Estilo dos Ajustes */}
-              <div className="flex-1">
-                <div className="bg-white dark:bg-[#1a2236] rounded-lg p-6 shadow-sm">
-                  <div className="space-y-8">
-                    {/* Informações Básicas do Grupo */}
-                    <div>
-                      <h3 className="text-lg font-bold mb-6 text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
+            {/* Conteúdo Principal - Estilo dos Ajustes */}
+            <div className="flex-1 p-6 pr-8">
+              <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-lg border border-orange-200/50 dark:border-orange-700/30 p-8">
+                <div className="space-y-10">
+                  {/* Header da Seção */}
+                  <div className="text-center mb-8">
+                    <h2 className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent mb-2">
+                      Informações do Grupo
+                    </h2>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      Visualize todas as informações básicas deste grupo de estudos
+                    </p>
+                  </div>
+
+                  {/* Informações Básicas do Grupo */}
+                  <div>
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="p-2 bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg">
+                        <Info className="h-5 w-5 text-white" />
+                      </div>
+                      <h3 className="text-lg font-bold bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent">
                         Informações Básicas
                       </h3>
-                      
-                      <div className="grid grid-cols-2 gap-6">
-                        {/* Nome do Grupo */}
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Nome do Grupo
-                          </label>
-                          <div className="relative">
-                            <Input
-                              value={group.nome || "Mecânica Quântica Avançada"}
-                              readOnly
-                              className="bg-gray-50 dark:bg-[#0f1525] border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white cursor-default"
-                            />
-                          </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Nome do Grupo */}
+                      <div className="space-y-2">
+                        <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                          <Users className="h-4 w-4" />
+                          Nome do Grupo
+                        </label>
+                        <div className="relative">
+                          <Input
+                            value={group.nome || "Mecânica Quântica Avançada"}
+                            readOnly
+                            className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-orange-200/50 dark:border-orange-700/50 rounded-xl h-12 cursor-default"
+                          />
                         </div>
+                      </div>
 
-                        {/* Código do Grupo */}
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Código do Grupo
-                          </label>
-                          <div className="relative">
-                            <Input
-                              value={group.codigo || "QUA2023"}
-                              readOnly
-                              className="bg-gray-50 dark:bg-[#0f1525] border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white cursor-default"
-                            />
-                          </div>
+                      {/* Código do Grupo */}
+                      <div className="space-y-2">
+                        <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                          <Target className="h-4 w-4" />
+                          Código do Grupo
+                        </label>
+                        <div className="relative">
+                          <Input
+                            value={group.codigo_unico || "QUA2023"}
+                            readOnly
+                            className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-orange-200/50 dark:border-orange-700/50 rounded-xl h-12 cursor-default"
+                          />
                         </div>
+                      </div>
 
-                        {/* Disciplina/Área */}
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Disciplina/Área
-                          </label>
-                          <div className="relative">
-                            <Input
-                              value={group.disciplina || "Física"}
-                              readOnly
-                              className="bg-gray-50 dark:bg-[#0f1525] border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white cursor-default"
-                            />
-                          </div>
+                      {/* Disciplina/Área */}
+                      <div className="space-y-2">
+                        <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                          <BookOpen className="h-4 w-4" />
+                          Disciplina/Área
+                        </label>
+                        <div className="relative">
+                          <Input
+                            value={group.disciplina_area || "Física"}
+                            readOnly
+                            className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-orange-200/50 dark:border-orange-700/50 rounded-xl h-12 cursor-default"
+                          />
                         </div>
+                      </div>
 
-                        {/* Tópico Específico */}
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Tópico Específico
-                          </label>
-                          <div className="relative">
-                            <Input
-                              value="Mecânica Quântica"
-                              readOnly
-                              className="bg-gray-50 dark:bg-[#0f1525] border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white cursor-default"
-                            />
-                          </div>
+                      {/* Tópico Específico */}
+                      <div className="space-y-2">
+                        <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                          <Brain className="h-4 w-4" />
+                          Tópico Específico
+                        </label>
+                        <div className="relative">
+                          <Input
+                            value={group.topico_especifico || "Mecânica Quântica"}
+                            readOnly
+                            className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-orange-200/50 dark:border-orange-700/50 rounded-xl h-12 cursor-default"
+                          />
                         </div>
+                      </div>
 
-                        {/* Tipo de Grupo */}
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Tipo de Grupo
-                          </label>
-                          <div className="relative">
-                            <Input
-                              value="Estudo"
-                              readOnly
-                              className="bg-gray-50 dark:bg-[#0f1525] border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white cursor-default"
-                            />
-                          </div>
+                      {/* Tipo de Grupo */}
+                      <div className="space-y-2">
+                        <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                          <Sparkles className="h-4 w-4" />
+                          Tipo de Grupo
+                        </label>
+                        <div className="relative">
+                          <Input
+                            value={group.tipo_grupo || "estudo"}
+                            readOnly
+                            className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-orange-200/50 dark:border-orange-700/50 rounded-xl h-12 cursor-default"
+                          />
                         </div>
+                      </div>
 
-                        {/* Visibilidade */}
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Visibilidade
-                          </label>
-                          <div className="relative">
-                            <Input
-                              value="Público"
-                              readOnly
-                              className="bg-gray-50 dark:bg-[#0f1525] border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white cursor-default"
-                            />
-                          </div>
+                      {/* Visibilidade */}
+                      <div className="space-y-2">
+                        <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                          <Eye className="h-4 w-4" />
+                          Visibilidade
+                        </label>
+                        <div className="relative">
+                          <Input
+                            value={group.is_public ? "Público" : "Privado"}
+                            readOnly
+                            className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-orange-200/50 dark:border-orange-700/50 rounded-xl h-12 cursor-default"
+                          />
                         </div>
+                      </div>
 
-                        {/* Data de Criação */}
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Data de Criação
-                          </label>
-                          <div className="relative">
-                            <Input
-                              value={group.dataInicio || "10/01/2023"}
-                              readOnly
-                              className="bg-gray-50 dark:bg-[#0f1525] border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white cursor-default"
-                            />
-                          </div>
+                      {/* Data de Criação */}
+                      <div className="space-y-2">
+                        <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                          <Calendar className="h-4 w-4" />
+                          Data de Criação
+                        </label>
+                        <div className="relative">
+                          <Input
+                            value={group.created_at ? new Date(group.created_at).toLocaleDateString('pt-BR') : "10/01/2023"}
+                            readOnly
+                            className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-orange-200/50 dark:border-orange-700/50 rounded-xl h-12 cursor-default"
+                          />
                         </div>
+                      </div>
 
-                        {/* Número de Membros */}
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Número de Membros
-                          </label>
-                          <div className="relative">
-                            <Input
-                              value={`${members.length} membros`}
-                              readOnly
-                              className="bg-gray-50 dark:bg-[#0f1525] border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white cursor-default"
-                            />
-                          </div>
+                      {/* Número de Membros */}
+                      <div className="space-y-2">
+                        <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                          <Users className="h-4 w-4" />
+                          Número de Membros
+                        </label>
+                        <div className="relative">
+                          <Input
+                            value={`${members.length} membros`}
+                            readOnly
+                            className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-orange-200/50 dark:border-orange-700/50 rounded-xl h-12 cursor-default"
+                          />
                         </div>
                       </div>
                     </div>
+                  </div>
 
-                    {/* Descrição do Grupo */}
-                    <div>
-                      <h4 className="text-md font-semibold mb-4 text-gray-900 dark:text-white">
+                  {/* Descrição do Grupo */}
+                  <div>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="p-2 bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg">
+                        <FileText className="h-5 w-5 text-white" />
+                      </div>
+                      <h4 className="text-lg font-bold bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent">
                         Descrição do Grupo
                       </h4>
-                      <div className="relative">
-                        <textarea
-                          value={group.descricao || "Grupo dedicado ao estudo de mecânica quântica e suas aplicações na física moderna. Discutimos desde os fundamentos até aplicações avançadas como computação quântica e criptografia quântica. Este grupo foi criado para facilitar o estudo colaborativo e o compartilhamento de recursos entre os alunos interessados em mecânica quântica."}
-                          readOnly
-                          rows={4}
-                          className="w-full p-3 bg-gray-50 dark:bg-[#0f1525] border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white cursor-default resize-none"
-                        />
-                      </div>
                     </div>
+                    <div className="relative">
+                      <textarea
+                        value={group.descricao || "Grupo dedicado ao estudo de mecânica quântica e suas aplicações na física moderna. Discutimos desde os fundamentos até aplicações avançadas como computação quântica e criptografia quântica. Este grupo foi criado para facilitar o estudo colaborativo e o compartilhamento de recursos entre os alunos interessados em mecânica quântica."}
+                        readOnly
+                        rows={4}
+                        className="w-full p-4 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-orange-200/50 dark:border-orange-700/50 rounded-xl text-gray-900 dark:text-white cursor-default resize-none"
+                      />
+                    </div>
+                  </div>
 
-                    {/* Tags/Etiquetas */}
-                    <div>
-                      <h4 className="text-md font-semibold mb-4 text-gray-900 dark:text-white">
+                  {/* Tags/Etiquetas */}
+                  <div>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="p-2 bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg">
+                        <Sparkles className="h-5 w-5 text-white" />
+                      </div>
+                      <h4 className="text-lg font-bold bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent">
                         Tags/Etiquetas
                       </h4>
-                      <div className="flex flex-wrap gap-2">
-                        {(group.tags || ["quântica", "física", "avançado", "teórico", "prático"]).map(
-                          (tag, index) => (
-                            <Badge
-                              key={index}
-                              className="bg-[#FF6B00]/10 text-[#FF6B00] border border-[#FF6B00]/30 px-3 py-1"
-                            >
-                              {tag}
-                            </Badge>
-                          ),
-                        )}
-                      </div>
                     </div>
+                    <div className="flex flex-wrap gap-3">
+                      {(group.tags || ["quântica", "física", "avançado", "teórico", "prático"]).map(
+                        (tag, index) => (
+                          <Badge
+                            key={index}
+                            className="bg-gradient-to-r from-orange-500/20 to-orange-600/20 text-orange-700 dark:text-orange-300 border border-orange-300/50 dark:border-orange-600/50 px-4 py-2 rounded-xl"
+                          >
+                            {tag}
+                          </Badge>
+                        ),
+                      )}
+                    </div>
+                  </div>
 
-                    {/* Administradores */}
-                    <div>
-                      <h4 className="text-md font-semibold mb-4 text-gray-900 dark:text-white">
+                  {/* Administradores */}
+                  <div>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="p-2 bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg">
+                        <Award className="h-5 w-5 text-white" />
+                      </div>
+                      <h4 className="text-lg font-bold bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent">
                         Administradores
                       </h4>
-                      <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-[#0f1525] border border-gray-300 dark:border-gray-700 rounded-lg">
-                        <Avatar className="h-10 w-10 ring-2 ring-[#FF6B00]/20">
-                          <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=Admin" />
-                          <AvatarFallback>AD</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-medium text-gray-900 dark:text-white">Ana Silva</p>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">Criador do grupo</p>
-                        </div>
+                    </div>
+                    <div className="flex items-center gap-4 p-4 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-orange-200/50 dark:border-orange-700/50 rounded-xl">
+                      <Avatar className="h-12 w-12 ring-2 ring-orange-500/30">
+                        <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=Admin" />
+                        <AvatarFallback className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">AD</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-semibold text-gray-900 dark:text-white">Ana Silva</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Criador do grupo</p>
                       </div>
                     </div>
+                  </div>
 
-                    {/* Progresso do Grupo */}
-                    <div>
-                      <h4 className="text-md font-semibold mb-4 text-gray-900 dark:text-white">
+                  {/* Progresso do Grupo */}
+                  <div>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="p-2 bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg">
+                        <BarChart className="h-5 w-5 text-white" />
+                      </div>
+                      <h4 className="text-lg font-bold bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent">
                         Progresso do Grupo
                       </h4>
-                      <div className="p-4 bg-gray-50 dark:bg-[#0f1525] border border-gray-300 dark:border-gray-700 rounded-lg">
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="text-sm text-gray-700 dark:text-gray-300">Conteúdo Concluído</span>
-                          <span className="text-lg font-bold text-[#FF6B00]">{group.progresso || 68}%</span>
-                        </div>
-                        <Progress 
-                          value={group.progresso || 68} 
-                          className="h-2"
-                        />
-                        <div className="flex gap-2 mt-3">
-                          <Badge className="bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/30">
-                            <CheckCircle className="h-3 w-3 mr-1" /> Participação Ativa
-                          </Badge>
-                          <Badge className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/30">
-                            <Award className="h-3 w-3 mr-1" /> Contribuidor de Conteúdo
-                          </Badge>
-                        </div>
+                    </div>
+                    <div className="p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-orange-200/50 dark:border-orange-700/50 rounded-xl">
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Conteúdo Concluído</span>
+                        <span className="text-xl font-bold bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent">{group.progresso || 68}%</span>
+                      </div>
+                      <Progress 
+                        value={group.progresso || 68} 
+                        className="h-3 mb-4"
+                      />
+                      <div className="flex gap-3">
+                        <Badge className="bg-green-500/20 text-green-700 dark:text-green-300 border border-green-300/50 dark:border-green-600/50 px-3 py-1 rounded-lg">
+                          <CheckCircle className="h-3 w-3 mr-1" /> Participação Ativa
+                        </Badge>
+                        <Badge className="bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-300/50 dark:border-blue-600/50 px-3 py-1 rounded-lg">
+                          <Award className="h-3 w-3 mr-1" /> Contribuidor de Conteúdo
+                        </Badge>
                       </div>
                     </div>
                   </div>
