@@ -140,43 +140,72 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
   };
 
   const saveSettings = async () => {
-    setIsSaving(true);
-    try {
-      const { error } = await supabase
-        .from('grupos_estudo')
-        .update({
-          nome: settings.nome,
-          descricao: settings.descricao,
-          disciplina_area: settings.disciplina_area,
-          topico_especifico: settings.topico_especifico,
-          tags: settings.tags,
-          is_public: settings.is_public,
-          is_private: settings.is_private,
-          is_visible_to_all: settings.is_visible_to_all,
-          is_visible_to_partners: settings.is_visible_to_partners,
-          max_members: settings.max_members,
-          require_approval: settings.require_approval,
-          allow_member_invites: settings.allow_member_invites,
-          notify_new_members: settings.notify_new_members,
-          notify_new_messages: settings.notify_new_messages,
-          notify_new_materials: settings.notify_new_materials,
-          backup_automatico: settings.backup_automatico,
-          notificacoes_ativas: settings.notificacoes_ativas,
-          moderacao_automatica: settings.moderacao_automatica
-        })
-        .eq('id', groupId);
-
-      if (error) throw error;
-
+    // Validação dos campos obrigatórios
+    if (!settings.nome.trim()) {
       toast({
-        title: "Sucesso",
-        description: "Configurações salvas com sucesso!",
+        title: "Erro de Validação",
+        description: "O nome do grupo é obrigatório.",
+        variant: "destructive"
       });
+      return;
+    }
+
+    setIsSaving(true);
+
+    const saveWithRetry = async (retries = 3, delay = 2000) => {
+      for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+          console.log(`Tentativa ${attempt} de salvar alterações para o grupo ${groupId}...`);
+
+          const updateData = {
+            nome: settings.nome.trim(),
+            descricao: settings.descricao.trim(),
+            disciplina_area: settings.disciplina_area.trim(),
+            topico_especifico: settings.topico_especifico.trim(),
+            tags: settings.tags.filter(tag => tag.trim() !== ''),
+            is_public: settings.is_public,
+            is_private: settings.is_private,
+            is_visible_to_all: settings.is_visible_to_all,
+            is_visible_to_partners: settings.is_visible_to_partners,
+            max_members: settings.max_members,
+            require_approval: settings.require_approval,
+            allow_member_invites: settings.allow_member_invites,
+            notify_new_members: settings.notify_new_members,
+            notify_new_messages: settings.notify_new_messages,
+            notify_new_materials: settings.notify_new_materials,
+            backup_automatico: settings.backup_automatico,
+            notificacoes_ativas: settings.notificacoes_ativas,
+            moderacao_automatica: settings.moderacao_automatica
+          };
+
+          const { error } = await supabase
+            .from('grupos_estudo')
+            .update(updateData)
+            .eq('id', groupId);
+
+          if (error) throw error;
+
+          console.log(`Alterações salvas com sucesso para o grupo ${groupId} na tentativa ${attempt}.`);
+          toast({
+            title: "Sucesso",
+            description: "Configurações salvas com sucesso!",
+          });
+          return;
+        } catch (error) {
+          console.warn(`Tentativa ${attempt} de salvar alterações para o grupo ${groupId} falhou:`, error.message);
+          if (attempt === retries) throw error;
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      }
+    };
+
+    try {
+      await saveWithRetry();
     } catch (error) {
-      console.error('Erro ao salvar configurações:', error);
+      console.error(`Erro ao salvar configurações para o grupo ${groupId} após todas as tentativas:`, error.message);
       toast({
         title: "Erro",
-        description: "Não foi possível salvar as configurações.",
+        description: "Não foi possível salvar as configurações após várias tentativas. Verifique sua conexão.",
         variant: "destructive"
       });
     } finally {
@@ -547,7 +576,7 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
               />
             </div>
           </div>
-        </CardContent>
+        </Card        </CardContent>
       </Card>
     </div>
   );
