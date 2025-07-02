@@ -140,78 +140,43 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
   };
 
   const saveSettings = async () => {
-    // Validação dos campos obrigatórios
-    if (!settings.nome.trim()) {
-      toast({
-        title: "Erro de Validação",
-        description: "O nome do grupo é obrigatório.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!settings.disciplina_area.trim()) {
-      toast({
-        title: "Erro de Validação",
-        description: "A disciplina/área é obrigatória.",
-        variant: "destructive"
-      });
-      return;
-    }
-
     setIsSaving(true);
     try {
-      console.log(`Salvando alterações para o grupo ${groupId}...`);
-
-      const updateData = {
-        nome: settings.nome.trim(),
-        descricao: settings.descricao.trim(),
-        disciplina_area: settings.disciplina_area.trim(),
-        topico_especifico: settings.topico_especifico.trim(),
-        tags: settings.tags.filter(tag => tag.trim() !== ''),
-        is_public: settings.is_public,
-        is_private: settings.is_private,
-        is_visible_to_all: settings.is_visible_to_all,
-        is_visible_to_partners: settings.is_visible_to_partners,
-        max_members: settings.max_members,
-        require_approval: settings.require_approval,
-        allow_member_invites: settings.allow_member_invites,
-        notify_new_members: settings.notify_new_members,
-        notify_new_messages: settings.notify_new_messages,
-        notify_new_materials: settings.notify_new_materials,
-        backup_automatico: settings.backup_automatico,
-        notificacoes_ativas: settings.notificacoes_ativas,
-        moderacao_automatica: settings.moderacao_automatica,
-        updated_at: new Date().toISOString()
-      };
-
-      console.log('Dados que serão salvos:', updateData);
-
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('grupos_estudo')
-        .update(updateData)
-        .eq('id', groupId)
-        .select();
+        .update({
+          nome: settings.nome,
+          descricao: settings.descricao,
+          disciplina_area: settings.disciplina_area,
+          topico_especifico: settings.topico_especifico,
+          tags: settings.tags,
+          is_public: settings.is_public,
+          is_private: settings.is_private,
+          is_visible_to_all: settings.is_visible_to_all,
+          is_visible_to_partners: settings.is_visible_to_partners,
+          max_members: settings.max_members,
+          require_approval: settings.require_approval,
+          allow_member_invites: settings.allow_member_invites,
+          notify_new_members: settings.notify_new_members,
+          notify_new_messages: settings.notify_new_messages,
+          notify_new_materials: settings.notify_new_materials,
+          backup_automatico: settings.backup_automatico,
+          notificacoes_ativas: settings.notificacoes_ativas,
+          moderacao_automatica: settings.moderacao_automatica
+        })
+        .eq('id', groupId);
 
-      if (error) {
-        console.error('Erro detalhado do Supabase:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log(`Alterações salvas com sucesso para o grupo ${groupId}:`, data);
       toast({
         title: "Sucesso",
         description: "Configurações salvas com sucesso!",
       });
-
-      // Recarregar os dados para confirmar o salvamento
-      await loadGroupSettings();
-
     } catch (error) {
-      console.error(`Erro ao salvar configurações para o grupo ${groupId}:`, error.message, error);
+      console.error('Erro ao salvar configurações:', error);
       toast({
         title: "Erro",
-        description: `Não foi possível salvar as configurações: ${error.message}`,
+        description: "Não foi possível salvar as configurações.",
         variant: "destructive"
       });
     } finally {
@@ -268,8 +233,6 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
               onChange={(e) => setSettings(prev => ({ ...prev, nome: e.target.value }))}
               placeholder="Digite o nome do grupo"
               className="h-12 border-2 border-orange-200 dark:border-orange-500/50 bg-white dark:bg-[#001327] text-gray-900 dark:text-white focus:border-[#FF6B00] focus:ring-2 focus:ring-[#FF6B00]/20 rounded-lg transition-all duration-200"
-              required
-              autoComplete="off"
             />
           </div>
 
@@ -284,7 +247,6 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
               placeholder="Descreva o grupo e seus objetivos"
               rows={4}
               className="border-2 border-orange-200 dark:border-orange-500/50 bg-white dark:bg-[#001327] text-gray-900 dark:text-white focus:border-[#FF6B00] focus:ring-2 focus:ring-[#FF6B00]/20 rounded-lg transition-all duration-200 resize-none"
-              autoComplete="off"
             />
           </div>
 
@@ -299,8 +261,6 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
                 onChange={(e) => setSettings(prev => ({ ...prev, disciplina_area: e.target.value }))}
                 placeholder="Ex: Matemática, Física, etc."
                 className="h-12 border-2 border-orange-200 dark:border-orange-500/50 bg-white dark:bg-[#001327] text-gray-900 dark:text-white focus:border-[#FF6B00] focus:ring-2 focus:ring-[#FF6B00]/20 rounded-lg transition-all duration-200"
-                required
-                autoComplete="off"
               />
             </div>
             <div className="space-y-3">
@@ -313,7 +273,6 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
                 onChange={(e) => setSettings(prev => ({ ...prev, topico_especifico: e.target.value }))}
                 placeholder="Ex: Álgebra Linear, Mecânica, etc."
                 className="h-12 border-2 border-orange-200 dark:border-orange-500/50 bg-white dark:bg-[#001327] text-gray-900 dark:text-white focus:border-[#FF6B00] focus:ring-2 focus:ring-[#FF6B00]/20 rounded-lg transition-all duration-200"
-                autoComplete="off"
               />
             </div>
           </div>
@@ -391,7 +350,6 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
                 placeholder="Digite uma nova tag"
                 onKeyPress={(e) => e.key === 'Enter' && addTag()}
                 className="flex-1 h-12 border-2 border-orange-200 dark:border-orange-500/50 bg-white dark:bg-[#001327] text-gray-900 dark:text-white focus:border-[#FF6B00] focus:ring-2 focus:ring-[#FF6B00]/20 rounded-lg transition-all duration-200"
-                autoComplete="off"
               />
               <Button 
                 type="button" 
