@@ -207,78 +207,113 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
   ];
 
   const renderConfiguracoesGerais = () => (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Informações Básicas</CardTitle>
+    <div className="space-y-8">
+      <Card className="shadow-xl border-0 bg-gradient-to-r from-white to-gray-50/50 backdrop-blur-sm">
+        <CardHeader className="bg-gradient-to-r from-[#FF6B00]/5 to-[#FF8C40]/5 border-b border-orange-100">
+          <CardTitle className="text-xl font-bold text-gray-800 flex items-center space-x-3">
+            <div className="w-8 h-8 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-lg flex items-center justify-center">
+              <Settings className="w-4 h-4 text-white" />
+            </div>
+            <span>Informações Básicas</span>
+          </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="nome">Nome do Grupo</Label>
+        <CardContent className="space-y-6 p-8">
+          <div className="space-y-3">
+            <Label htmlFor="nome" className="text-sm font-semibold text-gray-700 flex items-center space-x-2">
+              <span>Nome do Grupo</span>
+              <span className="text-red-500">*</span>
+            </Label>
             <Input
               id="nome"
               value={settings.nome}
               onChange={(e) => setSettings(prev => ({ ...prev, nome: e.target.value }))}
               placeholder="Digite o nome do grupo"
+              className="h-12 border-2 border-gray-200 focus:border-[#FF6B00] focus:ring-2 focus:ring-[#FF6B00]/20 rounded-lg transition-all duration-200"
             />
           </div>
 
-          <div>
-            <Label htmlFor="descricao">Descrição</Label>
+          <div className="space-y-3">
+            <Label htmlFor="descricao" className="text-sm font-semibold text-gray-700">
+              Descrição
+            </Label>
             <Textarea
               id="descricao"
               value={settings.descricao}
               onChange={(e) => setSettings(prev => ({ ...prev, descricao: e.target.value }))}
               placeholder="Descreva o grupo e seus objetivos"
-              rows={3}
+              rows={4}
+              className="border-2 border-gray-200 focus:border-[#FF6B00] focus:ring-2 focus:ring-[#FF6B00]/20 rounded-lg transition-all duration-200 resize-none"
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="disciplina">Disciplina/Área</Label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-3">
+              <Label htmlFor="disciplina" className="text-sm font-semibold text-gray-700">
+                Disciplina/Área
+              </Label>
               <Input
                 id="disciplina"
                 value={settings.disciplina_area}
                 onChange={(e) => setSettings(prev => ({ ...prev, disciplina_area: e.target.value }))}
                 placeholder="Ex: Matemática, Física, etc."
+                className="h-12 border-2 border-gray-200 focus:border-[#FF6B00] focus:ring-2 focus:ring-[#FF6B00]/20 rounded-lg transition-all duration-200"
               />
             </div>
-            <div>
-              <Label htmlFor="topico">Tópico Específico</Label>
+            <div className="space-y-3">
+              <Label htmlFor="topico" className="text-sm font-semibold text-gray-700">
+                Tópico Específico
+              </Label>
               <Input
                 id="topico"
                 value={settings.topico_especifico}
                 onChange={(e) => setSettings(prev => ({ ...prev, topico_especifico: e.target.value }))}
                 placeholder="Ex: Álgebra Linear, Mecânica, etc."
+                className="h-12 border-2 border-gray-200 focus:border-[#FF6B00] focus:ring-2 focus:ring-[#FF6B00]/20 rounded-lg transition-all duration-200"
               />
             </div>
           </div>
 
-          <div>
-            <Label>Tags do Grupo</Label>
-            <div className="flex flex-wrap gap-2 mb-2">
-              {settings.tags.map((tag, index) => (
-                <Badge key={index} variant="secondary" className="flex items-center gap-1">
-                  {tag}
-                  <button
-                    type="button"
-                    onClick={() => removeTag(tag)}
-                    className="text-red-500 hover:text-red-700"
+          <div className="space-y-4">
+            <Label className="text-sm font-semibold text-gray-700">
+              Tags do Grupo
+            </Label>
+            <div className="bg-gray-50 rounded-lg p-4 border-2 border-gray-200 min-h-[80px]">
+              <div className="flex flex-wrap gap-3 mb-3">
+                {settings.tags.map((tag, index) => (
+                  <Badge 
+                    key={index} 
+                    className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-medium rounded-full shadow-md hover:shadow-lg transition-all duration-200"
                   >
-                    <X className="w-3 h-3" />
-                  </button>
-                </Badge>
-              ))}
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={() => removeTag(tag)}
+                      className="text-white hover:text-red-200 transition-colors duration-200"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </Badge>
+                ))}
+                {settings.tags.length === 0 && (
+                  <span className="text-gray-400 text-sm italic">
+                    Nenhuma tag adicionada ainda
+                  </span>
+                )}
+              </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-3">
               <Input
                 value={newTag}
                 onChange={(e) => setNewTag(e.target.value)}
-                placeholder="Nova tag"
+                placeholder="Digite uma nova tag"
                 onKeyPress={(e) => e.key === 'Enter' && addTag()}
+                className="flex-1 h-12 border-2 border-gray-200 focus:border-[#FF6B00] focus:ring-2 focus:ring-[#FF6B00]/20 rounded-lg transition-all duration-200"
               />
-              <Button type="button" onClick={addTag} variant="outline">
+              <Button 
+                type="button" 
+                onClick={addTag} 
+                className="h-12 px-6 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white shadow-lg hover:shadow-xl transition-all duration-200"
+              >
                 <Plus className="w-4 h-4" />
               </Button>
             </div>
@@ -544,62 +579,105 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
   }
 
   return (
-    <div className="flex h-full bg-white rounded-lg shadow-sm overflow-hidden">
+    <div className="flex min-h-[800px] h-full bg-gradient-to-br from-gray-50 to-white rounded-xl shadow-2xl overflow-hidden border border-gray-200/50">
       {/* Menu Lateral */}
-      <div className="w-64 bg-[#2c3e50] text-white flex-shrink-0">
-        <div className="p-6 border-b border-[#34495e]">
-          <h3 className="text-lg font-semibold">Configurações</h3>
-          <p className="text-sm text-gray-300 mt-1">Gerencie seu grupo</p>
+      <div className="w-72 bg-gradient-to-b from-[#2c3e50] via-[#34495e] to-[#2c3e50] text-white flex-shrink-0 shadow-2xl">
+        <div className="p-8 border-b border-[#34495e]/50 bg-gradient-to-r from-[#2c3e50] to-[#34495e]">
+          <div className="flex items-center space-x-3 mb-2">
+            <div className="w-10 h-10 bg-gradient-to-r from-[#3498db] to-[#2980b9] rounded-lg flex items-center justify-center shadow-lg">
+              <Settings className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-white">Configurações</h3>
+              <p className="text-xs text-blue-200/80 mt-0.5">Gerencie seu grupo</p>
+            </div>
+          </div>
         </div>
-        <nav className="p-4">
+        <nav className="p-6 space-y-2">
           {menuItems.map((item) => {
             const Icon = item.icon;
             return (
               <button
                 key={item.id}
                 onClick={() => setActiveSection(item.id)}
-                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                className={`w-full flex items-center space-x-4 px-5 py-4 rounded-xl transition-all duration-300 transform hover:scale-105 group ${
                   activeSection === item.id
-                    ? 'bg-gradient-to-r from-[#3498db] to-[#2980b9] text-white shadow-lg'
-                    : 'text-gray-300 hover:bg-[#34495e] hover:text-white'
+                    ? 'bg-gradient-to-r from-[#3498db] to-[#2980b9] text-white shadow-2xl border border-blue-300/20'
+                    : 'text-gray-300 hover:bg-gradient-to-r hover:from-[#34495e] hover:to-[#3d566e] hover:text-white hover:shadow-lg'
                 }`}
               >
-                <Icon className="w-5 h-5" />
-                <span className="font-medium">{item.label}</span>
+                <div className={`p-2 rounded-lg transition-all duration-300 ${
+                  activeSection === item.id 
+                    ? 'bg-white/20' 
+                    : 'group-hover:bg-white/10'
+                }`}>
+                  <Icon className="w-5 h-5" />
+                </div>
+                <span className="font-semibold text-sm">{item.label}</span>
               </button>
             );
           })}
         </nav>
+        
+        {/* Decoração no menu lateral */}
+        <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-[#1a252f] to-transparent opacity-50"></div>
       </div>
 
       {/* Conteúdo Principal */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="p-6">
-          {activeSection === 'gerais' && renderConfiguracoesGerais()}
-          {activeSection === 'privacidade' && renderPrivacidade()}
-          {activeSection === 'membros' && renderMembros()}
-          {activeSection === 'notificacoes' && renderNotificacoes()}
-          {activeSection === 'avancado' && renderAvancado()}
+      <div className="flex-1 overflow-y-auto bg-gradient-to-br from-white to-gray-50">
+        <div className="p-8 min-h-full">
+          {/* Header do conteúdo */}
+          <div className="mb-8 pb-6 border-b border-gray-200/50">
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-xl flex items-center justify-center shadow-lg">
+                {menuItems.find(item => item.id === activeSection)?.icon && 
+                  React.createElement(menuItems.find(item => item.id === activeSection)!.icon, { className: "w-6 h-6 text-white" })
+                }
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-800">
+                  {menuItems.find(item => item.id === activeSection)?.label}
+                </h2>
+                <p className="text-gray-500 text-sm mt-1">
+                  Configure as opções do seu grupo de estudos
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Conteúdo das seções */}
+          <div className="space-y-6">
+            {activeSection === 'gerais' && renderConfiguracoesGerais()}
+            {activeSection === 'privacidade' && renderPrivacidade()}
+            {activeSection === 'membros' && renderMembros()}
+            {activeSection === 'notificacoes' && renderNotificacoes()}
+            {activeSection === 'avancado' && renderAvancado()}
+          </div>
 
           {/* Botão de Salvar */}
-          <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4 mt-6">
-            <div className="flex justify-end space-x-2">
-              <Button variant="outline" onClick={loadGroupSettings}>
+          <div className="sticky bottom-0 bg-gradient-to-r from-white via-white to-gray-50/90 border-t border-gray-200/50 p-6 mt-8 backdrop-blur-sm">
+            <div className="flex justify-end space-x-4">
+              <Button 
+                variant="outline" 
+                onClick={loadGroupSettings}
+                className="px-6 py-3 border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all duration-200"
+              >
+                <X className="w-4 h-4 mr-2" />
                 Cancelar
               </Button>
               <Button 
                 onClick={saveSettings} 
                 disabled={isSaving}
-                className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white"
+                className="px-8 py-3 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200"
               >
                 {isSaving ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
                     Salvando...
                   </>
                 ) : (
                   <>
-                    <Save className="w-4 h-4 mr-2" />
+                    <Save className="w-5 h-5 mr-3" />
                     Salvar Alterações
                   </>
                 )}
