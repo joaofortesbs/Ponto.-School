@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -175,12 +174,12 @@ const AjustesTab: React.FC<AjustesTabProps> = ({ group, onSave, onUpdate }) => {
 
       console.log(`Configurações salvas com sucesso para grupo ${group?.id}`);
       alert('Configurações salvas com sucesso!');
-      
+
       // Chama a função onUpdate para atualizar os dados do grupo no componente pai
       if (onUpdate) {
         onUpdate();
       }
-      
+
       // Chama a função original onSave se existir
       if (onSave) {
         onSave(groupSettings);
@@ -292,7 +291,7 @@ const AjustesTab: React.FC<AjustesTabProps> = ({ group, onSave, onUpdate }) => {
                   Informações Básicas do Grupo
                 </h3>
               </div>
-              
+
               <div className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="nome" className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
@@ -812,7 +811,7 @@ const AjustesTab: React.FC<AjustesTabProps> = ({ group, onSave, onUpdate }) => {
                     <Gavel className="h-4 w-4" />
                     Regras do Grupo
                   </Label>
-                  
+
                   <div className="space-y-3">
                     {groupSettings.regras.map((regra, index) => (
                       <motion.div

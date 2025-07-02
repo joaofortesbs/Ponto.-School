@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -140,12 +139,12 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
 
       console.log(`Configurações salvas com sucesso para grupo ${group?.id}`);
       alert('Configurações salvas com sucesso!');
-      
+
       // Chama a função original onSave se existir
       if (onSave) {
         onSave(groupSettings);
       }
-      
+
       onClose();
     } catch (error) {
       console.error('Erro ao salvar configurações:', error.message, error.stack);
@@ -255,7 +254,7 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
                   Informações Básicas do Grupo
                 </h3>
               </div>
-              
+
               <div className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="nome" className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
@@ -775,7 +774,7 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({
                     <Gavel className="h-4 w-4" />
                     Regras do Grupo
                   </Label>
-                  
+
                   <div className="space-y-3">
                     {groupSettings.regras.map((regra, index) => (
                       <motion.div
