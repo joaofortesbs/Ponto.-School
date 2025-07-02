@@ -910,11 +910,11 @@ const AjustesTab: React.FC<AjustesTabProps> = ({ group, onSave }) => {
   };
 
   return (
-    <div className="flex h-full bg-white dark:bg-[#051c30] rounded-3xl overflow-hidden shadow-lg">
+    <div className="flex min-h-[800px] bg-white dark:bg-[#051c30] rounded-3xl overflow-hidden shadow-lg">
       {/* Sidebar */}
-      <div className="w-72 bg-white dark:bg-[#051c30] border-r border-orange-200/50 dark:border-orange-700/30 flex flex-col overflow-hidden h-full rounded-l-3xl">
+      <div className="w-72 bg-white dark:bg-[#051c30] border-r border-orange-200/50 dark:border-orange-700/30 flex flex-col overflow-hidden min-h-[800px] rounded-l-3xl">
 
-        <div className="flex-1 overflow-y-auto p-2 h-full">
+        <div className="flex-1 overflow-y-auto p-2 min-h-[700px]">
           <nav className="space-y-2">
             {menuItems.map((item) => {
               const isActive = activeSection === item.id;
@@ -959,9 +959,9 @@ const AjustesTab: React.FC<AjustesTabProps> = ({ group, onSave }) => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden h-full bg-white dark:bg-[#051c30] rounded-r-3xl">
+      <div className="flex-1 flex flex-col overflow-hidden min-h-[800px] bg-white dark:bg-[#051c30] rounded-r-3xl">
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-6 min-h-[700px]">
           {renderContent()}
         </div>
 
