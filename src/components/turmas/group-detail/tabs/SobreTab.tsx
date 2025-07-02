@@ -220,47 +220,47 @@ export default function SobreTab({ group, onUpdate }: SobreTabProps) {
 
       {/* Premium Cards Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
-        {/* Informações Principais */}
-        <Card className="group hover:shadow-2xl transition-all duration-500 border-gray-200/60 dark:border-gray-700/60 bg-white/90 dark:bg-gray-800/90 backdrop-blur-md rounded-3xl overflow-hidden">
-          <CardHeader className="pb-6 bg-gradient-to-br from-blue-50/80 to-cyan-50/40 dark:from-blue-900/20 dark:to-cyan-900/10">
-            <CardTitle className="flex items-center gap-4 text-gray-900 dark:text-white">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-xl">
+        {/* Informações Principais com tipografia Roboto */}
+        <Card className="group hover:shadow-2xl transition-all duration-500 border-gray-200/60 dark:border-gray-700/60 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md rounded-3xl overflow-hidden shadow-lg">
+          <CardHeader className="pb-6 bg-gradient-to-br from-blue-50/90 to-cyan-50/50 dark:from-blue-900/25 dark:to-cyan-900/15">
+            <CardTitle className="flex items-center gap-4 text-gray-900 dark:text-white" style={{ fontFamily: 'Roboto, sans-serif' }}>
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#3498db] to-[#2980b9] flex items-center justify-center shadow-xl">
                 <BookOpen className="h-7 w-7 text-white" />
               </div>
               <div>
-                <h3 className="font-bold text-xl">Detalhes Principais</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Informações essenciais do grupo</p>
+                <h3 className="font-bold text-xl" style={{ fontSize: '20px' }}>Detalhes Principais</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 font-medium" style={{ fontSize: '14px' }}>Informações essenciais do grupo</p>
               </div>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6 p-8">
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-gray-50/80 to-gray-100/60 dark:from-gray-700/50 dark:to-gray-800/40 hover:from-gray-100/80 hover:to-gray-200/60 dark:hover:from-gray-700/80 dark:hover:to-gray-600/60 transition-all duration-300 border border-gray-200/50 dark:border-gray-600/30">
-                <span className="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                  <Layers className="h-4 w-4" />
+              <div className="flex items-center justify-between p-5 rounded-2xl bg-gradient-to-r from-gray-50/90 to-gray-100/70 dark:from-gray-700/60 dark:to-gray-800/50 hover:from-gray-100/90 hover:to-gray-200/70 dark:hover:from-gray-700/80 dark:hover:to-gray-600/70 transition-all duration-300 border border-gray-200/60 dark:border-gray-600/40 shadow-sm hover:shadow-md" style={{ fontFamily: 'Roboto, sans-serif' }}>
+                <span className="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-3" style={{ fontSize: '15px' }}>
+                  <Layers className="h-5 w-5" />
                   Disciplina/Área
                 </span>
-                <span className="text-sm text-gray-900 dark:text-white font-black bg-white/60 dark:bg-gray-700/60 px-3 py-1 rounded-lg">
+                <span className="text-sm text-gray-900 dark:text-white font-black bg-white/80 dark:bg-gray-700/80 px-4 py-2 rounded-xl shadow-sm" style={{ fontSize: '14px' }}>
                   {group.disciplina_area || 'Não especificado'}
                 </span>
               </div>
               
-              <div className="flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-gray-50/80 to-gray-100/60 dark:from-gray-700/50 dark:to-gray-800/40 hover:from-gray-100/80 hover:to-gray-200/60 dark:hover:from-gray-700/80 dark:hover:to-gray-600/60 transition-all duration-300 border border-gray-200/50 dark:border-gray-600/30">
-                <span className="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                  <Target className="h-4 w-4" />
+              <div className="flex items-center justify-between p-5 rounded-2xl bg-gradient-to-r from-gray-50/90 to-gray-100/70 dark:from-gray-700/60 dark:to-gray-800/50 hover:from-gray-100/90 hover:to-gray-200/70 dark:hover:from-gray-700/80 dark:hover:to-gray-600/70 transition-all duration-300 border border-gray-200/60 dark:border-gray-600/40 shadow-sm hover:shadow-md" style={{ fontFamily: 'Roboto, sans-serif' }}>
+                <span className="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-3" style={{ fontSize: '15px' }}>
+                  <Target className="h-5 w-5" />
                   Tópico Específico
                 </span>
-                <span className="text-sm text-gray-900 dark:text-white font-black bg-white/60 dark:bg-gray-700/60 px-3 py-1 rounded-lg">
+                <span className="text-sm text-gray-900 dark:text-white font-black bg-white/80 dark:bg-gray-700/80 px-4 py-2 rounded-xl shadow-sm" style={{ fontSize: '14px' }}>
                   {group.topico_especifico || 'Não especificado'}
                 </span>
               </div>
 
-              <div className="flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-gray-50/80 to-gray-100/60 dark:from-gray-700/50 dark:to-gray-800/40 hover:from-gray-100/80 hover:to-gray-200/60 dark:hover:from-gray-700/80 dark:hover:to-gray-600/60 transition-all duration-300 border border-gray-200/50 dark:border-gray-600/30">
-                <span className="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
+              <div className="flex items-center justify-between p-5 rounded-2xl bg-gradient-to-r from-gray-50/90 to-gray-100/70 dark:from-gray-700/60 dark:to-gray-800/50 hover:from-gray-100/90 hover:to-gray-200/70 dark:hover:from-gray-700/80 dark:hover:to-gray-600/70 transition-all duration-300 border border-gray-200/60 dark:border-gray-600/40 shadow-sm hover:shadow-md" style={{ fontFamily: 'Roboto, sans-serif' }}>
+                <span className="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-3" style={{ fontSize: '15px' }}>
+                  <Calendar className="h-5 w-5" />
                   Data de Criação
                 </span>
-                <span className="text-sm text-gray-900 dark:text-white font-black bg-white/60 dark:bg-gray-700/60 px-3 py-1 rounded-lg">
+                <span className="text-sm text-gray-900 dark:text-white font-black bg-white/80 dark:bg-gray-700/80 px-4 py-2 rounded-xl shadow-sm" style={{ fontSize: '14px' }}>
                   {formatDate(group.created_at)}
                 </span>
               </div>
@@ -457,80 +457,83 @@ export default function SobreTab({ group, onUpdate }: SobreTabProps) {
 
   return (
     <div className="flex h-full min-h-[800px] bg-gradient-to-br from-gray-50/90 via-white to-blue-50/60 dark:from-gray-900/90 dark:via-gray-800 dark:to-gray-900/60 rounded-3xl overflow-hidden shadow-2xl border-2 border-gray-200/50 dark:border-gray-700/50">
-      {/* Ultra Modern Sidebar */}
-      <div className="w-96 bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl border-r-2 border-gray-200/60 dark:border-gray-700/60 flex flex-col shadow-2xl">
-        {/* Sidebar Header Premium */}
-        <div className="p-10 border-b-2 border-gray-200/60 dark:border-gray-700/60 bg-gradient-to-br from-[#FF6B00]/5 via-orange-50/80 to-amber-50/30 dark:from-[#FF6B00]/10 dark:via-gray-800/50 dark:to-gray-900/50">
-          <div className="flex items-center gap-5">
-            <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-[#FF6B00] via-orange-500 to-red-500 flex items-center justify-center shadow-2xl shadow-[#FF6B00]/30 relative overflow-hidden">
+      {/* Ultra Modern Sidebar com design aprimorado */}
+      <div className="w-80 bg-gradient-to-b from-[#2c3e50] via-[#34495e] to-[#2c3e50] text-white flex flex-col shadow-2xl border-r-4 border-[#3498db]/30">
+        {/* Sidebar Header Premium com design moderno */}
+        <div className="p-8 border-b-2 border-white/10 bg-gradient-to-br from-[#2c3e50]/90 via-[#34495e]/80 to-[#2c3e50]/90 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#3498db]/10 to-transparent"></div>
+          <div className="relative z-10 flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#3498db] via-[#2980b9] to-[#1f4e79] flex items-center justify-center shadow-xl shadow-[#3498db]/40 relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent"></div>
-              <Info className="h-8 w-8 text-white relative z-10" />
+              <Info className="h-7 w-7 text-white relative z-10" />
             </div>
             <div>
-              <h2 className="text-2xl font-black text-gray-900 dark:text-white tracking-tight">
+              <h2 className="text-xl font-black text-white tracking-tight">
                 Sobre o Grupo
               </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 font-medium">
-                Informações completas e detalhadas
+              <p className="text-sm text-blue-200 mt-1 font-medium">
+                Informações detalhadas
               </p>
             </div>
           </div>
         </div>
 
-        {/* Sidebar Navigation Premium */}
-        <div className="flex-1 p-8">
-          <nav className="space-y-4">
+        {/* Sidebar Navigation Premium com design aprimorado */}
+        <div className="flex-1 p-6">
+          <nav className="space-y-3">
             {sidebarItems.map((item) => (
               <button
                 key={item.id}
                 onClick={() => item.isActive && setActiveSection(item.id)}
                 disabled={!item.isActive}
-                className={`w-full group relative overflow-hidden rounded-3xl p-6 transition-all duration-500 text-left ${
+                className={`w-full group relative overflow-hidden rounded-2xl p-5 transition-all duration-500 text-left ${
                   activeSection === item.id
-                    ? 'bg-gradient-to-r from-[#FF6B00]/15 via-orange-50/90 to-[#FF6B00]/10 border-2 border-[#FF6B00]/30 shadow-2xl shadow-[#FF6B00]/15 transform scale-[1.02]'
+                    ? 'bg-gradient-to-r from-[#3498db] to-[#2980b9] border-2 border-[#3498db]/50 shadow-2xl shadow-[#3498db]/25 transform scale-[1.02]'
                     : item.isActive
-                    ? 'hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100/80 dark:hover:from-gray-700/30 dark:hover:to-gray-600/20 border-2 border-transparent hover:border-gray-200/50 dark:hover:border-gray-600/30 hover:shadow-xl'
-                    : 'border-2 border-transparent opacity-60 cursor-not-allowed'
+                    ? 'hover:bg-gradient-to-r hover:from-[#3498db]/20 hover:to-[#2980b9]/20 border-2 border-transparent hover:border-[#3498db]/30 hover:shadow-lg'
+                    : 'border-2 border-transparent opacity-40 cursor-not-allowed'
                 }`}
               >
-                <div className="flex items-start gap-5">
-                  <div className={`flex-shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 ${
+                <div className="flex items-start gap-4">
+                  <div className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-500 ${
                     activeSection === item.id
-                      ? 'bg-[#FF6B00] text-white shadow-xl shadow-[#FF6B00]/40'
+                      ? 'bg-white/20 text-white shadow-lg'
                       : item.isActive
-                      ? item.color + ' text-white shadow-lg group-hover:shadow-xl'
-                      : 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500'
+                      ? 'bg-white/10 text-white/80 group-hover:bg-white/15 group-hover:text-white'
+                      : 'bg-white/5 text-white/40'
                   }`}>
                     {item.icon}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-2">
-                      <p className={`font-bold text-base transition-colors ${
-                        activeSection === item.id ? 'text-[#FF6B00]' : 'text-gray-900 dark:text-white'
+                      <p className={`font-bold text-sm transition-colors ${
+                        activeSection === item.id ? 'text-white' : item.isActive ? 'text-white/90' : 'text-white/60'
                       }`}>
                         {item.label}
                       </p>
                       {item.badge && (
                         <Badge 
                           variant="secondary" 
-                          className={`text-xs px-3 py-1 rounded-xl font-bold ${
+                          className={`text-xs px-2 py-1 rounded-lg font-bold ${
                             item.badge === 'Ativo' 
-                              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' 
-                              : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
+                              ? 'bg-emerald-500/20 text-emerald-100 border border-emerald-400/30' 
+                              : 'bg-gray-500/20 text-gray-200 border border-gray-400/30'
                           }`}
                         >
                           {item.badge}
                         </Badge>
                       )}
                     </div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed font-medium">
+                    <p className={`text-xs leading-relaxed font-medium ${
+                      activeSection === item.id ? 'text-white/80' : item.isActive ? 'text-white/70' : 'text-white/50'
+                    }`}>
                       {item.description}
                     </p>
                   </div>
-                  <ChevronRight className={`h-5 w-5 transition-all duration-500 ${
+                  <ChevronRight className={`h-4 w-4 transition-all duration-500 ${
                     activeSection === item.id 
-                      ? 'text-[#FF6B00] transform rotate-90' 
-                      : 'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300'
+                      ? 'text-white transform rotate-90' 
+                      : item.isActive ? 'text-white/60 group-hover:text-white/80' : 'text-white/40'
                   }`} />
                 </div>
               </button>
@@ -538,12 +541,13 @@ export default function SobreTab({ group, onUpdate }: SobreTabProps) {
           </nav>
         </div>
 
-        {/* Sidebar Footer Premium */}
-        <div className="p-8 border-t-2 border-gray-200/60 dark:border-gray-700/60 bg-gradient-to-r from-gray-50/80 to-gray-100/50 dark:from-gray-800/80 dark:to-gray-700/50">
-          <div className="text-center">
-            <div className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-gradient-to-r from-[#FF6B00]/10 to-orange-100/50 border-2 border-[#FF6B00]/20 shadow-lg">
-              <Sparkles className="h-5 w-5 text-[#FF6B00]" />
-              <span className="text-sm font-bold text-gray-600 dark:text-gray-400">
+        {/* Sidebar Footer Premium com design aprimorado */}
+        <div className="p-6 border-t-2 border-white/10 bg-gradient-to-r from-[#2c3e50]/80 to-[#34495e]/80 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#3498db]/5 to-transparent"></div>
+          <div className="relative z-10 text-center">
+            <div className="inline-flex items-center gap-3 px-5 py-3 rounded-xl bg-gradient-to-r from-[#3498db]/15 to-[#2980b9]/15 border border-[#3498db]/30 shadow-lg backdrop-blur-sm">
+              <Sparkles className="h-4 w-4 text-[#3498db]" />
+              <span className="text-sm font-bold text-white/80">
                 Mais seções em breve
               </span>
             </div>
@@ -551,21 +555,21 @@ export default function SobreTab({ group, onUpdate }: SobreTabProps) {
         </div>
       </div>
 
-      {/* Main Content Premium */}
-      <div className="flex-1 flex flex-col bg-gradient-to-br from-white/60 via-gray-50/80 to-white/40 dark:from-gray-800/60 dark:via-gray-900/80 dark:to-gray-800/40">
-        {/* Content Header Premium */}
-        <div className="p-10 border-b-2 border-gray-200/30 dark:border-gray-700/30 bg-white/90 dark:bg-gray-800/90 backdrop-blur-md">
+      {/* Main Content Premium com tipografia Roboto */}
+      <div className="flex-1 flex flex-col bg-gradient-to-br from-white/90 via-gray-50/80 to-white/60 dark:from-gray-800/60 dark:via-gray-900/80 dark:to-gray-800/40" style={{ fontFamily: 'Roboto, -apple-system, BlinkMacSystemFont, sans-serif' }}>
+        {/* Content Header Premium com tipografia refinada */}
+        <div className="p-10 border-b border-gray-200/40 dark:border-gray-700/40 bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl shadow-lg">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">
+              <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight" style={{ fontFamily: 'Roboto, sans-serif', fontSize: '28px' }}>
                 {sidebarItems.find(item => item.id === activeSection)?.label || 'Informações Básicas'}
               </h1>
-              <p className="text-gray-600 dark:text-gray-400 mt-2 font-medium">
-                Explore todos os detalhes e configurações do grupo
+              <p className="text-gray-600 dark:text-gray-400 mt-3 font-medium" style={{ fontFamily: 'Roboto, sans-serif', fontSize: '16px' }}>
+                Explore todos os detalhes e configurações do grupo com design moderno
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <Badge variant="outline" className="bg-[#FF6B00]/10 text-[#FF6B00] border-2 border-[#FF6B00]/20 px-4 py-2 rounded-xl font-bold">
+              <Badge variant="outline" className="bg-gradient-to-r from-[#3498db]/15 to-[#2980b9]/15 text-[#2c3e50] border-2 border-[#3498db]/30 px-5 py-2 rounded-xl font-bold shadow-lg">
                 <Info className="h-4 w-4 mr-2" />
                 Seção Ativa
               </Badge>
@@ -573,8 +577,8 @@ export default function SobreTab({ group, onUpdate }: SobreTabProps) {
           </div>
         </div>
 
-        {/* Content Area Premium */}
-        <div className="flex-1 p-10 overflow-y-auto">
+        {/* Content Area Premium com tipografia Roboto */}
+        <div className="flex-1 p-10 overflow-y-auto" style={{ fontFamily: 'Roboto, sans-serif' }}>
           {renderContent()}
         </div>
       </div>
