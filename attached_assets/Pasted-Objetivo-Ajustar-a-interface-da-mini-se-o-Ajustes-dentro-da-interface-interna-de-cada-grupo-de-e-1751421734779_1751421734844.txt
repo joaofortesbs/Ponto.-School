@@ -1,0 +1,341 @@
+Objetivo: Ajustar a interface da mini-seção "Ajustes" dentro da interface interna de cada grupo de estudos (não o modal de Configurações) para que os campos sejam preenchidos e configurados automaticamente com base nas informações e dados do grupo de estudos. Os campos a serem ajustados são: Nome do Grupo, Descrição, Disciplina/Área, Tópico Específico, Código Único, Tags do Grupo e Controle de Privacidade e Acesso. As alterações devem ser feitas de forma segura, preservando todas as funcionalidades existentes, sem modificar elementos fora de contexto ou introduzir erros/bugs, e mantendo o design/layout da mini-seção "Grupos de Estudos" (incluindo modals de "Adicionar Grupo" e "Criar Novo Grupo").
+
+
+
+Instruções Gerais
+
+
+
+
+
+Escopo Restrito: Foque exclusivamente na função accessGroup no frontend para adicionar a lógica de preenchimento automático dos campos na mini-seção "Ajustes". Não modifique o design ou layout das outras mini-seções ("Discussões", "Membros", "Tarefas", "Notificações"), nem os modals de "Adicionar Grupo" e "Criar Novo Grupo", nem outras partes do código (ex.: createGroup, joinGroupByCode, loadAllGroups).
+
+
+
+Preservação: Mantenha intactas todas as funcionalidades existentes (criação via modal, adesão, saída/exclusão, chat, pesquisa, contagem de online) e garanta que a interface da mini-seção "Ajustes" seja atualizada apenas com dados do grupo, sem impactar o restante da interface.
+
+
+
+Eficiência: Use Supabase para buscar as informações do grupo (ex.: tabela grupos com colunas como nome, descricao, disciplina, topico_especifico, codigo_unico, tags, privacidade) e preencha os campos correspondentes com validação e logs para evitar falhas.
+
+
+
+Testes Completos: Após as alterações, teste a mini-seção "Ajustes" e envie os logs.
+
+
+
+Análise de Cenários
+
+
+
+
+
+Cenário 1: Carregamento Inicial - Ao acessar a mini-seção "Ajustes", todos os campos devem ser preenchidos automaticamente com os dados do grupo.
+
+
+
+Cenário 2: Dados Ausentes - Se algum campo no banco de dados estiver vazio (ex.: topico_especifico ou tags), exibir um valor padrão (ex.: "Não especificado").
+
+
+
+Cenário 3: Múltiplos Grupos - Testar com diferentes grupos para confirmar que os campos refletem os dados do grupo ativo.
+
+
+
+Cenário 4: Erro de Dados - Implementar retry e tratamento de erro caso a consulta ao Supabase falhe.
+
+
+
+Descrição da Interface da Mini-Seção Ajustes
+
+
+
+
+
+Campos a Preencher:
+
+
+
+
+
+Nome do Grupo: Campo de texto (<input type="text">) com o nome do grupo.
+
+
+
+Descrição: Área de texto (<textarea>) com a descrição do grupo.
+
+
+
+Disciplina/Área: Campo de texto ou dropdown (<input> ou <select>) com a disciplina/área do grupo.
+
+
+
+Tópico Específico: Campo de texto (<input type="text">) com o tópico específico do grupo.
+
+
+
+Código Único: Campo de texto (<input type="text">) com o código único do grupo, readonly.
+
+
+
+Tags do Grupo: Campo de texto ou lista (<input> ou <div> com tags) com as tags do grupo.
+
+
+
+Controle de Privacidade e Acesso: Dropdown ou checkbox (<select> ou <input type="checkbox">) para definir se o grupo é público ou privado.
+
+
+
+Estilização: Manter o design existente, com campos alinhados verticalmente, bordas suaves, e fundo claro, ajustando apenas os valores.
+
+
+
+Modificações no Frontend (JavaScript)
+
+ // Atualizar accessGroup para preencher automaticamente os campos da mini-seção Ajustes const accessGroup = async (groupId) => { try { console.log(`Acessando grupo ${groupId}...`); const userId = await validateUserAuth(); if (!userId) { console.error('Usuário não autenticado.'); alert('Usuário não autenticado.'); return; } 
+
+// Ocultar o cabeçalho de Minhas Turmas
+const header = document.querySelector('.groups-header');
+if (header) header.style.display = 'none';
+
+// Cache para nomes e imagens de perfil
+const userCache = new Map();
+const { data: users, error: usersError } = await supabase
+  .from('auth.users')
+  .select('id, user_metadata')
+  .in('id', (await supabase.from('membros_grupos').select('user_id').eq('grupo_id', groupId)).data.map(u => u.user_id));
+if (usersError) throw usersError;
+if (!users) throw new Error('Nenhum usuário encontrado no grupo.');
+users.forEach(user => {
+  const metadata = user.user_metadata || {};
+  userCache.set(user.id, {
+    name: metadata.name || `Usuário ${user.id.slice(0, 5)}`,
+    avatar_url: metadata.avatar_url || null
+  });
+});
+console.log(`Cache de usuários populado com ${userCache.size} entradas.`);
+
+// Buscar dados do grupo para preencher Ajustes
+const { data: groupData, error: groupError } = await supabase
+  .from('grupos')
+  .select('nome, descricao, disciplina, topico_especifico, codigo_unico, tags, privacidade')
+  .eq('id', groupId)
+  .single();
+if (groupError) throw groupError;
+if (!groupData) throw new Error('Dados do grupo não encontrados.');
+
+// Contagem de membros online
+let onlineCount = 0;
+const updateOnlineCount = () => {
+  const now = new Date();
+  return supabase
+    .from('user_sessions')
+    .select('user_id', { count: 'exact' })
+    .eq('grupo_id', groupId)
+    .gte('last_active', new Date(now - 30 * 1000).toISOString())
+    .then(({ count }) => {
+      onlineCount = count || 0;
+      return onlineCount;
+    })
+    .catch(err => {
+      console.error('Erro ao atualizar contagem de online:', err.message);
+      return 0;
+    });
+};
+setInterval(() => {
+  updateOnlineCount().then(count => {
+    const onlineNumber = document.getElementById('online-number');
+    if (onlineNumber) onlineNumber.textContent = count;
+  });
+}, 15000);
+updateOnlineCount().then(count => {
+  const onlineNumber = document.getElementById('online-number');
+  if (onlineNumber) onlineNumber.textContent = count;
+});
+
+const groupInterface = document.createElement('div');
+groupInterface.id = 'group-interface';
+groupInterface.style.cssText = 'margin-left: 250px; padding: 20px;';
+groupInterface.innerHTML = `
+  <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #ccc; padding-bottom: 10px;">
+    <div class="mini-sections">
+      <button class="active" style="background: #3498db; color: white; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 5px;" onclick="switchSection('discussions', '${groupId}')">Discussões</button>
+      <button style="background: #ddd; color: #666; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 5px;" onclick="switchSection('members', '${groupId}')">Membros</button>
+      <button disabled style="background: #ddd; color: #666; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 5px;">Tarefas</button>
+      <button style="background: #ddd; color: #666; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 5px;" id="settings-button-${groupId}" onclick="switchSection('settings', '${groupId}')">Ajustes</button>
+      <button disabled style="background: #ddd; color: #666; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 5px;">Notificações</button>
+    </div>
+    <div style="display: flex; align-items: center;">
+      <span id="online-count" style="margin-right: 10px; color: #2ecc71;">Online: <span id="online-number">0</span></span>
+      <button id="search-icon" style="background: none; border: none; cursor: pointer; margin-right: 10px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+      </button>
+      <button id="menu-icon" style="background: none; border: none; cursor: pointer;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle>
+        </svg>
+      </button>
+    </div>
+  </div>
+  <div id="discussions-content" style="margin-top: 20px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; min-height: 200px; display: block;">
+    <div id="chat-messages" style="display: flex; flex-direction: column-reverse;"></div>
+  </div>
+  <div id="members-content" style="margin-top: 20px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; min-height: 200px; display: none;">
+    <div id="members-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;"></div>
+  </div>
+  <div id="settings-content" style="margin-top: 20px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; min-height: 200px; display: none;">
+    <div>
+      <label>Nome do Grupo:</label><br>
+      <input type="text" id="group-name-${groupId}" style="width: 100%; padding: 5px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px;"><br>
+      <label>Descrição:</label><br>
+      <textarea id="group-description-${groupId}" style="width: 100%; padding: 5px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; resize: vertical;"></textarea><br>
+      <label>Disciplina/Área:</label><br>
+      <input type="text" id="group-discipline-${groupId}" style="width: 100%; padding: 5px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px;"><br>
+      <label>Tópico Específico:</label><br>
+      <input type="text" id="group-topic-${groupId}" style="width: 100%; padding: 5px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px;"><br>
+      <label>Código Único:</label><br>
+      <input type="text" id="group-code-${groupId}" readonly style="width: 100%; padding: 5px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px;"><br>
+      <label>Tags do Grupo:</label><br>
+      <input type="text" id="group-tags-${groupId}" style="width: 100%; padding: 5px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px;"><br>
+      <label>Controle de Privacidade e Acesso:</label><br>
+      <select id="group-privacy-${groupId}" style="width: 100%; padding: 5px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px;">
+        <option value="public">Público</option>
+        <option value="private">Privado</option>
+      </select>
+    </div>
+  </div>
+  <div style="margin-top: 10px; display: flex; align-items: center;">
+    <input id="chat-input" type="text" placeholder="Digite sua mensagem..." style="flex-grow: 1; padding: 5px; border: 1px solid #ccc; border-radius: 5px; margin-right: 5px;">
+    <button onclick="sendMessage('${groupId}')" style="background: #2ecc71; color: white; border: none; padding: 5px 10px; border-radius: 5px;">Enviar</button>
+  </div>
+  <div id="search-bar" style="display: none; margin-top: 10px;">
+    <input id="search-input" type="text" placeholder="Pesquisar mensagens..." style="width: 200px; padding: 5px; border: 1px solid #ccc; border-radius: 5px;">
+    <button onclick="hideSearchBar()" style="background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 5px; margin-left: 5px;">Fechar</button>
+  </div>
+`;
+document.getElementById('main-content').innerHTML = '';
+document.getElementById('main-content').appendChild(groupInterface);
+
+// Preencher os campos da mini-seção Ajustes com os dados do grupo
+const fillSettings = () => {
+  try {
+    const nameInput = document.getElementById(`group-name-${groupId}`);
+    const descriptionInput = document.getElementById(`group-description-${groupId}`);
+    const disciplineInput = document.getElementById(`group-discipline-${groupId}`);
+    const topicInput = document.getElementById(`group-topic-${groupId}`);
+    const codeInput = document.getElementById(`group-code-${groupId}`);
+    const tagsInput = document.getElementById(`group-tags-${groupId}`);
+    const privacySelect = document.getElementById(`group-privacy-${groupId}`);
+
+    if (nameInput) nameInput.value = groupData.nome || 'Nome não especificado';
+    if (descriptionInput) descriptionInput.value = groupData.descricao || 'Descrição não especificada';
+    if (disciplineInput) disciplineInput.value = groupData.disciplina || 'Disciplina não especificada';
+    if (topicInput) topicInput.value = groupData.topico_especifico || 'Tópico não especificado';
+    if (codeInput) codeInput.value = groupData.codigo_unico || 'Código não disponível';
+    if (tagsInput) tagsInput.value = groupData.tags?.join(', ') || 'Sem tags';
+    if (privacySelect) privacySelect.value = groupData.privacidade || 'public';
+
+    console.log(`Campos da mini-seção Ajustes preenchidos para o grupo ${groupId}.`);
+  } catch (error) {
+    console.error(`Erro ao preencher campos da mini-seção Ajustes para o grupo ${groupId}:`, error.message);
+    alert('Erro ao carregar os dados dos ajustes. Verifique o console.');
+    setTimeout(fillSettings, 2000); // Retry após 2 segundos
+  }
+};
+
+// Chamar preenchimento ao carregar a seção Ajustes
+const switchSection = (section, groupId) => {
+  const sections = ['discussions', 'members', 'settings'];
+  sections.forEach(s => {
+    const content = document.getElementById(`${s}-content`);
+    if (content) content.style.display = s === section ? 'block' : 'none';
+    const button = document.querySelector(`button[onclick*="switchSection('${s}'"]`);
+    if (button) {
+      button.style.background = s === section ? '#3498db' : '#ddd';
+      button.style.color = s === section ? 'white' : '#666';
+    }
+  });
+  if (section === 'settings') {
+    fillSettings();
+  }
+  console.log(`Seção ${section} ativada para o grupo ${groupId}.`);
+};
+
+// Configurar Realtime para chat e online
+const channel = supabase
+  .channel(`chat-${groupId}`)
+  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mensagens', filter: `grupo_id=eq.${groupId}` }, (payload) => {
+    addMessageToChat(payload.new, userCache);
+  })
+  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'user_sessions', filter: `grupo_id=eq.${groupId}` }, () => {
+    updateOnlineCount().then(count => {
+      const onlineNumber = document.getElementById('online-number');
+      if (onlineNumber) onlineNumber.textContent = count;
+    }).catch(err => console.error('Erro na atualização de online via Realtime:', err.message));
+    loadMembers(groupId, userCache, userId, isAdminOrOwner);
+  })
+  .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'user_sessions', filter: `grupo_id=eq.${groupId}` }, () => {
+    updateOnlineCount().then(count => {
+      const onlineNumber = document.getElementById('online-number');
+      if (onlineNumber) onlineNumber.textContent = count;
+    }).catch(err => console.error('Erro na remoção de online via Realtime:', err.message));
+    loadMembers(groupId, userCache, userId, isAdminOrOwner);
+  })
+  .subscribe(async (status) => {
+    if (status === 'SUBSCRIBED') {
+      console.log(`Subscribed to chat and online channel for group ${groupId}`);
+      const { data: messages, error: messagesError } = await supabase
+        .from('mensagens')
+        .select('*')
+        .eq('grupo_id', groupId)
+        .order('enviado_em', { ascending: false });
+      if (messagesError) throw messagesError;
+      messages.forEach(message => addMessageToChat(message, userCache));
+      updateOnlineCount().then(count => {
+        const onlineNumber = document.getElementById('online-number');
+        if (onlineNumber) onlineNumber.textContent = count;
+      }).catch(err => console.error('Erro inicial na contagem de online:', err.message));
+      switchSection('discussions', groupId);
+      loadMembers(groupId, userCache, userId, isAdminOrOwner);
+    }
+  })
+  .catch(err => console.error('Erro ao subscrever ao canal Realtime:', err.message));
+
+// Evento para ícone de pesquisa
+const searchIcon = document.getElementById('search-icon');
+if (searchIcon) {
+  searchIcon.addEventListener('click', () => {
+    const searchBar = document.getElementById('search-bar');
+    if (searchBar) {
+      searchBar.style.display = 'block';
+      const searchInput = document.getElementById('search-input');
+      if (searchInput) searchInput.focus();
+      filterMessages(groupId);
+    }
+  });
+}
+
+// Evento para ícone de três pontos
+const menuIcon = document.getElementById('menu-icon');
+if (menuIcon && typeof showOptionsModal === 'function') {
+  menuIcon.addEventListener('click', () => {
+    try {
+      console.log(`Abrindo modal de opções para o grupo ${groupId}...`);
+      showOptionsModal(groupId);
+    } catch (error) {
+      console.error(`Erro ao abrir modal de opções para o grupo ${groupId}:`, error.message);
+      alert('Erro ao abrir as opções. Verifique o console.');
+    }
+  });
+} else if (menuIcon) {
+  console.warn(`Função showOptionsModal não encontrada para o grupo ${groupId}. Ícone desativado.`);
+  menuIcon.disabled = true;
+}
+
+console.log(`Interface do grupo ${groupId} carregada com chat configurado.`);
+
+} catch (error) { console.error('Erro ao acessar grupo:', error.message, error.stack); alert('Erro ao acessar o grupo. Verifique o console.'); const header = document.querySelector('.groups-header'); if (header) header.style.display = 'flex'; } };
+
+// Funções existentes mantidas sem alterações (loadMembers, returnToGroups, updateOnlineCount, filterMessages, hideSearchBar, loadInitialMessages, showSettingsModal, showOptionsModal, addMessageToChat, sendMessage, etc.)
