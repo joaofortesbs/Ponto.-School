@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -115,7 +114,7 @@ const AjustesTab: React.FC<AjustesTabProps> = ({ group, onSave }) => {
 
       console.log(`Configurações salvas com sucesso para grupo ${group?.id}`);
       alert('Configurações salvas com sucesso!');
-      
+
       // Chama a função original onSave se existir
       if (onSave) {
         onSave(groupSettings);
@@ -227,7 +226,7 @@ const AjustesTab: React.FC<AjustesTabProps> = ({ group, onSave }) => {
                   Informações Básicas do Grupo
                 </h3>
               </div>
-              
+
               <div className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="nome" className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
@@ -662,8 +661,7 @@ const AjustesTab: React.FC<AjustesTabProps> = ({ group, onSave }) => {
                       className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-orange-200/50 dark:border-orange-700/50 rounded-xl h-12 pl-4 pr-16"
                       placeholder="10"
                     />
-                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-500">
-                      posts
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-500">                      posts
                     </div>
                   </div>
                   <div className="text-xs text-gray-500">
@@ -747,7 +745,7 @@ const AjustesTab: React.FC<AjustesTabProps> = ({ group, onSave }) => {
                     <Gavel className="h-4 w-4" />
                     Regras do Grupo
                   </Label>
-                  
+
                   <div className="space-y-3">
                     {groupSettings.regras.map((regra, index) => (
                       <motion.div
@@ -910,11 +908,11 @@ const AjustesTab: React.FC<AjustesTabProps> = ({ group, onSave }) => {
   };
 
   return (
-    <div className="flex h-full bg-transparent">
+    <div className="flex h-full bg-white dark:bg-[#092035]">
       {/* Sidebar */}
-      <div className="w-72 bg-transparent border-r border-orange-200/50 dark:border-orange-700/30 flex flex-col overflow-hidden min-h-[900px]">
+      <div className="w-72 bg-white dark:bg-[#092035] border-r border-orange-200/50 dark:border-orange-700/30 flex flex-col overflow-hidden h-full">
 
-        <div className="flex-1 overflow-y-auto p-2 min-h-[800px]">
+        <div className="flex-1 overflow-y-auto p-2 h-full">
           <nav className="space-y-2">
             {menuItems.map((item) => {
               const isActive = activeSection === item.id;
@@ -959,14 +957,14 @@ const AjustesTab: React.FC<AjustesTabProps> = ({ group, onSave }) => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden min-h-[800px] bg-transparent">
+      <div className="flex-1 flex flex-col overflow-hidden h-full bg-white dark:bg-[#092035]">
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6 min-h-[700px]">
+        <div className="flex-1 overflow-y-auto p-6 h-full">
           {renderContent()}
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-orange-200/50 dark:border-orange-700/30 bg-transparent flex items-center justify-end gap-4">
+        <div className="p-6 border-t border-orange-200/50 dark:border-orange-700/30 bg-white dark:bg-[#092035] flex items-center justify-end gap-4">
           <Button
             onClick={handleSave}
             className="px-8 py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
