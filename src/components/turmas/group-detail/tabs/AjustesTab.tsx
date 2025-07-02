@@ -1172,11 +1172,6 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
                 onCheckedChange={(checked) => setSettings(prev => ({ ...prev, notify_new_materials: checked }))}
                 className="data-[state=checked]:bg-[#FF6B00]"
               />
-            </div>              <Switch
-                checked={settings.notify_new_materials}
-                onCheckedChange={(checked) => setSettings(prev => ({ ...prev, notify_new_materials: checked }))}
-                className="data-[state=checked]:bg-[#FF6B00]"
-              />
             </div>
           </div>
         </CardContent>
