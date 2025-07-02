@@ -209,32 +209,32 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
 
   const renderConfiguracoesGerais = () => (
     <div className="space-y-8">
-      <Card className="shadow-xl border-0 bg-gradient-to-r from-white to-gray-50/50 backdrop-blur-sm">
-        <CardHeader className="bg-gradient-to-r from-[#FF6B00]/5 to-[#FF8C40]/5 border-b border-orange-100">
-          <CardTitle className="text-xl font-bold text-gray-800 flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-lg flex items-center justify-center">
+      <Card className="shadow-xl border-2 border-orange-200 dark:border-orange-500/30 bg-white dark:bg-[#001327] backdrop-blur-sm">
+        <CardHeader className="bg-gradient-to-r from-orange-50 to-orange-100/50 dark:from-orange-900/20 dark:to-orange-800/20 border-b border-orange-200 dark:border-orange-500/30">
+          <CardTitle className="text-xl font-bold text-gray-800 dark:text-white flex items-center space-x-3">
+            <div className="w-8 h-8 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-lg flex items-center justify-center shadow-md">
               <Settings className="w-4 h-4 text-white" />
             </div>
             <span>Informações Básicas</span>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6 p-8">
+        <CardContent className="space-y-6 p-8 bg-white dark:bg-[#001327]">
           <div className="space-y-3">
-            <Label htmlFor="nome" className="text-sm font-semibold text-gray-700 flex items-center space-x-2">
+            <Label htmlFor="nome" className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center space-x-2">
               <span>Nome do Grupo</span>
-              <span className="text-red-500">*</span>
+              <span className="text-orange-500">*</span>
             </Label>
             <Input
               id="nome"
               value={settings.nome}
               onChange={(e) => setSettings(prev => ({ ...prev, nome: e.target.value }))}
               placeholder="Digite o nome do grupo"
-              className="h-12 border-2 border-gray-200 focus:border-[#FF6B00] focus:ring-2 focus:ring-[#FF6B00]/20 rounded-lg transition-all duration-200"
+              className="h-12 border-2 border-orange-200 dark:border-orange-500/50 bg-white dark:bg-[#001327] text-gray-900 dark:text-white focus:border-[#FF6B00] focus:ring-2 focus:ring-[#FF6B00]/20 rounded-lg transition-all duration-200"
             />
           </div>
 
           <div className="space-y-3">
-            <Label htmlFor="descricao" className="text-sm font-semibold text-gray-700">
+            <Label htmlFor="descricao" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
               Descrição
             </Label>
             <Textarea
@@ -243,13 +243,13 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
               onChange={(e) => setSettings(prev => ({ ...prev, descricao: e.target.value }))}
               placeholder="Descreva o grupo e seus objetivos"
               rows={4}
-              className="border-2 border-gray-200 focus:border-[#FF6B00] focus:ring-2 focus:ring-[#FF6B00]/20 rounded-lg transition-all duration-200 resize-none"
+              className="border-2 border-orange-200 dark:border-orange-500/50 bg-white dark:bg-[#001327] text-gray-900 dark:text-white focus:border-[#FF6B00] focus:ring-2 focus:ring-[#FF6B00]/20 rounded-lg transition-all duration-200 resize-none"
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-3">
-              <Label htmlFor="disciplina" className="text-sm font-semibold text-gray-700">
+              <Label htmlFor="disciplina" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                 Disciplina/Área
               </Label>
               <Input
@@ -257,11 +257,11 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
                 value={settings.disciplina_area}
                 onChange={(e) => setSettings(prev => ({ ...prev, disciplina_area: e.target.value }))}
                 placeholder="Ex: Matemática, Física, etc."
-                className="h-12 border-2 border-gray-200 focus:border-[#FF6B00] focus:ring-2 focus:ring-[#FF6B00]/20 rounded-lg transition-all duration-200"
+                className="h-12 border-2 border-orange-200 dark:border-orange-500/50 bg-white dark:bg-[#001327] text-gray-900 dark:text-white focus:border-[#FF6B00] focus:ring-2 focus:ring-[#FF6B00]/20 rounded-lg transition-all duration-200"
               />
             </div>
             <div className="space-y-3">
-              <Label htmlFor="topico" className="text-sm font-semibold text-gray-700">
+              <Label htmlFor="topico" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                 Tópico Específico
               </Label>
               <Input
@@ -269,16 +269,16 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
                 value={settings.topico_especifico}
                 onChange={(e) => setSettings(prev => ({ ...prev, topico_especifico: e.target.value }))}
                 placeholder="Ex: Álgebra Linear, Mecânica, etc."
-                className="h-12 border-2 border-gray-200 focus:border-[#FF6B00] focus:ring-2 focus:ring-[#FF6B00]/20 rounded-lg transition-all duration-200"
+                className="h-12 border-2 border-orange-200 dark:border-orange-500/50 bg-white dark:bg-[#001327] text-gray-900 dark:text-white focus:border-[#FF6B00] focus:ring-2 focus:ring-[#FF6B00]/20 rounded-lg transition-all duration-200"
               />
             </div>
           </div>
 
           <div className="space-y-4">
-            <Label className="text-sm font-semibold text-gray-700">
+            <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
               Tags do Grupo
             </Label>
-            <div className="bg-gray-50 rounded-lg p-4 border-2 border-gray-200 min-h-[80px]">
+            <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-4 border-2 border-orange-200 dark:border-orange-500/30 min-h-[80px]">
               <div className="flex flex-wrap gap-3 mb-3">
                 {settings.tags.map((tag, index) => (
                   <Badge 
@@ -289,14 +289,14 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
                     <button
                       type="button"
                       onClick={() => removeTag(tag)}
-                      className="text-white hover:text-red-200 transition-colors duration-200"
+                      className="text-white hover:text-orange-200 transition-colors duration-200"
                     >
                       <X className="w-3 h-3" />
                     </button>
                   </Badge>
                 ))}
                 {settings.tags.length === 0 && (
-                  <span className="text-gray-400 text-sm italic">
+                  <span className="text-orange-500 dark:text-orange-400 text-sm italic">
                     Nenhuma tag adicionada ainda
                   </span>
                 )}
@@ -308,12 +308,12 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
                 onChange={(e) => setNewTag(e.target.value)}
                 placeholder="Digite uma nova tag"
                 onKeyPress={(e) => e.key === 'Enter' && addTag()}
-                className="flex-1 h-12 border-2 border-gray-200 focus:border-[#FF6B00] focus:ring-2 focus:ring-[#FF6B00]/20 rounded-lg transition-all duration-200"
+                className="flex-1 h-12 border-2 border-orange-200 dark:border-orange-500/50 bg-white dark:bg-[#001327] text-gray-900 dark:text-white focus:border-[#FF6B00] focus:ring-2 focus:ring-[#FF6B00]/20 rounded-lg transition-all duration-200"
               />
               <Button 
                 type="button" 
                 onClick={addTag} 
-                className="h-12 px-6 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white shadow-lg hover:shadow-xl transition-all duration-200"
+                className="h-12 px-6 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white shadow-lg hover:shadow-xl transition-all duration-200 ring-2 ring-orange-200 dark:ring-orange-500/30"
               >
                 <Plus className="w-4 h-4" />
               </Button>
@@ -326,21 +326,25 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
 
   const renderPrivacidade = () => (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="w-5 h-5" />
+      <Card className="shadow-xl border-2 border-orange-200 dark:border-orange-500/30 bg-white dark:bg-[#001327]">
+        <CardHeader className="bg-gradient-to-r from-orange-50 to-orange-100/50 dark:from-orange-900/20 dark:to-orange-800/20 border-b border-orange-200 dark:border-orange-500/30">
+          <CardTitle className="flex items-center gap-2 text-gray-800 dark:text-white">
+            <div className="w-8 h-8 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-lg flex items-center justify-center shadow-md">
+              <Shield className="w-4 h-4 text-white" />
+            </div>
             Privacidade & Acesso
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
+        <CardContent className="space-y-4 p-6 bg-white dark:bg-[#001327]">
+          <div className="space-y-6">
+            <div className="flex items-center justify-between p-4 rounded-lg border border-orange-200 dark:border-orange-500/30 bg-orange-50/50 dark:bg-orange-900/10">
               <div className="flex items-center gap-3">
-                <Globe className="w-5 h-5 text-green-500" />
+                <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                  <Globe className="w-5 h-5 text-green-600 dark:text-green-400" />
+                </div>
                 <div>
-                  <Label>Grupo Público</Label>
-                  <p className="text-sm text-gray-500">Qualquer pessoa pode encontrar e participar</p>
+                  <Label className="text-gray-800 dark:text-white font-semibold">Grupo Público</Label>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Qualquer pessoa pode encontrar e participar</p>
                 </div>
               </div>
               <Switch
@@ -350,15 +354,18 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
                   is_public: checked,
                   is_private: checked ? false : prev.is_private
                 }))}
+                className="data-[state=checked]:bg-[#FF6B00]"
               />
             </div>
 
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between p-4 rounded-lg border border-orange-200 dark:border-orange-500/30 bg-orange-50/50 dark:bg-orange-900/10">
               <div className="flex items-center gap-3">
-                <Lock className="w-5 h-5 text-red-500" />
+                <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
+                  <Lock className="w-5 h-5 text-red-600 dark:text-red-400" />
+                </div>
                 <div>
-                  <Label>Grupo Privado</Label>
-                  <p className="text-sm text-gray-500">Apenas por convite</p>
+                  <Label className="text-gray-800 dark:text-white font-semibold">Grupo Privado</Label>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Apenas por convite</p>
                 </div>
               </div>
               <Switch
@@ -368,34 +375,41 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
                   is_private: checked,
                   is_public: checked ? false : prev.is_public
                 }))}
+                className="data-[state=checked]:bg-[#FF6B00]"
               />
             </div>
 
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between p-4 rounded-lg border border-orange-200 dark:border-orange-500/30 bg-orange-50/50 dark:bg-orange-900/10">
               <div className="flex items-center gap-3">
-                <Eye className="w-5 h-5 text-blue-500" />
+                <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                  <Eye className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                </div>
                 <div>
-                  <Label>Visível para Todos</Label>
-                  <p className="text-sm text-gray-500">Aparece nas listagens públicas</p>
+                  <Label className="text-gray-800 dark:text-white font-semibold">Visível para Todos</Label>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Aparece nas listagens públicas</p>
                 </div>
               </div>
               <Switch
                 checked={settings.is_visible_to_all}
                 onCheckedChange={(checked) => setSettings(prev => ({ ...prev, is_visible_to_all: checked }))}
+                className="data-[state=checked]:bg-[#FF6B00]"
               />
             </div>
 
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between p-4 rounded-lg border border-orange-200 dark:border-orange-500/30 bg-orange-50/50 dark:bg-orange-900/10">
               <div className="flex items-center gap-3">
-                <Users className="w-5 h-5 text-purple-500" />
+                <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+                  <Users className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                </div>
                 <div>
-                  <Label>Visível para Parceiros</Label>
-                  <p className="text-sm text-gray-500">Visível apenas para usuários conectados</p>
+                  <Label className="text-gray-800 dark:text-white font-semibold">Visível para Parceiros</Label>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Visível apenas para usuários conectados</p>
                 </div>
               </div>
               <Switch
                 checked={settings.is_visible_to_partners}
                 onCheckedChange={(checked) => setSettings(prev => ({ ...prev, is_visible_to_partners: checked }))}
+                className="data-[state=checked]:bg-[#FF6B00]"
               />
             </div>
           </div>
@@ -406,49 +420,53 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
 
   const renderMembros = () => (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="w-5 h-5" />
+      <Card className="shadow-xl border-2 border-orange-200 dark:border-orange-500/30 bg-white dark:bg-[#001327]">
+        <CardHeader className="bg-gradient-to-r from-orange-50 to-orange-100/50 dark:from-orange-900/20 dark:to-orange-800/20 border-b border-orange-200 dark:border-orange-500/30">
+          <CardTitle className="flex items-center gap-2 text-gray-800 dark:text-white">
+            <div className="w-8 h-8 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-lg flex items-center justify-center shadow-md">
+              <Users className="w-4 h-4 text-white" />
+            </div>
             Gerenciamento de Membros
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="max-members">Número Máximo de Membros</Label>
+        <CardContent className="space-y-4 p-6 bg-white dark:bg-[#001327]">
+          <div className="space-y-3">
+            <Label htmlFor="max-members" className="text-sm font-semibold text-gray-700 dark:text-gray-300">Número Máximo de Membros</Label>
             <Select value={settings.max_members.toString()} onValueChange={(value) => setSettings(prev => ({ ...prev, max_members: parseInt(value) }))}>
-              <SelectTrigger>
+              <SelectTrigger className="h-12 border-2 border-orange-200 dark:border-orange-500/50 bg-white dark:bg-[#001327] text-gray-900 dark:text-white focus:border-[#FF6B00] focus:ring-2 focus:ring-[#FF6B00]/20">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="10">10 membros</SelectItem>
-                <SelectItem value="25">25 membros</SelectItem>
-                <SelectItem value="50">50 membros</SelectItem>
-                <SelectItem value="100">100 membros</SelectItem>
-                <SelectItem value="999">Ilimitado</SelectItem>
+              <SelectContent className="bg-white dark:bg-[#001327] border-orange-200 dark:border-orange-500/50">
+                <SelectItem value="10" className="hover:bg-orange-50 dark:hover:bg-orange-900/20">10 membros</SelectItem>
+                <SelectItem value="25" className="hover:bg-orange-50 dark:hover:bg-orange-900/20">25 membros</SelectItem>
+                <SelectItem value="50" className="hover:bg-orange-50 dark:hover:bg-orange-900/20">50 membros</SelectItem>
+                <SelectItem value="100" className="hover:bg-orange-50 dark:hover:bg-orange-900/20">100 membros</SelectItem>
+                <SelectItem value="999" className="hover:bg-orange-50 dark:hover:bg-orange-900/20">Ilimitado</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between p-4 rounded-lg border border-orange-200 dark:border-orange-500/30 bg-orange-50/50 dark:bg-orange-900/10">
             <div>
-              <Label>Aprovação Obrigatória</Label>
-              <p className="text-sm text-gray-500">Novos membros precisam ser aprovados</p>
+              <Label className="text-gray-800 dark:text-white font-semibold">Aprovação Obrigatória</Label>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Novos membros precisam ser aprovados</p>
             </div>
             <Switch
               checked={settings.require_approval}
               onCheckedChange={(checked) => setSettings(prev => ({ ...prev, require_approval: checked }))}
+              className="data-[state=checked]:bg-[#FF6B00]"
             />
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between p-4 rounded-lg border border-orange-200 dark:border-orange-500/30 bg-orange-50/50 dark:bg-orange-900/10">
             <div>
-              <Label>Membros Podem Convidar</Label>
-              <p className="text-sm text-gray-500">Permite que membros convidem outros usuários</p>
+              <Label className="text-gray-800 dark:text-white font-semibold">Membros Podem Convidar</Label>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Permite que membros convidem outros usuários</p>
             </div>
             <Switch
               checked={settings.allow_member_invites}
               onCheckedChange={(checked) => setSettings(prev => ({ ...prev, allow_member_invites: checked }))}
+              className="data-[state=checked]:bg-[#FF6B00]"
             />
           </div>
         </CardContent>
@@ -458,45 +476,52 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
 
   const renderNotificacoes = () => (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Bell className="w-5 h-5" />
+      <Card className="shadow-xl border-2 border-orange-200 dark:border-orange-500/30 bg-white dark:bg-[#001327]">
+        <CardHeader className="bg-gradient-to-r from-orange-50 to-orange-100/50 dark:from-orange-900/20 dark:to-orange-800/20 border-b border-orange-200 dark:border-orange-500/30">
+          <CardTitle className="flex items-center gap-2 text-gray-800 dark:text-white">
+            <div className="w-8 h-8 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-lg flex items-center justify-center shadow-md">
+              <Bell className="w-4 h-4 text-white" />
+            </div>
             Preferências de Notificação
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <Label>Novos Membros</Label>
-              <p className="text-sm text-gray-500">Notificar quando alguém entrar no grupo</p>
+        <CardContent className="space-y-4 p-6 bg-white dark:bg-[#001327]">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-4 rounded-lg border border-orange-200 dark:border-orange-500/30 bg-orange-50/50 dark:bg-orange-900/10">
+              <div>
+                <Label className="text-gray-800 dark:text-white font-semibold">Novos Membros</Label>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Notificar quando alguém entrar no grupo</p>
+              </div>
+              <Switch
+                checked={settings.notify_new_members}
+                onCheckedChange={(checked) => setSettings(prev => ({ ...prev, notify_new_members: checked }))}
+                className="data-[state=checked]:bg-[#FF6B00]"
+              />
             </div>
-            <Switch
-              checked={settings.notify_new_members}
-              onCheckedChange={(checked) => setSettings(prev => ({ ...prev, notify_new_members: checked }))}
-            />
-          </div>
 
-          <div className="flex items-center justify-between">
-            <div>
-              <Label>Novas Mensagens</Label>
-              <p className="text-sm text-gray-500">Notificar sobre novas discussões</p>
+            <div className="flex items-center justify-between p-4 rounded-lg border border-orange-200 dark:border-orange-500/30 bg-orange-50/50 dark:bg-orange-900/10">
+              <div>
+                <Label className="text-gray-800 dark:text-white font-semibold">Novas Mensagens</Label>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Notificar sobre novas discussões</p>
+              </div>
+              <Switch
+                checked={settings.notify_new_messages}
+                onCheckedChange={(checked) => setSettings(prev => ({ ...prev, notify_new_messages: checked }))}
+                className="data-[state=checked]:bg-[#FF6B00]"
+              />
             </div>
-            <Switch
-              checked={settings.notify_new_messages}
-              onCheckedChange={(checked) => setSettings(prev => ({ ...prev, notify_new_messages: checked }))}
-            />
-          </div>
 
-          <div className="flex items-center justify-between">
-            <div>
-              <Label>Novos Materiais</Label>
-              <p className="text-sm text-gray-500">Notificar quando materiais forem adicionados</p>
+            <div className="flex items-center justify-between p-4 rounded-lg border border-orange-200 dark:border-orange-500/30 bg-orange-50/50 dark:bg-orange-900/10">
+              <div>
+                <Label className="text-gray-800 dark:text-white font-semibold">Novos Materiais</Label>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Notificar quando materiais forem adicionados</p>
+              </div>
+              <Switch
+                checked={settings.notify_new_materials}
+                onCheckedChange={(checked) => setSettings(prev => ({ ...prev, notify_new_materials: checked }))}
+                className="data-[state=checked]:bg-[#FF6B00]"
+              />
             </div>
-            <Switch
-              checked={settings.notify_new_materials}
-              onCheckedChange={(checked) => setSettings(prev => ({ ...prev, notify_new_materials: checked }))}
-            />
           </div>
         </CardContent>
       </Card>
@@ -505,61 +530,70 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
 
   const renderAvancado = () => (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5" />
+      <Card className="shadow-xl border-2 border-orange-200 dark:border-orange-500/30 bg-white dark:bg-[#001327]">
+        <CardHeader className="bg-gradient-to-r from-orange-50 to-orange-100/50 dark:from-orange-900/20 dark:to-orange-800/20 border-b border-orange-200 dark:border-orange-500/30">
+          <CardTitle className="flex items-center gap-2 text-gray-800 dark:text-white">
+            <div className="w-8 h-8 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-lg flex items-center justify-center shadow-md">
+              <AlertTriangle className="w-4 h-4 text-white" />
+            </div>
             Configurações Avançadas
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <Label>Backup Automático</Label>
-              <p className="text-sm text-gray-500">Backup automático das discussões e materiais</p>
+        <CardContent className="space-y-4 p-6 bg-white dark:bg-[#001327]">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-4 rounded-lg border border-orange-200 dark:border-orange-500/30 bg-orange-50/50 dark:bg-orange-900/10">
+              <div>
+                <Label className="text-gray-800 dark:text-white font-semibold">Backup Automático</Label>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Backup automático das discussões e materiais</p>
+              </div>
+              <Switch
+                checked={settings.backup_automatico}
+                onCheckedChange={(checked) => setSettings(prev => ({ ...prev, backup_automatico: checked }))}
+                className="data-[state=checked]:bg-[#FF6B00]"
+              />
             </div>
-            <Switch
-              checked={settings.backup_automatico}
-              onCheckedChange={(checked) => setSettings(prev => ({ ...prev, backup_automatico: checked }))}
-            />
-          </div>
 
-          <div className="flex items-center justify-between">
-            <div>
-              <Label>Notificações Ativas</Label>
-              <p className="text-sm text-gray-500">Sistema de notificações do grupo</p>
+            <div className="flex items-center justify-between p-4 rounded-lg border border-orange-200 dark:border-orange-500/30 bg-orange-50/50 dark:bg-orange-900/10">
+              <div>
+                <Label className="text-gray-800 dark:text-white font-semibold">Notificações Ativas</Label>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Sistema de notificações do grupo</p>
+              </div>
+              <Switch
+                checked={settings.notificacoes_ativas}
+                onCheckedChange={(checked) => setSettings(prev => ({ ...prev, notificacoes_ativas: checked }))}
+                className="data-[state=checked]:bg-[#FF6B00]"
+              />
             </div>
-            <Switch
-              checked={settings.notificacoes_ativas}
-              onCheckedChange={(checked) => setSettings(prev => ({ ...prev, notificacoes_ativas: checked }))}
-            />
-          </div>
 
-          <div className="flex items-center justify-between">
-            <div>
-              <Label>Moderação Automática</Label>
-              <p className="text-sm text-gray-500">Filtro automático de conteúdo inadequado</p>
+            <div className="flex items-center justify-between p-4 rounded-lg border border-orange-200 dark:border-orange-500/30 bg-orange-50/50 dark:bg-orange-900/10">
+              <div>
+                <Label className="text-gray-800 dark:text-white font-semibold">Moderação Automática</Label>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Filtro automático de conteúdo inadequado</p>
+              </div>
+              <Switch
+                checked={settings.moderacao_automatica}
+                onCheckedChange={(checked) => setSettings(prev => ({ ...prev, moderacao_automatica: checked }))}
+                className="data-[state=checked]:bg-[#FF6B00]"
+              />
             </div>
-            <Switch
-              checked={settings.moderacao_automatica}
-              onCheckedChange={(checked) => setSettings(prev => ({ ...prev, moderacao_automatica: checked }))}
-            />
           </div>
         </CardContent>
       </Card>
 
-      <Card className="border-red-200">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-red-600">
-            <Trash2 className="w-5 h-5" />
+      <Card className="shadow-xl border-2 border-red-300 dark:border-red-500/50 bg-red-50 dark:bg-red-900/20">
+        <CardHeader className="bg-gradient-to-r from-red-100 to-red-50 dark:from-red-900/30 dark:to-red-800/30 border-b border-red-200 dark:border-red-500/30">
+          <CardTitle className="flex items-center gap-2 text-red-700 dark:text-red-400">
+            <div className="w-8 h-8 bg-gradient-to-r from-red-500 to-red-600 rounded-lg flex items-center justify-center shadow-md">
+              <Trash2 className="w-4 h-4 text-white" />
+            </div>
             Zona de Perigo
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <p className="text-sm text-gray-600 mb-4">
+        <CardContent className="p-6 bg-red-50 dark:bg-red-900/20">
+          <p className="text-sm text-red-700 dark:text-red-400 mb-4">
             Estas ações são irreversíveis. Tenha cuidado ao executá-las.
           </p>
-          <Button variant="destructive" className="w-full">
+          <Button variant="destructive" className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 shadow-lg hover:shadow-xl transition-all duration-200">
             <Trash2 className="w-4 h-4 mr-2" />
             Excluir Grupo
           </Button>
@@ -569,69 +603,81 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
   );
 
   const renderAparencia = () => (
-    <div>
-      <div className="flex items-center gap-3 mb-6">
-        <div className="p-2 bg-[#FF6B00] rounded-lg">
-          <Eye className="h-5 w-5 text-white" />
+    <Card className="shadow-xl border-2 border-orange-200 dark:border-orange-500/30 bg-white dark:bg-[#001327]">
+      <CardHeader className="bg-gradient-to-r from-orange-50 to-orange-100/50 dark:from-orange-900/20 dark:to-orange-800/20 border-b border-orange-200 dark:border-orange-500/30">
+        <CardTitle className="flex items-center gap-3 text-gray-800 dark:text-white">
+          <div className="w-8 h-8 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-lg flex items-center justify-center shadow-md">
+            <Eye className="w-4 h-4 text-white" />
+          </div>
+          <span>Aparência & Tema</span>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="text-center py-16 bg-white dark:bg-[#001327]">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="w-20 h-20 bg-gradient-to-r from-orange-100 to-orange-200 dark:from-orange-900/30 dark:to-orange-800/30 rounded-2xl flex items-center justify-center">
+            <Eye className="w-10 h-10 text-orange-500" />
+          </div>
+          <h4 className="text-xl font-bold text-gray-800 dark:text-white">
+            Aparência & Tema
+          </h4>
+          <p className="text-orange-600 dark:text-orange-400 max-w-md">
+            Configurações de aparência estarão disponíveis em breve. Personalize cores, temas e layout do seu grupo.
+          </p>
         </div>
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-          Aparência & Tema
-        </h3>
-      </div>
-      <div className="text-center py-12">
-        <Eye className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-        <h4 className="text-lg font-bold text-gray-600 dark:text-gray-400 mb-2">
-          Aparência & Tema
-        </h4>
-        <p className="text-sm text-gray-500 dark:text-gray-500">
-          Configurações de aparência estarão disponíveis em breve.
-        </p>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 
     const renderMetas = () => (
-        <div>
-            <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 bg-[#FF6B00] rounded-lg">
-                    <Users className="h-5 w-5 text-white" />
-                </div>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                    Metas & Objetivos
-                </h3>
+        <Card className="shadow-xl border-2 border-orange-200 dark:border-orange-500/30 bg-white dark:bg-[#001327]">
+          <CardHeader className="bg-gradient-to-r from-orange-50 to-orange-100/50 dark:from-orange-900/20 dark:to-orange-800/20 border-b border-orange-200 dark:border-orange-500/30">
+            <CardTitle className="flex items-center gap-3 text-gray-800 dark:text-white">
+              <div className="w-8 h-8 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-lg flex items-center justify-center shadow-md">
+                <Users className="w-4 h-4 text-white" />
+              </div>
+              <span>Metas & Objetivos</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-center py-16 bg-white dark:bg-[#001327]">
+            <div className="flex flex-col items-center space-y-4">
+              <div className="w-20 h-20 bg-gradient-to-r from-orange-100 to-orange-200 dark:from-orange-900/30 dark:to-orange-800/30 rounded-2xl flex items-center justify-center">
+                <Users className="w-10 h-10 text-orange-500" />
+              </div>
+              <h4 className="text-xl font-bold text-gray-800 dark:text-white">
+                Metas & Objetivos
+              </h4>
+              <p className="text-orange-600 dark:text-orange-400 max-w-md">
+                Configurações de metas estarão disponíveis em breve. Defina objetivos e acompanhe o progresso do grupo.
+              </p>
             </div>
-            <div className="text-center py-12">
-                <Users className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <h4 className="text-lg font-bold text-gray-600 dark:text-gray-400 mb-2">
-                    Metas & Objetivos
-                </h4>
-                <p className="text-sm text-gray-500 dark:text-gray-500">
-                    Configurações de metas estarão disponíveis em breve.
-                </p>
-            </div>
-        </div>
+          </CardContent>
+        </Card>
     );
 
     const renderRegras = () => (
-        <div>
-            <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 bg-[#FF6B00] rounded-lg">
-                    <Bell className="h-5 w-5 text-white" />
-                </div>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                    Regras & Conduta
-                </h3>
+        <Card className="shadow-xl border-2 border-orange-200 dark:border-orange-500/30 bg-white dark:bg-[#001327]">
+          <CardHeader className="bg-gradient-to-r from-orange-50 to-orange-100/50 dark:from-orange-900/20 dark:to-orange-800/20 border-b border-orange-200 dark:border-orange-500/30">
+            <CardTitle className="flex items-center gap-3 text-gray-800 dark:text-white">
+              <div className="w-8 h-8 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-lg flex items-center justify-center shadow-md">
+                <Bell className="w-4 h-4 text-white" />
+              </div>
+              <span>Regras & Conduta</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-center py-16 bg-white dark:bg-[#001327]">
+            <div className="flex flex-col items-center space-y-4">
+              <div className="w-20 h-20 bg-gradient-to-r from-orange-100 to-orange-200 dark:from-orange-900/30 dark:to-orange-800/30 rounded-2xl flex items-center justify-center">
+                <Bell className="w-10 h-10 text-orange-500" />
+              </div>
+              <h4 className="text-xl font-bold text-gray-800 dark:text-white">
+                Regras & Conduta
+              </h4>
+              <p className="text-orange-600 dark:text-orange-400 max-w-md">
+                Configurações de regras estarão disponíveis em breve. Estabeleça diretrizes e normas para o grupo.
+              </p>
             </div>
-            <div className="text-center py-12">
-                <Bell className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <h4 className="text-lg font-bold text-gray-600 dark:text-gray-400 mb-2">
-                    Regras & Conduta
-                </h4>
-                <p className="text-sm text-gray-500 dark:text-gray-500">
-                    Configurações de regras estarão disponíveis em breve.
-                </p>
-            </div>
-        </div>
+          </CardContent>
+        </Card>
     );
 
   if (isLoading) {
@@ -646,17 +692,17 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
   }
 
   return (
-    <div className="flex min-h-[800px] h-full bg-gradient-to-br from-gray-50 to-white rounded-xl shadow-2xl overflow-hidden border border-gray-200/50">
+    <div className="flex min-h-[800px] h-full bg-white dark:bg-[#001327] rounded-xl shadow-2xl overflow-hidden border border-orange-200/30 dark:border-orange-500/20">
       {/* Menu Lateral */}
-      <div className="w-72 bg-gradient-to-b from-[#2c3e50] via-[#34495e] to-[#2c3e50] text-white flex-shrink-0 shadow-2xl">
-        <div className="p-8 border-b border-[#34495e]/50 bg-gradient-to-r from-[#2c3e50] to-[#34495e]">
+      <div className="w-72 bg-gradient-to-b from-orange-50 via-orange-100 to-orange-50 dark:from-[#001327] dark:via-[#002442] dark:to-[#001327] border-r border-orange-200 dark:border-orange-500/30 flex-shrink-0 shadow-2xl">
+        <div className="p-8 border-b border-orange-200/50 dark:border-orange-500/30 bg-gradient-to-r from-orange-100 to-orange-50 dark:from-[#001327] dark:to-[#002442]">
           <div className="flex items-center space-x-3 mb-2">
-            <div className="w-10 h-10 bg-gradient-to-r from-[#3498db] to-[#2980b9] rounded-lg flex items-center justify-center shadow-lg">
+            <div className="w-10 h-10 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-lg flex items-center justify-center shadow-lg">
               <Settings className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-white">Configurações</h3>
-              <p className="text-xs text-blue-200/80 mt-0.5">Gerencie seu grupo</p>
+              <h3 className="text-xl font-bold text-gray-800 dark:text-white">Configurações</h3>
+              <p className="text-xs text-orange-600 dark:text-orange-400 mt-0.5">Gerencie seu grupo</p>
             </div>
           </div>
         </div>
@@ -669,14 +715,14 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
                 onClick={() => setActiveSection(item.id)}
                 className={`w-full flex items-center space-x-4 px-5 py-4 rounded-xl transition-all duration-300 transform hover:scale-105 group ${
                   activeSection === item.id
-                    ? 'bg-gradient-to-r from-[#3498db] to-[#2980b9] text-white shadow-2xl border border-blue-300/20'
-                    : 'text-gray-300 hover:bg-gradient-to-r hover:from-[#34495e] hover:to-[#3d566e] hover:text-white hover:shadow-lg'
+                    ? 'bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white shadow-2xl border border-orange-300/20'
+                    : 'text-gray-600 dark:text-gray-300 hover:bg-gradient-to-r hover:from-orange-100 hover:to-orange-50 dark:hover:from-orange-900/30 dark:hover:to-orange-800/30 hover:text-orange-700 dark:hover:text-orange-300 hover:shadow-lg'
                 }`}
               >
                 <div className={`p-2 rounded-lg transition-all duration-300 ${
                   activeSection === item.id 
                     ? 'bg-white/20' 
-                    : 'group-hover:bg-white/10'
+                    : 'group-hover:bg-orange-200/30 dark:group-hover:bg-orange-500/20'
                 }`}>
                   <Icon className="w-5 h-5" />
                 </div>
@@ -687,25 +733,25 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
         </nav>
 
         {/* Decoração no menu lateral */}
-        <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-[#1a252f] to-transparent opacity-50"></div>
+        <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-orange-100/50 dark:from-[#001327] to-transparent opacity-50"></div>
       </div>
 
       {/* Conteúdo Principal */}
-      <div className="flex-1 overflow-y-auto bg-gradient-to-br from-white to-gray-50">
+      <div className="flex-1 overflow-y-auto bg-white dark:bg-[#001327]">
         <div className="p-8 min-h-full">
           {/* Header do conteúdo */}
-          <div className="mb-8 pb-6 border-b border-gray-200/50">
+          <div className="mb-8 pb-6 border-b border-orange-200/50 dark:border-orange-500/30">
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-xl flex items-center justify-center shadow-lg">
+              <div className="w-12 h-12 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-xl flex items-center justify-center shadow-lg ring-2 ring-orange-200 dark:ring-orange-500/30">
                 {menuItems.find(item => item.id === activeSection)?.icon && 
                   React.createElement(menuItems.find(item => item.id === activeSection)!.icon, { className: "w-6 h-6 text-white" })
                 }
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-gray-800">
+                <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
                   {menuItems.find(item => item.id === activeSection)?.label}
                 </h2>
-                <p className="text-gray-500 text-sm mt-1">
+                <p className="text-orange-600 dark:text-orange-400 text-sm mt-1">
                   Configure as opções do seu grupo de estudos
                 </p>
               </div>
@@ -725,12 +771,12 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
           </div>
 
           {/* Botão de Salvar */}
-          <div className="sticky bottom-0 bg-gradient-to-r from-white via-white to-gray-50/90 border-t border-gray-200/50 p-6 mt-8 backdrop-blur-sm">
+          <div className="sticky bottom-0 bg-white/95 dark:bg-[#001327]/95 border-t border-orange-200/50 dark:border-orange-500/30 p-6 mt-8 backdrop-blur-sm">
             <div className="flex justify-end space-x-4">
               <Button 
                 variant="outline" 
                 onClick={loadGroupSettings}
-                className="px-6 py-3 border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all duration-200"
+                className="px-6 py-3 border-2 border-orange-300 dark:border-orange-500 text-orange-600 dark:text-orange-400 hover:border-orange-400 dark:hover:border-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-all duration-200"
               >
                 <X className="w-4 h-4 mr-2" />
                 Cancelar
@@ -738,7 +784,7 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
               <Button 
                 onClick={saveSettings} 
                 disabled={isSaving}
-                className="px-8 py-3 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200"
+                className="px-8 py-3 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 ring-2 ring-orange-200 dark:ring-orange-500/30"
               >
                 {isSaving ? (
                   <>
