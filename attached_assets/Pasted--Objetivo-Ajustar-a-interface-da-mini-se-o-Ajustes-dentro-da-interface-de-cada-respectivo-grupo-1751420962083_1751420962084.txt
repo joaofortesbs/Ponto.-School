@@ -1,0 +1,134 @@
+
+
+Objetivo: Ajustar a interface da mini-seção "Ajustes" dentro da interface de cada respectivo grupo de estudos para que todos os campos sejam preenchidos e configurados automaticamente com as informações e dados do grupo de estudos, incluindo Nome do Grupo, Descrição, Disciplina/Área, Tópico Específico, Código Único, Tags do Grupo e Controle de Privacidade e Acesso. Os dados devem ser obtidos do Supabase e refletidos na interface. As alterações devem ser feitas de forma segura, preservando todas as funcionalidades existentes, sem alterar elementos fora de contexto ou introduzir erros/bugs, e mantendo o design/layout da mini-seção "Grupos de Estudos" (incluindo modals de "Adicionar Grupo" e "Criar Novo Grupo").
+
+
+
+Instruções Gerais
+
+
+
+
+
+Escopo Restrito: Foque exclusivamente na função showSettingsModal no frontend para preencher automaticamente os campos da interface do modal de Configurações com dados do grupo de estudos, sem modificar a lógica de outras partes do código (ex.: accessGroup, loadMembers, "Discussões", "Membros", "Tarefas", "Notificações").
+
+
+
+Preservação: Mantenha intactas todas as funcionalidades existentes (criação via modal, adesão, saída/exclusão, chat, pesquisa, contagem de online) e garanta que o modal de Configurações continue funcionando sem impactar o restante da interface.
+
+
+
+Eficiência: Utilize Supabase para buscar os dados do grupo (ex.: tabela grupos com colunas como nome, descricao, disciplina, topico_especifico, codigo_unico, tags, privacidade) e preencha os campos correspondentes, com validação e logs para evitar falhas.
+
+
+
+Testes Completos: Após as alterações, teste a mini-seção "Ajustes" e envie os logs.
+
+
+
+Análise de Cenários
+
+
+
+
+
+Cenário 1: Carregamento Inicial - Abrir o modal de Configurações deve preencher todos os campos com os dados atuais do grupo.
+
+
+
+Cenário 2: Dados Ausentes - Garantir que campos sem dados sejam preenchidos com placeholders (ex.: "Não especificado") sem quebrar a interface.
+
+
+
+Cenário 3: Múltiplos Grupos - Testar com diferentes grupos para confirmar que os campos refletem os dados do grupo correto.
+
+
+
+Cenário 4: Erro de Dados - Implementar retry e tratamento de erro caso a consulta ao Supabase falhe.
+
+
+
+Descrição da Interface
+
+
+
+
+
+Campos do Modal de Configurações:
+
+
+
+
+
+Nome do Grupo: Campo de texto <input> com valor do campo nome do grupo.
+
+
+
+Descrição: Área de texto <textarea> com valor do campo descricao.
+
+
+
+Disciplina/Área: Campo de texto <input> ou <select> com valor do campo disciplina.
+
+
+
+Tópico Específico: Campo de texto <input> com valor do campo topico_especifico.
+
+
+
+Código Único: Campo de texto <input> (somente leitura) com valor do campo codigo_unico.
+
+
+
+Tags do Grupo: Campo de texto ou múltiplos <input> com valores do campo tags (ex.: separados por vírgulas).
+
+
+
+Controle de Privacidade e Acesso: <select> ou <input type="checkbox"> com valor do campo privacidade (ex.: "Público", "Privado").
+
+
+
+Estilização: Manter o design existente do modal, apenas atualizando os valores dos campos.
+
+
+
+Modificações no Frontend (JavaScript)
+
+ // Atualizar showSettingsModal para preencher campos automaticamente const showSettingsModal = async (groupId) => { try { console.log(`Abrindo modal de configurações para o grupo ${groupId}...`); // Verificar se o modal já existe ou criá-lo let modal = document.getElementById('settings-modal'); if (!modal) { modal = document.createElement('div'); modal.id = 'settings-modal'; modal.style.cssText = 'display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.5); z-index: 1000;'; modal.innerHTML = `
+
+Configurações do Grupo
+
+Nome do Grupo: 
+Descrição: 
+Disciplina/Área: 
+Tópico Específico: 
+Código Único: 
+Tags do Grupo: 
+Privacidade: Público Privado 
+Salvar Fechar `; document.body.appendChild(modal); } 
+
+// Buscar dados do grupo no Supabase
+const { data: groupData, error: groupError } = await supabase
+  .from('grupos')
+  .select('nome, descricao, disciplina, topico_especifico, codigo_unico, tags, privacidade')
+  .eq('id', groupId)
+  .single();
+if (groupError) throw groupError;
+if (!groupData) throw new Error('Grupo não encontrado.');
+
+// Preencher os campos com os dados do grupo
+document.getElementById('group-name').value = groupData.nome || 'Não especificado';
+document.getElementById('group-description').value = groupData.descricao || 'Não especificado';
+document.getElementById('group-discipline').value = groupData.disciplina || 'Não especificado';
+document.getElementById('group-topic').value = groupData.topico_especifico || 'Não especificado';
+document.getElementById('group-code').value = groupData.codigo_unico || 'N/A';
+document.getElementById('group-tags').value = groupData.tags ? groupData.tags.join(', ') : 'Nenhuma tag';
+document.getElementById('group-privacy').value = groupData.privacidade || 'publico';
+
+// Exibir o modal
+modal.style.display = 'block';
+console.log(`Modal de configurações preenchido para o grupo ${groupId}.`);
+
+} catch (error) { console.error('Erro ao carregar configurações do grupo:', error.message, error.stack); alert('Erro ao carregar as configurações. Verifique o console.'); const modal = document.getElementById('settings-modal'); if (modal) modal.style.display = 'none'; setTimeout(() => showSettingsModal(groupId), 2000); // Retry após 2 segundos } };
+
+// Funções auxiliares (closeSettingsModal, saveSettings, etc.) mantidas sem alterações const closeSettingsModal = () => { const modal = document.getElementById('settings-modal'); if (modal) modal.style.display = 'none'; };
