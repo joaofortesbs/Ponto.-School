@@ -679,4 +679,64 @@ export default function AjustesTab({ groupId, group }: AjustesTabProps) {
                     <div className="flex items-center justify-between p-6 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-200/50 dark:border-gray-700/50">
                       <div className="flex items-center gap-4">
                         <div className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl text-white">
-                          <Bell className="h-5 w-5"
+                          <Bell className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900 dark:text-white">Novas Mensagens</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Notificar quando houver novas mensagens no grupo</p>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={settings.notify_new_messages}
+                        onCheckedChange={(checked) => setSettings({ ...settings, notify_new_messages: checked })}
+                        className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-purple-500 data-[state=checked]:to-pink-500"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between p-6 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-200/50 dark:border-gray-700/50">
+                      <div className="flex items-center gap-4">
+                        <div className="p-3 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl text-white">
+                          <BookOpen className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900 dark:text-white">Novos Materiais</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Notificar quando novos materiais forem adicionados</p>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={settings.notify_new_materials}
+                        onCheckedChange={(checked) => setSettings({ ...settings, notify_new_materials: checked })}
+                        className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-orange-500 data-[state=checked]:to-red-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer com botão de salvar */}
+      <div className="mt-6 flex justify-end">
+        <Button
+          onClick={saveSettings}
+          disabled={isSaving}
+          className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white rounded-xl h-11 px-8"
+        >
+          {isSaving ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              Salvando...
+            </>
+          ) : (
+            <>
+              <Save className="h-4 w-4 mr-2" />
+              Salvar Configurações
+            </>
+          )}
+        </Button>
+      </div>
+    </div>
+  );
+}
