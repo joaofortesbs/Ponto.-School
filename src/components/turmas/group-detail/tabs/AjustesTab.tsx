@@ -73,47 +73,94 @@ const AjustesTab: React.FC<AjustesTabProps> = ({ group, onSave, onUpdate }) => {
     moderacao_automatica: group?.moderacao_automatica ?? false,
   });
 
-  // Atualizar settings quando o grupo mudar
+  // Atualizar settings quando o grupo mudar e carregar dados do Supabase
   useEffect(() => {
-    if (group) {
+    const loadGroupData = async () => {
+      if (group?.id) {
+        try {
+          console.log(`Carregando dados do grupo ${group.id} para mini-seção Ajustes...`);
+          
+          // Importar supabase dinamicamente
+          const { supabase } = await import('@/integrations/supabase/client');
+          
+          // Buscar dados completos do grupo no Supabase
+          const { data: groupData, error } = await supabase
+            .from('grupos_estudo')
+            .select('*')
+            .eq('id', group.id)
+            .single();
+            
+          if (error) {
+            console.error('Erro ao carregar dados do grupo:', error);
+            // Usar dados do prop group como fallback
+            updateSettingsFromGroup(group);
+            return;
+          }
+          
+          if (groupData) {
+            console.log('Dados do grupo carregados do Supabase:', groupData);
+            updateSettingsFromGroup(groupData);
+          } else {
+            console.warn('Nenhum dado encontrado para o grupo:', group.id);
+            updateSettingsFromGroup(group);
+          }
+          
+        } catch (error) {
+          console.error('Erro ao conectar com Supabase:', error);
+          // Usar dados do prop group como fallback
+          updateSettingsFromGroup(group);
+        }
+      } else if (group) {
+        // Se não há ID, usar dados do prop group
+        updateSettingsFromGroup(group);
+      }
+    };
+    
+    const updateSettingsFromGroup = (groupData) => {
       setGroupSettings({
-        nome: group.nome || "",
-        descricao: group.descricao || "",
-        tags: group.tags || [],
-        disciplina_area: group.disciplina_area || "",
-        topico_especifico: group.topico_especifico || "",
-        is_private: group.is_private || false,
-        is_visible_to_all: group.is_visible_to_all || false,
-        is_visible_to_partners: group.is_visible_to_partners || false,
-        tipo_grupo: group.tipo_grupo || "estudo",
-        codigo_unico: group.codigo_unico || "",
+        nome: groupData.nome || "Nome não especificado",
+        descricao: groupData.descricao || "Descrição não especificada",
+        tags: groupData.tags || [],
+        disciplina_area: groupData.disciplina_area || "Disciplina não especificada",
+        topico_especifico: groupData.topico_especifico || "Tópico não especificado",
+        is_private: groupData.is_private || false,
+        is_visible_to_all: groupData.is_visible_to_all || false,
+        is_visible_to_partners: groupData.is_visible_to_partners || false,
+        tipo_grupo: groupData.tipo_grupo || "estudo",
+        codigo_unico: groupData.codigo_unico || "Código não disponível",
         // Configurações de aparência
-        tema: group.tema || "laranja",
-        cor_primaria: group.cor_primaria || "#FF6B00",
-        imagem_capa: group.imagem_capa || "",
+        tema: groupData.tema || "laranja",
+        cor_primaria: groupData.cor_primaria || "#FF6B00",
+        imagem_capa: groupData.imagem_capa || "",
         // Configurações de privacidade
-        aceitar_novos_membros: group.aceitar_novos_membros ?? true,
-        aprovacao_manual: group.aprovacao_manual ?? false,
-        permitir_convites: group.permitir_convites ?? true,
+        aceitar_novos_membros: groupData.aceitar_novos_membros ?? true,
+        aprovacao_manual: groupData.aprovacao_manual ?? false,
+        permitir_convites: groupData.permitir_convites ?? true,
         // Configurações de metas
-        meta_membros: group.meta_membros || 50,
-        meta_atividade_semanal: group.meta_atividade_semanal || 10,
-        meta_materiais: group.meta_materiais || 20,
+        meta_membros: groupData.meta_membros || 50,
+        meta_atividade_semanal: groupData.meta_atividade_semanal || 10,
+        meta_materiais: groupData.meta_materiais || 20,
         // Regras
-        regras: group.regras || [],
-        codigo_conduta: group.codigo_conduta || "",
+        regras: groupData.regras || [],
+        codigo_conduta: groupData.codigo_conduta || "",
         // Avançado
-        backup_automatico: group.backup_automatico ?? true,
-        notificacoes_ativas: group.notificacoes_ativas ?? true,
-        moderacao_automatica: group.moderacao_automatica ?? false,
+        backup_automatico: groupData.backup_automatico ?? true,
+        notificacoes_ativas: groupData.notificacoes_ativas ?? true,
+        moderacao_automatica: groupData.moderacao_automatica ?? false,
       });
-    }
+      
+      console.log(`Campos da mini-seção Ajustes preenchidos para o grupo ${groupData.id || 'desconhecido'}.`);
+    };
+    
+    loadGroupData();
   }, [group]);
 
   const [newTag, setNewTag] = useState("");
   const [newRule, setNewRule] = useState("");
 
-  const handleSave = async () => {
+  const handleSave = async (retryCount = 0) => {
+    const maxRetries = 3;
+    
     try {
       // Validações
       if (!groupSettings.nome.trim()) {
@@ -121,8 +168,14 @@ const AjustesTab: React.FC<AjustesTabProps> = ({ group, onSave, onUpdate }) => {
         return;
       }
 
+      if (!group?.id) {
+        console.error('ID do grupo não disponível para salvar.');
+        alert('Erro: ID do grupo não encontrado.');
+        return;
+      }
+
       // Log para debug
-      console.log('Salvando configurações do grupo:', group?.id, groupSettings);
+      console.log(`Tentativa ${retryCount + 1} de salvar configurações do grupo:`, group.id, groupSettings);
 
       // Preparar dados para atualização (incluindo todas as configurações)
       const updateData = {
@@ -164,15 +217,23 @@ const AjustesTab: React.FC<AjustesTabProps> = ({ group, onSave, onUpdate }) => {
       const { error } = await supabase
         .from('grupos_estudo')
         .update(updateData)
-        .eq('id', group?.id);
+        .eq('id', group.id);
 
       if (error) {
-        console.error('Erro ao salvar configurações no Supabase:', error);
-        alert('Erro ao salvar configurações. Verifique o console.');
-        return;
+        console.error(`Erro ao salvar configurações no Supabase (tentativa ${retryCount + 1}):`, error);
+        
+        // Tentar novamente se não excedeu o máximo de tentativas
+        if (retryCount < maxRetries - 1) {
+          console.log(`Tentando novamente em 2 segundos... (tentativa ${retryCount + 2}/${maxRetries})`);
+          setTimeout(() => handleSave(retryCount + 1), 2000);
+          return;
+        } else {
+          alert(`Erro ao salvar configurações após ${maxRetries} tentativas. Verifique o console.`);
+          return;
+        }
       }
 
-      console.log(`Configurações salvas com sucesso para grupo ${group?.id}`);
+      console.log(`Configurações salvas com sucesso para grupo ${group.id} na tentativa ${retryCount + 1}`);
       alert('Configurações salvas com sucesso!');
 
       // Chama a função onUpdate para atualizar os dados do grupo no componente pai
@@ -185,8 +246,15 @@ const AjustesTab: React.FC<AjustesTabProps> = ({ group, onSave, onUpdate }) => {
         onSave(groupSettings);
       }
     } catch (error) {
-      console.error('Erro ao salvar configurações:', error?.message, error?.stack);
-      alert('Erro ao salvar configurações. Verifique o console.');
+      console.error(`Erro ao salvar configurações (tentativa ${retryCount + 1}):`, error?.message, error?.stack);
+      
+      // Tentar novamente se não excedeu o máximo de tentativas
+      if (retryCount < maxRetries - 1) {
+        console.log(`Tentando novamente em 2 segundos... (tentativa ${retryCount + 2}/${maxRetries})`);
+        setTimeout(() => handleSave(retryCount + 1), 2000);
+      } else {
+        alert(`Erro ao salvar configurações após ${maxRetries} tentativas. Verifique o console.`);
+      }
     }
   };
 

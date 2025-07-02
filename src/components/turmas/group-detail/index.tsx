@@ -91,7 +91,23 @@ export default function GroupDetail({ group, currentUser, onBack }: GroupDetailP
           </div>
         );
       case 'ajustes':
-        return <AjustesTab group={group} onSave={(settings) => console.log('Settings saved:', settings)} />;
+        return <AjustesTab 
+          group={group} 
+          onSave={(settings) => {
+            console.log('Settings saved:', settings);
+            // Recarregar dados do grupo após salvar
+            if (typeof loadGroupData === 'function') {
+              loadGroupData();
+            }
+          }}
+          onUpdate={() => {
+            console.log('Group data update requested');
+            // Recarregar dados do grupo após atualização
+            if (typeof loadGroupData === 'function') {
+              loadGroupData();
+            }
+          }}
+        />;
       default:
         return <PlaceholderSection title="Discussões" message="Selecione uma aba" />;
     }
