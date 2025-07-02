@@ -393,7 +393,7 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
                 onCheckedChange={(checked) => setSettings(prev => ({ 
                   ...prev, 
                   is_public: checked,
-                  is_private: checked ? false : prev.is_private
+                  is_private: !checked
                 }))}
                 className="data-[state=checked]:bg-[#FF6B00]"
               />
@@ -414,25 +414,8 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
                 onCheckedChange={(checked) => setSettings(prev => ({ 
                   ...prev, 
                   is_private: checked,
-                  is_public: checked ? false : prev.is_public
+                  is_public: !checked
                 }))}
-                className="data-[state=checked]:bg-[#FF6B00]"
-              />
-            </div>
-
-            <div className="flex items-center justify-between p-4 rounded-lg border border-orange-200 dark:border-orange-500/30 bg-orange-50/50 dark:bg-orange-900/10">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                  <Eye className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div>
-                  <Label className="text-gray-800 dark:text-white font-semibold">Visível para Todos</Label>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Aparece nas listagens públicas</p>
-                </div>
-              </div>
-              <Switch
-                checked={settings.is_visible_to_all}
-                onCheckedChange={(checked) => setSettings(prev => ({ ...prev, is_visible_to_all: checked }))}
                 className="data-[state=checked]:bg-[#FF6B00]"
               />
             </div>
