@@ -363,3 +363,254 @@ const DiscussoesTab: React.FC<DiscussoesTabProps> = ({ groupId, groupData }) => 
 };
 
 export default DiscussoesTab;
+import React, { useState, useEffect, useRef } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Send, Paperclip, Smile, MoreHorizontal, Reply, Heart, MessageCircle } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Card, CardContent } from '@/components/ui/card';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/hooks/useAuth';
+
+interface Message {
+  id: string;
+  content: string;
+  user_id: string;
+  created_at: string;
+  user_name: string;
+  user_avatar?: string;
+  reactions?: any[];
+  replies?: Message[];
+}
+
+interface DiscussoesTabProps {
+  groupId: string;
+}
+
+export default function DiscussoesTab({ groupId }: DiscussoesTabProps) {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [onlineUsers, setOnlineUsers] = useState<number>(0);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    loadMessages();
+    setupRealtimeSubscription();
+    updateOnlineCount();
+  }, [groupId, user]);
+
+  const loadMessages = async () => {
+    if (!user?.id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('group_messages')
+        .select(`
+          *,
+          profiles!group_messages_user_id_fkey (
+            display_name,
+            avatar_url
+          )
+        `)
+        .eq('group_id', groupId)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+
+      const formattedMessages = data?.map(msg => ({
+        id: msg.id,
+        content: msg.content,
+        user_id: msg.user_id,
+        created_at: msg.created_at,
+        user_name: msg.profiles?.display_name || 'Usuário',
+        user_avatar: msg.profiles?.avatar_url || '',
+        reactions: [],
+        replies: []
+      })) || [];
+
+      setMessages(formattedMessages);
+      scrollToBottom();
+    } catch (error) {
+      console.error('Erro ao carregar mensagens:', error);
+    }
+  };
+
+  const setupRealtimeSubscription = () => {
+    const channel = supabase
+      .channel(`group_messages_${groupId}`)
+      .on('postgres_changes', 
+        { event: 'INSERT', schema: 'public', table: 'group_messages', filter: `group_id=eq.${groupId}` },
+        (payload) => {
+          console.log('Nova mensagem recebida:', payload);
+          loadMessages();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  };
+
+  const updateOnlineCount = () => {
+    setOnlineUsers(Math.floor(Math.random() * 5) + 1);
+  };
+
+  const sendMessage = async () => {
+    if (!newMessage.trim() || !user?.id) return;
+
+    setIsLoading(true);
+    try {
+      const { error } = await supabase
+        .from('group_messages')
+        .insert([
+          {
+            group_id: groupId,
+            user_id: user.id,
+            content: newMessage.trim()
+          }
+        ]);
+
+      if (error) throw error;
+
+      setNewMessage('');
+      scrollToBottom();
+    } catch (error) {
+      console.error('Erro ao enviar mensagem:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const scrollToBottom = () => {
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+
+  const formatMessageTime = (timestamp: string) => {
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString('pt-BR', { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
+  };
+
+  return (
+    <div className="flex flex-col h-full bg-white rounded-lg shadow-sm">
+      {/* Header do Chat */}
+      <div className="flex items-center justify-between p-4 border-b border-gray-200">
+        <div className="flex items-center space-x-3">
+          <MessageCircle className="w-5 h-5 text-[#FF6B00]" />
+          <div>
+            <h3 className="font-semibold text-gray-800">Discussões do Grupo</h3>
+            <p className="text-sm text-gray-500">
+              {onlineUsers} {onlineUsers === 1 ? 'membro online' : 'membros online'}
+            </p>
+          </div>
+        </div>
+        <Button variant="ghost" size="sm">
+          <MoreHorizontal className="w-4 h-4" />
+        </Button>
+      </div>
+
+      {/* Área de Mensagens */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 max-h-[500px]">
+        {messages.length === 0 ? (
+          <div className="text-center py-8">
+            <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+            <p className="text-gray-500">Nenhuma mensagem ainda.</p>
+            <p className="text-sm text-gray-400">Seja o primeiro a iniciar uma discussão!</p>
+          </div>
+        ) : (
+          messages.map((message) => (
+            <div key={message.id} className="flex space-x-3">
+              <Avatar className="w-8 h-8 flex-shrink-0">
+                <AvatarImage src={message.user_avatar} />
+                <AvatarFallback>
+                  {message.user_name.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center space-x-2 mb-1">
+                  <span className="font-medium text-sm text-gray-800">
+                    {message.user_name}
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    {formatMessageTime(message.created_at)}
+                  </span>
+                </div>
+                <Card className="bg-gray-50 border-0">
+                  <CardContent className="p-3">
+                    <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                      {message.content}
+                    </p>
+                  </CardContent>
+                </Card>
+                <div className="flex items-center space-x-4 mt-2">
+                  <button className="flex items-center space-x-1 text-gray-500 hover:text-red-500 transition-colors">
+                    <Heart className="w-4 h-4" />
+                    <span className="text-xs">Curtir</span>
+                  </button>
+                  <button className="flex items-center space-x-1 text-gray-500 hover:text-blue-500 transition-colors">
+                    <Reply className="w-4 h-4" />
+                    <span className="text-xs">Responder</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Área de Entrada de Mensagem */}
+      <div className="p-4 border-t border-gray-200">
+        <div className="flex items-center space-x-2">
+          <div className="flex-1 relative">
+            <Input
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Digite sua mensagem..."
+              className="pr-20 rounded-full border-gray-300 focus:border-[#FF6B00] focus:ring-[#FF6B00]"
+              disabled={isLoading}
+            />
+            <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600"
+              >
+                <Paperclip className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600"
+              >
+                <Smile className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+          <Button
+            onClick={sendMessage}
+            disabled={!newMessage.trim() || isLoading}
+            className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white rounded-full h-10 w-10 p-0"
+          >
+            <Send className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}

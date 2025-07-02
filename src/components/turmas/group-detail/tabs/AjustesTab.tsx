@@ -1,1115 +1,613 @@
-import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
-import {
-  Settings,
-  Info,
-  Palette,
-  Shield,
-  Target,
-  Gavel,
-  Zap,
-  Save,
-  Users,
-  Lock,
-  Bell,
-  Crown,
-  AlertTriangle,
-  Plus,
-  Trash2,
+import React, { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { 
+  Settings, 
+  Shield, 
+  Bell, 
+  Users, 
+  Globe, 
+  Lock, 
   Eye,
-  Globe,
-  UserPlus,
-  CheckCircle2,
-  Star,
-  Sparkles,
-  Layers,
-  Gauge,
-  Copy,
-} from "lucide-react";
+  Trash2,
+  Save,
+  X,
+  Plus,
+  AlertTriangle
+} from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
 
-interface AjustesTabProps {
-  group: any;
-  onSave?: (settings: any) => void;
-  onUpdate?: () => void;
+interface GroupSettings {
+  // Configurações Gerais
+  nome: string;
+  descricao: string;
+  disciplina_area: string;
+  topico_especifico: string;
+  tags: string[];
+
+  // Configurações de Privacidade
+  is_public: boolean;
+  is_private: boolean;
+  is_visible_to_all: boolean;
+  is_visible_to_partners: boolean;
+
+  // Configurações de Membros
+  max_members: number;
+  require_approval: boolean;
+  allow_member_invites: boolean;
+
+  // Configurações de Notificações
+  notify_new_members: boolean;
+  notify_new_messages: boolean;
+  notify_new_materials: boolean;
+
+  // Configurações Avançadas
+  backup_automatico: boolean;
+  notificacoes_ativas: boolean;
+  moderacao_automatica: boolean;
 }
 
-const AjustesTab: React.FC<AjustesTabProps> = ({ group, onSave, onUpdate }) => {
-  const [activeSection, setActiveSection] = useState("informacoes-basicas");
-  const [groupSettings, setGroupSettings] = useState({
-    nome: group?.nome || "",
-    descricao: group?.descricao || "",
-    tags: group?.tags || [],
-    disciplina_area: group?.disciplina_area || "",
-    topico_especifico: group?.topico_especifico || "",
-    is_private: group?.is_private || false,
-    is_visible_to_all: group?.is_visible_to_all || false,
-    is_visible_to_partners: group?.is_visible_to_partners || false,
-    tipo_grupo: group?.tipo_grupo || "estudo",
-    codigo_unico: group?.codigo_unico || "",
-    // Configurações de aparência
-    tema: group?.tema || "laranja",
-    cor_primaria: group?.cor_primaria || "#FF6B00",
-    imagem_capa: group?.imagem_capa || "",
-    // Configurações de privacidade
-    aceitar_novos_membros: group?.aceitar_novos_membros ?? true,
-    aprovacao_manual: group?.aprovacao_manual ?? false,
-    permitir_convites: group?.permitir_convites ?? true,
-    // Configurações de metas
-    meta_membros: group?.meta_membros || 50,
-    meta_atividade_semanal: group?.meta_atividade_semanal || 10,
-    meta_materiais: group?.meta_materiais || 20,
-    // Regras
-    regras: group?.regras || [],
-    codigo_conduta: group?.codigo_conduta || "",
-    // Avançado
-    backup_automatico: group?.backup_automatico ?? true,
-    notificacoes_ativas: group?.notificacoes_ativas ?? true,
-    moderacao_automatica: group?.moderacao_automatica ?? false,
+interface AjustesTabProps {
+  groupId: string;
+}
+
+export default function AjustesTab({ groupId }: AjustesTabProps) {
+  const [settings, setSettings] = useState<GroupSettings>({
+    nome: '',
+    descricao: '',
+    disciplina_area: '',
+    topico_especifico: '',
+    tags: [],
+    is_public: false,
+    is_private: false,
+    is_visible_to_all: false,
+    is_visible_to_partners: false,
+    max_members: 50,
+    require_approval: false,
+    allow_member_invites: true,
+    notify_new_members: true,
+    notify_new_messages: true,
+    notify_new_materials: true,
+    backup_automatico: true,
+    notificacoes_ativas: true,
+    moderacao_automatica: false
   });
 
-  // Atualizar settings quando o grupo mudar e carregar dados do Supabase
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [activeSection, setActiveSection] = useState('gerais');
+  const [newTag, setNewTag] = useState('');
+  const { user } = useAuth();
+  const { toast } = useToast();
+
   useEffect(() => {
-    const loadGroupData = async () => {
-      if (group?.id) {
-        try {
-          console.log(`Carregando dados do grupo ${group.id} para mini-seção Ajustes...`);
-          
-          // Importar supabase dinamicamente
-          const { supabase } = await import('@/integrations/supabase/client');
-          
-          // Buscar dados completos do grupo no Supabase
-          const { data: groupData, error } = await supabase
-            .from('grupos_estudo')
-            .select('*')
-            .eq('id', group.id)
-            .single();
-            
-          if (error) {
-            console.error('Erro ao carregar dados do grupo:', error);
-            // Usar dados do prop group como fallback
-            updateSettingsFromGroup(group);
-            return;
-          }
-          
-          if (groupData) {
-            console.log('Dados do grupo carregados do Supabase:', groupData);
-            updateSettingsFromGroup(groupData);
-          } else {
-            console.warn('Nenhum dado encontrado para o grupo:', group.id);
-            updateSettingsFromGroup(group);
-          }
-          
-        } catch (error) {
-          console.error('Erro ao conectar com Supabase:', error);
-          // Usar dados do prop group como fallback
-          updateSettingsFromGroup(group);
-        }
-      } else if (group) {
-        // Se não há ID, usar dados do prop group
-        updateSettingsFromGroup(group);
-      }
-    };
-    
-    const updateSettingsFromGroup = (groupData) => {
-      setGroupSettings({
-        nome: groupData.nome || "Nome não especificado",
-        descricao: groupData.descricao || "Descrição não especificada",
+    loadGroupSettings();
+  }, [groupId]);
+
+  const loadGroupSettings = async () => {
+    try {
+      const { data: groupData, error } = await supabase
+        .from('grupos_estudo')
+        .select('*')
+        .eq('id', groupId)
+        .single();
+
+      if (error) throw error;
+
+      setSettings({
+        nome: groupData.nome || '',
+        descricao: groupData.descricao || '',
+        disciplina_area: groupData.disciplina_area || '',
+        topico_especifico: groupData.topico_especifico || '',
         tags: groupData.tags || [],
-        disciplina_area: groupData.disciplina_area || "Disciplina não especificada",
-        topico_especifico: groupData.topico_especifico || "Tópico não especificado",
-        is_private: groupData.is_private || false,
-        is_visible_to_all: groupData.is_visible_to_all || false,
-        is_visible_to_partners: groupData.is_visible_to_partners || false,
-        tipo_grupo: groupData.tipo_grupo || "estudo",
-        codigo_unico: groupData.codigo_unico || "Código não disponível",
-        // Configurações de aparência
-        tema: groupData.tema || "laranja",
-        cor_primaria: groupData.cor_primaria || "#FF6B00",
-        imagem_capa: groupData.imagem_capa || "",
-        // Configurações de privacidade
-        aceitar_novos_membros: groupData.aceitar_novos_membros ?? true,
-        aprovacao_manual: groupData.aprovacao_manual ?? false,
-        permitir_convites: groupData.permitir_convites ?? true,
-        // Configurações de metas
-        meta_membros: groupData.meta_membros || 50,
-        meta_atividade_semanal: groupData.meta_atividade_semanal || 10,
-        meta_materiais: groupData.meta_materiais || 20,
-        // Regras
-        regras: groupData.regras || [],
-        codigo_conduta: groupData.codigo_conduta || "",
-        // Avançado
+        is_public: groupData.is_public ?? false,
+        is_private: groupData.is_private ?? false,
+        is_visible_to_all: groupData.is_visible_to_all ?? false,
+        is_visible_to_partners: groupData.is_visible_to_partners ?? false,
+        max_members: groupData.max_members ?? 50,
+        require_approval: groupData.require_approval ?? false,
+        allow_member_invites: groupData.allow_member_invites ?? true,
+        notify_new_members: groupData.notify_new_members ?? true,
+        notify_new_messages: groupData.notify_new_messages ?? true,
+        notify_new_materials: groupData.notify_new_materials ?? true,
         backup_automatico: groupData.backup_automatico ?? true,
         notificacoes_ativas: groupData.notificacoes_ativas ?? true,
         moderacao_automatica: groupData.moderacao_automatica ?? false,
       });
-      
+
       console.log(`Campos da mini-seção Ajustes preenchidos para o grupo ${groupData.id || 'desconhecido'}.`);
-    };
-    
-    loadGroupData();
-  }, [group]);
+    } catch (error) {
+      console.error('Erro ao carregar configurações:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar as configurações do grupo.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  const [newTag, setNewTag] = useState("");
-  const [newRule, setNewRule] = useState("");
-
-  const handleSave = async (retryCount = 0) => {
-    const maxRetries = 3;
-    
+  const saveSettings = async () => {
+    setIsSaving(true);
     try {
-      // Validações
-      if (!groupSettings.nome.trim()) {
-        alert('O nome do grupo não pode ser vazio.');
-        return;
-      }
-
-      if (!group?.id) {
-        console.error('ID do grupo não disponível para salvar.');
-        alert('Erro: ID do grupo não encontrado.');
-        return;
-      }
-
-      // Log para debug
-      console.log(`Tentativa ${retryCount + 1} de salvar configurações do grupo:`, group.id, groupSettings);
-
-      // Preparar dados para atualização (incluindo todas as configurações)
-      const updateData = {
-        nome: groupSettings.nome.trim(),
-        descricao: groupSettings.descricao.trim(),
-        tags: groupSettings.tags.filter(tag => tag.trim() !== ''),
-        disciplina_area: groupSettings.disciplina_area.trim(),
-        topico_especifico: groupSettings.topico_especifico.trim(),
-        is_private: groupSettings.is_private,
-        is_visible_to_all: groupSettings.is_visible_to_all,
-        is_visible_to_partners: groupSettings.is_visible_to_partners,
-        tipo_grupo: groupSettings.tipo_grupo,
-        // Configurações de aparência
-        tema: groupSettings.tema,
-        cor_primaria: groupSettings.cor_primaria,
-        imagem_capa: groupSettings.imagem_capa,
-        // Configurações de privacidade
-        aceitar_novos_membros: groupSettings.aceitar_novos_membros,
-        aprovacao_manual: groupSettings.aprovacao_manual,
-        permitir_convites: groupSettings.permitir_convites,
-        // Configurações de metas
-        meta_membros: groupSettings.meta_membros,
-        meta_atividade_semanal: groupSettings.meta_atividade_semanal,
-        meta_materiais: groupSettings.meta_materiais,
-        // Regras
-        regras: groupSettings.regras.filter(regra => regra.trim() !== ''),
-        codigo_conduta: groupSettings.codigo_conduta.trim(),
-        // Avançado
-        backup_automatico: groupSettings.backup_automatico,
-        notificacoes_ativas: groupSettings.notificacoes_ativas,
-        moderacao_automatica: groupSettings.moderacao_automatica,
-        updated_at: new Date().toISOString()
-      };
-
-      // Importar supabase dinamicamente
-      const { supabase } = await import('@/integrations/supabase/client');
-
-      // Atualizar no Supabase
       const { error } = await supabase
         .from('grupos_estudo')
-        .update(updateData)
-        .eq('id', group.id);
+        .update({
+          nome: settings.nome,
+          descricao: settings.descricao,
+          disciplina_area: settings.disciplina_area,
+          topico_especifico: settings.topico_especifico,
+          tags: settings.tags,
+          is_public: settings.is_public,
+          is_private: settings.is_private,
+          is_visible_to_all: settings.is_visible_to_all,
+          is_visible_to_partners: settings.is_visible_to_partners,
+          max_members: settings.max_members,
+          require_approval: settings.require_approval,
+          allow_member_invites: settings.allow_member_invites,
+          notify_new_members: settings.notify_new_members,
+          notify_new_messages: settings.notify_new_messages,
+          notify_new_materials: settings.notify_new_materials,
+          backup_automatico: settings.backup_automatico,
+          notificacoes_ativas: settings.notificacoes_ativas,
+          moderacao_automatica: settings.moderacao_automatica
+        })
+        .eq('id', groupId);
 
-      if (error) {
-        console.error(`Erro ao salvar configurações no Supabase (tentativa ${retryCount + 1}):`, error);
-        
-        // Tentar novamente se não excedeu o máximo de tentativas
-        if (retryCount < maxRetries - 1) {
-          console.log(`Tentando novamente em 2 segundos... (tentativa ${retryCount + 2}/${maxRetries})`);
-          setTimeout(() => handleSave(retryCount + 1), 2000);
-          return;
-        } else {
-          alert(`Erro ao salvar configurações após ${maxRetries} tentativas. Verifique o console.`);
-          return;
-        }
-      }
+      if (error) throw error;
 
-      console.log(`Configurações salvas com sucesso para grupo ${group.id} na tentativa ${retryCount + 1}`);
-      alert('Configurações salvas com sucesso!');
-
-      // Chama a função onUpdate para atualizar os dados do grupo no componente pai
-      if (onUpdate) {
-        onUpdate();
-      }
-
-      // Chama a função original onSave se existir
-      if (onSave) {
-        onSave(groupSettings);
-      }
+      toast({
+        title: "Sucesso",
+        description: "Configurações salvas com sucesso!",
+      });
     } catch (error) {
-      console.error(`Erro ao salvar configurações (tentativa ${retryCount + 1}):`, error?.message, error?.stack);
-      
-      // Tentar novamente se não excedeu o máximo de tentativas
-      if (retryCount < maxRetries - 1) {
-        console.log(`Tentando novamente em 2 segundos... (tentativa ${retryCount + 2}/${maxRetries})`);
-        setTimeout(() => handleSave(retryCount + 1), 2000);
-      } else {
-        alert(`Erro ao salvar configurações após ${maxRetries} tentativas. Verifique o console.`);
-      }
+      console.error('Erro ao salvar configurações:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível salvar as configurações.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const addTag = () => {
-    if (newTag.trim() && !groupSettings.tags.includes(newTag.trim())) {
-      setGroupSettings({
-        ...groupSettings,
-        tags: [...groupSettings.tags, newTag.trim()],
-      });
-      setNewTag("");
+    if (newTag.trim() && !settings.tags.includes(newTag.trim())) {
+      setSettings(prev => ({
+        ...prev,
+        tags: [...prev.tags, newTag.trim()]
+      }));
+      setNewTag('');
     }
   };
 
   const removeTag = (tagToRemove: string) => {
-    setGroupSettings({
-      ...groupSettings,
-      tags: groupSettings.tags.filter((tag) => tag !== tagToRemove),
-    });
-  };
-
-  const addRule = () => {
-    if (newRule.trim()) {
-      setGroupSettings({
-        ...groupSettings,
-        regras: [...groupSettings.regras, newRule.trim()],
-      });
-      setNewRule("");
-    }
-  };
-
-  const removeRule = (index: number) => {
-    setGroupSettings({
-      ...groupSettings,
-      regras: groupSettings.regras.filter((_, i) => i !== index),
-    });
-  };
-
-  const copyCode = async (code: string) => {
-    try {
-      await navigator.clipboard.writeText(code);
-      console.log('Código copiado:', code);
-    } catch (err) {
-      console.error('Erro ao copiar código:', err);
-    }
+    setSettings(prev => ({
+      ...prev,
+      tags: prev.tags.filter(tag => tag !== tagToRemove)
+    }));
   };
 
   const menuItems = [
-    {
-      id: "informacoes-basicas",
-      label: "Informações Básicas",
-      icon: Info,
-      description: "Nome, descrição e configurações gerais",
-    },
-    {
-      id: "aparencia",
-      label: "Aparência & Tema",
-      icon: Palette,
-      description: "Cores, temas e personalização visual",
-    },
-    {
-      id: "privacidade",
-      label: "Privacidade & Acesso",
-      icon: Shield,
-      description: "Controle de visibilidade e membros",
-    },
-    {
-      id: "metas",
-      label: "Metas & Objetivos",
-      icon: Target,
-      description: "Definir objetivos e métricas",
-    },
-    {
-      id: "regras",
-      label: "Regras & Conduta",
-      icon: Gavel,
-      description: "Estabelecer diretrizes do grupo",
-    },
-    {
-      id: "avancado",
-      label: "Configurações Avançadas",
-      icon: Zap,
-      description: "Recursos técnicos e automação",
-    },
+    { id: 'gerais', label: 'Configurações Gerais', icon: Settings },
+    { id: 'privacidade', label: 'Privacidade', icon: Shield },
+    { id: 'membros', label: 'Membros', icon: Users },
+    { id: 'notificacoes', label: 'Notificações', icon: Bell },
+    { id: 'avancado', label: 'Avançado', icon: AlertTriangle }
   ];
 
-  const renderContent = () => {
-    switch (activeSection) {
-      case "informacoes-basicas":
-        return (
-          <motion.div 
-            className="space-y-8"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 p-6 rounded-2xl border border-orange-200/50 dark:border-orange-800/50">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl text-white">
-                  <Info className="h-5 w-5" />
-                </div>
-                <h3 className="text-lg font-semibold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
-                  Informações Básicas do Grupo
-                </h3>
-              </div>
+  const renderConfiguracoesGerais = () => (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Informações Básicas</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="nome">Nome do Grupo</Label>
+            <Input
+              id="nome"
+              value={settings.nome}
+              onChange={(e) => setSettings(prev => ({ ...prev, nome: e.target.value }))}
+              placeholder="Digite o nome do grupo"
+            />
+          </div>
 
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="nome" className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    Nome do Grupo
-                  </Label>
-                  <Input
-                    id="nome"
-                    value={groupSettings.nome}
-                    onChange={(e) =>
-                      setGroupSettings({ ...groupSettings, nome: e.target.value })
-                    }
-                    className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-orange-200/50 dark:border-orange-700/50 rounded-xl h-12 text-lg font-medium transition-all duration-200 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
-                    placeholder="Digite o nome do grupo"
-                  />
-                </div>
+          <div>
+            <Label htmlFor="descricao">Descrição</Label>
+            <Textarea
+              id="descricao"
+              value={settings.descricao}
+              onChange={(e) => setSettings(prev => ({ ...prev, descricao: e.target.value }))}
+              placeholder="Descreva o grupo e seus objetivos"
+              rows={3}
+            />
+          </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="descricao" className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                    <Layers className="h-4 w-4" />
-                    Descrição
-                  </Label>
-                  <Textarea
-                    id="descricao"
-                    value={groupSettings.descricao}
-                    onChange={(e) =>
-                      setGroupSettings({ ...groupSettings, descricao: e.target.value })
-                    }
-                    className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-orange-200/50 dark:border-orange-700/50 rounded-xl min-h-[120px] resize-none transition-all duration-200 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
-                    placeholder="Descreva o propósito e objetivos do grupo"
-                    rows={4}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                      <Star className="h-4 w-4" />
-                      Disciplina/Área
-                    </Label>
-                    <Input
-                      value={groupSettings.disciplina_area}
-                      onChange={(e) =>
-                        setGroupSettings({
-                          ...groupSettings,
-                          disciplina_area: e.target.value,
-                        })
-                      }
-                      className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-orange-200/50 dark:border-orange-700/50 rounded-xl h-12 transition-all duration-200 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
-                      placeholder="Ex: Matemática, Física, etc."
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                      <Target className="h-4 w-4" />
-                      Tópico Específico
-                    </Label>
-                    <Input
-                      value={groupSettings.topico_especifico}
-                      onChange={(e) =>
-                        setGroupSettings({
-                          ...groupSettings,
-                          topico_especifico: e.target.value,
-                        })
-                      }
-                      className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-orange-200/50 dark:border-orange-700/50 rounded-xl h-12 transition-all duration-200 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
-                      placeholder="Ex: Cálculo Diferencial, Física Quântica"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                      <Sparkles className="h-4 w-4" />
-                      Código Único
-                    </Label>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        value={groupSettings.codigo_unico}
-                        readOnly
-                        className="flex-1 bg-gray-100 dark:bg-gray-700 border-orange-200/50 dark:border-orange-700/50 rounded-xl h-12 font-mono text-center cursor-pointer"
-                        onClick={() => copyCode(groupSettings.codigo_unico)}
-                        title="Clique para copiar"
-                      />
-                      <Button
-                        type="button"
-                        onClick={() => copyCode(groupSettings.codigo_unico)}
-                        className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-xl px-4 py-3 shadow-lg hover:shadow-xl transition-all duration-200"
-                        title="Copiar código"
-                      >
-                        <Copy className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                    <Sparkles className="h-4 w-4" />
-                    Tags do Grupo
-                  </Label>
-                  <div className="flex flex-wrap gap-2 min-h-[60px] p-4 bg-white/50 dark:bg-gray-800/50 rounded-xl border border-orange-200/50 dark:border-orange-700/50">
-                    {groupSettings.tags.map((tag, index) => (
-                      <motion.div
-                        key={index}
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.8 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        <Badge
-                          variant="secondary"
-                          className="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-3 py-2 rounded-full text-sm font-medium flex items-center gap-2 hover:shadow-lg transition-all duration-200"
-                        >
-                          {tag}
-                          <button
-                            onClick={() => removeTag(tag)}
-                            className="ml-1 hover:bg-white/20 rounded-full p-1 transition-colors"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </button>
-                        </Badge>
-                      </motion.div>
-                    ))}
-                  </div>
-                  <div className="flex gap-2">
-                    <Input
-                      value={newTag}
-                      onChange={(e) => setNewTag(e.target.value)}
-                      onKeyPress={(e) => e.key === "Enter" && addTag()}
-                      className="flex-1 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-orange-200/50 dark:border-orange-700/50 rounded-xl h-10"
-                      placeholder="Adicionar nova tag"
-                    />
-                    <Button
-                      onClick={addTag}
-                      className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-xl px-6 shadow-lg hover:shadow-xl transition-all duration-200"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="disciplina">Disciplina/Área</Label>
+              <Input
+                id="disciplina"
+                value={settings.disciplina_area}
+                onChange={(e) => setSettings(prev => ({ ...prev, disciplina_area: e.target.value }))}
+                placeholder="Ex: Matemática, Física, etc."
+              />
             </div>
-          </motion.div>
-        );
-
-      case "aparencia":
-        return (
-          <motion.div 
-            className="space-y-8"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 p-6 rounded-2xl border border-orange-200/50 dark:border-orange-800/50">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl text-white">
-                  <Palette className="h-5 w-5" />
-                </div>
-                <h3 className="text-lg font-semibold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
-                  Personalização Visual
-                </h3>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-4">
-                  <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Tema do Grupo
-                  </Label>
-                  <div className="grid grid-cols-2 gap-3">
-                    {["laranja", "vermelho", "amarelo", "bronze"].map((tema) => (
-                      <button
-                        key={tema}
-                        onClick={() => setGroupSettings({ ...groupSettings, tema })}
-                        className={`p-4 rounded-xl border-2 transition-all duration-200 ${
-                          groupSettings.tema === tema
-                            ? "border-orange-500 bg-orange-50 dark:bg-orange-950/50"
-                            : "border-gray-200 dark:border-gray-700 hover:border-orange-300"
-                        }`}
-                      >
-                        <div
-                          className={`w-full h-8 rounded-lg mb-2 ${
-                            tema === "laranja" ? "bg-gradient-to-r from-orange-500 to-amber-500" :
-                            tema === "vermelho" ? "bg-gradient-to-r from-red-500 to-orange-500" :
-                            tema === "amarelo" ? "bg-gradient-to-r from-yellow-500 to-orange-500" :
-                            "bg-gradient-to-r from-amber-600 to-orange-600"
-                          }`}
-                        />
-                        <span className="text-sm font-medium capitalize">{tema}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Cor Primária Personalizada
-                  </Label>
-                  <div className="flex items-center gap-4">
-                    <input
-                      type="color"
-                      value={groupSettings.cor_primaria}
-                      onChange={(e) =>
-                        setGroupSettings({ ...groupSettings, cor_primaria: e.target.value })
-                      }
-                      className="w-16 h-16 rounded-xl border-4 border-white shadow-lg cursor-pointer"
-                    />
-                    <div className="flex-1">
-                      <Input
-                        value={groupSettings.cor_primaria}
-                        onChange={(e) =>
-                          setGroupSettings({ ...groupSettings, cor_primaria: e.target.value })
-                        }
-                        className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-orange-200/50 dark:border-orange-700/50 rounded-xl h-12"
-                        placeholder="#FF6B00"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-8 space-y-4">
-                <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                  Imagem de Capa (URL)
-                </Label>
-                <Input
-                  value={groupSettings.imagem_capa}
-                  onChange={(e) =>
-                    setGroupSettings({ ...groupSettings, imagem_capa: e.target.value })
-                  }
-                  className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-orange-200/50 dark:border-orange-700/50 rounded-xl h-12"
-                  placeholder="https://exemplo.com/imagem.jpg"
-                />
-              </div>
+            <div>
+              <Label htmlFor="topico">Tópico Específico</Label>
+              <Input
+                id="topico"
+                value={settings.topico_especifico}
+                onChange={(e) => setSettings(prev => ({ ...prev, topico_especifico: e.target.value }))}
+                placeholder="Ex: Álgebra Linear, Mecânica, etc."
+              />
             </div>
-          </motion.div>
-        );
+          </div>
 
-      case "privacidade":
-        return (
-          <motion.div 
-            className="space-y-8"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 p-6 rounded-2xl border border-orange-200/50 dark:border-orange-800/50">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl text-white">
-                  <Shield className="h-5 w-5" />
-                </div>
-                <h3 className="text-lg font-semibold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
-                  Controle de Privacidade e Acesso
-                </h3>
-              </div>
-
-              <div className="space-y-6">
-                <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-xl border border-blue-200/50 dark:border-blue-800/50 mb-6">
-                  <div className="flex items-center gap-3 text-blue-700 dark:text-blue-300 mb-2">
-                    <Info className="h-5 w-5" />
-                    <span className="font-semibold text-sm">Configurações Editáveis</span>
-                  </div>
-                  <p className="text-xs text-blue-600 dark:text-blue-400">
-                    Estas configurações podem ser editadas e serão salvas ao clicar em "Salvar Configurações".
-                  </p>
-                </div>
-
-                <div className="grid gap-6">
-                  <div className="flex items-center justify-between p-6 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl border border-orange-200/30 dark:border-orange-800/30 hover:shadow-lg transition-all duration-200">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl text-white">
-                        <Eye className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-900 dark:text-white">Grupo Privado</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Apenas membros convidados podem ver o grupo</p>
-                      </div>
-                    </div>
-                    <Switch
-                      checked={groupSettings.is_private}
-                      onCheckedChange={(checked) =>
-                        setGroupSettings({ ...groupSettings, is_private: checked })
-                      }
-                      className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-orange-500 data-[state=checked]:to-amber-500"
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between p-6 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl border border-orange-200/30 dark:border-orange-800/30 hover:shadow-lg transition-all duration-200">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl text-white">
-                        <Globe className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-900 dark:text-white">Visível para Todos</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Grupo aparece nas buscas públicas</p>
-                      </div>
-                    </div>
-                    <Switch
-                      checked={groupSettings.is_visible_to_all}
-                      onCheckedChange={(checked) =>
-                        setGroupSettings({ ...groupSettings, is_visible_to_all: checked })
-                      }
-                      className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-orange-500 data-[state=checked]:to-amber-500"
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between p-6 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl border border-orange-200/30 dark:border-orange-800/30 hover:shadow-lg transition-all duration-200">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl text-white">
-                        <UserPlus className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-900 dark:text-white">Aceitar Novos Membros</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Permitir que novos usuários se juntem</p>
-                      </div>
-                    </div>
-                    <Switch
-                      checked={groupSettings.aceitar_novos_membros}
-                      onCheckedChange={(checked) =>
-                        setGroupSettings({ ...groupSettings, aceitar_novos_membros: checked })
-                      }
-                      className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-orange-500 data-[state=checked]:to-amber-500"
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between p-6 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl border border-orange-200/30 dark:border-orange-800/30 hover:shadow-lg transition-all duration-200">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl text-white">
-                        <Lock className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-900 dark:text-white">Aprovação Manual</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Administradores devem aprovar novos membros</p>
-                      </div>
-                    </div>
-                    <Switch
-                      checked={groupSettings.aprovacao_manual}
-                      onCheckedChange={(checked) =>
-                        setGroupSettings({ ...groupSettings, aprovacao_manual: checked })
-                      }
-                      className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-orange-500 data-[state=checked]:to-amber-500"
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between p-6 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl border border-orange-200/30 dark:border-orange-800/30 hover:shadow-lg transition-all duration-200">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl text-white">
-                        <Bell className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-900 dark:text-white">Permitir Convites</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Membros podem convidar outros usuários</p>
-                      </div>
-                    </div>
-                    <Switch
-                      checked={groupSettings.permitir_convites}
-                      onCheckedChange={(checked) =>
-                        setGroupSettings({ ...groupSettings, permitir_convites: checked })
-                      }
-                      className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-orange-500 data-[state=checked]:to-amber-500"
-                    />
-                  </div>
-                </div>
-              </div>
+          <div>
+            <Label>Tags do Grupo</Label>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {settings.tags.map((tag, index) => (
+                <Badge key={index} variant="secondary" className="flex items-center gap-1">
+                  {tag}
+                  <button
+                    type="button"
+                    onClick={() => removeTag(tag)}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </Badge>
+              ))}
             </div>
-          </motion.div>
-        );
-
-      case "metas":
-        return (
-          <motion.div 
-            className="space-y-8"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 p-6 rounded-2xl border border-orange-200/50 dark:border-orange-800/50">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl text-white">
-                  <Target className="h-5 w-5" />
-                </div>
-                <h3 className="text-lg font-semibold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
-                  Metas e Objetivos do Grupo
-                </h3>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="space-y-4">
-                  <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    Meta de Membros
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      type="number"
-                      value={groupSettings.meta_membros}
-                      onChange={(e) =>
-                        setGroupSettings({
-                          ...groupSettings,
-                          meta_membros: parseInt(e.target.value) || 0,
-                        })
-                      }
-                      className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-orange-200/50 dark:border-orange-700/50 rounded-xl h-12 pl-4 pr-16"
-                      placeholder="50"
-                    />
-                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-500">
-                      membros
-                    </div>
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    Objetivo de crescimento do grupo
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                    <Gauge className="h-4 w-4" />
-                    Atividade Semanal
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      type="number"
-                      value={groupSettings.meta_atividade_semanal}
-                      onChange={(e) =>
-                        setGroupSettings({
-                          ...groupSettings,
-                          meta_atividade_semanal: parseInt(e.target.value) || 0,
-                        })
-                      }
-                      className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-orange-200/50 dark:border-orange-700/50 rounded-xl h-12 pl-4 pr-16"
-                      placeholder="10"
-                    />
-                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-500">
-                      posts
-                    </div>
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    Interações esperadas por semana
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                    <Layers className="h-4 w-4" />
-                    Meta de Materiais
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      type="number"
-                      value={groupSettings.meta_materiais}
-                      onChange={(e) =>
-                        setGroupSettings({
-                          ...groupSettings,
-                          meta_materiais: parseInt(e.target.value) || 0,
-                        })
-                      }
-                      className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-orange-200/50 dark:border-orange-700/50 rounded-xl h-12 pl-4 pr-16"
-                      placeholder="20"
-                    />
-                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-500">
-                      arquivos
-                    </div>
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    Quantidade de materiais a compartilhar
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-8 p-6 bg-gradient-to-r from-orange-100 to-amber-100 dark:from-orange-900/30 dark:to-amber-900/30 rounded-xl border border-orange-200/50 dark:border-orange-800/50">
-                <div className="flex items-center gap-3 mb-3">
-                  <CheckCircle2 className="h-5 w-5 text-orange-600" />
-                  <span className="font-semibold text-orange-900 dark:text-orange-100">
-                    Progresso das Metas
-                  </span>
-                </div>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-orange-800 dark:text-orange-200">Membros Atuais</span>
-                    <span className="font-semibold text-orange-900 dark:text-orange-100">25 / {groupSettings.meta_membros}</span>
-                  </div>
-                  <div className="w-full bg-orange-200/50 dark:bg-orange-800/30 rounded-full h-2">
-                    <div 
-                      className="bg-gradient-to-r from-orange-500 to-amber-500 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${Math.min((25 / groupSettings.meta_membros) * 100, 100)}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
+            <div className="flex gap-2">
+              <Input
+                value={newTag}
+                onChange={(e) => setNewTag(e.target.value)}
+                placeholder="Nova tag"
+                onKeyPress={(e) => e.key === 'Enter' && addTag()}
+              />
+              <Button type="button" onClick={addTag} variant="outline">
+                <Plus className="w-4 h-4" />
+              </Button>
             </div>
-          </motion.div>
-        );
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
 
-      case "regras":
-        return (
-          <motion.div 
-            className="space-y-8"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 p-6 rounded-2xl border border-orange-200/50 dark:border-orange-800/50">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl text-white">
-                  <Gavel className="h-5 w-5" />
-                </div>
-                <h3 className="text-lg font-semibold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
-                  Regras e Código de Conduta
-                </h3>
-              </div>
-
-              <div className="space-y-8">
-                <div className="space-y-4">
-                  <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                    <Gavel className="h-4 w-4" />
-                    Regras do Grupo
-                  </Label>
-
-                  <div className="space-y-3">
-                    {groupSettings.regras.map((regra, index) => (
-                      <motion.div
-                        key={index}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        transition={{ duration: 0.2, delay: index * 0.1 }}
-                        className="flex items-center gap-3 p-4 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl border border-orange-200/30 dark:border-orange-800/30"
-                      >
-                        <div className="p-2 bg-gradient-to-r from-orange-500 to-amber-500 rounded-lg text-white">
-                          <span className="text-sm font-bold">{index + 1}</span>
-                        </div>
-                        <p className="flex-1 text-gray-700 dark:text-gray-300">{regra}</p>
-                        <button
-                          onClick={() => removeRule(index)}
-                          className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </motion.div>
-                    ))}
-                  </div>
-
-                  <div className="flex gap-3">
-                    <Input
-                      value={newRule}
-                      onChange={(e) => setNewRule(e.target.value)}
-                      onKeyPress={(e) => e.key === "Enter" && addRule()}
-                      className="flex-1 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-orange-200/50 dark:border-orange-700/50 rounded-xl h-12"
-                      placeholder="Digite uma nova regra para o grupo"
-                    />
-                    <Button
-                      onClick={addRule}
-                      className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-xl px-6 shadow-lg hover:shadow-xl transition-all duration-200"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                    <Shield className="h-4 w-4" />
-                    Código de Conduta Personalizado
-                  </Label>
-                  <Textarea
-                    value={groupSettings.codigo_conduta}
-                    onChange={(e) =>
-                      setGroupSettings({
-                        ...groupSettings,
-                        codigo_conduta: e.target.value,
-                      })
-                    }
-                    className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-orange-200/50 dark:border-orange-700/50 rounded-xl min-h-[150px] resize-none"
-                    placeholder="Descreva o comportamento esperado dos membros do grupo..."
-                    rows={6}
-                  />
+  const renderPrivacidade = () => (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="w-5 h-5" />
+            Configurações de Privacidade
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Globe className="w-5 h-5 text-green-500" />
+                <div>
+                  <Label>Grupo Público</Label>
+                  <p className="text-sm text-gray-500">Qualquer pessoa pode encontrar e participar</p>
                 </div>
               </div>
+              <Switch
+                checked={settings.is_public}
+                onCheckedChange={(checked) => setSettings(prev => ({ 
+                  ...prev, 
+                  is_public: checked,
+                  is_private: checked ? false : prev.is_private
+                }))}
+              />
             </div>
-          </motion.div>
-        );
 
-      case "avancado":
-        return (
-          <motion.div 
-            className="space-y-8"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 p-6 rounded-2xl border border-orange-200/50 dark:border-orange-800/50">
-              <div className="p-4 bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-950/50 dark:to-orange-950/50 rounded-xl border border-red-200/50 dark:border-red-800/50 mb-6">
-                <div className="flex items-center gap-3 text-red-700 dark:text-red-300 mb-2">
-                  <AlertTriangle className="h-5 w-5" />
-                  <span className="font-semibold">Configurações Avançadas</span>
-                </div>
-                <p className="text-sm text-red-600 dark:text-red-400">
-                  Essas configurações afetam o funcionamento interno do grupo. Use com cuidado.
-                </p>
-              </div>
-
-              <div className="space-y-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl text-white">
-                    <Zap className="h-5 w-5" />
-                  </div>
-                  <h3 className="text-lg font-semibold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
-                    Automação e Recursos Técnicos
-                  </h3>
-                </div>
-
-                <div className="grid gap-6">
-                  <div className="flex items-center justify-between p-6 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl border border-orange-200/30 dark:border-orange-800/30 hover:shadow-lg transition-all duration-200">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl text-white">
-                        <Zap className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-900 dark:text-white">Backup Automático</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Salvar automaticamente discussões e materiais</p>
-                      </div>
-                    </div>
-                    <Switch
-                      checked={groupSettings.backup_automatico}
-                      onCheckedChange={(checked) =>
-                        setGroupSettings({ ...groupSettings, backup_automatico: checked })
-                      }
-                      className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-orange-500 data-[state=checked]:to-amber-500"
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between p-6 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl border border-orange-200/30 dark:border-orange-800/30 hover:shadow-lg transition-all duration-200">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl text-white">
-                        <Bell className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-900 dark:text-white">Notificações Ativas</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Enviar notificações para membros do grupo</p>
-                      </div>
-                    </div>
-                    <Switch
-                      checked={groupSettings.notificacoes_ativas}
-                      onCheckedChange={(checked) =>
-                        setGroupSettings({ ...groupSettings, notificacoes_ativas: checked })
-                      }
-                      className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-orange-500 data-[state=checked]:to-amber-500"
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between p-6 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl border border-orange-200/30 dark:border-orange-800/30 hover:shadow-lg transition-all duration-200">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl text-white">
-                        <Crown className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-900 dark:text-white">Moderação Automática</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">IA moderará mensagens automaticamente</p>
-                      </div>
-                    </div>
-                    <Switch
-                      checked={groupSettings.moderacao_automatica}
-                      onCheckedChange={(checked) =>
-                        setGroupSettings({ ...groupSettings, moderacao_automatica: checked })
-                      }
-                      className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-orange-500 data-[state=checked]:to-amber-500"
-                    />
-                  </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Lock className="w-5 h-5 text-red-500" />
+                <div>
+                  <Label>Grupo Privado</Label>
+                  <p className="text-sm text-gray-500">Apenas por convite</p>
                 </div>
               </div>
+              <Switch
+                checked={settings.is_private}
+                onCheckedChange={(checked) => setSettings(prev => ({ 
+                  ...prev, 
+                  is_private: checked,
+                  is_public: checked ? false : prev.is_public
+                }))}
+              />
             </div>
-          </motion.div>
-        );
 
-      default:
-        return null;
-    }
-  };
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Eye className="w-5 h-5 text-blue-500" />
+                <div>
+                  <Label>Visível para Todos</Label>
+                  <p className="text-sm text-gray-500">Aparece nas listagens públicas</p>
+                </div>
+              </div>
+              <Switch
+                checked={settings.is_visible_to_all}
+                onCheckedChange={(checked) => setSettings(prev => ({ ...prev, is_visible_to_all: checked }))}
+              />
+            </div>
 
-  return (
-    <div className="flex min-h-[800px] bg-white dark:bg-[#051c30] rounded-3xl overflow-hidden shadow-lg">
-      {/* Sidebar */}
-      <div className="w-72 bg-white dark:bg-[#051c30] border-r border-orange-200/50 dark:border-orange-700/30 flex flex-col overflow-hidden min-h-[800px] rounded-l-3xl">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Users className="w-5 h-5 text-purple-500" />
+                <div>
+                  <Label>Visível para Parceiros</Label>
+                  <p className="text-sm text-gray-500">Visível apenas para usuários conectados</p>
+                </div>
+              </div>
+              <Switch
+                checked={settings.is_visible_to_partners}
+                onCheckedChange={(checked) => setSettings(prev => ({ ...prev, is_visible_to_partners: checked }))}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
 
-        <div className="flex-1 overflow-y-auto p-2 min-h-[700px]">
-          <nav className="space-y-2">
-            {menuItems.map((item) => {
-              const isActive = activeSection === item.id;
-              return (
-                <motion.button
-                  key={item.id}
-                  onClick={() => setActiveSection(item.id)}
-                  className={`w-full text-left p-4 rounded-2xl transition-all duration-200 group ${
-                    isActive
-                      ? "bg-white dark:bg-[#1A1F2E] shadow-lg border border-orange-200/50 dark:border-orange-700/50 scale-[1.02]"
-                      : "hover:bg-white/70 dark:hover:bg-[#1A1F2E]/70 hover:shadow-md"
-                  }`}
-                  whileHover={{ x: isActive ? 0 : 4 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className={`p-3 rounded-xl transition-all duration-200 ${
-                      isActive 
-                        ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg"
-                        : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 group-hover:bg-gray-200 dark:group-hover:bg-gray-700"
-                    }`}>
-                      <item.icon className="h-5 w-5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className={`font-semibold text-sm transition-colors ${
-                        isActive 
-                          ? "text-gray-900 dark:text-white" 
-                          : "text-gray-700 dark:text-gray-300"
-                      }`}>
-                        {item.label}
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 leading-tight">
-                        {item.description}
-                      </p>
-                    </div>
-                  </div>
-                </motion.button>
-              );
-            })}
-          </nav>
+  const renderMembros = () => (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="w-5 h-5" />
+            Gerenciamento de Membros
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="max-members">Número Máximo de Membros</Label>
+            <Select value={settings.max_members.toString()} onValueChange={(value) => setSettings(prev => ({ ...prev, max_members: parseInt(value) }))}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10 membros</SelectItem>
+                <SelectItem value="25">25 membros</SelectItem>
+                <SelectItem value="50">50 membros</SelectItem>
+                <SelectItem value="100">100 membros</SelectItem>
+                <SelectItem value="999">Ilimitado</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>Aprovação Obrigatória</Label>
+              <p className="text-sm text-gray-500">Novos membros precisam ser aprovados</p>
+            </div>
+            <Switch
+              checked={settings.require_approval}
+              onCheckedChange={(checked) => setSettings(prev => ({ ...prev, require_approval: checked }))}
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>Membros Podem Convidar</Label>
+              <p className="text-sm text-gray-500">Permite que membros convidem outros usuários</p>
+            </div>
+            <Switch
+              checked={settings.allow_member_invites}
+              onCheckedChange={(checked) => setSettings(prev => ({ ...prev, allow_member_invites: checked }))}
+            />
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  const renderNotificacoes = () => (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Bell className="w-5 h-5" />
+            Preferências de Notificação
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>Novos Membros</Label>
+              <p className="text-sm text-gray-500">Notificar quando alguém entrar no grupo</p>
+            </div>
+            <Switch
+              checked={settings.notify_new_members}
+              onCheckedChange={(checked) => setSettings(prev => ({ ...prev, notify_new_members: checked }))}
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>Novas Mensagens</Label>
+              <p className="text-sm text-gray-500">Notificar sobre novas discussões</p>
+            </div>
+            <Switch
+              checked={settings.notify_new_messages}
+              onCheckedChange={(checked) => setSettings(prev => ({ ...prev, notify_new_messages: checked }))}
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>Novos Materiais</Label>
+              <p className="text-sm text-gray-500">Notificar quando materiais forem adicionados</p>
+            </div>
+            <Switch
+              checked={settings.notify_new_materials}
+              onCheckedChange={(checked) => setSettings(prev => ({ ...prev, notify_new_materials: checked }))}
+            />
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  const renderAvancado = () => (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5" />
+            Configurações Avançadas
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>Backup Automático</Label>
+              <p className="text-sm text-gray-500">Backup automático das discussões e materiais</p>
+            </div>
+            <Switch
+              checked={settings.backup_automatico}
+              onCheckedChange={(checked) => setSettings(prev => ({ ...prev, backup_automatico: checked }))}
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>Notificações Ativas</Label>
+              <p className="text-sm text-gray-500">Sistema de notificações do grupo</p>
+            </div>
+            <Switch
+              checked={settings.notificacoes_ativas}
+              onCheckedChange={(checked) => setSettings(prev => ({ ...prev, notificacoes_ativas: checked }))}
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>Moderação Automática</Label>
+              <p className="text-sm text-gray-500">Filtro automático de conteúdo inadequado</p>
+            </div>
+            <Switch
+              checked={settings.moderacao_automatica}
+              onCheckedChange={(checked) => setSettings(prev => ({ ...prev, moderacao_automatica: checked }))}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-red-200">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-red-600">
+            <Trash2 className="w-5 h-5" />
+            Zona de Perigo
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-gray-600 mb-4">
+            Estas ações são irreversíveis. Tenha cuidado ao executá-las.
+          </p>
+          <Button variant="destructive" className="w-full">
+            <Trash2 className="w-4 h-4 mr-2" />
+            Excluir Grupo
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF6B00] mx-auto mb-4"></div>
+          <p className="text-gray-500">Carregando configurações...</p>
         </div>
       </div>
+    );
+  }
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden min-h-[800px] bg-white dark:bg-[#051c30] rounded-r-3xl">
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6 min-h-[700px]">
-          {renderContent()}
+  return (
+    <div className="flex h-full bg-white rounded-lg shadow-sm overflow-hidden">
+      {/* Menu Lateral */}
+      <div className="w-64 bg-[#2c3e50] text-white flex-shrink-0">
+        <div className="p-6 border-b border-[#34495e]">
+          <h3 className="text-lg font-semibold">Configurações</h3>
+          <p className="text-sm text-gray-300 mt-1">Gerencie seu grupo</p>
         </div>
+        <nav className="p-4">
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveSection(item.id)}
+                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                  activeSection === item.id
+                    ? 'bg-gradient-to-r from-[#3498db] to-[#2980b9] text-white shadow-lg'
+                    : 'text-gray-300 hover:bg-[#34495e] hover:text-white'
+                }`}
+              >
+                <Icon className="w-5 h-5" />
+                <span className="font-medium">{item.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+      </div>
 
-        {/* Footer */}
-        <div className="p-6 border-t border-orange-200/50 dark:border-orange-700/30 bg-white dark:bg-[#051c30] flex items-center justify-end gap-4 rounded-br-3xl">
-          <Button
-            onClick={handleSave}
-            className="px-8 py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
-          >
-            <Save className="h-4 w-4" />
-            Salvar Configurações
-          </Button>
+      {/* Conteúdo Principal */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="p-6">
+          {activeSection === 'gerais' && renderConfiguracoesGerais()}
+          {activeSection === 'privacidade' && renderPrivacidade()}
+          {activeSection === 'membros' && renderMembros()}
+          {activeSection === 'notificacoes' && renderNotificacoes()}
+          {activeSection === 'avancado' && renderAvancado()}
+
+          {/* Botão de Salvar */}
+          <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4 mt-6">
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={loadGroupSettings}>
+                Cancelar
+              </Button>
+              <Button 
+                onClick={saveSettings} 
+                disabled={isSaving}
+                className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white"
+              >
+                {isSaving ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Salvando...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    Salvar Alterações
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
-};
-
-export default AjustesTab;
+}
