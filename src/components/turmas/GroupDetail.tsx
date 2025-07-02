@@ -625,157 +625,174 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
 
         {activeTab === "sobre" && (
           <div className="p-4">
-            <div className="grid grid-cols-3 gap-6">
-              <div className="col-span-2">
-                <div className="bg-white dark:bg-[#1a2236] rounded-lg p-4 mb-6 shadow-sm hover:shadow-md transition-all">
-                  <h3 className="text-lg font-bold mb-3">Sobre o Grupo</h3>
-                  <p className="text-gray-700 dark:text-gray-300 mb-4">
-                    {group.descricao ||
-                      "Grupo dedicado ao estudo de mecânica quântica e suas aplicações na física moderna. Discutimos desde os fundamentos até aplicações avançadas como computação quântica e criptografia quântica."}
-                  </p>
-                  <p className="text-gray-700 dark:text-gray-300">
-                    Este grupo foi criado para facilitar o estudo colaborativo e
-                    o compartilhamento de recursos entre os alunos interessados
-                    em mecânica quântica.
-                  </p>
-                </div>
-
-                <div className="bg-white dark:bg-[#1a2236] rounded-lg p-4 mb-6 shadow-sm hover:shadow-md transition-all">
-                  <h3 className="text-lg font-bold mb-3">Tópicos de Estudo</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    {topics.map((topic) => (
-                      <div
-                        key={topic.id}
-                        className="bg-gray-50 dark:bg-[#0f1525] p-3 rounded-lg border border-[#FF6B00]/30 hover:shadow-md transition-all"
-                      >
-                        <h4 className="font-bold text-[#FF6B00]">
-                          {topic.title}
-                        </h4>
-                        <Button
-                          variant="link"
-                          className="text-xs text-[#FF6B00] p-0 h-auto"
-                        >
-                          Ver recursos relacionados
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="bg-white dark:bg-[#1a2236] rounded-lg p-4 shadow-sm hover:shadow-md transition-all">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-lg font-bold">
-                      Ferramentas e Recursos
-                    </h3>
+            <div className="flex gap-6 h-full">
+              {/* Menu Lateral Esquerdo */}
+              <div className="w-64 flex-shrink-0">
+                <div className="bg-white dark:bg-[#1a2236] rounded-lg p-4 shadow-sm">
+                  <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">Menu</h3>
+                  <div className="space-y-2">
                     <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-8 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#0f1525] transition-colors"
+                      variant="ghost"
+                      className="w-full justify-start bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20 font-medium"
                     >
-                      <Plus className="h-4 w-4 mr-1" /> Adicionar
+                      <Info className="h-4 w-4 mr-2" />
+                      Informações Básicas
                     </Button>
-                  </div>
-                  <div className="grid grid-cols-3 gap-4">
-                    {tools.map((tool) => (
-                      <div
-                        key={tool.id}
-                        className="bg-gray-50 dark:bg-[#0f1525] p-4 rounded-lg border border-gray-200 dark:border-gray-800 flex flex-col items-center text-center hover:shadow-md transition-all"
-                      >
-                        <div
-                          className={`h-12 w-12 rounded-full bg-${tool.color}-100 dark:bg-${tool.color}-500/20 flex items-center justify-center mb-2`}
-                        >
-                          {tool.icon === "whiteboard" && (
-                            <svg
-                              width="24"
-                              height="24"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <path
-                                d="M21 2H3C2.4 2 2 2.4 2 3V17C2 17.6 2.4 18 3 18H10V20H8V22H16V20H14V18H21C21.6 18 22 17.6 22 17V3C22 2.4 21.6 2 21 2ZM20 16H4V4H20V16Z"
-                                fill="#10B981"
-                              />
-                            </svg>
-                          )}
-                          {tool.icon === "code" && (
-                            <svg
-                              width="24"
-                              height="24"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <path
-                                d="M9.4 16.6L4.8 12L9.4 7.4L8 6L2 12L8 18L9.4 16.6ZM14.6 16.6L19.2 12L14.6 7.4L16 6L22 12L16 18L14.6 16.6Z"
-                                fill="#3B82F6"
-                              />
-                            </svg>
-                          )}
-                          {tool.icon === "formula" && (
-                            <svg
-                              width="24"
-                              height="24"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <path
-                                d="M7 2H17L13.5 7H17L10 16V9H7V2ZM9 4V7H10V10.31L12 7.5H9.5L13 2.5H8V4H9ZM3 20H21V22H3V20Z"
-                                fill="#8B5CF6"
-                              />
-                            </svg>
-                          )}
-                        </div>
-                        <h4 className="font-bold mb-1">{tool.name}</h4>
-                        <p className="text-xs text-gray-600 dark:text-gray-400">
-                          {tool.description}
-                        </p>
-                      </div>
-                    ))}
                   </div>
                 </div>
               </div>
 
-              <div className="col-span-1">
-                <div className="bg-white dark:bg-[#1a2236] rounded-lg p-4 mb-6 shadow-sm hover:shadow-md transition-all">
-                  <h3 className="text-lg font-bold mb-3">Detalhes do Grupo</h3>
-                  <div className="space-y-3">
+              {/* Conteúdo Principal - Estilo dos Ajustes */}
+              <div className="flex-1">
+                <div className="bg-white dark:bg-[#1a2236] rounded-lg p-6 shadow-sm">
+                  <div className="space-y-8">
+                    {/* Informações Básicas do Grupo */}
                     <div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Criado em
-                      </p>
-                      <p className="text-sm">
-                        {group.dataInicio || "10/01/2023"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Tipo de Grupo
-                      </p>
-                      <p className="text-sm">Público</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Administradores
-                      </p>
-                      <div className="flex items-center mt-1">
-                        <Avatar className="h-6 w-6 ring-1 ring-blue-500/20">
-                          <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=Mariana" />
-                          <AvatarFallback>M</AvatarFallback>
-                        </Avatar>
+                      <h3 className="text-lg font-bold mb-6 text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
+                        Informações Básicas
+                      </h3>
+                      
+                      <div className="grid grid-cols-2 gap-6">
+                        {/* Nome do Grupo */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Nome do Grupo
+                          </label>
+                          <div className="relative">
+                            <Input
+                              value={group.nome || "Mecânica Quântica Avançada"}
+                              readOnly
+                              className="bg-gray-50 dark:bg-[#0f1525] border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white cursor-default"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Código do Grupo */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Código do Grupo
+                          </label>
+                          <div className="relative">
+                            <Input
+                              value={group.codigo || "QUA2023"}
+                              readOnly
+                              className="bg-gray-50 dark:bg-[#0f1525] border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white cursor-default"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Disciplina/Área */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Disciplina/Área
+                          </label>
+                          <div className="relative">
+                            <Input
+                              value={group.disciplina || "Física"}
+                              readOnly
+                              className="bg-gray-50 dark:bg-[#0f1525] border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white cursor-default"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Tópico Específico */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Tópico Específico
+                          </label>
+                          <div className="relative">
+                            <Input
+                              value="Mecânica Quântica"
+                              readOnly
+                              className="bg-gray-50 dark:bg-[#0f1525] border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white cursor-default"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Tipo de Grupo */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Tipo de Grupo
+                          </label>
+                          <div className="relative">
+                            <Input
+                              value="Estudo"
+                              readOnly
+                              className="bg-gray-50 dark:bg-[#0f1525] border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white cursor-default"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Visibilidade */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Visibilidade
+                          </label>
+                          <div className="relative">
+                            <Input
+                              value="Público"
+                              readOnly
+                              className="bg-gray-50 dark:bg-[#0f1525] border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white cursor-default"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Data de Criação */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Data de Criação
+                          </label>
+                          <div className="relative">
+                            <Input
+                              value={group.dataInicio || "10/01/2023"}
+                              readOnly
+                              className="bg-gray-50 dark:bg-[#0f1525] border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white cursor-default"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Número de Membros */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Número de Membros
+                          </label>
+                          <div className="relative">
+                            <Input
+                              value={`${members.length} membros`}
+                              readOnly
+                              className="bg-gray-50 dark:bg-[#0f1525] border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white cursor-default"
+                            />
+                          </div>
+                        </div>
                       </div>
                     </div>
+
+                    {/* Descrição do Grupo */}
                     <div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Etiquetas
-                      </p>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {(group.tags || ["avançado", "teórico", "prático"]).map(
+                      <h4 className="text-md font-semibold mb-4 text-gray-900 dark:text-white">
+                        Descrição do Grupo
+                      </h4>
+                      <div className="relative">
+                        <textarea
+                          value={group.descricao || "Grupo dedicado ao estudo de mecânica quântica e suas aplicações na física moderna. Discutimos desde os fundamentos até aplicações avançadas como computação quântica e criptografia quântica. Este grupo foi criado para facilitar o estudo colaborativo e o compartilhamento de recursos entre os alunos interessados em mecânica quântica."}
+                          readOnly
+                          rows={4}
+                          className="w-full p-3 bg-gray-50 dark:bg-[#0f1525] border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white cursor-default resize-none"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Tags/Etiquetas */}
+                    <div>
+                      <h4 className="text-md font-semibold mb-4 text-gray-900 dark:text-white">
+                        Tags/Etiquetas
+                      </h4>
+                      <div className="flex flex-wrap gap-2">
+                        {(group.tags || ["quântica", "física", "avançado", "teórico", "prático"]).map(
                           (tag, index) => (
                             <Badge
                               key={index}
-                              className="bg-[#FF6B00]/10 text-[#FF6B00] border border-[#FF6B00]/30"
+                              className="bg-[#FF6B00]/10 text-[#FF6B00] border border-[#FF6B00]/30 px-3 py-1"
                             >
                               {tag}
                             </Badge>
@@ -783,58 +800,47 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
                         )}
                       </div>
                     </div>
-                  </div>
-                </div>
 
-                <div className="bg-white dark:bg-[#1a2236] rounded-lg p-4 shadow-sm hover:shadow-md transition-all">
-                  <h3 className="text-lg font-bold mb-3">Progresso do Grupo</h3>
-                  <div className="flex items-center justify-center mb-4">
-                    <div className="relative h-32 w-32">
-                      <svg className="w-full h-full" viewBox="0 0 100 100">
-                        <circle
-                          className="text-gray-200 dark:text-gray-700 stroke-current"
-                          strokeWidth="10"
-                          cx="50"
-                          cy="50"
-                          r="40"
-                          fill="transparent"
-                        ></circle>
-                        <circle
-                          className="text-[#FF6B00] stroke-current"
-                          strokeWidth="10"
-                          strokeLinecap="round"
-                          strokeDasharray={`${(group.progresso || 68) * 2.51} 251.2`}
-                          strokeDashoffset="0"
-                          cx="50"
-                          cy="50"
-                          r="40"
-                          fill="transparent"
-                          transform="rotate(-90 50 50)"
-                        ></circle>
-                      </svg>
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-2xl font-bold text-[#FF6B00]">
-                          {group.progresso || 68}%
-                        </span>
+                    {/* Administradores */}
+                    <div>
+                      <h4 className="text-md font-semibold mb-4 text-gray-900 dark:text-white">
+                        Administradores
+                      </h4>
+                      <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-[#0f1525] border border-gray-300 dark:border-gray-700 rounded-lg">
+                        <Avatar className="h-10 w-10 ring-2 ring-[#FF6B00]/20">
+                          <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=Admin" />
+                          <AvatarFallback>AD</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white">Ana Silva</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Criador do grupo</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <p className="text-center text-sm text-gray-600 dark:text-gray-400 mb-4">
-                    O grupo completou {group.progresso || 68}% do conteúdo
-                    planejado
-                  </p>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Badge className="bg-[#FF6B00]/10 text-[#FF6B00] border border-[#FF6B00]/30 rounded-full">
-                        <CheckCircle className="h-3 w-3 mr-1" /> Participação
-                        Ativa
-                      </Badge>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge className="bg-[#FF6B00]/10 text-[#FF6B00] border border-[#FF6B00]/30 rounded-full">
-                        <CheckCircle className="h-3 w-3 mr-1" /> Contribuidor de
-                        Conteúdo
-                      </Badge>
+
+                    {/* Progresso do Grupo */}
+                    <div>
+                      <h4 className="text-md font-semibold mb-4 text-gray-900 dark:text-white">
+                        Progresso do Grupo
+                      </h4>
+                      <div className="p-4 bg-gray-50 dark:bg-[#0f1525] border border-gray-300 dark:border-gray-700 rounded-lg">
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-sm text-gray-700 dark:text-gray-300">Conteúdo Concluído</span>
+                          <span className="text-lg font-bold text-[#FF6B00]">{group.progresso || 68}%</span>
+                        </div>
+                        <Progress 
+                          value={group.progresso || 68} 
+                          className="h-2"
+                        />
+                        <div className="flex gap-2 mt-3">
+                          <Badge className="bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/30">
+                            <CheckCircle className="h-3 w-3 mr-1" /> Participação Ativa
+                          </Badge>
+                          <Badge className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/30">
+                            <Award className="h-3 w-3 mr-1" /> Contribuidor de Conteúdo
+                          </Badge>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
