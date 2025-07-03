@@ -39,21 +39,22 @@ const MiniCardMembroGrupo: React.FC<MiniCardMembroGrupoProps> = ({
   const canRemoveMember = isCurrentUserCreator && !isMemberCreator && member.id !== currentUserId;
 
   const handleRemoverClick = () => {
-    console.log(`Iniciando processo de remoção para membro: ${member.name} (${member.id}) do grupo ${groupId}`);
-    console.log(`Usuário atual: ${currentUserId}, É criador: ${isCurrentUserCreator}, Pode remover: ${canRemoveMember}`);
-    console.log(`GroupCreatorId: ${groupCreatorId}, Member role: ${member.role}`);
+    console.log(`[MINI-CARD] Iniciando processo de remoção para membro: ${member.name} (${member.id}) do grupo ${groupId}`);
+    console.log(`[MINI-CARD] Usuário atual: ${currentUserId}, É criador: ${isCurrentUserCreator}, Pode remover: ${canRemoveMember}`);
+    console.log(`[MINI-CARD] GroupCreatorId: ${groupCreatorId}, Member role: ${member.role}`);
 
     if (!canRemoveMember) {
-      console.warn('Usuário não tem permissão para remover este membro');
+      console.warn('[MINI-CARD] Usuário não tem permissão para remover este membro');
       return;
     }
 
+    console.log(`[MINI-CARD] Abrindo modal de confirmação para remoção (comportamento igual ao botão Sair)`);
     setShowRemoverModal(true);
     setShowOptions(false);
   };
 
   const handleRemover = async () => {
-    console.log(`Modal de remoção fechado para membro ${member.name}`);
+    console.log(`[MINI-CARD] Modal de remoção fechado para membro ${member.name} (processo concluído)`);
     setShowRemoverModal(false);
   };
 

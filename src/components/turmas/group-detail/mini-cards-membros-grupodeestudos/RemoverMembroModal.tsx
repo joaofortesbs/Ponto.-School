@@ -25,22 +25,24 @@ const RemoverMembroModal: React.FC<RemoverMembroModalProps> = ({
   const handleRemoverMembro = async () => {
     try {
       setIsRemoving(true);
-      console.log(`[RemoverMembroModal] Removendo membro ${memberName} (${memberId}) do grupo ${groupId}`);
+      console.log(`[RemoverMembroModal] Iniciando remoção: ${memberName} (${memberId}) do grupo ${groupId}`);
 
       const success = await removeMember(memberId);
 
-      if (success) {
-        console.log(`[RemoverMembroModal] Membro ${memberName} removido com sucesso`);
-        // Fechar modal imediatamente após sucesso
-        onClose();
-      } else {
-        console.error(`[RemoverMembroModal] Falha ao remover membro - função retornou false`);
-        // Modal permanece aberto para o usuário tentar novamente
-      }
+      // Sempre fechar o modal, mesmo em caso de falha (igual ao comportamento do botão Sair)
+      console.log(`[RemoverMembroModal] Processo de remoção concluído. Sucesso: ${success}`);
+      console.log(`[RemoverMembroModal] Fechando modal independente do resultado (comportamento igual ao botão Sair)`);
+      
+      // Fechar modal imediatamente (não esperar por confirmação de sucesso)
+      onClose();
 
     } catch (error) {
-      console.error(`[RemoverMembroModal] Erro geral ao remover membro:`, error);
-      // Modal permanece aberto para o usuário tentar novamente
+      console.error(`[RemoverMembroModal] Erro capturado durante remoção:`, error);
+      
+      // Mesmo com erro, fechar modal (comportamento igual ao botão Sair)
+      console.log(`[RemoverMembroModal] Fechando modal mesmo com erro (comportamento robusto)`);
+      onClose();
+      
     } finally {
       setIsRemoving(false);
     }

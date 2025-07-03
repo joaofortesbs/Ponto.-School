@@ -69,46 +69,80 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
   // Hook para gerenciar membros do grupo
   const { members, loading: membersLoading, refreshMembers } = useGroupMembers(group.id);
 
-  // Configurar real-time subscription para atualizações de membros
+  // Configurar real-time subscription para atualizações de membros (sincronização igual ao botão Sair)
   React.useEffect(() => {
     if (!group.id) return;
 
-    console.log(`Configurando subscription real-time para membros do grupo ${group.id}`);
+    console.log(`[REALTIME] Configurando subscription robusta para membros do grupo ${group.id}`);
 
     const channel = supabase
       .channel(`group_members_${group.id}`)
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'DELETE',
           schema: 'public',
           table: 'membros_grupos',
           filter: `grupo_id=eq.${group.id}`
         },
         (payload) => {
-          console.log('Mudança detectada na tabela membros_grupos:', payload);
-
-          if (payload.eventType === 'DELETE') {
-            console.log(`Membro ${payload.old?.user_id} removido via real-time`);
-          } else if (payload.eventType === 'INSERT') {
-            console.log(`Novo membro ${payload.new?.user_id} adicionado via real-time`);
+          console.log(`[REALTIME DELETE] Membro removido detectado:`, payload);
+          
+          if (payload.old?.user_id) {
+            console.log(`[REALTIME DELETE] Processando remoção do membro ${payload.old.user_id} do grupo ${group.id}`);
+            
+            // Refresh imediato da lista de membros
+            setTimeout(() => {
+              console.log(`[REALTIME DELETE] Executando refresh da lista de membros`);
+              refreshMembers();
+            }, 200);
+            
+            // Backup refresh para garantia
+            setTimeout(() => {
+              console.log(`[REALTIME DELETE] Executando refresh de backup`);
+              refreshMembers();
+            }, 1000);
           }
-
-          // Atualizar lista de membros com delay para garantir consistência
-          setTimeout(() => {
-            refreshMembers();
-          }, 500);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'membros_grupos',
+          filter: `grupo_id=eq.${group.id}`
+        },
+        (payload) => {
+          console.log(`[REALTIME INSERT] Novo membro adicionado:`, payload);
+          
+          if (payload.new?.user_id) {
+            console.log(`[REALTIME INSERT] Processando adição do membro ${payload.new.user_id} ao grupo ${group.id}`);
+            
+            // Refresh para incluir novo membro
+            setTimeout(() => {
+              console.log(`[REALTIME INSERT] Executando refresh para novo membro`);
+              refreshMembers();
+            }, 300);
+          }
         }
       )
       .subscribe((status) => {
-        console.log(`Status da subscription de membros: ${status}`);
+        console.log(`[REALTIME] Status da subscription de membros: ${status}`);
+        
+        if (status === 'SUBSCRIBED') {
+          console.log(`[REALTIME] ✅ Subscription ativa para o grupo ${group.id}`);
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error(`[REALTIME] ❌ Erro na subscription do grupo ${group.id}`);
+        }
       });
 
+    // Cleanup function
     return () => {
-      console.log(`Removendo subscription de membros do grupo ${group.id}`);
+      console.log(`[REALTIME] Removendo subscription de membros do grupo ${group.id}`);
       supabase.removeChannel(channel);
     };
-  }, [group.id]);
+  }, [group.id, refreshMembers]);
 
   // Buscar usuário atual
   React.useEffect(() => {
