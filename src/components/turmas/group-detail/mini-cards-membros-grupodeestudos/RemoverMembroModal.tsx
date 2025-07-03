@@ -1,15 +1,10 @@
 
 import React, { useState } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { AlertTriangle, Loader2 } from "lucide-react";
-import { useGroupMembers } from "@/hooks/useGroupMembers";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface RemoverMembroModalProps {
   isOpen: boolean;
@@ -17,6 +12,7 @@ interface RemoverMembroModalProps {
   memberName: string;
   memberId: string;
   groupId: string;
+  onRemove: () => void;
 }
 
 const RemoverMembroModal: React.FC<RemoverMembroModalProps> = ({
@@ -25,28 +21,124 @@ const RemoverMembroModal: React.FC<RemoverMembroModalProps> = ({
   memberName,
   memberId,
   groupId,
+  onRemove
 }) => {
   const [isRemoving, setIsRemoving] = useState(false);
-  const { removeMember } = useGroupMembers(groupId);
+  const { toast } = useToast();
 
   const handleRemoverMembro = async () => {
-    if (isRemoving) return;
-
-    setIsRemoving(true);
-    console.log(`[MODAL] Iniciando remoção: ${memberName} (${memberId}) do grupo ${groupId}`);
-
     try {
-      const success = await removeMember(memberId);
-      
-      console.log(`[MODAL] Resultado da remoção: ${success ? 'SUCESSO' : 'FALHA'}`);
-      
-      // Fechar modal independente do resultado
+      setIsRemoving(true);
+      console.log(`Iniciando remoção do membro ${memberName} (${memberId}) do grupo ${groupId}`);
+
+      // Verificar se o usuário atual tem permissão para remover membros
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        console.error('Erro de autenticação:', userError);
+        toast({
+          title: "Erro",
+          description: "Usuário não autenticado.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Verificar se o usuário atual é o criador do grupo
+      const { data: groupData, error: groupError } = await supabase
+        .from('grupos_estudo')
+        .select('criador_id, nome')
+        .eq('id', groupId)
+        .single();
+
+      if (groupError) {
+        console.error('Erro ao verificar criador do grupo:', groupError);
+        toast({
+          title: "Erro",
+          description: "Erro ao verificar permissões do grupo.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Verificar se o usuário atual é o criador do grupo
+      if (groupData.criador_id !== user.id) {
+        console.error('Usuário não tem permissão para remover membros');
+        toast({
+          title: "Erro",
+          description: "Apenas o criador do grupo pode remover membros.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Verificar se não está tentando remover o próprio criador
+      if (memberId === groupData.criador_id) {
+        console.error('Tentativa de remover o criador do grupo');
+        toast({
+          title: "Erro",
+          description: "O criador do grupo não pode ser removido.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      console.log('Permissões verificadas. Removendo membro da tabela membros_grupos...');
+
+      // Remover o membro do grupo na tabela membros_grupos
+      const { error: removeError } = await supabase
+        .from('membros_grupos')
+        .delete()
+        .eq('grupo_id', groupId)
+        .eq('user_id', memberId);
+
+      if (removeError) {
+        console.error('Erro ao remover membro da tabela membros_grupos:', removeError);
+        toast({
+          title: "Erro",
+          description: `Erro ao remover membro: ${removeError.message}`,
+          variant: "destructive"
+        });
+        return;
+      }
+
+      console.log('Membro removido da tabela membros_grupos com sucesso');
+
+      // Também remover das sessões de usuário (se existir)
+      try {
+        const { error: sessionError } = await supabase
+          .from('user_sessions')
+          .delete()
+          .eq('grupo_id', groupId)
+          .eq('user_id', memberId);
+
+        if (sessionError) {
+          console.warn('Erro ao remover sessão do usuário (não crítico):', sessionError);
+        } else {
+          console.log('Sessão do usuário removida com sucesso');
+        }
+      } catch (sessionError) {
+        console.warn('Erro ao remover sessão do usuário (não crítico):', sessionError);
+      }
+
+      // Sucesso
+      console.log(`Membro ${memberName} removido com sucesso do grupo ${groupData.nome}`);
+      toast({
+        title: "Sucesso",
+        description: `${memberName} foi removido do grupo com sucesso.`,
+        variant: "default"
+      });
+
+      // Chamar callback para atualizar a lista
+      onRemove();
       onClose();
 
     } catch (error) {
-      console.error('[MODAL] Erro durante remoção:', error);
-      // Fechar modal mesmo com erro
-      onClose();
+      console.error('Erro geral ao remover membro:', error);
+      toast({
+        title: "Erro",
+        description: "Erro inesperado ao remover membro.",
+        variant: "destructive"
+      });
     } finally {
       setIsRemoving(false);
     }

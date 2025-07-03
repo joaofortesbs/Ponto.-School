@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -11,8 +10,6 @@ import { Input } from "@/components/ui/input";
 import { useTheme } from "@/components/ThemeProvider";
 import GroupDetailHeader from "./group-detail/GroupDetailHeader";
 import MaterialsSection from "./group-detail/MaterialsSection";
-import { useGroupMembers } from "@/hooks/useGroupMembers";
-import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowRight,
   Calendar,
@@ -56,7 +53,7 @@ import GroupSettingsModal from "./group-detail/GroupSettingsModal";
 import { MiniCardMembroGrupo } from "./group-detail/mini-cards-membros-grupodeestudos";
 
 interface GroupDetailProps {
-  group: any;
+  group: any; // Replace with proper type
   onBack: () => void;
 }
 
@@ -64,58 +61,35 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
   const [activeTab, setActiveTab] = useState("discussoes");
   const [searchQuery, setSearchQuery] = useState("");
   const [showSettingsModal, setShowSettingsModal] = useState(false);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const { theme } = useTheme();
 
-  // Hook para gerenciar membros do grupo
-  const { members, loading: membersLoading, refreshMembers } = useGroupMembers(group.id);
-
-  // Real-time subscription simples para atualizações de membros
-  React.useEffect(() => {
-    if (!group.id) return;
-
-    console.log(`[REALTIME] Configurando subscription para grupo ${group.id}`);
-
-    const channel = supabase
-      .channel(`group_members_${group.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'membros_grupos',
-          filter: `grupo_id=eq.${group.id}`
-        },
-        (payload) => {
-          console.log(`[REALTIME] Mudança detectada na tabela membros_grupos:`, payload);
-          
-          // Refresh automático após qualquer mudança
-          setTimeout(() => {
-            console.log(`[REALTIME] Executando refresh automático`);
-            refreshMembers();
-          }, 500);
-        }
-      )
-      .subscribe((status) => {
-        console.log(`[REALTIME] Status: ${status}`);
-      });
-
-    return () => {
-      console.log(`[REALTIME] Removendo subscription`);
-      supabase.removeChannel(channel);
-    };
-  }, [group.id, refreshMembers]);
-
-  // Buscar usuário atual
-  React.useEffect(() => {
-    const getCurrentUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setCurrentUserId(user.id);
-      }
-    };
-    getCurrentUser();
-  }, []);
+  // Mock data for the component
+  const members = [
+    {
+      id: "1",
+      name: "Ana Silva",
+      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ana",
+      role: "Administrador",
+      isOnline: true,
+      lastActive: "",
+    },
+    {
+      id: "2",
+      name: "Pedro Santos",
+      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Pedro",
+      role: "Membro",
+      isOnline: false,
+      lastActive: "Há 2 horas",
+    },
+    {
+      id: "3",
+      name: "Maria Oliveira",
+      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Maria",
+      role: "Membro",
+      isOnline: true,
+      lastActive: "",
+    },
+  ];
 
   const files = [
     {
@@ -197,6 +171,7 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    // Search functionality would be implemented here
     console.log("Searching for:", searchQuery);
   };
 
@@ -423,9 +398,7 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
           <div className="p-4">
             <div className="bg-gray-100 dark:bg-[#1a2236] rounded-lg p-4 shadow-sm">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold">
-                  Membros do Grupo ({membersLoading ? '...' : members.length})
-                </h3>
+                <h3 className="text-lg font-bold">Membros do Grupo ({members.length})</h3>
                 <div className="flex gap-2">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -440,27 +413,22 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
                 </div>
               </div>
 
-              {membersLoading ? (
-                <div className="text-center py-8">
-                  <div className="text-gray-500">Carregando membros...</div>
-                </div>
-              ) : members.length === 0 ? (
-                <div className="text-center py-8">
-                  <div className="text-gray-500">Nenhum membro encontrado</div>
-                </div>
-              ) : (
-                <div className="grid grid-cols-3 gap-4">
-                  {members.map((member) => (
-                    <MiniCardMembroGrupo
-                      key={member.id}
-                      member={member}
-                      groupId={group.id}
-                      currentUserId={currentUserId}
-                      groupCreatorId={group.criador_id}
-                    />
-                  ))}
-                </div>
-              )}
+              <div className="grid grid-cols-3 gap-4">
+                {members.map((member) => (
+                  <MiniCardMembroGrupo
+                    key={member.id}
+                    member={member}
+                    groupId={group.id}
+                    currentUserId="1" // TODO: Pegar do contexto/auth
+                    groupCreatorId={group.criador_id || "1"} // TODO: Pegar do grupo real
+                    onMemberRemoved={() => {
+                      console.log('Membro removido, atualizando lista...');
+                      // TODO: Implementar refresh da lista de membros
+                      // Pode ser feito fazendo uma nova consulta ao Supabase
+                    }}
+                  />
+                ))}
+              </div>
             </div>
           </div>
         )}
@@ -655,7 +623,7 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
                         Informações do Grupo
                       </h2>
                       <p className="text-gray-600 dark:text-gray-400">
-                        Visualize todas as informações básicas deste grupode estudos
+                        Visualize todas as informações básicas deste grupo de estudos
                       </p>
                     </div>
 
@@ -670,7 +638,7 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
                             Informações Básicas
                           </h3>
                         </div>
-
+                        
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           {/* Nome do Grupo */}
                           <div className="space-y-2">

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ interface MiniCardMembroGrupoProps {
     lastActive: string;
   };
   groupId?: string;
+  onMemberRemoved?: () => void;
   currentUserId?: string;
   groupCreatorId?: string;
 }
@@ -23,6 +25,7 @@ interface MiniCardMembroGrupoProps {
 const MiniCardMembroGrupo: React.FC<MiniCardMembroGrupoProps> = ({ 
   member, 
   groupId, 
+  onMemberRemoved,
   currentUserId,
   groupCreatorId 
 }) => {
@@ -31,31 +34,28 @@ const MiniCardMembroGrupo: React.FC<MiniCardMembroGrupoProps> = ({
 
   // Verificar se o usuário atual é o criador do grupo
   const isCurrentUserCreator = currentUserId === groupCreatorId;
-
+  
   // Verificar se o membro é o criador do grupo
   const isMemberCreator = member.id === groupCreatorId;
-
+  
   // Verificar se pode remover este membro
   const canRemoveMember = isCurrentUserCreator && !isMemberCreator && member.id !== currentUserId;
 
   const handleRemoverClick = () => {
-    console.log(`[MINI-CARD] Iniciando processo de remoção para membro: ${member.name} (${member.id}) do grupo ${groupId}`);
-    console.log(`[MINI-CARD] Usuário atual: ${currentUserId}, É criador: ${isCurrentUserCreator}, Pode remover: ${canRemoveMember}`);
-    console.log(`[MINI-CARD] GroupCreatorId: ${groupCreatorId}, Member role: ${member.role}`);
-
-    if (!canRemoveMember) {
-      console.warn('[MINI-CARD] Usuário não tem permissão para remover este membro');
-      return;
-    }
-
-    console.log(`[MINI-CARD] Abrindo modal de confirmação para remoção (comportamento igual ao botão Sair)`);
+    console.log(`Tentando remover membro: ${member.name} (${member.id}) do grupo ${groupId}`);
     setShowRemoverModal(true);
     setShowOptions(false);
   };
 
   const handleRemover = async () => {
-    console.log(`[MINI-CARD] Modal de remoção fechado para membro ${member.name} (processo concluído)`);
+    console.log(`Membro ${member.name} foi removido com sucesso`);
     setShowRemoverModal(false);
+    
+    // Chamar o callback para atualizar a lista de membros
+    if (onMemberRemoved) {
+      console.log('Chamando callback onMemberRemoved para atualizar lista');
+      onMemberRemoved();
+    }
   };
 
   const getRoleIcon = () => {
@@ -111,12 +111,12 @@ const MiniCardMembroGrupo: React.FC<MiniCardMembroGrupoProps> = ({
                 </h4>
                 {getRoleIcon()}
               </div>
-
+              
               <div className="flex items-center gap-2 mb-2">
                 <Badge className={`text-xs px-2 py-1 border ${getRoleBadgeColor()}`}>
                   {getDisplayRole()}
                 </Badge>
-
+                
                 {member.isOnline ? (
                   <span className="text-xs text-green-600 dark:text-green-400 font-medium">
                     Online
@@ -154,7 +154,7 @@ const MiniCardMembroGrupo: React.FC<MiniCardMembroGrupoProps> = ({
                     <MessageCircle className="h-4 w-4" />
                     Enviar mensagem
                   </button>
-
+                  
                   {canRemoveMember && (
                     <button 
                       className="w-full text-left px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md flex items-center gap-2"
@@ -178,6 +178,7 @@ const MiniCardMembroGrupo: React.FC<MiniCardMembroGrupoProps> = ({
         memberName={member.name}
         memberId={member.id}
         groupId={groupId || ""}
+        onRemove={handleRemover}
       />
     </>
   );

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -17,12 +18,10 @@ export const useGroupMembers = (groupId: string) => {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const loadMembers = async (): Promise<void> => {
+  const loadMembers = async () => {
     try {
       setLoading(true);
       setError(null);
-
-      console.log(`[LOAD MEMBERS] Carregando membros para o grupo ${groupId}`);
 
       // Buscar membros do grupo
       const { data: membersData, error: membersError } = await supabase
@@ -40,7 +39,7 @@ export const useGroupMembers = (groupId: string) => {
         .eq('grupo_id', groupId);
 
       if (membersError) {
-        console.error('[LOAD MEMBERS] Erro ao carregar membros:', membersError);
+        console.error('Erro ao carregar membros:', membersError);
         setError('Erro ao carregar membros do grupo');
         return;
       }
@@ -53,7 +52,7 @@ export const useGroupMembers = (groupId: string) => {
         .single();
 
       if (groupError) {
-        console.error('[LOAD MEMBERS] Erro ao carregar dados do grupo:', groupError);
+        console.error('Erro ao carregar dados do grupo:', groupError);
         setError('Erro ao carregar dados do grupo');
         return;
       }
@@ -68,7 +67,7 @@ export const useGroupMembers = (groupId: string) => {
           name: groupData.profiles.display_name || groupData.profiles.full_name || groupData.profiles.email || 'Usuário',
           avatar: groupData.profiles.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(groupData.profiles.display_name || 'U')}&background=FF6B00&color=fff&size=40`,
           role: 'Criador',
-          isOnline: true,
+          isOnline: true, // TODO: Implementar status online real
           lastActive: ''
         });
       }
@@ -81,196 +80,63 @@ export const useGroupMembers = (groupId: string) => {
             name: memberData.profiles.display_name || memberData.profiles.full_name || memberData.profiles.email || 'Usuário',
             avatar: memberData.profiles.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(memberData.profiles.display_name || 'U')}&background=FF6B00&color=fff&size=40`,
             role: 'Membro',
-            isOnline: false,
-            lastActive: 'Há 2 horas'
+            isOnline: false, // TODO: Implementar status online real
+            lastActive: 'Há 2 horas' // TODO: Implementar última atividade real
           });
         }
       });
 
       setMembers(allMembers);
-      console.log(`[LOAD MEMBERS] Carregados ${allMembers.length} membros para o grupo ${groupId}`);
+      console.log(`Carregados ${allMembers.length} membros para o grupo ${groupId}`);
 
     } catch (err) {
-      console.error('[LOAD MEMBERS] Erro inesperado ao carregar membros:', err);
+      console.error('Erro inesperado ao carregar membros:', err);
       setError('Erro inesperado ao carregar membros');
     } finally {
       setLoading(false);
     }
   };
 
-  const refreshMembers = async () => {
-    console.log('[REFRESH] Iniciando refresh da lista de membros...');
-    await loadMembers();
+  const refreshMembers = () => {
+    console.log('Atualizando lista de membros...');
+    loadMembers();
   };
 
-  const removeMember = async (memberId: string): Promise<boolean> => {
-    console.log(`[REMOVE MEMBER] === INICIANDO REMOÇÃO ===`);
-    console.log(`[REMOVE MEMBER] Grupo: ${groupId}, Membro: ${memberId}`);
-
+  const removeMember = async (memberId: string) => {
     try {
-      // 1. Verificar autenticação
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      if (authError || !user) {
-        console.error('[REMOVE MEMBER] Usuário não autenticado');
-        toast({
-          title: "Erro",
-          description: "Você precisa estar logado para remover membros.",
-          variant: "destructive"
-        });
-        return false;
-      }
-
-      console.log(`[REMOVE MEMBER] Usuário autenticado: ${user.id}`);
-
-      // 2. Verificar se o usuário é o criador do grupo
-      const { data: groupData, error: groupError } = await supabase
-        .from('grupos_estudo')
-        .select('criador_id')
-        .eq('id', groupId)
-        .single();
-
-      if (groupError) {
-        console.error('[REMOVE MEMBER] Erro ao verificar criador:', groupError);
-        toast({
-          title: "Erro",
-          description: "Erro ao verificar permissões do grupo.",
-          variant: "destructive"
-        });
-        return false;
-      }
-
-      if (groupData.criador_id !== user.id) {
-        console.error('[REMOVE MEMBER] Usuário não é criador do grupo');
-        toast({
-          title: "Erro",
-          description: "Apenas o criador do grupo pode remover membros.",
-          variant: "destructive"
-        });
-        return false;
-      }
-
-      console.log(`[REMOVE MEMBER] Permissão verificada - usuário é criador do grupo`);
-
-      // 3. Verificar se o membro existe antes de remover
-      const { data: existingMember, error: checkError } = await supabase
+      const { error } = await supabase
         .from('membros_grupos')
-        .select('user_id, grupo_id')
+        .delete()
         .eq('grupo_id', groupId)
-        .eq('user_id', memberId)
-        .single();
+        .eq('user_id', memberId);
 
-      if (checkError && checkError.code !== 'PGRST116') {
-        console.error('[REMOVE MEMBER] Erro ao verificar membro:', checkError);
+      if (error) {
+        console.error('Erro ao remover membro:', error);
         toast({
           title: "Erro",
-          description: "Erro ao verificar dados do membro.",
+          description: "Erro ao remover membro do grupo.",
           variant: "destructive"
         });
         return false;
       }
 
-      if (!existingMember) {
-        console.log('[REMOVE MEMBER] Membro não encontrado na tabela - já foi removido');
-        // Atualizar interface removendo da lista local
-        setMembers(prevMembers => prevMembers.filter(member => member.id !== memberId));
-        toast({
-          title: "Aviso",
-          description: "Membro já foi removido anteriormente.",
-          variant: "default"
-        });
-        return true;
-      }
-
-      console.log(`[REMOVE MEMBER] Membro encontrado na tabela - prosseguindo com remoção`);
-
-      // 4. Executar remoção com retry
-      let success = false;
-      const maxRetries = 3;
-
-      for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        console.log(`[REMOVE MEMBER] Tentativa ${attempt}/${maxRetries}`);
-
-        try {
-          // Executar DELETE
-          const { error: deleteError } = await supabase
-            .from('membros_grupos')
-            .delete()
-            .eq('grupo_id', groupId)
-            .eq('user_id', memberId);
-
-          if (deleteError) {
-            console.error(`[REMOVE MEMBER] DELETE falhou na tentativa ${attempt}:`, deleteError);
-            throw deleteError;
-          }
-
-          console.log(`[REMOVE MEMBER] DELETE executado com sucesso na tentativa ${attempt}`);
-
-          // Aguardar um pouco para garantir consistência
-          await new Promise(resolve => setTimeout(resolve, 300));
-
-          // Verificar se realmente foi removido
-          const { data: verification, error: verifyError } = await supabase
-            .from('membros_grupos')
-            .select('user_id')
-            .eq('grupo_id', groupId)
-            .eq('user_id', memberId);
-
-          if (verifyError) {
-            console.error(`[REMOVE MEMBER] Erro na verificação:`, verifyError);
-            throw verifyError;
-          }
-
-          if (verification && verification.length === 0) {
-            console.log(`[REMOVE MEMBER] ✅ SUCESSO - Membro removido e verificado na tentativa ${attempt}`);
-            success = true;
-            break;
-          } else {
-            console.warn(`[REMOVE MEMBER] ⚠️ Membro ainda encontrado após DELETE na tentativa ${attempt}`);
-            if (attempt === maxRetries) {
-              throw new Error('Membro ainda encontrado após todas as tentativas de remoção');
-            }
-          }
-
-        } catch (error) {
-          console.error(`[REMOVE MEMBER] Erro na tentativa ${attempt}:`, error);
-          if (attempt === maxRetries) {
-            throw error;
-          }
-          // Aguardar antes da próxima tentativa
-          await new Promise(resolve => setTimeout(resolve, 500));
-        }
-      }
-
-      if (success) {
-        // 5. Atualizar interface removendo o membro
-        setMembers(prevMembers => {
-          const newMembers = prevMembers.filter(member => member.id !== memberId);
-          console.log(`[REMOVE MEMBER] Interface atualizada - ${newMembers.length} membros restantes`);
-          return newMembers;
-        });
-
-        // 6. Toast de sucesso
-        toast({
-          title: "Sucesso",
-          description: "Membro removido com sucesso do grupo.",
-          variant: "default"
-        });
-
-        console.log(`[REMOVE MEMBER] === REMOÇÃO CONCLUÍDA COM SUCESSO ===`);
-        return true;
-      } else {
-        throw new Error('Falha na remoção após todas as tentativas');
-      }
-
-    } catch (error) {
-      console.error('[REMOVE MEMBER] === ERRO CRÍTICO ===', error);
-
+      // Atualizar lista local removendo o membro
+      setMembers(prev => prev.filter(member => member.id !== memberId));
+      
       toast({
-        title: "Erro",
-        description: "Erro ao remover membro do grupo. Tente novamente.",
-        variant: "destructive"
+        title: "Sucesso",
+        description: "Membro removido com sucesso.",
+        variant: "default"
       });
 
+      return true;
+    } catch (err) {
+      console.error('Erro inesperado ao remover membro:', err);
+      toast({
+        title: "Erro",
+        description: "Erro inesperado ao remover membro.",
+        variant: "destructive"
+      });
       return false;
     }
   };
