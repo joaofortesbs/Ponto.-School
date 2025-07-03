@@ -273,16 +273,19 @@ export type Database = {
       membros_grupos: {
         Row: {
           grupo_id: string
+          is_blocked: boolean | null
           joined_at: string | null
           user_id: string
         }
         Insert: {
           grupo_id: string
+          is_blocked?: boolean | null
           joined_at?: string | null
           user_id: string
         }
         Update: {
           grupo_id?: string
+          is_blocked?: boolean | null
           joined_at?: string | null
           user_id?: string
         }

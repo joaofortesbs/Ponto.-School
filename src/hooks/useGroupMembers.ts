@@ -10,12 +10,14 @@ interface GroupMember {
   role: string;
   isOnline: boolean;
   lastActive: string;
+  isBlocked?: boolean;
 }
 
 export const useGroupMembers = (groupId: string) => {
   const [members, setMembers] = useState<GroupMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isBlocked, setIsBlocked] = useState(false);
   const { toast } = useToast();
 
   const loadMembers = async () => {
@@ -23,11 +25,29 @@ export const useGroupMembers = (groupId: string) => {
       setLoading(true);
       setError(null);
 
-      // Buscar membros do grupo
+      // Verificar se o usuário atual está bloqueado
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: userMembership } = await supabase
+          .from('membros_grupos')
+          .select('is_blocked')
+          .eq('grupo_id', groupId)
+          .eq('user_id', user.id)
+          .single();
+
+        if (userMembership?.is_blocked) {
+          setIsBlocked(true);
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Buscar membros do grupo (apenas não bloqueados)
       const { data: membersData, error: membersError } = await supabase
         .from('membros_grupos')
         .select(`
           user_id,
+          is_blocked,
           profiles!inner(
             id,
             display_name,
@@ -36,7 +56,8 @@ export const useGroupMembers = (groupId: string) => {
             avatar_url
           )
         `)
-        .eq('grupo_id', groupId);
+        .eq('grupo_id', groupId)
+        .eq('is_blocked', false);
 
       if (membersError) {
         console.error('Erro ao carregar membros:', membersError);
@@ -67,8 +88,9 @@ export const useGroupMembers = (groupId: string) => {
           name: groupData.profiles.display_name || groupData.profiles.full_name || groupData.profiles.email || 'Usuário',
           avatar: groupData.profiles.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(groupData.profiles.display_name || 'U')}&background=FF6B00&color=fff&size=40`,
           role: 'Criador',
-          isOnline: true, // TODO: Implementar status online real
-          lastActive: ''
+          isOnline: true,
+          lastActive: '',
+          isBlocked: false
         });
       }
 
@@ -80,8 +102,9 @@ export const useGroupMembers = (groupId: string) => {
             name: memberData.profiles.display_name || memberData.profiles.full_name || memberData.profiles.email || 'Usuário',
             avatar: memberData.profiles.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(memberData.profiles.display_name || 'U')}&background=FF6B00&color=fff&size=40`,
             role: 'Membro',
-            isOnline: false, // TODO: Implementar status online real
-            lastActive: 'Há 2 horas' // TODO: Implementar última atividade real
+            isOnline: false,
+            lastActive: 'Há 2 horas',
+            isBlocked: memberData.is_blocked || false
           });
         }
       });
@@ -102,44 +125,89 @@ export const useGroupMembers = (groupId: string) => {
     loadMembers();
   };
 
-  const removeMember = async (memberId: string) => {
+  const blockMember = async (memberId: string, retries = 3, delay = 500) => {
     try {
-      const { error } = await supabase
-        .from('membros_grupos')
-        .delete()
-        .eq('grupo_id', groupId)
-        .eq('user_id', memberId);
+      for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+          console.log(`Tentativa ${attempt} de bloquear membro ${memberId}`);
+          
+          const { error } = await supabase
+            .from('membros_grupos')
+            .update({ is_blocked: true })
+            .eq('grupo_id', groupId)
+            .eq('user_id', memberId);
 
-      if (error) {
-        console.error('Erro ao remover membro:', error);
-        toast({
-          title: "Erro",
-          description: "Erro ao remover membro do grupo.",
-          variant: "destructive"
-        });
-        return false;
+          if (error) {
+            throw error;
+          }
+
+          console.log(`Membro ${memberId} bloqueado com sucesso no grupo ${groupId}`);
+          
+          // Atualizar lista local removendo o membro bloqueado
+          setMembers(prev => prev.filter(member => member.id !== memberId));
+          
+          toast({
+            title: "Sucesso",
+            description: "Membro removido com sucesso.",
+            variant: "default"
+          });
+
+          return true;
+        } catch (error: any) {
+          console.error(`Tentativa ${attempt} falhou:`, error.message);
+          if (attempt === retries) {
+            throw error;
+          }
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
       }
-
-      // Atualizar lista local removendo o membro
-      setMembers(prev => prev.filter(member => member.id !== memberId));
-      
-      toast({
-        title: "Sucesso",
-        description: "Membro removido com sucesso.",
-        variant: "default"
-      });
-
-      return true;
-    } catch (err) {
-      console.error('Erro inesperado ao remover membro:', err);
+    } catch (err: any) {
+      console.error('Erro ao bloquear membro:', err);
       toast({
         title: "Erro",
-        description: "Erro inesperado ao remover membro.",
+        description: "Erro ao remover membro do grupo.",
         variant: "destructive"
       });
       return false;
     }
   };
+
+  // Configurar realtime para mudanças na tabela membros_grupos
+  useEffect(() => {
+    if (!groupId) return;
+
+    const channel = supabase
+      .channel(`members-${groupId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'membros_grupos',
+          filter: `grupo_id=eq.${groupId}`
+        },
+        (payload) => {
+          console.log('Mudança detectada em membros_grupos:', payload);
+          
+          // Se o usuário atual foi bloqueado
+          const { data: { user } } = supabase.auth.getUser();
+          user.then(({ user: currentUser }) => {
+            if (currentUser && payload.new.user_id === currentUser.id && payload.new.is_blocked) {
+              console.log('Usuário atual foi bloqueado');
+              setIsBlocked(true);
+            }
+          });
+          
+          // Atualizar lista de membros
+          refreshMembers();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [groupId]);
 
   useEffect(() => {
     if (groupId) {
@@ -151,7 +219,8 @@ export const useGroupMembers = (groupId: string) => {
     members,
     loading,
     error,
+    isBlocked,
     refreshMembers,
-    removeMember
+    blockMember
   };
 };

@@ -4,6 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import GroupDetail from "@/components/turmas/group-detail";
+import BlockedGroupModal from "@/components/turmas/group-detail/BlockedGroupModal";
 
 export default function GroupDetailPage() {
   const { id } = useParams();
@@ -12,6 +13,7 @@ export default function GroupDetailPage() {
   const [loading, setLoading] = useState(true);
   const [group, setGroup] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
+  const [isBlocked, setIsBlocked] = useState(false);
 
   useEffect(() => {
     getCurrentUser();
@@ -61,10 +63,10 @@ export default function GroupDetailPage() {
       setLoading(true);
       console.log('Carregando dados do grupo:', id);
 
-      // Verificar se o usuário é membro do grupo
+      // Verificar se o usuário é membro do grupo e se está bloqueado
       const { data: membership, error: membershipError } = await supabase
         .from('membros_grupos')
-        .select('*')
+        .select('*, is_blocked')
         .eq('grupo_id', id)
         .eq('user_id', currentUser.id)
         .single();
@@ -77,6 +79,25 @@ export default function GroupDetailPage() {
           variant: "destructive"
         });
         navigate("/turmas/grupos");
+        return;
+      }
+
+      // Verificar se o usuário está bloqueado
+      if (membership.is_blocked) {
+        console.log('Usuário está bloqueado neste grupo');
+        setIsBlocked(true);
+        
+        // Carregar dados básicos do grupo para exibir o nome no modal
+        const { data: groupData, error: groupError } = await supabase
+          .from('grupos_estudo')
+          .select('nome')
+          .eq('id', id)
+          .single();
+
+        if (!groupError && groupData) {
+          setGroup(groupData);
+        }
+        setLoading(false);
         return;
       }
 
@@ -117,10 +138,64 @@ export default function GroupDetailPage() {
     navigate("/turmas/grupos");
   };
 
+  // Configurar realtime para detectar quando o usuário é bloqueado
+  useEffect(() => {
+    if (!id || !currentUser) return;
+
+    const channel = supabase
+      .channel(`group-access-${id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'membros_grupos',
+          filter: `grupo_id=eq.${id}`
+        },
+        (payload) => {
+          console.log('Mudança detectada em membros_grupos:', payload);
+          
+          // Se o usuário atual foi bloqueado
+          if (payload.new.user_id === currentUser.id && payload.new.is_blocked) {
+            console.log('Usuário atual foi bloqueado em tempo real');
+            setIsBlocked(true);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [id, currentUser]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen bg-[#001427]">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#FF6B00]"></div>
+      </div>
+    );
+  }
+
+  if (isBlocked) {
+    return (
+      <div className="min-h-screen bg-[#001427] p-4">
+        <div className="container mx-auto max-w-7xl">
+          <div 
+            className="blur-sm pointer-events-none"
+            style={{ filter: 'blur(5px)' }}
+          >
+            <div className="bg-gray-300 dark:bg-gray-700 h-96 rounded-lg flex items-center justify-center">
+              <p className="text-gray-500">Conteúdo do grupo</p>
+            </div>
+          </div>
+          
+          <BlockedGroupModal
+            isOpen={true}
+            groupName={group?.nome || 'Grupo'}
+            onBack={handleBack}
+          />
+        </div>
       </div>
     );
   }

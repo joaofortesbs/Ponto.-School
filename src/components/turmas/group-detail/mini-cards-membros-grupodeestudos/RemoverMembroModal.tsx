@@ -29,7 +29,7 @@ const RemoverMembroModal: React.FC<RemoverMembroModalProps> = ({
   const handleRemoverMembro = async () => {
     try {
       setIsRemoving(true);
-      console.log(`Iniciando remoção do membro ${memberName} (${memberId}) do grupo ${groupId}`);
+      console.log(`Iniciando bloqueio do membro ${memberName} (${memberId}) do grupo ${groupId}`);
 
       // Verificar se o usuário atual tem permissão para remover membros
       const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -82,46 +82,29 @@ const RemoverMembroModal: React.FC<RemoverMembroModalProps> = ({
         return;
       }
 
-      console.log('Permissões verificadas. Removendo membro da tabela membros_grupos...');
+      console.log('Permissões verificadas. Bloqueando membro na tabela membros_grupos...');
 
-      // Remover o membro do grupo na tabela membros_grupos
-      const { error: removeError } = await supabase
+      // Bloquear o membro do grupo (ao invés de deletar)
+      const { error: blockError } = await supabase
         .from('membros_grupos')
-        .delete()
+        .update({ is_blocked: true })
         .eq('grupo_id', groupId)
         .eq('user_id', memberId);
 
-      if (removeError) {
-        console.error('Erro ao remover membro da tabela membros_grupos:', removeError);
+      if (blockError) {
+        console.error('Erro ao bloquear membro na tabela membros_grupos:', blockError);
         toast({
           title: "Erro",
-          description: `Erro ao remover membro: ${removeError.message}`,
+          description: `Erro ao remover membro: ${blockError.message}`,
           variant: "destructive"
         });
         return;
       }
 
-      console.log('Membro removido da tabela membros_grupos com sucesso');
-
-      // Também remover das sessões de usuário (se existir)
-      try {
-        const { error: sessionError } = await supabase
-          .from('user_sessions')
-          .delete()
-          .eq('grupo_id', groupId)
-          .eq('user_id', memberId);
-
-        if (sessionError) {
-          console.warn('Erro ao remover sessão do usuário (não crítico):', sessionError);
-        } else {
-          console.log('Sessão do usuário removida com sucesso');
-        }
-      } catch (sessionError) {
-        console.warn('Erro ao remover sessão do usuário (não crítico):', sessionError);
-      }
+      console.log('Membro bloqueado na tabela membros_grupos com sucesso');
 
       // Sucesso
-      console.log(`Membro ${memberName} removido com sucesso do grupo ${groupData.nome}`);
+      console.log(`Membro ${memberName} removido (bloqueado) com sucesso do grupo ${groupData.nome}`);
       toast({
         title: "Sucesso",
         description: `${memberName} foi removido do grupo com sucesso.`,
@@ -153,7 +136,7 @@ const RemoverMembroModal: React.FC<RemoverMembroModalProps> = ({
             Remover Membro
           </DialogTitle>
           <DialogDescription className="text-gray-600 dark:text-gray-400">
-            Esta ação não pode ser desfeita.
+            Esta ação bloqueará o acesso do membro ao grupo.
           </DialogDescription>
         </DialogHeader>
 
@@ -162,7 +145,7 @@ const RemoverMembroModal: React.FC<RemoverMembroModalProps> = ({
             Tem certeza que deseja remover <strong>{memberName}</strong> do grupo?
           </p>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-            O membro será removido imediatamente e perderá acesso a todas as discussões e materiais do grupo.
+            O membro será bloqueado e perderá acesso a todas as discussões e materiais do grupo. Ele precisará sair manualmente do grupo.
           </p>
         </div>
 

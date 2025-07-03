@@ -15,6 +15,7 @@ interface MiniCardMembroGrupoProps {
     role: string;
     isOnline: boolean;
     lastActive: string;
+    isBlocked?: boolean;
   };
   groupId?: string;
   onMemberRemoved?: () => void;
@@ -31,6 +32,11 @@ const MiniCardMembroGrupo: React.FC<MiniCardMembroGrupoProps> = ({
 }) => {
   const [showRemoverModal, setShowRemoverModal] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
+
+  // Não renderizar se o membro estiver bloqueado
+  if (member.isBlocked) {
+    return null;
+  }
 
   // Verificar se o usuário atual é o criador do grupo
   const isCurrentUserCreator = currentUserId === groupCreatorId;
