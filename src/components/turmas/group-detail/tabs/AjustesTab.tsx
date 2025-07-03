@@ -95,104 +95,204 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
     loadGroupSettings();
   }, [groupId]);
 
-  const loadGroupSettings = async () => {
-    try {
-      const { data: groupData, error } = await supabase
-        .from('grupos_estudo')
-        .select('*')
-        .eq('id', groupId)
-        .single();
+  const loadGroupSettings = async (retries = 3, delay = 2000) => {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        console.log(`Tentativa ${attempt} de carregar configurações do grupo ${groupId}...`);
+        
+        const { data: groupData, error } = await supabase
+          .from('grupos_estudo')
+          .select('*')
+          .eq('id', groupId)
+          .single();
 
-      if (error) throw error;
+        if (error) throw error;
 
-      setSettings({
-        nome: groupData.nome || '',
-        descricao: groupData.descricao || '',
-        disciplina_area: groupData.disciplina_area || '',
-        topico_especifico: groupData.topico_especifico || '',
-        tags: groupData.tags || [],
-        codigo_unico: groupData.codigo_unico || '',
-        is_public: groupData.is_public ?? false,
-        is_private: groupData.is_private ?? false,
-        is_visible_to_all: groupData.is_visible_to_all ?? false,
-        is_visible_to_partners: groupData.is_visible_to_partners ?? false,
-        max_members: groupData.max_members ?? 50,
-        require_approval: groupData.require_approval ?? false,
-        allow_member_invites: groupData.allow_member_invites ?? true,
-        notify_new_members: groupData.notify_new_members ?? true,
-        notify_new_messages: groupData.notify_new_messages ?? true,
-        notify_new_materials: groupData.notify_new_materials ?? true,
-        backup_automatico: groupData.backup_automatico ?? true,
-        notificacoes_ativas: groupData.notificacoes_ativas ?? true,
-        moderacao_automatica: groupData.moderacao_automatica ?? false,
-      });
+        if (!groupData) {
+          throw new Error(`Dados do grupo ${groupId} não encontrados.`);
+        }
 
-      console.log(`Campos da mini-seção Ajustes preenchidos para o grupo ${groupData.id || 'desconhecido'}.`);
-    } catch (error) {
-      console.error('Erro ao carregar configurações:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar as configurações do grupo.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
+        setSettings({
+          nome: groupData.nome || '',
+          descricao: groupData.descricao || '',
+          disciplina_area: groupData.disciplina_area || '',
+          topico_especifico: groupData.topico_especifico || '',
+          tags: groupData.tags || [],
+          codigo_unico: groupData.codigo_unico || '',
+          is_public: groupData.is_public ?? false,
+          is_private: groupData.is_private ?? false,
+          is_visible_to_all: groupData.is_visible_to_all ?? false,
+          is_visible_to_partners: groupData.is_visible_to_partners ?? false,
+          max_members: groupData.max_members ?? 50,
+          require_approval: groupData.require_approval ?? false,
+          allow_member_invites: groupData.allow_member_invites ?? true,
+          notify_new_members: groupData.notify_new_members ?? true,
+          notify_new_messages: groupData.notify_new_messages ?? true,
+          notify_new_materials: groupData.notify_new_materials ?? true,
+          backup_automatico: groupData.backup_automatico ?? true,
+          notificacoes_ativas: groupData.notificacoes_ativas ?? true,
+          moderacao_automatica: groupData.moderacao_automatica ?? false,
+        });
+
+        console.log(`Campos da mini-seção Ajustes preenchidos para o grupo ${groupData.id || 'desconhecido'} na tentativa ${attempt}.`);
+        break;
+
+      } catch (error) {
+        console.warn(`Tentativa ${attempt} de carregar configurações do grupo ${groupId} falhou:`, error.message);
+        
+        if (attempt === retries) {
+          console.error(`Erro final ao carregar configurações do grupo ${groupId}:`, error);
+          toast({
+            title: "Erro",
+            description: "Não foi possível carregar as configurações do grupo após múltiplas tentativas.",
+            variant: "destructive"
+          });
+        } else {
+          console.log(`Aguardando ${delay}ms antes da próxima tentativa...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      }
     }
+    
+    setIsLoading(false);
   };
 
-  const saveSettings = async () => {
+  const saveSettings = async (retries = 3, delay = 2000) => {
     setIsSaving(true);
-    try {
-      const { error } = await supabase
-        .from('grupos_estudo')
-        .update({
-          nome: settings.nome,
-          descricao: settings.descricao,
-          disciplina_area: settings.disciplina_area,
-          topico_especifico: settings.topico_especifico,
-          tags: settings.tags,
-          is_public: settings.is_public,
-          is_private: settings.is_private,
-          is_visible_to_all: settings.is_visible_to_all,
-          is_visible_to_partners: settings.is_visible_to_partners,
-          max_members: settings.max_members,
-          require_approval: settings.require_approval,
-          allow_member_invites: settings.allow_member_invites,
-          notify_new_members: settings.notify_new_members,
-          notify_new_messages: settings.notify_new_messages,
-          notify_new_materials: settings.notify_new_materials,
-          backup_automatico: settings.backup_automatico,
-          notificacoes_ativas: settings.notificacoes_ativas,
-          moderacao_automatica: settings.moderacao_automatica
-        })
-        .eq('id', groupId);
-
-      if (error) throw error;
-
+    
+    // Validações rigorosas
+    if (!settings.nome.trim()) {
       toast({
-        title: "Sucesso",
-        description: "Configurações salvas com sucesso!",
-      });
-    } catch (error) {
-      console.error('Erro ao salvar configurações:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível salvar as configurações.",
+        title: "Erro de Validação",
+        description: "O Nome do Grupo é obrigatório.",
         variant: "destructive"
       });
-    } finally {
       setIsSaving(false);
+      return;
     }
+
+    if (settings.nome.length > 100) {
+      toast({
+        title: "Erro de Validação",
+        description: "O Nome do Grupo deve ter no máximo 100 caracteres.",
+        variant: "destructive"
+      });
+      setIsSaving(false);
+      return;
+    }
+
+    if (settings.descricao.length > 500) {
+      toast({
+        title: "Erro de Validação",
+        description: "A Descrição deve ter no máximo 500 caracteres.",
+        variant: "destructive"
+      });
+      setIsSaving(false);
+      return;
+    }
+
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        console.log(`Tentativa ${attempt} de salvar configurações do grupo ${groupId}...`);
+        
+        const { error } = await supabase
+          .from('grupos_estudo')
+          .update({
+            nome: settings.nome.trim(),
+            descricao: settings.descricao.trim(),
+            disciplina_area: settings.disciplina_area.trim(),
+            topico_especifico: settings.topico_especifico.trim(),
+            tags: settings.tags.filter(tag => tag.trim() !== ''),
+            is_public: settings.is_public,
+            is_private: settings.is_private,
+            is_visible_to_all: settings.is_visible_to_all,
+            is_visible_to_partners: settings.is_visible_to_partners,
+            max_members: settings.max_members,
+            require_approval: settings.require_approval,
+            allow_member_invites: settings.allow_member_invites,
+            notify_new_members: settings.notify_new_members,
+            notify_new_messages: settings.notify_new_messages,
+            notify_new_materials: settings.notify_new_materials,
+            backup_automatico: settings.backup_automatico,
+            notificacoes_ativas: settings.notificacoes_ativas,
+            moderacao_automatica: settings.moderacao_automatica
+          })
+          .eq('id', groupId);
+
+        if (error) throw error;
+
+        console.log(`Configurações do grupo ${groupId} salvas com sucesso na tentativa ${attempt}.`);
+        toast({
+          title: "Sucesso",
+          description: "Configurações salvas com sucesso!",
+        });
+        break;
+
+      } catch (error) {
+        console.warn(`Tentativa ${attempt} de salvar configurações do grupo ${groupId} falhou:`, error.message);
+        
+        if (attempt === retries) {
+          console.error(`Erro final ao salvar configurações do grupo ${groupId}:`, error);
+          toast({
+            title: "Erro",
+            description: "Não foi possível salvar as configurações após múltiplas tentativas.",
+            variant: "destructive"
+          });
+        } else {
+          console.log(`Aguardando ${delay}ms antes da próxima tentativa...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      }
+    }
+    
+    setIsSaving(false);
   };
 
   const addTag = () => {
-    if (newTag.trim() && !settings.tags.includes(newTag.trim())) {
-      setSettings(prev => ({
-        ...prev,
-        tags: [...prev.tags, newTag.trim()]
-      }));
-      setNewTag('');
+    const trimmedTag = newTag.trim();
+    
+    if (!trimmedTag) {
+      toast({
+        title: "Tag inválida",
+        description: "A tag não pode estar vazia.",
+        variant: "destructive"
+      });
+      return;
     }
+
+    if (trimmedTag.length > 20) {
+      toast({
+        title: "Tag muito longa",
+        description: "A tag deve ter no máximo 20 caracteres.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (settings.tags.includes(trimmedTag)) {
+      toast({
+        title: "Tag duplicada",
+        description: "Esta tag já foi adicionada.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (settings.tags.length >= 10) {
+      toast({
+        title: "Limite de tags",
+        description: "Você pode adicionar no máximo 10 tags.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setSettings(prev => ({
+      ...prev,
+      tags: [...prev.tags, trimmedTag]
+    }));
+    setNewTag('');
+    console.log(`Tag "${trimmedTag}" adicionada ao grupo ${groupId}.`);
   };
 
   const removeTag = (tagToRemove: string) => {
