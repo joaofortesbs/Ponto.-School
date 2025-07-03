@@ -36,10 +36,8 @@ const MiniCardMembroGrupo: React.FC<MiniCardMembroGrupoProps> = ({ member }) => 
   return (
     <>
     <div className="bg-white dark:bg-[#0f1525] p-4 rounded-lg border border-gray-200 dark:border-gray-800 flex items-center hover:bg-gray-50 dark:hover:bg-[#1e293b] transition-colors shadow-sm hover:shadow-md relative">
-      <div className="absolute top-2 right-2 z-10">
-        <RemoverMembroComponent onClick={handleRemoverClick} />
-      </div>
-      <div className="relative mr-3"></div>
+      <RemoverMembroComponent onClick={handleRemoverClick} />
+      <div className="relative mr-3">
         <Avatar className="h-12 w-12 ring-1 ring-blue-500/20">
           <AvatarImage src={member.avatar} />
           <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
