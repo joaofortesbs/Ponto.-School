@@ -199,6 +199,15 @@ mode = "sequential"
 task = "shell.exec"
 args = "npm run dev"
 
+[[workflows.workflow]]
+name = "Configurar Storage de Imagens"
+author = 44539870
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node scripts/setup-storage-buckets.js"
+
 [auth]
 pageEnabled = false
 buttonEnabled = false

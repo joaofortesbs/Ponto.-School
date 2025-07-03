@@ -88,12 +88,68 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [activeSection, setActiveSection] = useState('gerais');
   const [newTag, setNewTag] = useState('');
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [bannerPreview, setBannerPreview] = useState<string | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [isSavingImages, setIsSavingImages] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
     loadGroupSettings();
+    loadGroupImages();
   }, [groupId]);
+
+  const loadGroupImages = async () => {
+    try {
+      const retries = 3;
+      const delay = 2000;
+
+      for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+          // Try to load banner
+          const { data: bannerData, error: bannerError } = await supabase.storage
+            .from('group-banners')
+            .download(`${groupId}-banner`);
+
+          if (bannerData && !bannerError) {
+            const bannerUrl = URL.createObjectURL(bannerData);
+            setBannerPreview(bannerUrl);
+            console.log(`Banner loaded for group ${groupId}`);
+          } else if (bannerError && bannerError.message !== 'Object not found') {
+            throw bannerError;
+          }
+
+          // Try to load photo
+          const { data: photoData, error: photoError } = await supabase.storage
+            .from('group-photos')
+            .download(`${groupId}-photo`);
+
+          if (photoData && !photoError) {
+            const photoUrl = URL.createObjectURL(photoData);
+            setPhotoPreview(photoUrl);
+            console.log(`Photo loaded for group ${groupId}`);
+          } else if (photoError && photoError.message !== 'Object not found') {
+            throw photoError;
+          }
+
+          return;
+
+        } catch (error) {
+          console.warn(`Attempt ${attempt} to load images for group ${groupId} failed:`, error);
+          
+          if (attempt === retries) {
+            console.error(`Failed to load images for group ${groupId} after ${retries} attempts:`, error);
+          } else {
+            await new Promise(resolve => setTimeout(resolve, delay));
+          }
+        }
+      }
+    } catch (error) {
+      console.error(`Error loading images for group ${groupId}:`, error);
+    }
+  };
 
   const loadGroupSettings = async () => {
     try {
@@ -200,6 +256,129 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
       ...prev,
       tags: prev.tags.filter(tag => tag !== tagToRemove)
     }));
+  };
+
+  const validateImageFile = (file: File): boolean => {
+    const validTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+    const maxSize = 5 * 1024 * 1024; // 5MB
+
+    if (!validTypes.includes(file.type)) {
+      toast({
+        title: "Formato inválido",
+        description: "Por favor, selecione uma imagem PNG, JPG ou JPEG.",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    if (file.size > maxSize) {
+      toast({
+        title: "Arquivo muito grande",
+        description: "A imagem deve ter menos de 5MB.",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && validateImageFile(file)) {
+      setBannerFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setBannerPreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && validateImageFile(file)) {
+      setPhotoFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setPhotoPreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const saveImages = async () => {
+    if (!bannerFile && !photoFile) {
+      toast({
+        title: "Nenhuma imagem selecionada",
+        description: "Selecione pelo menos uma imagem para salvar.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSavingImages(true);
+    
+    try {
+      const retries = 3;
+      const delay = 2000;
+
+      for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+          if (bannerFile) {
+            console.log(`Uploading banner for group ${groupId}, attempt ${attempt}`);
+            const { error: bannerError } = await supabase.storage
+              .from('group-banners')
+              .upload(`${groupId}-banner`, bannerFile, { upsert: true });
+            
+            if (bannerError) throw bannerError;
+            console.log(`Banner uploaded successfully for group ${groupId}`);
+          }
+
+          if (photoFile) {
+            console.log(`Uploading photo for group ${groupId}, attempt ${attempt}`);
+            const { error: photoError } = await supabase.storage
+              .from('group-photos')
+              .upload(`${groupId}-photo`, photoFile, { upsert: true });
+            
+            if (photoError) throw photoError;
+            console.log(`Photo uploaded successfully for group ${groupId}`);
+          }
+
+          toast({
+            title: "Sucesso",
+            description: "Imagens salvas com sucesso!",
+          });
+
+          // Reset form
+          setBannerFile(null);
+          setPhotoFile(null);
+          setBannerPreview(null);
+          setPhotoPreview(null);
+          
+          console.log(`Images saved successfully for group ${groupId} on attempt ${attempt}`);
+          return;
+
+        } catch (error) {
+          console.warn(`Attempt ${attempt} to save images for group ${groupId} failed:`, error);
+          
+          if (attempt === retries) {
+            throw error;
+          } else {
+            await new Promise(resolve => setTimeout(resolve, delay));
+          }
+        }
+      }
+    } catch (error) {
+      console.error(`Error saving images for group ${groupId}:`, error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível salvar as imagens. Tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSavingImages(false);
+    }
   };
 
   const menuItems = [
@@ -637,17 +816,164 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
           <span>Aparência & Tema</span>
         </CardTitle>
       </CardHeader>
-      <CardContent className="text-center py-16 bg-white dark:bg-[#001327]">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="w-20 h-20 bg-gradient-to-r from-orange-100 to-orange-200 dark:from-orange-900/30 dark:to-orange-800/30 rounded-2xl flex items-center justify-center">
-            <Eye className="w-10 h-10 text-orange-500" />
+      <CardContent className="space-y-6 p-8 bg-white dark:bg-[#001327]">
+        <div className="space-y-6">
+          {/* Banner Upload Section */}
+          <div className="space-y-4">
+            <div className="flex items-center space-x-3">
+              <div className="w-6 h-6 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-lg flex items-center justify-center">
+                <div className="w-3 h-3 bg-white rounded-sm"></div>
+              </div>
+              <Label htmlFor="banner-upload" className="text-lg font-semibold text-gray-800 dark:text-white">
+                Banner do Grupo
+              </Label>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-400 ml-9">
+              Adicione um banner para personalizar a aparência do seu grupo (PNG, JPG, JPEG - Máx: 5MB)
+            </p>
+            
+            {/* Banner Preview */}
+            <div className="ml-9 bg-gradient-to-r from-orange-50 to-orange-100/50 dark:from-orange-900/20 dark:to-orange-800/20 rounded-lg p-4 border-2 border-orange-200 dark:border-orange-500/30">
+              <div className="w-full h-32 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-600 relative overflow-hidden">
+                {bannerPreview ? (
+                  <img 
+                    src={bannerPreview} 
+                    alt="Banner Preview" 
+                    className="w-full h-full object-cover rounded-lg"
+                  />
+                ) : (
+                  <div className="text-center">
+                    <div className="w-12 h-12 mx-auto mb-2 bg-gray-400 dark:bg-gray-500 rounded-lg flex items-center justify-center">
+                      <Eye className="w-6 h-6 text-white" />
+                    </div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Nenhum banner selecionado</p>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <div className="ml-9 flex gap-3">
+              <Input
+                id="banner-upload"
+                type="file"
+                accept="image/png,image/jpeg,image/jpg"
+                onChange={handleBannerChange}
+                className="hidden"
+              />
+              <Button
+                type="button"
+                onClick={() => document.getElementById('banner-upload')?.click()}
+                className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white shadow-lg hover:shadow-xl transition-all duration-200"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Escolher Banner
+              </Button>
+              {bannerFile && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setBannerFile(null);
+                    setBannerPreview(null);
+                  }}
+                  className="border-orange-300 dark:border-orange-500 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                >
+                  <X className="w-4 h-4 mr-2" />
+                  Remover
+                </Button>
+              )}
+            </div>
           </div>
-          <h4 className="text-xl font-bold text-gray-800 dark:text-white">
-            Aparência & Tema
-          </h4>
-          <p className="text-orange-600 dark:text-orange-400 max-w-md">
-            Configurações de aparência estarão disponíveis em breve. Personalize cores, temas e layout do seu grupo.
-          </p>
+
+          {/* Photo Upload Section */}
+          <div className="space-y-4">
+            <div className="flex items-center space-x-3">
+              <div className="w-6 h-6 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-lg flex items-center justify-center">
+                <div className="w-3 h-3 bg-white rounded-full"></div>
+              </div>
+              <Label htmlFor="photo-upload" className="text-lg font-semibold text-gray-800 dark:text-white">
+                Foto do Grupo
+              </Label>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-400 ml-9">
+              Adicione uma foto que represente seu grupo (PNG, JPG, JPEG - Máx: 5MB)
+            </p>
+            
+            {/* Photo Preview */}
+            <div className="ml-9 bg-gradient-to-r from-orange-50 to-orange-100/50 dark:from-orange-900/20 dark:to-orange-800/20 rounded-lg p-4 border-2 border-orange-200 dark:border-orange-500/30">
+              <div className="w-32 h-32 mx-auto bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-600 relative overflow-hidden">
+                {photoPreview ? (
+                  <img 
+                    src={photoPreview} 
+                    alt="Photo Preview" 
+                    className="w-full h-full object-cover rounded-full"
+                  />
+                ) : (
+                  <div className="text-center">
+                    <div className="w-12 h-12 mx-auto mb-2 bg-gray-400 dark:bg-gray-500 rounded-full flex items-center justify-center">
+                      <Users className="w-6 h-6 text-white" />
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Sem foto</p>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <div className="ml-9 flex gap-3 justify-center">
+              <Input
+                id="photo-upload"
+                type="file"
+                accept="image/png,image/jpeg,image/jpg"
+                onChange={handlePhotoChange}
+                className="hidden"
+              />
+              <Button
+                type="button"
+                onClick={() => document.getElementById('photo-upload')?.click()}
+                className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white shadow-lg hover:shadow-xl transition-all duration-200"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Escolher Foto
+              </Button>
+              {photoFile && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setPhotoFile(null);
+                    setPhotoPreview(null);
+                  }}
+                  className="border-orange-300 dark:border-orange-500 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                >
+                  <X className="w-4 h-4 mr-2" />
+                  Remover
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {/* Save Images Button */}
+          {(bannerFile || photoFile) && (
+            <div className="pt-4 border-t border-orange-200 dark:border-orange-500/30">
+              <Button
+                onClick={saveImages}
+                disabled={isSavingImages}
+                className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200"
+              >
+                {isSavingImages ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
+                    Salvando Imagens...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-5 h-5 mr-3" />
+                    Salvar Imagens
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
