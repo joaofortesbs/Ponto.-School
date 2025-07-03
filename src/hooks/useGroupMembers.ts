@@ -109,6 +109,8 @@ export const useGroupMembers = (groupId: string) => {
 
   const removeMember = async (memberId: string) => {
     try {
+      console.log(`Iniciando remoção do membro ${memberId} do grupo ${groupId}`);
+      
       const { error } = await supabase
         .from('membros_grupos')
         .delete()
@@ -125,9 +127,18 @@ export const useGroupMembers = (groupId: string) => {
         return false;
       }
 
-      // Recarregar a lista completa do banco de dados
-      console.log('Membro removido do banco, recarregando lista de membros...');
-      await refreshMembers();
+      console.log(`Membro ${memberId} removido do banco de dados com sucesso`);
+      
+      // Atualizar estado local imediatamente
+      setMembers(prevMembers => {
+        const updatedMembers = prevMembers.filter(member => member.id !== memberId);
+        console.log(`Lista de membros atualizada. Membros restantes: ${updatedMembers.length}`);
+        return updatedMembers;
+      });
+
+      // Recarregar a lista completa do banco de dados para garantir sincronização
+      console.log('Recarregando lista completa de membros...');
+      await loadMembers();
       
       toast({
         title: "Sucesso",

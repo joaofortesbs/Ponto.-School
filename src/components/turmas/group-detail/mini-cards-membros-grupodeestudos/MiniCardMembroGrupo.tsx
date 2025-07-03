@@ -40,7 +40,8 @@ const MiniCardMembroGrupo: React.FC<MiniCardMembroGrupoProps> = ({
   const canRemoveMember = isCurrentUserCreator && !isMemberCreator && member.id !== currentUserId;
 
   const handleRemoverClick = () => {
-    console.log(`Tentando remover membro: ${member.name} (${member.id}) do grupo ${groupId}`);
+    console.log(`Iniciando processo de remoção para membro: ${member.name} (${member.id}) do grupo ${groupId}`);
+    console.log(`Usuário atual: ${currentUserId}, É criador: ${isCurrentUserCreator}, Pode remover: ${canRemoveMember}`);
     setShowRemoverModal(true);
     setShowOptions(false);
   };

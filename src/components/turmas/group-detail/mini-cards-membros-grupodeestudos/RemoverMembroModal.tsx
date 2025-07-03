@@ -25,10 +25,16 @@ const RemoverMembroModal: React.FC<RemoverMembroModalProps> = ({
   const handleRemoverMembro = async () => {
     try {
       setIsRemoving(true);
+      console.log(`Removendo membro ${memberName} (${memberId}) do grupo ${groupId}`);
 
-      await removeMember(memberId);
-
-      onClose();
+      const success = await removeMember(memberId);
+      
+      if (success) {
+        console.log(`Membro ${memberName} removido com sucesso`);
+        onClose();
+      } else {
+        console.error('Falha ao remover membro - função retornou false');
+      }
 
     } catch (error) {
       console.error('Erro geral ao remover membro:', error);

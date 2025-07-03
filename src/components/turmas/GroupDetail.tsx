@@ -70,6 +70,43 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
   // Hook para gerenciar membros do grupo
   const { members, loading: membersLoading, refreshMembers } = useGroupMembers(group.id);
 
+  // Configurar real-time subscription para atualizações de membros
+  React.useEffect(() => {
+    if (!group.id) return;
+
+    console.log(`Configurando subscription real-time para membros do grupo ${group.id}`);
+    
+    const channel = supabase
+      .channel(`group_members_${group.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'membros_grupos',
+          filter: `grupo_id=eq.${group.id}`
+        },
+        (payload) => {
+          console.log('Mudança detectada na tabela membros_grupos:', payload);
+          
+          if (payload.eventType === 'DELETE') {
+            console.log(`Membro ${payload.old?.user_id} removido via real-time`);
+          }
+          
+          // Atualizar lista de membros
+          refreshMembers();
+        }
+      )
+      .subscribe((status) => {
+        console.log(`Status da subscription de membros: ${status}`);
+      });
+
+    return () => {
+      console.log(`Removendo subscription de membros do grupo ${group.id}`);
+      supabase.removeChannel(channel);
+    };
+  }, [group.id, refreshMembers]);
+
   // Buscar usuário atual
   React.useEffect(() => {
     const getCurrentUser = async () => {
