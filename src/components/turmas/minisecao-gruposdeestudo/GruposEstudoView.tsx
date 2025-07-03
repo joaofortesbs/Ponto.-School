@@ -1,7 +1,3 @@
-Adding RemoverMembro component to member cards in MembersSection.
-```
-
-```replit_final_file
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -39,6 +35,7 @@ import CreateGroupModal from "../CreateGroupModal";
 import AddGroupModal from "../AddGroupModal";
 import EntrarGrupoSuccessModal from "../EntrarGrupoSuccessModal";
 import ChatSection from "@/components/turmas/group-detail/ChatSection";
+import { MiniCardMembroGrupo } from "../group-detail/mini-cards-membros-grupodeestudos";
 
 import AjustesTab from '../group-detail/tabs/AjustesTab';
 
@@ -242,73 +239,18 @@ const MembersSection: React.FC<{
         {members.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-h-[400px] overflow-y-auto group" style={{ padding: '16px 16px 16px 8px' }}>
             {members.map((member) => (
-                <div
-                  key={member.id}
-                  className={`relative flex items-center gap-3 p-4 bg-[#f7f9fa] dark:bg-[#29335C]/20 rounded-lg border transition-all ${
-                    member.isCreator 
-                      ? 'border-[#FF6B00] border-2' 
-                      : 'border-[#FF6B00]/10 hover:border-[#FF6B00]/30'
-                  }`}
-                  style={{ position: 'relative', zIndex: 1, marginLeft: member.isCreator ? '12px' : '0px' }}
-                >
-                  {member.isCreator && (
-                    <div className="absolute -top-3 left-0 w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center shadow-lg z-10">
-                      <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                      </svg>
-                    </div>
-                  )}
-
-                  {/* Componente Remover Membro no canto superior direito */}
-                  <div className="absolute top-2 right-2 z-20">
-                    <button
-                      className="h-6 w-6 p-0 rounded-full hover:bg-[#FF6B00]/20 text-[#FF6B00] hover:text-[#FF8C40] transition-colors flex items-center justify-center"
-                      onClick={() => {
-                        console.log(`Remover membro: ${member.name}`);
-                        // Funcionalidade será implementada no futuro
-                      }}
-                    >
-                      <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
-                        <circle cx="9" cy="7" r="4" />
-                        <path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" />
-                      </svg>
-                    </button>
-                  </div>
-
-                  <div className="relative">
-                    <div className="w-12 h-12 rounded-full overflow-hidden bg-[#FF6B00]/10 flex items-center justify-center">
-                      {member.avatar_url ? (
-                        <img 
-                          src={member.avatar_url} 
-                          alt={member.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <span className="text-[#FF6B00] font-semibold text-lg">
-                          {member.name.charAt(0).toUpperCase()}
-                        </span>
-                      )}
-                    </div>
-                    <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white dark:border-[#1a2236] ${
-                      member.isOnline ? 'bg-green-500' : 'bg-gray-400'
-                    }`}></div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-[#001427] dark:text-white text-sm truncate">
-                      {member.name}
-                      {member.isCreator && (
-                        <span className="ml-2 text-[#FF6B00] text-xs font-bold">
-                          ADMIN
-                        </span>
-                      )}
-                    </h4>
-                    <p className={`text-xs ${member.isOnline ? 'text-green-600' : 'text-gray-500'}`}>
-                      {member.isOnline ? 'Online' : 'Offline'}
-                    </p>
-                  </div>
-                </div>
-              ))}
+              <MiniCardMembroGrupo
+                key={member.id}
+                member={{
+                  id: member.id,
+                  name: member.name,
+                  avatar: member.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(member.name)}&background=FF6B00&color=fff&size=50`,
+                  role: member.isCreator ? "Administrador" : "Membro",
+                  isOnline: member.isOnline,
+                  lastActive: member.isOnline ? "Online agora" : "Há algumas horas"
+                }}
+              />
+            ))}
           </div>
         ) : (
           <div className="text-center py-8">
@@ -840,7 +782,9 @@ const GruposEstudoView: React.FC = () => {
         variant: "destructive"
       });
     }
-  };    // Nova função para acessar o grupo e substituir a interface
+  };
+
+    // Nova função para acessar o grupo e substituir a interface
     const accessGroup = async (groupId: string) => {
     try {
       console.log(`Acessando grupo ${groupId}...`);
@@ -1516,4 +1460,290 @@ const GruposEstudoView: React.FC = () => {
 
                                   <div className="space-y-3">
                                       <div>
-                                          Adding RemoverMembro component to member cards in MembersSection.
+                                          <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Nome:</label>
+                                          <p className="text-[#001427] dark:text-white font-medium">{activeGroup.nome}</p>
+                                      </div>
+
+                                      <div>
+                                          <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Descrição:</label>
+                                          <p className="text-[#001427] dark:text-white">{activeGroup.descricao}</p>
+                                      </div>
+
+                                      <div>
+                                          <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Tipo:</label>
+                                          <p className="text-[#001427] dark:text-white capitalize">{activeGroup.tipo_grupo}</p>
+                                      </div>
+
+                                      <div>
+                                          <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Área/Disciplina:</label>
+                                          <p className="text-[#001427] dark:text-white">{activeGroup.disciplina_area}</p>
+                                      </div>
+
+                                      {activeGroup.topico_especifico && (
+                                          <div>
+                                              <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Tópico:</label>
+                                              <p className="text-[#001427] dark:text-white">{activeGroup.topico_especifico}</p>
+                                          </div>
+                                      )}
+
+                                      {activeGroup.tags && activeGroup.tags.length > 0 && (
+                                          <div>
+                                              <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Tags:</label>
+                                              <div className="flex flex-wrap gap-2 mt-1">
+                                                  {activeGroup.tags.map((tag, index) => (
+                                                      <span key={index} className="bg-[#FF6B00] text-white px-2 py-1 rounded text-xs">
+                                                          {tag}
+                                                      </span>
+                                                  ))}
+                                              </div>
+                                          </div>
+                                      )}
+
+                                      <div>
+                                          <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Criado em:</label>
+                                          <p className="text-[#001427] dark:text-white">
+                                              {new Date(activeGroup.created_at).toLocaleDateString('pt-BR')}
+                                          </p>
+                                      </div>
+
+                                      <div>
+                                          <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Código do Grupo:</label>
+                                          <p className="text-[#001427] dark:text-white font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+                                              {activeGroup.codigo_unico}
+                                          </p>
+                                      </div>
+                                  </div>
+                              </div>
+                          </div>
+                      </div>
+                  )}
+                 {activeTab === 'ajustes' && (
+                        <div className="h-full">
+                            <AjustesTab groupId={activeGroup.id} />
+                        </div>
+                    )}
+                  {/* Conteúdo das outras abas aqui */}
+              </div>
+          </div>
+      );
+  }
+
+  return (
+    <div className="w-full h-full bg-[#f7f9fa] dark:bg-[#001427] p-6 space-y-6 transition-colors duration-300">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="flex items-center justify-between mb-6"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] flex items-center justify-center shadow-md">
+            <Users className="h-6 w-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold text-[#001427] dark:text-white bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] bg-clip-text text-transparent font-montserrat">
+              Grupos de Estudos
+            </h1>
+            <p className="text-[#778DA9] dark:text-gray-400 text-sm font-open-sans">
+              Conecte-se com outros estudantes e acelere seu aprendizado
+            </p>
+          </div>
+        </div>
+
+        {/* Botões de Ação */}
+        <div className="flex items-center gap-3">
+          <Button
+            onClick={() => setShowAddModal(true)}
+            variant="outline"
+            className="border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10 font-montserrat"
+          >
+            <UserPlus className="h-4 w-4 mr-2" />
+            Adicionar
+          </Button>
+
+          <Button
+            onClick={() => setShowCreateModal(true)}
+            className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-montserrat"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Criar Novo Grupo
+          </Button>
+        </div>
+      </motion.div>
+
+      {/* Navigation Tabs */}
+      <div className="flex items-center gap-4 mb-6">
+        <Button
+          variant={currentView === "todos-grupos" ? "default" : "outline"}
+          onClick={() => setCurrentView("todos-grupos")}
+          className={`${
+            currentView === "todos-grupos"
+              ? "bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white"
+              : "border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10"
+          } font-montserrat`}
+        >
+          <Globe className="h-4 w-4 mr-2" />
+          Todos os Grupos
+        </Button>
+
+        <Button
+          variant={currentView === "meus-grupos" ? "default" : "outline"}
+          onClick={() => setCurrentView("meus-grupos")}
+          className={`${
+            currentView === "meus-grupos"
+              ? "bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white"
+              : "border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10"
+          } font-montserrat`}
+        >
+          <Users className="h-4 w-4 mr-2" />
+          Meus Grupos
+        </Button>
+      </div>
+
+      {/* Search Bar */}
+      <div className="relative mb-6">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <Input
+          placeholder="Buscar grupos por nome, descrição ou área..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-10 border-[#FF6B00]/20 focus:border-[#FF6B00] font-open-sans"
+        />
+      </div>
+
+      {/* Groups Grid */}
+      <div id="all-groups" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <AnimatePresence>
+          {loading ? (
+            <div className="col-span-full flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="w-8 h-8 border-4 border-[#FF6B00]/30 border-t-[#FF6B00] rounded-full animate-spin mx-auto mb-4"></div>
+                <p className="text-gray-500 dark:text-gray-400">Carregando grupos...</p>
+              </div>
+            </div>
+          ) : filteredGroups().length > 0 ? (
+            filteredGroups().map((group) => (
+              <motion.div
+                key={group.id}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ duration: 0.2 }}
+              >
+                <GroupCard
+                  group={convertToGroupCardFormat(group)}
+                  onClick={() => handleGroupClick(group)}
+                  view={currentView}
+                  onLeave={currentView === "meus-grupos" ? () => handleShowLeaveModal(group) : undefined}
+                />
+              </motion.div>
+            ))
+          ) : (
+            <div className="col-span-full text-center py-12">
+              <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
+                <Users className="h-8 w-8 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-1">
+                {currentView === "todos-grupos" ? "Nenhum grupo público encontrado" : "Você ainda não faz parte de grupos"}
+              </h3>
+              <p className="text-gray-500 dark:text-gray-400 mb-4">
+                {currentView === "todos-grupos" 
+                  ? "Tente ajustar sua busca ou volte mais tarde." 
+                  : "Comece criando seu primeiro grupo ou entre em um grupo usando um código."}
+              </p>
+              {currentView === "meus-grupos" && (
+                <Button 
+                  onClick={() => setShowCreateModal(true)}
+                  className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-montserrat"
+                >
+                  <Plus className="h-4 w-4 mr-1" /> Criar Grupo
+                </Button>
+              )}
+            </div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Modals */}
+      <CreateGroupModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSubmit={handleCreateGroup}
+      />
+
+      <AddGroupModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onGroupAdded={handleGroupAdded}
+      />
+
+      <EntrarGrupoSuccessModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        groupName={joinedGroupName}
+      />
+
+      {/* Modal de Confirmação de Saída */}
+      {showLeaveModal && groupToLeave && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4 shadow-xl"
+          >
+            <div className="text-center">
+              <div className="w-12 h-12 mx-auto mb-4 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                <Users className="h-6 w-6 text-red-600 dark:text-red-400" />
+              </div>
+
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                Confirmar Ação
+              </h3>
+
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                {isGroupCreator 
+                  ? `Você é o criador do grupo "${groupToLeave.nome}". Deseja sair ou excluir o grupo?`
+                  : `Tem certeza que deseja sair do grupo "${groupToLeave.nome}"?`
+                }
+              </p>
+
+              <div className="flex gap-3 justify-center">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowLeaveModal(false);
+                    setGroupToLeave(null);
+                    setIsGroupCreator(false);
+                  }}
+                  className="flex-1"
+                >
+                  Cancelar
+                </Button>
+
+                <Button
+                  onClick={() => leaveGroup(groupToLeave.id)}
+                  className="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white"
+                >
+                  Sair do Grupo
+                </Button>
+
+                {isGroupCreator && (
+                  <Button
+                    onClick={() => deleteGroup(groupToLeave.id)}
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    Excluir Grupo
+                  </Button>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default GruposEstudoView;
