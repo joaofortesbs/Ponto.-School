@@ -107,7 +107,7 @@ export const useGroupMembers = (groupId: string) => {
     }
   };
 
-  const removeMember = async (memberId: string) => {
+  const removeMember = async (memberId: string): Promise<boolean> => {
     try {
       console.log(`Iniciando remoção do membro ${memberId} do grupo ${groupId}`);
       
@@ -138,7 +138,7 @@ export const useGroupMembers = (groupId: string) => {
 
       // Recarregar a lista completa do banco de dados para garantir sincronização
       console.log('Recarregando lista completa de membros...');
-      await loadMembers();
+      await refreshMembers();
       
       toast({
         title: "Sucesso",

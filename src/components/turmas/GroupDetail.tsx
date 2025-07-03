@@ -91,10 +91,14 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
           
           if (payload.eventType === 'DELETE') {
             console.log(`Membro ${payload.old?.user_id} removido via real-time`);
+          } else if (payload.eventType === 'INSERT') {
+            console.log(`Novo membro ${payload.new?.user_id} adicionado via real-time`);
           }
           
-          // Atualizar lista de membros
-          refreshMembers();
+          // Atualizar lista de membros com delay para garantir consistência
+          setTimeout(() => {
+            refreshMembers();
+          }, 500);
         }
       )
       .subscribe((status) => {
@@ -105,7 +109,7 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
       console.log(`Removendo subscription de membros do grupo ${group.id}`);
       supabase.removeChannel(channel);
     };
-  }, [group.id, refreshMembers]);
+  }, [group.id]);
 
   // Buscar usuário atual
   React.useEffect(() => {

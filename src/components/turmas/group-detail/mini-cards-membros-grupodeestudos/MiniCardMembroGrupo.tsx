@@ -42,6 +42,13 @@ const MiniCardMembroGrupo: React.FC<MiniCardMembroGrupoProps> = ({
   const handleRemoverClick = () => {
     console.log(`Iniciando processo de remoção para membro: ${member.name} (${member.id}) do grupo ${groupId}`);
     console.log(`Usuário atual: ${currentUserId}, É criador: ${isCurrentUserCreator}, Pode remover: ${canRemoveMember}`);
+    console.log(`GroupCreatorId: ${groupCreatorId}, Member role: ${member.role}`);
+    
+    if (!canRemoveMember) {
+      console.warn('Usuário não tem permissão para remover este membro');
+      return;
+    }
+    
     setShowRemoverModal(true);
     setShowOptions(false);
   };

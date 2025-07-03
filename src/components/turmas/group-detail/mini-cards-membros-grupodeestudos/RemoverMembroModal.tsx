@@ -31,13 +31,18 @@ const RemoverMembroModal: React.FC<RemoverMembroModalProps> = ({
       
       if (success) {
         console.log(`Membro ${memberName} removido com sucesso`);
-        onClose();
+        // Fechar modal apenas após sucesso confirmado
+        setTimeout(() => {
+          onClose();
+        }, 1000); // Dar tempo para o toast aparecer
       } else {
         console.error('Falha ao remover membro - função retornou false');
+        // Modal permanece aberto para o usuário tentar novamente
       }
 
     } catch (error) {
       console.error('Erro geral ao remover membro:', error);
+      // Modal permanece aberto para o usuário tentar novamente
     } finally {
       setIsRemoving(false);
     }
