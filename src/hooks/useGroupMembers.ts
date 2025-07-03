@@ -23,6 +23,33 @@ export const useGroupMembers = (groupId: string) => {
       setLoading(true);
       setError(null);
 
+      const cacheKey = `members-${groupId}`;
+      const timestampKey = `members-${groupId}-timestamp`;
+      const cacheTimeout = 30000; // 30 segundos
+
+      // Verificar cache primeiro
+      const cachedMembers = localStorage.getItem(cacheKey);
+      const cacheTimestamp = localStorage.getItem(timestampKey);
+      
+      if (cachedMembers && cacheTimestamp) {
+        const isExpired = Date.now() - parseInt(cacheTimestamp) > cacheTimeout;
+        if (!isExpired) {
+          try {
+            const parsedMembers = JSON.parse(cachedMembers);
+            setMembers(parsedMembers);
+            console.log(`Membros carregados do cache para o grupo ${groupId}:`, parsedMembers.length);
+            setLoading(false);
+            return;
+          } catch (cacheError) {
+            console.warn('Erro ao parsear cache, recarregando do banco:', cacheError);
+            localStorage.removeItem(cacheKey);
+            localStorage.removeItem(timestampKey);
+          }
+        }
+      }
+
+      console.log(`Carregando membros do banco de dados para o grupo ${groupId}`);
+
       // Buscar membros do grupo
       const { data: membersData, error: membersError } = await supabase
         .from('membros_grupos')
@@ -86,6 +113,15 @@ export const useGroupMembers = (groupId: string) => {
         }
       });
 
+      // Salvar no cache
+      try {
+        localStorage.setItem(cacheKey, JSON.stringify(allMembers));
+        localStorage.setItem(timestampKey, Date.now().toString());
+        console.log(`Membros salvos no cache para o grupo ${groupId}`);
+      } catch (storageError) {
+        console.warn('Erro ao salvar no cache:', storageError);
+      }
+
       setMembers(allMembers);
       console.log(`Carregados ${allMembers.length} membros para o grupo ${groupId}:`, allMembers.map(m => ({ id: m.id, name: m.name, role: m.role })));
 
@@ -100,6 +136,13 @@ export const useGroupMembers = (groupId: string) => {
   const refreshMembers = async () => {
     console.log('Iniciando refresh da lista de membros...');
     try {
+      // Limpar cache antes de recarregar
+      const cacheKey = `members-${groupId}`;
+      const timestampKey = `members-${groupId}-timestamp`;
+      localStorage.removeItem(cacheKey);
+      localStorage.removeItem(timestampKey);
+      console.log('Cache limpo antes do refresh');
+      
       await loadMembers();
       console.log('Refresh da lista de membros concluído com sucesso');
     } catch (error) {
@@ -108,10 +151,62 @@ export const useGroupMembers = (groupId: string) => {
   };
 
   const removeMember = async (memberId: string): Promise<boolean> => {
+    const shadowLog = (message: string) => console.log(`[SHADOW] ${message} - Group: ${groupId}, User: ${memberId}`);
+    
     try {
-      console.log(`Iniciando remoção do membro ${memberId} do grupo ${groupId}`);
+      shadowLog('Iniciando processo de remoção híbrida');
       
-      // Verificar se o membro existe antes de tentar remover
+      // Verificar autenticação do usuário atual
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) {
+        shadowLog('Erro de autenticação detectado');
+        toast({
+          title: "Erro",
+          description: "Usuário não autenticado.",
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      // Verificar permissões - apenas criadores podem remover membros
+      const { data: groupData, error: groupError } = await supabase
+        .from('grupos_estudo')
+        .select('criador_id')
+        .eq('id', groupId)
+        .single();
+
+      if (groupError) {
+        shadowLog('Erro ao verificar permissões do grupo');
+        toast({
+          title: "Erro",
+          description: "Erro ao verificar permissões do grupo.",
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      if (groupData.criador_id !== user.id) {
+        shadowLog('Permissão negada - usuário não é criador do grupo');
+        toast({
+          title: "Erro",
+          description: "Apenas o criador do grupo pode remover membros.",
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      // Salvar estado atual para rollback
+      const currentMembers = [...members];
+      shadowLog('Estado atual salvo para rollback');
+
+      // Remoção otimista imediata na interface
+      setMembers(prevMembers => {
+        const updatedMembers = prevMembers.filter(member => member.id !== memberId);
+        shadowLog(`Interface atualizada imediatamente. Membros restantes: ${updatedMembers.length}`);
+        return updatedMembers;
+      });
+
+      // Verificar se o membro existe na tabela antes de tentar remover
       const { data: existingMember, error: checkError } = await supabase
         .from('membros_grupos')
         .select('user_id, grupo_id')
@@ -120,7 +215,9 @@ export const useGroupMembers = (groupId: string) => {
         .single();
 
       if (checkError && checkError.code !== 'PGRST116') {
-        console.error('Erro ao verificar membro:', checkError);
+        shadowLog('Erro ao verificar existência do membro');
+        // Rollback na interface
+        setMembers(currentMembers);
         toast({
           title: "Erro",
           description: "Erro ao verificar membro no grupo.",
@@ -130,7 +227,9 @@ export const useGroupMembers = (groupId: string) => {
       }
 
       if (!existingMember) {
-        console.log(`Membro ${memberId} não encontrado na tabela membros_grupos`);
+        shadowLog('Membro não encontrado na tabela membros_grupos');
+        // Rollback na interface
+        setMembers(currentMembers);
         toast({
           title: "Aviso",
           description: "Membro não encontrado no grupo.",
@@ -139,64 +238,101 @@ export const useGroupMembers = (groupId: string) => {
         return false;
       }
 
-      console.log(`Membro encontrado: user_id=${existingMember.user_id}, grupo_id=${existingMember.grupo_id}`);
+      shadowLog(`Membro encontrado: user_id=${existingMember.user_id}, grupo_id=${existingMember.grupo_id}`);
 
-      // Remover o membro da tabela membros_grupos
-      const { error: deleteError } = await supabase
-        .from('membros_grupos')
-        .delete()
-        .eq('grupo_id', groupId)
-        .eq('user_id', memberId);
+      // Tentar remover com retry system
+      const maxRetries = 3;
+      const retryDelay = 1000;
+      let lastError;
 
-      if (deleteError) {
-        console.error('Erro ao remover membro da tabela membros_grupos:', deleteError);
-        toast({
-          title: "Erro",
-          description: `Erro ao remover membro: ${deleteError.message}`,
-          variant: "destructive"
-        });
-        return false;
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          shadowLog(`Tentativa ${attempt} de remoção no banco de dados`);
+          
+          const { error: deleteError } = await supabase
+            .from('membros_grupos')
+            .delete()
+            .eq('grupo_id', groupId)
+            .eq('user_id', memberId);
+
+          if (deleteError) {
+            throw deleteError;
+          }
+
+          shadowLog(`Remoção bem-sucedida na tentativa ${attempt}`);
+          
+          // Verificar se a remoção foi realmente efetivada
+          const { data: verifyRemoval, error: verifyError } = await supabase
+            .from('membros_grupos')
+            .select('user_id')
+            .eq('grupo_id', groupId)
+            .eq('user_id', memberId);
+
+          if (verifyError) {
+            throw verifyError;
+          }
+
+          if (verifyRemoval && verifyRemoval.length === 0) {
+            shadowLog('Remoção verificada: membro não está mais na tabela');
+            
+            // Atualizar cache local
+            localStorage.removeItem(`members-${groupId}-${memberId}`);
+            
+            // Recarregar lista completa para garantir sincronização
+            setTimeout(() => {
+              refreshMembers();
+            }, 500);
+            
+            toast({
+              title: "Sucesso",
+              description: "Membro removido com sucesso do grupo.",
+              variant: "default"
+            });
+
+            return true;
+          } else {
+            shadowLog('Aviso: membro ainda encontrado na tabela após remoção');
+            throw new Error('Membro ainda encontrado após remoção');
+          }
+
+        } catch (error) {
+          lastError = error;
+          shadowLog(`Tentativa ${attempt} falhou: ${error.message}`);
+          
+          if (attempt < maxRetries) {
+            shadowLog(`Aguardando ${retryDelay}ms antes da próxima tentativa`);
+            await new Promise(resolve => setTimeout(resolve, retryDelay));
+          }
+        }
       }
 
-      console.log(`Membro ${memberId} removido da tabela membros_grupos com sucesso`);
+      // Se chegou aqui, todas as tentativas falharam
+      shadowLog(`Todas as ${maxRetries} tentativas falharam. Executando rollback.`);
       
-      // Verificar se a remoção foi bem-sucedida
-      const { data: verifyRemoval, error: verifyError } = await supabase
-        .from('membros_grupos')
-        .select('user_id')
-        .eq('grupo_id', groupId)
-        .eq('user_id', memberId);
-
-      if (verifyError) {
-        console.error('Erro ao verificar remoção:', verifyError);
-      } else if (verifyRemoval && verifyRemoval.length === 0) {
-        console.log('Remoção verificada: membro não está mais na tabela');
-      } else {
-        console.warn('Aviso: membro ainda encontrado na tabela após remoção');
-      }
-      
-      // Atualizar estado local imediatamente
-      setMembers(prevMembers => {
-        const updatedMembers = prevMembers.filter(member => member.id !== memberId);
-        console.log(`Lista de membros atualizada localmente. Membros restantes: ${updatedMembers.length}`);
-        return updatedMembers;
-      });
-
-      // Recarregar a lista completa do banco de dados para garantir sincronização
-      console.log('Recarregando lista completa de membros do banco de dados...');
-      setTimeout(() => {
-        refreshMembers();
-      }, 1000);
+      // Rollback na interface
+      setMembers(currentMembers);
       
       toast({
-        title: "Sucesso",
-        description: "Membro removido com sucesso do grupo.",
-        variant: "default"
+        title: "Erro",
+        description: `Erro ao remover membro: ${lastError?.message || 'Erro desconhecido'}`,
+        variant: "destructive"
       });
 
-      return true;
+      return false;
+
     } catch (err) {
-      console.error('Erro inesperado ao remover membro:', err);
+      shadowLog(`Erro inesperado: ${err.message}`);
+      
+      // Rollback na interface em caso de erro inesperado
+      setMembers(prevMembers => {
+        const memberExists = prevMembers.find(member => member.id === memberId);
+        if (!memberExists) {
+          // Recarregar completamente se necessário
+          refreshMembers();
+        }
+        return prevMembers;
+      });
+      
       toast({
         title: "Erro",
         description: "Erro inesperado ao remover membro.",

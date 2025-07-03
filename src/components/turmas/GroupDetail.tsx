@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -75,7 +74,7 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
     if (!group.id) return;
 
     console.log(`Configurando subscription real-time para membros do grupo ${group.id}`);
-    
+
     const channel = supabase
       .channel(`group_members_${group.id}`)
       .on(
@@ -88,13 +87,13 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
         },
         (payload) => {
           console.log('Mudança detectada na tabela membros_grupos:', payload);
-          
+
           if (payload.eventType === 'DELETE') {
             console.log(`Membro ${payload.old?.user_id} removido via real-time`);
           } else if (payload.eventType === 'INSERT') {
             console.log(`Novo membro ${payload.new?.user_id} adicionado via real-time`);
           }
-          
+
           // Atualizar lista de membros com delay para garantir consistência
           setTimeout(() => {
             refreshMembers();
@@ -663,7 +662,7 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
                         Informações do Grupo
                       </h2>
                       <p className="text-gray-600 dark:text-gray-400">
-                        Visualize todas as informações básicas deste grupo de estudos
+                        Visualize todas as informações básicas deste grupode estudos
                       </p>
                     </div>
 
@@ -678,7 +677,7 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
                             Informações Básicas
                           </h3>
                         </div>
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           {/* Nome do Grupo */}
                           <div className="space-y-2">
