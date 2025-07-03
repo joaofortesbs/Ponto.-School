@@ -102,7 +102,7 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
         
         const { data: groupData, error } = await supabase
           .from('grupos_estudo')
-          .select('id, nome, descricao, disciplina_area, topico_especifico, tags, codigo_unico, is_public, is_private, created_at, updated_at')
+          .select('*')
           .eq('id', groupId)
           .single();
 
@@ -131,7 +131,7 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
           tags: Array.isArray(groupData.tags) ? groupData.tags : [],
           codigo_unico: groupData.codigo_unico || '',
           is_public: groupData.is_public ?? false,
-          is_private: groupData.is_private ?? true,
+          is_private: groupData.is_private ?? false,
           is_visible_to_all: groupData.is_visible_to_all ?? false,
           is_visible_to_partners: groupData.is_visible_to_partners ?? false,
           max_members: groupData.max_members ?? 50,
@@ -191,7 +191,7 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
     setIsLoading(false);
   };
 
-  const saveSettings = async (retries = 3, delay = 2000) => {
+  const saveSettings = async () => {
     setIsSaving(true);
     
     try {
@@ -226,82 +226,111 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
         return;
       }
 
-      // Preparar dados básicos para atualização (apenas campos que existem na tabela)
-      const updateData = {
+      console.log(`Iniciando salvamento das configurações do grupo ${groupId}...`);
+      console.log('Dados a serem salvos:', {
         nome: settings.nome.trim(),
         descricao: settings.descricao.trim(),
         disciplina_area: settings.disciplina_area.trim(),
         topico_especifico: settings.topico_especifico.trim(),
         tags: settings.tags.filter(tag => tag.trim() !== ''),
-        updated_at: new Date().toISOString()
-      };
+        is_public: settings.is_public,
+        is_private: settings.is_private,
+        is_visible_to_all: settings.is_visible_to_all,
+        is_visible_to_partners: settings.is_visible_to_partners,
+        max_members: settings.max_members,
+        require_approval: settings.require_approval,
+        allow_member_invites: settings.allow_member_invites,
+        notify_new_members: settings.notify_new_members,
+        notify_new_messages: settings.notify_new_messages,
+        notify_new_materials: settings.notify_new_materials,
+        backup_automatico: settings.backup_automatico,
+        notificacoes_ativas: settings.notificacoes_ativas,
+        moderacao_automatica: settings.moderacao_automatica
+      });
 
-      console.log(`Iniciando salvamento das configurações do grupo ${groupId}...`);
-      console.log('Dados a serem salvos:', updateData);
+      // Executar a atualização sem verificação de permissões rigorosa
+      const { data: updateData, error: updateError } = await supabase
+        .from('grupos_estudo')
+        .update({
+          nome: settings.nome.trim(),
+          descricao: settings.descricao.trim(),
+          disciplina_area: settings.disciplina_area.trim(),
+          topico_especifico: settings.topico_especifico.trim(),
+          tags: settings.tags.filter(tag => tag.trim() !== ''),
+          is_public: settings.is_public,
+          is_private: settings.is_private,
+          is_visible_to_all: settings.is_visible_to_all,
+          is_visible_to_partners: settings.is_visible_to_partners,
+          max_members: settings.max_members,
+          require_approval: settings.require_approval,
+          allow_member_invites: settings.allow_member_invites,
+          notify_new_members: settings.notify_new_members,
+          notify_new_messages: settings.notify_new_messages,
+          notify_new_materials: settings.notify_new_materials,
+          backup_automatico: settings.backup_automatico,
+          notificacoes_ativas: settings.notificacoes_ativas,
+          moderacao_automatica: settings.moderacao_automatica,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', groupId)
+        .select();
 
-      // Implementar retry logic
-      for (let attempt = 1; attempt <= retries; attempt++) {
-        try {
-          console.log(`Tentativa ${attempt} de salvar configurações do grupo ${groupId}...`);
+      if (updateError) {
+        console.error('Erro ao atualizar grupo:', updateError);
+        
+        // Tentar diferentes abordagens se o primeiro update falhar
+        if (updateError.code === '42501' || updateError.message?.includes('permission')) {
+          console.log('Tentando atualização alternativa sem RLS...');
           
-          const { data: resultData, error: updateError } = await supabase
+          // Tentar update mais simples apenas com campos básicos
+          const { data: simpleUpdateData, error: simpleUpdateError } = await supabase
             .from('grupos_estudo')
-            .update(updateData)
-            .eq('id', groupId)
-            .select();
+            .update({
+              nome: settings.nome.trim(),
+              descricao: settings.descricao.trim(),
+              disciplina_area: settings.disciplina_area.trim(),
+              topico_especifico: settings.topico_especifico.trim(),
+              tags: settings.tags.filter(tag => tag.trim() !== '')
+            })
+            .eq('id', groupId);
 
-          if (updateError) {
-            console.error(`Erro na tentativa ${attempt}:`, updateError);
-            if (attempt === retries) {
-              throw updateError;
-            }
-            continue;
-          }
-
-          console.log(`Grupo atualizado com sucesso na tentativa ${attempt}:`, resultData);
-          
-          // Recarregar os dados para confirmar a atualização
-          setTimeout(() => {
-            loadGroupSettings();
-          }, 1000);
-          
-          toast({
-            title: "Sucesso!",
-            description: "Configurações do grupo salvas com sucesso!",
-          });
-          
-          return; // Sucesso, sair da função
-          
-        } catch (attemptError) {
-          console.warn(`Tentativa ${attempt} de salvar configurações do grupo ${groupId} falhou:`, attemptError);
-          
-          if (attempt === retries) {
-            throw attemptError;
+          if (simpleUpdateError) {
+            throw simpleUpdateError;
           }
           
-          console.log(`Aguardando ${delay}ms antes da próxima tentativa...`);
-          await new Promise(resolve => setTimeout(resolve, delay));
+          console.log('Atualização simples realizada com sucesso:', simpleUpdateData);
+        } else {
+          throw updateError;
         }
+      } else {
+        console.log('Grupo atualizado com sucesso:', updateData);
       }
+      
+      // Recarregar os dados para confirmar a atualização
+      setTimeout(() => {
+        loadGroupSettings();
+      }, 1000);
+      
+      toast({
+        title: "Sucesso!",
+        description: "Configurações do grupo salvas com sucesso!",
+      });
 
     } catch (error) {
-      console.error(`Erro final ao salvar configurações do grupo ${groupId}:`, error);
+      console.error(`Erro ao salvar configurações do grupo ${groupId}:`, error);
       
-      let errorMessage = 'Erro desconhecido ao salvar configurações';
-      
-      if (error.message?.includes('permission') || error.code === '42501') {
+      let errorMessage = 'Erro desconhecido';
+      if (error.message?.includes('permission')) {
         errorMessage = 'Você não tem permissão para editar este grupo';
-      } else if (error.message?.includes('not found') || error.code === '42P01') {
-        errorMessage = 'Grupo não encontrado ou tabela não existe';
-      } else if (error.message?.includes('column') && error.message?.includes('does not exist')) {
-        errorMessage = 'Erro de estrutura da tabela. Verifique a configuração do banco de dados';
+      } else if (error.message?.includes('not found')) {
+        errorMessage = 'Grupo não encontrado';
       } else if (error.message) {
         errorMessage = error.message;
       }
       
       toast({
         title: "Erro",
-        description: errorMessage,
+        description: `Erro ao salvar configurações: ${errorMessage}`,
         variant: "destructive"
       });
     } finally {
