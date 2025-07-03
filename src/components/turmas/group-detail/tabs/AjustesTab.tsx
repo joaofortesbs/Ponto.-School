@@ -160,92 +160,142 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
   const saveSettings = async (retries = 3, delay = 2000) => {
     setIsSaving(true);
     
-    // Validações rigorosas
-    if (!settings.nome.trim()) {
-      toast({
-        title: "Erro de Validação",
-        description: "O Nome do Grupo é obrigatório.",
-        variant: "destructive"
-      });
-      setIsSaving(false);
-      return;
-    }
-
-    if (settings.nome.length > 100) {
-      toast({
-        title: "Erro de Validação",
-        description: "O Nome do Grupo deve ter no máximo 100 caracteres.",
-        variant: "destructive"
-      });
-      setIsSaving(false);
-      return;
-    }
-
-    if (settings.descricao.length > 500) {
-      toast({
-        title: "Erro de Validação",
-        description: "A Descrição deve ter no máximo 500 caracteres.",
-        variant: "destructive"
-      });
-      setIsSaving(false);
-      return;
-    }
-
-    for (let attempt = 1; attempt <= retries; attempt++) {
-      try {
-        console.log(`Tentativa ${attempt} de salvar configurações do grupo ${groupId}...`);
-        
-        const { error } = await supabase
-          .from('grupos_estudo')
-          .update({
-            nome: settings.nome.trim(),
-            descricao: settings.descricao.trim(),
-            disciplina_area: settings.disciplina_area.trim(),
-            topico_especifico: settings.topico_especifico.trim(),
-            tags: settings.tags.filter(tag => tag.trim() !== ''),
-            is_public: settings.is_public,
-            is_private: settings.is_private,
-            is_visible_to_all: settings.is_visible_to_all,
-            is_visible_to_partners: settings.is_visible_to_partners,
-            max_members: settings.max_members,
-            require_approval: settings.require_approval,
-            allow_member_invites: settings.allow_member_invites,
-            notify_new_members: settings.notify_new_members,
-            notify_new_messages: settings.notify_new_messages,
-            notify_new_materials: settings.notify_new_materials,
-            backup_automatico: settings.backup_automatico,
-            notificacoes_ativas: settings.notificacoes_ativas,
-            moderacao_automatica: settings.moderacao_automatica
-          })
-          .eq('id', groupId);
-
-        if (error) throw error;
-
-        console.log(`Configurações do grupo ${groupId} salvas com sucesso na tentativa ${attempt}.`);
+    try {
+      // Validações rigorosas
+      if (!settings.nome.trim()) {
         toast({
-          title: "Sucesso",
-          description: "Configurações salvas com sucesso!",
+          title: "Erro de Validação",
+          description: "O Nome do Grupo é obrigatório.",
+          variant: "destructive"
         });
-        break;
-
-      } catch (error) {
-        console.warn(`Tentativa ${attempt} de salvar configurações do grupo ${groupId} falhou:`, error.message);
-        
-        if (attempt === retries) {
-          console.error(`Erro final ao salvar configurações do grupo ${groupId}:`, error);
-          toast({
-            title: "Erro",
-            description: "Não foi possível salvar as configurações após múltiplas tentativas.",
-            variant: "destructive"
-          });
-        } else {
-          console.log(`Aguardando ${delay}ms antes da próxima tentativa...`);
-          await new Promise(resolve => setTimeout(resolve, delay));
-        }
+        setIsSaving(false);
+        return;
       }
+
+      if (settings.nome.length > 100) {
+        toast({
+          title: "Erro de Validação",
+          description: "O Nome do Grupo deve ter no máximo 100 caracteres.",
+          variant: "destructive"
+        });
+        setIsSaving(false);
+        return;
+      }
+
+      if (settings.descricao.length > 500) {
+        toast({
+          title: "Erro de Validação",
+          description: "A Descrição deve ter no máximo 500 caracteres.",
+          variant: "destructive"
+        });
+        setIsSaving(false);
+        return;
+      }
+
+      // Verificar se o usuário é proprietário do grupo
+      const { data: currentUser } = await supabase.auth.getUser();
+      if (!currentUser?.user) {
+        toast({
+          title: "Erro de Autenticação",
+          description: "Usuário não autenticado.",
+          variant: "destructive"
+        });
+        setIsSaving(false);
+        return;
+      }
+
+      // Verificar se o grupo existe e se o usuário tem permissão para editá-lo
+      const { data: grupoData, error: grupoError } = await supabase
+        .from('grupos_estudo')
+        .select('id, created_by, nome')
+        .eq('id', groupId)
+        .single();
+
+      if (grupoError || !grupoData) {
+        console.error('Erro ao verificar grupo:', grupoError);
+        toast({
+          title: "Erro",
+          description: "Grupo não encontrado ou você não tem permissão para editá-lo.",
+          variant: "destructive"
+        });
+        setIsSaving(false);
+        return;
+      }
+
+      console.log(`Iniciando salvamento das configurações do grupo ${groupId}...`);
+      console.log('Dados a serem salvos:', {
+        nome: settings.nome.trim(),
+        descricao: settings.descricao.trim(),
+        disciplina_area: settings.disciplina_area.trim(),
+        topico_especifico: settings.topico_especifico.trim(),
+        tags: settings.tags.filter(tag => tag.trim() !== ''),
+        is_public: settings.is_public,
+        is_private: settings.is_private,
+        is_visible_to_all: settings.is_visible_to_all,
+        is_visible_to_partners: settings.is_visible_to_partners,
+        max_members: settings.max_members,
+        require_approval: settings.require_approval,
+        allow_member_invites: settings.allow_member_invites,
+        notify_new_members: settings.notify_new_members,
+        notify_new_messages: settings.notify_new_messages,
+        notify_new_materials: settings.notify_new_materials,
+        backup_automatico: settings.backup_automatico,
+        notificacoes_ativas: settings.notificacoes_ativas,
+        moderacao_automatica: settings.moderacao_automatica
+      });
+
+      // Executar a atualização
+      const { data: updateData, error: updateError } = await supabase
+        .from('grupos_estudo')
+        .update({
+          nome: settings.nome.trim(),
+          descricao: settings.descricao.trim(),
+          disciplina_area: settings.disciplina_area.trim(),
+          topico_especifico: settings.topico_especifico.trim(),
+          tags: settings.tags.filter(tag => tag.trim() !== ''),
+          is_public: settings.is_public,
+          is_private: settings.is_private,
+          is_visible_to_all: settings.is_visible_to_all,
+          is_visible_to_partners: settings.is_visible_to_partners,
+          max_members: settings.max_members,
+          require_approval: settings.require_approval,
+          allow_member_invites: settings.allow_member_invites,
+          notify_new_members: settings.notify_new_members,
+          notify_new_messages: settings.notify_new_messages,
+          notify_new_materials: settings.notify_new_materials,
+          backup_automatico: settings.backup_automatico,
+          notificacoes_ativas: settings.notificacoes_ativas,
+          moderacao_automatica: settings.moderacao_automatica,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', groupId)
+        .select();
+
+      if (updateError) {
+        console.error('Erro ao atualizar grupo:', updateError);
+        throw updateError;
+      }
+
+      console.log('Grupo atualizado com sucesso:', updateData);
+      
+      // Recarregar os dados para confirmar a atualização
+      await loadGroupSettings();
+      
+      toast({
+        title: "Sucesso!",
+        description: "Configurações do grupo salvas com sucesso!",
+      });
+
+    } catch (error) {
+      console.error(`Erro ao salvar configurações do grupo ${groupId}:`, error);
+      toast({
+        title: "Erro",
+        description: `Erro ao salvar configurações: ${error.message || 'Erro desconhecido'}`,
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
     }
-    
-    setIsSaving(false);
   };
 
   const addTag = () => {
@@ -907,7 +957,12 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
                 Cancelar
               </Button>
               <Button 
-                onClick={saveSettings} 
+                onClick={() => {
+                  console.log('Botão Salvar Alterações clicado!');
+                  console.log('Settings atuais:', settings);
+                  console.log('Group ID:', groupId);
+                  saveSettings();
+                }} 
                 disabled={isSaving}
                 className="px-8 py-3 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 ring-2 ring-orange-200 dark:ring-orange-500/30"
               >
