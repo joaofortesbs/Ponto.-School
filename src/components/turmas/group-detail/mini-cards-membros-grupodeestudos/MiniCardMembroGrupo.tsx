@@ -1,9 +1,11 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Clock, MoreVertical } from "lucide-react";
+import RemoverMembroComponent from "./RemoverMembroComponent";
+import RemoverMembroModal from "./RemoverMembroModal";
 
 interface Member {
   id: string;
@@ -19,8 +21,22 @@ interface MiniCardMembroGrupoProps {
 }
 
 const MiniCardMembroGrupo: React.FC<MiniCardMembroGrupoProps> = ({ member }) => {
+  const [showRemoverModal, setShowRemoverModal] = useState(false);
+
+  const handleRemoverClick = () => {
+    setShowRemoverModal(true);
+  };
+
+  const handleRemover = () => {
+    // Funcionalidade será implementada no futuro
+    console.log(`Removendo membro: ${member.name}`);
+    setShowRemoverModal(false);
+  };
+
   return (
-    <div className="bg-white dark:bg-[#0f1525] p-4 rounded-lg border border-gray-200 dark:border-gray-800 flex items-center hover:bg-gray-50 dark:hover:bg-[#1e293b] transition-colors shadow-sm hover:shadow-md">
+    <>
+    <div className="bg-white dark:bg-[#0f1525] p-4 rounded-lg border border-gray-200 dark:border-gray-800 flex items-center hover:bg-gray-50 dark:hover:bg-[#1e293b] transition-colors shadow-sm hover:shadow-md relative">
+      <RemoverMembroComponent onClick={handleRemoverClick} />
       <div className="relative mr-3">
         <Avatar className="h-12 w-12 ring-1 ring-blue-500/20">
           <AvatarImage src={member.avatar} />
@@ -61,6 +77,14 @@ const MiniCardMembroGrupo: React.FC<MiniCardMembroGrupoProps> = ({ member }) => 
         <MoreVertical className="h-4 w-4" />
       </Button>
     </div>
+
+    <RemoverMembroModal
+      isOpen={showRemoverModal}
+      onClose={() => setShowRemoverModal(false)}
+      memberName={member.name}
+      onRemove={handleRemover}
+    />
+    </>
   );
 };
 
