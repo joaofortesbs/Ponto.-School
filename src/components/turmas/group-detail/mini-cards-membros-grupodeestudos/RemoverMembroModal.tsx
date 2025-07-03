@@ -1,5 +1,12 @@
+
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { useGroupMembers } from "@/hooks/useGroupMembers";
@@ -23,26 +30,23 @@ const RemoverMembroModal: React.FC<RemoverMembroModalProps> = ({
   const { removeMember } = useGroupMembers(groupId);
 
   const handleRemoverMembro = async () => {
+    if (isRemoving) return;
+
+    setIsRemoving(true);
+    console.log(`[MODAL] Iniciando remoção: ${memberName} (${memberId}) do grupo ${groupId}`);
+
     try {
-      setIsRemoving(true);
-      console.log(`[RemoverMembroModal] Iniciando remoção: ${memberName} (${memberId}) do grupo ${groupId}`);
-
       const success = await removeMember(memberId);
-
-      // Sempre fechar o modal, mesmo em caso de falha (igual ao comportamento do botão Sair)
-      console.log(`[RemoverMembroModal] Processo de remoção concluído. Sucesso: ${success}`);
-      console.log(`[RemoverMembroModal] Fechando modal independente do resultado (comportamento igual ao botão Sair)`);
       
-      // Fechar modal imediatamente (não esperar por confirmação de sucesso)
+      console.log(`[MODAL] Resultado da remoção: ${success ? 'SUCESSO' : 'FALHA'}`);
+      
+      // Fechar modal independente do resultado
       onClose();
 
     } catch (error) {
-      console.error(`[RemoverMembroModal] Erro capturado durante remoção:`, error);
-      
-      // Mesmo com erro, fechar modal (comportamento igual ao botão Sair)
-      console.log(`[RemoverMembroModal] Fechando modal mesmo com erro (comportamento robusto)`);
+      console.error('[MODAL] Erro durante remoção:', error);
+      // Fechar modal mesmo com erro
       onClose();
-      
     } finally {
       setIsRemoving(false);
     }
