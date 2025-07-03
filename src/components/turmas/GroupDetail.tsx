@@ -418,6 +418,14 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
                   <MiniCardMembroGrupo
                     key={member.id}
                     member={member}
+                    groupId={group.id}
+                    currentUserId="1" // TODO: Pegar do contexto/auth
+                    groupCreatorId={group.criador_id || "1"} // TODO: Pegar do grupo real
+                    onMemberRemoved={() => {
+                      console.log('Membro removido, atualizando lista...');
+                      // TODO: Implementar refresh da lista de membros
+                      // Pode ser feito fazendo uma nova consulta ao Supabase
+                    }}
                   />
                 ))}
               </div>
