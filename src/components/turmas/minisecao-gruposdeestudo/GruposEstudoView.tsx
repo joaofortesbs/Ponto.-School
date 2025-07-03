@@ -35,6 +35,7 @@ import CreateGroupModal from "../CreateGroupModal";
 import AddGroupModal from "../AddGroupModal";
 import EntrarGrupoSuccessModal from "../EntrarGrupoSuccessModal";
 import ChatSection from "@/components/turmas/group-detail/ChatSection";
+import { MiniCardMembroGrupo } from "../group-detail/mini-cards-membros-grupodeestudos";
 
 import AjustesTab from '../group-detail/tabs/AjustesTab';
 
@@ -238,57 +239,17 @@ const MembersSection: React.FC<{
         {members.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-h-[400px] overflow-y-auto group" style={{ padding: '16px 16px 16px 8px' }}>
             {members.map((member) => (
-              <div
+              <MiniCardMembroGrupo
                 key={member.id}
-                className={`relative flex items-center gap-3 p-4 bg-[#f7f9fa] dark:bg-[#29335C]/20 rounded-lg border transition-all ${
-                  member.isCreator 
-                    ? 'border-[#FF6B00] border-2' 
-                    : 'border-[#FF6B00]/10 hover:border-[#FF6B00]/30'
-                }`}
-                style={{ position: 'relative', zIndex: 1, marginLeft: member.isCreator ? '12px' : '0px' }}
-              >
-                {member.isCreator && (
-                  <div className="absolute -top-3 left-0 w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center shadow-lg z-10">
-                    <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                    </svg>
-                  </div>
-                )}
-
-                
-
-                <div className="relative">
-                  <div className="w-12 h-12 rounded-full overflow-hidden bg-[#FF6B00]/10 flex items-center justify-center">
-                    {member.avatar_url ? (
-                      <img 
-                        src={member.avatar_url} 
-                        alt={member.name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-[#FF6B00] font-semibold text-lg">
-                        {member.name.charAt(0).toUpperCase()}
-                      </span>
-                    )}
-                  </div>
-                  <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white dark:border-[#1a2236] ${
-                    member.isOnline ? 'bg-green-500' : 'bg-gray-400'
-                  }`}></div>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-semibold text-[#001427] dark:text-white text-sm truncate">
-                    {member.name}
-                    {member.isCreator && (
-                      <span className="ml-2 text-[#FF6B00] text-xs font-bold">
-                        ADMIN
-                      </span>
-                    )}
-                  </h4>
-                  <p className={`text-xs ${member.isOnline ? 'text-green-600' : 'text-gray-500'}`}>
-                    {member.isOnline ? 'Online' : 'Offline'}
-                  </p>
-                </div>
-              </div>
+                member={{
+                  id: member.id,
+                  name: member.name,
+                  avatar: member.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(member.name)}&background=FF6B00&color=fff&size=50`,
+                  role: member.isCreator ? "Administrador" : "Membro",
+                  isOnline: member.isOnline,
+                  lastActive: member.isOnline ? "Online agora" : "Há algumas horas"
+                }}
+              />
             ))}
           </div>
         ) : (
