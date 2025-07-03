@@ -1,0 +1,192 @@
+# Prompt para IA de Vibe Code: Novo Sistema de Remoção de Usuários como no WhatsApp
+
+**Objetivo:** Refazer o sistema de remoção de usuários na mini-seção "Membros" de cada grupo de estudos, inspirado no WhatsApp. Quando o administrador clicar em "Remover" no modal, o usuário não será excluído da tabela `membros_grupos`, mas terá a interface do grupo bloqueada (conteúdo borrado) e um modal central será exibido informando que ele foi removido do grupo (com o nome do grupo), sem acesso às informações, instruindo-o a sair manualmente clicando em "Voltar" para a grade de "Meus Grupos" e usar o botão "Sair". Preservar o design e outras funcionalidades.
+
+---
+
+## **Instruções Gerais**
+- **Escopo Restrito:** Modifique `accessGroup`, `removeMember`, `loadMembers`, e o listener Realtime em `script.js`. Adicione o campo `is_blocked` à tabela `membros_grupos` no Supabase. Não altere o design (HTML, CSS) nem outras partes funcionais.
+- **Preservação do Design:** Manter layout e estilos da interface, ajustando apenas a lógica de remoção.
+- **Funcionalidades de Remoção:**
+  - Adicionar `is_blocked` (boolean, default `false`) à tabela `membros_grupos`.
+  - Ao clicar em "Remover", atualizar `is_blocked` para `true` para o `user_id` selecionado.
+  - Para o usuário bloqueado, borrar a interface (`filter: blur(5px)`) e exibir um modal com texto: "Você foi removido do grupo [nome do grupo]. Você não tem mais acesso às informações deste grupo. Clique em 'Voltar' para sair manualmente."
+  - Manter o usuário na tabela até ele usar o botão "Sair".
+  - Sincronizar o bloqueio via Realtime.
+- **Testes:** Realize testes e envie logs.
+
+---
+
+## **Passos para a IA Programadora**
+1. **Acesse o Arquivo:** Abra `script.js` e localize as funções mencionadas.
+2. **Atualizar Supabase:**
+   - Adicione `is_blocked` à tabela `membros_grupos` com `ALTER TABLE membros_grupos ADD COLUMN is_blocked BOOLEAN DEFAULT false;`.
+3. **Ajustar `removeMember`:**
+   - Atualizar `supabase.from('membros_grupos').update({ is_blocked: true }).eq('grupo_id', groupId).eq('user_id', userId)` com retries (3 tentativas, 500ms).
+   - Remover o mini-card e notificar via Realtime.
+4. **Modificar `accessGroup` e `loadMembers`:**
+   - Verificar `is_blocked` ao carregar o grupo; se `true` para o `userId`, aplicar blur e exibir modal.
+5. **Ajustar Realtime:**
+   - No evento `UPDATE` com `is_blocked: true`, aplicar o bloqueio ao usuário afetado.
+6. **Teste e Valide:**
+   - Teste o fluxo (clique em "Remover", bloqueio, modal) e confirme o funcionamento.
+   - Envie logs.
+
+---
+
+## **Modificações no Frontend (JavaScript)**
+
+<xaiArtifact artifact_id="6304c316-590e-4c04-95ac-c0cf09a6b119" artifact_version_id="1f23562f-13c7-4b72-ba66-281ecd87303e" title="script.js" contentType="text/javascript">
+// Atualizar accessGroup com novo sistema de remoção
+let currentGroupId = null;
+
+const accessGroup = async (groupId) => {
+  try {
+    const userId = await validateUserAuth();
+    if (!userId) {
+      console.error('Usuário não autenticado.');
+      alert('Usuário não autenticado.');
+      return;
+    }
+    currentGroupId = groupId;
+
+    const header = document.querySelector('.groups-header');
+    if (header) header.style.display = 'none';
+
+    const userCache = new Map();
+    const { data: users } = await supabase
+      .from('auth.users')
+      .select('id, user_metadata')
+      .in('id', (await supabase.from('membros_grupos').select('user_id').eq('grupo_id', groupId)).data.map(u => u.user_id));
+    users.forEach(user => {
+      const metadata = user.user_metadata || {};
+      userCache.set(user.id, { name: metadata.name || `Usuário ${user.id.slice(0, 5)}`, avatar_url: metadata.avatar_url || null });
+    });
+
+    const { data: membership } = await supabase
+      .from('membros_grupos')
+      .select('is_blocked')
+      .eq('grupo_id', groupId)
+      .eq('user_id', userId)
+      .single();
+    const isBlocked = membership?.is_blocked || false;
+
+    const groupInterface = document.querySelector('#group-interface') || document.createElement('div');
+    if (!groupInterface.id) {
+      groupInterface.id = 'group-interface';
+      groupInterface.style.cssText = 'margin-left: 250px; padding: 20px;';
+      document.getElementById('main-content').innerHTML = '';
+      document.getElementById('main-content').appendChild(groupInterface);
+    }
+
+    if (isBlocked) {
+      groupInterface.style.filter = 'blur(5px)';
+      const modal = document.createElement('div');
+      modal.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 5px; z-index: 1000; text-align: center;';
+      const { data: groupData } = await supabase.from('grupos').select('nome').eq('id', groupId).single();
+      modal.innerHTML = `Você foi removido do grupo ${groupData.nome}. Você não tem mais acesso às informações deste grupo. Clique em 'Voltar' para sair manualmente.`;
+      groupInterface.appendChild(modal);
+    } else {
+      loadMembers(groupId, userCache, userId, /* isAdminOrOwner logic */);
+    }
+
+    // Configurações existentes (fetchGroupData, fetchGroupImages, etc.) mantidas
+  } catch (error) {
+    console.error('Erro ao acessar grupo:', error.message);
+    alert('Erro ao acessar o grupo.');
+    const header = document.querySelector('.groups-header');
+    if (header) header.style.display = 'flex';
+  }
+};
+
+const loadMembers = async (groupId, userCache, currentUserId, isAdminOrOwner) => {
+  const membersContent = document.getElementById('members-content');
+  if (!membersContent) return;
+  membersContent.innerHTML = '';
+  const { data: members } = await supabase
+    .from('membros_grupos')
+    .select('user_id, is_admin, is_owner, is_blocked')
+    .eq('grupo_id', groupId);
+  members.forEach(member => {
+    if (!member.is_blocked) {
+      const user = userCache.get(member.user_id) || { name: `Usuário ${member.user_id.slice(0, 5)}`, avatar_url: null };
+      const memberCard = document.createElement('div');
+      memberCard.className = 'member-card';
+      memberCard.dataset.userId = member.user_id;
+      memberCard.innerHTML = `
+        <img src="${user.avatar_url || 'default-avatar.png'}" alt="${user.name}">
+        <span>${user.name}</span>
+        ${member.user_id === currentUserId || !isAdminOrOwner ? '' : '<i class="remove-member-icon" data-user-id="' + member.user_id + '"></i>'}
+      `;
+      membersContent.appendChild(memberCard);
+      if (member.user_id !== currentUserId && isAdminOrOwner) {
+        memberCard.querySelector('.remove-member-icon').addEventListener('click', () => showRemoveMemberModal(member.user_id, user.name));
+      }
+    }
+  });
+};
+
+const showRemoveMemberModal = (userId, userName) => {
+  const modal = document.createElement('div');
+  modal.id = 'remove-member-modal';
+  modal.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.5); z-index: 1000; text-align: center;';
+  modal.innerHTML = `
+    <p>Você realmente quer remover ${userName} do grupo de estudos?</p>
+    <button id="cancel-remove" style="margin-right: 10px; background: #ddd; border: none; padding: 5px 10px; border-radius: 5px;">Cancelar</button>
+    <button id="confirm-remove" style="background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 5px;">Remover</button>
+  `;
+  document.body.appendChild(modal);
+
+  document.getElementById('cancel-remove').addEventListener('click', () => modal.remove());
+  document.getElementById('confirm-remove').addEventListener('click', () => {
+    removeMember(groupId, userId).then(() => {
+      modal.remove();
+      loadMembers(groupId, userCache, userId, isAdminOrOwner);
+    });
+  });
+  modal.addEventListener('click', (e) => e.target === modal && modal.remove());
+};
+
+const removeMember = async (groupId, userId, retries = 3, delay = 500) => {
+  try {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        const { error } = await supabase
+          .from('membros_grupos')
+          .update({ is_blocked: true })
+          .eq('grupo_id', groupId)
+          .eq('user_id', userId);
+        if (error) throw error;
+        console.log(`Membro ${userId} bloqueado no grupo ${groupId}.`);
+        const memberCard = document.querySelector(`.member-card[data-user-id="${userId}"]`);
+        if (memberCard) memberCard.remove();
+        return;
+      } catch (error) {
+        console.error(`Tentativa ${attempt} falhou: ${error.message}`);
+        if (attempt === retries) throw error;
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  } catch (error) {
+    console.error(`Erro ao bloquear ${userId}: ${error.message}`);
+  }
+};
+
+// Realtime para sincronização
+const channel = supabase
+  .channel(`members-${groupId}`)
+  .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'membros_grupos', filter: `grupo_id=eq.${groupId}` }, (payload) => {
+    if (payload.new.is_blocked && payload.new.user_id === userId) {
+      const groupInterface = document.querySelector('#group-interface');
+      if (groupInterface) {
+        groupInterface.style.filter = 'blur(5px)';
+        const modal = document.createElement('div');
+        modal.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 5px; z-index: 1000; text-align: center;';
+        supabase.from('grupos').select('nome').eq('id', groupId).single().then(({ data }) => {
+          modal.innerHTML = `Você foi removido do grupo ${data.nome}. Você não tem mais acesso às informações deste grupo. Clique em 'Voltar' para sair manualmente.`;
+          groupInterface.appendChild(modal);
+        });
+      }
+    }
+  })
+  .subscribe(status => console.log(`Subscribed to members-${groupId}: ${status}`));
