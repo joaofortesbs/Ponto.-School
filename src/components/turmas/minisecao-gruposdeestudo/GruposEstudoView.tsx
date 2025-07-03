@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -1468,7 +1467,7 @@ const GruposEstudoView: React.FC = () => {
                   </Button>
               </div>
 
-              {/* Conteúdo da aba ativa - flex-1 para ocupar espaço restante */}
+              {/* Conteúdo da aba ativa */}
               <div className="flex-1 px-6 pb-6 min-h-0">
                   {activeTab === 'discussoes' && (
                       <div className="h-full">
@@ -1513,4 +1512,306 @@ const GruposEstudoView: React.FC = () => {
 
                                   <div className="space-y-3">
                                       <div>
-                                          Adding RemoverMembro component to member cards in MembersSection.
+                                          <h4 className="font-semibold text-[#001427] dark:text-white">Descrição</h4>
+                                          <p className="text-[#778DA9] dark:text-gray-400">{activeGroup.descricao || "Nenhuma descrição disponível"}</p>
+                                      </div>
+
+                                      <div>
+                                          <h4 className="font-semibold text-[#001427] dark:text-white">Disciplina</h4>
+                                          <p className="text-[#778DA9] dark:text-gray-400">{activeGroup.disciplina_area || "Não especificada"}</p>
+                                      </div>
+
+                                      <div>
+                                          <h4 className="font-semibold text-[#001427] dark:text-white">Tipo de Grupo</h4>
+                                          <p className="text-[#778DA9] dark:text-gray-400">{activeGroup.tipo_grupo || "Não especificado"}</p>
+                                      </div>
+
+                                      <div>
+                                          <h4 className="font-semibold text-[#001427] dark:text-white">Privacidade</h4>
+                                          <Badge variant={activeGroup.is_public ? "secondary" : "outline"}>
+                                              {activeGroup.is_public ? "Público" : "Privado"}
+                                          </Badge>
+                                      </div>
+
+                                      <div>
+                                          <h4 className="font-semibold text-[#001427] dark:text-white">Código do Grupo</h4>
+                                          <div className="flex items-center gap-2">
+                                              <code className="bg-[#FF6B00]/10 text-[#FF6B00] px-2 py-1 rounded text-sm">
+                                                  {activeGroup.codigo_unico}
+                                              </code>
+                                              <Button 
+                                                  size="sm" 
+                                                  variant="outline"
+                                                  onClick={() => {
+                                                      navigator.clipboard.writeText(activeGroup.codigo_unico);
+                                                      toast({
+                                                          title: "Código copiado",
+                                                          description: "O código do grupo foi copiado para a área de transferência"
+                                                      });
+                                                  }}
+                                              >
+                                                  Copiar
+                                              </Button>
+                                          </div>
+                                      </div>
+                                  </div>
+                              </div>
+                          </div>
+                      </div>
+                  )}
+                  {activeTab === 'ajustes' && (
+                      <div className="h-full">
+                          <AjustesTab 
+                              groupId={activeGroup.id}
+                              groupData={activeGroup}
+                              onGroupUpdate={(updatedData) => {
+                                  setActiveGroup({ ...activeGroup, ...updatedData });
+                              }}
+                          />
+                      </div>
+                  )}
+              </div>
+          </div>
+      );
+  }
+
+  // Interface principal de listagem de grupos
+  return (
+      <div className="w-full min-h-screen bg-[#f7f9fa] dark:bg-[#001427] transition-colors duration-300">
+          <div className="px-6 py-6">
+              {/* Header da seção */}
+              <div className="groups-header visible">
+                  <motion.div
+                      initial={{ opacity: 0, y: -20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="flex items-center justify-between mb-6"
+                  >
+                      <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] flex items-center justify-center shadow-md">
+                              <Users className="h-6 w-6 text-white" />
+                          </div>
+                          <div>
+                              <h1 className="text-3xl font-bold text-[#001427] dark:text-white bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] bg-clip-text text-transparent font-montserrat">
+                                  Grupos de Estudo
+                              </h1>
+                              <p className="text-[#778DA9] dark:text-gray-400 text-sm font-open-sans">
+                                  Colabore, compartilhe e aprenda com seus colegas
+                              </p>
+                          </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                          <div className="relative">
+                              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#FF6B00]">
+                                  <Search className="h-4 w-4" />
+                              </div>
+                              <Input
+                                  placeholder="Buscar grupos..."
+                                  value={searchTerm}
+                                  onChange={(e) => setSearchTerm(e.target.value)}
+                                  className="pl-9 w-[250px] border-[#FF6B00]/30 focus:border-[#FF6B00] focus:ring-[#FF6B00]/30 rounded-lg"
+                              />
+                          </div>
+                          <Button
+                              onClick={() => setShowCreateModal(true)}
+                              className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white shadow-md"
+                          >
+                              <Plus className="h-4 w-4 mr-2" />
+                              Criar Grupo
+                          </Button>
+                          <Button
+                              onClick={() => setShowAddModal(true)}
+                              variant="outline"
+                              className="border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10"
+                          >
+                              <Users className="h-4 w-4 mr-2" />
+                              Entrar em Grupo
+                          </Button>
+                      </div>
+                  </motion.div>
+              </div>
+
+              {/* Navegação das abas */}
+              <div className="flex items-center gap-4 mb-6 border-b border-[#FF6B00]/10 pb-4">
+                  <Button
+                      variant={currentView === "todos-grupos" ? "default" : "outline"}
+                      onClick={() => setCurrentView("todos-grupos")}
+                      className={`${currentView === "todos-grupos" ? 'bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white' : 'border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10'} font-montserrat`}
+                  >
+                      <Globe className="w-4 h-4 mr-2" />
+                      Todos os Grupos
+                  </Button>
+                  <Button
+                      variant={currentView === "meus-grupos" ? "default" : "outline"}
+                      onClick={() => setCurrentView("meus-grupos")}
+                      className={`${currentView === "meus-grupos" ? 'bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white' : 'border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10'} font-montserrat`}
+                  >
+                      <Users className="w-4 h-4 mr-2" />
+                      Meus Grupos
+                  </Button>
+              </div>
+
+              {/* Conteúdo principal */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  <AnimatePresence>
+                      {loading ? (
+                          // Skeleton loading
+                          Array.from({ length: 8 }).map((_, index) => (
+                              <motion.div
+                                  key={`skeleton-${index}`}
+                                  initial={{ opacity: 0 }}
+                                  animate={{ opacity: 1 }}
+                                  className="bg-white dark:bg-[#1a2236] rounded-lg p-6 shadow-md"
+                              >
+                                  <div className="animate-pulse">
+                                      <div className="h-4 bg-[#FF6B00]/20 rounded mb-3"></div>
+                                      <div className="h-3 bg-[#FF6B00]/10 rounded mb-2"></div>
+                                      <div className="h-3 bg-[#FF6B00]/10 rounded mb-4"></div>
+                                      <div className="h-8 bg-[#FF6B00]/20 rounded"></div>
+                                  </div>
+                              </motion.div>
+                          ))
+                      ) : filteredGroups().length > 0 ? (
+                          filteredGroups().map((group, index) => (
+                              <motion.div
+                                  key={group.id}
+                                  initial={{ opacity: 0, y: 20 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  exit={{ opacity: 0, y: -20 }}
+                                  transition={{ duration: 0.3, delay: index * 0.1 }}
+                              >
+                                  <GroupCard
+                                      grupo={convertToGroupCardFormat(group)}
+                                      onClick={() => handleGroupClick(group)}
+                                      currentView={currentView}
+                                      onJoinGroup={() => handleAccessGroup(group)}
+                                      onLeaveGroup={() => handleShowLeaveModal(group)}
+                                  />
+                              </motion.div>
+                          ))
+                      ) : (
+                          <motion.div
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              className="col-span-full text-center py-12"
+                          >
+                              <Users className="w-16 h-16 mx-auto mb-4 text-[#FF6B00]/50" />
+                              <h3 className="text-xl font-semibold text-[#001427] dark:text-white mb-2">
+                                  {currentView === "todos-grupos" ? "Nenhum grupo público encontrado" : "Você ainda não faz parte de nenhum grupo"}
+                              </h3>
+                              <p className="text-[#778DA9] dark:text-gray-400 mb-6 max-w-md mx-auto">
+                                  {currentView === "todos-grupos" 
+                                      ? "Não há grupos públicos disponíveis no momento. Crie o primeiro grupo!"
+                                      : "Junte-se a grupos existentes ou crie seu próprio grupo para começar a colaborar."
+                                  }
+                              </p>
+                              <div className="flex gap-3 justify-center">
+                                  <Button 
+                                      onClick={() => setShowCreateModal(true)}
+                                      className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white"
+                                  >
+                                      <Plus className="w-4 h-4 mr-2" />
+                                      Criar Grupo
+                                  </Button>
+                                  {currentView === "meus-grupos" && (
+                                      <Button 
+                                          onClick={() => setShowAddModal(true)}
+                                          variant="outline"
+                                          className="border-[#FF6B00]/30 text-[#FF6B00]"
+                                      >
+                                          <Users className="w-4 h-4 mr-2" />
+                                          Entrar em Grupo
+                                      </Button>
+                                  )}
+                              </div>
+                          </motion.div>
+                      )}
+                  </AnimatePresence>
+              </div>
+          </div>
+
+          {/* Modais */}
+          <CreateGroupModal
+              isOpen={showCreateModal}
+              onClose={() => setShowCreateModal(false)}
+              onGroupCreated={handleCreateGroup}
+          />
+
+          <AddGroupModal
+              isOpen={showAddModal}
+              onClose={() => setShowAddModal(false)}
+              onGroupAdded={handleGroupAdded}
+          />
+
+          <EntrarGrupoSuccessModal
+              isOpen={showSuccessModal}
+              onClose={() => setShowSuccessModal(false)}
+              groupName={joinedGroupName}
+          />
+
+          {/* Modal de confirmação para sair/excluir grupo */}
+          {showLeaveModal && groupToLeave && (
+              <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+                  onClick={() => {
+                      setShowLeaveModal(false);
+                      setGroupToLeave(null);
+                  }}
+              >
+                  <motion.div
+                      initial={{ scale: 0.95, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.95, opacity: 0 }}
+                      className="bg-white dark:bg-[#1a2236] rounded-lg p-6 w-full max-w-md mx-4"
+                      onClick={(e) => e.stopPropagation()}
+                  >
+                      <div className="text-center">
+                          <div className="w-16 h-16 mx-auto mb-4 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center">
+                              {isGroupCreator ? (
+                                  <AlertCircle className="w-8 h-8 text-red-500" />
+                              ) : (
+                                  <LogOut className="w-8 h-8 text-red-500" />
+                              )}
+                          </div>
+                          <h3 className="text-xl font-bold text-[#001427] dark:text-white mb-2">
+                              {isGroupCreator ? "Excluir Grupo" : "Sair do Grupo"}
+                          </h3>
+                          <p className="text-[#778DA9] dark:text-gray-400 mb-6">
+                              {isGroupCreator 
+                                  ? `Tem certeza que deseja excluir permanentemente o grupo "${groupToLeave.nome}"? Esta ação não pode ser desfeita.`
+                                  : `Tem certeza que deseja sair do grupo "${groupToLeave.nome}"?`
+                              }
+                          </p>
+                          <div className="flex gap-3">
+                              <Button
+                                  variant="outline"
+                                  onClick={() => {
+                                      setShowLeaveModal(false);
+                                      setGroupToLeave(null);
+                                  }}
+                                  className="flex-1"
+                              >
+                                  Cancelar
+                              </Button>
+                              <Button
+                                  variant="destructive"
+                                  onClick={() => {
+                                      if (isGroupCreator) {
+                                          deleteGroup(groupToLeave.id);
+                                      } else {
+                                          leaveGroup(groupToLeave.id);
+                                      }
+                                  }}
+                                  className="flex-1"
+                              >
+                                  {isGroupCreator ? "Excluir" : "Sair"}
+                              </Button>
+                          </div>
+                      </div>
+                  </motion.div>
+              </motion.div>
+          )}
+      </div>
