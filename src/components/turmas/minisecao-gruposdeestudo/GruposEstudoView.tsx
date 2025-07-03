@@ -854,7 +854,6 @@ const GruposEstudoView: React.FC = () => {
       }
 
       // Ocultar o cabeçalho de Minhas Turmas
-```text
       const headers = document.querySelectorAll('.groups-header, [data-testid="groups-header"], .turmas-header');
       if (headers.length > 0) {
         headers.forEach(header => {
@@ -1558,18 +1557,18 @@ const GruposEstudoView: React.FC = () => {
     }
 
   return (
-    
-      
-        
+
+
+
           <Tabs defaultValue={currentView} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="todos-grupos">Todos os Grupos</TabsTrigger>
               <TabsTrigger value="meus-grupos">Meus Grupos</TabsTrigger>
             </TabsList>
-            
-              
-                
-                  
+
+
+
+
                     <Input
                       type="search"
                       placeholder="Buscar grupo..."
@@ -1577,20 +1576,20 @@ const GruposEstudoView: React.FC = () => {
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="max-w-sm lg:max-w-md xl:max-w-lg"
                     />
-                    
-                  
-                  
+
+
+
                     <Button onClick={() => setShowCreateModal(true)}>Criar Grupo</Button>
                     <Button variant="outline" onClick={() => setShowAddModal(true)}>
                       Participar com Código
                     </Button>
-                  
-                
-              
-              
-                
-                  
-                    
+
+
+
+
+
+
+
                       {filteredGroups().map((group) => (
                         <GroupCard
                           key={group.id}
@@ -1598,31 +1597,31 @@ const GruposEstudoView: React.FC = () => {
                           onGroupClick={() => handleGroupClick(group)}
                         />
                       ))}
-                    
+
                     {!loading && filteredGroups().length === 0 && (
-                      
+
                         <Globe className="w-16 h-16 mx-auto mb-4 text-[#FF6B00]/50" />
                         <p className="text-[#778DA9] dark:text-gray-400">
                           Nenhum grupo encontrado
                         </p>
-                      
+
                     )}
                     {loading && (
-                      
-                        
+
+
                           Carregando grupos...
-                        
-                      
+
+
                     )}
-                  
-                
-              
-            
-            
-              
-                
-                  
-                    
+
+
+
+
+
+
+
+
+
                       {filteredGroups().map((group) => (
                         <GroupCard
                           key={group.id}
@@ -1630,26 +1629,26 @@ const GruposEstudoView: React.FC = () => {
                           onGroupClick={() => handleGroupClick(group)}
                         />
                       ))}
-                    
+
                     {!loading && filteredGroups().length === 0 && (
-                      
+
                         <Coffee className="w-16 h-16 mx-auto mb-4 text-[#FF6B00]/50" />
                         <p className="text-[#778DA9] dark:text-gray-400">
                           Você não participa de nenhum grupo ainda
                         </p>
-                      
+
                     )}
                     {loading && (
-                      
-                        
+
+
                           Carregando seus grupos...
-                        
-                      
+
+
                     )}
-                  
-                
-              
-            
+
+
+
+
           </Tabs>
 
           <CreateGroupModal
@@ -1670,25 +1669,25 @@ const GruposEstudoView: React.FC = () => {
             groupName={joinedGroupName}
           />
 
-          
-            
-              
+
+
+
                 Tem certeza que deseja {isGroupCreator ? 'excluir' : 'sair'} do grupo "{groupToLeave?.nome}"?
-                
+
                   Esta ação é irreversível e todos os dados serão perdidos.
-                
-              
-              
-                
+
+
+
+
                   Cancelar
                   {isGroupCreator ? 'Excluir Grupo' : 'Sair do Grupo'}
-                
-              
-            
-          
-        
-      
-    
+
+
+
+
+
+
+
   );
 };
 
