@@ -14,8 +14,7 @@ import {
   MoreHorizontal,
   UserPlus,
   MessageCircle,
-  Settings,
-  X
+  Settings
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
@@ -41,8 +40,6 @@ export default function MembrosTab({ groupId }: MembrosTabProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'online' | 'admins'>('all');
-  const [showRemoveModal, setShowRemoveModal] = useState(false);
-  const [memberToRemove, setMemberToRemove] = useState<Member | null>(null);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -125,16 +122,6 @@ export default function MembrosTab({ groupId }: MembrosTabProps) {
       month: '2-digit',
       year: 'numeric'
     });
-  };
-
-  const handleRemoveUser = (member: Member) => {
-    setMemberToRemove(member);
-    setShowRemoveModal(true);
-  };
-
-  const handleCloseRemoveModal = () => {
-    setShowRemoveModal(false);
-    setMemberToRemove(null);
   };
 
   return (
@@ -268,10 +255,9 @@ export default function MembrosTab({ groupId }: MembrosTabProps) {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-gray-500 hover:text-red-500"
-                        onClick={() => handleRemoveUser(member)}
+                        className="text-gray-500 hover:text-[#FF6B00]"
                       >
-                        <X className="w-4 h-4" />
+                        <MoreHorizontal className="w-4 h-4" />
                       </Button>
                     </div>
                   </div>
@@ -281,44 +267,6 @@ export default function MembrosTab({ groupId }: MembrosTabProps) {
           </div>
         )}
       </div>
-
-      {/* Modal de Confirmação de Remoção */}
-      {showRemoveModal && memberToRemove && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4 shadow-xl">
-            <div className="text-center">
-              <div className="w-12 h-12 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
-                <X className="w-6 h-6 text-red-600" />
-              </div>
-
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                Remover Membro
-              </h3>
-
-              <p className="text-gray-600 mb-6">
-                Tem certeza que deseja remover <strong>{memberToRemove.display_name}</strong> do grupo?
-              </p>
-
-              <div className="flex gap-3 justify-center">
-                <Button
-                  variant="outline"
-                  onClick={handleCloseRemoveModal}
-                  className="flex-1"
-                >
-                  Cancelar
-                </Button>
-
-                <Button
-                  disabled
-                  className="flex-1 bg-gray-300 text-gray-500 cursor-not-allowed"
-                >
-                  Retirar
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
