@@ -11,8 +11,8 @@ export default function GroupDetailPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
-  const [group, setGroup] = useState(null);
-  const [currentUser, setCurrentUser] = useState(null);
+  const [group, setGroup] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const [isBlocked, setIsBlocked] = useState(false);
   const [showBlockedModal, setShowBlockedModal] = useState(false);
 
@@ -104,7 +104,7 @@ export default function GroupDetailPage() {
       setGroup(groupData);
 
       // Verificar se o usuário está bloqueado
-      if (membership.is_blocked) {
+      if (membership.is_blocked === true) {
         console.log('Usuário está bloqueado neste grupo');
         setIsBlocked(true);
         setShowBlockedModal(true);
@@ -145,11 +145,11 @@ export default function GroupDetailPage() {
           table: 'membros_grupos',
           filter: `grupo_id=eq.${id}`
         },
-        (payload) => {
+        (payload: any) => {
           console.log('Mudança detectada em membros_grupos:', payload);
           
           // Se o usuário atual foi bloqueado
-          if (payload.new.user_id === currentUser.id && payload.new.is_blocked) {
+          if (payload.new.user_id === currentUser.id && payload.new.is_blocked === true) {
             console.log('Usuário atual foi bloqueado em tempo real');
             setIsBlocked(true);
             setShowBlockedModal(true);
@@ -188,12 +188,12 @@ export default function GroupDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#001427] p-4">
+    <div className="min-h-screen bg-[#001427] p-4 relative">
       <div className="container mx-auto max-w-7xl">
         {isBlocked ? (
           <>
             <div 
-              className="blur-sm pointer-events-none"
+              className="blur-sm pointer-events-none opacity-50"
               style={{ filter: 'blur(5px)' }}
             >
               <GroupDetail 

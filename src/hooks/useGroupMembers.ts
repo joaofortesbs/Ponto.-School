@@ -35,7 +35,7 @@ export const useGroupMembers = (groupId: string) => {
           .eq('user_id', user.id)
           .single();
 
-        if (userMembership?.is_blocked) {
+        if (userMembership?.is_blocked === true) {
           setIsBlocked(true);
           setLoading(false);
           return;
@@ -125,42 +125,32 @@ export const useGroupMembers = (groupId: string) => {
     loadMembers();
   };
 
-  const blockMember = async (memberId: string, retries = 3, delay = 500) => {
+  const blockMember = async (memberId: string) => {
     try {
-      for (let attempt = 1; attempt <= retries; attempt++) {
-        try {
-          console.log(`Tentativa ${attempt} de bloquear membro ${memberId}`);
-          
-          const { error } = await supabase
-            .from('membros_grupos')
-            .update({ is_blocked: true })
-            .eq('grupo_id', groupId)
-            .eq('user_id', memberId);
+      console.log(`Tentando bloquear membro ${memberId}`);
+      
+      const { error } = await supabase
+        .from('membros_grupos')
+        .update({ is_blocked: true })
+        .eq('grupo_id', groupId)
+        .eq('user_id', memberId);
 
-          if (error) {
-            throw error;
-          }
-
-          console.log(`Membro ${memberId} bloqueado com sucesso no grupo ${groupId}`);
-          
-          // Atualizar lista local removendo o membro bloqueado
-          setMembers(prev => prev.filter(member => member.id !== memberId));
-          
-          toast({
-            title: "Sucesso",
-            description: "Membro removido com sucesso.",
-            variant: "default"
-          });
-
-          return true;
-        } catch (error: any) {
-          console.error(`Tentativa ${attempt} falhou:`, error.message);
-          if (attempt === retries) {
-            throw error;
-          }
-          await new Promise(resolve => setTimeout(resolve, delay));
-        }
+      if (error) {
+        throw error;
       }
+
+      console.log(`Membro ${memberId} bloqueado com sucesso no grupo ${groupId}`);
+      
+      // Atualizar lista local removendo o membro bloqueado
+      setMembers(prev => prev.filter(member => member.id !== memberId));
+      
+      toast({
+        title: "Sucesso",
+        description: "Membro removido com sucesso.",
+        variant: "default"
+      });
+
+      return true;
     } catch (err: any) {
       console.error('Erro ao bloquear membro:', err);
       toast({
@@ -186,11 +176,11 @@ export const useGroupMembers = (groupId: string) => {
           table: 'membros_grupos',
           filter: `grupo_id=eq.${groupId}`
         },
-        (payload) => {
+        (payload: any) => {
           console.log('Mudança detectada em membros_grupos:', payload);
           
           // Se algum usuário foi bloqueado, atualizar lista
-          if (payload.new.is_blocked) {
+          if (payload.new.is_blocked === true) {
             console.log('Membro foi bloqueado, atualizando lista');
             refreshMembers();
           }
