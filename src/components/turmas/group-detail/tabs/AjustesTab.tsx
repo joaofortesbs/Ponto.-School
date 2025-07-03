@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -652,57 +653,57 @@ export default function AjustesTab({ groupId }: AjustesTabProps) {
     </Card>
   );
 
-    const renderMetas = () => (
-        <Card className="shadow-xl border-2 border-orange-200 dark:border-orange-500/30 bg-white dark:bg-[#001327]">
-          <CardHeader className="bg-gradient-to-r from-orange-50 to-orange-100/50 dark:from-orange-900/20 dark:to-orange-800/20 border-b border-orange-200 dark:border-orange-500/30">
-            <CardTitle className="flex items-center gap-3 text-gray-800 dark:text-white">
-              <div className="w-8 h-8 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-lg flex items-center justify-center shadow-md">
-                <Users className="w-4 h-4 text-white" />
-              </div>
-              <span>Metas & Objetivos</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-center py-16 bg-white dark:bg-[#001327]">
-            <div className="flex flex-col items-center space-y-4">
-              <div className="w-20 h-20 bg-gradient-to-r from-orange-100 to-orange-200 dark:from-orange-900/30 dark:to-orange-800/30 rounded-2xl flex items-center justify-center">
-                <Users className="w-10 h-10 text-orange-500" />
-              </div>
-              <h4 className="text-xl font-bold text-gray-800 dark:text-white">
-                Metas & Objetivos
-              </h4>
-              <p className="text-orange-600 dark:text-orange-400 max-w-md">
-                Configurações de metas estarão disponíveis em breve. Defina objetivos e acompanhe o progresso do grupo.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-    );
+  const renderMetas = () => (
+    <Card className="shadow-xl border-2 border-orange-200 dark:border-orange-500/30 bg-white dark:bg-[#001327]">
+      <CardHeader className="bg-gradient-to-r from-orange-50 to-orange-100/50 dark:from-orange-900/20 dark:to-orange-800/20 border-b border-orange-200 dark:border-orange-500/30">
+        <CardTitle className="flex items-center gap-3 text-gray-800 dark:text-white">
+          <div className="w-8 h-8 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-lg flex items-center justify-center shadow-md">
+            <Users className="w-4 h-4 text-white" />
+          </div>
+          <span>Metas & Objetivos</span>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="text-center py-16 bg-white dark:bg-[#001327]">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="w-20 h-20 bg-gradient-to-r from-orange-100 to-orange-200 dark:from-orange-900/30 dark:to-orange-800/30 rounded-2xl flex items-center justify-center">
+            <Users className="w-10 h-10 text-orange-500" />
+          </div>
+          <h4 className="text-xl font-bold text-gray-800 dark:text-white">
+            Metas & Objetivos
+          </h4>
+          <p className="text-orange-600 dark:text-orange-400 max-w-md">
+            Configurações de metas estarão disponíveis em breve. Defina objetivos e acompanhe o progresso do grupo.
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  );
 
-    const renderRegras = () => (
-        <Card className="shadow-xl border-2 border-orange-200 dark:border-orange-500/30 bg-white dark:bg-[#001327]">
-          <CardHeader className="bg-gradient-to-r from-orange-50 to-orange-100/50 dark:from-orange-900/20 dark:to-orange-800/20 border-b border-orange-200 dark:border-orange-500/30">
-            <CardTitle className="flex items-center gap-3 text-gray-800 dark:text-white">
-              <div className="w-8 h-8 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-lg flex items-center justify-center shadow-md">
-                <Bell className="w-4 h-4 text-white" />
-              </div>
-              <span>Regras & Conduta</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-center py-16 bg-white dark:bg-[#001327]">
-            <div className="flex flex-col items-center space-y-4">
-              <div className="w-20 h-20 bg-gradient-to-r from-orange-100 to-orange-200 dark:from-orange-900/30 dark:to-orange-800/30 rounded-2xl flex items-center justify-center">
-                <Bell className="w-10 h-10 text-orange-500" />
-              </div>
-              <h4 className="text-xl font-bold text-gray-800 dark:text-white">
-                Regras & Conduta
-              </h4>
-              <p className="text-orange-600 dark:text-orange-400 max-w-md">
-                Configurações de regras estarão disponíveis em breve. Estabeleça diretrizes e normas para o grupo.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-    );
+  const renderRegras = () => (
+    <Card className="shadow-xl border-2 border-orange-200 dark:border-orange-500/30 bg-white dark:bg-[#001327]">
+      <CardHeader className="bg-gradient-to-r from-orange-50 to-orange-100/50 dark:from-orange-900/20 dark:to-orange-800/20 border-b border-orange-200 dark:border-orange-500/30">
+        <CardTitle className="flex items-center gap-3 text-gray-800 dark:text-white">
+          <div className="w-8 h-8 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-lg flex items-center justify-center shadow-md">
+            <Bell className="w-4 h-4 text-white" />
+          </div>
+          <span>Regras & Conduta</span>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="text-center py-16 bg-white dark:bg-[#001327]">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="w-20 h-20 bg-gradient-to-r from-orange-100 to-orange-200 dark:from-orange-900/30 dark:to-orange-800/30 rounded-2xl flex items-center justify-center">
+            <Bell className="w-10 h-10 text-orange-500" />
+          </div>
+          <h4 className="text-xl font-bold text-gray-800 dark:text-white">
+            Regras & Conduta
+          </h4>
+          <p className="text-orange-600 dark:text-orange-400 max-w-md">
+            Configurações de regras estarão disponíveis em breve. Estabeleça diretrizes e normas para o grupo.
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  );
 
   if (isLoading) {
     return (
