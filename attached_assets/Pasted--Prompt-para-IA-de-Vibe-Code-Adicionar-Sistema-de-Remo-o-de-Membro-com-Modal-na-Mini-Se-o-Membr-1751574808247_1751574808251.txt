@@ -1,0 +1,554 @@
+# Prompt para IA de Vibe Code: Adicionar Sistema de Remoção de Membro com Modal na Mini-Seção "Membros"
+
+**Objetivo:** Adicionar um sistema na mini-seção "Membros" da interface de cada grupo de estudos, na seção de Grupos de Estudos, para que ao clicar no ícone de retirar membro (representado por uma pessoa com um sinal de menos à direita, já existente nos mini-cards dos usuários), um modal centralizado seja exibido perguntando "Você realmente quer remover este membro do grupo de estudos?" com opções "Cancelar" e "Remover". Ao clicar em "Remover", o membro deve ser excluído da tabela `membros_grupos` no Supabase, e a interface deve ser atualizada. Preservar o design atual dos mini-cards e da mini-seção "Membros", garantindo segurança, validação de permissões (apenas administradores/proprietários), e atualizações em tempo real via Realtime, com logs detalhados e testes rigorosos.
+
+---
+
+## **Instruções Gerais**
+- **Escopo Restrito:** Modifique apenas a função `accessGroup` e a função `switchSection` no arquivo `script.js`. Não altere o design (HTML, CSS, layout, estilos) das outras mini-seções ("Discussões", "Ajustes", "Sobre", "Notificações"), nem dos modals de "Adicionar Grupo" e "Criar Novo Grupo", nem outras partes do código que funcionam (ex.: `createGroup`, `joinGroupByCode`).
+- **Preservação do Design:** Mantenha o layout, os estilos e a estrutura HTML dos mini-cards e da mini-seção "Membros" exatamente como estão, adicionando apenas a lógica de evento e modal.
+- **Funcionalidades de Remoção:**
+  - Ao clicar no ícone de retirar membro, exibir um modal centralizado com texto "Você realmente quer remover este membro do grupo de estudos?", botão "Cancelar" (fecha o modal), e botão "Remover" (exclui o membro).
+  - Excluir o membro da tabela `membros_grupos` no Supabase apenas se o usuário atual for administrador ou proprietário do grupo.
+  - Atualizar a interface em tempo real removendo o mini-card do membro excluído.
+- **Eficiência e Segurança:** Implemente validação de permissões, tratamento de erros, retries (máximo de 3 tentativas com intervalo de 1 segundo), e logs detalhados. Use Realtime para sincronização.
+- **Testes Completos:** Após as alterações, realize testes abrangentes e envie os logs.
+
+---
+
+## **Descrição da Interface da Mini-Seção "Membros" (Preservação do Design)**
+- **Mini-Cards:** Cada mini-card exibe o perfil de um usuário do grupo, com um ícone de retirar membro (ex.: `<i class="remove-member-icon">`) à direita, que já existe e deve ser reutilizado.
+- **Modal:** Novo elemento centralizado, sem alterar o layout existente, com texto e botões "Cancelar" e "Remover".
+- **Restrição:** Não adicionar, remover ou modificar elementos HTML/CSS dos mini-cards ou da mini-seção, apenas implementar a lógica de evento e exclusão.
+
+---
+
+## **Passos para a IA Programadora**
+1. **Acesse o Arquivo:**
+   - Abra o arquivo `script.js` onde a função `accessGroup` está definida.
+2. **Modifique a Função `accessGroup`:**
+   - Adicione eventos de clique ao ícone `remove-member-icon` dentro dos mini-cards gerados pela função `loadMembers` (que já existe e carrega os membros).
+   - Chame a função `showRemoveMemberModal` ao clicar no ícone.
+3. **Crie a Função `showRemoveMemberModal`:**
+   - Gere dinamicamente um modal centralizado com o texto e botões especificados.
+   - Passe o `userId` do membro como parâmetro para rastrear quem será removido.
+4. **Crie a Função `removeMember`:**
+   - Valide se o usuário atual é administrador ou proprietário usando a tabela `membros_grupos` (coluna `is_admin` ou `is_owner`).
+   - Exclua o registro da tabela `membros_grupos` onde `grupo_id` = `groupId` e `user_id` = `userId`.
+   - Atualize a interface removendo o mini-card correspondente.
+5. **Configure Realtime:**
+   - Adicione um listener para a tabela `membros_grupos` para sincronizar a remoção em tempo real.
+6. **Aplique Configurações:**
+   - Certifique-se de que o Supabase client está autenticado antes da exclusão.
+   - Use retries para lidar com falhas de conexão.
+7. **Revise e Analise:**
+   - Verifique que o modal não interfira no layout existente.
+   - Teste todas as permissões e cenários de erro.
+   - Analise os logs para garantir ausência de bugs.
+8. **Seja Certeira e Positiva:**
+   - Implemente as alterações com confiança, evitando suposições ou erros.
+   - Confirme cada passo com logs detalhados.
+
+---
+
+## **Modificações no Frontend (JavaScript)**
+
+<xaiArtifact artifact_id="1c412fd5-f3ab-4111-b946-b8c52ac27072" artifact_version_id="ba459bee-6cea-4fef-a510-4cfc02095bd1" title="script.js" contentType="text/javascript">
+// Atualizar accessGroup para adicionar sistema de remoção de membro com modal
+let currentGroupId = null; // Variável global para armazenar o groupId ativo
+
+const accessGroup = async (groupId) => {
+  try {
+    console.log(`Acessando grupo ${groupId}...`);
+    const userId = await validateUserAuth();
+    if (!userId) {
+      console.error('Usuário não autenticado.');
+      alert('Usuário não autenticado.');
+      return;
+    }
+
+    // Validar e armazenar o groupId
+    if (!groupId || typeof groupId !== 'string') {
+      console.error('ID do grupo inválido:', groupId);
+      alert('ID do grupo inválido. Verifique o console.');
+      return;
+    }
+    currentGroupId = groupId;
+
+    // Ocultar o cabeçalho de Minhas Turmas
+    const header = document.querySelector('.groups-header');
+    if (header) header.style.display = 'none';
+
+    // Cache para nomes e imagens de perfil
+    const userCache = new Map();
+    const { data: users, error: usersError } = await supabase
+      .from('auth.users')
+      .select('id, user_metadata')
+      .in('id', (await supabase.from('membros_grupos').select('user_id').eq('grupo_id', groupId)).data.map(u => u.user_id));
+    if (usersError) throw usersError;
+    if (!users) throw new Error('Nenhum usuário encontrado no grupo.');
+    users.forEach(user => {
+      const metadata = user.user_metadata || {};
+      userCache.set(user.id, {
+        name: metadata.name || `Usuário ${user.id.slice(0, 5)}`,
+        avatar_url: metadata.avatar_url || null
+      });
+    });
+    console.log(`Cache de usuários populado com ${userCache.size} entradas.`);
+
+    // Buscar dados do grupo com retries
+    const fetchGroupData = async (groupId, retries = 3, delay = 2000) => {
+      for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+          const { data: groupData, error: groupError } = await supabase
+            .from('grupos')
+            .select('nome, descricao, disciplina, topico_especifico, codigo_unico, tags, privacidade')
+            .eq('id', groupId)
+            .single();
+          if (groupError) throw groupError;
+          if (!groupData) throw new Error(`Dados do grupo ${groupId} não encontrados.`);
+          return groupData;
+        } catch (error) {
+          console.warn(`Tentativa ${attempt} de buscar dados do grupo ${groupId} falhou:`, error.message);
+          if (attempt === retries) throw error;
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      }
+    };
+    const groupData = await fetchGroupData(groupId);
+
+    // Buscar imagens do grupo com retries e URL pública
+    const fetchGroupImages = async (groupId, retries = 3, delay = 2000) => {
+      for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+          const { data: bannerData, error: bannerError } = await supabase.storage
+            .from('group-banners')
+            .createSignedUrl(`${groupId}-banner`, 3600);
+          const { data: photoData, error: photoError } = await supabase.storage
+            .from('group-photos')
+            .createSignedUrl(`${groupId}-photo`, 3600);
+          if (bannerError && bannerError.message !== 'File not found') throw bannerError;
+          if (photoError && photoError.message !== 'File not found') throw photoError;
+          return {
+            bannerUrl: bannerData ? bannerData.signedUrl : null,
+            photoUrl: photoData ? photoData.signedUrl : null
+          };
+        } catch (error) {
+          console.warn(`Tentativa ${attempt} de buscar imagens do grupo ${groupId} falhou:`, error.message);
+          if (attempt === retries) throw error;
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      }
+    };
+    const { bannerUrl, photoUrl } = await fetchGroupImages(groupId);
+
+    // Contagem de membros online
+    let onlineCount = 0;
+    const updateOnlineCount = () => {
+      const now = new Date();
+      return supabase
+        .from('user_sessions')
+        .select('user_id', { count: 'exact' })
+        .eq('grupo_id', groupId)
+        .gte('last_active', new Date(now - 30 * 1000).toISOString())
+        .then(({ count }) => {
+          onlineCount = count || 0;
+          return onlineCount;
+        })
+        .catch(err => {
+          console.error('Erro ao atualizar contagem de online:', err.message);
+          return 0;
+        });
+    };
+    setInterval(() => {
+      updateOnlineCount().then(count => {
+        const onlineNumber = document.getElementById('online-number');
+        if (onlineNumber) onlineNumber.textContent = count;
+      });
+    }, 15000);
+    updateOnlineCount().then(count => {
+      const onlineNumber = document.getElementById('online-number');
+      if (onlineNumber) onlineNumber.textContent = count;
+    });
+
+    // Preservar a interface existente
+    const groupInterface = document.querySelector('#group-interface') || document.createElement('div');
+    if (!groupInterface.id) {
+      groupInterface.id = 'group-interface';
+      groupInterface.style.cssText = 'margin-left: 250px; padding: 20px;';
+      document.getElementById('main-content').innerHTML = '';
+      document.getElementById('main-content').appendChild(groupInterface);
+    }
+
+    // Exibir imagens na interface
+    const bannerImg = document.getElementById('group-banner');
+    if (bannerImg) bannerImg.src = bannerUrl || 'default-banner.png';
+    const photoImg = document.getElementById('group-photo');
+    if (photoImg) photoImg.src = photoUrl || 'default-photo.png';
+
+    // Preencher e habilitar edição dos campos
+    const fillAndEnableEditing = (groupData) => {
+      try {
+        const nameInput = document.querySelector('#group-name');
+        const descriptionInput = document.querySelector('#group-description');
+        const disciplineInput = document.querySelector('#group-discipline');
+        const topicInput = document.querySelector('#group-topic');
+        const tagsInput = document.querySelector('#group-tags');
+        const privacySelect = document.querySelector('#group-privacy');
+
+        if (!nameInput || !descriptionInput || !disciplineInput || !topicInput || !tagsInput || !privacySelect) {
+          console.error(`Campos da mini-seção "Ajustes" não encontrados para o grupo ${groupId}. Verifique os seletores.`);
+          return;
+        }
+
+        nameInput.removeAttribute('readonly');
+        descriptionInput.removeAttribute('readonly');
+        disciplineInput.removeAttribute('readonly');
+        topicInput.removeAttribute('readonly');
+        tagsInput.removeAttribute('readonly');
+        privacySelect.removeAttribute('disabled');
+
+        nameInput.value = groupData.nome || '';
+        descriptionInput.value = groupData.descricao || '';
+        disciplineInput.value = groupData.disciplina || '';
+        topicInput.value = groupData.topico_especifico || '';
+        tagsInput.value = Array.isArray(groupData.tags) ? groupData.tags.join(', ') : groupData.tags || '';
+        privacySelect.value = groupData.privacidade || 'public';
+
+        console.log(`Campos da mini-seção "Ajustes" habilitados para edição para o grupo ${groupId}.`);
+      } catch (error) {
+        console.error(`Erro ao habilitar edição dos campos para o grupo ${groupId}:`, error.message);
+        alert('Erro ao carregar os dados dos ajustes. Verifique o console.');
+      }
+    };
+
+    // Função para salvar alterações no Supabase
+    const saveChanges = async (groupId) => {
+      try {
+        const nameInput = document.querySelector('#group-name');
+        const descriptionInput = document.querySelector('#group-description');
+        const disciplineInput = document.querySelector('#group-discipline');
+        const topicInput = document.querySelector('#group-topic');
+        const tagsInput = document.querySelector('#group-tags');
+        const privacySelect = document.querySelector('#group-privacy');
+
+        if (!nameInput || !descriptionInput || !disciplineInput || !topicInput || !tagsInput || !privacySelect) {
+          console.error(`Campos da mini-seção "Ajustes" não encontrados para salvar alterações no grupo ${groupId}.`);
+          alert('Erro ao localizar campos para salvar. Verifique o console.');
+          return;
+        }
+
+        if (!nameInput.value.trim()) {
+          alert('O Nome do Grupo é obrigatório.');
+          return;
+        }
+
+        const updates = {
+          nome: nameInput.value.trim(),
+          descricao: descriptionInput.value.trim(),
+          disciplina: disciplineInput.value.trim(),
+          topico_especifico: topicInput.value.trim(),
+          tags: tagsInput.value.split(',').map(tag => tag.trim()).filter(tag => tag),
+          privacidade: privacySelect.value
+        };
+
+        const { error } = await supabase
+          .from('grupos')
+          .update(updates)
+          .eq('id', groupId);
+
+        if (error) throw error;
+
+        console.log(`Alterações salvas com sucesso para o grupo ${groupId}.`);
+        alert('Alterações salvas com sucesso!');
+        const updatedData = await fetchGroupData(groupId);
+        fillAndEnableEditing(updatedData);
+      } catch (error) {
+        console.error(`Erro ao salvar alterações para o grupo ${groupId}:`, error.message);
+        alert('Erro ao salvar as alterações. Verifique o console.');
+      }
+    };
+
+    // Função para carregar membros (assumida como existente, a ser ajustada)
+    const loadMembers = async (groupId, userCache, currentUserId, isAdminOrOwner) => {
+      try {
+        const membersContent = document.getElementById('members-content');
+        if (!membersContent) {
+          console.error('Seção "Membros" não encontrada para o grupo ${groupId}.');
+          return;
+        }
+        membersContent.innerHTML = ''; // Limpar conteúdo existente
+
+        const { data: members, error: membersError } = await supabase
+          .from('membros_grupos')
+          .select('user_id, is_admin, is_owner')
+          .eq('grupo_id', groupId);
+        if (membersError) throw membersError;
+
+        members.forEach(member => {
+          const user = userCache.get(member.user_id) || { name: `Usuário ${member.user_id.slice(0, 5)}`, avatar_url: null };
+          const memberCard = document.createElement('div');
+          memberCard.className = 'member-card'; // Classe existente
+          memberCard.innerHTML = `
+            <img src="${user.avatar_url || 'default-avatar.png'}" alt="${user.name}">
+            <span>${user.name}</span>
+            ${member.user_id === currentUserId ? '' : '<i class="remove-member-icon" data-user-id="' + member.user_id + '"></i>'}
+          `;
+          membersContent.appendChild(memberCard);
+
+          // Adicionar evento ao ícone de remover membro
+          if (member.user_id !== currentUserId && isAdminOrOwner) {
+            const removeIcon = memberCard.querySelector('.remove-member-icon');
+            if (removeIcon) {
+              removeIcon.style.cursor = 'pointer';
+              removeIcon.addEventListener('click', () => showRemoveMemberModal(member.user_id, user.name));
+            }
+          }
+        });
+        console.log(`Membros carregados para o grupo ${groupId} com ${members.length} entradas.`);
+      } catch (error) {
+        console.error(`Erro ao carregar membros para o grupo ${groupId}:`, error.message);
+        alert('Erro ao carregar os membros. Verifique o console.');
+      }
+    };
+
+    // Função para exibir o modal de confirmação
+    const showRemoveMemberModal = (userId, userName) => {
+      const modal = document.createElement('div');
+      modal.id = 'remove-member-modal';
+      modal.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        padding: 20px;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        z-index: 1000;
+        text-align: center;
+      `;
+      modal.innerHTML = `
+        <p>Você realmente quer remover ${userName} do grupo de estudos?</p>
+        <button id="cancel-remove" style="margin-right: 10px; background: #ddd; border: none; padding: 5px 10px; border-radius: 5px;">Cancelar</button>
+        <button id="confirm-remove" style="background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 5px;">Remover</button>
+      `;
+      document.body.appendChild(modal);
+
+      document.getElementById('cancel-remove').addEventListener('click', () => modal.remove());
+      document.getElementById('confirm-remove').addEventListener('click', () => {
+        removeMember(groupId, userId).then(() => modal.remove());
+      });
+
+      // Fechar modal ao clicar fora
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.remove();
+      });
+    };
+
+    // Função para remover membro do Supabase
+    const removeMember = async (groupId, userId, retries = 3, delay = 1000) => {
+      try {
+        // Verificar autenticação
+        const { data: session, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError || !session?.session) {
+          console.error('Erro de autenticação ao remover membro:', sessionError?.message || 'Sessão não encontrada.');
+          alert('Erro de autenticação. Faça login novamente.');
+          return;
+        }
+
+        // Verificar se o usuário atual é administrador ou proprietário
+        const { data: currentMember, error: memberError } = await supabase
+          .from('membros_grupos')
+          .select('is_admin, is_owner')
+          .eq('grupo_id', groupId)
+          .eq('user_id', userId)
+          .single();
+        if (memberError || !currentMember) throw new Error('Membro não encontrado.');
+        const isAdminOrOwner = (await supabase
+          .from('membros_grupos')
+          .select('is_admin, is_owner')
+          .eq('grupo_id', groupId)
+          .eq('user_id', userId)
+          .single()).data?.is_admin || (await supabase
+          .from('membros_grupos')
+          .select('is_owner')
+          .eq('grupo_id', groupId)
+          .eq('user_id', userId)
+          .single()).data?.is_owner;
+        if (!isAdminOrOwner) {
+          console.warn(`Usuário ${userId} não tem permissão para remover membros do grupo ${groupId}.`);
+          alert('Você não tem permissão para remover membros.');
+          return;
+        }
+
+        for (let attempt = 1; attempt <= retries; attempt++) {
+          try {
+            const { error } = await supabase
+              .from('membros_grupos')
+              .delete()
+              .eq('grupo_id', groupId)
+              .eq('user_id', userId);
+            if (error) throw error;
+
+            // Atualizar interface removendo o mini-card
+            const memberCard = document.querySelector(`.member-card .remove-member-icon[data-user-id="${userId}"]`)?.parentElement;
+            if (memberCard) memberCard.remove();
+            console.log(`Membro ${userId} removido com sucesso do grupo ${groupId} na tentativa ${attempt}.`);
+            alert('Membro removido com sucesso!');
+            return;
+          } catch (error) {
+            console.error(`Tentativa ${attempt} de remover membro ${userId} do grupo ${groupId} falhou:`, error.message);
+            if (attempt === retries) throw error;
+            await new Promise(resolve => setTimeout(resolve, delay));
+          }
+        }
+      } catch (error) {
+        console.error(`Erro geral ao remover membro ${userId} do grupo ${groupId}:`, error.message, error.stack);
+        alert(`Erro ao remover o membro: ${error.message}. Verifique o console.`);
+      }
+    };
+
+    // Adicionar ou atualizar seção "Membros" dentro da mini-seção
+    const membersContent = document.getElementById('members-content');
+    if (membersContent) {
+      let isAdminOrOwner = false; // Substituir por lógica real de permissão
+      const { data: membership, error: membershipError } = await supabase
+        .from('membros_grupos')
+        .select('is_admin, is_owner')
+        .eq('grupo_id', groupId)
+        .eq('user_id', userId)
+        .single();
+      if (membershipError) throw membershipError;
+      isAdminOrOwner = membership.is_admin || membership.is_owner;
+      loadMembers(groupId, userCache, userId, isAdminOrOwner);
+    }
+
+    // Atualizar seção com preenchimento e edição
+    const switchSection = (section, groupId) => {
+      const sections = ['discussions', 'members', 'settings'];
+      sections.forEach(s => {
+        const content = document.getElementById(`${s}-content`);
+        if (content) content.style.display = s === section ? 'block' : 'none';
+        const button = document.querySelector(`button[onclick*="switchSection('${s}'"]`);
+        if (button) {
+          button.style.background = s === section ? '#3498db' : '#ddd';
+          button.style.color = s === section ? 'white' : '#666';
+        }
+      });
+      if (section === 'members' && currentGroupId) {
+        const isAdminOrOwner = (await supabase
+          .from('membros_grupos')
+          .select('is_admin, is_owner')
+          .eq('grupo_id', groupId)
+          .eq('user_id', userId)
+          .single()).data?.is_admin || (await supabase
+          .from('membros_grupos')
+          .select('is_owner')
+          .eq('grupo_id', groupId)
+          .eq('user_id', userId)
+          .single()).data?.is_owner;
+        loadMembers(groupId, userCache, userId, isAdminOrOwner);
+      }
+      console.log(`Seção ${section} ativada para o grupo ${groupId}.`);
+    };
+
+    switchSection('discussions', groupId); // Iniciar com Discussões
+
+    // Configurar Realtime para membros
+    const channel = supabase
+      .channel(`members-${groupId}`)
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'membros_grupos', filter: `grupo_id=eq.${groupId}` }, (payload) => {
+        if (payload.old.user_id) {
+          const memberCard = document.querySelector(`.member-card .remove-member-icon[data-user-id="${payload.old.user_id}"]`)?.parentElement;
+          if (memberCard) memberCard.remove();
+          console.log(`Membro ${payload.old.user_id} removido via Realtime do grupo ${groupId}.`);
+        }
+      })
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log(`Subscribed to members channel for group ${groupId}`);
+        }
+      })
+      .catch(err => console.error('Erro ao subscrever ao canal Realtime de membros:', err.message));
+
+    // Configurar Realtime para chat e online (mantido como está)
+    const chatChannel = supabase
+      .channel(`chat-${groupId}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mensagens', filter: `grupo_id=eq.${groupId}` }, (payload) => {
+        addMessageToChat(payload.new, userCache);
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'user_sessions', filter: `grupo_id=eq.${groupId}` }, () => {
+        updateOnlineCount().then(count => {
+          const onlineNumber = document.getElementById('online-number');
+          if (onlineNumber) onlineNumber.textContent = count;
+        }).catch(err => console.error('Erro na atualização de online via Realtime:', err.message));
+        loadMembers(groupId, userCache, userId, isAdminOrOwner);
+      })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'user_sessions', filter: `grupo_id=eq.${groupId}` }, () => {
+        updateOnlineCount().then(count => {
+          const onlineNumber = document.getElementById('online-number');
+          if (onlineNumber) onlineNumber.textContent = count;
+        }).catch(err => console.error('Erro na remoção de online via Realtime:', err.message));
+        loadMembers(groupId, userCache, userId, isAdminOrOwner);
+      })
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log(`Subscribed to chat and online channel for group ${groupId}`);
+          const { data: messages, error: messagesError } = await supabase
+            .from('mensagens')
+            .select('*')
+            .eq('grupo_id', groupId)
+            .order('enviado_em', { ascending: false });
+          if (messagesError) throw messagesError;
+          messages.forEach(message => addMessageToChat(message, userCache));
+          updateOnlineCount().then(count => {
+            const onlineNumber = document.getElementById('online-number');
+            if (onlineNumber) onlineNumber.textContent = count;
+          }).catch(err => console.error('Erro inicial na contagem de online:', err.message));
+          loadMembers(groupId, userCache, userId, isAdminOrOwner);
+        }
+      })
+      .catch(err => console.error('Erro ao subscrever ao canal Realtime:', err.message));
+
+    // Evento para ícone de pesquisa
+    const searchIcon = document.getElementById('search-icon');
+    if (searchIcon) {
+      searchIcon.addEventListener('click', () => {
+        const searchBar = document.getElementById('search-bar');
+        if (searchBar) {
+          searchBar.style.display = 'block';
+          const searchInput = document.getElementById('search-input');
+          if (searchInput) searchInput.focus();
+          filterMessages(groupId);
+        }
+      });
+    }
+
+    // Evento para ícone de três pontos
+    const menuIcon = document.getElementById('menu-icon');
+    if (menuIcon && typeof showOptionsModal === 'function') {
+      menuIcon.addEventListener('click', () => {
+        try {
+          console.log(`Abrindo modal de opções para o grupo ${groupId}...`);
+          showOptionsModal(groupId);
+        } catch (error) {
+          console.error(`Erro ao abrir modal de opções para o grupo ${groupId}:`, error.message);
+          alert('Erro ao abrir as opções. Verifique o console.');
+        }
+      });
+    } else if (menuIcon) {
+      console.warn(`Função showOptionsModal não encontrada para o grupo ${groupId}. Ícone desativado.`);
+      menuIcon.disabled = true;
+    }
+
+    console.log(`Interface do grupo ${groupId} carregada com sistema de remoção de membro.`);
+  } catch (error) {
+    console.error('Erro ao acessar grupo:', error.message, error.stack);
+    alert('Erro ao acessar o grupo. Verifique o console.');
+    const header = document.querySelector('.groups-header');
+    if (header) header.style.display = 'flex';
+  }
+};
+
+// Funções existentes mantidas sem alterações (returnToGroups, updateOnlineCount, filterMessages, hideSearchBar, loadInitialMessages, showSettingsModal, showOptionsModal, addMessageToChat, sendMessage, etc.)
