@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { 
   Users, 
   Search, 
@@ -15,8 +14,7 @@ import {
   MoreHorizontal,
   UserPlus,
   MessageCircle,
-  Settings,
-  UserMinus
+  Settings
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
@@ -42,8 +40,6 @@ export default function MembrosTab({ groupId }: MembrosTabProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'online' | 'admins'>('all');
-  const [showRemoveModal, setShowRemoveModal] = useState(false);
-  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -126,22 +122,6 @@ export default function MembrosTab({ groupId }: MembrosTabProps) {
       month: '2-digit',
       year: 'numeric'
     });
-  };
-
-  const handleRemoveUser = (member: Member) => {
-    setSelectedMember(member);
-    setShowRemoveModal(true);
-  };
-
-  const handleCloseRemoveModal = () => {
-    setShowRemoveModal(false);
-    setSelectedMember(null);
-  };
-
-  const handleConfirmRemove = () => {
-    // Função para remover usuário (implementação futura)
-    console.log('Removendo usuário:', selectedMember?.display_name);
-    handleCloseRemoveModal();
   };
 
   return (
@@ -275,11 +255,9 @@ export default function MembrosTab({ groupId }: MembrosTabProps) {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-gray-500 hover:text-red-600"
-                        onClick={() => handleRemoveUser(member)}
-                        title="Retirar usuário"
+                        className="text-gray-500 hover:text-[#FF6B00]"
                       >
-                        <UserMinus className="w-4 h-4" />
+                        <MoreHorizontal className="w-4 h-4" />
                       </Button>
                     </div>
                   </div>
@@ -289,63 +267,6 @@ export default function MembrosTab({ groupId }: MembrosTabProps) {
           </div>
         )}
       </div>
-
-      {/* Modal de Confirmação para Remover Usuário */}
-      <Dialog open={showRemoveModal} onOpenChange={setShowRemoveModal}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center space-x-2">
-              <UserMinus className="w-5 h-5 text-red-500" />
-              <span>Remover Membro</span>
-            </DialogTitle>
-            <DialogDescription>
-              Tem certeza que deseja remover {selectedMember?.display_name} do grupo?
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="flex flex-col space-y-4 py-4">
-            <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-              <Avatar className="w-10 h-10">
-                <AvatarImage src={selectedMember?.avatar_url} />
-                <AvatarFallback>
-                  {selectedMember?.display_name.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="font-medium text-gray-800">{selectedMember?.display_name}</p>
-                <p className="text-sm text-gray-500">
-                  {getRoleLabel(selectedMember?.role || 'member')}
-                </p>
-              </div>
-            </div>
-
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-              <p className="text-sm text-yellow-800">
-                <strong>Atenção:</strong> Esta ação não pode ser desfeita. O usuário será removido do grupo e perderá acesso a todas as discussões e materiais.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex justify-end space-x-2">
-            <Button
-              variant="outline"
-              onClick={handleCloseRemoveModal}
-              className="px-4 py-2"
-            >
-              Cancelar
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleConfirmRemove}
-              disabled={true}
-              className="px-4 py-2 bg-gray-300 text-gray-500 cursor-not-allowed"
-              title="Funcionalidade em desenvolvimento"
-            >
-              Retirar
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
