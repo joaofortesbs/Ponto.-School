@@ -11,10 +11,7 @@ import {
   Crown, 
   Shield, 
   User, 
-  MoreHorizontal,
-  UserPlus,
-  MessageCircle,
-  Settings
+  UserPlus
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
@@ -237,29 +234,7 @@ export default function MembrosTab({ groupId }: MembrosTabProps) {
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-gray-500 hover:text-[#FF6B00]"
-                      >
-                        <MessageCircle className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-gray-500 hover:text-[#FF6B00]"
-                      >
-                        <Settings className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-gray-500 hover:text-[#FF6B00]"
-                      >
-                        <MoreHorizontal className="w-4 h-4" />
-                      </Button>
-                    </div>
+                    
                   </div>
                 </CardContent>
               </Card>
