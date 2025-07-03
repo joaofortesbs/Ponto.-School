@@ -833,8 +833,7 @@ const GruposEstudoView: React.FC = () => {
       toast({
         title: "Erro",
         description: "Erro inesperado ao acessar o grupo",
-        variant: "destructive"
-      });
+        variant: "destructive"        });
     }
   };    // Nova função para acessar o grupo e substituir a interface
     const accessGroup = async (groupId: string) => {
@@ -1512,7 +1511,7 @@ const GruposEstudoView: React.FC = () => {
 
                                   <div className="space-y-3">
                                       <div>
-                                          <h4 className="font-semibold text-[#001427] dark:text-white">Descrição</h4>
+                                                                                    <h4 className="font-semibold text-[#001427] dark:text-white">Descrição</h4>
                                           <p className="text-[#778DA9] dark:text-gray-400">{activeGroup.descricao || "Nenhuma descrição disponível"}</p>
                                       </div>
 
@@ -1815,3 +1814,7 @@ const GruposEstudoView: React.FC = () => {
               </motion.div>
           )}
       </div>
+  );
+};
+
+export default GruposEstudoView;
