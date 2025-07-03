@@ -854,6 +854,7 @@ const GruposEstudoView: React.FC = () => {
       }
 
       // Ocultar o cabeçalho de Minhas Turmas
+```text
       const headers = document.querySelectorAll('.groups-header, [data-testid="groups-header"], .turmas-header');
       if (headers.length > 0) {
         headers.forEach(header => {
@@ -1298,6 +1299,7 @@ const GruposEstudoView: React.FC = () => {
     // Renderizar interface do grupo se estiver ativa
     if (showGroupInterface && activeGroup) {
       return (
+          <>
           <div className="w-full h-screen bg-[#f7f9fa] dark:bg-[#001427] flex flex-col transition-colors duration-300">
               {/* Banner de Capa do Grupo */}
               <div className="px-6 pb-0 relative">
@@ -1523,3 +1525,171 @@ const GruposEstudoView: React.FC = () => {
                                       </div>
 
                                       <div>
+                                          <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Tipo de Grupo:</label>
+                                          <p className="text-[#001427] dark:text-white">{activeGroup.tipo_grupo}</p>
+                                      </div>
+
+                                      <div>
+                                          <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Disciplina/Área:</label>
+                                          <p className="text-[#001427] dark:text-white">{activeGroup.disciplina_area}</p>
+                                      </div>
+
+                                      <div>
+                                          <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Tópico Específico:</label>
+                                          <p className="text-[#001427] dark:text-white">{activeGroup.topico_especifico}</p>
+                                      </div>
+                                  </div>
+
+                                  <div>
+                                      <h4 className="text-lg font-semibold text-[#001427] dark:text-white mt-4 mb-2">Membros</h4>
+                                      <p className="text-[#778DA9] dark:text-gray-400">Este grupo tem {groupMembersCount} membros.</p>
+                                  </div>
+                              </div>
+                          </div>
+                      </div>
+                  )}
+                  {activeTab === 'ajustes' && (
+                      <AjustesTab groupId={activeGroup.id} />
+                  )}
+              </div>
+          </div>
+          </>
+      );
+    }
+
+  return (
+    
+      
+        
+          <Tabs defaultValue={currentView} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="todos-grupos">Todos os Grupos</TabsTrigger>
+              <TabsTrigger value="meus-grupos">Meus Grupos</TabsTrigger>
+            </TabsList>
+            
+              
+                
+                  
+                    <Input
+                      type="search"
+                      placeholder="Buscar grupo..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="max-w-sm lg:max-w-md xl:max-w-lg"
+                    />
+                    
+                  
+                  
+                    <Button onClick={() => setShowCreateModal(true)}>Criar Grupo</Button>
+                    <Button variant="outline" onClick={() => setShowAddModal(true)}>
+                      Participar com Código
+                    </Button>
+                  
+                
+              
+              
+                
+                  
+                    
+                      {filteredGroups().map((group) => (
+                        <GroupCard
+                          key={group.id}
+                          group={convertToGroupCardFormat(group)}
+                          onGroupClick={() => handleGroupClick(group)}
+                        />
+                      ))}
+                    
+                    {!loading && filteredGroups().length === 0 && (
+                      
+                        <Globe className="w-16 h-16 mx-auto mb-4 text-[#FF6B00]/50" />
+                        <p className="text-[#778DA9] dark:text-gray-400">
+                          Nenhum grupo encontrado
+                        </p>
+                      
+                    )}
+                    {loading && (
+                      
+                        
+                          Carregando grupos...
+                        
+                      
+                    )}
+                  
+                
+              
+            
+            
+              
+                
+                  
+                    
+                      {filteredGroups().map((group) => (
+                        <GroupCard
+                          key={group.id}
+                          group={convertToGroupCardFormat(group)}
+                          onGroupClick={() => handleGroupClick(group)}
+                        />
+                      ))}
+                    
+                    {!loading && filteredGroups().length === 0 && (
+                      
+                        <Coffee className="w-16 h-16 mx-auto mb-4 text-[#FF6B00]/50" />
+                        <p className="text-[#778DA9] dark:text-gray-400">
+                          Você não participa de nenhum grupo ainda
+                        </p>
+                      
+                    )}
+                    {loading && (
+                      
+                        
+                          Carregando seus grupos...
+                        
+                      
+                    )}
+                  
+                
+              
+            
+          </Tabs>
+
+          <CreateGroupModal
+            open={showCreateModal}
+            setOpen={setShowCreateModal}
+            onGroupCreated={handleCreateGroup}
+          />
+
+          <AddGroupModal
+            open={showAddModal}
+            setOpen={setShowAddModal}
+            onGroupAdded={handleGroupAdded}
+          />
+
+          <EntrarGrupoSuccessModal
+            open={showSuccessModal}
+            setOpen={setShowSuccessModal}
+            groupName={joinedGroupName}
+          />
+
+          
+            
+              
+                Tem certeza que deseja {isGroupCreator ? 'excluir' : 'sair'} do grupo "{groupToLeave?.nome}"?
+                
+                  Esta ação é irreversível e todos os dados serão perdidos.
+                
+              
+              
+                
+                  Cancelar
+                  {isGroupCreator ? 'Excluir Grupo' : 'Sair do Grupo'}
+                
+              
+            
+          
+        
+      
+    
+  );
+};
+
+export default GruposEstudoView;
