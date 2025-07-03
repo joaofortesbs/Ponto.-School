@@ -26,8 +26,6 @@ import {
     Globe,
     BookOpen,
     Info,
-    Eye,
-    UserMinus,
 } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -37,7 +35,7 @@ import CreateGroupModal from "../CreateGroupModal";
 import AddGroupModal from "../AddGroupModal";
 import EntrarGrupoSuccessModal from "../EntrarGrupoSuccessModal";
 import ChatSection from "@/components/turmas/group-detail/ChatSection";
-import { Shield } from "lucide-react";
+
 import AjustesTab from '../group-detail/tabs/AjustesTab';
 
 // Componente para exibir informações do grupo de forma consistente
@@ -257,89 +255,7 @@ const MembersSection: React.FC<{
                   </div>
                 )}
 
-                {/* Ícones de administração - sempre visíveis */}
-                <div className="absolute top-2 right-2 flex gap-2 transition-opacity duration-200">
-                  {(() => {
-                    if (!currentUserId) {
-                      // Se ainda não carregou o usuário atual, não mostra ícones
-                      return null;
-                    }
-
-                    const isCurrentUser = member.id === currentUserId;
-                    const isCurrentUserAdminOrOwner = groupCreatorId === currentUserId;
-
-                    if (isCurrentUser) {
-                      // Se for o próprio usuário, apenas ícone de inspecionar
-                      return (
-                        <button
-                          className="text-[#FF6B00] hover:text-[#FF8C40] transition-colors"
-                          title="Inspecionar Perfil"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            console.log(`Inspecionar perfil do usuário: ${member.id}`);
-                            // Funcionalidade a ser implementada
-                          }}
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                      );
-                    } else if (isCurrentUserAdminOrOwner) {
-                      // Se o usuário atual é admin/owner, mostra 3 ícones para outros membros
-                      return (
-                        <>
-                          <button
-                            className="text-[#FF6B00] hover:text-[#FF8C40] transition-colors"
-                            title="Inspecionar Perfil"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              console.log(`Inspecionar perfil do usuário: ${member.id}`);
-                              // Funcionalidade a ser implementada
-                            }}
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
-                          <button
-                            className="text-[#FF6B00] hover:text-[#FF8C40] transition-colors"
-                            title="Promover Usuário"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              console.log(`Ação 1 para usuário: ${member.id}`);
-                              // Funcionalidade a ser implementada
-                            }}
-                          >
-                            <Shield className="w-4 h-4" />
-                          </button>
-                          <button
-                            className="text-[#FF6B00] hover:text-[#FF8C40] transition-colors"
-                            title="Retirar Usuário"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              console.log(`Ação 2 para usuário: ${member.id}`);
-                              // Funcionalidade a ser implementada
-                            }}
-                          >
-                            <UserMinus className="w-4 h-4" />
-                          </button>
-                        </>
-                      );
-                    } else {
-                      // Se for membro comum vendo outros membros, apenas ícone de inspecionar
-                      return (
-                        <button
-                          className="text-[#FF6B00] hover:text-[#FF8C40] transition-colors"
-                          title="Inspecionar Perfil"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            console.log(`Inspecionar perfil do usuário: ${member.id}`);
-                            // Funcionalidade a ser implementada
-                          }}
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                      );
-                    }
-                  })()}
-                </div>
+                
 
                 <div className="relative">
                   <div className="w-12 h-12 rounded-full overflow-hidden bg-[#FF6B00]/10 flex items-center justify-center">
