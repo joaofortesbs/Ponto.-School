@@ -249,6 +249,8 @@ const MembersSection: React.FC<{
                   isOnline: member.isOnline,
                   lastActive: member.isOnline ? "Online agora" : "Há algumas horas"
                 }}
+                groupId={groupId}
+                onMemberRemoved={() => loadMembers()}
               />
             ))}
           </div>

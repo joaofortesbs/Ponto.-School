@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -17,20 +16,54 @@ interface Member {
 }
 
 interface MiniCardMembroGrupoProps {
-  member: Member;
+  member: {
+    id: string;
+    name: string;
+    avatar: string;
+    role: string;
+    isOnline: boolean;
+    lastActive: string;
+  };
+  groupId?: string;
+  onMemberRemoved?: () => void;
 }
 
-const MiniCardMembroGrupo: React.FC<MiniCardMembroGrupoProps> = ({ member }) => {
+const MiniCardMembroGrupo: React.FC<MiniCardMembroGrupoProps> = ({ member, groupId, onMemberRemoved }) => {
   const [showRemoverModal, setShowRemoverModal] = useState(false);
 
   const handleRemoverClick = () => {
     setShowRemoverModal(true);
   };
 
-  const handleRemover = () => {
+  const handleRemover = async () => {
     // Funcionalidade será implementada no futuro
     console.log(`Removendo membro: ${member.name}`);
     setShowRemoverModal(false);
+    if (groupId && member.id && onMemberRemoved) {
+      try {
+        const res = await fetch('/api/remove-member', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            groupId: groupId,
+            memberId: member.id,
+          }),
+        });
+
+        if (res.ok) {
+          console.log('Membro removido com sucesso!');
+          onMemberRemoved(); // Refresh the member list
+        } else {
+          console.error('Erro ao remover o membro:', res.statusText);
+        }
+      } catch (error) {
+        console.error('Erro ao remover o membro:', error);
+      }
+    } else {
+      console.warn('groupId, member.id ou onMemberRemoved não foram fornecidos.');
+    }
   };
 
   return (

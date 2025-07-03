@@ -1,13 +1,16 @@
-
-import React from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { UserMinus, AlertTriangle } from "lucide-react";
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import { UserMinus, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface RemoverMembroModalProps {
   isOpen: boolean;
   onClose: () => void;
   memberName: string;
+  memberId: string;
+  groupId: string;
   onRemove: () => void;
 }
 
@@ -15,8 +18,105 @@ const RemoverMembroModal: React.FC<RemoverMembroModalProps> = ({
   isOpen,
   onClose,
   memberName,
+  memberId,
+  groupId,
   onRemove
 }) => {
+  const [isRemoving, setIsRemoving] = useState(false);
+  const { toast } = useToast();
+
+  const handleRemoverMembro = async () => {
+    try {
+      setIsRemoving(true);
+
+      // Verificar se o usuário atual tem permissão para remover membros
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        toast({
+          title: "Erro",
+          description: "Usuário não autenticado.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Verificar se o usuário atual é o criador do grupo
+      const { data: groupData, error: groupError } = await supabase
+        .from('grupos_estudo')
+        .select('criador_id')
+        .eq('id', groupId)
+        .single();
+
+      if (groupError) {
+        console.error('Erro ao verificar criador do grupo:', groupError);
+        toast({
+          title: "Erro",
+          description: "Erro ao verificar permissões.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Verificar se o usuário atual é o criador do grupo
+      if (groupData.criador_id !== user.id) {
+        toast({
+          title: "Erro",
+          description: "Apenas o criador do grupo pode remover membros.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Verificar se não está tentando remover o próprio criador
+      if (memberId === groupData.criador_id) {
+        toast({
+          title: "Erro",
+          description: "O criador do grupo não pode ser removido.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Remover o membro do grupo
+      const { error: removeError } = await supabase
+        .from('membros_grupos')
+        .delete()
+        .eq('grupo_id', groupId)
+        .eq('user_id', memberId);
+
+      if (removeError) {
+        console.error('Erro ao remover membro:', removeError);
+        toast({
+          title: "Erro",
+          description: "Erro ao remover membro do grupo.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Sucesso
+      toast({
+        title: "Sucesso",
+        description: `${memberName} foi removido do grupo com sucesso.`,
+        variant: "default"
+      });
+
+      // Chamar callback para atualizar a lista
+      onRemove();
+      onClose();
+
+    } catch (error) {
+      console.error('Erro geral ao remover membro:', error);
+      toast({
+        title: "Erro",
+        description: "Erro inesperado ao remover membro.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsRemoving(false);
+    }
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -27,7 +127,7 @@ const RemoverMembroModal: React.FC<RemoverMembroModalProps> = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={onClose}
+            onClick={!isRemoving ? onClose : undefined}
           />
 
           {/* Modal */}
@@ -52,32 +152,30 @@ const RemoverMembroModal: React.FC<RemoverMembroModalProps> = ({
               Tem certeza que deseja remover <span className="font-medium text-gray-900 dark:text-white">{memberName}</span> do grupo?
             </p>
 
-            {/* Notice */}
-            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 mb-6">
-              <div className="flex items-start">
-                <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400 mr-2 mt-0.5 flex-shrink-0" />
-                <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                  Esta funcionalidade está em desenvolvimento e será habilitada em breve.
-                </p>
-              </div>
-            </div>
-
             {/* Actions */}
-            <div className="flex gap-3 justify-center">
+            <div className="flex gap-3">
               <Button
                 variant="outline"
                 onClick={onClose}
-                className="flex-1 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                className="flex-1"
+                disabled={isRemoving}
               >
                 Cancelar
               </Button>
 
               <Button
-                onClick={onRemove}
-                disabled={true}
-                className="flex-1 bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                onClick={handleRemoverMembro}
+                className="flex-1 bg-[#FF6B00] hover:bg-[#FF8C40] text-white"
+                disabled={isRemoving}
               >
-                Remover
+                {isRemoving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Removendo...
+                  </>
+                ) : (
+                  'Remover'
+                )}
               </Button>
             </div>
           </motion.div>
