@@ -28,7 +28,7 @@ const RemoverMembroModal: React.FC<RemoverMembroModalProps> = ({
       console.log(`Removendo membro ${memberName} (${memberId}) do grupo ${groupId}`);
 
       const success = await removeMember(memberId);
-      
+
       if (success) {
         console.log(`Membro ${memberName} removido com sucesso`);
         // Fechar modal apenas após sucesso confirmado

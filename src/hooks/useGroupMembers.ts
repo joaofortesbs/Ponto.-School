@@ -111,38 +111,86 @@ export const useGroupMembers = (groupId: string) => {
     try {
       console.log(`Iniciando remoção do membro ${memberId} do grupo ${groupId}`);
       
-      const { error } = await supabase
+      // Verificar se o membro existe antes de tentar remover
+      const { data: existingMember, error: checkError } = await supabase
         .from('membros_grupos')
-        .delete()
+        .select('user_id, grupo_id')
         .eq('grupo_id', groupId)
-        .eq('user_id', memberId);
+        .eq('user_id', memberId)
+        .single();
 
-      if (error) {
-        console.error('Erro ao remover membro:', error);
+      if (checkError && checkError.code !== 'PGRST116') {
+        console.error('Erro ao verificar membro:', checkError);
         toast({
           title: "Erro",
-          description: "Erro ao remover membro do grupo.",
+          description: "Erro ao verificar membro no grupo.",
           variant: "destructive"
         });
         return false;
       }
 
-      console.log(`Membro ${memberId} removido do banco de dados com sucesso`);
+      if (!existingMember) {
+        console.log(`Membro ${memberId} não encontrado na tabela membros_grupos`);
+        toast({
+          title: "Aviso",
+          description: "Membro não encontrado no grupo.",
+          variant: "default"
+        });
+        return false;
+      }
+
+      console.log(`Membro encontrado: user_id=${existingMember.user_id}, grupo_id=${existingMember.grupo_id}`);
+
+      // Remover o membro da tabela membros_grupos
+      const { error: deleteError } = await supabase
+        .from('membros_grupos')
+        .delete()
+        .eq('grupo_id', groupId)
+        .eq('user_id', memberId);
+
+      if (deleteError) {
+        console.error('Erro ao remover membro da tabela membros_grupos:', deleteError);
+        toast({
+          title: "Erro",
+          description: `Erro ao remover membro: ${deleteError.message}`,
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      console.log(`Membro ${memberId} removido da tabela membros_grupos com sucesso`);
+      
+      // Verificar se a remoção foi bem-sucedida
+      const { data: verifyRemoval, error: verifyError } = await supabase
+        .from('membros_grupos')
+        .select('user_id')
+        .eq('grupo_id', groupId)
+        .eq('user_id', memberId);
+
+      if (verifyError) {
+        console.error('Erro ao verificar remoção:', verifyError);
+      } else if (verifyRemoval && verifyRemoval.length === 0) {
+        console.log('Remoção verificada: membro não está mais na tabela');
+      } else {
+        console.warn('Aviso: membro ainda encontrado na tabela após remoção');
+      }
       
       // Atualizar estado local imediatamente
       setMembers(prevMembers => {
         const updatedMembers = prevMembers.filter(member => member.id !== memberId);
-        console.log(`Lista de membros atualizada. Membros restantes: ${updatedMembers.length}`);
+        console.log(`Lista de membros atualizada localmente. Membros restantes: ${updatedMembers.length}`);
         return updatedMembers;
       });
 
       // Recarregar a lista completa do banco de dados para garantir sincronização
-      console.log('Recarregando lista completa de membros...');
-      await refreshMembers();
+      console.log('Recarregando lista completa de membros do banco de dados...');
+      setTimeout(() => {
+        refreshMembers();
+      }, 1000);
       
       toast({
         title: "Sucesso",
-        description: "Membro removido com sucesso.",
+        description: "Membro removido com sucesso do grupo.",
         variant: "default"
       });
 
