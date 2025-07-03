@@ -69,11 +69,11 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
   // Hook para gerenciar membros do grupo
   const { members, loading: membersLoading, refreshMembers } = useGroupMembers(group.id);
 
-  // Configurar real-time subscription para atualizações de membros (sincronização igual ao botão Sair)
+  // Configurar real-time subscription melhorada para atualizações de membros
   React.useEffect(() => {
     if (!group.id) return;
 
-    console.log(`[REALTIME] Configurando subscription robusta para membros do grupo ${group.id}`);
+    console.log(`[REALTIME] Configurando subscription melhorada para membros do grupo ${group.id}`);
 
     const channel = supabase
       .channel(`group_members_${group.id}`)
@@ -86,22 +86,27 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
           filter: `grupo_id=eq.${group.id}`
         },
         (payload) => {
-          console.log(`[REALTIME DELETE] Membro removido detectado:`, payload);
+          console.log(`[REALTIME DELETE] Membro removido detectado via Realtime:`, payload);
           
           if (payload.old?.user_id) {
-            console.log(`[REALTIME DELETE] Processando remoção do membro ${payload.old.user_id} do grupo ${group.id}`);
+            const removedUserId = payload.old.user_id;
+            console.log(`[REALTIME DELETE] Sincronizando remoção do membro ${removedUserId} do grupo ${group.id}`);
             
-            // Refresh imediato da lista de membros
+            // Refresh múltiplos para garantir sincronização
             setTimeout(() => {
-              console.log(`[REALTIME DELETE] Executando refresh da lista de membros`);
+              console.log(`[REALTIME DELETE] Refresh imediato (200ms)`);
               refreshMembers();
             }, 200);
             
-            // Backup refresh para garantia
             setTimeout(() => {
-              console.log(`[REALTIME DELETE] Executando refresh de backup`);
+              console.log(`[REALTIME DELETE] Refresh de confirmação (800ms)`);
               refreshMembers();
-            }, 1000);
+            }, 800);
+            
+            setTimeout(() => {
+              console.log(`[REALTIME DELETE] Refresh final de garantia (1500ms)`);
+              refreshMembers();
+            }, 1500);
           }
         }
       )
@@ -114,10 +119,10 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
           filter: `grupo_id=eq.${group.id}`
         },
         (payload) => {
-          console.log(`[REALTIME INSERT] Novo membro adicionado:`, payload);
+          console.log(`[REALTIME INSERT] Novo membro adicionado via Realtime:`, payload);
           
           if (payload.new?.user_id) {
-            console.log(`[REALTIME INSERT] Processando adição do membro ${payload.new.user_id} ao grupo ${group.id}`);
+            console.log(`[REALTIME INSERT] Sincronizando adição do membro ${payload.new.user_id} ao grupo ${group.id}`);
             
             // Refresh para incluir novo membro
             setTimeout(() => {
@@ -134,6 +139,11 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
           console.log(`[REALTIME] ✅ Subscription ativa para o grupo ${group.id}`);
         } else if (status === 'CHANNEL_ERROR') {
           console.error(`[REALTIME] ❌ Erro na subscription do grupo ${group.id}`);
+          // Tentar reconectar após erro
+          setTimeout(() => {
+            console.log(`[REALTIME] Tentando reconectar subscription...`);
+            refreshMembers();
+          }, 2000);
         }
       });
 

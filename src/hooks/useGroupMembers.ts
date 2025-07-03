@@ -134,34 +134,39 @@ export const useGroupMembers = (groupId: string) => {
   };
 
   const refreshMembers = async () => {
-    console.log('Iniciando refresh da lista de membros...');
+    console.log('[REFRESH] Iniciando refresh da lista de membros...');
     try {
-      // Limpar cache antes de recarregar
+      // Limpar cache completamente antes de recarregar
       const cacheKey = `members-${groupId}`;
       const timestampKey = `members-${groupId}-timestamp`;
       localStorage.removeItem(cacheKey);
       localStorage.removeItem(timestampKey);
-      console.log('Cache limpo antes do refresh');
+      console.log('[REFRESH] Cache limpo completamente');
+      
+      // Forçar loading state
+      setLoading(true);
+      setError(null);
       
       await loadMembers();
-      console.log('Refresh da lista de membros concluído com sucesso');
+      console.log('[REFRESH] Lista de membros recarregada com sucesso');
     } catch (error) {
-      console.error('Erro durante refresh da lista de membros:', error);
+      console.error('[REFRESH] Erro durante refresh da lista de membros:', error);
+      setError('Erro ao atualizar lista de membros');
     }
   };
 
   const removeMember = async (memberId: string): Promise<boolean> => {
-    const shadowLog = (message: string) => console.log(`[SHADOW REMOVE] ${message} - Group: ${groupId}, User: ${memberId}`);
+    const shadowLog = (message: string) => console.log(`[FIXED REMOVE] ${message} - Group: ${groupId}, User: ${memberId}`);
     
     try {
-      shadowLog('Iniciando processo de remoção replicando lógica do botão Sair');
+      shadowLog('Iniciando processo de remoção com retry system melhorado');
       
       // Verificar autenticação do usuário atual
       const { data: { user }, error: authError } = await supabase.auth.getUser();
       if (authError || !user) {
         shadowLog('Erro de autenticação detectado');
         console.error('Usuário não autenticado ao tentar remover membro');
-        return false; // Não exibir erro ao usuário, apenas logar
+        return false;
       }
 
       // Verificar permissões - apenas criadores podem remover membros
@@ -174,22 +179,14 @@ export const useGroupMembers = (groupId: string) => {
       if (groupError) {
         shadowLog('Erro ao verificar permissões do grupo');
         console.error('Erro ao verificar permissões:', groupError.message);
-        return false; // Não exibir erro ao usuário
+        return false;
       }
 
       if (groupData.criador_id !== user.id) {
         shadowLog('Permissão negada - usuário não é criador do grupo');
         console.warn(`Usuário ${user.id} não tem permissão para remover membros do grupo ${groupId}`);
-        return false; // Não exibir erro ao usuário
+        return false;
       }
-
-      // Remoção otimista imediata na interface
-      shadowLog('Removendo membro da interface imediatamente');
-      setMembers(prevMembers => {
-        const updatedMembers = prevMembers.filter(member => member.id !== memberId);
-        shadowLog(`Interface atualizada. Membros restantes: ${updatedMembers.length}`);
-        return updatedMembers;
-      });
 
       // Verificar se o membro existe na tabela antes de tentar remover
       const { data: existingMember, error: checkError } = await supabase
@@ -202,81 +199,116 @@ export const useGroupMembers = (groupId: string) => {
       if (checkError && checkError.code !== 'PGRST116') {
         shadowLog('Erro ao verificar existência do membro');
         console.error('Erro na verificação:', checkError.message);
-        // Forçar refresh para sincronizar estado
-        refreshMembers();
         return false;
       }
 
       if (!existingMember) {
-        shadowLog('Membro não encontrado na tabela membros_grupos');
-        console.warn(`Membro ${memberId} não encontrado no grupo ${groupId}`);
-        // Manter remoção da interface já que não existe no DB
+        shadowLog('Membro não encontrado na tabela membros_grupos - removendo da interface');
+        // Remover da interface mesmo que não exista no DB
+        setMembers(prevMembers => prevMembers.filter(member => member.id !== memberId));
         return true;
       }
 
       shadowLog(`Membro encontrado: user_id=${existingMember.user_id}, grupo_id=${existingMember.grupo_id}`);
 
-      // Retry system robusto - 5 tentativas com 500ms de intervalo (igual ao botão Sair)
+      // Remoção otimista da interface antes da operação no banco
+      shadowLog('Removendo membro da interface otimisticamente');
+      setMembers(prevMembers => {
+        const updatedMembers = prevMembers.filter(member => member.id !== memberId);
+        shadowLog(`Interface atualizada otimisticamente. Membros restantes: ${updatedMembers.length}`);
+        return updatedMembers;
+      });
+
+      // Sistema de retry robusto - 5 tentativas com validação rigorosa
       const maxRetries = 5;
       const retryDelay = 500;
       let lastError;
 
       for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
-          shadowLog(`Tentativa ${attempt} de ${maxRetries} - Executando DELETE na tabela membros_grupos`);
+          shadowLog(`=== TENTATIVA ${attempt}/${maxRetries} ===`);
           
-          // Query idêntica ao botão "Sair"
-          const { data, error: deleteError } = await supabase
+          // Executar DELETE com query robusta
+          const { data: deleteData, error: deleteError } = await supabase
             .from('membros_grupos')
             .delete()
             .eq('grupo_id', groupId)
             .eq('user_id', memberId);
 
           if (deleteError) {
+            shadowLog(`DELETE falhou na tentativa ${attempt}: ${deleteError.message}`);
             throw deleteError;
           }
 
-          shadowLog(`Remoção executada com sucesso na tentativa ${attempt}`);
+          shadowLog(`DELETE executado na tentativa ${attempt} - Resultado: ${JSON.stringify(deleteData)}`);
           
-          // Verificação adicional para confirmar remoção
-          const { data: verifyRemoval, error: verifyError } = await supabase
+          // Aguardar um pouco para garantir propagação no banco
+          await new Promise(resolve => setTimeout(resolve, 200));
+          
+          // Validação rigorosa pós-exclusão com múltiplas verificações
+          shadowLog(`Iniciando validação pós-exclusão (tentativa ${attempt})`);
+          
+          // Primeira validação: busca específica
+          const { data: validation1, error: validationError1 } = await supabase
             .from('membros_grupos')
-            .select('user_id')
+            .select('user_id, grupo_id')
             .eq('grupo_id', groupId)
             .eq('user_id', memberId);
 
-          if (verifyError) {
-            shadowLog(`Erro na verificação: ${verifyError.message}`);
-            throw verifyError;
+          if (validationError1) {
+            shadowLog(`Erro na primeira validação: ${validationError1.message}`);
+            throw validationError1;
           }
 
-          if (verifyRemoval && verifyRemoval.length === 0) {
-            shadowLog('✅ Remoção confirmada: membro não existe mais na tabela');
+          shadowLog(`Primeira validação: encontrados ${validation1?.length || 0} registros`);
+          
+          if (validation1 && validation1.length === 0) {
+            shadowLog('✅ SUCESSO: Primeira validação confirmou remoção');
             
-            // Limpar cache relacionado
+            // Segunda validação: busca geral para garantia dupla
+            const { data: validation2, error: validationError2 } = await supabase
+              .from('membros_grupos')
+              .select('user_id')
+              .eq('grupo_id', groupId);
+
+            if (validationError2) {
+              shadowLog(`Erro na segunda validação: ${validationError2.message}`);
+              // Continuar mesmo com erro na segunda validação se a primeira passou
+            } else {
+              const memberStillExists = validation2?.some(m => m.user_id === memberId);
+              shadowLog(`Segunda validação: membro ainda existe? ${memberStillExists}`);
+              
+              if (memberStillExists) {
+                shadowLog('⚠️ INCONSISTÊNCIA: Segunda validação encontrou o membro');
+                throw new Error('Membro ainda encontrado na segunda validação');
+              }
+            }
+            
+            // Limpar cache para forçar reload
             const cacheKey = `members-${groupId}`;
             const timestampKey = `members-${groupId}-timestamp`;
             localStorage.removeItem(cacheKey);
             localStorage.removeItem(timestampKey);
-            shadowLog('Cache limpo após remoção bem-sucedida');
+            shadowLog('Cache limpo após remoção confirmada');
             
-            // Agendar refresh para garantir sincronização
+            // Refresh da lista para sincronizar
             setTimeout(() => {
-              shadowLog('Executando refresh agendado após remoção');
+              shadowLog('Executando refresh pós-remoção para sincronização final');
               refreshMembers();
             }, 300);
             
-            // Toast de sucesso sem interromper fluxo
+            // Toast de sucesso
             toast({
               title: "Sucesso",
               description: "Membro removido com sucesso do grupo.",
               variant: "default"
             });
 
+            shadowLog(`🎉 REMOÇÃO CONCLUÍDA COM SUCESSO na tentativa ${attempt}`);
             return true;
           } else {
-            shadowLog('⚠️ Aviso: membro ainda encontrado na tabela após DELETE');
-            throw new Error('Membro ainda existe após operação DELETE');
+            shadowLog(`❌ FALHA NA VALIDAÇÃO: Membro ainda encontrado (${validation1?.length} registros)`);
+            throw new Error(`Membro ainda encontrado após DELETE - encontrados ${validation1?.length} registros`);
           }
 
         } catch (error) {
@@ -284,34 +316,36 @@ export const useGroupMembers = (groupId: string) => {
           shadowLog(`Tentativa ${attempt} falhou: ${error.message}`);
           
           if (attempt < maxRetries) {
-            shadowLog(`Aguardando ${retryDelay}ms antes da próxima tentativa`);
+            shadowLog(`Aguardando ${retryDelay}ms antes da próxima tentativa...`);
             await new Promise(resolve => setTimeout(resolve, retryDelay));
           }
         }
       }
 
-      // Todas as tentativas falharam
-      shadowLog(`❌ Todas as ${maxRetries} tentativas falharam. Última tentativa de recovery.`);
+      // Todas as tentativas falharam - estratégia de recovery
+      shadowLog(`❌ TODAS AS ${maxRetries} TENTATIVAS FALHARAM - Iniciando recovery`);
       
-      // Forçar remoção da interface e refresh
-      setMembers(prevMembers => prevMembers.filter(member => member.id !== memberId));
+      // Manter remoção da interface (já foi feita otimisticamente)
+      shadowLog('Mantendo remoção otimística da interface');
       
-      // Refresh forçado para tentar sincronizar
+      // Refresh forçado para tentar sincronizar estado real
       setTimeout(() => {
-        shadowLog('Executando refresh de recovery');
+        shadowLog('Executando refresh de recovery para sincronizar estado real');
         refreshMembers();
       }, 1000);
       
-      // Logar erro no console mas não interromper fluxo do usuário
-      console.error(`Falha na remoção do membro ${memberId} do grupo ${groupId}:`, lastError?.message || 'Erro desconhecido');
+      // Logar erro detalhado no console
+      console.error(`[ERRO REMOÇÃO] Falha ao remover membro ${memberId} do grupo ${groupId} após ${maxRetries} tentativas:`);
+      console.error(`[ERRO REMOÇÃO] Último erro:`, lastError?.message || 'Erro desconhecido');
+      console.error(`[ERRO REMOÇÃO] A interface foi atualizada otimisticamente, mas pode haver inconsistência com o banco`);
 
       return false;
 
     } catch (err) {
-      shadowLog(`💥 Erro crítico inesperado: ${err.message}`);
+      shadowLog(`💥 ERRO CRÍTICO INESPERADO: ${err.message}`);
       console.error('Erro crítico na remoção de membro:', err);
       
-      // Forçar remoção da interface como fallback
+      // Forçar remoção da interface como último recurso
       setMembers(prevMembers => prevMembers.filter(member => member.id !== memberId));
       
       // Refresh de emergência
