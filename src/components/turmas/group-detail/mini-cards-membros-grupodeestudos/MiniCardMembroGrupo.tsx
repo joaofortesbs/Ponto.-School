@@ -48,13 +48,20 @@ const MiniCardMembroGrupo: React.FC<MiniCardMembroGrupoProps> = ({
   };
 
   const handleRemover = async () => {
-    console.log(`Membro ${member.name} foi removido com sucesso`);
+    console.log(`Membro ${member.name} foi removido com sucesso - atualizando interface`);
     setShowRemoverModal(false);
     
     // Chamar o callback para atualizar a lista de membros
     if (onMemberRemoved) {
-      console.log('Chamando callback onMemberRemoved para atualizar lista');
-      onMemberRemoved();
+      console.log('Executando callback onMemberRemoved para refresh da lista');
+      try {
+        await onMemberRemoved();
+        console.log('Callback onMemberRemoved executado com sucesso');
+      } catch (error) {
+        console.error('Erro ao executar callback onMemberRemoved:', error);
+      }
+    } else {
+      console.warn('Callback onMemberRemoved não está definido');
     }
   };
 

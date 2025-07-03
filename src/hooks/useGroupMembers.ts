@@ -18,7 +18,7 @@ export const useGroupMembers = (groupId: string) => {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const loadMembers = async () => {
+  const loadMembers = async (): Promise<void> => {
     try {
       setLoading(true);
       setError(null);
@@ -87,7 +87,7 @@ export const useGroupMembers = (groupId: string) => {
       });
 
       setMembers(allMembers);
-      console.log(`Carregados ${allMembers.length} membros para o grupo ${groupId}`);
+      console.log(`Carregados ${allMembers.length} membros para o grupo ${groupId}:`, allMembers.map(m => ({ id: m.id, name: m.name, role: m.role })));
 
     } catch (err) {
       console.error('Erro inesperado ao carregar membros:', err);
@@ -97,9 +97,14 @@ export const useGroupMembers = (groupId: string) => {
     }
   };
 
-  const refreshMembers = () => {
-    console.log('Atualizando lista de membros...');
-    loadMembers();
+  const refreshMembers = async () => {
+    console.log('Iniciando refresh da lista de membros...');
+    try {
+      await loadMembers();
+      console.log('Refresh da lista de membros concluído com sucesso');
+    } catch (error) {
+      console.error('Erro durante refresh da lista de membros:', error);
+    }
   };
 
   const removeMember = async (memberId: string) => {
