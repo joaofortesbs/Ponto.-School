@@ -60,6 +60,8 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
   const [activeTab, setActiveTab] = useState("discussoes");
   const [searchQuery, setSearchQuery] = useState("");
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showRemoveMemberModal, setShowRemoveMemberModal] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<any>(null);
   const { theme } = useTheme();
 
   // Mock data for the component
@@ -172,6 +174,16 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
     e.preventDefault();
     // Search functionality would be implemented here
     console.log("Searching for:", searchQuery);
+  };
+
+  const handleRemoveMemberClick = (member: any) => {
+    setSelectedMember(member);
+    setShowRemoveMemberModal(true);
+  };
+
+  const handleCloseRemoveMemberModal = () => {
+    setShowRemoveMemberModal(false);
+    setSelectedMember(null);
   };
 
   return (
@@ -453,9 +465,24 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-8 w-8 p-0 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
+                      className="h-8 w-8 p-0 rounded-full hover:bg-red-100 dark:hover:bg-red-900/20 text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+                      onClick={() => handleRemoveMemberClick(member)}
+                      title="Retirar usuário"
                     >
-                      <MoreVertical className="h-4 w-4" />
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
                     </Button>
                   </div>
                 ))}
@@ -903,6 +930,63 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
         onClose={() => setShowSettingsModal(false)}
         group={group}
       />
+
+      {/* Modal de Confirmação para Remover Membro */}
+      {showRemoveMemberModal && selectedMember && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            className="bg-white dark:bg-[#1E293B] rounded-xl p-6 max-w-md w-full mx-4 shadow-xl border border-gray-200 dark:border-gray-700"
+          >
+            <div className="text-center">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/20 mb-4">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6 text-red-600 dark:text-red-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
+                  />
+                </svg>
+              </div>
+
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                Retirar Membro do Grupo
+              </h3>
+
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                Tem certeza que deseja retirar <strong>{selectedMember.name}</strong> do grupo? Esta ação não pode ser desfeita.
+              </p>
+
+              <div className="flex gap-3 justify-center">
+                <Button
+                  variant="outline"
+                  onClick={handleCloseRemoveMemberModal}
+                  className="flex-1 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                >
+                  Cancelar
+                </Button>
+
+                <Button
+                  className="flex-1 bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                  disabled
+                  title="Esta funcionalidade estará disponível em breve"
+                >
+                  Retirar
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 };
