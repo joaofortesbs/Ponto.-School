@@ -1,0 +1,282 @@
+
+    const { data: members, error: membersError } = await supabase
+      .from('membros_grupos')
+      .select('user_id, is_admin, is_owner')
+      .eq('grupo_id', groupId);
+    if (membersError) throw membersError;
+
+    members.forEach(member => {
+      const user = userCache.get(member.user_id) || { name: `Usuário ${member.user_id.slice(0, 5)}`, avatar_url: null };
+      const memberCard = document.createElement('div');
+      memberCard.className = 'member-card'; // Classe existente
+      memberCard.innerHTML = `
+        <img src="${user.avatar_url || 'default-avatar.png'}" alt="${user.name}">
+        <span>${user.name}</span>
+        ${member.user_id === currentUserId ? '' : '<i class="remove-member-icon" data-user-id="' + member.user_id + '"></i>'}
+      `;
+      membersContent.appendChild(memberCard);
+
+      // Adicionar evento ao ícone de remover membro
+      if (member.user_id !== currentUserId && isAdminOrOwner) {
+        const removeIcon = memberCard.querySelector('.remove-member-icon');
+        if (removeIcon) {
+          removeIcon.style.cursor = 'pointer';
+          removeIcon.addEventListener('click', () => showRemoveMemberModal(member.user_id, user.name));
+        }
+      }
+    });
+    console.log(`Membros carregados para o grupo ${groupId} com ${members.length} entradas.`);
+  } catch (error) {
+    console.error(`Erro ao carregar membros para o grupo ${groupId}:`, error.message);
+    alert('Erro ao carregar os membros. Verifique o console.');
+  }
+};
+
+// Função para exibir o modal de confirmação
+const showRemoveMemberModal = (userId, userName) => {
+  const modal = document.createElement('div');
+  modal.id = 'remove-member-modal';
+  modal.style.cssText = `
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    z-index: 1000;
+    text-align: center;
+  `;
+  modal.innerHTML = `
+    <p>Você realmente quer remover ${userName} do grupo de estudos?</p>
+    <button id="cancel-remove" style="margin-right: 10px; background: #ddd; border: none; padding: 5px 10px; border-radius: 5px;">Cancelar</button>
+    <button id="confirm-remove" style="background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 5px;">Remover</button>
+  `;
+  document.body.appendChild(modal);
+
+  document.getElementById('cancel-remove').addEventListener('click', () => modal.remove());
+  document.getElementById('confirm-remove').addEventListener('click', () => {
+    removeMember(groupId, userId).then(() => {
+      modal.remove();
+      loadMembers(groupId, userCache, userId, isAdminOrOwner); // Recarregar membros
+    });
+  });
+
+  // Fechar modal ao clicar fora
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.remove();
+  });
+};
+
+// Função para remover membro como o botão "Sair"
+const removeMember = async (groupId, userId, retries = 5, delay = 500) => {
+  try {
+    // Verificar autenticação
+    const { data: session, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !session?.session) {
+      console.error('Erro de autenticação ao remover membro:', sessionError?.message || 'Sessão não encontrada.');
+      return; // Continuar sem exibir erro ao usuário
+    }
+
+    // Verificar se o usuário atual é administrador ou proprietário
+    const { data: currentMembership, error: membershipError } = await supabase
+      .from('membros_grupos')
+      .select('is_admin, is_owner')
+      .eq('grupo_id', groupId)
+      .eq('user_id', userId)
+      .single();
+    if (membershipError) {
+      console.error('Erro ao verificar permissões:', membershipError.message);
+      return; // Ignorar erro visível
+    }
+    const { data: userMembership, error: userMembershipError } = await supabase
+      .from('membros_grupos')
+      .select('is_admin, is_owner')
+      .eq('grupo_id', groupId)
+      .eq('user_id', userId)
+      .single();
+    if (userMembershipError) {
+      console.error('Erro ao verificar status do membro:', userMembershipError.message);
+      return; // Ignorar erro visível
+    }
+    const isAdminOrOwner = userMembership.is_admin || userMembership.is_owner;
+    if (!isAdminOrOwner) {
+      console.warn(`Usuário ${userId} não tem permissão para remover membros do grupo ${groupId}.`);
+      return; // Ignorar permissão negada sem alerta
+    }
+
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        const { data, error } = await supabase
+          .from('membros_grupos')
+          .delete()
+          .eq('grupo_id', groupId)
+          .eq('user_id', userId);
+        if (error) throw error;
+        console.log(`Membro ${userId} removido com sucesso do grupo ${groupId} na tentativa ${attempt}.`);
+
+        // Remover o mini-card imediatamente
+        const memberCard = document.querySelector(`.member-card .remove-member-icon[data-user-id="${userId}"]`)?.parentElement;
+        if (memberCard) memberCard.remove();
+
+        return; // Sucesso, sair do loop
+      } catch (error) {
+        console.error(`Tentativa ${attempt} de remover membro ${userId} falhou:`, error.message);
+        if (attempt === retries) {
+          // Última tentativa falhou, recarregar para tentar novamente
+          const memberCard = document.querySelector(`.member-card .remove-member-icon[data-user-id="${userId}"]`)?.parentElement;
+          if (memberCard) memberCard.remove(); // Forçar remoção mesmo com erro
+          loadMembers(groupId, userCache, userId, isAdminOrOwner);
+        }
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  } catch (error) {
+    console.error(`Erro geral ao remover membro ${userId} do grupo ${groupId}:`, error.message);
+    // Forçar remoção mesmo com erro
+    const memberCard = document.querySelector(`.member-card .remove-member-icon[data-user-id="${userId}"]`)?.parentElement;
+    if (memberCard) memberCard.remove();
+    loadMembers(groupId, userCache, userId, isAdminOrOwner);
+  }
+};
+
+// Adicionar ou atualizar seção "Membros" dentro da mini-seção
+const membersContent = document.getElementById('members-content');
+if (membersContent) {
+  let isAdminOrOwner = false;
+  const { data: membership, error: membershipError } = await supabase
+    .from('membros_grupos')
+    .select('is_admin, is_owner')
+    .eq('grupo_id', groupId)
+    .eq('user_id', userId)
+    .single();
+  if (membershipError) throw membershipError;
+  isAdminOrOwner = membership.is_admin || membership.is_owner;
+  loadMembers(groupId, userCache, userId, isAdminOrOwner);
+}
+
+// Atualizar seção com preenchimento e edição
+const switchSection = (section, groupId) => {
+  const sections = ['discussions', 'members', 'settings'];
+  sections.forEach(s => {
+    const content = document.getElementById(`${s}-content`);
+    if (content) content.style.display = s === section ? 'block' : 'none';
+    const button = document.querySelector(`button[onclick*="switchSection('${s}'"]`);
+    if (button) {
+      button.style.background = s === section ? '#3498db' : '#ddd';
+      button.style.color = s === section ? 'white' : '#666';
+    }
+  });
+  if (section === 'members' && currentGroupId) {
+    const isAdminOrOwner = (await supabase
+      .from('membros_grupos')
+      .select('is_admin, is_owner')
+      .eq('grupo_id', groupId)
+      .eq('user_id', userId)
+      .single()).data?.is_admin || (await supabase
+      .from('membros_grupos')
+      .select('is_owner')
+      .eq('grupo_id', groupId)
+      .eq('user_id', userId)
+      .single()).data?.is_owner;
+    loadMembers(groupId, userCache, userId, isAdminOrOwner);
+  }
+  console.log(`Seção ${section} ativada para o grupo ${groupId}.`);
+};
+
+switchSection('discussions', groupId); // Iniciar com Discussões
+
+// Configurar Realtime para membros
+const channel = supabase
+  .channel(`members-${groupId}`)
+  .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'membros_grupos', filter: `grupo_id=eq.${groupId}` }, (payload) => {
+    if (payload.old.user_id) {
+      const memberCard = document.querySelector(`.member-card .remove-member-icon[data-user-id="${payload.old.user_id}"]`)?.parentElement;
+      if (memberCard) memberCard.remove();
+      loadMembers(groupId, userCache, userId, isAdminOrOwner); // Recarregar membros
+      console.log(`Membro ${payload.old.user_id} removido via Realtime do grupo ${groupId}.`);
+    }
+  })
+  .subscribe((status) => {
+    if (status === 'SUBSCRIBED') {
+      console.log(`Subscribed to members channel for group ${groupId}`);
+    }
+  })
+  .catch(err => console.error('Erro ao subscrever ao canal Realtime de membros:', err.message));
+
+// Configurar Realtime para chat e online (mantido como está)
+const chatChannel = supabase
+  .channel(`chat-${groupId}`)
+  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mensagens', filter: `grupo_id=eq.${groupId}` }, (payload) => {
+    addMessageToChat(payload.new, userCache);
+  })
+  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'user_sessions', filter: `grupo_id=eq.${groupId}` }, () => {
+    updateOnlineCount().then(count => {
+      const onlineNumber = document.getElementById('online-number');
+      if (onlineNumber) onlineNumber.textContent = count;
+    }).catch(err => console.error('Erro na atualização de online via Realtime:', err.message));
+    loadMembers(groupId, userCache, userId, isAdminOrOwner);
+  })
+  .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'user_sessions', filter: `grupo_id=eq.${groupId}` }, () => {
+    updateOnlineCount().then(count => {
+      const onlineNumber = document.getElementById('online-number');
+      if (onlineNumber) onlineNumber.textContent = count;
+    }).catch(err => console.error('Erro na remoção de online via Realtime:', err.message));
+    loadMembers(groupId, userCache, userId, isAdminOrOwner);
+  })
+  .subscribe(async (status) => {
+    if (status === 'SUBSCRIBED') {
+      console.log(`Subscribed to chat and online channel for group ${groupId}`);
+      const { data: messages, error: messagesError } = await supabase
+        .from('mensagens')
+        .select('*')
+        .eq('grupo_id', groupId)
+        .order('enviado_em', { ascending: false });
+      if (messagesError) throw messagesError;
+      messages.forEach(message => addMessageToChat(message, userCache));
+      updateOnlineCount().then(count => {
+        const onlineNumber = document.getElementById('online-number');
+        if (onlineNumber) onlineNumber.textContent = count;
+      }).catch(err => console.error('Erro inicial na contagem de online:', err.message));
+      loadMembers(groupId, userCache, userId, isAdminOrOwner);
+    }
+  })
+  .catch(err => console.error('Erro ao subscrever ao canal Realtime:', err.message));
+
+// Evento para ícone de pesquisa
+const searchIcon = document.getElementById('search-icon');
+if (searchIcon) {
+  searchIcon.addEventListener('click', () => {
+    const searchBar = document.getElementById('search-bar');
+    if (searchBar) {
+      searchBar.style.display = 'block';
+      const searchInput = document.getElementById('search-input');
+      if (searchInput) searchInput.focus();
+      filterMessages(groupId);
+    }
+  });
+}
+
+// Evento para ícone de três pontos
+const menuIcon = document.getElementById('menu-icon');
+if (menuIcon && typeof showOptionsModal === 'function') {
+  menuIcon.addEventListener('click', () => {
+    try {
+      console.log(`Abrindo modal de opções para o grupo ${groupId}...`);
+      showOptionsModal(groupId);
+    } catch (error) {
+      console.error(`Erro ao abrir modal de opções para o grupo ${groupId}:`, error.message);
+      alert('Erro ao abrir as opções. Verifique o console.');
+    }
+  });
+} else if (menuIcon) {
+  console.warn(`Função showOptionsModal não encontrada para o grupo ${groupId}. Ícone desativado.`);
+  menuIcon.disabled = true;
+}
+
+console.log(`Interface do grupo ${groupId} carregada com remoção igual ao botão "Sair".`);
+
+} catch (error) { console.error('Erro ao acessar grupo:', error.message, error.stack); alert('Erro ao acessar o grupo. Verifique o console.'); const header = document.querySelector('.groups-header'); if (header) header.style.display = 'flex'; } };
+
+// Funções existentes mantidas sem alterações (returnToGroups, updateOnlineCount, filterMessages, hideSearchBar, loadInitialMessages, showSettingsModal, showOptionsModal, addMessageToChat, sendMessage, etc.)
