@@ -125,8 +125,9 @@ export const useGroupMembers = (groupId: string) => {
         return false;
       }
 
-      // Atualizar lista local removendo o membro
-      setMembers(prev => prev.filter(member => member.id !== memberId));
+      // Recarregar a lista completa do banco de dados
+      console.log('Membro removido do banco, recarregando lista de membros...');
+      await refreshMembers();
       
       toast({
         title: "Sucesso",

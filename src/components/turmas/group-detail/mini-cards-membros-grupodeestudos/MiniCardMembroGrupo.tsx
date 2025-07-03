@@ -17,7 +17,6 @@ interface MiniCardMembroGrupoProps {
     lastActive: string;
   };
   groupId?: string;
-  onMemberRemoved?: () => void;
   currentUserId?: string;
   groupCreatorId?: string;
 }
@@ -25,7 +24,6 @@ interface MiniCardMembroGrupoProps {
 const MiniCardMembroGrupo: React.FC<MiniCardMembroGrupoProps> = ({ 
   member, 
   groupId, 
-  onMemberRemoved,
   currentUserId,
   groupCreatorId 
 }) => {
@@ -48,21 +46,8 @@ const MiniCardMembroGrupo: React.FC<MiniCardMembroGrupoProps> = ({
   };
 
   const handleRemover = async () => {
-    console.log(`Membro ${member.name} foi removido com sucesso - atualizando interface`);
+    console.log(`Modal de remoção fechado para membro ${member.name}`);
     setShowRemoverModal(false);
-    
-    // Chamar o callback para atualizar a lista de membros
-    if (onMemberRemoved) {
-      console.log('Executando callback onMemberRemoved para refresh da lista');
-      try {
-        await onMemberRemoved();
-        console.log('Callback onMemberRemoved executado com sucesso');
-      } catch (error) {
-        console.error('Erro ao executar callback onMemberRemoved:', error);
-      }
-    } else {
-      console.warn('Callback onMemberRemoved não está definido');
-    }
   };
 
   const getRoleIcon = () => {
@@ -185,7 +170,6 @@ const MiniCardMembroGrupo: React.FC<MiniCardMembroGrupoProps> = ({
         memberName={member.name}
         memberId={member.id}
         groupId={groupId || ""}
-        onRemove={handleRemover}
       />
     </>
   );

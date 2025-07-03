@@ -165,10 +165,7 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
     console.log("Searching for:", searchQuery);
   };
 
-  const handleMemberRemoved = () => {
-    console.log('Membro removido - atualizando lista de membros...');
-    refreshMembers();
-  };
+  // Callback removido - o hook useGroupMembers agora gerencia a atualização automaticamente
 
   return (
     <div className="w-full h-full bg-white dark:bg-[#0f1525] text-gray-900 dark:text-white p-0 overflow-hidden flex flex-col">
@@ -427,7 +424,6 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
                       groupId={group.id}
                       currentUserId={currentUserId}
                       groupCreatorId={group.criador_id}
-                      onMemberRemoved={handleMemberRemoved}
                     />
                   ))}
                 </div>
