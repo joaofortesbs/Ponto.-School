@@ -14,6 +14,7 @@ export default function GroupDetailPage() {
   const [group, setGroup] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [isBlocked, setIsBlocked] = useState(false);
+  const [showBlockedModal, setShowBlockedModal] = useState(false);
 
   useEffect(() => {
     getCurrentUser();
@@ -82,26 +83,7 @@ export default function GroupDetailPage() {
         return;
       }
 
-      // Verificar se o usuário está bloqueado
-      if (membership.is_blocked) {
-        console.log('Usuário está bloqueado neste grupo');
-        setIsBlocked(true);
-        
-        // Carregar dados básicos do grupo para exibir o nome no modal
-        const { data: groupData, error: groupError } = await supabase
-          .from('grupos_estudo')
-          .select('nome')
-          .eq('id', id)
-          .single();
-
-        if (!groupError && groupData) {
-          setGroup(groupData);
-        }
-        setLoading(false);
-        return;
-      }
-
-      // Carregar dados do grupo
+      // Carregar dados básicos do grupo sempre
       const { data: groupData, error: groupError } = await supabase
         .from('grupos_estudo')
         .select('*')
@@ -119,8 +101,19 @@ export default function GroupDetailPage() {
         return;
       }
 
-      console.log('Dados do grupo carregados:', groupData);
       setGroup(groupData);
+
+      // Verificar se o usuário está bloqueado
+      if (membership.is_blocked) {
+        console.log('Usuário está bloqueado neste grupo');
+        setIsBlocked(true);
+        setShowBlockedModal(true);
+      } else {
+        setIsBlocked(false);
+        setShowBlockedModal(false);
+      }
+
+      console.log('Dados do grupo carregados:', groupData);
     } catch (error) {
       console.error('Erro ao carregar grupo:', error);
       toast({
@@ -159,6 +152,7 @@ export default function GroupDetailPage() {
           if (payload.new.user_id === currentUser.id && payload.new.is_blocked) {
             console.log('Usuário atual foi bloqueado em tempo real');
             setIsBlocked(true);
+            setShowBlockedModal(true);
           }
         }
       )
@@ -173,29 +167,6 @@ export default function GroupDetailPage() {
     return (
       <div className="flex items-center justify-center h-screen bg-[#001427]">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#FF6B00]"></div>
-      </div>
-    );
-  }
-
-  if (isBlocked) {
-    return (
-      <div className="min-h-screen bg-[#001427] p-4">
-        <div className="container mx-auto max-w-7xl">
-          <div 
-            className="blur-sm pointer-events-none"
-            style={{ filter: 'blur(5px)' }}
-          >
-            <div className="bg-gray-300 dark:bg-gray-700 h-96 rounded-lg flex items-center justify-center">
-              <p className="text-gray-500">Conteúdo do grupo</p>
-            </div>
-          </div>
-          
-          <BlockedGroupModal
-            isOpen={true}
-            groupName={group?.nome || 'Grupo'}
-            onBack={handleBack}
-          />
-        </div>
       </div>
     );
   }
@@ -219,11 +190,32 @@ export default function GroupDetailPage() {
   return (
     <div className="min-h-screen bg-[#001427] p-4">
       <div className="container mx-auto max-w-7xl">
-        <GroupDetail 
-          group={group} 
-          currentUser={currentUser}
-          onBack={handleBack} 
-        />
+        {isBlocked ? (
+          <>
+            <div 
+              className="blur-sm pointer-events-none"
+              style={{ filter: 'blur(5px)' }}
+            >
+              <GroupDetail 
+                group={group} 
+                currentUser={currentUser}
+                onBack={handleBack} 
+              />
+            </div>
+            
+            <BlockedGroupModal
+              isOpen={showBlockedModal}
+              groupName={group?.nome || 'Grupo'}
+              onBack={handleBack}
+            />
+          </>
+        ) : (
+          <GroupDetail 
+            group={group} 
+            currentUser={currentUser}
+            onBack={handleBack} 
+          />
+        )}
       </div>
     </div>
   );

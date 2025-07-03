@@ -84,21 +84,38 @@ const RemoverMembroModal: React.FC<RemoverMembroModalProps> = ({
 
       console.log('Permissões verificadas. Bloqueando membro na tabela membros_grupos...');
 
-      // Bloquear o membro do grupo (ao invés de deletar)
-      const { error: blockError } = await supabase
-        .from('membros_grupos')
-        .update({ is_blocked: true })
-        .eq('grupo_id', groupId)
-        .eq('user_id', memberId);
+      // Bloquear o membro do grupo (ao invés de deletar) com retry
+      let success = false;
+      const maxRetries = 3;
+      
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          const { error: blockError } = await supabase
+            .from('membros_grupos')
+            .update({ is_blocked: true })
+            .eq('grupo_id', groupId)
+            .eq('user_id', memberId);
 
-      if (blockError) {
-        console.error('Erro ao bloquear membro na tabela membros_grupos:', blockError);
-        toast({
-          title: "Erro",
-          description: `Erro ao remover membro: ${blockError.message}`,
-          variant: "destructive"
-        });
-        return;
+          if (!blockError) {
+            success = true;
+            break;
+          }
+          
+          if (attempt === maxRetries) {
+            throw blockError;
+          }
+          
+          console.log(`Tentativa ${attempt} falhou, tentando novamente...`);
+          await new Promise(resolve => setTimeout(resolve, 500));
+        } catch (error) {
+          if (attempt === maxRetries) {
+            throw error;
+          }
+        }
+      }
+
+      if (!success) {
+        throw new Error('Falha ao bloquear membro após múltiplas tentativas');
       }
 
       console.log('Membro bloqueado na tabela membros_grupos com sucesso');

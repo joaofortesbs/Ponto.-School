@@ -17,7 +17,7 @@ const BlockedGroupModal: React.FC<BlockedGroupModalProps> = ({
 }) => {
   return (
     <Dialog open={isOpen} onOpenChange={() => {}}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[9999] bg-white dark:bg-gray-800 border shadow-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-red-600">
             <AlertCircle className="h-5 w-5" />
@@ -35,7 +35,7 @@ const BlockedGroupModal: React.FC<BlockedGroupModalProps> = ({
           
           <Button
             onClick={onBack}
-            className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white"
+            className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white w-full"
           >
             Voltar aos Meus Grupos
           </Button>

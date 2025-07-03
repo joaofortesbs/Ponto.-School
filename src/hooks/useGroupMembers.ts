@@ -189,17 +189,11 @@ export const useGroupMembers = (groupId: string) => {
         (payload) => {
           console.log('Mudança detectada em membros_grupos:', payload);
           
-          // Se o usuário atual foi bloqueado
-          const { data: { user } } = supabase.auth.getUser();
-          user.then(({ user: currentUser }) => {
-            if (currentUser && payload.new.user_id === currentUser.id && payload.new.is_blocked) {
-              console.log('Usuário atual foi bloqueado');
-              setIsBlocked(true);
-            }
-          });
-          
-          // Atualizar lista de membros
-          refreshMembers();
+          // Se algum usuário foi bloqueado, atualizar lista
+          if (payload.new.is_blocked) {
+            console.log('Membro foi bloqueado, atualizando lista');
+            refreshMembers();
+          }
         }
       )
       .subscribe();
