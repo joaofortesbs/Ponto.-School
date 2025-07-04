@@ -9,6 +9,47 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      blocked_group_members: {
+        Row: {
+          blocked_at: string
+          blocked_by_user_id: string
+          blocked_user_id: string
+          created_at: string
+          group_id: string
+          id: string
+          reason: string | null
+          updated_at: string
+        }
+        Insert: {
+          blocked_at?: string
+          blocked_by_user_id: string
+          blocked_user_id: string
+          created_at?: string
+          group_id: string
+          id?: string
+          reason?: string | null
+          updated_at?: string
+        }
+        Update: {
+          blocked_at?: string
+          blocked_by_user_id?: string
+          blocked_user_id?: string
+          created_at?: string
+          group_id?: string
+          id?: string
+          reason?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blocked_group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "grupos_estudo"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_erros: {
         Row: {
           created_at: string | null
@@ -967,6 +1008,10 @@ export type Database = {
           message: string
         }[]
       }
+      block_user_from_group: {
+        Args: { group_id: string; user_to_block_id: string; reason?: string }
+        Returns: boolean
+      }
       clean_expired_locks: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -1035,6 +1080,10 @@ export type Database = {
       }
       is_group_member_safe: {
         Args: { group_id: string; user_id: string }
+        Returns: boolean
+      }
+      is_user_blocked_from_group: {
+        Args: { user_id: string; group_id: string }
         Returns: boolean
       }
       join_group_by_code: {
