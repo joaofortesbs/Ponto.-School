@@ -28,26 +28,25 @@ export const useGroupMembers = (groupId: string) => {
       // Verificar se o usuário atual está bloqueado
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const { data: userMembership } = await supabase
-          .from('membros_grupos')
-          .select('is_blocked')
+        const { data: blockData } = await supabase
+          .from('bloqueios_grupos')
+          .select('id')
           .eq('grupo_id', groupId)
           .eq('user_id', user.id)
           .single();
 
-        if (userMembership?.is_blocked === true) {
+        if (blockData) {
           setIsBlocked(true);
           setLoading(false);
           return;
         }
       }
 
-      // Buscar membros do grupo (apenas não bloqueados)
+      // Buscar membros do grupo
       const { data: membersData, error: membersError } = await supabase
         .from('membros_grupos')
         .select(`
           user_id,
-          is_blocked,
           profiles!inner(
             id,
             display_name,
@@ -56,8 +55,7 @@ export const useGroupMembers = (groupId: string) => {
             avatar_url
           )
         `)
-        .eq('grupo_id', groupId)
-        .eq('is_blocked', false);
+        .eq('grupo_id', groupId);
 
       if (membersError) {
         console.error('Erro ao carregar membros:', membersError);
@@ -78,11 +76,19 @@ export const useGroupMembers = (groupId: string) => {
         return;
       }
 
+      // Buscar bloqueios para filtrar membros bloqueados
+      const { data: blockedMembers } = await supabase
+        .from('bloqueios_grupos')
+        .select('user_id')
+        .eq('grupo_id', groupId);
+
+      const blockedUserIds = blockedMembers?.map(b => b.user_id) || [];
+
       // Combinar membros e criador
       const allMembers: GroupMember[] = [];
 
-      // Adicionar criador primeiro
-      if (groupData?.profiles) {
+      // Adicionar criador primeiro (se não estiver bloqueado)
+      if (groupData?.profiles && !blockedUserIds.includes(groupData.criador_id)) {
         allMembers.push({
           id: groupData.criador_id,
           name: groupData.profiles.display_name || groupData.profiles.full_name || groupData.profiles.email || 'Usuário',
@@ -94,9 +100,9 @@ export const useGroupMembers = (groupId: string) => {
         });
       }
 
-      // Adicionar membros (excluir criador se já estiver na lista de membros)
+      // Adicionar membros (excluir criador se já estiver na lista e filtrar bloqueados)
       membersData?.forEach((memberData: any) => {
-        if (memberData.user_id !== groupData.criador_id) {
+        if (memberData.user_id !== groupData.criador_id && !blockedUserIds.includes(memberData.user_id)) {
           allMembers.push({
             id: memberData.user_id,
             name: memberData.profiles.display_name || memberData.profiles.full_name || memberData.profiles.email || 'Usuário',
@@ -104,7 +110,7 @@ export const useGroupMembers = (groupId: string) => {
             role: 'Membro',
             isOnline: false,
             lastActive: 'Há 2 horas',
-            isBlocked: memberData.is_blocked || false
+            isBlocked: false
           });
         }
       });
@@ -130,10 +136,12 @@ export const useGroupMembers = (groupId: string) => {
       console.log(`Tentando bloquear membro ${memberId}`);
       
       const { error } = await supabase
-        .from('membros_grupos')
-        .update({ is_blocked: true })
-        .eq('grupo_id', groupId)
-        .eq('user_id', memberId);
+        .from('bloqueios_grupos')
+        .insert({
+          grupo_id: groupId,
+          user_id: memberId,
+          bloqueado_em: new Date().toISOString()
+        });
 
       if (error) {
         throw error;
@@ -146,7 +154,7 @@ export const useGroupMembers = (groupId: string) => {
       
       toast({
         title: "Sucesso",
-        description: "Membro removido com sucesso.",
+        description: "Membro bloqueado com sucesso.",
         variant: "default"
       });
 
@@ -155,14 +163,14 @@ export const useGroupMembers = (groupId: string) => {
       console.error('Erro ao bloquear membro:', err);
       toast({
         title: "Erro",
-        description: "Erro ao remover membro do grupo.",
+        description: "Erro ao bloquear membro do grupo.",
         variant: "destructive"
       });
       return false;
     }
   };
 
-  // Configurar realtime para mudanças na tabela membros_grupos
+  // Configurar realtime para mudanças na tabela bloqueios_grupos
   useEffect(() => {
     if (!groupId) return;
 
@@ -171,18 +179,18 @@ export const useGroupMembers = (groupId: string) => {
       .on(
         'postgres_changes',
         {
-          event: 'UPDATE',
+          event: 'INSERT',
           schema: 'public',
-          table: 'membros_grupos',
+          table: 'bloqueios_grupos',
           filter: `grupo_id=eq.${groupId}`
         },
         (payload: any) => {
-          console.log('Mudança detectada em membros_grupos:', payload);
+          console.log('Novo bloqueio detectado:', payload);
           
-          // Se algum usuário foi bloqueado, atualizar lista
-          if (payload.new.is_blocked === true) {
-            console.log('Membro foi bloqueado, atualizando lista');
-            refreshMembers();
+          // Remover membro bloqueado da lista
+          if (payload.new.user_id) {
+            console.log('Removendo membro bloqueado da lista:', payload.new.user_id);
+            setMembers(prev => prev.filter(member => member.id !== payload.new.user_id));
           }
         }
       )

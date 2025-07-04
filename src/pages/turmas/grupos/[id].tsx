@@ -64,10 +64,10 @@ export default function GroupDetailPage() {
       setLoading(true);
       console.log('Carregando dados do grupo:', id);
 
-      // Verificar se o usuário é membro do grupo e se está bloqueado
+      // Verificar se o usuário é membro do grupo
       const { data: membership, error: membershipError } = await supabase
         .from('membros_grupos')
-        .select('*, is_blocked')
+        .select('*')
         .eq('grupo_id', id)
         .eq('user_id', currentUser.id)
         .single();
@@ -81,6 +81,18 @@ export default function GroupDetailPage() {
         });
         navigate("/turmas/grupos");
         return;
+      }
+
+      // Verificar se o usuário está bloqueado
+      const { data: blockData, error: blockError } = await supabase
+        .from('bloqueios_grupos')
+        .select('id')
+        .eq('grupo_id', id)
+        .eq('user_id', currentUser.id)
+        .single();
+
+      if (blockError && blockError.code !== 'PGRST116') {
+        console.error('Erro ao verificar bloqueio:', blockError);
       }
 
       // Carregar dados básicos do grupo sempre
@@ -103,8 +115,8 @@ export default function GroupDetailPage() {
 
       setGroup(groupData);
 
-      // Verificar se o usuário está bloqueado
-      if (membership.is_blocked === true) {
+      // Se o usuário está bloqueado, mostrar modal
+      if (blockData) {
         console.log('Usuário está bloqueado neste grupo');
         setIsBlocked(true);
         setShowBlockedModal(true);
@@ -140,16 +152,16 @@ export default function GroupDetailPage() {
       .on(
         'postgres_changes',
         {
-          event: 'UPDATE',
+          event: 'INSERT',
           schema: 'public',
-          table: 'membros_grupos',
+          table: 'bloqueios_grupos',
           filter: `grupo_id=eq.${id}`
         },
         (payload: any) => {
-          console.log('Mudança detectada em membros_grupos:', payload);
+          console.log('Novo bloqueio detectado:', payload);
           
           // Se o usuário atual foi bloqueado
-          if (payload.new.user_id === currentUser.id && payload.new.is_blocked === true) {
+          if (payload.new.user_id === currentUser.id) {
             console.log('Usuário atual foi bloqueado em tempo real');
             setIsBlocked(true);
             setShowBlockedModal(true);

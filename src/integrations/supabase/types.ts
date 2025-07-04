@@ -9,6 +9,38 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      bloqueios_grupos: {
+        Row: {
+          bloqueado_em: string
+          created_at: string
+          grupo_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          bloqueado_em?: string
+          created_at?: string
+          grupo_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          bloqueado_em?: string
+          created_at?: string
+          grupo_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bloqueios_grupos_grupo_id_fkey"
+            columns: ["grupo_id"]
+            isOneToOne: false
+            referencedRelation: "grupos_estudo"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_erros: {
         Row: {
           created_at: string | null
@@ -967,6 +999,10 @@ export type Database = {
           message: string
         }[]
       }
+      block_user_from_group: {
+        Args: { group_id: string; user_to_block_id: string; reason?: string }
+        Returns: boolean
+      }
       clean_expired_locks: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -1035,6 +1071,10 @@ export type Database = {
       }
       is_group_member_safe: {
         Args: { group_id: string; user_id: string }
+        Returns: boolean
+      }
+      is_user_blocked_from_group: {
+        Args: { user_id: string; group_id: string }
         Returns: boolean
       }
       join_group_by_code: {
