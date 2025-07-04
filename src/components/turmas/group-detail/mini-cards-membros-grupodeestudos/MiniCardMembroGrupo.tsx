@@ -1,11 +1,11 @@
-
 import React, { useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MoreVertical, Crown, Shield, UserMinus, MessageCircle } from "lucide-react";
+import { MoreVertical, Crown, Shield, UserMinus, MessageCircle, Ban } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import RemoverMembroModal from "./RemoverMembroModal";
+import BloquearMembroModal from "./BloquearMembroModal";
 
 interface MiniCardMembroGrupoProps {
   member: {
@@ -32,6 +32,7 @@ const MiniCardMembroGrupo: React.FC<MiniCardMembroGrupoProps> = ({
 }) => {
   const [showRemoverModal, setShowRemoverModal] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
+  const [showBlockModal, setShowBlockModal] = useState(false);
 
   // Não renderizar se o membro estiver bloqueado
   if (member.isBlocked) {
@@ -40,10 +41,10 @@ const MiniCardMembroGrupo: React.FC<MiniCardMembroGrupoProps> = ({
 
   // Verificar se o usuário atual é o criador do grupo
   const isCurrentUserCreator = currentUserId === groupCreatorId;
-  
+
   // Verificar se o membro é o criador do grupo
   const isMemberCreator = member.id === groupCreatorId;
-  
+
   // Verificar se pode remover este membro
   const canRemoveMember = isCurrentUserCreator && !isMemberCreator && member.id !== currentUserId;
 
@@ -56,7 +57,24 @@ const MiniCardMembroGrupo: React.FC<MiniCardMembroGrupoProps> = ({
   const handleRemover = async () => {
     console.log(`Membro ${member.name} foi removido com sucesso`);
     setShowRemoverModal(false);
-    
+
+    // Chamar o callback para atualizar a lista de membros
+    if (onMemberRemoved) {
+      console.log('Chamando callback onMemberRemoved para atualizar lista');
+      onMemberRemoved();
+    }
+  };
+
+  const handleBlockClick = () => {
+    console.log(`Tentando bloquear membro: ${member.name} (${member.id}) do grupo ${groupId}`);
+    setShowBlockModal(true);
+    setShowOptions(false);
+  };
+
+  const handleBlock = async () => {
+    console.log(`Membro ${member.name} foi bloqueado com sucesso`);
+    setShowBlockModal(false);
+
     // Chamar o callback para atualizar a lista de membros
     if (onMemberRemoved) {
       console.log('Chamando callback onMemberRemoved para atualizar lista');
@@ -117,12 +135,12 @@ const MiniCardMembroGrupo: React.FC<MiniCardMembroGrupoProps> = ({
                 </h4>
                 {getRoleIcon()}
               </div>
-              
+
               <div className="flex items-center gap-2 mb-2">
                 <Badge className={`text-xs px-2 py-1 border ${getRoleBadgeColor()}`}>
                   {getDisplayRole()}
                 </Badge>
-                
+
                 {member.isOnline ? (
                   <span className="text-xs text-green-600 dark:text-green-400 font-medium">
                     Online
@@ -160,7 +178,7 @@ const MiniCardMembroGrupo: React.FC<MiniCardMembroGrupoProps> = ({
                     <MessageCircle className="h-4 w-4" />
                     Enviar mensagem
                   </button>
-                  
+
                   {canRemoveMember && (
                     <button 
                       className="w-full text-left px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md flex items-center gap-2"
@@ -168,6 +186,16 @@ const MiniCardMembroGrupo: React.FC<MiniCardMembroGrupoProps> = ({
                     >
                       <UserMinus className="h-4 w-4" />
                       Remover do grupo
+                    </button>
+                  )}
+                  
+                  {canRemoveMember && (
+                    <button 
+                      className="w-full text-left px-3 py-2 text-sm text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-md flex items-center gap-2"
+                      onClick={handleBlockClick}
+                    >
+                      <Ban className="h-4 w-4" />
+                      Bloquear usuário
                     </button>
                   )}
                 </div>
@@ -185,6 +213,16 @@ const MiniCardMembroGrupo: React.FC<MiniCardMembroGrupoProps> = ({
         memberId={member.id}
         groupId={groupId || ""}
         onRemove={handleRemover}
+      />
+
+      {/* Modal de bloqueio */}
+      <BloquearMembroModal
+        isOpen={showBlockModal}
+        onClose={() => setShowBlockModal(false)}
+        memberName={member.name}
+        memberId={member.id}
+        groupId={groupId || ""}
+        onBlock={handleBlock}
       />
     </>
   );
