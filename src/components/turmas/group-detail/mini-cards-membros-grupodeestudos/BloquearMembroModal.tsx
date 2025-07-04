@@ -41,9 +41,15 @@ const BloquearMembroModal: React.FC<BloquearMembroModalProps> = ({
     setIsBlocking(true);
 
     try {
-      // Chamar a função do Supabase para bloquear o usuário
-      const { error } = await supabase.rpc('block_user_from_group', {
+      console.log('Tentando bloquear membro:', {
         group_id: groupId,
+        user_to_block_id: memberId,
+        reason: reason.trim() || null
+      });
+
+      // Chamar a função do Supabase para bloquear o usuário
+      const { data, error } = await supabase.rpc('block_user_from_group', {
+        p_group_id: groupId,
         user_to_block_id: memberId,
         reason: reason.trim() || null
       });
@@ -57,6 +63,8 @@ const BloquearMembroModal: React.FC<BloquearMembroModalProps> = ({
         });
         return;
       }
+
+      console.log('Membro bloqueado com sucesso:', data);
 
       toast({
         title: "Membro bloqueado",

@@ -19,8 +19,10 @@ export const blockService = {
   // Bloquear um usuário de um grupo
   async blockUser(groupId: string, userId: string, reason?: string): Promise<boolean> {
     try {
-      const { error } = await supabase.rpc('block_user_from_group', {
-        group_id: groupId,
+      console.log('Bloqueando usuário:', { groupId, userId, reason });
+      
+      const { data, error } = await supabase.rpc('block_user_from_group', {
+        p_group_id: groupId,
         user_to_block_id: userId,
         reason: reason || null
       });
@@ -30,6 +32,7 @@ export const blockService = {
         return false;
       }
 
+      console.log('Usuário bloqueado com sucesso:', data);
       return true;
     } catch (error) {
       console.error('Erro ao bloquear usuário:', error);
