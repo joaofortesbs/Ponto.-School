@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +14,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
+import { blockService } from '@/services/blockService';
 
 interface Member {
   id: string;
@@ -26,18 +26,22 @@ interface Member {
   is_online?: boolean;
   last_seen?: string;
   contribution_level?: number;
+  isBlocked?: boolean;
 }
 
 interface MembrosTabProps {
   groupId: string;
 }
 
-export default function MembrosTab({ groupId }: MembrosTabProps) {
+const MembrosTab: React.FC<MembrosTabProps> = ({ 
+  groupId
+}) => {
   const [members, setMembers] = useState<Member[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'online' | 'admins'>('all');
   const { user } = useAuth();
+  const [blockedUserIds, setBlockedUserIds] = useState<string[]>([]);
 
   useEffect(() => {
     loadMembers();
@@ -77,16 +81,29 @@ export default function MembrosTab({ groupId }: MembrosTabProps) {
     }
   };
 
+  useEffect(() => {
+    const loadBlockedUsers = async () => {
+      if (groupId) {
+        const blockedMembers = await blockService.getBlockedMembers(groupId);
+        const blockedIds = blockedMembers.map(member => member.blocked_user_id);
+        setBlockedUserIds(blockedIds);
+      }
+    };
+
+    loadBlockedUsers();
+  }, [groupId]);
+
   const filteredMembers = members.filter(member => {
     const matchesSearch = member.display_name.toLowerCase().includes(searchTerm.toLowerCase());
-    
+    const isNotBlocked = !blockedUserIds.includes(member.user_id);
+
     switch (selectedFilter) {
       case 'online':
-        return matchesSearch && member.is_online;
+        return matchesSearch && member.is_online && isNotBlocked;
       case 'admins':
-        return matchesSearch && (member.role === 'admin' || member.role === 'moderator');
+        return matchesSearch && (member.role === 'admin' || member.role === 'moderator') && isNotBlocked;
       default:
-        return matchesSearch;
+        return matchesSearch && isNotBlocked;
     }
   });
 
@@ -234,7 +251,7 @@ export default function MembrosTab({ groupId }: MembrosTabProps) {
                         </div>
                       </div>
                     </div>
-                    
+
                   </div>
                 </CardContent>
               </Card>
@@ -245,3 +262,5 @@ export default function MembrosTab({ groupId }: MembrosTabProps) {
     </div>
   );
 }
+
+export default MembrosTab;
