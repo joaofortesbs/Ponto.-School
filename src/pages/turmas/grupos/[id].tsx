@@ -14,6 +14,7 @@ export default function GroupDetailPage() {
   const [group, setGroup] = useState<any>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [isBlocked, setIsBlocked] = useState(false);
+  const [blockInfo, setBlockInfo] = useState<any>(null);
   const [showBlockedModal, setShowBlockedModal] = useState(false);
 
   useEffect(() => {
@@ -64,25 +65,6 @@ export default function GroupDetailPage() {
       setLoading(true);
       console.log('Carregando dados do grupo:', id);
 
-      // Verificar se o usuário é membro do grupo e se está bloqueado
-      const { data: membership, error: membershipError } = await supabase
-        .from('membros_grupos')
-        .select('*, is_blocked')
-        .eq('grupo_id', id)
-        .eq('user_id', currentUser.id)
-        .single();
-
-      if (membershipError || !membership) {
-        console.error('Usuário não é membro do grupo:', membershipError);
-        toast({
-          title: "Acesso negado",
-          description: "Você não é membro deste grupo",
-          variant: "destructive"
-        });
-        navigate("/turmas/grupos");
-        return;
-      }
-
       // Carregar dados básicos do grupo sempre
       const { data: groupData, error: groupError } = await supabase
         .from('grupos_estudo')
@@ -104,11 +86,52 @@ export default function GroupDetailPage() {
       setGroup(groupData);
 
       // Verificar se o usuário está bloqueado
-      if (membership.is_blocked === true) {
+      const { data: blockData, error: blockError } = await supabase
+        .from('blocked_group_members')
+        .select(`
+          reason,
+          blocked_at,
+          profiles:blocked_by_user_id (
+            display_name,
+            username
+          )
+        `)
+        .eq('group_id', id)
+        .eq('blocked_user_id', currentUser.id)
+        .single();
+
+      if (blockError && blockError.code !== 'PGRST116') {
+        console.error('Erro ao verificar bloqueio:', blockError);
+      }
+
+      if (blockData) {
         console.log('Usuário está bloqueado neste grupo');
         setIsBlocked(true);
+        setBlockInfo(blockData);
         setShowBlockedModal(true);
       } else {
+        // Verificar se é membro do grupo
+        const { data: membership, error: membershipError } = await supabase
+          .from('membros_grupos')
+          .select('*')
+          .eq('grupo_id', id)
+          .eq('user_id', currentUser.id)
+          .single();
+
+        if (membershipError || !membership) {
+          // Verificar se é o criador do grupo
+          if (groupData.criador_id !== currentUser.id) {
+            console.error('Usuário não é membro do grupo:', membershipError);
+            toast({
+              title: "Acesso negado",
+              description: "Você não é membro deste grupo",
+              variant: "destructive"
+            });
+            navigate("/turmas/grupos");
+            return;
+          }
+        }
+
         setIsBlocked(false);
         setShowBlockedModal(false);
       }
@@ -140,18 +163,22 @@ export default function GroupDetailPage() {
       .on(
         'postgres_changes',
         {
-          event: 'UPDATE',
+          event: 'INSERT',
           schema: 'public',
-          table: 'membros_grupos',
-          filter: `grupo_id=eq.${id}`
+          table: 'blocked_group_members',
+          filter: `group_id=eq.${id}`
         },
         (payload: any) => {
-          console.log('Mudança detectada em membros_grupos:', payload);
+          console.log('Novo bloqueio detectado:', payload);
           
           // Se o usuário atual foi bloqueado
-          if (payload.new.user_id === currentUser.id && payload.new.is_blocked === true) {
+          if (payload.new.blocked_user_id === currentUser.id) {
             console.log('Usuário atual foi bloqueado em tempo real');
             setIsBlocked(true);
+            setBlockInfo({
+              reason: payload.new.reason,
+              blocked_at: payload.new.blocked_at
+            });
             setShowBlockedModal(true);
           }
         }
@@ -206,6 +233,7 @@ export default function GroupDetailPage() {
             <BlockedGroupModal
               isOpen={showBlockedModal}
               groupName={group?.nome || 'Grupo'}
+              reason={blockInfo?.reason}
               onBack={handleBack}
             />
           </>

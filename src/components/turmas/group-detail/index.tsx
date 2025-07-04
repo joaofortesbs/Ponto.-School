@@ -1,7 +1,9 @@
+
 import React, { useState } from 'react';
 import { ArrowLeft, MessageCircle, Users, Calendar, FileText, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import AjustesTab from './tabs/AjustesTab';
+import MembrosTab from './tabs/MembrosTab';
 import GroupDetailHeader from './GroupDetailHeader';
 import GroupTabs from './GroupTabs';
 import ChatSection from './ChatSection';
@@ -33,7 +35,7 @@ export default function GroupDetail({ group, currentUser, onBack }: GroupDetailP
       case 'events':
         return <PlaceholderSection title="Eventos" message="Funcionalidade em desenvolvimento" />;
       case 'members':
-        return <PlaceholderSection title="Membros" message="Funcionalidade em desenvolvimento" />;
+        return <MembrosTab groupId={group.id} />;
       case 'files':
         return <PlaceholderSection title="Arquivos" message="Funcionalidade em desenvolvimento" />;
       case 'about':
@@ -95,17 +97,9 @@ export default function GroupDetail({ group, currentUser, onBack }: GroupDetailP
           group={group} 
           onSave={(settings) => {
             console.log('Settings saved:', settings);
-            // Recarregar dados do grupo após salvar
-            if (typeof loadGroupData === 'function') {
-              loadGroupData();
-            }
           }}
           onUpdate={() => {
             console.log('Group data update requested');
-            // Recarregar dados do grupo após atualização
-            if (typeof loadGroupData === 'function') {
-              loadGroupData();
-            }
           }}
         />;
       default:
