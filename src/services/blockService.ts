@@ -1,5 +1,4 @@
 
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface BlockedMember {
@@ -24,8 +23,8 @@ export const blockService = {
       
       const { data, error } = await supabase.rpc('block_user_from_group', {
         p_group_id: groupId,
-        user_to_block_id: userId,
-        reason: reason || null
+        p_user_to_block_id: userId,
+        p_reason: reason || null
       });
 
       if (error) {
@@ -120,7 +119,7 @@ export const blockService = {
     }
   },
 
-  // Desbloquear um usuário (para implementação futura)
+  // Desbloquear um usuário
   async unblockUser(groupId: string, userId: string): Promise<boolean> {
     try {
       const { error } = await supabase
@@ -141,4 +140,3 @@ export const blockService = {
     }
   }
 };
-

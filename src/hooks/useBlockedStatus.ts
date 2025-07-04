@@ -1,5 +1,4 @@
 
-
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 
@@ -69,4 +68,3 @@ export const useBlockedStatus = (groupId: string | undefined, userId: string | u
 
   return { blockedInfo, loading };
 };
-

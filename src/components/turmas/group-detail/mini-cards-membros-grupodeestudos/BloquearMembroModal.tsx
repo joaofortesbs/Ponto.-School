@@ -1,5 +1,4 @@
 
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -43,16 +42,16 @@ const BloquearMembroModal: React.FC<BloquearMembroModalProps> = ({
 
     try {
       console.log('Tentando bloquear membro:', {
-        group_id: groupId,
-        user_to_block_id: memberId,
-        reason: reason.trim() || null
+        p_group_id: groupId,
+        p_user_to_block_id: memberId,
+        p_reason: reason.trim() || null
       });
 
       // Chamar a função do Supabase para bloquear o usuário
       const { data, error } = await supabase.rpc('block_user_from_group', {
         p_group_id: groupId,
-        user_to_block_id: memberId,
-        reason: reason.trim() || null
+        p_user_to_block_id: memberId,
+        p_reason: reason.trim() || null
       });
 
       if (error) {
@@ -155,4 +154,3 @@ const BloquearMembroModal: React.FC<BloquearMembroModalProps> = ({
 };
 
 export default BloquearMembroModal;
-
