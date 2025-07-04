@@ -64,7 +64,49 @@ export default function GroupDetailPage() {
       setLoading(true);
       console.log('Carregando dados do grupo:', id);
 
-      // Verificar se o usuário é membro do grupo
+      // PRIMEIRO: Verificar se o usuário está bloqueado ANTES de tudo
+      console.log(`Verificando se usuário ${currentUser.id} está bloqueado no grupo ${id}`);
+      const { data: blockData, error: blockError } = await supabase
+        .from('bloqueios_grupos')
+        .select('id, grupo_id, user_id')
+        .eq('grupo_id', id)
+        .eq('user_id', currentUser.id)
+        .maybeSingle();
+
+      if (blockError && blockError.code !== 'PGRST116') {
+        console.error('Erro ao verificar bloqueio:', blockError);
+      }
+
+      // Se o usuário está bloqueado, carregar dados básicos do grupo e mostrar modal imediatamente
+      if (blockData) {
+        console.log('Usuário está bloqueado - carregando dados básicos e mostrando modal');
+        
+        // Carregar apenas dados básicos do grupo
+        const { data: groupData, error: groupError } = await supabase
+          .from('grupos_estudo')
+          .select('id, nome, descricao')
+          .eq('id', id)
+          .single();
+
+        if (groupError || !groupData) {
+          console.error('Erro ao carregar grupo:', groupError);
+          toast({
+            title: "Erro",
+            description: "Grupo não encontrado",
+            variant: "destructive"
+          });
+          navigate("/turmas/grupos");
+          return;
+        }
+
+        setGroup(groupData);
+        setIsBlocked(true);
+        setShowBlockedModal(true);
+        setLoading(false);
+        return;
+      }
+
+      // SEGUNDO: Verificar se é membro do grupo (só se não estiver bloqueado)
       const { data: membership, error: membershipError } = await supabase
         .from('membros_grupos')
         .select('*')
@@ -83,19 +125,7 @@ export default function GroupDetailPage() {
         return;
       }
 
-      // Verificar se o usuário está bloqueado
-      const { data: blockData, error: blockError } = await supabase
-        .from('bloqueios_grupos')
-        .select('id')
-        .eq('grupo_id', id)
-        .eq('user_id', currentUser.id)
-        .single();
-
-      if (blockError && blockError.code !== 'PGRST116') {
-        console.error('Erro ao verificar bloqueio:', blockError);
-      }
-
-      // Carregar dados básicos do grupo sempre
+      // TERCEIRO: Carregar dados completos do grupo
       const { data: groupData, error: groupError } = await supabase
         .from('grupos_estudo')
         .select('*')
@@ -114,16 +144,8 @@ export default function GroupDetailPage() {
       }
 
       setGroup(groupData);
-
-      // Se o usuário está bloqueado, mostrar modal
-      if (blockData) {
-        console.log('Usuário está bloqueado neste grupo');
-        setIsBlocked(true);
-        setShowBlockedModal(true);
-      } else {
-        setIsBlocked(false);
-        setShowBlockedModal(false);
-      }
+      setIsBlocked(false);
+      setShowBlockedModal(false);
 
       console.log('Dados do grupo carregados:', groupData);
     } catch (error) {

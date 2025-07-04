@@ -20,23 +20,45 @@ export const useGroupMembers = (groupId: string) => {
   const [isBlocked, setIsBlocked] = useState(false);
   const { toast } = useToast();
 
+  const checkIfUserIsBlocked = async (currentUserId: string) => {
+    try {
+      console.log(`Verificando se usuário ${currentUserId} está bloqueado no grupo ${groupId}`);
+      if (!groupId || !currentUserId) return false;
+
+      const { data: blockData, error: blockError } = await supabase
+        .from('bloqueios_grupos')
+        .select('id, grupo_id, user_id')
+        .eq('grupo_id', groupId)
+        .eq('user_id', currentUserId)
+        .maybeSingle();
+
+      if (blockError) {
+        console.error('Erro ao verificar bloqueio:', blockError);
+        return false;
+      }
+
+      const blocked = !!blockData;
+      console.log(`Usuário ${currentUserId} ${blocked ? 'está' : 'não está'} bloqueado no grupo ${groupId}`);
+      
+      setIsBlocked(blocked);
+      return blocked;
+    } catch (error) {
+      console.error('Erro ao verificar se usuário está bloqueado:', error);
+      return false;
+    }
+  };
+
   const loadMembers = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Verificar se o usuário atual está bloqueado
+      // Verificar se o usuário atual está bloqueado PRIMEIRO
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const { data: blockData } = await supabase
-          .from('bloqueios_grupos')
-          .select('id')
-          .eq('grupo_id', groupId)
-          .eq('user_id', user.id)
-          .single();
-
-        if (blockData) {
-          setIsBlocked(true);
+        const userIsBlocked = await checkIfUserIsBlocked(user.id);
+        if (userIsBlocked) {
+          console.log('Usuário está bloqueado, parando carregamento de membros');
           setLoading(false);
           return;
         }
@@ -186,6 +208,14 @@ export const useGroupMembers = (groupId: string) => {
         },
         (payload: any) => {
           console.log('Novo bloqueio detectado:', payload);
+          
+          // Verificar se o usuário atual foi bloqueado
+          supabase.auth.getUser().then(({ data: { user } }) => {
+            if (user && payload.new.user_id === user.id) {
+              console.log('Usuário atual foi bloqueado em tempo real');
+              setIsBlocked(true);
+            }
+          });
           
           // Remover membro bloqueado da lista
           if (payload.new.user_id) {
