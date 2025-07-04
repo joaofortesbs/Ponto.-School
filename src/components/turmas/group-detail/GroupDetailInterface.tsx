@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
@@ -8,9 +7,6 @@ import ChatSection from './ChatSection';
 import PlaceholderSection from './PlaceholderSection';
 import AjustesTab from './tabs/AjustesTab';
 import SobreTab from './tabs/SobreTab';
-import UserBlockedModal from './UserBlockedModal';
-import { useAuth } from '@/hooks/useAuth';
-import { useBlockedStatus } from '@/hooks/useBlockedStatus';
 
 interface GroupDetailInterfaceProps {
   groupId: string;
@@ -28,28 +24,24 @@ export default function GroupDetailInterface({
   const [activeTab, setActiveTab] = useState('discussions');
   const [groupData, setGroupData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [showBlockedModal, setShowBlockedModal] = useState(false);
-
-  // Verificar se o usuário está bloqueado
-  const { blockedInfo, loading: blockedLoading } = useBlockedStatus(groupId, currentUser?.id);
 
   // Função para carregar dados do grupo
   const loadGroupData = async () => {
     try {
       setLoading(true);
       const { supabase } = await import('@/integrations/supabase/client');
-
+      
       const { data, error } = await supabase
         .from('grupos_estudo')
         .select('*')
         .eq('id', groupId)
         .single();
-
+      
       if (error) {
         console.error('Erro ao carregar dados do grupo:', error);
         return;
       }
-
+      
       if (data) {
         console.log('Dados do grupo carregados:', data);
         setGroupData(data);
@@ -65,34 +57,6 @@ export default function GroupDetailInterface({
   const handleUpdate = () => {
     loadGroupData();
   };
-
-    useEffect(() => {
-    // Scroll to top when entering group interface
-    window.scrollTo(0, 0);
-
-    // Carregar dados do grupo
-    if (groupId) {
-      loadGroupData();
-    }
-
-        // Verificar se o usuário está bloqueado e mostrar o modal
-    if (!blockedLoading && blockedInfo && blockedInfo.isBlocked) {
-      setShowBlockedModal(true);
-    }
-
-
-    // Cleanup function para restaurar cabeçalho se componente for desmontado
-    return () => {
-      const headers = document.querySelectorAll('.groups-header, [data-testid="groups-header"], .turmas-header');
-      if (headers.length > 0) {
-        headers.forEach(header => {
-          (header as HTMLElement).classList.remove('hidden');
-          (header as HTMLElement).classList.add('visible');
-        });
-        console.log('Cabeçalho restaurado na limpeza do componente.');
-      }
-    };
-  }, [groupId, blockedInfo, blockedLoading]);
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -127,6 +91,28 @@ export default function GroupDetailInterface({
     }
   };
 
+  useEffect(() => {
+    // Scroll to top when entering group interface
+    window.scrollTo(0, 0);
+
+    // Carregar dados do grupo
+    if (groupId) {
+      loadGroupData();
+    }
+
+    // Cleanup function para restaurar cabeçalho se componente for desmontado
+    return () => {
+      const headers = document.querySelectorAll('.groups-header, [data-testid="groups-header"], .turmas-header');
+      if (headers.length > 0) {
+        headers.forEach(header => {
+          (header as HTMLElement).classList.remove('hidden');
+          (header as HTMLElement).classList.add('visible');
+        });
+        console.log('Cabeçalho restaurado na limpeza do componente.');
+      }
+    };
+  }, [groupId]);
+
   return (
     <div className="group-interface">
       <GroupDetailHeader groupName={groupName} onBack={onBack} />
@@ -134,21 +120,6 @@ export default function GroupDetailInterface({
       <div className="group-content">
         {renderTabContent()}
       </div>
-
-      {/* Modal para usuário bloqueado */}
-      <UserBlockedModal
-        isOpen={showBlockedModal}
-        onClose={() => {
-          setShowBlockedModal(false);
-          onBack();
-        }}
-        groupName={groupData?.nome || 'Grupo'}
-        reason={blockedInfo?.reason}
-        onUnblock={() => {
-          // Função para desbloquear (inativa por enquanto)
-          console.log('Função de desbloqueio ainda não implementada');
-        }}
-      />
     </div>
   );
 }

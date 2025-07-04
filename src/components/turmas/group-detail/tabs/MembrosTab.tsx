@@ -11,15 +11,10 @@ import {
   Crown, 
   Shield, 
   User, 
-  UserPlus,
-  UserX,
-  AlertTriangle
+  UserPlus
 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
-import { blockService } from '@/services/blockService';
-import BloquearMembroModal from '../mini-cards-membros-grupodeestudos/BloquearMembroModal';
-import { useToast } from '@/hooks/use-toast';
 
 interface Member {
   id: string;
@@ -31,183 +26,60 @@ interface Member {
   is_online?: boolean;
   last_seen?: string;
   contribution_level?: number;
-  isBlocked?: boolean;
 }
 
 interface MembrosTabProps {
   groupId: string;
 }
 
-const MembrosTab: React.FC<MembrosTabProps> = ({ 
-  groupId
-}) => {
+export default function MembrosTab({ groupId }: MembrosTabProps) {
   const [members, setMembers] = useState<Member[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'online' | 'admins'>('all');
-  const [isGroupCreator, setIsGroupCreator] = useState(false);
-  const [currentUser, setCurrentUser] = useState<any>(null);
-  const [blockModalOpen, setBlockModalOpen] = useState(false);
-  const [selectedMember, setSelectedMember] = useState<{ id: string; name: string } | null>(null);
   const { user } = useAuth();
-  const { toast } = useToast();
 
   useEffect(() => {
     loadMembers();
-    checkUserPermissions();
   }, [groupId]);
-
-  const checkUserPermissions = async () => {
-    try {
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      if (!currentUser) return;
-
-      setCurrentUser(currentUser);
-
-      const { data: groupData, error } = await supabase
-        .from('grupos_estudo')
-        .select('criador_id')
-        .eq('id', groupId)
-        .single();
-
-      if (error) {
-        console.error('Erro ao verificar permissões:', error);
-        return;
-      }
-
-      setIsGroupCreator(groupData?.criador_id === currentUser.id);
-    } catch (error) {
-      console.error('Erro ao verificar permissões:', error);
-    }
-  };
 
   const loadMembers = async () => {
     try {
-      setIsLoading(true);
-
-      // Buscar membros do grupo
-      const { data: membersData, error: membersError } = await supabase
-        .from('membros_grupos')
+      const { data, error } = await supabase
+        .from('group_members')
         .select(`
-          user_id,
-          joined_at,
-          profiles:user_id (
+          *,
+          profiles!group_members_user_id_fkey (
             display_name,
             avatar_url
           )
         `)
-        .eq('grupo_id', groupId);
+        .eq('group_id', groupId);
 
-      if (membersError) {
-        console.error('Erro ao carregar membros:', membersError);
-        toast({
-          title: "Erro",
-          description: "Erro ao carregar membros do grupo",
-          variant: "destructive"
-        });
-        return;
-      }
+      if (error) throw error;
 
-      // Buscar dados do criador do grupo
-      const { data: groupData, error: groupError } = await supabase
-        .from('grupos_estudo')
-        .select(`
-          criador_id,
-          profiles:criador_id (
-            display_name,
-            avatar_url
-          )
-        `)
-        .eq('id', groupId)
-        .single();
-
-      if (groupError) {
-        console.error('Erro ao carregar dados do grupo:', groupError);
-        return;
-      }
-
-      const formattedMembers: Member[] = [];
-
-      // Adicionar criador primeiro
-      if (groupData?.profiles) {
-        formattedMembers.push({
-          id: `member-${groupData.criador_id}`,
-          user_id: groupData.criador_id,
-          role: 'admin',
-          joined_at: new Date().toISOString(),
-          display_name: groupData.profiles.display_name || 'Criador',
-          avatar_url: groupData.profiles.avatar_url,
-          is_online: Math.random() > 0.5,
-          contribution_level: Math.floor(Math.random() * 100)
-        });
-      }
-
-      // Adicionar outros membros
-      if (membersData) {
-        membersData.forEach((memberData: any) => {
-          if (memberData.user_id !== groupData.criador_id) {
-            formattedMembers.push({
-              id: `member-${memberData.user_id}`,
-              user_id: memberData.user_id,
-              role: 'member',
-              joined_at: memberData.joined_at,
-              display_name: memberData.profiles?.display_name || 'Usuário',
-              avatar_url: memberData.profiles?.avatar_url,
-              is_online: Math.random() > 0.5,
-              contribution_level: Math.floor(Math.random() * 100)
-            });
-          }
-        });
-      }
+      const formattedMembers = data?.map(member => ({
+        id: member.id,
+        user_id: member.user_id,
+        role: member.role || 'member',
+        joined_at: member.joined_at,
+        display_name: member.profiles?.display_name || 'Usuário',
+        avatar_url: member.profiles?.avatar_url || '',
+        is_online: Math.random() > 0.5, // Simulação de status online
+        contribution_level: Math.floor(Math.random() * 100)
+      })) || [];
 
       setMembers(formattedMembers);
     } catch (error) {
       console.error('Erro ao carregar membros:', error);
-      toast({
-        title: "Erro",
-        description: "Erro inesperado ao carregar membros",
-        variant: "destructive"
-      });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleBlockMember = (memberId: string, memberName: string) => {
-    setSelectedMember({ id: memberId, name: memberName });
-    setBlockModalOpen(true);
-  };
-
-  const handleBlockConfirm = async () => {
-    if (!selectedMember) return;
-
-    try {
-      const success = await blockService.blockUser(groupId, selectedMember.id);
-      if (success) {
-        toast({
-          title: "Sucesso",
-          description: `${selectedMember.name} foi bloqueado do grupo`,
-        });
-        
-        // Remover membro da lista local
-        setMembers(prev => prev.filter(member => member.user_id !== selectedMember.id));
-        
-        setBlockModalOpen(false);
-        setSelectedMember(null);
-      }
-    } catch (error) {
-      console.error('Erro ao bloquear membro:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao bloquear membro",
-        variant: "destructive"
-      });
-    }
-  };
-
   const filteredMembers = members.filter(member => {
     const matchesSearch = member.display_name.toLowerCase().includes(searchTerm.toLowerCase());
-
+    
     switch (selectedFilter) {
       case 'online':
         return matchesSearch && member.is_online;
@@ -362,21 +234,7 @@ const MembrosTab: React.FC<MembrosTabProps> = ({
                         </div>
                       </div>
                     </div>
-
-                    {/* Botões de ação - apenas para criadores do grupo */}
-                    {isGroupCreator && member.user_id !== currentUser?.id && (
-                      <div className="flex items-center space-x-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleBlockMember(member.user_id, member.display_name)}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
-                        >
-                          <UserX className="w-4 h-4 mr-1" />
-                          Bloquear
-                        </Button>
-                      </div>
-                    )}
+                    
                   </div>
                 </CardContent>
               </Card>
@@ -384,21 +242,6 @@ const MembrosTab: React.FC<MembrosTabProps> = ({
           </div>
         )}
       </div>
-
-      {/* Modal de Bloqueio */}
-      <BloquearMembroModal
-        isOpen={blockModalOpen}
-        onClose={() => {
-          setBlockModalOpen(false);
-          setSelectedMember(null);
-        }}
-        memberName={selectedMember?.name || ''}
-        memberId={selectedMember?.id || ''}
-        groupId={groupId}
-        onBlock={handleBlockConfirm}
-      />
     </div>
   );
-};
-
-export default MembrosTab;
+}
