@@ -15,6 +15,7 @@ export default function GroupDetailPage() {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [isBlocked, setIsBlocked] = useState(false);
   const [showBlockedModal, setShowBlockedModal] = useState(false);
+  const [blockCheckComplete, setBlockCheckComplete] = useState(false);
 
   useEffect(() => {
     getCurrentUser();
@@ -22,7 +23,8 @@ export default function GroupDetailPage() {
 
   useEffect(() => {
     if (currentUser && id) {
-      fetchGroup();
+      // 🔥 PRIORIDADE MÁXIMA: Verificar bloqueio IMEDIATAMENTE
+      checkBlockedStatusFirst();
     }
   }, [id, currentUser]);
 
@@ -57,18 +59,16 @@ export default function GroupDetailPage() {
     }
   };
 
-  const fetchGroup = async () => {
+  const checkBlockedStatusFirst = async () => {
     if (!currentUser || !id) return;
     
     try {
-      setLoading(true);
-      console.log('Carregando dados do grupo:', id);
+      console.log(`🔥 VERIFICAÇÃO CRÍTICA: Checando bloqueio para usuário ${currentUser.id} no grupo ${id}`);
 
-      // PRIMEIRO: Verificar se o usuário está bloqueado ANTES de tudo
-      console.log(`Verificando se usuário ${currentUser.id} está bloqueado no grupo ${id}`);
+      // PRIMEIRA COISA: Verificar se o usuário está bloqueado
       const { data: blockData, error: blockError } = await supabase
         .from('bloqueios_grupos')
-        .select('id, grupo_id, user_id')
+        .select('id, grupo_id, user_id, bloqueado_em')
         .eq('grupo_id', id)
         .eq('user_id', currentUser.id)
         .maybeSingle();
@@ -77,11 +77,10 @@ export default function GroupDetailPage() {
         console.error('Erro ao verificar bloqueio:', blockError);
       }
 
-      // Se o usuário está bloqueado, carregar dados básicos do grupo e mostrar modal imediatamente
       if (blockData) {
-        console.log('Usuário está bloqueado - carregando dados básicos e mostrando modal');
+        console.log(`🚫 BLOQUEIO CONFIRMADO: Usuário ${currentUser.id} está bloqueado no grupo ${id}`);
         
-        // Carregar apenas dados básicos do grupo
+        // Carregar dados básicos do grupo APENAS para o modal
         const { data: groupData, error: groupError } = await supabase
           .from('grupos_estudo')
           .select('id, nome, descricao')
@@ -102,11 +101,32 @@ export default function GroupDetailPage() {
         setGroup(groupData);
         setIsBlocked(true);
         setShowBlockedModal(true);
+        setBlockCheckComplete(true);
         setLoading(false);
         return;
       }
 
-      // SEGUNDO: Verificar se é membro do grupo (só se não estiver bloqueado)
+      console.log(`✅ Usuário ${currentUser.id} NÃO está bloqueado no grupo ${id}. Continuando carregamento normal.`);
+      setIsBlocked(false);
+      setBlockCheckComplete(true);
+      
+      // Agora sim, carregar o grupo normalmente
+      fetchGroup();
+    } catch (error) {
+      console.error('Erro crítico ao verfiicar bloqueio:', error);
+      setBlockCheckComplete(true);
+      fetchGroup(); // Tentar carregar normalmente em caso de erro
+    }
+  };
+
+  const fetchGroup = async () => {
+    if (!currentUser || !id) return;
+    
+    try {
+      setLoading(true);
+      console.log('Carregando dados do grupo:', id);
+
+      // Verificar se é membro do grupo
       const { data: membership, error: membershipError } = await supabase
         .from('membros_grupos')
         .select('*')
@@ -125,7 +145,7 @@ export default function GroupDetailPage() {
         return;
       }
 
-      // TERCEIRO: Carregar dados completos do grupo
+      // Carregar dados completos do grupo
       const { data: groupData, error: groupError } = await supabase
         .from('grupos_estudo')
         .select('*')
@@ -144,9 +164,6 @@ export default function GroupDetailPage() {
       }
 
       setGroup(groupData);
-      setIsBlocked(false);
-      setShowBlockedModal(false);
-
       console.log('Dados do grupo carregados:', groupData);
     } catch (error) {
       console.error('Erro ao carregar grupo:', error);
@@ -180,11 +197,11 @@ export default function GroupDetailPage() {
           filter: `grupo_id=eq.${id}`
         },
         (payload: any) => {
-          console.log('Novo bloqueio detectado:', payload);
+          console.log('🔥 REALTIME: Novo bloqueio detectado:', payload);
           
           // Se o usuário atual foi bloqueado
           if (payload.new.user_id === currentUser.id) {
-            console.log('Usuário atual foi bloqueado em tempo real');
+            console.log('🚫 REALTIME: Usuário atual foi bloqueado em tempo real');
             setIsBlocked(true);
             setShowBlockedModal(true);
           }
@@ -197,7 +214,8 @@ export default function GroupDetailPage() {
     };
   }, [id, currentUser]);
 
-  if (loading) {
+  // Mostrar loading apenas se ainda não terminou de verificar o bloqueio
+  if (loading || !blockCheckComplete) {
     return (
       <div className="flex items-center justify-center h-screen bg-[#001427]">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#FF6B00]"></div>

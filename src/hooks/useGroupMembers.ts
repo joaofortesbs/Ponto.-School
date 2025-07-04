@@ -22,28 +22,35 @@ export const useGroupMembers = (groupId: string) => {
 
   const checkIfUserIsBlocked = async (currentUserId: string) => {
     try {
-      console.log(`Verificando se usuário ${currentUserId} está bloqueado no grupo ${groupId}`);
+      console.log(`🔍 Verificando imediatamente se usuário ${currentUserId} está bloqueado no grupo ${groupId}`);
       if (!groupId || !currentUserId) return false;
 
+      // Fazer a verificação IMEDIATAMENTE sem delay
       const { data: blockData, error: blockError } = await supabase
         .from('bloqueios_grupos')
-        .select('id, grupo_id, user_id')
+        .select('id, grupo_id, user_id, bloqueado_em')
         .eq('grupo_id', groupId)
         .eq('user_id', currentUserId)
         .maybeSingle();
 
       if (blockError) {
-        console.error('Erro ao verificar bloqueio:', blockError);
+        console.error('❌ Erro ao verificar bloqueio:', blockError);
         return false;
       }
 
       const blocked = !!blockData;
-      console.log(`Usuário ${currentUserId} ${blocked ? 'está' : 'não está'} bloqueado no grupo ${groupId}`);
+      console.log(`🚫 Usuário ${currentUserId} ${blocked ? 'ESTÁ BLOQUEADO' : 'não está bloqueado'} no grupo ${groupId}`, blockData);
       
-      setIsBlocked(blocked);
-      return blocked;
+      if (blocked) {
+        setIsBlocked(true);
+        setLoading(false); // Parar o loading imediatamente
+        return true;
+      }
+      
+      setIsBlocked(false);
+      return false;
     } catch (error) {
-      console.error('Erro ao verificar se usuário está bloqueado:', error);
+      console.error('❌ Erro crítico ao verificar se usuário está bloqueado:', error);
       return false;
     }
   };
@@ -53,16 +60,19 @@ export const useGroupMembers = (groupId: string) => {
       setLoading(true);
       setError(null);
 
-      // Verificar se o usuário atual está bloqueado PRIMEIRO
+      // 🔥 PRIMEIRO: Verificar se o usuário atual está bloqueado IMEDIATAMENTE
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
+        console.log(`🔥 PRIORIDADE MÁXIMA: Verificando bloqueio para usuário ${user.id} no grupo ${groupId}`);
         const userIsBlocked = await checkIfUserIsBlocked(user.id);
         if (userIsBlocked) {
-          console.log('Usuário está bloqueado, parando carregamento de membros');
-          setLoading(false);
+          console.log(`🚫 BLOQUEADO CONFIRMADO: Usuário ${user.id} está bloqueado no grupo ${groupId}. Parando tudo.`);
+          // NÃO carregar mais nada, apenas definir como bloqueado
           return;
         }
       }
+
+      console.log(`✅ Usuário não está bloqueado. Continuando carregamento normal dos membros.`);
 
       // Buscar membros do grupo
       const { data: membersData, error: membersError } = await supabase
@@ -207,12 +217,12 @@ export const useGroupMembers = (groupId: string) => {
           filter: `grupo_id=eq.${groupId}`
         },
         (payload: any) => {
-          console.log('Novo bloqueio detectado:', payload);
+          console.log('🔥 REALTIME: Novo bloqueio detectado:', payload);
           
           // Verificar se o usuário atual foi bloqueado
           supabase.auth.getUser().then(({ data: { user } }) => {
             if (user && payload.new.user_id === user.id) {
-              console.log('Usuário atual foi bloqueado em tempo real');
+              console.log('🚫 REALTIME: Usuário atual foi bloqueado em tempo real');
               setIsBlocked(true);
             }
           });

@@ -16,8 +16,15 @@ const BlockedGroupModal: React.FC<BlockedGroupModalProps> = ({
   onBack
 }) => {
   return (
-    <Dialog open={isOpen} onOpenChange={() => {}}>
-      <DialogContent className="max-w-md mx-auto my-auto fixed inset-0 z-[99999] bg-white dark:bg-gray-800 border shadow-2xl rounded-lg">
+    <Dialog 
+      open={isOpen} 
+      onOpenChange={() => {}} // Impedir que o modal seja fechado ao clicar fora
+    >
+      <DialogContent 
+        className="max-w-md mx-auto my-auto fixed inset-0 z-[99999] bg-white dark:bg-gray-800 border shadow-2xl rounded-lg"
+        onPointerDownOutside={(e) => e.preventDefault()} // Impedir fechamento ao clicar fora
+        onEscapeKeyDown={(e) => e.preventDefault()} // Impedir fechamento com ESC
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-red-600 text-lg font-bold">
             <AlertCircle className="h-6 w-6" />
