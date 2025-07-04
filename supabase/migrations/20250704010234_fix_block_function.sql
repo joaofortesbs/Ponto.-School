@@ -1,4 +1,5 @@
 
+
 -- Fix the block_user_from_group function to avoid column ambiguity
 CREATE OR REPLACE FUNCTION block_user_from_group(
   p_group_id UUID,
@@ -38,3 +39,4 @@ BEGIN
   );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+

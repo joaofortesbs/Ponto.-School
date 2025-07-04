@@ -1,4 +1,5 @@
 
+
 import { supabase } from "@/integrations/supabase/client";
 
 export interface BlockedMember {
@@ -140,3 +141,4 @@ export const blockService = {
     }
   }
 };
+
