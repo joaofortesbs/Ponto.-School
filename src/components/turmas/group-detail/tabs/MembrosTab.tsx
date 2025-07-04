@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,7 +15,6 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
-import { blockService } from '@/services/blockService';
 
 interface Member {
   id: string;
@@ -26,22 +26,18 @@ interface Member {
   is_online?: boolean;
   last_seen?: string;
   contribution_level?: number;
-  isBlocked?: boolean;
 }
 
 interface MembrosTabProps {
   groupId: string;
 }
 
-const MembrosTab: React.FC<MembrosTabProps> = ({ 
-  groupId
-}) => {
+export default function MembrosTab({ groupId }: MembrosTabProps) {
   const [members, setMembers] = useState<Member[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'online' | 'admins'>('all');
   const { user } = useAuth();
-  const [blockedUserIds, setBlockedUserIds] = useState<string[]>([]);
 
   useEffect(() => {
     loadMembers();
@@ -81,29 +77,16 @@ const MembrosTab: React.FC<MembrosTabProps> = ({
     }
   };
 
-  useEffect(() => {
-    const loadBlockedUsers = async () => {
-      if (groupId) {
-        const blockedMembers = await blockService.getBlockedMembers(groupId);
-        const blockedIds = blockedMembers.map(member => member.blocked_user_id);
-        setBlockedUserIds(blockedIds);
-      }
-    };
-
-    loadBlockedUsers();
-  }, [groupId]);
-
   const filteredMembers = members.filter(member => {
     const matchesSearch = member.display_name.toLowerCase().includes(searchTerm.toLowerCase());
-    const isNotBlocked = !blockedUserIds.includes(member.user_id);
-
+    
     switch (selectedFilter) {
       case 'online':
-        return matchesSearch && member.is_online && isNotBlocked;
+        return matchesSearch && member.is_online;
       case 'admins':
-        return matchesSearch && (member.role === 'admin' || member.role === 'moderator') && isNotBlocked;
+        return matchesSearch && (member.role === 'admin' || member.role === 'moderator');
       default:
-        return matchesSearch && isNotBlocked;
+        return matchesSearch;
     }
   });
 
@@ -251,7 +234,7 @@ const MembrosTab: React.FC<MembrosTabProps> = ({
                         </div>
                       </div>
                     </div>
-
+                    
                   </div>
                 </CardContent>
               </Card>
@@ -262,5 +245,3 @@ const MembrosTab: React.FC<MembrosTabProps> = ({
     </div>
   );
 }
-
-export default MembrosTab;
