@@ -1,0 +1,327 @@
+[plugin:vite:react-swc] × the name `GreetingMessage` is defined multiple times
+     ╭─[/home/runner/workspace/src/sections/SchoolPower/components/AvatarCentral.tsx:75:1]
+  75 │ ];
+  76 │ 
+  77 │ // Componente GreetingMessage
+  78 │ const GreetingMessage = () => {
+     ·       ───────┬───────
+     ·              ╰── previous definition of `GreetingMessage` here
+  79 │   return (
+  80 │     <motion.div
+  81 │       initial={{ opacity: 0, y: 20 }}
+  82 │       animate={{ opacity: 1, y: 0 }}
+  83 │       transition={{ duration: 0.8, delay: 0.3 }}
+  84 │       className="text-center mb-8"
+  85 │     >
+  86 │       <h2 className="text-2xl font-bold text-white mb-2">
+  87 │         Bem-vindo ao School Power!
+  88 │       </h2>
+  89 │       <p className="text-white/80 text-lg">
+  90 │         Escolha seu perfil para começar sua jornada educacional
+  91 │       </p>
+  92 │     </motion.div>
+  93 │   );
+  94 │ };
+  95 │ 
+  96 │ export default function AvatarCentral() {
+  97 │   const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
+  98 │ 
+  99 │   const handleProfileSelect = (profileId: string) => {
+ 100 │     setSelectedProfile(profileId);
+ 101 │     // Aqui você pode adicionar lógica para salvar o perfil selecionado
+ 102 │     console.log('Perfil selecionado:', profileId);
+ 103 │   };
+ 104 │ 
+ 105 │   return (
+ 106 │     <div className="flex flex-col items-center justify-center min-h-screen p-8">
+ 107 │       <GreetingMessage />
+ 108 │       
+ 109 │       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 max-w-4xl">
+ 110 │         {profiles.map((profile) => (
+ 111 │           <motion.div
+ 112 │             key={profile.id}
+ 113 │             className="flex flex-col items-center cursor-pointer group"
+ 114 │             whileHover={{ scale: 1.05 }}
+ 115 │             whileTap={{ scale: 0.95 }}
+ 116 │             onClick={() => handleProfileSelect(profile.id)}
+ 117 │           >
+ 118 │             <div className={`w-20 h-20 rounded-full bg-gradient-to-br ${profile.bgGradient} flex items-center justify-center shadow-lg border-2 border-white/20 group-hover:border-orange-400 transition-all duration-300`}>
+ 119 │               <profile.icon className="w-10 h-10 text-orange-600" />
+ 120 │             </div>
+ 121 │             <span className="mt-3 text-white font-medium text-sm text-center">
+ 122 │               {profile.name}
+ 123 │             </span>
+ 124 │           </motion.div>
+ 125 │         ))}
+ 126 │       </div>
+ 127 │     </div>
+ 128 │   );
+ 129 │ }
+ 130 │ const GreetingMessage = ({ selectedProfile, userName }) => {
+     ·       ───────┬───────
+     ·              ╰── `GreetingMessage` redefined here
+ 131 │   const [greeting, setGreeting] = useState('');
+ 132 │ 
+ 133 │   useEffect(() => {
+     ╰────
+
+  × the name `default` is exported multiple times
+     ╭─[/home/runner/workspace/src/sections/SchoolPower/components/AvatarCentral.tsx:93:1]
+  93 │       );
+  94 │     };
+  95 │     
+  96 │ ╭─▶ export default function AvatarCentral() {
+  97 │ │     const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
+  98 │ │   
+  99 │ │     const handleProfileSelect = (profileId: string) => {
+ 100 │ │       setSelectedProfile(profileId);
+ 101 │ │       // Aqui você pode adicionar lógica para salvar o perfil selecionado
+ 102 │ │       console.log('Perfil selecionado:', profileId);
+ 103 │ │     };
+ 104 │ │   
+ 105 │ │     return (
+ 106 │ │       <div className="flex flex-col items-center justify-center min-h-screen p-8">
+ 107 │ │         <GreetingMessage />
+ 108 │ │         
+ 109 │ │         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 max-w-4xl">
+ 110 │ │           {profiles.map((profile) => (
+ 111 │ │             <motion.div
+ 112 │ │               key={profile.id}
+ 113 │ │               className="flex flex-col items-center cursor-pointer group"
+ 114 │ │               whileHover={{ scale: 1.05 }}
+ 115 │ │               whileTap={{ scale: 0.95 }}
+ 116 │ │               onClick={() => handleProfileSelect(profile.id)}
+ 117 │ │             >
+ 118 │ │               <div className={`w-20 h-20 rounded-full bg-gradient-to-br ${profile.bgGradient} flex items-center justify-center shadow-lg border-2 border-white/20 group-hover:border-orange-400 transition-all duration-300`}>
+ 119 │ │                 <profile.icon className="w-10 h-10 text-orange-600" />
+ 120 │ │               </div>
+ 121 │ │               <span className="mt-3 text-white font-medium text-sm text-center">
+ 122 │ │                 {profile.name}
+ 123 │ │               </span>
+ 124 │ │             </motion.div>
+ 125 │ │           ))}
+ 126 │ │         </div>
+ 127 │ │       </div>
+ 128 │ │     );
+ 129 │ ├─▶ }
+     · ╰──── previous exported here
+ 130 │     const GreetingMessage = ({ selectedProfile, userName }) => {
+ 131 │       const [greeting, setGreeting] = useState('');
+ 132 │     
+ 133 │       useEffect(() => {
+ 134 │         const hour = new Date().getHours();
+ 135 │         let timeGreeting = '';
+ 136 │         
+ 137 │         if (hour < 12) {
+ 138 │           timeGreeting = 'Bom dia';
+ 139 │         } else if (hour < 18) {
+ 140 │           timeGreeting = 'Boa tarde';
+ 141 │         } else {
+ 142 │           timeGreeting = 'Boa noite';
+ 143 │         }
+ 144 │     
+ 145 │         const profileMessages = {
+ 146 │           student: `${timeGreeting}, ${userName}! Pronto para aprender algo novo?`,
+ 147 │           teacher: `${timeGreeting}, ${userName}! Vamos planejar sua próxima aula?`,
+ 148 │           coordinator: `${timeGreeting}, ${userName}! Tudo pronto para organizar sua escola?`,
+ 149 │           expert: `${timeGreeting}, ${userName}! Vamos transformar educação com IA?`,
+ 150 │           responsible: `${timeGreeting}, ${userName}! Vamos acompanhar o progresso do seu filho?`
+ 151 │         };
+ 152 │     
+ 153 │         setGreeting(profileMessages[selectedProfile.id] || `${timeGreeting}, ${userName}!`);
+ 154 │       }, [selectedProfile, userName]);
+ 155 │     
+ 156 │       return (
+ 157 │         <motion.div
+ 158 │           key={selectedProfile.id}
+ 159 │           initial={{ opacity: 0, y: 10 }}
+ 160 │           animate={{ opacity: 1, y: 0 }}
+ 161 │           transition={{ duration: 0.3 }}
+ 162 │           className="text-center mt-6 max-w-md mx-auto"
+ 163 │         >
+ 164 │           <p className="text-lg font-medium text-gray-700 dark:text-gray-300 leading-relaxed">
+ 165 │             {greeting}
+ 166 │           </p>
+ 167 │         </motion.div>
+ 168 │       );
+ 169 │     };
+ 170 │     
+ 171 │     // Componente ProfileOptionBubble
+ 172 │     const ProfileOptionBubble = ({ profile, onClick, index }) => {
+ 173 │       // Posicionamento horizontal alinhado: Coordenador à esquerda, outros à direita
+ 174 │       const positions = [
+ 175 │         { x: -140, y: 0 },  // Aluno - esquerda
+ 176 │         { x: 140, y: 0 },   // Professor - direita
+ 177 │         { x: -280, y: 0 },  // Coordenador - mais à esquerda
+ 178 │         { x: 280, y: 0 },   // Expert - mais à direita
+ 179 │         { x: 420, y: 0 }    // Responsável - extrema direita
+ 180 │       ];
+ 181 │     
+ 182 │       return (
+ 183 │         <motion.div
+ 184 │           initial={{ scale: 0, opacity: 0 }}
+ 185 │           animate={{ 
+ 186 │             scale: 1, 
+ 187 │             opacity: 1,
+ 188 │             x: positions[index].x,
+ 189 │             y: positions[index].y
+ 190 │           }}
+ 191 │           exit={{ scale: 0, opacity: 0 }}
+ 192 │           transition={{ 
+ 193 │             type: "spring", 
+ 194 │             stiffness: 300, 
+ 195 │             damping: 20,
+ 196 │             delay: index * 0.1 
+ 197 │           }}
+ 198 │           whileHover={{ scale: 1.05 }}
+ 199 │           whileTap={{ scale: 0.95 }}
+ 200 │           className="absolute cursor-pointer z-20"
+ 201 │           onClick={() => onClick(profile)}
+ 202 │         >
+ 203 │           <div className={`
+ 204 │             w-20 h-20 rounded-full shadow-lg flex items-center justify-center
+ 205 │             bg-gradient-to-br ${profile.bgGradient}
+ 206 │             hover:shadow-xl transition-shadow duration-200
+ 207 │             border-2 border-orange-200/50
+ 208 │           `}>
+ 209 │             {profile.icon}
+ 210 │           </div>
+ 211 │           <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 whitespace-nowrap">
+ 212 │             <span className="text-sm font-medium text-orange-700 dark:text-orange-300 bg-orange-100/90 dark:bg-orange-900/80 px-3 py-1 rounded-full shadow-sm border border-orange-200/50 dark:border-orange-700/50">
+ 213 │               {profile.name}
+ 214 │             </span>
+ 215 │           </div>
+ 216 │         </motion.div>
+ 217 │       );
+ 218 │     };
+ 219 │     
+ 220 │     // Componente principal AvatarCentral
+ 221 │     const AvatarCentral = () => {
+ 222 │       const [isExpanded, setIsExpanded] = useState(false);
+ 223 │       const [selectedProfile, setSelectedProfile] = useState(profiles[0]);
+ 224 │       const userName = "João Marcelo";
+ 225 │     
+ 226 │       const handleAvatarClick = () => {
+ 227 │         if (isExpanded) {
+ 228 │           // Se já está expandido, apenas fecha as opções
+ 229 │           setIsExpanded(false);
+ 230 │         } else {
+ 231 │           // Se não está expandido, abre as opções
+ 232 │           setIsExpanded(true);
+ 233 │         }
+ 234 │       };
+ 235 │     
+ 236 │       const handleProfileSelect = (profile) => {
+ 237 │         setSelectedProfile(profile);
+ 238 │         setIsExpanded(false);
+ 239 │         
+ 240 │         // Aqui você pode adicionar lógica para atualizar o contexto global
+ 241 │         console.log('Perfil selecionado:', profile);
+ 242 │       };
+ 243 │     
+ 244 │       return (
+ 245 │         <div className="flex flex-col items-center justify-center h-full p-8 relative">
+ 246 │           {/* Container principal do avatar */}
+ 247 │           <div className="relative z-10">
+ 248 │             {/* Avatar central */}
+ 249 │             <motion.div
+ 250 │               whileHover={{ scale: 1.05 }}
+ 251 │               whileTap={{ scale: 0.95 }}
+ 252 │               className="relative cursor-pointer"
+ 253 │               onClick={handleAvatarClick}
+ 254 │             >
+ 255 │               <div className={`
+ 256 │                 w-20 h-20 rounded-full shadow-xl flex items-center justify-center
+ 257 │                 bg-gradient-to-br ${selectedProfile.bgGradient}
+ 258 │                 border-2 border-orange-200/50
+ 259 │                 transition-all duration-300
+ 260 │               `}>
+ 261 │                 {selectedProfile.icon}
+ 262 │               </div>
+ 263 │               
+ 264 │               {/* Indicador de expansão */}
+ 265 │               <motion.div
+ 266 │                 animate={{ rotate: isExpanded ? 45 : 0 }}
+ 267 │                 className="absolute -bottom-1 -right-1 w-6 h-6 bg-white rounded-full shadow-md flex items-center justify-center border-2 border-orange-200"
+ 268 │               >
+ 269 │                 <svg className="w-3 h-3 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ 270 │                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+ 271 │                 </svg>
+ 272 │               </motion.div>
+ 273 │             </motion.div>
+ 274 │     
+ 275 │             {/* Bolhas de perfil expandidas */}
+ 276 │             <AnimatePresence>
+ 277 │               {isExpanded && (
+ 278 │                 <div className="absolute inset-0 pointer-events-none">
+ 279 │                   {profiles.filter(profile => profile.id !== selectedProfile.id).map((profile, index) => (
+ 280 │                     <div key={profile.id} className="pointer-events-auto">
+ 281 │                       <ProfileOptionBubble
+ 282 │                         profile={profile}
+ 283 │                         onClick={handleProfileSelect}
+ 284 │                         index={index}
+ 285 │                       />
+ 286 │                     </div>
+ 287 │                   ))}
+ 288 │                 </div>
+ 289 │               )}
+ 290 │             </AnimatePresence>
+ 291 │     
+ 292 │             {/* Overlay para fechar quando expandido */}
+ 293 │             <AnimatePresence>
+ 294 │               {isExpanded && (
+ 295 │                 <motion.div
+ 296 │                   initial={{ opacity: 0 }}
+ 297 │                   animate={{ opacity: 1 }}
+ 298 │                   exit={{ opacity: 0 }}
+ 299 │                   className="fixed inset-0 bg-black/10 z-0"
+ 300 │                   onClick={() => setIsExpanded(false)}
+ 301 │                 />
+ 302 │               )}
+ 303 │             </AnimatePresence>
+ 304 │           </div>
+ 305 │     
+ 306 │           {/* Mensagem de saudação com blur quando expandido */}
+ 307 │           <div className={`transition-all duration-300 ${isExpanded ? 'blur-sm' : ''}`}>
+ 308 │             <GreetingMessage selectedProfile={selectedProfile} userName={userName} />
+ 309 │     
+ 310 │             {/* Informações do perfil atual */}
+ 311 │             <motion.div
+ 312 │               initial={{ opacity: 0 }}
+ 313 │               animate={{ opacity: 1 }}
+ 314 │               transition={{ delay: 0.5 }}
+ 315 │               className="mt-4 text-center"
+ 316 │             >
+ 317 │               <span className="inline-flex items-center px-4 py-2 rounded-full bg-orange-100/80 dark:bg-orange-900/30 shadow-sm border border-orange-200/50 dark:border-orange-700/50">
+ 318 │                 <span className="text-sm font-medium text-orange-700 dark:text-orange-300">
+ 319 │                   Perfil atual: {selectedProfile.name}
+ 320 │                 </span>
+ 321 │               </span>
+ 322 │             </motion.div>
+ 323 │     
+ 324 │             {/* Versão mobile responsiva */}
+ 325 │             <div className="md:hidden mt-8 text-center">
+ 326 │               <p className="text-sm text-gray-500 dark:text-gray-400">
+ 327 │                 Toque no avatar para alternar entre perfis
+ 328 │               </p>
+ 329 │             </div>
+ 330 │           </div>
+ 331 │     
+ 332 │           {/* Efeitos visuais adicionais */}
+ 333 │           <div className="absolute inset-0 pointer-events-none">
+ 334 │             <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-orange-400/30 rounded-full animate-pulse"></div>
+ 335 │             <div className="absolute top-3/4 right-1/4 w-1 h-1 bg-orange-400/30 rounded-full animate-pulse delay-1000"></div>
+ 336 │             <div className="absolute bottom-1/4 left-1/3 w-1.5 h-1.5 bg-orange-400/30 rounded-full animate-pulse delay-500"></div>
+ 337 │           </div>
+ 338 │         </div>
+ 339 │       );
+ 340 │     };
+ 341 │     
+ 342 │ ╭─▶ export default AvatarCentral;
+     · │──────────────┬──────────────
+     · │              ╰── exported more than once
+     ╰────
+
+Error: 
+  ☞ Exported identifiers must be unique
+/home/runner/workspace/src/sections/SchoolPower/components/AvatarCentral.tsx:75:1
