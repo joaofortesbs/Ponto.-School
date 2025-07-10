@@ -21,7 +21,6 @@ import {
   Library,
   MessageSquare,
   Settings,
-  ShoppingCart,
   Star,
   Target,
   Users,
@@ -185,20 +184,6 @@ const Sidebar: React.FC<SidebarProps> = ({ className }) => {
         >
           <Library className="h-4 w-4 mr-3" />
           Biblioteca
-        </Button>
-
-        <Button
-          variant="ghost"
-          className={cn(
-            "w-full justify-start text-sm font-medium h-10 px-3",
-            activeItem === "mercado"
-              ? "bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20"
-              : "text-gray-300 hover:bg-[#29335C]/30 hover:text-white",
-          )}
-          onClick={() => handleItemClick("mercado", "/mercado")}
-        >
-          <ShoppingCart className="h-4 w-4 mr-3" />
-          Mercado
         </Button>
 
         <Button
