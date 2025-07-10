@@ -74,63 +74,16 @@ const profiles = [
   }
 ];
 
-// Componente GreetingMessage
-const GreetingMessage = () => {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.8, delay: 0.3 }}
-      className="text-center mb-8"
-    >
-      <h2 className="text-2xl font-bold text-white mb-2">
-        Bem-vindo ao School Power!
-      </h2>
-      <p className="text-white/80 text-lg">
-        Escolha seu perfil para começar sua jornada educacional
-      </p>
-    </motion.div>
-  );
-};
-
-export default function AvatarCentral() {
-  const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
-
-  const handleProfileSelect = (profileId: string) => {
-    setSelectedProfile(profileId);
-    // Aqui você pode adicionar lógica para salvar o perfil selecionado
-    console.log('Perfil selecionado:', profileId);
-  };
-
-  return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-8">
-      <GreetingMessage />
-      
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 max-w-4xl">
-        {profiles.map((profile) => (
-          <motion.div
-            key={profile.id}
-            className="flex flex-col items-center cursor-pointer group"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => handleProfileSelect(profile.id)}
-          >
-            <div className={`w-20 h-20 rounded-full bg-gradient-to-br ${profile.bgGradient} flex items-center justify-center shadow-lg border-2 border-white/20 group-hover:border-orange-400 transition-all duration-300`}>
-              <profile.icon className="w-10 h-10 text-orange-600" />
-            </div>
-            <span className="mt-3 text-white font-medium text-sm text-center">
-              {profile.name}
-            </span>
-          </motion.div>
-        ))}
-      </div>
-    </div>
-  );
-}
-const GreetingMessage = ({ selectedProfile, userName }) => {
+// Componente GreetingMessage com mensagens dinâmicas
+const GreetingMessage = ({ selectedProfile, userName }: { selectedProfile?: any; userName?: string }) => {
   const [greeting, setGreeting] = useState('');
 
   useEffect(() => {
+    if (!selectedProfile || !userName) {
+      setGreeting('Bem-vindo ao School Power!');
+      return;
+    }
+
     const hour = new Date().getHours();
     let timeGreeting = '';
     
@@ -153,23 +106,41 @@ const GreetingMessage = ({ selectedProfile, userName }) => {
     setGreeting(profileMessages[selectedProfile.id] || `${timeGreeting}, ${userName}!`);
   }, [selectedProfile, userName]);
 
+  if (selectedProfile && userName) {
+    return (
+      <motion.div
+        key={selectedProfile.id}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="text-center mt-6 max-w-md mx-auto"
+      >
+        <p className="text-lg font-medium text-gray-700 dark:text-gray-300 leading-relaxed">
+          {greeting}
+        </p>
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div
-      key={selectedProfile.id}
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="text-center mt-6 max-w-md mx-auto"
+      transition={{ duration: 0.8, delay: 0.3 }}
+      className="text-center mb-8"
     >
-      <p className="text-lg font-medium text-gray-700 dark:text-gray-300 leading-relaxed">
-        {greeting}
+      <h2 className="text-2xl font-bold text-white mb-2">
+        Bem-vindo ao School Power!
+      </h2>
+      <p className="text-white/80 text-lg">
+        Escolha seu perfil para começar sua jornada educacional
       </p>
     </motion.div>
   );
 };
 
 // Componente ProfileOptionBubble
-const ProfileOptionBubble = ({ profile, onClick, index }) => {
+const ProfileOptionBubble = ({ profile, onClick, index }: { profile: any; onClick: (profile: any) => void; index: number }) => {
   // Posicionamento horizontal alinhado: Coordenador à esquerda, outros à direita
   const positions = [
     { x: -140, y: 0 },  // Aluno - esquerda
@@ -233,7 +204,7 @@ const AvatarCentral = () => {
     }
   };
 
-  const handleProfileSelect = (profile) => {
+  const handleProfileSelect = (profile: any) => {
     setSelectedProfile(profile);
     setIsExpanded(false);
     
