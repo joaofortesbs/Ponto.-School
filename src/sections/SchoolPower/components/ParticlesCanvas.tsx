@@ -640,13 +640,14 @@ const InteractiveParticleGlobe = () => {
     };
   }, []);
 
+  // The following code snippet defines the React component's return value, ensuring a transparent background for the globe.
   return (
-    <div className="w-full h-full relative overflow-hidden bg-black">
+    <div className="w-full h-full relative overflow-hidden" style={{ background: 'transparent' }}>
       {/* Container principal do globo */}
       <div
         ref={mountRef}
         className="w-full h-full"
-        style={{ minHeight: '600px' }}
+        style={{ minHeight: '600px', background: 'transparent' }}
       />
     </div>
   );
