@@ -52,6 +52,11 @@ import { TypewriterLoader } from "./components/ui/typewriter-loader";
 // Nova página em branco
 import BlankPage from "@/pages/BlankPage";
 
+// Import das paginas novas
+import EpictusIAPage from "./pages/epictus-ia";
+import SchoolPowerPageIndex from "./pages/school-power";
+import MentorIAPage from "./pages/mentor-ia";
+
 // Componente para proteger rotas
 function ProtectedRoute({ children }) {
   const navigate = useNavigate();
@@ -289,7 +294,8 @@ function App() {
                   <Route path="turmas/grupos/:id" element={<GruposEstudo />} />
                   <Route path="comunidades" element={<Comunidades />} />
                   <Route path="pedidos-ajuda" element={<PedidosAjuda />} />
-                  <Route path="epictus-ia" element={<EpictusIA />} />
+                  <Route path="epictus-ia" element={<EpictusIAPage />} />
+                  <Route path="/school-power" element={<SchoolPowerPageIndex />} />
                   <Route path="agenda" element={<Agenda />} />
                   <Route path="biblioteca" element={<Biblioteca />} />
                   <Route path="mercado" element={<Mercado />} />

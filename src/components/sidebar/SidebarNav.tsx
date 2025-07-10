@@ -326,6 +326,12 @@ export function SidebarNav({
       isSpecial: true,
     },
     {
+      icon: <Rocket className="h-5 w-5" />,
+      label: "School Power",
+      path: "/school-power",
+      isSpecial: true,
+    },
+    {
       icon: <Calendar className="h-5 w-5" />,
       label: "Agenda",
       path: "/agenda",
