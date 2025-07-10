@@ -255,12 +255,12 @@ const AvatarCentral = () => {
       <div className={`transition-all duration-300 ${isExpanded ? 'blur-sm' : ''}`}>
         <GreetingMessage selectedProfile={selectedProfile} userName={userName} />
 
-        {/* Informações do perfil atual */}
+        {/* Informações do perfil atual - movido para baixo do círculo */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="mt-4 text-center"
+          className="absolute top-32 left-1/2 transform -translate-x-1/2 text-center"
         >
           <span className="inline-flex items-center px-4 py-2 rounded-full bg-orange-100/80 dark:bg-orange-900/30 shadow-sm border border-orange-200/50 dark:border-orange-700/50">
             <span className="text-sm font-medium text-orange-700 dark:text-orange-300">
