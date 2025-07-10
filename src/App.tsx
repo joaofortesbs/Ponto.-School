@@ -27,7 +27,6 @@ import PedidosAjuda from "@/pages/pedidos-ajuda";
 import EpictusIA from "@/pages/epictus-ia";
 import Agenda from "@/pages/agenda";
 import Biblioteca from "@/pages/biblioteca";
-import Mercado from "@/pages/mercado";
 import Conquistas from "@/pages/conquistas";
 import Carteira from "@/pages/carteira";
 import Organizacao from "@/pages/organizacao";
@@ -298,7 +297,6 @@ function App() {
                   <Route path="/school-power" element={<SchoolPowerPageIndex />} />
                   <Route path="agenda" element={<Agenda />} />
                   <Route path="biblioteca" element={<Biblioteca />} />
-                  <Route path="mercado" element={<Mercado />} />
                   <Route path="conquistas" element={<Conquistas />} />
                   <Route path="carteira" element={<Carteira />} />
                   <Route path="organizacao" element={<Organizacao />} />
