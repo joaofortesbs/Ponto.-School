@@ -7,10 +7,10 @@ export function SchoolPowerPage() {
   return (
     <div className="min-h-screen relative overflow-hidden" style={{ background: 'transparent' }}>
       <ParticlesCanvas />
-      <div className="fixed -top-16 left-1/2 transform -translate-x-1/2 z-10 pointer-events-auto">
+      <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 z-10 pointer-events-auto">
         <AvatarCentral />
       </div>
-      <div className="fixed bottom-32 left-1/2 transform -translate-x-1/2 z-10">
+      <div className="absolute bottom-32 left-1/2 transform -translate-x-1/2 z-10">
         <AIMessageBox />
       </div>
     </div>
