@@ -278,19 +278,7 @@ const AvatarCentral = () => {
       <div className={`transition-all duration-300 ${isExpanded ? 'blur-sm' : ''}`}>
         <GreetingMessage selectedProfile={selectedProfile} userName={userName} />
 
-        {/* Informações do perfil atual */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="mt-4 text-center"
-        >
-          <span className="inline-flex items-center px-4 py-2 rounded-full bg-orange-100/80 dark:bg-orange-900/30 shadow-sm border border-orange-200/50 dark:border-orange-700/50">
-            <span className="text-sm font-medium text-orange-700 dark:text-orange-300">
-              Perfil atual: {selectedProfile.name}
-            </span>
-          </span>
-        </motion.div>
+        
 
         {/* Versão mobile responsiva */}
         <div className="md:hidden mt-8 text-center">
