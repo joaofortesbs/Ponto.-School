@@ -75,6 +75,58 @@ const profiles = [
 ];
 
 // Componente GreetingMessage
+const GreetingMessage = () => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.8, delay: 0.3 }}
+      className="text-center mb-8"
+    >
+      <h2 className="text-2xl font-bold text-white mb-2">
+        Bem-vindo ao School Power!
+      </h2>
+      <p className="text-white/80 text-lg">
+        Escolha seu perfil para começar sua jornada educacional
+      </p>
+    </motion.div>
+  );
+};
+
+export default function AvatarCentral() {
+  const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
+
+  const handleProfileSelect = (profileId: string) => {
+    setSelectedProfile(profileId);
+    // Aqui você pode adicionar lógica para salvar o perfil selecionado
+    console.log('Perfil selecionado:', profileId);
+  };
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen p-8">
+      <GreetingMessage />
+      
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 max-w-4xl">
+        {profiles.map((profile) => (
+          <motion.div
+            key={profile.id}
+            className="flex flex-col items-center cursor-pointer group"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => handleProfileSelect(profile.id)}
+          >
+            <div className={`w-20 h-20 rounded-full bg-gradient-to-br ${profile.bgGradient} flex items-center justify-center shadow-lg border-2 border-white/20 group-hover:border-orange-400 transition-all duration-300`}>
+              <profile.icon className="w-10 h-10 text-orange-600" />
+            </div>
+            <span className="mt-3 text-white font-medium text-sm text-center">
+              {profile.name}
+            </span>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  );
+}
 const GreetingMessage = ({ selectedProfile, userName }) => {
   const [greeting, setGreeting] = useState('');
 
