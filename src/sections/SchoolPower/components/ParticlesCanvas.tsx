@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 
-const InteractiveParticleGlobe = () => {
+const InteractiveParticleGlobe = ({ children }: { children?: React.ReactNode }) => {
   const mountRef = useRef(null);
   const sceneRef = useRef(null);
   const rendererRef = useRef(null);
@@ -650,6 +650,8 @@ const InteractiveParticleGlobe = () => {
         className="w-full h-full"
         style={{ minHeight: '600px', background: 'transparent' }}
       />
+      {/* Renderizar componentes filhos no mesmo container */}
+      {children}
     </div>
   );
 };
