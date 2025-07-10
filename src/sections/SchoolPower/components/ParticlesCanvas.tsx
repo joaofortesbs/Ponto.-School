@@ -33,7 +33,7 @@ const InteractiveParticleGlobe = () => {
       1000
     );
     camera.position.z = 15;
-    camera.position.y = 8; // Mover câmera mais para cima para que as partículas fiquem mais altas
+    camera.position.y = 3; // Mover câmera para cima para que as partículas fiquem mais para baixo
 
     // Configuração do renderer
     const renderer = new THREE.WebGLRenderer({ 
