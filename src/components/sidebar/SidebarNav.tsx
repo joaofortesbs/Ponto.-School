@@ -391,11 +391,7 @@ export function SidebarNav({
         },
       ],
     },
-    {
-      icon: <ShoppingCart className="h-5 w-5" />,
-      label: "Mercado",
-      path: "/mercado",
-    },
+    
     {
       icon: <Trophy className="h-5 w-5" />,
       label: "Conquistas",
