@@ -1,5 +1,3 @@
-
-
 import { cn } from "@/lib/utils";
 import { SidebarNav } from "@/components/sidebar/SidebarNav";
 import { useState, useEffect, useRef } from "react";
@@ -196,8 +194,8 @@ export default function Sidebar({
           >
             <div className="h-16 flex items-center justify-center w-full">
               <img
-                src={sidebarCollapsed ? "/lovable-uploads/6c3ba385-d8cf-41ec-a21d-6b59107a234b.png" : "/lovable-uploads/9db37eca-4284-4678-97fd-984c12eb0f30.png"}
-                alt="Logo Ponto School"
+                src={sidebarCollapsed ? "/lovable-uploads/Logo-Ponto.School-Icone.png" : "/lovable-uploads/Logo-Ponto. School.png"}
+                alt="Ponto School Logo"
                 className={cn(
                   "object-contain mx-auto transition-all duration-300",
                   sidebarCollapsed ? "h-14 w-14" : "h-16 w-auto"
