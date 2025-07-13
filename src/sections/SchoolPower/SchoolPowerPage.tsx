@@ -2616,8 +2616,8 @@ export function SchoolPowerPage() {
 
   return (
     <div 
-      className="relative flex h-[85vh] min-h-[600px] w-full flex-col items-center justify-center overflow-hidden rounded-lg border"
-      style={{ backgroundColor: isDarkTheme ? '#111827' : '#F3F4F7' }}
+      className="relative flex h-[90vh] min-h-[650px] w-full flex-col items-center justify-center overflow-hidden rounded-lg border"
+      style={{ backgroundColor: 'transparent' }}
     >
       {/* Background de estrelas */}
       {isDarkTheme && (
