@@ -2201,8 +2201,8 @@ const Ripple = React.memo(function Ripple({
                   opacity,
                   animationDelay,
                   borderWidth: "1px",
-                  borderColor: isDarkTheme ? "rgba(255, 255, 255, 0.3)" : "rgba(0, 0, 0, 0.1)",
-                  backgroundColor: isDarkTheme ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.05)",
+                  borderColor: isDarkTheme ? "rgba(255, 255, 255, 0.3)" : "rgba(0, 0, 0, 0.4)",
+                  backgroundColor: isDarkTheme ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.15)",
                   top: "50%",
                   left: "50%",
                   transform: "translate(-50%, -50%) scale(1)",
@@ -2616,7 +2616,7 @@ export function SchoolPowerPage() {
 
   return (
     <div 
-      className="relative flex h-[90vh] min-h-[650px] w-full flex-col items-center justify-center overflow-hidden rounded-lg border"
+      className="relative flex h-[90vh] min-h-[650px] w-full flex-col items-center justify-center overflow-hidden rounded-lg"
       style={{ backgroundColor: 'transparent' }}
     >
       {/* Background de estrelas */}
