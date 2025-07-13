@@ -2673,14 +2673,14 @@ export function SchoolPowerPage() {
         />
       </div>
 
-      {/* TechCircle adicionado no topo */}
-      <div className="absolute top-4 left-0 w-full z-10">
-        <TechCircle isDarkTheme={isDarkTheme} />
-      </div>
-
       {/* Container Ripple fixo e centralizado no background */}
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none">
         <div className="relative" style={{ width: "700px", height: "500px" }}>
+          {/* TechCircle posicionado no topo do container Ripple */}
+          <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-full z-30 pointer-events-none" style={{ marginTop: "-20px" }}>
+            <TechCircle isDarkTheme={isDarkTheme} />
+          </div>
+          
           {/* Ripple centralizado */}
           <div className="absolute inset-0">
             <Ripple 
