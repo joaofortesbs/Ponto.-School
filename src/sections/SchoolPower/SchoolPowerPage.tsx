@@ -2678,35 +2678,30 @@ export function SchoolPowerPage() {
         <TechCircle isDarkTheme={isDarkTheme} />
       </div>
 
-      {/* Container fixo que mantém Ripple + Ícone Central + Caixa de Mensagem juntos */}
-      <div className="fixed inset-0 flex items-center justify-center z-30 pointer-events-none">
-        <div className="relative w-full h-full flex flex-col items-center justify-center">
-          
-          {/* Container do Ripple e Ícone Central */}
-          <div className="relative flex-shrink-0" style={{ width: "700px", height: "500px", marginTop: "80px" }}>
-            {/* Ripple com posição relativa */}
-            <div className="absolute inset-0">
-              <Ripple 
-                isDarkTheme={isDarkTheme} 
-                isBlurred={isCentralExpanded}
-              />
-            </div>
-            
-            {/* Ícone Central no centro do Ripple */}
-            <div className="absolute z-50 pointer-events-auto" style={{ top: "50%", left: "50%", transform: "translate(-50%, -50%)" }}>
-              <CentralIcon 
-                isDarkTheme={isDarkTheme} 
-                onExpandedChange={handleCentralExpandedChange}
-              />
-            </div>
+      {/* Container Ripple fixo e centralizado no background */}
+      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none">
+        <div className="relative" style={{ width: "700px", height: "500px" }}>
+          {/* Ripple centralizado */}
+          <div className="absolute inset-0">
+            <Ripple 
+              isDarkTheme={isDarkTheme} 
+              isBlurred={isCentralExpanded}
+            />
           </div>
           
-          {/* Caixa de Mensagem fixada abaixo do Ripple */}
-          <div className="relative z-40 pointer-events-auto -mt-20">
-            <AIMessageBox isDarkTheme={isDarkTheme} />
+          {/* Ícone Central no centro do Ripple */}
+          <div className="absolute z-50 pointer-events-auto" style={{ top: "50%", left: "50%", transform: "translate(-50%, -50%)" }}>
+            <CentralIcon 
+              isDarkTheme={isDarkTheme} 
+              onExpandedChange={handleCentralExpandedChange}
+            />
           </div>
-          
         </div>
+      </div>
+
+      {/* Caixa de Mensagem fixada na parte inferior */}
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-40 pointer-events-auto">
+        <AIMessageBox isDarkTheme={isDarkTheme} />
       </div>
     </div>
   );
