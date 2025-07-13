@@ -353,7 +353,7 @@ const TechCircle = ({ isDarkTheme = true }) => {
               <img
                 src="/lovable-uploads/Logo-Ponto.School-Icone.png"
                 alt="Logo Ponto School"
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
                 style={{
                   filter: 'brightness(1.1) contrast(1.1)',
                   userSelect: 'none',
