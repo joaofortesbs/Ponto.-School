@@ -292,7 +292,7 @@ const TechCircle = ({ isDarkTheme = true }) => {
   }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-full bg-transparent p-4 gap-4">
+    <div className="flex flex-col items-center justify-center min-h-full bg-transparent p-2 gap-2">
       <div className="relative">
         {/* Aura externa */}
         <div 
@@ -318,7 +318,7 @@ const TechCircle = ({ isDarkTheme = true }) => {
         
         {/* Círculo principal */}
         <div 
-          className="relative w-24 h-24 rounded-full overflow-hidden"
+          className="relative w-20 h-20 rounded-full overflow-hidden"
           style={{
             background: '#111827',
             border: '3px solid transparent',
@@ -348,8 +348,8 @@ const TechCircle = ({ isDarkTheme = true }) => {
           }}
         >
           {/* Imagem quadrada */}
-          <div className="w-full h-full flex items-center justify-center p-4">
-            <div className="w-18 h-18 overflow-hidden pointer-events-none select-none">
+          <div className="w-full h-full flex items-center justify-center p-3">
+            <div className="w-14 h-14 overflow-hidden pointer-events-none select-none">
               <img
                 src="4xdV8N2N4CZiWg4a_31SE"
                 alt="Logo S"
@@ -370,10 +370,10 @@ const TechCircle = ({ isDarkTheme = true }) => {
           
           {/* Reflexo 3D */}
           <div 
-            className="absolute top-1 left-1 w-6 h-6 rounded-full opacity-30"
+            className="absolute top-1 left-1 w-5 h-5 rounded-full opacity-30"
             style={{
               background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, transparent 70%)',
-              filter: 'blur(8px)',
+              filter: 'blur(6px)',
             }}
           />
         </div>
@@ -384,15 +384,15 @@ const TechCircle = ({ isDarkTheme = true }) => {
       <style jsx>{`
         @keyframes float {
           0% { transform: translateY(0px) scale(1); }
-          100% { transform: translateY(-10px) scale(1.2); }
+          100% { transform: translateY(-8px) scale(1.1); }
         }
       `}</style>
       
       {/* Texto com FlipWords abaixo do círculo */}
-      <div className="text-center max-w-2xl space-y-1">
+      <div className="text-center max-w-2xl space-y-0.5">
         {/* Primeira linha: Saudação */}
         <div 
-          className="text-2xl font-bold tracking-tight leading-tight"
+          className="text-xl font-bold tracking-tight leading-tight"
           style={{ 
             fontFamily: "'Inter', 'SF Pro Display', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'sans-serif'",
             fontWeight: '700',
@@ -412,7 +412,7 @@ const TechCircle = ({ isDarkTheme = true }) => {
         
         {/* Segunda linha: Pergunta com FlipWords */}
         <div 
-          className="flex flex-wrap items-center justify-center gap-2 text-xl font-semibold tracking-tight"
+          className="flex flex-wrap items-center justify-center gap-2 text-lg font-semibold tracking-tight"
           style={{ 
             fontFamily: "'Inter', 'SF Pro Display', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'sans-serif'",
             fontWeight: '600',
@@ -431,7 +431,7 @@ const TechCircle = ({ isDarkTheme = true }) => {
           <FlipWords 
             words={flipWords} 
             duration={5000}
-            className={`font-bold text-xl ${isDarkTheme ? 'text-orange-500' : 'text-orange-600'}`}
+            className={`font-bold text-lg ${isDarkTheme ? 'text-orange-500' : 'text-orange-600'}`}
             style={{ 
               fontFamily: "'Inter', 'SF Pro Display', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'sans-serif'",
               fontWeight: '700',
@@ -2674,7 +2674,7 @@ export function SchoolPowerPage() {
       </div>
 
       {/* TechCircle adicionado no topo */}
-      <div className="absolute top-16 left-0 w-full z-10">
+      <div className="absolute top-8 left-0 w-full z-10">
         <TechCircle isDarkTheme={isDarkTheme} />
       </div>
 
@@ -2683,7 +2683,7 @@ export function SchoolPowerPage() {
         <div className="relative w-full h-full flex flex-col items-center justify-center">
           
           {/* Container do Ripple e Ícone Central */}
-          <div className="relative flex-shrink-0" style={{ width: "700px", height: "650px", marginTop: "230px" }}>
+          <div className="relative flex-shrink-0" style={{ width: "700px", height: "650px", marginTop: "150px" }}>
             {/* Ripple com posição relativa */}
             <div className="absolute inset-0">
               <Ripple 
