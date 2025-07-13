@@ -2607,12 +2607,8 @@ const Ripple = React.memo(function Ripple({
 });
 
 export function SchoolPowerPage() {
-  const [isDarkTheme, setIsDarkTheme] = useState(true);
+  const [isDarkTheme] = useState(true);
   const [isCentralExpanded, setIsCentralExpanded] = useState(false);
-
-  const toggleTheme = () => {
-    setIsDarkTheme(!isDarkTheme);
-  };
 
   const handleCentralExpandedChange = (expanded) => {
     setIsCentralExpanded(expanded);
@@ -2648,23 +2644,6 @@ export function SchoolPowerPage() {
         </>
       )}
 
-      <button
-        onClick={toggleTheme}
-        className={`absolute top-4 right-4 z-50 p-3 rounded-full transition-all duration-300 hover:scale-105 ${isDarkTheme ? 'bg-gray-800 hover:bg-gray-700 text-white border border-gray-600' : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 shadow-md'}`}
-        title={isDarkTheme ? 'Mudar para tema claro' : 'Mudar para tema escuro'}
-      >
-        {isDarkTheme ? (
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="12" cy="12" r="5"/>
-            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
-          </svg>
-        ) : (
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-          </svg>
-        )}
-      </button>
-
       {/* Vertical dock positioned at right side */}
       <div className="absolute right-8 top-1/2 transform -translate-y-1/2 z-40">
         <FloatingDock 
@@ -2674,7 +2653,7 @@ export function SchoolPowerPage() {
       </div>
 
       {/* Container Ripple fixo e centralizado no background */}
-      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none">
+      <div className="absolute top-[60%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none">
         <div className="relative" style={{ width: "700px", height: "500px" }}>
           {/* TechCircle posicionado no topo do container Ripple */}
           <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-full z-30 pointer-events-none" style={{ marginTop: "-20px" }}>
