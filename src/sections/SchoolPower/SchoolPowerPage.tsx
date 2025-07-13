@@ -403,7 +403,7 @@ const TechCircle = ({ isDarkTheme = true }) => {
           <span 
             className={isDarkTheme 
               ? "bg-gradient-to-r from-slate-100 via-white to-slate-100 bg-clip-text text-transparent" 
-              : "bg-gradient-to-r from-gray-800 via-gray-900 to-gray-800 bg-clip-text text-transparent"
+              : "bg-gradient-to-r from-gray-900 via-black to-gray-900 bg-clip-text text-transparent"
             }
           >
             {greeting}, João!
@@ -423,7 +423,7 @@ const TechCircle = ({ isDarkTheme = true }) => {
           <span 
             className={isDarkTheme 
               ? "bg-gradient-to-r from-gray-300 via-white to-gray-300 bg-clip-text text-transparent" 
-              : "bg-gradient-to-r from-gray-600 via-gray-700 to-gray-600 bg-clip-text text-transparent"
+              : "bg-gradient-to-r from-gray-700 via-gray-800 to-gray-700 bg-clip-text text-transparent"
             }
           >
             O que vamos
@@ -431,7 +431,7 @@ const TechCircle = ({ isDarkTheme = true }) => {
           <FlipWords 
             words={flipWords} 
             duration={5000}
-            className={`font-bold text-lg ${isDarkTheme ? 'text-orange-500' : 'text-orange-600'}`}
+            className={`font-bold text-lg ${isDarkTheme ? 'text-orange-500' : 'text-orange-700'}`}
             style={{ 
               fontFamily: "'Inter', 'SF Pro Display', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'sans-serif'",
               fontWeight: '700',
@@ -441,7 +441,7 @@ const TechCircle = ({ isDarkTheme = true }) => {
           <span 
             className={isDarkTheme 
               ? "bg-gradient-to-r from-gray-300 via-white to-gray-300 bg-clip-text text-transparent" 
-              : "bg-gradient-to-r from-gray-600 via-gray-700 to-gray-600 bg-clip-text text-transparent"
+              : "bg-gradient-to-r from-gray-700 via-gray-800 to-gray-700 bg-clip-text text-transparent"
             }
           >
             hoje?
@@ -2201,8 +2201,8 @@ const Ripple = React.memo(function Ripple({
                   opacity,
                   animationDelay,
                   borderWidth: "1px",
-                  borderColor: isDarkTheme ? "rgba(255, 255, 255, 0.3)" : "rgba(0, 0, 0, 0.4)",
-                  backgroundColor: isDarkTheme ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.15)",
+                  borderColor: isDarkTheme ? "rgba(255, 255, 255, 0.3)" : "rgba(0, 0, 0, 0.6)",
+                  backgroundColor: isDarkTheme ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.25)",
                   top: "50%",
                   left: "50%",
                   transform: "translate(-50%, -50%) scale(1)",
