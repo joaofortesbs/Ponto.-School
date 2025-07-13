@@ -2620,7 +2620,7 @@ export function SchoolPowerPage() {
 
   return (
     <div 
-      className="relative flex h-full min-h-screen w-full flex-col items-center justify-center overflow-hidden rounded-lg border"
+      className="relative flex h-[85vh] min-h-[600px] w-full flex-col items-center justify-center overflow-hidden rounded-lg border"
       style={{ backgroundColor: isDarkTheme ? '#111827' : '#F3F4F7' }}
     >
       {/* Background de estrelas */}
@@ -2674,7 +2674,7 @@ export function SchoolPowerPage() {
       </div>
 
       {/* TechCircle adicionado no topo */}
-      <div className="absolute top-8 left-0 w-full z-10">
+      <div className="absolute top-4 left-0 w-full z-10">
         <TechCircle isDarkTheme={isDarkTheme} />
       </div>
 
@@ -2683,7 +2683,7 @@ export function SchoolPowerPage() {
         <div className="relative w-full h-full flex flex-col items-center justify-center">
           
           {/* Container do Ripple e Ícone Central */}
-          <div className="relative flex-shrink-0" style={{ width: "700px", height: "650px", marginTop: "150px" }}>
+          <div className="relative flex-shrink-0" style={{ width: "700px", height: "500px", marginTop: "80px" }}>
             {/* Ripple com posição relativa */}
             <div className="absolute inset-0">
               <Ripple 
@@ -2702,7 +2702,7 @@ export function SchoolPowerPage() {
           </div>
           
           {/* Caixa de Mensagem fixada abaixo do Ripple */}
-          <div className="relative z-40 pointer-events-auto -mt-40">
+          <div className="relative z-40 pointer-events-auto -mt-20">
             <AIMessageBox isDarkTheme={isDarkTheme} />
           </div>
           
