@@ -1,7 +1,7 @@
 
 "use client";
 import React from "react";
-import { AnimatePresence, motion, LayoutGroup, useAnimation, stagger, useAnimate, useInView, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { AnimatePresence, motion, LayoutGroup, useAnimation, stagger, useAnimate, useInView, useMotionValue, useSpring, useTransform, useAnimationFrame, useMotionTemplate } from "framer-motion";
 import { useCallback, useEffect, useRef, useState, useId, useMemo } from "react";
 import Particles from "@tsparticles/react";
 import { initParticlesEngine } from "@tsparticles/react";
