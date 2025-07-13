@@ -351,8 +351,8 @@ const TechCircle = ({ isDarkTheme = true }) => {
           <div className="w-full h-full flex items-center justify-center p-3">
             <div className="w-14 h-14 overflow-hidden pointer-events-none select-none">
               <img
-                src="4xdV8N2N4CZiWg4a_31SE"
-                alt="Logo S"
+                src="/lovable-uploads/Logo-Ponto.School-Icone.png"
+                alt="Logo Ponto School"
                 className="w-full h-full object-cover"
                 style={{
                   filter: 'brightness(1.1) contrast(1.1)',
