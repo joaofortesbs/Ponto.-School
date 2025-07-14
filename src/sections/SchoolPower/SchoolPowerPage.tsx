@@ -639,7 +639,7 @@ export const Beam = ({
     >
       <motion.path
         d={`M0 0.5H${width ?? "600"}`}
-        stroke={`url(#svgGradient-${id})}`}
+        stroke={`url(#svgGradient-${id})`}
       />
 
       <defs>
@@ -979,8 +979,7 @@ export const SparklesCore = (props) => {
           particlesLoaded={particlesLoaded}
           options={{
             background: {
-              ```
-color: {
+              color: {
                 value: background || "#0d47a1",
               },
             },
@@ -1895,7 +1894,6 @@ const CentralIcon = ({ isDarkTheme, onExpandedChange }) => {
   );
 };
 
-```
 // MovingBorder component
 const MovingBorder = ({
   children,
@@ -2699,7 +2697,8 @@ const AIMessageBox = ({ isDarkTheme = true }) => {
                       >
                         <path
                           d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13"
-                          stroke="currentColor"strokeWidth="2"
+                          stroke="currentColor"
+                          strokeWidth="2"
                           strokeLinecap="round"
                           strokeLinejoin="round"
                         />
