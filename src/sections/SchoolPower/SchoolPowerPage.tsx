@@ -3103,12 +3103,12 @@ export function SchoolPowerPage() {
               onExpandedChange={handleCentralExpandedChange}
             />
           </div>
-        </div>
-      </div>
 
-      {/* Caixa de Mensagem fixada na parte inferior */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-40 pointer-events-auto">
-        <AIMessageBox isDarkTheme={isDarkTheme} />
+          {/* Caixa de Mensagem dentro do mesmo container Ripple */}
+          <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full z-40 pointer-events-auto" style={{ marginTop: "20px" }}>
+            <AIMessageBox isDarkTheme={isDarkTheme} />
+          </div>
+        </div>
       </div>
     </div>
   );
