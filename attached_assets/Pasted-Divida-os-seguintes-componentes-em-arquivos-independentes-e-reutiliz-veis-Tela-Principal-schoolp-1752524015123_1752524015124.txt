@@ -1,0 +1,85 @@
+Divida os seguintes componentes em arquivos independentes e reutilizáveis:
+
+Tela Principal: (schoolpower/SchoolPower.jsx)
+
+Contém a renderização principal da interface.
+
+Importa todos os componentes abaixo.
+
+Responsável por controlar o layout e comunicação entre componentes.
+
+Partículas Interativas: (schoolpower/components/Particles3D.jsx)
+
+Renderiza as partículas interativas em 3 anéis concêntricos.
+
+Gera movimento circular contínuo.
+
+Permite interação de dispersão com cursor.
+
+Caixa de Entrada de IA: (schoolpower/components/ChatInput.jsx)
+
+Input de mensagem com placeholder “Digite sua mensagem para a IA…”
+
+Botão de microfone
+
+Botão “+” para upload ou ação futura
+
+Menu suspenso com opção “Agente IA” e “Assistente IA”
+
+Menu de Perfis do Usuário: (schoolpower/components/ProfileSelector.jsx)
+
+Ícone central clicável com o avatar do perfil ativo (Aluno, Professor etc.)
+
+Expande para mostrar perfis laterais: Professor, Coordenador, Aluno, Expert, Responsável.
+
+Responsável por emitir evento de troca de perfil global
+
+Header de Saudação e Logo: (schoolpower/components/TopHeader.jsx)
+
+Saudação personalizada: “Boa tarde, João!”
+
+Frase interativa: “O que vamos planejar hoje?”
+
+Logo do School Power no topo
+
+Pode importar dados dinâmicos do usuário
+
+Grade de Funcionalidades: (schoolpower/components/FunctionGrid.jsx)
+
+Renderiza os 15 ícones rotativos nas 3 órbitas circulares
+
+Cada ícone representa uma funcionalidade ativa com base no perfil selecionado
+
+Cada anel: 1ª linha (5), 2ª linha (4), 3ª linha (6)
+
+Responsável por alternar os ícones de forma sincronizada com o perfil
+
+Painel Lateral (RightMenu): (schoolpower/components/SideMenu.jsx)
+
+Painel lateral vertical (direita)
+
+4 botões interativos: Histórico, Favoritos, Notificações, Configurações
+
+Fixado à direita da tela com z-index elevado
+
+Contexto Global: (schoolpower/context/ProfileContext.js)
+
+Define o contexto React para armazenar e trocar o perfil ativo
+
+Permite comunicação entre todos os componentes da interface
+
+Ex: ao trocar de perfil, o FunctionGrid e o TopHeader são atualizados
+
+🧠 Considerações Técnicas:
+
+Utilize ReactJS + TailwindCSS + Framer Motion para as animações
+
+Garanta que os ícones nos círculos não mudem de posição ao trocar perfil
+
+Utilize JSON ou constantes centralizadas para armazenar os ícones de cada perfil
+
+Use useEffect com debounce para animações contínuas e suaves
+
+Adicione tratativas para hover em cada ícone
+
+A arquitetura precisa permitir fácil inserção de novos perfis e funcionalidades sem alterar a base existente
