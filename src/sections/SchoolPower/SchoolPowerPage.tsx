@@ -1892,6 +1892,9 @@ const CentralIcon = ({ isDarkTheme, onExpandedChange }) => {
       </AnimatePresence>
     </div>
   );
+      </div>
+    </div>
+  );
 };
 
 // MovingBorder component
