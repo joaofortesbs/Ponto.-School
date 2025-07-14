@@ -3412,7 +3412,7 @@ export function SchoolPowerPage() {
       </div>
 
       {/* Container Ripple fixo e centralizado no background */}
-      <div className="absolute top-[57%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none">
+      <div className="absolute top-[62%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none">
         <div className="relative" style={{ width: "900px", height: "617px" }}>
           {/* TechCircle posicionado no topo do container Ripple */}
           <div
