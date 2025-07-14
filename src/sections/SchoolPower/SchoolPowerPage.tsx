@@ -3104,7 +3104,7 @@ export function SchoolPowerPage() {
           </div>
 
           {/* Caixa de Mensagem dentro do mesmo container Ripple */}
-          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 translate-y-full z-40 pointer-events-auto" style={{ marginTop: "10px" }}>
+          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 translate-y-full z-40 pointer-events-auto" style={{ marginTop: "-20px" }}>
             <AIMessageBox isDarkTheme={isDarkTheme} />
           </div>
         </div>
