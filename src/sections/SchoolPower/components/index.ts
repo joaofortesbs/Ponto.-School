@@ -1,8 +1,8 @@
 
+// Exportação dos componentes do School Power
+export { default as TopHeader } from './TopHeader';
+export { default as ProfileSelector } from './ProfileSelector';
 export { default as ChatInput } from './ChatInput';
-export { default as ChecklistPlanner } from './ChecklistPlanner';
-export { default as ContextualizationForm } from './ContextualizationForm';
-export { default as IAExecutionDashboard } from './IAExecutionDashboard';
+export { default as Particles3D } from './Particles3D';
+export { default as SideMenu } from './SideMenu';
 export { default as ParticlesBackground } from './ParticlesBackground';
-export { default as ProfileSelector, ProfileSelector } from './ProfileSelector';
-export { default as SideMenu, SideMenu } from './SideMenu';
