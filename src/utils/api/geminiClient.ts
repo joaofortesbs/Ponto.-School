@@ -1,5 +1,5 @@
 
-import { API_KEYS, API_URLS, API_CONFIG } from '@/config/apiKeys';
+import { API_KEYS, API_URLS, API_CONFIG, TOKEN_COSTS } from '@/config/apiKeys';
 
 export interface GeminiRequest {
   prompt: string;
@@ -11,9 +11,10 @@ export interface GeminiRequest {
 
 export interface GeminiResponse {
   success: boolean;
-  content: string;
-  tokensUsed: number;
-  responseTime: number;
+  result: string;
+  estimatedTokens: number;
+  estimatedPowerCost: number;
+  executionTime: number;
   error?: string;
 }
 
@@ -61,27 +62,33 @@ export class GeminiClient {
       }
 
       const data = await response.json();
-      const responseTime = Date.now() - startTime;
+      const executionTime = Date.now() - startTime;
 
       if (!data.candidates || !data.candidates[0]?.content?.parts?.[0]?.text) {
         throw new Error('Resposta inválida da API Gemini');
       }
 
+      const responseText = data.candidates[0].content.parts[0].text;
+      const estimatedTokens = this.estimateTokens(request.prompt + responseText);
+      const estimatedPowerCost = estimatedTokens * TOKEN_COSTS.GEMINI;
+
       return {
         success: true,
-        content: data.candidates[0].content.parts[0].text,
-        tokensUsed: this.estimateTokens(request.prompt + data.candidates[0].content.parts[0].text),
-        responseTime,
+        result: responseText,
+        estimatedTokens,
+        estimatedPowerCost,
+        executionTime,
       };
 
     } catch (error) {
-      const responseTime = Date.now() - startTime;
+      const executionTime = Date.now() - startTime;
       
       return {
         success: false,
-        content: '',
-        tokensUsed: 0,
-        responseTime,
+        result: '',
+        estimatedTokens: 0,
+        estimatedPowerCost: 0,
+        executionTime,
         error: error instanceof Error ? error.message : 'Erro desconhecido',
       };
     }

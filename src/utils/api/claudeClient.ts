@@ -1,5 +1,5 @@
 
-import { API_KEYS, API_URLS, API_CONFIG } from '@/config/apiKeys';
+import { API_KEYS, API_URLS, API_CONFIG, TOKEN_COSTS } from '@/config/apiKeys';
 
 export interface ClaudeRequest {
   prompt: string;
@@ -10,9 +10,10 @@ export interface ClaudeRequest {
 
 export interface ClaudeResponse {
   success: boolean;
-  content: string;
-  tokensUsed: number;
-  responseTime: number;
+  result: string;
+  estimatedTokens: number;
+  estimatedPowerCost: number;
+  executionTime: number;
   error?: string;
 }
 
@@ -63,27 +64,32 @@ export class ClaudeClient {
       }
 
       const data = await response.json();
-      const responseTime = Date.now() - startTime;
+      const executionTime = Date.now() - startTime;
 
       if (!data.content || !data.content[0]?.text) {
         throw new Error('Resposta inválida da API Claude');
       }
 
+      const totalTokens = (data.usage?.input_tokens || 0) + (data.usage?.output_tokens || 0);
+      const estimatedPowerCost = totalTokens * TOKEN_COSTS.CLAUDE;
+
       return {
         success: true,
-        content: data.content[0].text,
-        tokensUsed: data.usage?.input_tokens + data.usage?.output_tokens || 0,
-        responseTime,
+        result: data.content[0].text,
+        estimatedTokens: totalTokens,
+        estimatedPowerCost,
+        executionTime,
       };
 
     } catch (error) {
-      const responseTime = Date.now() - startTime;
+      const executionTime = Date.now() - startTime;
       
       return {
         success: false,
-        content: '',
-        tokensUsed: 0,
-        responseTime,
+        result: '',
+        estimatedTokens: 0,
+        estimatedPowerCost: 0,
+        executionTime,
         error: error instanceof Error ? error.message : 'Erro desconhecido',
       };
     }
