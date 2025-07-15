@@ -2,14 +2,6 @@
 @import "./styles/animations.css";
 @import "./styles/hide-scrollbar.css";
 @import "./styles/typewriter-loader.css";
-
-/* Estilo para tópicos selecionados - apenas borda laranja (sem animação) */
-.topic-selected {
-  border: 2px solid #FF6B00;
-  position: relative;
-  box-shadow: 0 0 10px rgba(255, 107, 0, 0.4);
-}
-
 @import "./styles/notebook.css";
 @import "./styles/header-animations.css";
 @import "./styles/carousel-effects.css";
@@ -18,6 +10,16 @@
 @import "./styles/groups-header-transitions.css";
 @import "./styles/chat-responsive.css";
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Estilo para tópicos selecionados - apenas borda laranja (sem animação) */
+.topic-selected {
+  border: 2px solid #FF6B00;
+  position: relative;
+  box-shadow: 0 0 10px rgba(255, 107, 0, 0.4);
+}
 
 /* Estilos para manter proporções consistentes em grid layouts */
 .dashboard-card {
@@ -93,6 +95,7 @@
   scrollbar-width: thin !important;
   scrollbar-color: rgba(255, 107, 0, 0.6) rgba(13, 34, 56, 0.4) !important;
 }
+
 .mode-epictus-turbo-advanced {
   min-height: 100vh;
   overflow-y: auto;
@@ -123,53 +126,6 @@
   }
   50% {
     opacity: 0;
-
-/* Estilo para a barra de rolagem customizada */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 107, 0, 0.3);
-  border-radius: 3px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 107, 0, 0.5);
-}
-
-
-/* Garantir que a barra de rolagem seja visível no componente EventosDoDia */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 5px !important;
-  display: block !important;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(13, 34, 56, 0.4) !important;
-  border-radius: 6px !important;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 107, 0, 0.6) !important;
-  border-radius: 6px !important;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(255, 107, 0, 0.8) !important;
-}
-
-/* Para Firefox */
-.custom-scrollbar {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 107, 0, 0.3) transparent;
-}
-
   }
   100% {
     transform: scale(1.25);
@@ -199,35 +155,6 @@
 
 .active-topic::after {
   content: '';
-
-/* Personalização da scrollbar para o modal de atalhos */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(145, 145, 145, 0.4);
-  border-radius: 10px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(145, 145, 145, 0.6);
-}
-
-/* Estilo para tema escuro */
-.dark .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(100, 100, 100, 0.4);
-}
-
-.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(100, 100, 100, 0.6);
-}
-
   position: absolute;
   inset: 0;
   border-radius: inherit;
@@ -276,7 +203,6 @@
   color: white;
   font-weight: 700;
 }
-
 
 /* Estilos para efeitos 3D */
 .perspective-1000 {
@@ -386,7 +312,6 @@
   }
 }
 
-
 /* Gradiente radial para efeitos de fundo */
 .bg-gradient-radial {
   background-image: radial-gradient(var(--tw-gradient-stops));
@@ -398,12 +323,10 @@
     box-shadow: 0 0 0 0 rgba(255, 107, 0, 0.7);
     transform: scale(0.95);
   }
-
   70% {
     box-shadow: 0 0 0 10px rgba(255, 107, 0, 0);
     transform: scale(1);
   }
-
   100% {
     box-shadow: 0 0 0 0 rgba(255, 107, 0, 0);
     transform: scale(0.95);
@@ -533,7 +456,6 @@ div[data-radix-focus-guard] {
   z-index: 999999 !important;
 }
 
-
 .radix-dialog-content,
 [data-radix-popper-content-wrapper],
 [role="dialog"] {
@@ -595,11 +517,6 @@ button[aria-haspopup="menu"] {
   transform: translateY(-50%) scale(0.95);
 }
 
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 @layer utilities {
   .scrollbar-hide {
     -ms-overflow-style: none;  /* IE and Edge */
@@ -621,7 +538,7 @@ button[aria-haspopup="menu"] {
   animation: pulse-glow 3s infinite ease-in-out;
 }
 
-::root {
+:::root {
 
 /* Estilos para linhas tecnológicas */
 @keyframes pulse-tech-line {
@@ -741,7 +658,6 @@ svg.neural-connections {
     transform: translateY(0px);
   }
 }
-
 
 /* Efeito de partículas brilhantes para os cards destacados */
 @keyframes float-particle {
@@ -882,10 +798,6 @@ svg.neural-connections {
   opacity: 1;
 }
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -1009,7 +921,7 @@ svg.neural-connections {
 .dark .icon-nav-button:hover {
   background-color: rgba(15, 25, 35, 0.95) !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
-}```text
+}
 /* Estilos para ícones específicos */
 .calendar-icon {
   color: #FF6B00 !important;
@@ -1436,7 +1348,7 @@ body.modal-open {
 }
 
 /* Custom cursor styles */
-::root:not(.dark) body {
+:::root:not(.dark) body {
   cursor:
     url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="%23FF6B00" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" fill="rgba(255, 107, 0, 0.15)" stroke="%23FF6B00"/><path d="M2 2l7 4" stroke="%23FF6B00"/><path d="M8.5 9.5L5 6" stroke="%23FF6B00"/><path d="M18 13l-2.5-2.5" stroke="%23FF6B00"/><path d="M13 18l-2.5-2.5" stroke="%23FF6B00"/><circle cx="16.5" cy="11.5" r="0.5" fill="%23FF6B00" stroke="none"/></svg>')
       1 1,
@@ -1983,10 +1895,6 @@ textarea:hover,
   animation: fadeOut 0.2s ease-in-out forwards;
 }
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 .typewriter-message {
   overflow: hidden;
   line-height: 1.5;
@@ -2195,7 +2103,7 @@ textarea:hover,
 }
 
 /* Custom cursor styles */
-::root:not(.dark) body {
+:::root:not(.dark) body {
   cursor:
     url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="%23FF6B00" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" fill="rgba(255, 107, 0, 0.15)" stroke="%23FF6B00"/><path d="M2 2l7 4" stroke="%23FF6B00"/><path d="M8.5 9.5L5 6" stroke="%23FF6B00"/><path d="M18 13l-2.5-2.5" stroke="%23FF6B00"/><path d="M13 18l-2.5-2.5" stroke="%23FF6B00"/><circle cx="16.5" cy="11.5" r="0.5" fill="%23FF6B00" stroke="none"/></svg>')
       1 1,
@@ -2627,4 +2535,84 @@ textarea:hover,
 .profile-3d-text:hover {
   text-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   transform: translateY(-1px);
+}
+
+/* Customização do scrollbar para cards de métricas */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(13, 34, 56, 0.1);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, rgba(255, 107, 0, 0.6), rgba(255, 140, 64, 0.6));
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to bottom, rgba(255, 107, 0, 0.8), rgba(255, 140, 64, 0.8));
+}
+
+/* Efeito de sombras e brilhos para cards */
+.card-glow {
+  box-shadow: 0 0 15px rgba(255, 107, 0, 0.15);
+  transition: box-shadow 0.3s ease;
+}
+
+.card-glow:hover {
+  box-shadow: 0 0 20px rgba(255, 107, 0, 0.25);
+}
+
+/* Estilos para os cards da grade de métricas */
+.metrics-card {
+  transition: all 0.3s ease;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.metrics-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Estilos para transições suaves do cabeçalho de grupos */
+.groups-header {
+  transition: all 0.3s ease-in-out;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.groups-header.hidden {
+  opacity: 0;
+  transform: translateY(-100%);
+  visibility: hidden;
+}
+
+.groups-header.visible {
+  opacity: 1;
+  transform: translateY(0);
+  visibility: visible;
+}
+
+/* Estilos específicos para modo claro */
+.light-mode-card {
+  background-color: white;
+  border-color: rgba(229, 231, 235, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.light-mode-card:hover {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Estilos para containers dos cards */
+.metrics-card-container {
+  transition: transform 0.3s ease;
+}
+
+.metrics-card-container:hover {
+  transform: translateY(-2px);
 }
