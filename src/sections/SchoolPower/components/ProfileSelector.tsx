@@ -1,274 +1,104 @@
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { User, ChevronDown, Settings, LogOut } from 'lucide-react';
 
-"use client";
-import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-
-// Ícones para perfis
-const ProfileIcons = {
-  student: (
-    <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-      <path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z" />
-    </svg>
-  ),
-  teacher: (
-    <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-      <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
-    </svg>
-  ),
-  coordinator: (
-    <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-      <path d="M14 6V4h-4v2h4zM4 8v11h16V8H4zm16-2c1.11 0 2 .89 2 2v11c0 1.11-.89 2-2 2H4c-1.11 0-2-.89-2-2V8c0-1.11.89-2 2-2h16z" />
-      <path d="M12 9c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3z" />
-    </svg>
-  ),
-  expert: (
-    <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-5.5-2.5l7.51-3.49L17.5 6.5 9.99 9.99 6.5 17.5zm5.5-6.6c.61 0 1.1.49 1.1 1.1s-.49 1.1-1.1 1.1-1.1-.49-1.1-1.1.49-1.1 1.1-1.1z" />
-    </svg>
-  ),
-  responsible: (
-    <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-      <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-    </svg>
-  ),
-};
-
-// Icon de Aluno
-const StudentIcon = () => (
-  <svg
-    width="32"
-    height="32"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-  >
-    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-    <circle cx="12" cy="7" r="4" />
-  </svg>
-);
-
-// Dados dos perfis
-const profiles = [
-  {
-    id: "student",
-    name: "Aluno",
-    icon: ProfileIcons.student,
-    color: "bg-orange-500",
-  },
-  {
-    id: "teacher",
-    name: "Professor",
-    icon: ProfileIcons.teacher,
-    color: "bg-orange-500",
-  },
-  {
-    id: "coordinator",
-    name: "Coordenador",
-    icon: ProfileIcons.coordinator,
-    color: "bg-orange-500",
-  },
-  {
-    id: "expert",
-    name: "Expert",
-    icon: ProfileIcons.expert,
-    color: "bg-orange-500",
-  },
-  {
-    id: "responsible",
-    name: "Responsável",
-    icon: ProfileIcons.responsible,
-    color: "bg-orange-500",
-  },
-];
-
-// Componente ProfileOptionBubble
-const ProfileOptionBubble = ({ profile, onClick, index }: any) => {
-  const spacing = 120;
-
-  const positions = [
-    { x: -spacing * 2, y: 0 },
-    { x: -spacing, y: 0 },
-    { x: spacing, y: 0 },
-    { x: spacing * 2, y: 0 },
-  ];
-
-  return (
-    <motion.div
-      initial={{ scale: 0, opacity: 0 }}
-      animate={{
-        scale: 1,
-        opacity: 1,
-        x: positions[index]?.x || 0,
-        y: positions[index]?.y || 0,
-      }}
-      exit={{ scale: 0, opacity: 0 }}
-      transition={{
-        type: "spring",
-        stiffness: 300,
-        damping: 20,
-        delay: index * 0.1,
-      }}
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
-      className="absolute select-none"
-      style={{
-        zIndex: 999,
-        cursor: "pointer",
-        userSelect: "none",
-        WebkitUserSelect: "none",
-        MozUserSelect: "none",
-        msUserSelect: "none",
-      }}
-      onClick={() => onClick(profile)}
-    >
-      <div
-        className={`w-16 h-16 rounded-full shadow-lg flex items-center justify-center ${profile.color} hover:shadow-xl transition-shadow duration-200 border-2 border-orange-300/50`}
-        style={{ cursor: "pointer" }}
-      >
-        <div className="pointer-events-none">{profile.icon}</div>
-      </div>
-      <div
-        className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 whitespace-nowrap pointer-events-none"
-        style={{ zIndex: 1000 }}
-      >
-        <span className="text-xs font-medium text-orange-300 bg-black/80 px-3 py-1 rounded-full shadow-lg border border-orange-400/30">
-          {profile.name}
-        </span>
-      </div>
-    </motion.div>
-  );
-};
-
-interface ProfileSelectorProps {
-  isDarkTheme?: boolean;
-  onExpandedChange?: (expanded: boolean) => void;
+interface Profile {
+  id: string;
+  name: string;
+  avatar?: string;
+  type: 'student' | 'teacher' | 'admin';
 }
 
-// Componente do Ícone Central
-const ProfileSelector: React.FC<ProfileSelectorProps> = ({ isDarkTheme, onExpandedChange }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [selectedProfile, setSelectedProfile] = useState(profiles[0]);
-  const [isHovered, setIsHovered] = useState(false);
+const mockProfiles: Profile[] = [
+  {
+    id: '1',
+    name: 'João Silva',
+    avatar: '/images/avatar1.png',
+    type: 'student'
+  },
+  {
+    id: '2',
+    name: 'Maria Santos',
+    avatar: '/images/avatar2.png',
+    type: 'teacher'
+  }
+];
 
-  const handleAvatarClick = () => {
-    const newExpandedState = !isExpanded;
-    setIsExpanded(newExpandedState);
-    onExpandedChange?.(newExpandedState);
-  };
+export const ProfileSelector: React.FC = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedProfile, setSelectedProfile] = useState<Profile>(mockProfiles[0]);
 
-  const handleProfileSelect = (profile: any) => {
+  const handleProfileSelect = (profile: Profile) => {
     setSelectedProfile(profile);
-    setIsExpanded(false);
-    onExpandedChange?.(false);
-  };
-
-  const handleMouseEnter = () => {
-    setIsHovered(true);
-  };
-
-  const handleMouseLeave = () => {
-    setIsHovered(false);
+    setIsOpen(false);
   };
 
   return (
-    <div className="relative">
-      <motion.div
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        className="relative select-none"
-        onClick={handleAvatarClick}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-        style={{
-          cursor: "pointer",
-          userSelect: "none",
-          WebkitUserSelect: "none",
-          MozUserSelect: "none",
-          msUserSelect: "none",
-        }}
-      >
-        <div
-          className="flex items-center justify-center rounded-full bg-orange-500 shadow-lg border-4 border-orange-300 transition-all duration-200"
-          style={{
-            width: "80px",
-            height: "80px",
-            zIndex: 1000,
-            position: "relative",
-            cursor: "pointer",
-            pointerEvents: "all",
-          }}
+    <div className="fixed top-4 right-4 z-50">
+      <div className="relative">
+        <motion.button
+          onClick={() => setIsOpen(!isOpen)}
+          className="flex items-center gap-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-4 py-2 text-white hover:bg-white/20 transition-all duration-300"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
         >
-          <div className="text-white pointer-events-none">
-            {selectedProfile.icon || <StudentIcon />}
+          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 flex items-center justify-center">
+            {selectedProfile.avatar ? (
+              <img src={selectedProfile.avatar} alt={selectedProfile.name} className="w-8 h-8 rounded-full" />
+            ) : (
+              <User className="w-4 h-4 text-white" />
+            )}
           </div>
-        </div>
+          <span className="font-medium">{selectedProfile.name}</span>
+          <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        </motion.button>
 
-        <motion.div
-          animate={{ rotate: isExpanded ? 45 : 0 }}
-          className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full shadow-md flex items-center justify-center border-2 transition-all duration-200 ${
-            isDarkTheme
-              ? "bg-white border-orange-200"
-              : "bg-gray-100 border-orange-300"
-          }`}
-          style={{
-            zIndex: 1001,
-            cursor: "pointer",
-            pointerEvents: "none",
-          }}
-        >
-          <svg
-            className="w-3 h-3 text-orange-500 pointer-events-none"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-            />
-          </svg>
-        </motion.div>
-      </motion.div>
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="absolute top-full right-0 mt-2 min-w-[200px] bg-white/95 backdrop-blur-md border border-white/20 rounded-xl shadow-xl overflow-hidden"
+            >
+              <div className="p-2">
+                {mockProfiles.map((profile) => (
+                  <button
+                    key={profile.id}
+                    onClick={() => handleProfileSelect(profile)}
+                    className={`w-full flex items-center gap-3 p-3 rounded-lg text-left hover:bg-gray-100/50 transition-colors ${
+                      selectedProfile.id === profile.id ? 'bg-orange-100/50' : ''
+                    }`}
+                  >
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 flex items-center justify-center">
+                      {profile.avatar ? (
+                        <img src={profile.avatar} alt={profile.name} className="w-8 h-8 rounded-full" />
+                      ) : (
+                        <User className="w-4 h-4 text-white" />
+                      )}
+                    </div>
+                    <div>
+                      <div className="font-medium text-gray-900">{profile.name}</div>
+                      <div className="text-xs text-gray-500 capitalize">{profile.type}</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
 
-      <AnimatePresence>
-        {isExpanded && (
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{ zIndex: 999 }}
-          >
-            {profiles
-              .filter((profile) => profile.id !== selectedProfile.id)
-              .map((profile, index) => (
-                <div key={profile.id} className="pointer-events-auto">
-                  <ProfileOptionBubble
-                    profile={profile}
-                    onClick={handleProfileSelect}
-                    index={index}
-                  />
-                </div>
-              ))}
-          </div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {isExpanded && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/20 z-20"
-            style={{ cursor: "default" }}
-            onClick={() => {
-              setIsExpanded(false);
-              onExpandedChange?.(false);
-            }}
-          />
-        )}
-      </AnimatePresence>
+              <div className="border-t border-gray-200/50 p-2">
+                <button className="w-full flex items-center gap-3 p-3 rounded-lg text-left hover:bg-gray-100/50 transition-colors text-gray-700">
+                  <Settings className="w-4 h-4" />
+                  <span className="text-sm">Configurações</span>
+                </button>
+                <button className="w-full flex items-center gap-3 p-3 rounded-lg text-left hover:bg-red-100/50 transition-colors text-red-600">
+                  <LogOut className="w-4 h-4" />
+                  <span className="text-sm">Sair</span>
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 };
