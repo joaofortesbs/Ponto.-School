@@ -1,72 +1,103 @@
-"use client";
-import React, { useState } from "react";
-import {
-  TopHeader,
-  ProfileSelector,
-  ChatInput,
-  Particles3D,
-  SideMenu,
-  ParticlesBackground,
-} from "./components";
 
-export function SchoolPowerPage() {
-  const [isDarkTheme] = useState(true);
-  const [isCentralExpanded, setIsCentralExpanded] = useState(false);
+import React, { useEffect } from 'react';
+import { AnimatePresence } from 'framer-motion';
+import { useSchoolPowerStore } from '@/store/schoolPowerStore';
+import { ChatInput } from './components/ChatInput';
+import { ContextualizationForm } from './components/ContextualizationForm';
+import { ChecklistPlanner } from './components/ChecklistPlanner';
+import { IAExecutionDashboard } from './components/IAExecutionDashboard';
+import { TopHeader } from './components/TopHeader';
+import { ProfileSelector } from './components/ProfileSelector';
+import { SideMenu } from './components/SideMenu';
+import { ParticlesBackground } from './components/ParticlesBackground';
 
-  const handleCentralExpandedChange = (expanded: boolean) => {
-    setIsCentralExpanded(expanded);
+export const SchoolPowerPage: React.FC = () => {
+  const { stage, error, setError } = useSchoolPowerStore();
+
+  useEffect(() => {
+    // Limpar erros quando o componente monta
+    if (error) {
+      const timeout = setTimeout(() => {
+        setError(null);
+      }, 5000);
+      return () => clearTimeout(timeout);
+    }
+  }, [error, setError]);
+
+  const renderCurrentStage = () => {
+    switch (stage) {
+      case 'start':
+        return (
+          <div className="flex flex-col items-center justify-center min-h-screen space-y-8">
+            <div className="text-center space-y-4 mb-8">
+              <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+                School Power
+              </h1>
+              <p className="text-xl text-white/80 max-w-2xl">
+                Transforme suas ideias em materiais educacionais completos com o poder da IA
+              </p>
+            </div>
+            <ChatInput />
+          </div>
+        );
+      
+      case 'contextualization':
+        return <ContextualizationForm />;
+      
+      case 'planning':
+        return <ChecklistPlanner />;
+      
+      case 'execution':
+        return <IAExecutionDashboard />;
+      
+      default:
+        return (
+          <div className="flex flex-col items-center justify-center min-h-screen">
+            <div className="text-center space-y-4">
+              <h2 className="text-2xl font-bold text-white">Estado Desconhecido</h2>
+              <p className="text-white/80">
+                Ocorreu um erro inesperado. Recarregue a página.
+              </p>
+            </div>
+          </div>
+        );
+    }
   };
 
   return (
-    <div
-      className="relative flex h-[90vh] min-h-[650px] w-full flex-col items-center justify-center overflow-hidden rounded-lg"
-      style={{ backgroundColor: "transparent" }}
-    >
-      {/* Background de estrelas */}
-      <ParticlesBackground isDarkTheme={isDarkTheme} />
-
-      {/* Vertical dock positioned at right side */}
-      <div className="absolute right-8 top-1/2 transform -translate-y-1/2">
-        <SideMenu />
-      </div>
-
-      {/* Container Ripple fixo e centralizado no background */}
-      <div className="absolute top-[57%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none">
-        <div className="relative" style={{ width: "900px", height: "617px" }}>
-          {/* TechCircle posicionado no topo do container Ripple */}
-          <div
-            className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-full z-30 pointer-events-none"
-            style={{ marginTop: "7px" }}
-          >
-            <TopHeader isDarkTheme={isDarkTheme} />
+    <div className="min-h-screen bg-gradient-to-br from-[#0D2238] via-[#1A365D] to-[#2D3748] relative overflow-hidden">
+      {/* Background Effects */}
+      <ParticlesBackground />
+      
+      {/* Header */}
+      <TopHeader />
+      
+      {/* Side Menu */}
+      <SideMenu />
+      
+      {/* Profile Selector */}
+      <ProfileSelector />
+      
+      {/* Main Content */}
+      <main className="relative z-10 container mx-auto px-4 py-8">
+        {/* Error Display */}
+        {error && (
+          <div className="fixed top-4 right-4 z-50 max-w-md">
+            <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-4 text-red-200">
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-red-500 rounded-full"></div>
+                <span className="font-medium">Erro</span>
+              </div>
+              <p className="mt-1 text-sm">{error}</p>
+            </div>
           </div>
-
-          {/* Ripple centralizado */}
-          <div className="absolute inset-0">
-            <Particles3D isDarkTheme={isDarkTheme} isBlurred={isCentralExpanded} />
-          </div>
-
-          {/* Ícone Central no centro do Ripple */}
-          <div
-            className="absolute z-50 pointer-events-auto"
-            style={{
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-            }}
-          >
-            <ProfileSelector
-              isDarkTheme={isDarkTheme}
-              onExpandedChange={handleCentralExpandedChange}
-            />
-          </div>
-
-          {/* Caixa de Mensagem dentro do mesmo container Ripple */}
-          <div className="absolute bottom-24 left-1/2 transform -translate-x-1/2 translate-y-full z-40 pointer-events-auto" style={{ marginTop: "-150px" }}>
-            <ChatInput isDarkTheme={isDarkTheme} />
-          </div>
-        </div>
-      </div>
+        )}
+        
+        {/* Stage Content */}
+        <AnimatePresence mode="wait">
+          {renderCurrentStage()}
+        </AnimatePresence>
+      </main>
     </div>
   );
-}
+};
