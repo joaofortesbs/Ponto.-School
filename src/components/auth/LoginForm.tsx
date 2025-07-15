@@ -269,13 +269,26 @@ export function LoginForm() {
           </div>
         </div>
       )}
-      <div className="text-center space-y-2">
-        <h1 className="text-2xl font-bold tracking-tight text-brand-black dark:text-white drop-shadow-sm">
-          Entrar na plataforma
-        </h1>
-        <p className="text-sm text-brand-muted dark:text-white/70">
-          Insira suas credenciais para acessar
-        </p>
+      <div className="text-center space-y-4">
+        <div className="flex justify-center mb-4">
+          <img 
+            src="/lovable-uploads/Logo-Ponto.-School.png" 
+            alt="Ponto.School Logo" 
+            className="w-16 h-16 object-contain"
+            onError={(e) => {
+              console.error("Erro ao carregar logo no login");
+              e.currentTarget.style.display = "none";
+            }}
+          />
+        </div>
+        <div className="space-y-2">
+          <h1 className="text-2xl font-bold tracking-tight text-brand-black dark:text-white drop-shadow-sm">
+            Entrar na plataforma
+          </h1>
+          <p className="text-sm text-brand-muted dark:text-white/70">
+            Insira suas credenciais para acessar
+          </p>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4 relative z-10">
