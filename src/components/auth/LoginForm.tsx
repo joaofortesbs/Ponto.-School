@@ -36,24 +36,30 @@ export function LoginForm() {
       }, 8000); // Aumentado para 8 segundos para dar mais tempo de leitura
 
       // Limpar flag de redirecionamento
-      localStorage.removeItem('redirectTimer');
+      localStorage.removeItem("redirectTimer");
 
       // Verificar se temos o email direto do state (redirecionamento imediato)
       if (location.state.email) {
-        setFormData(prev => ({ ...prev, email: location.state.email }));
-        console.log("Preenchendo campo de email do state:", location.state.email);
+        setFormData((prev) => ({ ...prev, email: location.state.email }));
+        console.log(
+          "Preenchendo campo de email do state:",
+          location.state.email,
+        );
       } else {
         // Usar email registrado (preferencial)
-        const lastRegisteredEmail = localStorage.getItem('lastRegisteredEmail');
+        const lastRegisteredEmail = localStorage.getItem("lastRegisteredEmail");
         if (lastRegisteredEmail) {
-          setFormData(prev => ({ ...prev, email: lastRegisteredEmail }));
+          setFormData((prev) => ({ ...prev, email: lastRegisteredEmail }));
           console.log("Preenchendo campo de email:", lastRegisteredEmail);
         } else {
           // Fallback para username se não tiver email
-          const lastUsername = localStorage.getItem('lastRegisteredUsername');
+          const lastUsername = localStorage.getItem("lastRegisteredUsername");
           if (lastUsername) {
-            setFormData(prev => ({ ...prev, email: lastUsername }));
-            console.log("Preenchendo campo de email com username:", lastUsername);
+            setFormData((prev) => ({ ...prev, email: lastUsername }));
+            console.log(
+              "Preenchendo campo de email com username:",
+              lastUsername,
+            );
           }
         }
       }
@@ -61,39 +67,40 @@ export function LoginForm() {
 
     // Verificar o parâmetro na URL também
     const params = new URLSearchParams(location.search);
-    if (params.get('newAccount') === 'true') {
+    if (params.get("newAccount") === "true") {
       setAccountCreated(true);
       setTimeout(() => {
         setAccountCreated(false);
       }, 8000); // Aumentado para 8 segundos
 
       // Limpar flag de redirecionamento
-      localStorage.removeItem('redirectTimer');
+      localStorage.removeItem("redirectTimer");
 
       // Verificar se há username no localStorage mesmo quando vindo por parâmetro de URL
-      const lastUsername = localStorage.getItem('lastRegisteredUsername');
+      const lastUsername = localStorage.getItem("lastRegisteredUsername");
       if (lastUsername && !formData.email) {
-        setFormData(prev => ({ ...prev, email: lastUsername }));
+        setFormData((prev) => ({ ...prev, email: lastUsername }));
       }
     }
 
     // Executar sempre na montagem do componente para verificar se existe um redirecionamento pendente
-    const pendingRedirect = localStorage.getItem('redirectTimer');
-    if (pendingRedirect === 'active') {
+    const pendingRedirect = localStorage.getItem("redirectTimer");
+    if (pendingRedirect === "active") {
       setAccountCreated(true);
-      localStorage.removeItem('redirectTimer');
+      localStorage.removeItem("redirectTimer");
 
-      const lastUsername = localStorage.getItem('lastRegisteredUsername');
+      const lastUsername = localStorage.getItem("lastRegisteredUsername");
       if (lastUsername) {
-        setFormData(prev => ({ ...prev, email: lastUsername }));
+        setFormData((prev) => ({ ...prev, email: lastUsername }));
       }
     }
   }, [location]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.type === "checkbox" ? e.target.checked : e.target.value;
+    const value =
+      e.target.type === "checkbox" ? e.target.checked : e.target.value;
     setFormData((prev) => ({ ...prev, [e.target.name]: value }));
-    
+
     // Clear invalid credentials state when user starts typing in email or password fields
     if (e.target.name === "email" || e.target.name === "password") {
       setInvalidCredentials(false);
@@ -101,9 +108,9 @@ export function LoginForm() {
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !loading) {
+    if (e.key === "Enter" && !loading) {
       e.preventDefault();
-      const form = e.currentTarget.closest('form');
+      const form = e.currentTarget.closest("form");
       if (form) {
         form.requestSubmit();
       }
@@ -125,24 +132,24 @@ export function LoginForm() {
 
     // Feedback visual imediato para melhorar a percepção
     setSuccess(true);
-    localStorage.setItem('auth_checked', 'pending');
-    localStorage.setItem('auth_status', 'authenticating');
+    localStorage.setItem("auth_checked", "pending");
+    localStorage.setItem("auth_status", "authenticating");
 
     // Iniciar redirecionamento antecipado para melhorar percepção de velocidade
     // Um timeout curto para dar percepção de resposta instantânea
     const preloadTimeout = setTimeout(() => {
-      if (localStorage.getItem('auth_status') === 'authenticating') {
+      if (localStorage.getItem("auth_status") === "authenticating") {
         // Pré-carregar a rota de dashboard enquanto aguarda autenticação
-        const preloadLink = document.createElement('link');
-        preloadLink.rel = 'prefetch';
-        preloadLink.href = '/dashboard';
+        const preloadLink = document.createElement("link");
+        preloadLink.rel = "prefetch";
+        preloadLink.href = "/dashboard";
         document.head.appendChild(preloadLink);
       }
     }, 300);
 
     // Timeout mais curto (5 segundos) para feedback em caso de lentidão
     const authTimeout = setTimeout(() => {
-      if (localStorage.getItem('auth_status') === 'authenticating') {
+      if (localStorage.getItem("auth_status") === "authenticating") {
         // Não cancelar o login, apenas mostrar feedback
         setError("Estamos processando seu login, aguarde um momento...");
       }
@@ -151,7 +158,7 @@ export function LoginForm() {
     try {
       let authResult;
       const inputValue = formData.email;
-      const isEmail = inputValue.includes('@');
+      const isEmail = inputValue.includes("@");
 
       if (isEmail) {
         // Login com email
@@ -160,17 +167,17 @@ export function LoginForm() {
             email: inputValue,
             password: formData.password,
           }),
-          new Promise((_, reject) => 
-            setTimeout(() => reject(new Error("Tempo limite excedido")), 8000)
-          )
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("Tempo limite excedido")), 8000),
+          ),
         ]);
       } else {
         // Login com nome de usuário
         // Primeiro, buscar o email associado ao nome de usuário
         const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('email')
-          .eq('username', inputValue)
+          .from("profiles")
+          .select("email")
+          .eq("username", inputValue)
           .single();
 
         if (profileError || !profileData?.email) {
@@ -180,8 +187,8 @@ export function LoginForm() {
           setLoading(false);
           clearTimeout(preloadTimeout);
           clearTimeout(authTimeout);
-          localStorage.removeItem('auth_checked');
-          localStorage.removeItem('auth_status');
+          localStorage.removeItem("auth_checked");
+          localStorage.removeItem("auth_status");
           return;
         }
 
@@ -191,9 +198,9 @@ export function LoginForm() {
             email: profileData.email,
             password: formData.password,
           }),
-          new Promise((_, reject) => 
-            setTimeout(() => reject(new Error("Tempo limite excedido")), 8000)
-          )
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("Tempo limite excedido")), 8000),
+          ),
         ]);
       }
 
@@ -204,40 +211,43 @@ export function LoginForm() {
 
       if (error) {
         setSuccess(false);
-        if (error.message.includes("Invalid login credentials") ||
-            error.message.includes("Email not confirmed")) {
+        if (
+          error.message.includes("Invalid login credentials") ||
+          error.message.includes("Email not confirmed")
+        ) {
           setError("Email ou senha inválidos");
           setInvalidCredentials(true); // Set invalid credentials state
-        } else if (error.status === 0) { //Improved network error handling
+        } else if (error.status === 0) {
+          //Improved network error handling
           setError("Erro de conexão. Verifique sua internet.");
         } else {
           setError("Erro ao fazer login: " + error.message);
         }
-        localStorage.removeItem('auth_checked');
-        localStorage.removeItem('auth_status');
+        localStorage.removeItem("auth_checked");
+        localStorage.removeItem("auth_status");
         setLoading(false);
         return;
       }
 
       if (data?.user) {
-        localStorage.setItem('auth_checked', 'true');
-        localStorage.setItem('auth_status', 'authenticated');
+        localStorage.setItem("auth_checked", "true");
+        localStorage.setItem("auth_status", "authenticated");
 
         // Redirecionar rapidamente para melhorar percepção de velocidade
         navigate("/");
       } else {
         setSuccess(false);
         setError("Erro ao completar login");
-        localStorage.removeItem('auth_checked');
-        localStorage.removeItem('auth_status');
+        localStorage.removeItem("auth_checked");
+        localStorage.removeItem("auth_status");
       }
     } catch (err: any) {
       clearTimeout(authTimeout);
       setSuccess(false);
       setError("Erro ao fazer login, tente novamente");
       console.error("Erro ao logar:", err);
-      localStorage.removeItem('auth_checked');
-      localStorage.removeItem('auth_status');
+      localStorage.removeItem("auth_checked");
+      localStorage.removeItem("auth_status");
     } finally {
       setLoading(false);
     }
@@ -252,7 +262,10 @@ export function LoginForm() {
           </div>
           <div className="flex-1">
             <h3 className="text-lg font-bold">Conta criada com sucesso!</h3>
-            <p className="text-sm mt-1">Sua conta foi criada e seus dados foram salvos com sucesso. Use suas credenciais para fazer login.</p>
+            <p className="text-sm mt-1">
+              Sua conta foi criada e seus dados foram salvos com sucesso. Use
+              suas credenciais para fazer login.
+            </p>
           </div>
         </div>
       )}
@@ -263,19 +276,24 @@ export function LoginForm() {
               <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
             </div>
             <div>
-              <span className="font-medium text-green-600 dark:text-green-400">Login bem-sucedido!</span>
-              <p className="text-sm text-green-600/80 dark:text-green-400/80">Redirecionando para o dashboard...</p>
+              <span className="font-medium text-green-600 dark:text-green-400">
+                Login bem-sucedido!
+              </span>
+              <p className="text-sm text-green-600/80 dark:text-green-400/80">
+                Redirecionando para o dashboard...
+              </p>
             </div>
           </div>
         </div>
       )}
       <div className="text-center space-y-2">
-        <h1 className="text-2xl font-bold tracking-tight text-brand-black dark:text-white drop-shadow-sm">
-          Entrar na plataforma
-        </h1>
-        <p className="text-sm text-brand-muted dark:text-white/70">
-          Insira suas credenciais para acessar
-        </p>
+        <div className="flex justify-center mb-4">
+          <img
+            src="/lovable-uploads/Logo-Ponto. School.png"
+            alt="Ponto School Logo"
+            className="w-73 h-73 object-contain"
+          />
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4 relative z-10">
@@ -284,13 +302,15 @@ export function LoginForm() {
             E-mail
           </label>
           <div className="relative group">
-            <Mail className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 group-hover:text-brand-primary transition-colors duration-200 z-10 ${
-              invalidCredentials 
-                ? 'text-red-500' 
-                : formData.email 
-                  ? 'text-[#FF6B00]' 
-                  : 'text-muted-foreground'
-            }`} />
+            <Mail
+              className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 group-hover:text-brand-primary transition-colors duration-200 z-10 ${
+                invalidCredentials
+                  ? "text-red-500"
+                  : formData.email
+                    ? "text-[#FF6B00]"
+                    : "text-muted-foreground"
+              }`}
+            />
             <Input
               type="text"
               name="email"
@@ -299,22 +319,26 @@ export function LoginForm() {
               onKeyPress={handleKeyPress}
               placeholder="Digite seu e-mail"
               className={`pl-10 h-11 rounded-lg transition-all duration-300 hover:border-[#FF6B00]/30 bg-[#031223]/60 text-white backdrop-blur-md dark:bg-white/8 ${
-                invalidCredentials 
-                  ? 'border-red-500 dark:border-red-500 focus:border-red-500 dark:focus:border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]' 
-                  : formData.email 
-                    ? 'border-[#FF6B00] dark:border-[#FF6B00] focus:border-[#FF6B00] dark:focus:border-[#FF6B00] shadow-[0_0_15px_rgba(255,107,0,0.3)]' 
-                    : 'border-[#FF6B00]/10 dark:border-[#FF6B00]/20 focus:border-[#FF6B00]/60 dark:focus:border-[#FF6B00]/60'
+                invalidCredentials
+                  ? "border-red-500 dark:border-red-500 focus:border-red-500 dark:focus:border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]"
+                  : formData.email
+                    ? "border-[#FF6B00] dark:border-[#FF6B00] focus:border-[#FF6B00] dark:focus:border-[#FF6B00] shadow-[0_0_15px_rgba(255,107,0,0.3)]"
+                    : "border-[#FF6B00]/10 dark:border-[#FF6B00]/20 focus:border-[#FF6B00]/60 dark:focus:border-[#FF6B00]/60"
               }`}
               required
               style={{
                 backdropFilter: "blur(12px)",
                 WebkitBackdropFilter: "blur(12px)",
-                boxShadow: "inset 0 1px 2px rgba(255, 255, 255, 0.1)"
+                boxShadow: "inset 0 1px 2px rgba(255, 255, 255, 0.1)",
               }}
             />
-            <div className="absolute inset-0 rounded-lg opacity-0 group-focus:opacity-20 transition-all duration-300 pointer-events-none border border-[#FF6B00]/30 shadow-[0_0_15px_rgba(255,107,0,0.15)]" style={{
-              background: "linear-gradient(135deg, rgba(255, 107, 0, 0.03) 0%, rgba(255, 140, 64, 0.02) 100%)"
-            }}></div>
+            <div
+              className="absolute inset-0 rounded-lg opacity-0 group-focus:opacity-20 transition-all duration-300 pointer-events-none border border-[#FF6B00]/30 shadow-[0_0_15px_rgba(255,107,0,0.15)]"
+              style={{
+                background:
+                  "linear-gradient(135deg, rgba(255, 107, 0, 0.03) 0%, rgba(255, 140, 64, 0.02) 100%)",
+              }}
+            ></div>
           </div>
         </div>
 
@@ -323,13 +347,15 @@ export function LoginForm() {
             Senha
           </label>
           <div className="relative group">
-            <Lock className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 group-hover:text-brand-primary transition-colors duration-200 z-10 ${
-              invalidCredentials 
-                ? 'text-red-500' 
-                : formData.password 
-                  ? 'text-[#FF6B00]' 
-                  : 'text-muted-foreground'
-            }`} />
+            <Lock
+              className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 group-hover:text-brand-primary transition-colors duration-200 z-10 ${
+                invalidCredentials
+                  ? "text-red-500"
+                  : formData.password
+                    ? "text-[#FF6B00]"
+                    : "text-muted-foreground"
+              }`}
+            />
             <Input
               type={showPassword ? "text" : "password"}
               name="password"
@@ -338,17 +364,17 @@ export function LoginForm() {
               onKeyPress={handleKeyPress}
               placeholder="Digite sua senha"
               className={`pl-10 pr-10 h-11 rounded-lg transition-all duration-300 hover:border-[#FF6B00]/30 bg-[#031223]/60 text-white backdrop-blur-md dark:bg-white/8 ${
-                invalidCredentials 
-                  ? 'border-red-500 dark:border-red-500 focus:border-red-500 dark:focus:border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]' 
-                  : formData.password 
-                    ? 'border-[#FF6B00] dark:border-[#FF6B00] focus:border-[#FF6B00] dark:focus:border-[#FF6B00] shadow-[0_0_15px_rgba(255,107,0,0.3)]' 
-                    : 'border-[#FF6B00]/10 dark:border-[#FF6B00]/20 focus:border-[#FF6B00]/60 dark:focus:border-[#FF6B00]/60'
+                invalidCredentials
+                  ? "border-red-500 dark:border-red-500 focus:border-red-500 dark:focus:border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]"
+                  : formData.password
+                    ? "border-[#FF6B00] dark:border-[#FF6B00] focus:border-[#FF6B00] dark:focus:border-[#FF6B00] shadow-[0_0_15px_rgba(255,107,0,0.3)]"
+                    : "border-[#FF6B00]/10 dark:border-[#FF6B00]/20 focus:border-[#FF6B00]/60 dark:focus:border-[#FF6B00]/60"
               }`}
               required
               style={{
                 backdropFilter: "blur(12px)",
                 WebkitBackdropFilter: "blur(12px)",
-                boxShadow: "inset 0 1px 2px rgba(255, 255, 255, 0.1)"
+                boxShadow: "inset 0 1px 2px rgba(255, 255, 255, 0.1)",
               }}
             />
             <Button
@@ -364,9 +390,13 @@ export function LoginForm() {
                 <Eye className="h-4 w-4 text-muted-foreground hover:text-[#FF6B00]" />
               )}
             </Button>
-            <div className="absolute inset-0 rounded-lg opacity-0 group-focus:opacity-20 transition-all duration-300 pointer-events-none border border-[#FF6B00]/30 shadow-[0_0_15px_rgba(255,107,0,0.15)]" style={{
-              background: "linear-gradient(135deg, rgba(255, 107, 0, 0.03) 0%, rgba(255, 140, 64, 0.02) 100%)"
-            }}></div>
+            <div
+              className="absolute inset-0 rounded-lg opacity-0 group-focus:opacity-20 transition-all duration-300 pointer-events-none border border-[#FF6B00]/30 shadow-[0_0_15px_rgba(255,107,0,0.15)]"
+              style={{
+                background:
+                  "linear-gradient(135deg, rgba(255, 107, 0, 0.03) 0%, rgba(255, 140, 64, 0.02) 100%)",
+              }}
+            ></div>
           </div>
           <div className="flex justify-between items-center mt-8"></div>
           <div className="flex justify-between items-center mt-8">
@@ -376,7 +406,10 @@ export function LoginForm() {
                 name="rememberMe"
                 checked={formData.rememberMe}
                 onCheckedChange={(checked) =>
-                  setFormData((prev) => ({ ...prev, rememberMe: checked === true }))
+                  setFormData((prev) => ({
+                    ...prev,
+                    rememberMe: checked === true,
+                  }))
                 }
               />
               <label
@@ -404,8 +437,19 @@ export function LoginForm() {
         <div className="mt-10 mb-6 flex items-center">
           <div className="flex-1 border-t border-gray-300 dark:border-gray-700"></div>
           <div className="mx-4 text-gray-400">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none">
-              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2v20m7.0711-17.071L4.9289 19.071M22 12H2m17.0711 7.0711L4.9289 4.9289"></path>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              viewBox="0 0 24 24"
+              fill="none"
+            >
+              <path
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 2v20m7.0711-17.071L4.9289 19.071M22 12H2m17.0711 7.0711L4.9289 4.9289"
+              ></path>
             </svg>
           </div>
           <div className="flex-1 border-t border-gray-300 dark:border-gray-700"></div>
@@ -416,7 +460,9 @@ export function LoginForm() {
           className="w-full h-11 text-base bg-brand-primary hover:bg-brand-primary/90 text-white transition-all duration-300 shadow-md hover:shadow-lg hover:shadow-brand-primary/20 relative overflow-hidden group"
           disabled={loading}
         >
-          <span className="relative z-10 font-bold">{loading ? "Entrando..." : "Acessar minha conta"}</span>
+          <span className="relative z-10 font-bold">
+            {loading ? "Entrando..." : "Acessar minha conta"}
+          </span>
           <span className="absolute inset-0 bg-gradient-to-r from-brand-primary to-[#FF8C40] opacity-0 group-hover:opacity-100 transition-opacity duration-500"></span>
         </Button>
 
@@ -438,36 +484,36 @@ export function LoginForm() {
   );
 }
 
-
 //This is a placeholder for the registration form. A complete implementation would require a separate component.
-export function RegistrationForm(){
-    //Implementation for registration form here.  This would include fields for name, email, password, etc., and a submit handler to create a new user account in Supabase.  Error handling and success messages would also be necessary.
-    return <div>Registration Form (Not implemented)</div>
+export function RegistrationForm() {
+  //Implementation for registration form here.  This would include fields for name, email, password, etc., and a submit handler to create a new user account in Supabase.  Error handling and success messages would also be necessary.
+  return <div>Registration Form (Not implemented)</div>;
 }
 const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
+  e.preventDefault();
+  setLoading(true);
+  setError("");
 
-    // Verificar se veio do registro (para garantir exibição do modal de boas-vindas)
-    const isFromRegistration = localStorage.getItem('registrationCompleted') === 'true';
+  // Verificar se veio do registro (para garantir exibição do modal de boas-vindas)
+  const isFromRegistration =
+    localStorage.getItem("registrationCompleted") === "true";
 
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
-      });
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: formData.email,
+      password: formData.password,
+    });
 
-      // Garantir que o flag de primeiro login esteja ativo após login bem-sucedido
-      // se o usuário acabou de se registrar
-      if (data?.user && isFromRegistration) {
-        localStorage.setItem('isFirstLogin', 'true');
+    // Garantir que o flag de primeiro login esteja ativo após login bem-sucedido
+    // se o usuário acabou de se registrar
+    if (data?.user && isFromRegistration) {
+      localStorage.setItem("isFirstLogin", "true");
 
-        // Limpar flag de sessão do modal para garantir que será exibido
-        sessionStorage.removeItem('welcomeModalShown');
-        sessionStorage.removeItem(`currentSession_${data.user.id}`);
-      }
-    } catch (err) {
-      console.error("Erro ao fazer login:", err);
+      // Limpar flag de sessão do modal para garantir que será exibido
+      sessionStorage.removeItem("welcomeModalShown");
+      sessionStorage.removeItem(`currentSession_${data.user.id}`);
     }
+  } catch (err) {
+    console.error("Erro ao fazer login:", err);
+  }
 };
