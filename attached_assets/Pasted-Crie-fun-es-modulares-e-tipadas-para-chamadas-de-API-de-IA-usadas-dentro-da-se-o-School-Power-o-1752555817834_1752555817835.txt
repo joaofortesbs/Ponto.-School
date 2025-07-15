@@ -1,0 +1,139 @@
+Crie funções modulares e tipadas para chamadas de API de IA usadas dentro da seção “School Power”, organizadas por grupo funcional. Cada grupo utilizará um modelo primário diferente, conforme abaixo:
+
+Estrutura de Diretórios:
+
+/services/SchoolPowerAIManager.ts — Arquivo principal de orquestração
+/utils/api/claudeClient.ts — Interface com Claude 3.7 Sonnet
+/utils/api/geminiClient.ts — Interface com Gemini 2.5 Flash
+/config/apiKeys.ts — Armazena as chaves de API
+
+Minha chave Gemini:
+GEMINI_API_KEY=AIzaSyD-Sso0SdyYKoA4M3tQhcWjQ1AoddB7Wo4
+
+Defina e documente as seguintes funções por grupo, roteando para o modelo apropriado (Claude ou Gemini):
+
+Grupo A – Criação de Conteúdo Didático (Claude Sonnet)
+
+generateLessonPlan(data)
+
+generateDidacticSequence(data)
+
+generateExam(data)
+
+generateSimulationTest(data)
+
+generateExerciseList(data)
+
+generateEssayPrompt(data)
+
+generateLifeProject(data)
+
+generateStepByStepProject(data)
+
+Grupo B – Adaptação e Inclusão (Claude Sonnet)
+
+generateRecoveryPlan(data)
+
+generateAdaptedTask(data)
+
+generateAccessibleActivity(data)
+
+rewriteTextForAccessibility(data)
+
+assessTextAccessibility(data)
+
+suggestAccessibleLessons(data)
+
+suggestInclusiveAssessments(data)
+
+Grupo C – Correção e Avaliação (Claude Sonnet)
+
+correctExam(data)
+
+correctEssay(data)
+
+correctOpenQuestions(data)
+
+generatePerformanceReport(data)
+
+Grupo D – Suporte ao Professor (Gemini Flash)
+
+generateQuestions(data)
+
+generateBloomQuestions(data)
+
+generateEvaluationCriteria(data)
+
+generateLearningObjectives(data)
+
+improveContentRelevance(data)
+
+suggestInterventions(data)
+
+Grupo E – Conteúdo Multimodal (Gemini Flash)
+
+summarizeVideo(videoUrl)
+
+queryVideoContent(videoUrl, query)
+
+createSlidePresentation(data)
+
+generateMindMap(data)
+
+Grupo F – Atividades, Dinâmicas e Jogos (Gemini Flash)
+
+suggestClassroomGames(data)
+
+suggestEducationalGames(data)
+
+suggestScientificExperiments(data)
+
+generateFairyTaleActivities(data)
+
+suggestChildPlayActivities(data)
+
+generateEducationalSongs(data)
+
+Grupo G – Resumos e Textos (Gemini Flash)
+
+summarizeTopic(data)
+
+summarizeText(data)
+
+generateSupportText(data)
+
+generateVocabularyList(data)
+
+generateIncidentReflection(data)
+
+Requisitos:
+
+Tipagem forte (se TypeScript)
+
+Cada função deve:
+
+Receber os parâmetros necessários (tema, série, objetivo, etc.)
+
+Validar input básico
+
+Direcionar para o modelo correto (Claude ou Gemini)
+
+Retornar:
+
+result (texto gerado)
+
+estimatedTokens
+
+estimatedPowerCost (baseado na tarefa)
+
+executionTime
+
+error (se houver)
+
+Permitir fácil substituição de modelos no futuro (ex: Claude → GPT-4o ou LLaMA3/Groq)
+
+Organização clara, para fácil expansão com novos grupos e funções
+
+Essa arquitetura será usada dentro da plataforma para o sistema de chat com IA e os fluxos automáticos de criação de planos pedagógicos.
+
+Não gerar front-end neste prompt — apenas os arquivos de lógica e API.
