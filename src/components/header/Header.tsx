@@ -27,15 +27,6 @@ export function Header() {
         />
       </div>
       <div className="flex items-center gap-4">
-        <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-[#001427] dark:border-white flex-shrink-0">
-          <img 
-            src="/lovable-uploads/Avtar-Ponto.School.png" 
-            alt="Ponto School Avatar" 
-            className="w-full h-full object-cover"
-            style={{ aspectRatio: '1/1' }}
-          />
-        </div>
-      <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" className="relative hidden md:flex">
           <ShoppingCart className="h-5 w-5" />
           <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-[#001427] p-0 text-xs text-white">
