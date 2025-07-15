@@ -2,6 +2,7 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
 import { motion, useMotionValue, useTransform, useAnimationFrame, useMotionTemplate } from "framer-motion";
+import { TextShimmerWave } from '@/components/ui/text-shimmer-wave';
 
 // MovingBorder component
 const MovingBorder = ({
@@ -658,9 +659,11 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true }) => {
                         ease: [0.25, 0.1, 0.25, 1],
                       }}
                     >
-                      {selectedMode === "Agente IA"
-                        ? "Seu Agente IA está pensando em uma resposta para isso..."
-                        : "Seu Assistente IA está pensando em uma resposta para isso..."}
+                      <TextShimmerWave className='font-mono text-sm text-white' duration={1.5}>
+                        {selectedMode === "Agente IA"
+                          ? "Seu Agente IA está pensando em uma resposta para isso..."
+                          : "Seu Assistente IA está pensando em uma resposta para isso..."}
+                      </TextShimmerWave>
                     </motion.div>
                   </div>
                 </motion.div>
