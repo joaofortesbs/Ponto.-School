@@ -24,7 +24,7 @@ const mockProfiles: Profile[] = [
   }
 ];
 
-export const ProfileSelector: React.FC = () => {
+const ProfileSelector: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<Profile>(mockProfiles[0]);
 
@@ -103,4 +103,5 @@ export const ProfileSelector: React.FC = () => {
   );
 };
 
+export { ProfileSelector };
 export default ProfileSelector;
