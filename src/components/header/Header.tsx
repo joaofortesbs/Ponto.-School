@@ -19,21 +19,24 @@ export function Header() {
           <Menu className="h-5 w-5" />
         </Button>
       </div>
-      <div className="relative hidden md:flex md:flex-1 md:max-w-md lg:max-w-lg">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          placeholder="Buscar..."
-          className="pl-9 pr-4 focus-visible:ring-[#001427]"
-        />
-      </div>
       <div className="flex items-center gap-4">
-        <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-[#001427] dark:border-white">
+        <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-[#001427] dark:border-white flex-shrink-0">
           <img 
             src="/lovable-uploads/Avtar-Ponto.School.png" 
             alt="Ponto School Avatar" 
             className="w-full h-full object-cover"
+            style={{ aspectRatio: '1/1' }}
           />
         </div>
+        <div className="relative flex flex-1 max-w-md lg:max-w-lg">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Buscar..."
+            className="pl-9 pr-4 focus-visible:ring-[#001427]"
+          />
+        </div>
+      </div>
+      <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" className="relative hidden md:flex">
           <ShoppingCart className="h-5 w-5" />
           <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-[#001427] p-0 text-xs text-white">
