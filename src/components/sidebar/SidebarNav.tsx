@@ -43,7 +43,6 @@ import {
   GraduationCap,
   CalendarClock,
   Upload,
-  RotateCcw,
 } from "lucide-react";
 import MentorAI from "@/components/mentor/MentorAI";
 import AgendaNav from "./AgendaNav";
@@ -70,7 +69,6 @@ export function SidebarNav({
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [firstName, setFirstName] = useState<string | null>(null);
-  const [isFlipped, setIsFlipped] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -393,7 +391,7 @@ export function SidebarNav({
         },
       ],
     },
-
+    
     {
       icon: <Trophy className="h-5 w-5" />,
       label: "Conquistas",
@@ -484,177 +482,64 @@ export function SidebarNav({
         </div>
       )}
 
-      {/* User Profile Component - Greeting and progress section - Apenas quando expandido */}
-      {!isCollapsed && (
-        <div className={cn(
-          "bg-white dark:bg-[#001427] p-4 mb-4 flex flex-col items-center relative group mt-4"
-        )}>
-          {/* Card wrapper com bordas arredondadas e flip effect */}
-          <div className="relative w-full h-48" style={{ perspective: "1000px" }}>
-            <div
+      {/* User Profile Component - Greeting and progress section */}
+      <div className={cn(
+        "bg-white dark:bg-[#001427] p-4 mb-4 flex flex-col items-center relative group",
+        isCollapsed ? "mt-6" : "mt-4"
+      )}>
+        {/* Card wrapper com bordas arredondadas */}
+        <div className="bg-white dark:bg-[#29335C]/20 rounded-xl border border-gray-200 dark:border-[#29335C]/30 p-4 w-full backdrop-blur-sm">
+          {/* Profile Image Component - Responsive avatar */}
+          <div className="relative mb-4 flex justify-center flex-col items-center">
+            <div 
               className={cn(
-                "absolute inset-0 w-full h-full transition-transform duration-700",
-                "transform-style-preserve-3d",
-                isFlipped ? "rotate-y-180" : ""
+                "rounded-full overflow-hidden bg-gradient-to-r from-[#FF6B00] via-[#FF8736] to-[#FFB366] p-0.5 cursor-pointer transition-all duration-300",
+                isCollapsed ? "w-12 h-12" : "w-20 h-20"
               )}
-              style={{ transformStyle: "preserve-3d" }}
+              onClick={() => fileInputRef.current?.click()}
             >
-              {/* Front Face */}
-              <div
-                className="absolute inset-0 w-full h-full bg-white dark:bg-[#29335C]/20 rounded-xl border border-gray-200 dark:border-[#29335C]/30 p-4 backdrop-blur-sm backface-hidden"
-                style={{ backfaceVisibility: "hidden" }}
-              >
-                {/* Ícone de troca no canto superior direito */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute top-2 right-2 h-6 w-6 rounded-full hover:bg-white/10 text-[#FF6B00] hover:text-[#FF8C40] z-10"
-                  onClick={() => setIsFlipped(!isFlipped)}
-                >
-                  <RotateCcw className="h-3 w-3" />
-                </Button>
-
-                {/* Profile Image Component - Responsive avatar */}
-                <div className="relative mb-4 flex justify-center flex-col items-center">
-                  <div 
-                    className="rounded-full overflow-hidden bg-gradient-to-r from-[#FF6B00] via-[#FF8736] to-[#FFB366] p-0.5 cursor-pointer transition-all duration-300 w-20 h-20"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-[#001427] flex items-center justify-center">
-                      {profileImage ? (
-                        <img
-                          src={profileImage}
-                          alt="Profile"
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            console.error("Error loading profile image");
-                            setProfileImage(null);
-                          }}
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
-                          <div className="bg-yellow-300 rounded-full flex items-center justify-center w-10 h-10">
-                            <span className="text-black font-bold text-lg">
-                              {firstName ? firstName.charAt(0).toUpperCase() : "U"}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Informações do usuário */}
-                <div className="text-[#001427] dark:text-white text-center w-full">
-                  <h3 className="font-semibold text-base mb-2 flex items-center justify-center">
-                    <span className="mr-1">👋</span> Olá, {(() => {
-                      const firstName = userProfile?.full_name?.split(' ')[0] || 
-                                      userProfile?.display_name || 
-                                      localStorage.getItem('userFirstName') || 
-                                      "Estudante";
-                      return firstName;
-                    })()}!
-                  </h3>
-                  <div className="flex flex-col items-center mt-1">
-                    <p className="text-xs text-[#001427]/70 dark:text-white/70 mb-0.5">
-                      Nível {userProfile?.level || 1}
-                    </p>
-                    <div className="w-24 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-[#FFD700] via-[#FF6B00] to-[#FF0000] rounded-full transition-all duration-300"
-                        style={{ 
-                          width: `${(() => {
-                            const currentXP = userProfile?.experience_points || 0;
-                            const currentLevel = userProfile?.level || 1;
-                            const xpForNextLevel = currentLevel * 1000;
-                            const previousLevelXP = (currentLevel - 1) * 1000;
-                            const xpInCurrentLevel = currentXP - previousLevelXP;
-                            const xpNeededForLevel = xpForNextLevel - previousLevelXP;
-
-                            if (currentLevel === 1 && currentXP === 0) {
-                              return 0;
-                            }
-
-                            return xpNeededForLevel > 0 ? Math.round((xpInCurrentLevel / xpNeededForLevel) * 100) : 0;
-                          })()}%` 
-                        }}
-                      ></div>
-                    </div>
-                    <span className="text-[10px] text-[#FF6B00] mt-0.5">
-                      {(() => {
-                        const currentXP = userProfile?.experience_points || 0;
-                        const currentLevel = userProfile?.level || 1;
-                        const xpForNextLevel = currentLevel * 1000;
-
-                        if (currentLevel === 1 && currentXP === 0) {
-                          return "0 XP / 1.000 XP";
-                        }
-
-                        return `${currentXP.toLocaleString()} XP / ${xpForNextLevel.toLocaleString()} XP`;
-                      })()}
+              <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-[#001427] flex items-center justify-center">
+                {profileImage ? (
+                  <img
+                    src={profileImage}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      console.error("Error loading profile image");
+                      setProfileImage(null);
+                    }}
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
+                    <div className={cn(
+                      "bg-yellow-300 rounded-full flex items-center justify-center",
+                      isCollapsed ? "w-6 h-6" : "w-10 h-10"
+                  )}>
+                    <span className={cn(
+                      "text-black font-bold",
+                      isCollapsed ? "text-xs" : "text-lg"
+                    )}>
+                      {firstName ? firstName.charAt(0).toUpperCase() : "U"}
                     </span>
                   </div>
                 </div>
-              </div>
-
-              {/* Back Face */}
-              <div
-                className="absolute inset-0 w-full h-full bg-gradient-to-br from-[#FF6B00]/10 to-[#FF8C40]/10 dark:bg-gradient-to-br dark:from-[#FF6B00]/20 dark:to-[#FF8C40]/20 rounded-xl border border-[#FF6B00]/30 p-4 backdrop-blur-sm backface-hidden rotate-y-180"
-                style={{ 
-                  backfaceVisibility: "hidden",
-                  transform: "rotateY(180deg)"
-                }}
-              >
-                {/* Ícone de troca no canto superior direito */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute top-2 right-2 h-6 w-6 rounded-full hover:bg-white/10 text-[#FF6B00] hover:text-[#FF8C40] z-10"
-                  onClick={() => setIsFlipped(!isFlipped)}
-                >
-                  <RotateCcw className="h-3 w-3" />
-                </Button>
-
-                {/* Conteúdo do verso */}
-                <div className="text-[#001427] dark:text-white text-center w-full h-full flex flex-col justify-center">
-                  <div className="mb-4">
-                    <Trophy className="h-8 w-8 text-[#FF6B00] mx-auto mb-2" />
-                    <h3 className="font-semibold text-base mb-1 text-[#FF6B00]">
-                      Estatísticas
-                    </h3>
-                  </div>
-
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-[#001427]/70 dark:text-white/70">Sessões de estudo:</span>
-                      <span className="font-medium">12</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-[#001427]/70 dark:text-white/70">Tempo total:</span>
-                      <span className="font-medium">4h 32min</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-[#001427]/70 dark:text-white/70">Sequência atual:</span>
-                      <span className="font-medium text-[#FF6B00]">7 dias</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-[#001427]/70 dark:text-white/70">Conquistas:</span>
-                      <span className="font-medium">3</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
           </div>
 
-          {isUploading && (
-            <div className="mb-3 text-xs text-gray-500 dark:text-gray-400">
-              Enviando...
+          {/* Barra de progresso - apenas quando minimizado */}
+          {isCollapsed && (
+            <div className="mt-2 w-12 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-full transition-all duration-300"
+                style={{ width: '0%' }}
+              />
             </div>
           )}
 
-          {/* Hidden File Input */}
+          {/* File input component */}
           <input
+            type="file"
             ref={fileInputRef}
             type="file"
             accept="image/*"
@@ -662,7 +547,77 @@ export function SidebarNav({
             className="hidden"
           />
         </div>
-      )}
+
+        {isUploading && (
+          <div className="mb-3 text-xs text-gray-500 dark:text-gray-400">
+            Enviando...
+          </div>
+        )}
+
+        {/* Hidden File Input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleImageChange}
+          className="hidden"
+        />
+
+        {!isCollapsed && (
+          <div className="text-[#001427] dark:text-white text-center w-full">
+            <h3 className="font-semibold text-base mb-2 flex items-center justify-center">
+              <span className="mr-1">👋</span> Olá, {(() => {
+                // Obter o primeiro nome com a mesma lógica do Dashboard
+                const firstName = userProfile?.full_name?.split(' ')[0] || 
+                                userProfile?.display_name || 
+                                localStorage.getItem('userFirstName') || 
+                                "Estudante";
+                return firstName;
+              })()}!
+            </h3>
+            <div className="flex flex-col items-center mt-1">
+              <p className="text-xs text-[#001427]/70 dark:text-white/70 mb-0.5">
+                Nível {userProfile?.level || 1}
+              </p>
+              <div className="w-24 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-[#FFD700] via-[#FF6B00] to-[#FF0000] rounded-full transition-all duration-300"
+                  style={{ 
+                    width: `${(() => {
+                      const currentXP = userProfile?.experience_points || 0;
+                      const currentLevel = userProfile?.level || 1;
+                      const xpForNextLevel = currentLevel * 1000;
+                      const previousLevelXP = (currentLevel - 1) * 1000;
+                      const xpInCurrentLevel = currentXP - previousLevelXP;
+                      const xpNeededForLevel = xpForNextLevel - previousLevelXP;
+
+                      if (currentLevel === 1 && currentXP === 0) {
+                        return 0; // Usuário novo sem XP
+                      }
+
+                      return xpNeededForLevel > 0 ? Math.round((xpInCurrentLevel / xpNeededForLevel) * 100) : 0;
+                    })()}%` 
+                  }}
+                ></div>
+              </div>
+              <span className="text-[10px] text-[#FF6B00] mt-0.5">
+                {(() => {
+                  const currentXP = userProfile?.experience_points || 0;
+                  const currentLevel = userProfile?.level || 1;
+                  const xpForNextLevel = currentLevel * 1000;
+
+                  if (currentLevel === 1 && currentXP === 0) {
+                    return "0 XP / 1.000 XP"; // Usuário novo
+                  }
+
+                  return `${currentXP.toLocaleString()} XP / ${xpForNextLevel.toLocaleString()} XP`;
+                })()}
+              </span>
+            </div>
+          </div>
+        )}
+        </div>
+      </div>
 
       <ScrollArea className={cn(
         "py-2",
@@ -811,7 +766,8 @@ export function SidebarNav({
                                 xmlns="http://www.w3.org/2000/svg"
                                 width="14"
                                 height="14"
-                                viewBox="0 0 24 24"fill="none"
+                                viewBox="0 0 24 24"
+                                fill="none"
                                 stroke="currentColor"
                                 strokeWidth="2"
                                 strokeLinecap="round"
