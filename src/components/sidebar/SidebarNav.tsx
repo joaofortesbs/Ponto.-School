@@ -542,11 +542,11 @@ export function SidebarNav({
                 isCollapsed ? "w-14 p-2" : "w-full p-4",
               )}
             >
-              {/* Badge ALUNO no canto superior esquerdo quando expandido */}
+              {/* Ícone de graduação no canto superior esquerdo quando expandido */}
               {!isCollapsed && (
                 <div className="absolute top-3 left-3 z-10">
-                  <div className="bg-[#FF6B00] text-white text-xs font-bold px-2 py-1 rounded-full shadow-sm">
-                    ALUNO
+                  <div className="bg-[#FF6B00] text-white p-1.5 rounded-full shadow-sm">
+                    <GraduationCap className="h-3 w-3" />
                   </div>
                 </div>
               )}
