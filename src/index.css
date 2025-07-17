@@ -18,6 +18,19 @@
 @import "./styles/groups-header-transitions.css";
 @import "./styles/chat-responsive.css";
 
+/* Flip Card Styles */
+.transform-style-preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+
 
 /* Estilos para manter proporções consistentes em grid layouts */
 .dashboard-card {
