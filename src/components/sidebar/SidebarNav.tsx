@@ -548,7 +548,7 @@ export function SidebarNav({
                   <div className="w-6 h-6">
                     <div className="w-full h-full rounded-full border-2 border-orange-500 bg-orange-600 bg-opacity-20 flex items-center justify-center">
                       <GraduationCap 
-                        size={12} 
+                        size={14} 
                         className="text-orange-500" 
                       />
                     </div>
