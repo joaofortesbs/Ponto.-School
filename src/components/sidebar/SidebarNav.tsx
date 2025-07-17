@@ -391,7 +391,7 @@ export function SidebarNav({
         },
       ],
     },
-    
+
     {
       icon: <Trophy className="h-5 w-5" />,
       label: "Conquistas",
@@ -489,8 +489,8 @@ export function SidebarNav({
       )}>
         {/* Card wrapper com bordas arredondadas - só aparece quando não collapsed */}
         {!isCollapsed && (
-          <div className="bg-white dark:bg-[#29335C]/20 rounded-xl border border-gray-200 dark:border-[#29335C]/30 p-4 w-full backdrop-blur-sm"></div_str>
-          {/* Profile Image Component - Responsive avatar */}
+          <div className="bg-white dark:bg-[#29335C]/20 rounded-xl border border-gray-200 dark:border-[#29335C]/30 p-4 w-full backdrop-blur-sm">
+            {/* Profile Image Component - Responsive avatar */}
             <div className="relative mb-4 flex justify-center flex-col items-center">
               <div 
                 className={cn(
@@ -542,11 +542,70 @@ export function SidebarNav({
             <input
               type="file"
               ref={fileInputRef}
-              type="file"
               accept="image/*"
               onChange={handleImageChange}
               className="hidden"
             />
+
+            {isUploading && (
+              <div className="mb-3 text-xs text-gray-500 dark:text-gray-400">
+                Enviando...
+              </div>
+            )}
+
+            {!isCollapsed && (
+              <div className="text-[#001427] dark:text-white text-center w-full">
+                <h3 className="font-semibold text-base mb-2 flex items-center justify-center">
+                  <span className="mr-1">👋</span> Olá, {(() => {
+                    // Obter o primeiro nome com a mesma lógica do Dashboard
+                    const firstName = userProfile?.full_name?.split(' ')[0] || 
+                                    userProfile?.display_name || 
+                                    localStorage.getItem('userFirstName') || 
+                                    "Estudante";
+                    return firstName;
+                  })()}!
+                </h3>
+                <div className="flex flex-col items-center mt-1">
+                  <p className="text-xs text-[#001427]/70 dark:text-white/70 mb-0.5">
+                    Nível {userProfile?.level || 1}
+                  </p>
+                  <div className="w-24 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-[#FFD700] via-[#FF6B00] to-[#FF0000] rounded-full transition-all duration-300"
+                      style={{ 
+                        width: `${(() => {
+                          const currentXP = userProfile?.experience_points || 0;
+                          const currentLevel = userProfile?.level || 1;
+                          const xpForNextLevel = currentLevel * 1000;
+                          const previousLevelXP = (currentLevel - 1) * 1000;
+                          const xpInCurrentLevel = currentXP - previousLevelXP;
+                          const xpNeededForLevel = xpForNextLevel - previousLevelXP;
+
+                          if (currentLevel === 1 && currentXP === 0) {
+                            return 0; // Usuário novo sem XP
+                          }
+
+                          return xpNeededForLevel > 0 ? Math.round((xpInCurrentLevel / xpNeededForLevel) * 100) : 0;
+                        })()}%` 
+                      }}
+                    ></div>
+                  </div>
+                  <span className="text-[10px] text-[#FF6B00] mt-0.5">
+                    {(() => {
+                      const currentXP = userProfile?.experience_points || 0;
+                      const currentLevel = userProfile?.level || 1;
+                      const xpForNextLevel = currentLevel * 1000;
+
+                      if (currentLevel === 1 && currentXP === 0) {
+                        return "0 XP / 1.000 XP"; // Usuário novo
+                      }
+
+                      return `${currentXP.toLocaleString()} XP / ${xpForNextLevel.toLocaleString()} XP`;
+                    })()}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
