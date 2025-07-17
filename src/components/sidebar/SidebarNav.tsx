@@ -632,24 +632,9 @@ export function SidebarNav({
                 {isCollapsed && (
                   <div className="mt-2 w-10 h-1.5 bg-orange-100 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-orange-400 to-orange-600 rounded-full transition-all duration-300"
+                      className="h-full rounded-full transition-all duration-300"
                       style={{
-                        width: `${(() => {
-                          const currentXP = userProfile?.experience_points || 0;
-                          const currentLevel = userProfile?.level || 1;
-                          const xpForNextLevel = currentLevel * 1000;
-                          const previousLevelXP = (currentLevel - 1) * 1000;
-                          const xpInCurrentLevel = currentXP - previousLevelXP;
-                          const xpNeededForLevel = xpForNextLevel - previousLevelXP;
-
-                          if (currentLevel === 1 && currentXP === 0) {
-                            return 0; // Usuário novo sem XP
-                          }
-
-                          return xpNeededForLevel > 0
-                            ? Math.round((xpInCurrentLevel / xpNeededForLevel) * 100)
-                            : 0;
-                        })()}%`,
+                        backgroundColor: '#2462EA',
                       }}
                     />
                   </div>
@@ -701,8 +686,10 @@ export function SidebarNav({
                     </p>
                     <div className="relative w-20 h-2 bg-orange-100 rounded-full shadow-lg overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-r from-orange-400 to-orange-600 rounded-full transition-all duration-100 ease-out shadow-sm"
+                        className="h-full rounded-full transition-all duration-100 ease-out shadow-sm"
                         style={{
+                          backgroundColor: '#FF6B00',
+                          opacity: 0.3,
                           width: `${(() => {
                             const currentXP =
                               userProfile?.experience_points || 0;
@@ -830,26 +817,11 @@ export function SidebarNav({
 
                 {/* Barra de progresso - apenas quando minimizado */}
                 {isCollapsed && (
-                  <div className="mt-2 w-10 h-1.5 bg-orange-100 rounded-full overflow-hidden">
+                  <div className="mt-2 w-10 h-1.5 bg-gray-100 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-orange-400 to-orange-600 rounded-full transition-all duration-300"
+                      className="h-full rounded-full transition-all duration-300"
                       style={{
-                        width: `${(() => {
-                          const currentXP = userProfile?.experience_points || 0;
-                          const currentLevel = userProfile?.level || 1;
-                          const xpForNextLevel = currentLevel * 1000;
-                          const previousLevelXP = (currentLevel - 1) * 1000;
-                          const xpInCurrentLevel = currentXP - previousLevelXP;
-                          const xpNeededForLevel = xpForNextLevel - previousLevelXP;
-
-                          if (currentLevel === 1 && currentXP === 0) {
-                            return 0; // Usuário novo sem XP
-                          }
-
-                          return xpNeededForLevel > 0
-                            ? Math.round((xpInCurrentLevel / xpNeededForLevel) * 100)
-                            : 0;
-                        })()}%`,
+                        backgroundColor: '#2462EA',
                       }}
                     />
                   </div>
@@ -883,8 +855,10 @@ export function SidebarNav({
                     </p>
                     <div className="relative w-20 h-2 bg-orange-100 rounded-full shadow-lg overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-r from-orange-400 to-orange-600 rounded-full transition-all duration-100 ease-out shadow-sm"
+                        className="h-full rounded-full transition-all duration-100 ease-out shadow-sm"
                         style={{
+                          backgroundColor: '#FF6B00',
+                          opacity: 0.3,
                           width: `${(() => {
                             const currentXP =
                               userProfile?.experience_points || 0;
@@ -896,7 +870,7 @@ export function SidebarNav({
                             const xpNeededForLevel =
                               xpForNextLevel - previousLevelXP;
 
-                            if (currentLevel === 1 && currentXP === 0) {
+                            if (currentLevel === 1 && currentXP === 0){
                               return 0; // Usuário novo sem XP
                             }
 
