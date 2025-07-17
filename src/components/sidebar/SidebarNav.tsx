@@ -710,7 +710,6 @@ export function SidebarNav({
           </div>
         )}
         </div>
-      </div>
 
       <ScrollArea className={cn(
         "py-2",
