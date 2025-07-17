@@ -709,21 +709,7 @@ export function SidebarNav({
                           })()}%`,
                         }}
                       />
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-[8px] font-medium text-gray-800 drop-shadow-sm">
-                          {(() => {
-                            const currentXP = userProfile?.experience_points || 0;
-                            const currentLevel = userProfile?.level || 1;
-                            const xpForNextLevel = currentLevel * 1000;
-
-                            if (currentLevel === 1 && currentXP === 0) {
-                              return "0 XP / 1.000 XP"; // Usuário novo
-                            }
-
-                            return `${currentXP.toLocaleString()} XP / ${xpForNextLevel.toLocaleString()} XP`;
-                          })()}
-                        </span>
-                      </div>
+                      
                     </div>
                   </div>
                 </div>
@@ -889,21 +875,7 @@ export function SidebarNav({
                           })()}%`,
                         }}
                       />
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-[8px] font-medium text-gray-800 drop-shadow-sm">
-                          {(() => {
-                            const currentXP = userProfile?.experience_points || 0;
-                            const currentLevel = userProfile?.level || 1;
-                            const xpForNextLevel = currentLevel * 1000;
-
-                            if (currentLevel === 1 && currentXP === 0) {
-                              return "0 XP / 1.000 XP"; // Usuário novo
-                            }
-
-                            return `${currentXP.toLocaleString()} XP / ${xpForNextLevel.toLocaleString()} XP`;
-                          })()}
-                        </span>
-                      </div>
+                      
                     </div>
                   </div>
                 </div>
