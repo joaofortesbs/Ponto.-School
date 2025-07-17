@@ -542,32 +542,33 @@ export function SidebarNav({
                 isCollapsed ? "w-14 p-2" : "w-full p-4",
               )}
             >
+              {/* Componente ALUNO no canto superior esquerdo quando expandido */}
+              {!isCollapsed && (
+                <div className="absolute top-3 left-3 px-2 py-1 rounded-full bg-[#FF6B00] text-white text-xs font-semibold">
+                  ALUNO
+                </div>
+              )}
+
               {/* Ícone no canto superior direito quando expandido */}
               {!isCollapsed && (
                 <button 
-                  className="absolute top-3 right-3 w-6 h-6 rounded-md bg-gray-100 dark:bg-[#29335C]/40 hover:bg-gray-200 dark:hover:bg-[#29335C]/60 flex items-center justify-center transition-all duration-200 hover:scale-105"
+                  className="absolute top-3 right-3 w-8 h-8 rounded-full bg-gray-100 dark:bg-[#29335C]/40 hover:bg-gray-200 dark:hover:bg-[#29335C]/60 flex items-center justify-center transition-all duration-200 hover:scale-105 cursor-pointer"
                   onClick={() => setIsCardFlipped(!isCardFlipped)}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    width="14"
-                    height="14"
+                    width="16"
+                    height="16"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    className="text-[#CC5500]"
+                    className="text-[#FF6B00]"
                   >
-                    <path d="M16 3h5v5"/>
-                    <path d="M8 3H3v5"/>
-                    <path d="M12 22v-8.3a4 4 0 0 0-1.172-2.872L3 3"/>
-                    <path d="m21 3-7.5 7.5"/>
-                    <path d="M16 21h5v-5"/>
-                    <path d="M8 21H3v-5"/>
-                    <path d="M12 2v8.3a4 4 0 0 0 1.172 2.872L21 21"/>
-                    <path d="m3 21 7.5-7.5"/>
+                    <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+                    <circle cx="12" cy="12" r="3"/>
                   </svg>
                 </button>
               )}
@@ -721,32 +722,33 @@ export function SidebarNav({
                 isCollapsed ? "w-14 p-2" : "w-full p-4",
               )}
             >
+              {/* Componente ALUNO no canto superior esquerdo quando expandido */}
+              {!isCollapsed && (
+                <div className="absolute top-3 left-3 px-2 py-1 rounded-full bg-[#FF6B00] text-white text-xs font-semibold">
+                  ALUNO
+                </div>
+              )}
+
               {/* Ícone no canto superior direito quando expandido */}
               {!isCollapsed && (
                 <button 
-                  className="absolute top-3 right-3 w-6 h-6 rounded-md bg-gray-100 dark:bg-[#29335C]/40 hover:bg-gray-200 dark:hover:bg-[#29335C]/60 flex items-center justify-center transition-all duration-200 hover:scale-105"
+                  className="absolute top-3 right-3 w-8 h-8 rounded-full bg-gray-100 dark:bg-[#29335C]/40 hover:bg-gray-200 dark:hover:bg-[#29335C]/60 flex items-center justify-center transition-all duration-200 hover:scale-105 cursor-pointer"
                   onClick={() => setIsCardFlipped(!isCardFlipped)}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    width="14"
-                    height="14"
+                    width="16"
+                    height="16"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    className="text-[#CC5500]"
+                    className="text-[#FF6B00]"
                   >
-                    <path d="M16 3h5v5"/>
-                    <path d="M8 3H3v5"/>
-                    <path d="M12 22v-8.3a4 4 0 0 0-1.172-2.872L3 3"/>
-                    <path d="m21 3-7.5 7.5"/>
-                    <path d="M16 21h5v-5"/>
-                    <path d="M8 21H3v-5"/>
-                    <path d="M12 2v8.3a4 4 0 0 0 1.172 2.872L21 21"/>
-                    <path d="m3 21 7.5-7.5"/>
+                    <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+                    <circle cx="12" cy="12" r="3"/>
                   </svg>
                 </button>
               )}
