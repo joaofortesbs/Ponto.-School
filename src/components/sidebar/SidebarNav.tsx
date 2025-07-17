@@ -393,7 +393,7 @@ export function SidebarNav({
         },
       ],
     },
-    
+
     {
       icon: <Trophy className="h-5 w-5" />,
       label: "Conquistas",
@@ -623,7 +623,7 @@ export function SidebarNav({
                       Estatísticas
                     </h3>
                   </div>
-                  
+
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-[#001427]/70 dark:text-white/70">Sessões de estudo:</span>
@@ -663,7 +663,6 @@ export function SidebarNav({
           />
         </div>
       )}
-      </div>
 
       <ScrollArea className={cn(
         "py-2",
@@ -812,8 +811,7 @@ export function SidebarNav({
                                 xmlns="http://www.w3.org/2000/svg"
                                 width="14"
                                 height="14"
-                                viewBox="0 0 24 24"
-                                fill="none"
+                                viewBox="0 0 24 24"fill="none"
                                 stroke="currentColor"
                                 strokeWidth="2"
                                 strokeLinecap="round"
