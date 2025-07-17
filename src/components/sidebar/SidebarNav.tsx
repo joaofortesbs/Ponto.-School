@@ -779,7 +779,7 @@ export function SidebarNav({
               )}>
                 <div
                   className={cn(
-                    "rounded-full overflow-hidden bg-gradient-to-r from-[#FF6B00] via-[#FF8736] to-[#FFB366] p-0.5 cursor-pointer transition-all duration-300",
+                    "rounded-full overflow-hidden bg-gradient-to-r from-blue-500 via-purple-500 to-purple-600 p-0.5 cursor-pointer transition-all duration-300",
                     isCollapsed ? "w-10 h-10" : "w-20 h-20",
                   )}
                   onClick={() => fileInputRef.current?.click()}
