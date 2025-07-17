@@ -70,15 +70,11 @@ const Sidebar: React.FC<SidebarProps> = ({ className, isCollapsed }) => {
           </Avatar>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium truncate">João Silva</p>
-            <div className="space-y-1">
-              {/* Barra de progresso do nível */}
-              <Progress value={75} className="h-1 bg-[#29335C]/30 opacity-20" />
-              <div className="flex items-center">
-                <Badge className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white text-xs px-1.5 py-0 h-4 rounded">
-                  Nível 3
-                </Badge>
-                <span className="text-xs text-gray-400 ml-1.5">Estudante</span>
-              </div>
+            <div className="flex items-center">
+              <Badge className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white text-xs px-1.5 py-0 h-4 rounded">
+                Nível 3
+              </Badge>
+              <span className="text-xs text-gray-400 ml-1.5">Estudante</span>
             </div>
           </div>
         </div>
