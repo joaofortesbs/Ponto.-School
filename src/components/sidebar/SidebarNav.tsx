@@ -89,17 +89,41 @@ export function SidebarNav({
     };
 
     // Adicionar os listeners
-    document.addEventListener('userAvatarUpdated', handleAvatarUpdate as EventListener);
-    document.addEventListener('usernameUpdated', handleUsernameUpdate as EventListener);
-    document.addEventListener('usernameReady', handleUsernameUpdate as EventListener);
-    document.addEventListener('usernameSynchronized', handleUsernameUpdate as EventListener);
+    document.addEventListener(
+      "userAvatarUpdated",
+      handleAvatarUpdate as EventListener,
+    );
+    document.addEventListener(
+      "usernameUpdated",
+      handleUsernameUpdate as EventListener,
+    );
+    document.addEventListener(
+      "usernameReady",
+      handleUsernameUpdate as EventListener,
+    );
+    document.addEventListener(
+      "usernameSynchronized",
+      handleUsernameUpdate as EventListener,
+    );
 
     // Remover os listeners quando o componente for desmontado
     return () => {
-      document.removeEventListener('userAvatarUpdated', handleAvatarUpdate as EventListener);
-      document.removeEventListener('usernameUpdated', handleUsernameUpdate as EventListener);
-      document.removeEventListener('usernameReady', handleUsernameUpdate as EventListener);
-      document.removeEventListener('usernameSynchronized', handleUsernameUpdate as EventListener);
+      document.removeEventListener(
+        "userAvatarUpdated",
+        handleAvatarUpdate as EventListener,
+      );
+      document.removeEventListener(
+        "usernameUpdated",
+        handleUsernameUpdate as EventListener,
+      );
+      document.removeEventListener(
+        "usernameReady",
+        handleUsernameUpdate as EventListener,
+      );
+      document.removeEventListener(
+        "usernameSynchronized",
+        handleUsernameUpdate as EventListener,
+      );
     };
   }, []);
 
@@ -107,9 +131,9 @@ export function SidebarNav({
     const fetchUserProfile = async () => {
       try {
         // Primeiro tentar obter do localStorage para display rápido
-        const storedFirstName = localStorage.getItem('userFirstName');
-        const storedDisplayName = localStorage.getItem('userDisplayName');
-        const storedAvatarUrl = localStorage.getItem('userAvatarUrl');
+        const storedFirstName = localStorage.getItem("userFirstName");
+        const storedDisplayName = localStorage.getItem("userDisplayName");
+        const storedAvatarUrl = localStorage.getItem("userAvatarUrl");
 
         if (storedDisplayName) {
           setFirstName(storedDisplayName);
@@ -142,26 +166,29 @@ export function SidebarNav({
             // Se o perfil tiver um avatar_url, usar ele e atualizar localStorage
             if (data.avatar_url) {
               setProfileImage(data.avatar_url);
-              localStorage.setItem('userAvatarUrl', data.avatar_url);
+              localStorage.setItem("userAvatarUrl", data.avatar_url);
             }
 
             // Determinar o primeiro nome com a mesma lógica do Dashboard
-            const firstName = data.full_name?.split(' ')[0] || 
-                           data.display_name || 
-                           data.username || 
-                           "";
+            const firstName =
+              data.full_name?.split(" ")[0] ||
+              data.display_name ||
+              data.username ||
+              "";
 
             setFirstName(firstName);
-            localStorage.setItem('userFirstName', firstName);
+            localStorage.setItem("userFirstName", firstName);
 
             // Disparar evento para outros componentes
-            document.dispatchEvent(new CustomEvent('usernameUpdated', { 
-              detail: { 
-                displayName: data.display_name,
-                firstName: firstName,
-                username: data.username
-              } 
-            }));
+            document.dispatchEvent(
+              new CustomEvent("usernameUpdated", {
+                detail: {
+                  displayName: data.display_name,
+                  firstName: firstName,
+                  username: data.username,
+                },
+              }),
+            );
           }
         } else {
           if (!firstName) setFirstName("Usuário"); // Fallback if user is not authenticated
@@ -181,7 +208,9 @@ export function SidebarNav({
     fileInputRef.current?.click();
   };
 
-  const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = event.target.files?.[0];
     if (file) {
       try {
@@ -190,47 +219,47 @@ export function SidebarNav({
         // Obter o usuário atual
         const { data: currentUser } = await supabase.auth.getUser();
         if (!currentUser.user) {
-          throw new Error('Usuário não autenticado');
+          throw new Error("Usuário não autenticado");
         }
 
         // Upload da imagem para o Supabase Storage
-        const fileExt = file.name.split('.').pop();
+        const fileExt = file.name.split(".").pop();
         const fileName = `avatar-${currentUser.user.id}-${Date.now()}.${fileExt}`;
         const filePath = `avatars/${fileName}`;
 
         // Fazer upload para o storage do Supabase
         const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('profile-images')
+          .from("profile-images")
           .upload(filePath, file, {
-            cacheControl: '3600',
-            upsert: true
+            cacheControl: "3600",
+            upsert: true,
           });
 
         if (uploadError) {
-          console.error('Erro ao fazer upload da imagem:', uploadError);
+          console.error("Erro ao fazer upload da imagem:", uploadError);
           throw new Error(uploadError.message);
         }
 
         // Obter a URL pública da imagem
         const { data: publicUrlData } = supabase.storage
-          .from('profile-images')
+          .from("profile-images")
           .getPublicUrl(filePath);
 
         if (!publicUrlData.publicUrl) {
-          throw new Error('Não foi possível obter a URL pública da imagem');
+          throw new Error("Não foi possível obter a URL pública da imagem");
         }
 
         // Atualizar o perfil do usuário com a URL da imagem
         const { error: updateError } = await supabase
-          .from('profiles')
-          .update({ 
+          .from("profiles")
+          .update({
             avatar_url: publicUrlData.publicUrl,
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
           })
-          .eq('id', currentUser.user.id);
+          .eq("id", currentUser.user.id);
 
         if (updateError) {
-          console.error('Erro ao atualizar perfil com avatar:', updateError);
+          console.error("Erro ao atualizar perfil com avatar:", updateError);
           throw new Error(updateError.message);
         }
 
@@ -238,16 +267,18 @@ export function SidebarNav({
         setProfileImage(publicUrlData.publicUrl);
 
         // Salvar no localStorage para persistência
-        localStorage.setItem('userAvatarUrl', publicUrlData.publicUrl);
+        localStorage.setItem("userAvatarUrl", publicUrlData.publicUrl);
 
         // Disparar evento para outros componentes saberem que o avatar foi atualizado
-        document.dispatchEvent(new CustomEvent('userAvatarUpdated', { 
-          detail: { url: publicUrlData.publicUrl } 
-        }));
+        document.dispatchEvent(
+          new CustomEvent("userAvatarUpdated", {
+            detail: { url: publicUrlData.publicUrl },
+          }),
+        );
 
-        console.log('Avatar atualizado com sucesso!');
+        console.log("Avatar atualizado com sucesso!");
       } catch (error) {
-        console.error('Erro ao processar upload de avatar:', error);
+        console.error("Erro ao processar upload de avatar:", error);
       } finally {
         setIsUploading(false);
       }
@@ -391,7 +422,7 @@ export function SidebarNav({
         },
       ],
     },
-    
+
     {
       icon: <Trophy className="h-5 w-5" />,
       label: "Conquistas",
@@ -483,21 +514,25 @@ export function SidebarNav({
       )}
 
       {/* User Profile Component - Greeting and progress section */}
-      <div className={cn(
-        "bg-white dark:bg-[#001427] p-4 mb-4 flex flex-col items-center relative group",
-        isCollapsed ? "mt-6 px-2" : "mt-4"
-      )}>
+      <div
+        className={cn(
+          "bg-white dark:bg-[#001427] p-4 mb-4 flex flex-col items-center relative group",
+          isCollapsed ? "mt-6 px-2" : "mt-4",
+        )}
+      >
         {/* Card wrapper com bordas arredondadas */}
-        <div className={cn(
-          "bg-white dark:bg-[#29335C]/20 rounded-xl border border-gray-200 dark:border-[#29335C]/30 p-4 backdrop-blur-sm",
-          isCollapsed ? "w-16" : "w-full"
-        )}>
+        <div
+          className={cn(
+            "bg-white dark:bg-[#29335C]/20 rounded-xl border border-gray-200 dark:border-[#29335C]/30 p-4 backdrop-blur-sm",
+            isCollapsed ? "w-14" : "w-full",
+          )}
+        >
           {/* Profile Image Component - Responsive avatar */}
           <div className="relative mb-4 flex justify-center flex-col items-center">
-            <div 
+            <div
               className={cn(
                 "rounded-full overflow-hidden bg-gradient-to-r from-[#FF6B00] via-[#FF8736] to-[#FFB366] p-0.5 cursor-pointer transition-all duration-300",
-                isCollapsed ? "w-12 h-12" : "w-20 h-20"
+                isCollapsed ? "w-12 h-12" : "w-20 h-20",
               )}
               onClick={() => fileInputRef.current?.click()}
             >
@@ -514,117 +549,131 @@ export function SidebarNav({
                   />
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
-                    <div className={cn(
-                      "bg-yellow-300 rounded-full flex items-center justify-center",
-                      isCollapsed ? "w-6 h-6" : "w-10 h-10"
-                  )}>
-                    <span className={cn(
-                      "text-black font-bold",
-                      isCollapsed ? "text-xs" : "text-lg"
-                    )}>
-                      {firstName ? firstName.charAt(0).toUpperCase() : "U"}
-                    </span>
+                    <div
+                      className={cn(
+                        "bg-yellow-300 rounded-full flex items-center justify-center",
+                        isCollapsed ? "w-6 h-6" : "w-10 h-10",
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "text-black font-bold",
+                          isCollapsed ? "text-xs" : "text-lg",
+                        )}
+                      >
+                        {firstName ? firstName.charAt(0).toUpperCase() : "U"}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
+
+            {/* Barra de progresso - apenas quando minimizado */}
+            {isCollapsed && (
+              <div className="mt-2 w-12 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-full transition-all duration-300"
+                  style={{ width: "0%" }}
+                />
+              </div>
+            )}
+
+            {/* File input component */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="image/*"
+              onChange={handleImageChange}
+              className="hidden"
+            />
           </div>
 
-          {/* Barra de progresso - apenas quando minimizado */}
-          {isCollapsed && (
-            <div className="mt-2 w-12 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-full transition-all duration-300"
-                style={{ width: '0%' }}
-              />
+          {isUploading && (
+            <div className="mb-3 text-xs text-gray-500 dark:text-gray-400">
+              Enviando...
             </div>
           )}
 
-          {/* File input component */}
+          {/* Hidden File Input */}
           <input
-            type="file"
             ref={fileInputRef}
+            type="file"
             accept="image/*"
             onChange={handleImageChange}
             className="hidden"
           />
-        </div>
 
-        {isUploading && (
-          <div className="mb-3 text-xs text-gray-500 dark:text-gray-400">
-            Enviando...
-          </div>
-        )}
-
-        {/* Hidden File Input */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          onChange={handleImageChange}
-          className="hidden"
-        />
-
-        {!isCollapsed && (
-          <div className="text-[#001427] dark:text-white text-center w-full">
-            <h3 className="font-semibold text-base mb-2 flex items-center justify-center">
-              <span className="mr-1">👋</span> Olá, {(() => {
-                // Obter o primeiro nome com a mesma lógica do Dashboard
-                const firstName = userProfile?.full_name?.split(' ')[0] || 
-                                userProfile?.display_name || 
-                                localStorage.getItem('userFirstName') || 
-                                "Estudante";
-                return firstName;
-              })()}!
-            </h3>
-            <div className="flex flex-col items-center mt-1">
-              <p className="text-xs text-[#001427]/70 dark:text-white/70 mb-0.5">
-                Nível {userProfile?.level || 1}
-              </p>
-              <div className="w-24 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-[#FFD700] via-[#FF6B00] to-[#FF0000] rounded-full transition-all duration-300"
-                  style={{ 
-                    width: `${(() => {
-                      const currentXP = userProfile?.experience_points || 0;
-                      const currentLevel = userProfile?.level || 1;
-                      const xpForNextLevel = currentLevel * 1000;
-                      const previousLevelXP = (currentLevel - 1) * 1000;
-                      const xpInCurrentLevel = currentXP - previousLevelXP;
-                      const xpNeededForLevel = xpForNextLevel - previousLevelXP;
-
-                      if (currentLevel === 1 && currentXP === 0) {
-                        return 0; // Usuário novo sem XP
-                      }
-
-                      return xpNeededForLevel > 0 ? Math.round((xpInCurrentLevel / xpNeededForLevel) * 100) : 0;
-                    })()}%` 
-                  }}
-                ></div>
-              </div>
-              <span className="text-[10px] text-[#FF6B00] mt-0.5">
+          {!isCollapsed && (
+            <div className="text-[#001427] dark:text-white text-center w-full">
+              <h3 className="font-semibold text-base mb-2 flex items-center justify-center">
+                <span className="mr-1">👋</span> Olá,{" "}
                 {(() => {
-                  const currentXP = userProfile?.experience_points || 0;
-                  const currentLevel = userProfile?.level || 1;
-                  const xpForNextLevel = currentLevel * 1000;
-
-                  if (currentLevel === 1 && currentXP === 0) {
-                    return "0 XP / 1.000 XP"; // Usuário novo
-                  }
-
-                  return `${currentXP.toLocaleString()} XP / ${xpForNextLevel.toLocaleString()} XP`;
+                  // Obter o primeiro nome com a mesma lógica do Dashboard
+                  const firstName =
+                    userProfile?.full_name?.split(" ")[0] ||
+                    userProfile?.display_name ||
+                    localStorage.getItem("userFirstName") ||
+                    "Estudante";
+                  return firstName;
                 })()}
-              </span>
+                !
+              </h3>
+              <div className="flex flex-col items-center mt-1">
+                <p className="text-xs text-[#001427]/70 dark:text-white/70 mb-0.5">
+                  Nível {userProfile?.level || 1}
+                </p>
+                <div className="w-24 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-[#FFD700] via-[#FF6B00] to-[#FF0000] rounded-full transition-all duration-300"
+                    style={{
+                      width: `${(() => {
+                        const currentXP = userProfile?.experience_points || 0;
+                        const currentLevel = userProfile?.level || 1;
+                        const xpForNextLevel = currentLevel * 1000;
+                        const previousLevelXP = (currentLevel - 1) * 1000;
+                        const xpInCurrentLevel = currentXP - previousLevelXP;
+                        const xpNeededForLevel =
+                          xpForNextLevel - previousLevelXP;
+
+                        if (currentLevel === 1 && currentXP === 0) {
+                          return 0; // Usuário novo sem XP
+                        }
+
+                        return xpNeededForLevel > 0
+                          ? Math.round(
+                              (xpInCurrentLevel / xpNeededForLevel) * 100,
+                            )
+                          : 0;
+                      })()}%`,
+                    }}
+                  ></div>
+                </div>
+                <span className="text-[10px] text-[#FF6B00] mt-0.5">
+                  {(() => {
+                    const currentXP = userProfile?.experience_points || 0;
+                    const currentLevel = userProfile?.level || 1;
+                    const xpForNextLevel = currentLevel * 1000;
+
+                    if (currentLevel === 1 && currentXP === 0) {
+                      return "0 XP / 1.000 XP"; // Usuário novo
+                    }
+
+                    return `${currentXP.toLocaleString()} XP / ${xpForNextLevel.toLocaleString()} XP`;
+                  })()}
+                </span>
+              </div>
             </div>
-          </div>
-        )}
+          )}
         </div>
       </div>
 
-      <ScrollArea className={cn(
-        "py-2",
-        isCollapsed ? "h-[calc(100%-220px)]" : "h-[calc(100%-300px)]"
-      )}>
+      <ScrollArea
+        className={cn(
+          "py-2",
+          isCollapsed ? "h-[calc(100%-220px)]" : "h-[calc(100%-300px)]",
+        )}
+      >
         <nav className="grid gap-1 px-2">
           {navItems.map((item, index) => (
             <div key={index} className="relative">
