@@ -682,7 +682,7 @@ export function SidebarNav({
                     <p className="text-xs text-[#001427]/70 dark:text-white/70 mb-0.5">
                       Nível {userProfile?.level || 1}
                     </p>
-                    <div className="relative w-48 h-6 bg-orange-100 rounded-full shadow-lg overflow-hidden">
+                    <div className="relative w-20 h-3 bg-orange-100 rounded-full shadow-lg overflow-hidden">
                       <div
                         className="h-full bg-gradient-to-r from-orange-400 to-orange-600 rounded-full transition-all duration-100 ease-out shadow-sm"
                         style={{
@@ -710,7 +710,7 @@ export function SidebarNav({
                         }}
                       />
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-xs font-medium text-gray-800 drop-shadow-sm">
+                        <span className="text-[10px] font-medium text-gray-800 drop-shadow-sm">
                           {(() => {
                             const currentXP = userProfile?.experience_points || 0;
                             const currentLevel = userProfile?.level || 1;
@@ -862,7 +862,7 @@ export function SidebarNav({
                     <p className="text-xs text-[#001427]/70 dark:text-white/70 mb-0.5">
                       Nível {userProfile?.level || 1}
                     </p>
-                    <div className="relative w-48 h-6 bg-orange-100 rounded-full shadow-lg overflow-hidden">
+                    <div className="relative w-20 h-3 bg-orange-100 rounded-full shadow-lg overflow-hidden">
                       <div
                         className="h-full bg-gradient-to-r from-orange-400 to-orange-600 rounded-full transition-all duration-100 ease-out shadow-sm"
                         style={{
@@ -890,7 +890,7 @@ export function SidebarNav({
                         }}
                       />
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-xs font-medium text-gray-800 drop-shadow-sm">
+                        <span className="text-[10px] font-medium text-gray-800 drop-shadow-sm">
                           {(() => {
                             const currentXP = userProfile?.experience_points || 0;
                             const currentLevel = userProfile?.level || 1;
