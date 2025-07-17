@@ -484,77 +484,131 @@ export function SidebarNav({
 
       {/* User Profile Component - Greeting and progress section */}
       <div className={cn(
-        "bg-white dark:bg-[#001427] p-4 mb-4 flex flex-col items-center relative group",
-        isCollapsed ? "mt-6" : "mt-4"
+        "p-4 mb-4 flex flex-col items-center relative group",
+        isCollapsed ? "mt-6" : "mt-4 bg-white dark:bg-[#001427]"
       )}>
-        {/* Card wrapper com bordas arredondadas */}
-        <div className="bg-white dark:bg-[#29335C]/20 rounded-xl border border-gray-200 dark:border-[#29335C]/30 p-4 w-full backdrop-blur-sm">
+        {/* Card wrapper com bordas arredondadas - só aparece quando não collapsed */}
+        {!isCollapsed && (
+          <div className="bg-white dark:bg-[#29335C]/20 rounded-xl border border-gray-200 dark:border-[#29335C]/30 p-4 w-full backdrop-blur-sm"></div_str>
           {/* Profile Image Component - Responsive avatar */}
-          <div className="relative mb-4 flex justify-center flex-col items-center">
-            <div 
-              className={cn(
-                "rounded-full overflow-hidden bg-gradient-to-r from-[#FF6B00] via-[#FF8736] to-[#FFB366] p-0.5 cursor-pointer transition-all duration-300",
-                isCollapsed ? "w-12 h-12" : "w-20 h-20"
-              )}
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-[#001427] flex items-center justify-center">
-                {profileImage ? (
-                  <img
-                    src={profileImage}
-                    alt="Profile"
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      console.error("Error loading profile image");
-                      setProfileImage(null);
-                    }}
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
-                    <div className={cn(
-                      "bg-yellow-300 rounded-full flex items-center justify-center",
-                      isCollapsed ? "w-6 h-6" : "w-10 h-10"
-                  )}>
-                    <span className={cn(
-                      "text-black font-bold",
-                      isCollapsed ? "text-xs" : "text-lg"
-                    )}>
-                      {firstName ? firstName.charAt(0).toUpperCase() : "U"}
-                    </span>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Barra de progresso - apenas quando minimizado */}
-          {isCollapsed && (
-            <div className="mt-2 w-12 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+            <div className="relative mb-4 flex justify-center flex-col items-center">
               <div 
-                className="h-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-full transition-all duration-300"
-                style={{ width: '0%' }}
-              />
+                className={cn(
+                  "rounded-full overflow-hidden bg-gradient-to-r from-[#FF6B00] via-[#FF8736] to-[#FFB366] p-0.5 cursor-pointer transition-all duration-300",
+                  isCollapsed ? "w-12 h-12" : "w-20 h-20"
+                )}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-[#001427] flex items-center justify-center">
+                  {profileImage ? (
+                    <img
+                      src={profileImage}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        console.error("Error loading profile image");
+                        setProfileImage(null);
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
+                      <div className={cn(
+                        "bg-yellow-300 rounded-full flex items-center justify-center",
+                        isCollapsed ? "w-6 h-6" : "w-10 h-10"
+                    )}>
+                      <span className={cn(
+                        "text-black font-bold",
+                        isCollapsed ? "text-xs" : "text-lg"
+                      )}>
+                        {firstName ? firstName.charAt(0).toUpperCase() : "U"}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
-          )}
 
-          {/* File input component */}
-          <input
-            type="file"
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleImageChange}
-            className="hidden"
-          />
-        </div>
+            {/* Barra de progresso - apenas quando minimizado */}
+            {isCollapsed && (
+              <div className="mt-2 w-12 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-full transition-all duration-300"
+                  style={{ width: '0%' }}
+                />
+              </div>
+            )}
 
-        {isUploading && (
-          <div className="mb-3 text-xs text-gray-500 dark:text-gray-400">
-            Enviando...
+            {/* File input component */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="hidden"
+            />
           </div>
         )}
 
-        {/* Hidden File Input */}
+        {/* Versão compacta para quando collapsed */}
+        {isCollapsed && (
+          <div className="flex flex-col items-center">
+            {/* Profile Image Component - Versão compacta */}
+            <div className="relative flex justify-center flex-col items-center">
+              <div 
+                className="rounded-full overflow-hidden bg-gradient-to-r from-[#FF6B00] via-[#FF8736] to-[#FFB366] p-0.5 cursor-pointer transition-all duration-300 w-12 h-12"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-[#001427] flex items-center justify-center">
+                  {profileImage ? (
+                    <img
+                      src={profileImage}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        console.error("Error loading profile image");
+                        setProfileImage(null);
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
+                      <div className="bg-yellow-300 rounded-full flex items-center justify-center w-6 h-6">
+                        <span className="text-black font-bold text-xs">
+                          {firstName ? firstName.charAt(0).toUpperCase() : "U"}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Barra de progresso compacta */}
+            <div className="mt-2 w-12 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-full transition-all duration-300"
+                style={{ 
+                  width: `${(() => {
+                    const currentXP = userProfile?.experience_points || 0;
+                    const currentLevel = userProfile?.level || 1;
+                    const xpForNextLevel = currentLevel * 1000;
+                    const previousLevelXP = (currentLevel - 1) * 1000;
+                    const xpInCurrentLevel = currentXP - previousLevelXP;
+                    const xpNeededForLevel = xpForNextLevel - previousLevelXP;
+
+                    if (currentLevel === 1 && currentXP === 0) {
+                      return 0;
+                    }
+
+                    return xpNeededForLevel > 0 ? Math.round((xpInCurrentLevel / xpNeededForLevel) * 100) : 0;
+                  })()}%` 
+                }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Input de arquivo compartilhado */}
         <input
           ref={fileInputRef}
           type="file"
@@ -562,6 +616,12 @@ export function SidebarNav({
           onChange={handleImageChange}
           className="hidden"
         />
+
+        {isUploading && (
+          <div className="mb-3 text-xs text-gray-500 dark:text-gray-400">
+            Enviando...
+          </div>
+        )}
 
         {!isCollapsed && (
           <div className="text-[#001427] dark:text-white text-center w-full">
