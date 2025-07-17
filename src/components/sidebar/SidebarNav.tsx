@@ -545,8 +545,13 @@ export function SidebarNav({
               {/* Ícone de graduação no canto superior esquerdo quando expandido */}
               {!isCollapsed && (
                 <div className="absolute top-3 left-3 z-10">
-                  <div className="bg-[#FF6B00] text-white p-1.5 rounded-full shadow-sm">
-                    <GraduationCap className="h-3 w-3" />
+                  <div className="w-6 h-6">
+                    <div className="w-full h-full rounded-full border-2 border-orange-500 bg-orange-600 bg-opacity-20 flex items-center justify-center">
+                      <GraduationCap 
+                        size={12} 
+                        className="text-orange-500" 
+                      />
+                    </div>
                   </div>
                 </div>
               )}
