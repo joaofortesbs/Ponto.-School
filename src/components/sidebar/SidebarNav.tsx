@@ -740,10 +740,10 @@ export function SidebarNav({
               {!isCollapsed && (
                 <div className="absolute top-3 left-3 z-10">
                   <div className="w-6 h-6">
-                    <div className="w-full h-full rounded-full border-2 border-[#661472] bg-[#661472] bg-opacity-20 flex items-center justify-center">
+                    <div className="w-full h-full rounded-full border-2 border-[#0630d8] bg-[#0f26aa] bg-opacity-20 flex items-center justify-center">
                       <Briefcase 
                         size={12} 
-                        className="text-[#661472]" 
+                        className="text-[#0131fe]" 
                         strokeWidth={2.5} 
                       />
                     </div>
