@@ -7,6 +7,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import type { UserProfile } from "@/types/user-profile";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { motion } from "framer-motion";
 import {
   Home,
   BookOpen,
@@ -69,6 +70,7 @@ export function SidebarNav({
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [firstName, setFirstName] = useState<string | null>(null);
+  const [isFlipped, setIsFlipped] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -206,6 +208,10 @@ export function SidebarNav({
 
   const handleImageUploadClick = () => {
     fileInputRef.current?.click();
+  };
+
+  const handleFlipCard = () => {
+    setIsFlipped(!isFlipped);
   };
 
   const handleImageChange = async (
@@ -520,39 +526,61 @@ export function SidebarNav({
           isCollapsed ? "mt-6 px-2" : "mt-4",
         )}
       >
-        {/* Card wrapper com bordas arredondadas */}
+        {/* Card wrapper com bordas arredondadas com flip effect */}
         <div
           className={cn(
-            "bg-white dark:bg-[#29335C]/20 rounded-xl border border-gray-200 dark:border-[#29335C]/30 backdrop-blur-sm relative",
-            isCollapsed ? "w-14 p-2" : "w-full p-4",
+            "relative perspective-1000",
+            isCollapsed ? "w-14 h-16" : "w-full h-auto",
           )}
+          style={{ perspective: "1000px" }}
         >
-          {/* Ícone no canto superior direito quando expandido */}
-          {!isCollapsed && (
-            <button className="absolute top-3 right-3 w-6 h-6 rounded-md bg-gray-100 dark:bg-[#29335C]/40 hover:bg-gray-200 dark:hover:bg-[#29335C]/60 flex items-center justify-center transition-all duration-200 hover:scale-105">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-[#CC5500]"
-              >
-                <path d="M16 3h5v5"/>
-                <path d="M8 3H3v5"/>
-                <path d="M12 22v-8.3a4 4 0 0 0-1.172-2.872L3 3"/>
-                <path d="m21 3-7.5 7.5"/>
-                <path d="M16 21h5v-5"/>
-                <path d="M8 21H3v-5"/>
-                <path d="M12 2v8.3a4 4 0 0 0 1.172 2.872L21 21"/>
-                <path d="m3 21 7.5-7.5"/>
-              </svg>
-            </button>
-          )}
+          <motion.div
+            className={cn(
+              "bg-white dark:bg-[#29335C]/20 rounded-xl border border-gray-200 dark:border-[#29335C]/30 backdrop-blur-sm relative preserve-3d",
+              isCollapsed ? "w-14 p-2" : "w-full p-4",
+            )}
+            animate={{ rotateY: isFlipped ? 180 : 0 }}
+            transition={{ duration: 0.6, ease: "easeInOut" }}
+            style={{
+              transformStyle: "preserve-3d",
+            }}
+          >
+            {/* Face frontal do card */}
+            <div
+              className="backface-hidden"
+              style={{
+                backfaceVisibility: "hidden",
+              }}
+            >
+              {/* Ícone no canto superior direito quando expandido */}
+              {!isCollapsed && (
+                <button 
+                  onClick={handleFlipCard}
+                  className="absolute top-3 right-3 w-6 h-6 rounded-md bg-gray-100 dark:bg-[#29335C]/40 hover:bg-gray-200 dark:hover:bg-[#29335C]/60 flex items-center justify-center transition-all duration-200 hover:scale-105 cursor-pointer z-10"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="text-[#CC5500]"
+                  >
+                    <path d="M16 3h5v5"/>
+                    <path d="M8 3H3v5"/>
+                    <path d="M12 22v-8.3a4 4 0 0 0-1.172-2.872L3 3"/>
+                    <path d="m21 3-7.5 7.5"/>
+                    <path d="M16 21h5v-5"/>
+                    <path d="M8 21H3v-5"/>
+                    <path d="M12 2v8.3a4 4 0 0 0 1.172 2.872L21 21"/>
+                    <path d="m3 21 7.5-7.5"/>
+                  </svg>
+                </button>
+              )}
           {/* Profile Image Component - Responsive avatar */}
           <div className={cn(
             "relative flex justify-center flex-col items-center",
@@ -634,66 +662,225 @@ export function SidebarNav({
           />
 
           {!isCollapsed && (
-            <div className="text-[#001427] dark:text-white text-center w-full">
-              <h3 className="font-semibold text-base mb-2 flex items-center justify-center">
-                <span className="mr-1">👋</span> Olá,{" "}
-                {(() => {
-                  // Obter o primeiro nome com a mesma lógica do Dashboard
-                  const firstName =
-                    userProfile?.full_name?.split(" ")[0] ||
-                    userProfile?.display_name ||
-                    localStorage.getItem("userFirstName") ||
-                    "Estudante";
-                  return firstName;
-                })()}
-                !
-              </h3>
-              <div className="flex flex-col items-center mt-1">
-                <p className="text-xs text-[#001427]/70 dark:text-white/70 mb-0.5">
-                  Nível {userProfile?.level || 1}
-                </p>
-                <div className="w-24 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-[#FFD700] via-[#FF6B00] to-[#FF0000] rounded-full transition-all duration-300"
-                    style={{
-                      width: `${(() => {
+                <div className="text-[#001427] dark:text-white text-center w-full">
+                  <h3 className="font-semibold text-base mb-2 flex items-center justify-center">
+                    <span className="mr-1">👋</span> Olá,{" "}
+                    {(() => {
+                      // Obter o primeiro nome com a mesma lógica do Dashboard
+                      const firstName =
+                        userProfile?.full_name?.split(" ")[0] ||
+                        userProfile?.display_name ||
+                        localStorage.getItem("userFirstName") ||
+                        "Estudante";
+                      return firstName;
+                    })()}
+                    !
+                  </h3>
+                  <div className="flex flex-col items-center mt-1">
+                    <p className="text-xs text-[#001427]/70 dark:text-white/70 mb-0.5">
+                      Nível {userProfile?.level || 1}
+                    </p>
+                    <div className="w-24 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-[#FFD700] via-[#FF6B00] to-[#FF0000] rounded-full transition-all duration-300"
+                        style={{
+                          width: `${(() => {
+                            const currentXP = userProfile?.experience_points || 0;
+                            const currentLevel = userProfile?.level || 1;
+                            const xpForNextLevel = currentLevel * 1000;
+                            const previousLevelXP = (currentLevel - 1) * 1000;
+                            const xpInCurrentLevel = currentXP - previousLevelXP;
+                            const xpNeededForLevel =
+                              xpForNextLevel - previousLevelXP;
+
+                            if (currentLevel === 1 && currentXP === 0) {
+                              return 0; // Usuário novo sem XP
+                            }
+
+                            return xpNeededForLevel > 0
+                              ? Math.round(
+                                  (xpInCurrentLevel / xpNeededForLevel) * 100,
+                                )
+                              : 0;
+                          })()}%`,
+                        }}
+                      ></div>
+                    </div>
+                    <span className="text-[10px] text-[#FF6B00] mt-0.5">
+                      {(() => {
                         const currentXP = userProfile?.experience_points || 0;
                         const currentLevel = userProfile?.level || 1;
                         const xpForNextLevel = currentLevel * 1000;
-                        const previousLevelXP = (currentLevel - 1) * 1000;
-                        const xpInCurrentLevel = currentXP - previousLevelXP;
-                        const xpNeededForLevel =
-                          xpForNextLevel - previousLevelXP;
 
                         if (currentLevel === 1 && currentXP === 0) {
-                          return 0; // Usuário novo sem XP
+                          return "0 XP / 1.000 XP"; // Usuário novo
                         }
 
-                        return xpNeededForLevel > 0
-                          ? Math.round(
-                              (xpInCurrentLevel / xpNeededForLevel) * 100,
-                            )
-                          : 0;
-                      })()}%`,
-                    }}
-                  ></div>
+                        return `${currentXP.toLocaleString()} XP / ${xpForNextLevel.toLocaleString()} XP`;
+                      })()}
+                    </span>
+                  </div>
                 </div>
-                <span className="text-[10px] text-[#FF6B00] mt-0.5">
-                  {(() => {
-                    const currentXP = userProfile?.experience_points || 0;
-                    const currentLevel = userProfile?.level || 1;
-                    const xpForNextLevel = currentLevel * 1000;
-
-                    if (currentLevel === 1 && currentXP === 0) {
-                      return "0 XP / 1.000 XP"; // Usuário novo
-                    }
-
-                    return `${currentXP.toLocaleString()} XP / ${xpForNextLevel.toLocaleString()} XP`;
-                  })()}
-                </span>
-              </div>
+              )}
             </div>
-          )}
+
+            {/* Face traseira do card */}
+            <div
+              className="absolute inset-0 backface-hidden"
+              style={{
+                backfaceVisibility: "hidden",
+                transform: "rotateY(180deg)",
+              }}
+            >
+              {/* Ícone no canto superior direito quando expandido */}
+              {!isCollapsed && (
+                <button 
+                  onClick={handleFlipCard}
+                  className="absolute top-3 right-3 w-6 h-6 rounded-md bg-gray-100 dark:bg-[#29335C]/40 hover:bg-gray-200 dark:hover:bg-[#29335C]/60 flex items-center justify-center transition-all duration-200 hover:scale-105 cursor-pointer z-10"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="text-[#CC5500]"
+                  >
+                    <path d="M16 3h5v5"/>
+                    <path d="M8 3H3v5"/>
+                    <path d="M12 22v-8.3a4 4 0 0 0-1.172-2.872L3 3"/>
+                    <path d="m21 3-7.5 7.5"/>
+                    <path d="M16 21h5v-5"/>
+                    <path d="M8 21H3v-5"/>
+                    <path d="M12 2v8.3a4 4 0 0 0 1.172 2.872L21 21"/>
+                    <path d="m3 21 7.5-7.5"/>
+                  </svg>
+                </button>
+              )}
+              
+              {/* Profile Image Component - Responsive avatar (verso) */}
+              <div className={cn(
+                "relative flex justify-center flex-col items-center",
+                isCollapsed ? "mb-1" : "mb-4"
+              )}>
+                <div
+                  className={cn(
+                    "rounded-full overflow-hidden bg-gradient-to-r from-[#FF6B00] via-[#FF8736] to-[#FFB366] p-0.5 cursor-pointer transition-all duration-300",
+                    isCollapsed ? "w-10 h-10" : "w-20 h-20",
+                  )}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-[#001427] flex items-center justify-center">
+                    {profileImage ? (
+                      <img
+                        src={profileImage}
+                        alt="Profile"
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          console.error("Error loading profile image");
+                          setProfileImage(null);
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
+                        <div
+                          className={cn(
+                            "bg-yellow-300 rounded-full flex items-center justify-center",
+                            isCollapsed ? "w-5 h-5" : "w-10 h-10",
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              "text-black font-bold",
+                              isCollapsed ? "text-xs" : "text-lg",
+                            )}
+                          >
+                            {firstName ? firstName.charAt(0).toUpperCase() : "U"}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Barra de progresso - apenas quando minimizado (verso) */}
+                {isCollapsed && (
+                  <div className="mt-2 w-10 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-full transition-all duration-300"
+                      style={{ width: "0%" }}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {!isCollapsed && (
+                <div className="text-[#001427] dark:text-white text-center w-full">
+                  <h3 className="font-semibold text-base mb-2 flex items-center justify-center">
+                    <span className="mr-1">👋</span> Olá,{" "}
+                    {(() => {
+                      // Obter o primeiro nome com a mesma lógica do Dashboard
+                      const firstName =
+                        userProfile?.full_name?.split(" ")[0] ||
+                        userProfile?.display_name ||
+                        localStorage.getItem("userFirstName") ||
+                        "Estudante";
+                      return firstName;
+                    })()}
+                    !
+                  </h3>
+                  <div className="flex flex-col items-center mt-1">
+                    <p className="text-xs text-[#001427]/70 dark:text-white/70 mb-0.5">
+                      Nível {userProfile?.level || 1}
+                    </p>
+                    <div className="w-24 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-[#FFD700] via-[#FF6B00] to-[#FF0000] rounded-full transition-all duration-300"
+                        style={{
+                          width: `${(() => {
+                            const currentXP = userProfile?.experience_points || 0;
+                            const currentLevel = userProfile?.level || 1;
+                            const xpForNextLevel = currentLevel * 1000;
+                            const previousLevelXP = (currentLevel - 1) * 1000;
+                            const xpInCurrentLevel = currentXP - previousLevelXP;
+                            const xpNeededForLevel =
+                              xpForNextLevel - previousLevelXP;
+
+                            if (currentLevel === 1 && currentXP === 0) {
+                              return 0; // Usuário novo sem XP
+                            }
+
+                            return xpNeededForLevel > 0
+                              ? Math.round(
+                                  (xpInCurrentLevel / xpNeededForLevel) * 100,
+                                )
+                              : 0;
+                          })()}%`,
+                        }}
+                      ></div>
+                    </div>
+                    <span className="text-[10px] text-[#FF6B00] mt-0.5">
+                      {(() => {
+                        const currentXP = userProfile?.experience_points || 0;
+                        const currentLevel = userProfile?.level || 1;
+                        const xpForNextLevel = currentLevel * 1000;
+
+                        if (currentLevel === 1 && currentXP === 0) {
+                          return "0 XP / 1.000 XP"; // Usuário novo
+                        }
+
+                        return `${currentXP.toLocaleString()} XP / ${xpForNextLevel.toLocaleString()} XP`;
+                      })()}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </motion.div>
         </div>
       </div>
 
