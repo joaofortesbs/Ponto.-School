@@ -485,10 +485,13 @@ export function SidebarNav({
       {/* User Profile Component - Greeting and progress section */}
       <div className={cn(
         "bg-white dark:bg-[#001427] p-4 mb-4 flex flex-col items-center relative group",
-        isCollapsed ? "mt-6" : "mt-4"
+        isCollapsed ? "mt-6 px-2" : "mt-4"
       )}>
         {/* Card wrapper com bordas arredondadas */}
-        <div className="bg-white dark:bg-[#29335C]/20 rounded-xl border border-gray-200 dark:border-[#29335C]/30 p-4 w-full backdrop-blur-sm">
+        <div className={cn(
+          "bg-white dark:bg-[#29335C]/20 rounded-xl border border-gray-200 dark:border-[#29335C]/30 p-4 backdrop-blur-sm",
+          isCollapsed ? "w-16" : "w-full"
+        )}></div>
           {/* Profile Image Component - Responsive avatar */}
           <div className="relative mb-4 flex justify-center flex-col items-center">
             <div 
