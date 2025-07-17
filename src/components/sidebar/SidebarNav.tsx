@@ -69,6 +69,7 @@ export function SidebarNav({
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [firstName, setFirstName] = useState<string | null>(null);
+  const [isFlipped, setIsFlipped] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -487,66 +488,158 @@ export function SidebarNav({
         "bg-white dark:bg-[#001427] p-4 mb-4 flex flex-col items-center relative group",
         isCollapsed ? "mt-6" : "mt-4"
       )}>
-        {/* Card wrapper com bordas arredondadas */}
-        <div className="bg-white dark:bg-[#29335C]/20 rounded-xl border border-gray-200 dark:border-[#29335C]/30 p-4 w-full backdrop-blur-sm">
-          {/* Profile Image Component - Responsive avatar */}
-          <div className="relative mb-4 flex justify-center flex-col items-center">
+        {/* Card wrapper com bordas arredondadas - só visível quando não collapsed */}
+        {!isCollapsed && (
+          <div className="relative perspective-1000">
             <div 
               className={cn(
-                "rounded-full overflow-hidden bg-gradient-to-r from-[#FF6B00] via-[#FF8736] to-[#FFB366] p-0.5 cursor-pointer transition-all duration-300",
-                isCollapsed ? "w-12 h-12" : "w-20 h-20"
+                "bg-white dark:bg-[#29335C]/20 rounded-xl border border-gray-200 dark:border-[#29335C]/30 p-4 w-full backdrop-blur-sm transition-transform duration-700 transform-style-preserve-3d",
+                isFlipped ? "rotate-y-180" : ""
               )}
-              onClick={() => fileInputRef.current?.click()}
+              style={{
+                transformStyle: "preserve-3d",
+                perspective: "1000px"
+              }}
             >
-              <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-[#001427] flex items-center justify-center">
-                {profileImage ? (
-                  <img
-                    src={profileImage}
-                    alt="Profile"
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      console.error("Error loading profile image");
-                      setProfileImage(null);
-                    }}
+              {/* Ícone de troca no canto superior direito */}
+              <button
+                onClick={() => setIsFlipped(!isFlipped)}
+                className="absolute top-3 right-3 z-10 p-1.5 rounded-full bg-white/80 dark:bg-[#001427]/80 hover:bg-white dark:hover:bg-[#001427] transition-all duration-200 hover:scale-110 backdrop-blur-sm border border-gray-200 dark:border-[#29335C]/30"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="text-[#FF6B00]"
+                >
+                  <path
+                    d="M7 7H17V10L21 6L17 2V5H5V9H7V7Z"
+                    fill="currentColor"
                   />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
-                    <div className={cn(
-                      "bg-yellow-300 rounded-full flex items-center justify-center",
-                      isCollapsed ? "w-6 h-6" : "w-10 h-10"
-                  )}>
-                    <span className={cn(
-                      "text-black font-bold",
-                      isCollapsed ? "text-xs" : "text-lg"
-                    )}>
-                      {firstName ? firstName.charAt(0).toUpperCase() : "U"}
-                    </span>
+                  <path
+                    d="M17 17H7V14L3 18L7 22V19H19V15H17V17Z"
+                    fill="currentColor"
+                  />
+                </svg>
+              </button>
+
+              {/* Frente do card */}
+              <div 
+                className={cn(
+                  "w-full transition-opacity duration-300",
+                  isFlipped ? "opacity-0 pointer-events-none absolute inset-0 p-4 rotate-y-180" : "opacity-100"
+                )}
+                style={{
+                  backfaceVisibility: "hidden",
+                  transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)"
+                }}
+              >
+                {/* Profile Image Component - Responsive avatar */}
+                <div className="relative mb-4 flex justify-center flex-col items-center">
+                  <div 
+                    className="rounded-full overflow-hidden bg-gradient-to-r from-[#FF6B00] via-[#FF8736] to-[#FFB366] p-0.5 cursor-pointer transition-all duration-300 w-20 h-20"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-[#001427] flex items-center justify-center">
+                      {profileImage ? (
+                        <img
+                          src={profileImage}
+                          alt="Profile"
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            console.error("Error loading profile image");
+                            setProfileImage(null);
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
+                          <div className="bg-yellow-300 rounded-full flex items-center justify-center w-10 h-10">
+                            <span className="text-black font-bold text-lg">
+                              {firstName ? firstName.charAt(0).toUpperCase() : "U"}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              )}
+
+                {/* File input component */}
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
+                />
+              </div>
+
+              {/* Verso do card */}
+              <div 
+                className={cn(
+                  "w-full transition-opacity duration-300",
+                  isFlipped ? "opacity-100" : "opacity-0 pointer-events-none absolute inset-0 p-4"
+                )}
+                style={{
+                  backfaceVisibility: "hidden",
+                  transform: isFlipped ? "rotateY(0deg)" : "rotateY(-180deg)"
+                }}
+              >
+                {/* Conteúdo do verso */}
+                <div className="flex flex-col items-center justify-center h-full">
+                  <div className="w-16 h-16 mb-3 rounded-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] flex items-center justify-center">
+                    <svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="text-white"
+                    >
+                      <path
+                        d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z"
+                        fill="currentColor"
+                      />
+                      <path
+                        d="M19 15L19.5 17L21.5 17.5L19.5 18L19 20L18.5 18L16.5 17.5L18.5 17L19 15Z"
+                        fill="currentColor"
+                      />
+                      <path
+                        d="M6.5 7L7 8.5L8.5 9L7 9.5L6.5 11L6 9.5L4.5 9L6 8.5L6.5 7Z"
+                        fill="currentColor"
+                      />
+                    </svg>
+                  </div>
+                  
+                  <h3 className="text-sm font-semibold text-[#001427] dark:text-white mb-2 text-center">
+                    Estatísticas de Progresso
+                  </h3>
+                  
+                  <div className="w-full space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-[#001427]/70 dark:text-white/70">Sequência:</span>
+                      <span className="text-xs font-medium text-[#FF6B00]">7 dias</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-[#001427]/70 dark:text-white/70">Conquistas:</span>
+                      <span className="text-xs font-medium text-[#FF6B00]">12/25</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-[#001427]/70 dark:text-white/70">Ranking:</span>
+                      <span className="text-xs font-medium text-[#FF6B00]">#42</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-[#001427]/70 dark:text-white/70">School Points:</span>
+                      <span className="text-xs font-medium text-[#FF6B00]">2.847</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-
-          {/* Barra de progresso - apenas quando minimizado */}
-          {isCollapsed && (
-            <div className="mt-2 w-12 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-full transition-all duration-300"
-                style={{ width: '0%' }}
-              />
-            </div>
-          )}
-
-          {/* File input component */}
-          <input
-            type="file"
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleImageChange}
-            className="hidden"
-          />
-        </div>
+        )}
 
         {isUploading && (
           <div className="mb-3 text-xs text-gray-500 dark:text-gray-400">
