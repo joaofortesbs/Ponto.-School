@@ -80,16 +80,7 @@ const Sidebar: React.FC<SidebarProps> = ({ className, isCollapsed }) => {
         </div>
       )}
 
-      {/* Progress Bar - sempre visível */}
-      {!isCollapsed && (
-        <div className="px-4 mb-6">
-          <div className="flex justify-between items-center mb-1.5">
-            <span className="text-xs text-gray-400">Progresso do curso</span>
-            <span className="text-xs font-medium text-[#FF6B00]">65%</span>
-          </div>
-          <Progress value={65} className="h-1.5 bg-[#29335C]/30 opacity-10" />
-        </div>
-      )}
+      
 
       {/* Navigation */}
       <div className="flex-1 overflow-y-auto px-2 space-y-1">
