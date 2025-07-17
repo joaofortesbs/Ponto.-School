@@ -682,9 +682,9 @@ export function SidebarNav({
                     <p className="text-xs text-[#001427]/70 dark:text-white/70 mb-0.5">
                       Nível {userProfile?.level || 1}
                     </p>
-                    <div className="w-24 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                    <div className="relative w-48 h-6 bg-orange-100 rounded-full shadow-lg overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-r from-[#FFD700] via-[#FF6B00] to-[#FF0000] rounded-full transition-all duration-300"
+                        className="h-full bg-gradient-to-r from-orange-400 to-orange-600 rounded-full transition-all duration-100 ease-out shadow-sm"
                         style={{
                           width: `${(() => {
                             const currentXP =
@@ -708,21 +708,23 @@ export function SidebarNav({
                               : 0;
                           })()}%`,
                         }}
-                      ></div>
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-xs font-medium text-gray-800 drop-shadow-sm">
+                          {(() => {
+                            const currentXP = userProfile?.experience_points || 0;
+                            const currentLevel = userProfile?.level || 1;
+                            const xpForNextLevel = currentLevel * 1000;
+
+                            if (currentLevel === 1 && currentXP === 0) {
+                              return "0 XP / 1.000 XP"; // Usuário novo
+                            }
+
+                            return `${currentXP.toLocaleString()} XP / ${xpForNextLevel.toLocaleString()} XP`;
+                          })()}
+                        </span>
+                      </div>
                     </div>
-                    <span className="text-[10px] text-[#FF6B00] mt-0.5">
-                      {(() => {
-                        const currentXP = userProfile?.experience_points || 0;
-                        const currentLevel = userProfile?.level || 1;
-                        const xpForNextLevel = currentLevel * 1000;
-
-                        if (currentLevel === 1 && currentXP === 0) {
-                          return "0 XP / 1.000 XP"; // Usuário novo
-                        }
-
-                        return `${currentXP.toLocaleString()} XP / ${xpForNextLevel.toLocaleString()} XP`;
-                      })()}
-                    </span>
                   </div>
                 </div>
               )}
@@ -860,9 +862,9 @@ export function SidebarNav({
                     <p className="text-xs text-[#001427]/70 dark:text-white/70 mb-0.5">
                       Nível {userProfile?.level || 1}
                     </p>
-                    <div className="w-24 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                    <div className="relative w-48 h-6 bg-orange-100 rounded-full shadow-lg overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-r from-[#FFD700] via-[#FF6B00] to-[#FF0000] rounded-full transition-all duration-300"
+                        className="h-full bg-gradient-to-r from-orange-400 to-orange-600 rounded-full transition-all duration-100 ease-out shadow-sm"
                         style={{
                           width: `${(() => {
                             const currentXP =
@@ -886,21 +888,23 @@ export function SidebarNav({
                               : 0;
                           })()}%`,
                         }}
-                      ></div>
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-xs font-medium text-gray-800 drop-shadow-sm">
+                          {(() => {
+                            const currentXP = userProfile?.experience_points || 0;
+                            const currentLevel = userProfile?.level || 1;
+                            const xpForNextLevel = currentLevel * 1000;
+
+                            if (currentLevel === 1 && currentXP === 0) {
+                              return "0 XP / 1.000 XP"; // Usuário novo
+                            }
+
+                            return `${currentXP.toLocaleString()} XP / ${xpForNextLevel.toLocaleString()} XP`;
+                          })()}
+                        </span>
+                      </div>
                     </div>
-                    <span className="text-[10px] text-[#FF6B00] mt-0.5">
-                      {(() => {
-                        const currentXP = userProfile?.experience_points || 0;
-                        const currentLevel = userProfile?.level || 1;
-                        const xpForNextLevel = currentLevel * 1000;
-
-                        if (currentLevel === 1 && currentXP === 0) {
-                          return "0 XP / 1.000 XP"; // Usuário novo
-                        }
-
-                        return `${currentXP.toLocaleString()} XP / ${xpForNextLevel.toLocaleString()} XP`;
-                      })()}
-                    </span>
                   </div>
                 </div>
               )}
