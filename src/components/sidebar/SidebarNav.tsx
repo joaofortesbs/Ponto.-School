@@ -99,7 +99,7 @@ export function SidebarNav({
     // Remover os listeners quando o componente for desmontado
     return () => {
       document.removeEventListener('userAvatarUpdated', handleAvatarUpdate as EventListener);
-      document.removeEventListener('usernameUpdated', handleAvatarUpdate as EventListener);
+      document.removeEventListener('usernameUpdated', handleUsernameUpdate as EventListener);
       document.removeEventListener('usernameReady', handleUsernameUpdate as EventListener);
       document.removeEventListener('usernameSynchronized', handleUsernameUpdate as EventListener);
     };
@@ -412,36 +412,6 @@ export function SidebarNav({
     },
   ];
 
-  const [headerUsername, setHeaderUsername] = useState<string | null>(null);
-
-  useEffect(() => {
-    // Atualiza o nome do cabeçalho ao montar o componente
-    setHeaderUsername(localStorage.getItem('userFirstName') || "Usuário");
-
-    // Listener para atualizações no nome de usuário
-    const handleUsernameUpdate = (event: CustomEvent) => {
-      if (event.detail?.displayName) {
-        setHeaderUsername(event.detail.displayName);
-      } else if (event.detail?.firstName) {
-        setHeaderUsername(event.detail.firstName);
-      }
-    };
-
-    document.addEventListener('usernameUpdated', handleUsernameUpdate as EventListener);
-    document.addEventListener('usernameReady', handleUsernameUpdate as EventListener);
-    document.addEventListener('usernameSynchronized', handleUsernameUpdate as EventListener);
-
-    return () => {
-      document.removeEventListener('usernameUpdated', handleUsernameUpdate as EventListener);
-      document.removeEventListener('usernameReady', handleUsernameUpdate as EventListener);
-      document.removeEventListener('usernameSynchronized', handleUsernameUpdate as EventListener);
-    };
-  }, []);
-
-  const handleFlipCard = () => {
-    setIsFlipped(!isFlipped);
-  };
-
   return (
     <div className="relative h-full">
       {showMentorAI && (
@@ -514,112 +484,185 @@ export function SidebarNav({
         </div>
       )}
 
-      {/* Card de informações do usuário com flip */}
+      {/* User Profile Component - Greeting and progress section - Apenas quando expandido */}
       {!isCollapsed && (
-        <div className="profile-card-container mb-4">
-          <div className={`profile-card ${isFlipped ? 'flipped' : ''}`}>
-            {/* Frente do card */}
-            <div className="profile-card-side profile-card-front">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="flip-button absolute top-2 right-2 z-10 p-1 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
-                onClick={handleFlipCard}
+        <div className={cn(
+          "bg-white dark:bg-[#001427] p-4 mb-4 flex flex-col items-center relative group mt-4"
+        )}>
+          {/* Card wrapper com bordas arredondadas e flip effect */}
+          <div className="relative w-full h-48" style={{ perspective: "1000px" }}>
+            <div
+              className={cn(
+                "absolute inset-0 w-full h-full transition-transform duration-700",
+                "transform-style-preserve-3d",
+                isFlipped ? "rotate-y-180" : ""
+              )}
+              style={{ transformStyle: "preserve-3d" }}
+            >
+              {/* Front Face */}
+              <div
+                className="absolute inset-0 w-full h-full bg-white dark:bg-[#29335C]/20 rounded-xl border border-gray-200 dark:border-[#29335C]/30 p-4 backdrop-blur-sm backface-hidden"
+                style={{ backfaceVisibility: "hidden" }}
               >
-                <RotateCcw className="w-4 h-4 text-white" />
-              </Button>
+                {/* Ícone de troca no canto superior direito */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-2 right-2 h-6 w-6 rounded-full hover:bg-white/10 text-[#FF6B00] hover:text-[#FF8C40] z-10"
+                  onClick={() => setIsFlipped(!isFlipped)}
+                >
+                  <RotateCcw className="h-3 w-3" />
+                </Button>
 
-              {/* Conteúdo da frente */}
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="h-12 w-12 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] flex items-center justify-center shadow-lg">
-                   {profileImage ? (
+                {/* Profile Image Component - Responsive avatar */}
+                <div className="relative mb-4 flex justify-center flex-col items-center">
+                  <div 
+                    className="rounded-full overflow-hidden bg-gradient-to-r from-[#FF6B00] via-[#FF8736] to-[#FFB366] p-0.5 cursor-pointer transition-all duration-300 w-20 h-20"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-[#001427] flex items-center justify-center">
+                      {profileImage ? (
                         <img
                           src={profileImage}
                           alt="Profile"
-                          className="w-full h-full object-cover rounded-full"
+                          className="w-full h-full object-cover"
                           onError={(e) => {
                             console.error("Error loading profile image");
                             setProfileImage(null);
                           }}
                         />
                       ) : (
-                  <span className="text-white font-bold text-lg">{firstName ? firstName.charAt(0).toUpperCase() : "U"}</span>
+                        <div className="w-full h-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
+                          <div className="bg-yellow-300 rounded-full flex items-center justify-center w-10 h-10">
+                            <span className="text-black font-bold text-lg">
+                              {firstName ? firstName.charAt(0).toUpperCase() : "U"}
+                            </span>
+                          </div>
+                        </div>
                       )}
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-[#001427] dark:text-white font-semibold text-sm">
-                    Olá, {headerUsername || 'Usuário'}!
+
+                {/* Informações do usuário */}
+                <div className="text-[#001427] dark:text-white text-center w-full">
+                  <h3 className="font-semibold text-base mb-2 flex items-center justify-center">
+                    <span className="mr-1">👋</span> Olá, {(() => {
+                      const firstName = userProfile?.full_name?.split(' ')[0] || 
+                                      userProfile?.display_name || 
+                                      localStorage.getItem('userFirstName') || 
+                                      "Estudante";
+                      return firstName;
+                    })()}!
                   </h3>
-                  <p className="text-[#001427]/70 dark:text-white/70 text-xs">
-                    Bem-vindo de volta
-                  </p>
+                  <div className="flex flex-col items-center mt-1">
+                    <p className="text-xs text-[#001427]/70 dark:text-white/70 mb-0.5">
+                      Nível {userProfile?.level || 1}
+                    </p>
+                    <div className="w-24 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-[#FFD700] via-[#FF6B00] to-[#FF0000] rounded-full transition-all duration-300"
+                        style={{ 
+                          width: `${(() => {
+                            const currentXP = userProfile?.experience_points || 0;
+                            const currentLevel = userProfile?.level || 1;
+                            const xpForNextLevel = currentLevel * 1000;
+                            const previousLevelXP = (currentLevel - 1) * 1000;
+                            const xpInCurrentLevel = currentXP - previousLevelXP;
+                            const xpNeededForLevel = xpForNextLevel - previousLevelXP;
+
+                            if (currentLevel === 1 && currentXP === 0) {
+                              return 0;
+                            }
+
+                            return xpNeededForLevel > 0 ? Math.round((xpInCurrentLevel / xpNeededForLevel) * 100) : 0;
+                          })()}%` 
+                        }}
+                      ></div>
+                    </div>
+                    <span className="text-[10px] text-[#FF6B00] mt-0.5">
+                      {(() => {
+                        const currentXP = userProfile?.experience_points || 0;
+                        const currentLevel = userProfile?.level || 1;
+                        const xpForNextLevel = currentLevel * 1000;
+
+                        if (currentLevel === 1 && currentXP === 0) {
+                          return "0 XP / 1.000 XP";
+                        }
+
+                        return `${currentXP.toLocaleString()} XP / ${xpForNextLevel.toLocaleString()} XP`;
+                      })()}
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              <div className="mb-3">
-                <div className="flex items-center justify-between text-xs mb-1">
-                  <span className="text-[#001427]/70 dark:text-white/70">Nível 5</span>
-                  <span className="text-[#001427]/70 dark:text-white/70">750/1000 XP</span>
-                </div>
-                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                  <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] h-2 rounded-full w-3/4 transition-all duration-500"></div>
-                </div>
-              </div>
-            </div>
-
-            {/* Verso do card */}
-            <div className="profile-card-side profile-card-back">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="flip-button absolute top-2 right-2 z-10 p-1 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
-                onClick={handleFlipCard}
+              {/* Back Face */}
+              <div
+                className="absolute inset-0 w-full h-full bg-gradient-to-br from-[#FF6B00]/10 to-[#FF8C40]/10 dark:bg-gradient-to-br dark:from-[#FF6B00]/20 dark:to-[#FF8C40]/20 rounded-xl border border-[#FF6B00]/30 p-4 backdrop-blur-sm backface-hidden rotate-y-180"
+                style={{ 
+                  backfaceVisibility: "hidden",
+                  transform: "rotateY(180deg)"
+                }}
               >
-                <RotateCcw className="w-4 h-4 text-white" />
-              </Button>
+                {/* Ícone de troca no canto superior direito */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-2 right-2 h-6 w-6 rounded-full hover:bg-white/10 text-[#FF6B00] hover:text-[#FF8C40] z-10"
+                  onClick={() => setIsFlipped(!isFlipped)}
+                >
+                  <RotateCcw className="h-3 w-3" />
+                </Button>
 
-              <div className="h-full flex flex-col justify-center">
-                <div className="text-center mb-4">
-                 <Trophy className="h-8 w-8 text-[#FF6B00] mx-auto mb-2" />
-                  <h3 className="text-[#001427] dark:text-white font-semibold text-sm mb-1">
-                    Estatísticas
-                  </h3>
-                </div>
+                {/* Conteúdo do verso */}
+                <div className="text-[#001427] dark:text-white text-center w-full h-full flex flex-col justify-center">
+                  <div className="mb-4">
+                    <Trophy className="h-8 w-8 text-[#FF6B00] mx-auto mb-2" />
+                    <h3 className="font-semibold text-base mb-1 text-[#FF6B00]">
+                      Estatísticas
+                    </h3>
+                  </div>
 
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-[#001427]/70 dark:text-white/70">Sessões de estudo:</span>
-                    <span className="text-[#001427] dark:text-white font-medium">24</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-[#001427]/70 dark:text-white/70">Tempo total:</span>
-                    <span className="text-[#001427] dark:text-white font-medium">48h</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-[#001427]/70 dark:text-white/70">Sequência atual:</span>
-                    <span className="text-[#FF6B00] font-bold">7 dias</span>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-[#001427]/70 dark:text-white/70">Sessões de estudo:</span>
+                      <span className="font-medium">12</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[#001427]/70 dark:text-white/70">Tempo total:</span>
+                      <span className="font-medium">4h 32min</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[#001427]/70 dark:text-white/70">Sequência atual:</span>
+                      <span className="font-medium text-[#FF6B00]">7 dias</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[#001427]/70 dark:text-white/70">Conquistas:</span>
+                      <span className="font-medium">3</span>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
+
+          {isUploading && (
+            <div className="mb-3 text-xs text-gray-500 dark:text-gray-400">
+              Enviando...
+            </div>
+          )}
+
+          {/* Hidden File Input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            className="hidden"
+          />
         </div>
       )}
-
-      {isUploading && (
-        <div className="mb-3 text-xs text-gray-500 dark:text-gray-400">
-          Enviando...
-        </div>
-      )}
-
-      {/* Hidden File Input */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        onChange={handleImageChange}
-        className="hidden"
-      />
 
       <ScrollArea className={cn(
         "py-2",
