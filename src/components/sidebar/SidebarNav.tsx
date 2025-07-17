@@ -63,7 +63,7 @@ export function SidebarNav({
   const navigate = useNavigate();
   const location = useLocation();
   const [showMentorAI, setShowMentorAI] = useState(false);
-  const [showNovidadesPopup, setShowNovidadesPopup = useState(false);
+  const [showNovidadesPopup, setShowNovidadesPopup] = useState(false);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
