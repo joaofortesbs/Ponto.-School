@@ -548,10 +548,7 @@ export function SidebarNav({
                 <div className="absolute top-3 left-3 z-10">
                   <div className="w-6 h-6">
                     <div className="w-full h-full rounded-full border-2 border-orange-500 bg-orange-600 bg-opacity-20 flex items-center justify-center">
-                      <GraduationCap 
-                        size={14} 
-                        className="text-orange-500" 
-                      />
+                      <GraduationCap size={14} className="text-orange-500" />
                     </div>
                   </div>
                 </div>
@@ -559,7 +556,7 @@ export function SidebarNav({
 
               {/* Ícone no canto superior direito quando expandido */}
               {!isCollapsed && (
-                <button 
+                <button
                   className="absolute top-3 right-3 w-6 h-6 rounded-md bg-gray-100 dark:bg-[#29335C]/40 hover:bg-gray-200 dark:hover:bg-[#29335C]/60 flex items-center justify-center transition-all duration-200 hover:scale-105"
                   onClick={() => setIsCardFlipped(!isCardFlipped)}
                 >
@@ -575,18 +572,20 @@ export function SidebarNav({
                     strokeLinejoin="round"
                     className="text-[#CC5500]"
                   >
-                    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
-                    <path d="M21 3v5h-5"/>
-                    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
-                    <path d="M8 16H3v5"/>
+                    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                    <path d="M21 3v5h-5" />
+                    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+                    <path d="M8 16H3v5" />
                   </svg>
                 </button>
               )}
               {/* Profile Image Component - Responsive avatar */}
-              <div className={cn(
-                "relative flex justify-center flex-col items-center",
-                isCollapsed ? "mb-1" : "mb-4"
-              )}>
+              <div
+                className={cn(
+                  "relative flex justify-center flex-col items-center",
+                  isCollapsed ? "mb-1" : "mb-4",
+                )}
+              >
                 <div
                   className={cn(
                     "rounded-full overflow-hidden bg-gradient-to-r from-[#FF6B00] via-[#FF8736] to-[#FFB366] p-0.5 cursor-pointer transition-all duration-300",
@@ -619,7 +618,9 @@ export function SidebarNav({
                               isCollapsed ? "text-xs" : "text-lg",
                             )}
                           >
-                            {firstName ? firstName.charAt(0).toUpperCase() : "U"}
+                            {firstName
+                              ? firstName.charAt(0).toUpperCase()
+                              : "U"}
                           </span>
                         </div>
                       </div>
@@ -686,11 +687,13 @@ export function SidebarNav({
                         className="h-full bg-gradient-to-r from-[#FFD700] via-[#FF6B00] to-[#FF0000] rounded-full transition-all duration-300"
                         style={{
                           width: `${(() => {
-                            const currentXP = userProfile?.experience_points || 0;
+                            const currentXP =
+                              userProfile?.experience_points || 0;
                             const currentLevel = userProfile?.level || 1;
                             const xpForNextLevel = currentLevel * 1000;
                             const previousLevelXP = (currentLevel - 1) * 1000;
-                            const xpInCurrentLevel = currentXP - previousLevelXP;
+                            const xpInCurrentLevel =
+                              currentXP - previousLevelXP;
                             const xpNeededForLevel =
                               xpForNextLevel - previousLevelXP;
 
@@ -736,11 +739,11 @@ export function SidebarNav({
               {!isCollapsed && (
                 <div className="absolute top-3 left-3 z-10">
                   <div className="w-6 h-6">
-                    <div className="w-full h-full rounded-full border-2 border-[#0630d8] bg-[#0f26aa] bg-opacity-20 flex items-center justify-center">
-                      <Briefcase 
-                        size={12} 
-                        className="text-[#0131fe]" 
-                        strokeWidth={2.5} 
+                    <div className="w-full h-full rounded-full border-2 border-[#2462EA] bg-[#0f26aa] bg-opacity-20 flex items-center justify-center">
+                      <Briefcase
+                        size={12}
+                        className="text-[#2462EA]"
+                        strokeWidth={2.5}
                       />
                     </div>
                   </div>
@@ -749,7 +752,7 @@ export function SidebarNav({
 
               {/* Ícone no canto superior direito quando expandido */}
               {!isCollapsed && (
-                <button 
+                <button
                   className="absolute top-3 right-3 w-6 h-6 rounded-md bg-gray-100 dark:bg-[#29335C]/40 hover:bg-gray-200 dark:hover:bg-[#29335C]/60 flex items-center justify-center transition-all duration-200 hover:scale-105"
                   onClick={() => setIsCardFlipped(!isCardFlipped)}
                 >
@@ -765,21 +768,23 @@ export function SidebarNav({
                     strokeLinejoin="round"
                     className="text-[#CC5500]"
                   >
-                    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
-                    <path d="M21 3v5h-5"/>
-                    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
-                    <path d="M8 16H3v5"/>
+                    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                    <path d="M21 3v5h-5" />
+                    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+                    <path d="M8 16H3v5" />
                   </svg>
                 </button>
               )}
               {/* Profile Image Component - Responsive avatar */}
-              <div className={cn(
-                "relative flex justify-center flex-col items-center",
-                isCollapsed ? "mb-1" : "mb-4"
-              )}>
+              <div
+                className={cn(
+                  "relative flex justify-center flex-col items-center",
+                  isCollapsed ? "mb-1" : "mb-4",
+                )}
+              >
                 <div
                   className={cn(
-                    "rounded-full overflow-hidden bg-gradient-to-r from-blue-500 via-purple-500 to-purple-600 p-0.5 cursor-pointer transition-all duration-300",
+                    "rounded-full overflow-hidden bg-gradient-to-r from-blue-500 via-purple-520 to-blue-600 p-0.5 cursor-pointer transition-all duration-300",
                     isCollapsed ? "w-10 h-10" : "w-20 h-20",
                   )}
                   onClick={() => fileInputRef.current?.click()}
@@ -809,7 +814,9 @@ export function SidebarNav({
                               isCollapsed ? "text-xs" : "text-lg",
                             )}
                           >
-                            {firstName ? firstName.charAt(0).toUpperCase() : "U"}
+                            {firstName
+                              ? firstName.charAt(0).toUpperCase()
+                              : "U"}
                           </span>
                         </div>
                       </div>
@@ -858,11 +865,13 @@ export function SidebarNav({
                         className="h-full bg-gradient-to-r from-[#FFD700] via-[#FF6B00] to-[#FF0000] rounded-full transition-all duration-300"
                         style={{
                           width: `${(() => {
-                            const currentXP = userProfile?.experience_points || 0;
+                            const currentXP =
+                              userProfile?.experience_points || 0;
                             const currentLevel = userProfile?.level || 1;
                             const xpForNextLevel = currentLevel * 1000;
                             const previousLevelXP = (currentLevel - 1) * 1000;
-                            const xpInCurrentLevel = currentXP - previousLevelXP;
+                            const xpInCurrentLevel =
+                              currentXP - previousLevelXP;
                             const xpNeededForLevel =
                               xpForNextLevel - previousLevelXP;
 
