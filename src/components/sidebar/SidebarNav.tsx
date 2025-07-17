@@ -688,8 +688,7 @@ export function SidebarNav({
                       <div
                         className="h-full rounded-full transition-all duration-100 ease-out shadow-sm"
                         style={{
-                          backgroundColor: '#FF6B00',
-                          opacity: 0.3,
+                          backgroundColor: 'rgba(255, 107, 0, 0.3)',
                           width: `${(() => {
                             const currentXP =
                               userProfile?.experience_points || 0;
@@ -873,8 +872,7 @@ export function SidebarNav({
                       <div
                         className="h-full rounded-full transition-all duration-100 ease-out shadow-sm"
                         style={{
-                          backgroundColor: '#FF6B00',
-                          opacity: 0.3,
+                          backgroundColor: 'rgba(255, 107, 0, 0.3)',
                           width: `${(() => {
                             const currentXP =
                               userProfile?.experience_points || 0;
