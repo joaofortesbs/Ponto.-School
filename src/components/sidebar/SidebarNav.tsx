@@ -822,6 +822,22 @@ export function SidebarNav({
                       className="h-full rounded-full transition-all duration-300"
                       style={{
                         backgroundColor: '#2462EA',
+                        width: `${(() => {
+                          const currentXP = userProfile?.experience_points || 0;
+                          const currentLevel = userProfile?.level || 1;
+                          const xpForNextLevel = currentLevel * 1000;
+                          const previousLevelXP = (currentLevel - 1) * 1000;
+                          const xpInCurrentLevel = currentXP - previousLevelXP;
+                          const xpNeededForLevel = xpForNextLevel - previousLevelXP;
+
+                          if (currentLevel === 1 && currentXP === 0) {
+                            return 0; // Usuário novo sem XP
+                          }
+
+                          return xpNeededForLevel > 0
+                            ? Math.round((xpInCurrentLevel / xpNeededForLevel) * 100)
+                            : 0;
+                        })()}%`,
                       }}
                     />
                   </div>
@@ -870,7 +886,7 @@ export function SidebarNav({
                             const xpNeededForLevel =
                               xpForNextLevel - previousLevelXP;
 
-                            if (currentLevel === 1 && currentXP === 0){
+                            if (currentLevel === 1 && currentXP === 0) {
                               return 0; // Usuário novo sem XP
                             }
 
