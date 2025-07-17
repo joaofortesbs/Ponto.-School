@@ -530,7 +530,7 @@ export function SidebarNav({
           {/* Profile Image Component - Responsive avatar */}
           <div className={cn(
             "relative flex justify-center flex-col items-center",
-            isCollapsed ? "mb-2" : "mb-4"
+            isCollapsed ? "mb-1" : "mb-4"
           )}>
             <div
               className={cn(
@@ -574,7 +574,7 @@ export function SidebarNav({
 
             {/* Barra de progresso - apenas quando minimizado */}
             {isCollapsed && (
-              <div className="mt-1 w-10 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div className="mt-2 w-10 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-full transition-all duration-300"
                   style={{ width: "0%" }}
