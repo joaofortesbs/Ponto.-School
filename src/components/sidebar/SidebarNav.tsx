@@ -523,16 +523,19 @@ export function SidebarNav({
         {/* Card wrapper com bordas arredondadas */}
         <div
           className={cn(
-            "bg-white dark:bg-[#29335C]/20 rounded-xl border border-gray-200 dark:border-[#29335C]/30 p-4 backdrop-blur-sm",
-            isCollapsed ? "w-14" : "w-full",
+            "bg-white dark:bg-[#29335C]/20 rounded-xl border border-gray-200 dark:border-[#29335C]/30 backdrop-blur-sm",
+            isCollapsed ? "w-14 p-2" : "w-full p-4",
           )}
         >
           {/* Profile Image Component - Responsive avatar */}
-          <div className="relative mb-4 flex justify-center flex-col items-center">
+          <div className={cn(
+            "relative flex justify-center flex-col items-center",
+            isCollapsed ? "mb-2" : "mb-4"
+          )}>
             <div
               className={cn(
                 "rounded-full overflow-hidden bg-gradient-to-r from-[#FF6B00] via-[#FF8736] to-[#FFB366] p-0.5 cursor-pointer transition-all duration-300",
-                isCollapsed ? "w-12 h-12" : "w-20 h-20",
+                isCollapsed ? "w-10 h-10" : "w-20 h-20",
               )}
               onClick={() => fileInputRef.current?.click()}
             >
@@ -552,7 +555,7 @@ export function SidebarNav({
                     <div
                       className={cn(
                         "bg-yellow-300 rounded-full flex items-center justify-center",
-                        isCollapsed ? "w-6 h-6" : "w-10 h-10",
+                        isCollapsed ? "w-5 h-5" : "w-10 h-10",
                       )}
                     >
                       <span
@@ -571,7 +574,7 @@ export function SidebarNav({
 
             {/* Barra de progresso - apenas quando minimizado */}
             {isCollapsed && (
-              <div className="mt-2 w-12 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div className="mt-1 w-10 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-full transition-all duration-300"
                   style={{ width: "0%" }}
@@ -671,7 +674,7 @@ export function SidebarNav({
       <ScrollArea
         className={cn(
           "py-2",
-          isCollapsed ? "h-[calc(100%-220px)]" : "h-[calc(100%-300px)]",
+          isCollapsed ? "h-[calc(100%-180px)]" : "h-[calc(100%-300px)]",
         )}
       >
         <nav className="grid gap-1 px-2">
