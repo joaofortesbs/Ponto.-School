@@ -630,12 +630,10 @@ export function SidebarNav({
 
                 {/* Barra de progresso - apenas quando minimizado */}
                 {isCollapsed && (
-                  <div className="mt-2 w-10 h-1.5 bg-orange-100 rounded-full overflow-hidden">
+                  <div className="mt-2 w-10 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                     <div
-                      className="h-full rounded-full transition-all duration-300"
-                      style={{
-                        backgroundColor: '#2462EA',
-                      }}
+                      className="h-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-full transition-all duration-300"
+                      style={{ width: "0%" }}
                     />
                   </div>
                 )}
@@ -686,9 +684,8 @@ export function SidebarNav({
                     </p>
                     <div className="relative w-20 h-2 bg-orange-100 rounded-full shadow-lg overflow-hidden">
                       <div
-                        className="h-full rounded-full transition-all duration-100 ease-out shadow-sm"
+                        className="h-full bg-gradient-to-r from-orange-400 to-orange-600 rounded-full transition-all duration-100 ease-out shadow-sm"
                         style={{
-                          backgroundColor: 'rgba(255, 107, 0, 0.3)',
                           width: `${(() => {
                             const currentXP =
                               userProfile?.experience_points || 0;
@@ -712,6 +709,21 @@ export function SidebarNav({
                           })()}%`,
                         }}
                       />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-[8px] font-medium text-gray-800 drop-shadow-sm">
+                          {(() => {
+                            const currentXP = userProfile?.experience_points || 0;
+                            const currentLevel = userProfile?.level || 1;
+                            const xpForNextLevel = currentLevel * 1000;
+
+                            if (currentLevel === 1 && currentXP === 0) {
+                              return "0 XP / 1.000 XP"; // Usuário novo
+                            }
+
+                            return `${currentXP.toLocaleString()} XP / ${xpForNextLevel.toLocaleString()} XP`;
+                          })()}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -816,28 +828,10 @@ export function SidebarNav({
 
                 {/* Barra de progresso - apenas quando minimizado */}
                 {isCollapsed && (
-                  <div className="mt-2 w-10 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="mt-2 w-10 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                     <div
-                      className="h-full rounded-full transition-all duration-300"
-                      style={{
-                        backgroundColor: '#2462EA',
-                        width: `${(() => {
-                          const currentXP = userProfile?.experience_points || 0;
-                          const currentLevel = userProfile?.level || 1;
-                          const xpForNextLevel = currentLevel * 1000;
-                          const previousLevelXP = (currentLevel - 1) * 1000;
-                          const xpInCurrentLevel = currentXP - previousLevelXP;
-                          const xpNeededForLevel = xpForNextLevel - previousLevelXP;
-
-                          if (currentLevel === 1 && currentXP === 0) {
-                            return 0; // Usuário novo sem XP
-                          }
-
-                          return xpNeededForLevel > 0
-                            ? Math.round((xpInCurrentLevel / xpNeededForLevel) * 100)
-                            : 0;
-                        })()}%`,
-                      }}
+                      className="h-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-full transition-all duration-300"
+                      style={{ width: "0%" }}
                     />
                   </div>
                 )}
@@ -870,9 +864,8 @@ export function SidebarNav({
                     </p>
                     <div className="relative w-20 h-2 bg-orange-100 rounded-full shadow-lg overflow-hidden">
                       <div
-                        className="h-full rounded-full transition-all duration-100 ease-out shadow-sm"
+                        className="h-full bg-gradient-to-r from-orange-400 to-orange-600 rounded-full transition-all duration-100 ease-out shadow-sm"
                         style={{
-                          backgroundColor: 'rgba(255, 107, 0, 0.3)',
                           width: `${(() => {
                             const currentXP =
                               userProfile?.experience_points || 0;
@@ -896,6 +889,21 @@ export function SidebarNav({
                           })()}%`,
                         }}
                       />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-[8px] font-medium text-gray-800 drop-shadow-sm">
+                          {(() => {
+                            const currentXP = userProfile?.experience_points || 0;
+                            const currentLevel = userProfile?.level || 1;
+                            const xpForNextLevel = currentLevel * 1000;
+
+                            if (currentLevel === 1 && currentXP === 0) {
+                              return "0 XP / 1.000 XP"; // Usuário novo
+                            }
+
+                            return `${currentXP.toLocaleString()} XP / ${xpForNextLevel.toLocaleString()} XP`;
+                          })()}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
