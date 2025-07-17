@@ -10,6 +10,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   Home,
   BookOpen,
+  Briefcase,
   ShoppingCart,
   Calendar,
   Users,
@@ -735,6 +736,21 @@ export function SidebarNav({
                 isCollapsed ? "w-14 p-2" : "w-full p-4",
               )}
             >
+              {/* Ícone de Briefcase no canto superior esquerdo quando expandido */}
+              {!isCollapsed && (
+                <div className="absolute top-3 left-3 z-10">
+                  <div className="w-6 h-6">
+                    <div className="w-full h-full rounded-full border-2 border-orange-500 bg-orange-600 bg-opacity-20 flex items-center justify-center">
+                      <Briefcase 
+                        size={12} 
+                        className="text-orange-500" 
+                        strokeWidth={2.5} 
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Ícone no canto superior direito quando expandido */}
               {!isCollapsed && (
                 <button 
