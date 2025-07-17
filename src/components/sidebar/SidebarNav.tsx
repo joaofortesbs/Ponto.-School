@@ -628,16 +628,6 @@ export function SidebarNav({
                   </div>
                 </div>
 
-                {/* Barra de progresso - apenas quando minimizado */}
-                {isCollapsed && (
-                  <div className="mt-2 w-10 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-full transition-all duration-300"
-                      style={{ width: "0%" }}
-                    />
-                  </div>
-                )}
-
                 {/* File input component */}
                 <input
                   type="file"
@@ -682,35 +672,6 @@ export function SidebarNav({
                     <p className="text-xs text-[#001427]/70 dark:text-white/70 mb-0.5">
                       Nível {userProfile?.level || 1}
                     </p>
-                    <div className="relative w-20 h-2 bg-orange-100 rounded-full shadow-lg overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-orange-400 to-orange-600 rounded-full transition-all duration-100 ease-out shadow-sm"
-                        style={{
-                          width: `${(() => {
-                            const currentXP =
-                              userProfile?.experience_points || 0;
-                            const currentLevel = userProfile?.level || 1;
-                            const xpForNextLevel = currentLevel * 1000;
-                            const previousLevelXP = (currentLevel - 1) * 1000;
-                            const xpInCurrentLevel =
-                              currentXP - previousLevelXP;
-                            const xpNeededForLevel =
-                              xpForNextLevel - previousLevelXP;
-
-                            if (currentLevel === 1 && currentXP === 0) {
-                              return 0; // Usuário novo sem XP
-                            }
-
-                            return xpNeededForLevel > 0
-                              ? Math.round(
-                                  (xpInCurrentLevel / xpNeededForLevel) * 100,
-                                )
-                              : 0;
-                          })()}%`,
-                        }}
-                      />
-                      
-                    </div>
                   </div>
                 </div>
               )}
@@ -811,16 +772,6 @@ export function SidebarNav({
                     )}
                   </div>
                 </div>
-
-                {/* Barra de progresso - apenas quando minimizado */}
-                {isCollapsed && (
-                  <div className="mt-2 w-10 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-full transition-all duration-300"
-                      style={{ width: "0%" }}
-                    />
-                  </div>
-                )}
               </div>
 
               {isUploading && (
@@ -848,35 +799,6 @@ export function SidebarNav({
                     <p className="text-xs text-[#001427]/70 dark:text-white/70 mb-0.5">
                       Nível {userProfile?.level || 1}
                     </p>
-                    <div className="relative w-20 h-2 bg-orange-100 rounded-full shadow-lg overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-orange-400 to-orange-600 rounded-full transition-all duration-100 ease-out shadow-sm"
-                        style={{
-                          width: `${(() => {
-                            const currentXP =
-                              userProfile?.experience_points || 0;
-                            const currentLevel = userProfile?.level || 1;
-                            const xpForNextLevel = currentLevel * 1000;
-                            const previousLevelXP = (currentLevel - 1) * 1000;
-                            const xpInCurrentLevel =
-                              currentXP - previousLevelXP;
-                            const xpNeededForLevel =
-                              xpForNextLevel - previousLevelXP;
-
-                            if (currentLevel === 1 && currentXP === 0) {
-                              return 0; // Usuário novo sem XP
-                            }
-
-                            return xpNeededForLevel > 0
-                              ? Math.round(
-                                  (xpInCurrentLevel / xpNeededForLevel) * 100,
-                                )
-                              : 0;
-                          })()}%`,
-                        }}
-                      />
-                      
-                    </div>
                   </div>
                 </div>
               )}
