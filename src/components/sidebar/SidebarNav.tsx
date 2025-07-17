@@ -68,7 +68,7 @@ export function SidebarNav({
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [profileImage, setProfileImage] = useState<string | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
+  const [isUploading, setIsUploading] = useState(isCollapsed);
   const [firstName, setFirstName] = useState<string | null>(null);
   const [isCardFlipped, setIsCardFlipped] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -672,6 +672,17 @@ export function SidebarNav({
                     <p className="text-xs text-[#001427]/70 dark:text-white/70 mb-0.5">
                       Nível {userProfile?.level || 1}
                     </p>
+                    <div className="flex justify-center">
+                      <div 
+                        className="h-1.5 bg-[#FF6B00] rounded-full opacity-30"
+                        style={{ width: "80px" }}
+                      >
+                        <div 
+                          className="h-full bg-[#FF6B00] rounded-full transition-all duration-300"
+                          style={{ width: "65%" }}
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
