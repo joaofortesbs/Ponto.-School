@@ -487,31 +487,33 @@ export function SidebarNav({
         "bg-white dark:bg-[#001427] p-4 mb-4 flex flex-col items-center relative group",
         isCollapsed ? "mt-6" : "mt-4"
       )}>
-        {/* Profile Image Component - Responsive avatar */}
-        <div className="relative mb-4 flex justify-center flex-col items-center">
-          <div 
-            className={cn(
-              "rounded-full overflow-hidden bg-gradient-to-r from-[#FF6B00] via-[#FF8736] to-[#FFB366] p-0.5 cursor-pointer transition-all duration-300",
-              isCollapsed ? "w-12 h-12" : "w-20 h-20"
-            )}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-[#001427] flex items-center justify-center">
-              {profileImage ? (
-                <img
-                  src={profileImage}
-                  alt="Profile"
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    console.error("Error loading profile image");
-                    setProfileImage(null);
-                  }}
-                />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
-                  <div className={cn(
-                    "bg-yellow-300 rounded-full flex items-center justify-center",
-                    isCollapsed ? "w-6 h-6" : "w-10 h-10"
+        {/* Card wrapper com bordas arredondadas */}
+        <div className="bg-white dark:bg-[#29335C]/20 rounded-xl border border-gray-200 dark:border-[#29335C]/30 p-4 w-full backdrop-blur-sm">
+          {/* Profile Image Component - Responsive avatar */}
+          <div className="relative mb-4 flex justify-center flex-col items-center">
+            <div 
+              className={cn(
+                "rounded-full overflow-hidden bg-gradient-to-r from-[#FF6B00] via-[#FF8736] to-[#FFB366] p-0.5 cursor-pointer transition-all duration-300",
+                isCollapsed ? "w-12 h-12" : "w-20 h-20"
+              )}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-[#001427] flex items-center justify-center">
+                {profileImage ? (
+                  <img
+                    src={profileImage}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      console.error("Error loading profile image");
+                      setProfileImage(null);
+                    }}
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
+                    <div className={cn(
+                      "bg-yellow-300 rounded-full flex items-center justify-center",
+                      isCollapsed ? "w-6 h-6" : "w-10 h-10"
                   )}>
                     <span className={cn(
                       "text-black font-bold",
@@ -614,6 +616,7 @@ export function SidebarNav({
             </div>
           </div>
         )}
+        </div>
       </div>
 
       <ScrollArea className={cn(
