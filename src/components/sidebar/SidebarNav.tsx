@@ -488,10 +488,10 @@ export function SidebarNav({
         isCollapsed ? "mt-6" : "mt-4"
       )}>
         {/* Card wrapper com bordas arredondadas */}
-        { !isCollapsed && (
-        <div className="bg-white dark:bg-[#29335C]/20 rounded-xl border border-gray-200 dark:border-[#29335C]/30 p-4 w-full backdrop-blur-sm">
-          {/* Profile Image Component - Responsive avatar */}
-          <div className="relative mb-4 flex justify-center flex-col items-center">
+        {!isCollapsed && (
+          <div className="bg-white dark:bg-[#29335C]/20 rounded-xl border border-gray-200 dark:border-[#29335C]/30 p-4 w-full backdrop-blur-sm">
+            {/* Profile Image Component - Responsive avatar */}
+            <div className="relative mb-4 flex justify-center flex-col items-center"></div>
             <div 
               className={cn(
                 "rounded-full overflow-hidden bg-gradient-to-r from-[#FF6B00] via-[#FF8736] to-[#FFB366] p-0.5 cursor-pointer transition-all duration-300",
@@ -616,8 +616,8 @@ export function SidebarNav({
               </span>
             </div>
           </div>
+          </div>
         )}
-        </div>
       </div>
 
       <ScrollArea className={cn(
