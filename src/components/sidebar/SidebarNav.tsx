@@ -68,7 +68,7 @@ export function SidebarNav({
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [profileImage, setProfileImage] = useState<string | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
+  const [isUploading, setIsUploading] = useState(isUploading);
   const [firstName, setFirstName] = useState<string | null>(null);
   const [isCardFlipped, setIsCardFlipped] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -575,14 +575,10 @@ export function SidebarNav({
                     strokeLinejoin="round"
                     className="text-[#CC5500]"
                   >
-                    <path d="M16 3h5v5"/>
-                    <path d="M8 3H3v5"/>
-                    <path d="M12 22v-8.3a4 4 0 0 0-1.172-2.872L3 3"/>
-                    <path d="m21 3-7.5 7.5"/>
-                    <path d="M16 21h5v-5"/>
-                    <path d="M8 21H3v-5"/>
-                    <path d="M12 2v8.3a4 4 0 0 0 1.172 2.872L21 21"/>
-                    <path d="m3 21 7.5-7.5"/>
+                    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                    <path d="M21 3v5h-5"/>
+                    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+                    <path d="M8 16H3v5"/>
                   </svg>
                 </button>
               )}
@@ -769,14 +765,10 @@ export function SidebarNav({
                     strokeLinejoin="round"
                     className="text-[#CC5500]"
                   >
-                    <path d="M16 3h5v5"/>
-                    <path d="M8 3H3v5"/>
-                    <path d="M12 22v-8.3a4 4 0 0 0-1.172-2.872L3 3"/>
-                    <path d="m21 3-7.5 7.5"/>
-                    <path d="M16 21h5v-5"/>
-                    <path d="M8 21H3v-5"/>
-                    <path d="M12 2v8.3a4 4 0 0 0 1.172 2.872L21 21"/>
-                    <path d="m3 21 7.5-7.5"/>
+                    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                    <path d="M21 3v5h-5"/>
+                    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+                    <path d="M8 16H3v5"/>
                   </svg>
                 </button>
               )}
