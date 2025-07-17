@@ -758,6 +758,13 @@ export function SidebarNav({
           isCollapsed ? "h-[calc(100%-180px)]" : "h-[calc(100%-300px)]",
         )}
       >
+
+      <ScrollArea
+        className={cn(
+          "py-2",
+          isCollapsed ? "h-[calc(100%-180px)]" : "h-[calc(100%-300px)]",
+        )}
+      >
         <nav className="grid gap-1 px-2">
           {navItems.map((item, index) => (
             <div key={index} className="relative">
