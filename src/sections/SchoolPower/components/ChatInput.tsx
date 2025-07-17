@@ -659,7 +659,16 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true }) => {
                         ease: [0.25, 0.1, 0.25, 1],
                       }}
                     >
-                      <TextShimmerWave className='font-mono text-sm text-white' duration={1.5}>
+                      <TextShimmerWave 
+                        className='font-mono text-sm text-white' 
+                        duration={1.5}
+                        zDistance={8}
+                        xDistance={1.5}
+                        yDistance={-1.5}
+                        scaleDistance={1.08}
+                        rotateYDistance={8}
+                        spread={1.2}
+                      >
                         {selectedMode === "Agente IA"
                           ? "Seu Agente IA está pensando em uma resposta para isso..."
                           : "Seu Assistente IA está pensando em uma resposta para isso..."}
