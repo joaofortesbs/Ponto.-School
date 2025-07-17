@@ -10,7 +10,6 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   Home,
   BookOpen,
-  Briefcase,
   ShoppingCart,
   Calendar,
   Users,
@@ -442,9 +441,6 @@ export function SidebarNav({
       isSpecial: true,
     },
   ];
-
-  const [currentMode, setCurrentMode] = useState("Modo"); // State to store the current mode
-  const [lastAccess, setLastAccess] = useState("Tempo"); // State to store the last access time
 
   return (
     <div className="relative h-full">
@@ -892,37 +888,6 @@ export function SidebarNav({
                 </div>
               )}
             </div>
-          {/* Verso do card - informações do usuário */}
-              <div className="absolute inset-0 backface-hidden rotate-y-180 bg-[#001427] rounded-xl p-4">
-                {/* Ícone de maleta no canto superior esquerdo do verso */}
-                {!isCollapsed && (
-                <div className="absolute top-3 left-3 z-10">
-                  <div className="w-6 h-6">
-                    <div className="w-full h-full rounded-full border-2 border-orange-500 bg-orange-600 bg-opacity-20 flex items-center justify-center">
-                      <Briefcase 
-                        size={12} 
-                        className="text-orange-500"
-                        strokeWidth={2.5} 
-                      />
-                    </div>
-                  </div>
-                </div>
-                )}
-
-                <div className="flex flex-col items-center justify-center h-full space-y-2">
-                  {/* Aqui você pode adicionar as informações do usuário que deseja exibir no verso do card */}
-                  {/* Por exemplo: */}
-                  <div className="text-xs text-gray-400 text-center">
-                    Modo: {currentMode}
-                  </div>
-                  <div className="text-xs text-gray-400 text-center">
-                    Status: Online
-                  </div>
-                  <div className="text-xs text-gray-400 text-center">
-                    Último acesso: {lastAccess}
-                  </div>
-                </div>
-              </div>
           </div>
         </div>
       </div>
