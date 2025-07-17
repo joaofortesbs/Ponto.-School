@@ -87,7 +87,7 @@ const Sidebar: React.FC<SidebarProps> = ({ className, isCollapsed }) => {
             <span className="text-xs text-gray-400">Progresso do curso</span>
             <span className="text-xs font-medium text-[#FF6B00]">65%</span>
           </div>
-          <Progress value={65} className="h-1.5 bg-[#29335C]/30 opacity-30" />
+          <Progress value={65} className="h-1.5 bg-[#29335C]/30 opacity-10" />
         </div>
       )}
 
