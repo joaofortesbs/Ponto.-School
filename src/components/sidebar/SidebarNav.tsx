@@ -7,7 +7,6 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import type { UserProfile } from "@/types/user-profile";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Home,
   BookOpen,
@@ -70,7 +69,6 @@ export function SidebarNav({
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [firstName, setFirstName] = useState<string | null>(null);
-  const [isFlipped, setIsFlipped] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -208,10 +206,6 @@ export function SidebarNav({
 
   const handleImageUploadClick = () => {
     fileInputRef.current?.click();
-  };
-
-  const handleFlipCard = () => {
-    setIsFlipped(!isFlipped);
   };
 
   const handleImageChange = async (
@@ -529,35 +523,13 @@ export function SidebarNav({
         {/* Card wrapper com bordas arredondadas */}
         <div
           className={cn(
-            "relative",
-            isCollapsed ? "w-14 h-14" : "w-full h-auto",
+            "bg-white dark:bg-[#29335C]/20 rounded-xl border border-gray-200 dark:border-[#29335C]/30 backdrop-blur-sm relative",
+            isCollapsed ? "w-14 p-2" : "w-full p-4",
           )}
-          style={{ perspective: "1000px" }}
         >
-          <motion.div
-            className={cn(
-              "bg-white dark:bg-[#29335C]/20 rounded-xl border border-gray-200 dark:border-[#29335C]/30 backdrop-blur-sm relative",
-              isCollapsed ? "w-14 p-2" : "w-full p-4",
-            )}
-            animate={{ rotateY: isFlipped ? 180 : 0 }}
-            transition={{ 
-              duration: 0.6, 
-              ease: "easeInOut",
-              type: "spring",
-              damping: 20,
-              stiffness: 100
-            }}
-            style={{ 
-              transformStyle: "preserve-3d",
-              backfaceVisibility: "hidden"
-            }}
-          >
           {/* Ícone no canto superior direito quando expandido */}
           {!isCollapsed && (
-            <button 
-              onClick={handleFlipCard}
-              className="absolute top-3 right-3 w-6 h-6 rounded-md bg-gray-100 dark:bg-[#29335C]/40 hover:bg-gray-200 dark:hover:bg-[#29335C]/60 flex items-center justify-center transition-all duration-200 hover:scale-105"
-            >
+            <button className="absolute top-3 right-3 w-6 h-6 rounded-md bg-gray-100 dark:bg-[#29335C]/40 hover:bg-gray-200 dark:hover:bg-[#29335C]/60 flex items-center justify-center transition-all duration-200 hover:scale-105">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="14"
@@ -662,114 +634,66 @@ export function SidebarNav({
           />
 
           {!isCollapsed && (
-            <div 
-              className="text-[#001427] dark:text-white text-center w-full"
-              style={{
-                transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
-                backfaceVisibility: "hidden"
-              }}
-            >
-              <AnimatePresence mode="wait">
-                {!isFlipped ? (
-                  <motion.div
-                    key="front"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <h3 className="font-semibold text-base mb-2 flex items-center justify-center">
-                      <span className="mr-1">👋</span> Olá,{" "}
-                      {(() => {
-                        // Obter o primeiro nome com a mesma lógica do Dashboard
-                        const firstName =
-                          userProfile?.full_name?.split(" ")[0] ||
-                          userProfile?.display_name ||
-                          localStorage.getItem("userFirstName") ||
-                          "Estudante";
-                        return firstName;
-                      })()}
-                      !
-                    </h3>
-                    <div className="flex flex-col items-center mt-1">
-                      <p className="text-xs text-[#001427]/70 dark:text-white/70 mb-0.5">
-                        Nível {userProfile?.level || 1}
-                      </p>
-                      <div className="w-24 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-gradient-to-r from-[#FFD700] via-[#FF6B00] to-[#FF0000] rounded-full transition-all duration-300"
-                          style={{
-                            width: `${(() => {
-                              const currentXP = userProfile?.experience_points || 0;
-                              const currentLevel = userProfile?.level || 1;
-                              const xpForNextLevel = currentLevel * 1000;
-                              const previousLevelXP = (currentLevel - 1) * 1000;
-                              const xpInCurrentLevel = currentXP - previousLevelXP;
-                              const xpNeededForLevel =
-                                xpForNextLevel - previousLevelXP;
+            <div className="text-[#001427] dark:text-white text-center w-full">
+              <h3 className="font-semibold text-base mb-2 flex items-center justify-center">
+                <span className="mr-1">👋</span> Olá,{" "}
+                {(() => {
+                  // Obter o primeiro nome com a mesma lógica do Dashboard
+                  const firstName =
+                    userProfile?.full_name?.split(" ")[0] ||
+                    userProfile?.display_name ||
+                    localStorage.getItem("userFirstName") ||
+                    "Estudante";
+                  return firstName;
+                })()}
+                !
+              </h3>
+              <div className="flex flex-col items-center mt-1">
+                <p className="text-xs text-[#001427]/70 dark:text-white/70 mb-0.5">
+                  Nível {userProfile?.level || 1}
+                </p>
+                <div className="w-24 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-[#FFD700] via-[#FF6B00] to-[#FF0000] rounded-full transition-all duration-300"
+                    style={{
+                      width: `${(() => {
+                        const currentXP = userProfile?.experience_points || 0;
+                        const currentLevel = userProfile?.level || 1;
+                        const xpForNextLevel = currentLevel * 1000;
+                        const previousLevelXP = (currentLevel - 1) * 1000;
+                        const xpInCurrentLevel = currentXP - previousLevelXP;
+                        const xpNeededForLevel =
+                          xpForNextLevel - previousLevelXP;
 
-                              if (currentLevel === 1 && currentXP === 0) {
-                                return 0; // Usuário novo sem XP
-                              }
+                        if (currentLevel === 1 && currentXP === 0) {
+                          return 0; // Usuário novo sem XP
+                        }
 
-                              return xpNeededForLevel > 0
-                                ? Math.round(
-                                    (xpInCurrentLevel / xpNeededForLevel) * 100,
-                                  )
-                                : 0;
-                            })()}%`,
-                          }}
-                        ></div>
-                      </div>
-                      <span className="text-[10px] text-[#FF6B00] mt-0.5">
-                        {(() => {
-                          const currentXP = userProfile?.experience_points || 0;
-                          const currentLevel = userProfile?.level || 1;
-                          const xpForNextLevel = currentLevel * 1000;
+                        return xpNeededForLevel > 0
+                          ? Math.round(
+                              (xpInCurrentLevel / xpNeededForLevel) * 100,
+                            )
+                          : 0;
+                      })()}%`,
+                    }}
+                  ></div>
+                </div>
+                <span className="text-[10px] text-[#FF6B00] mt-0.5">
+                  {(() => {
+                    const currentXP = userProfile?.experience_points || 0;
+                    const currentLevel = userProfile?.level || 1;
+                    const xpForNextLevel = currentLevel * 1000;
 
-                          if (currentLevel === 1 && currentXP === 0) {
-                            return "0 XP / 1.000 XP"; // Usuário novo
-                          }
+                    if (currentLevel === 1 && currentXP === 0) {
+                      return "0 XP / 1.000 XP"; // Usuário novo
+                    }
 
-                          return `${currentXP.toLocaleString()} XP / ${xpForNextLevel.toLocaleString()} XP`;
-                        })()}
-                      </span>
-                    </div>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="back"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                    style={{ transform: "rotateY(180deg)" }}
-                  >
-                    <h3 className="font-semibold text-base mb-2 flex items-center justify-center">
-                      <span className="mr-1">⚡</span> Estatísticas
-                    </h3>
-                    <div className="flex flex-col items-center mt-1 space-y-2">
-                      <div className="text-xs text-[#001427]/70 dark:text-white/70">
-                        <div className="flex justify-between items-center w-full mb-1">
-                          <span>Sessões:</span>
-                          <span className="text-[#FF6B00] font-medium">0</span>
-                        </div>
-                        <div className="flex justify-between items-center w-full mb-1">
-                          <span>Tempo Total:</span>
-                          <span className="text-[#FF6B00] font-medium">0h 0m</span>
-                        </div>
-                        <div className="flex justify-between items-center w-full">
-                          <span>Sequência:</span>
-                          <span className="text-[#FF6B00] font-medium">0 dias</span>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                    return `${currentXP.toLocaleString()} XP / ${xpForNextLevel.toLocaleString()} XP`;
+                  })()}
+                </span>
+              </div>
             </div>
           )}
-        </motion.div>
         </div>
       </div>
 
