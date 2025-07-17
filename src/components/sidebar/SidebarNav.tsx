@@ -391,7 +391,7 @@ export function SidebarNav({
         },
       ],
     },
-    
+
     {
       icon: <Trophy className="h-5 w-5" />,
       label: "Conquistas",
@@ -488,6 +488,7 @@ export function SidebarNav({
         isCollapsed ? "mt-6" : "mt-4"
       )}>
         {/* Card wrapper com bordas arredondadas */}
+        { !isCollapsed && (
         <div className="bg-white dark:bg-[#29335C]/20 rounded-xl border border-gray-200 dark:border-[#29335C]/30 p-4 w-full backdrop-blur-sm">
           {/* Profile Image Component - Responsive avatar */}
           <div className="relative mb-4 flex justify-center flex-col items-center">
