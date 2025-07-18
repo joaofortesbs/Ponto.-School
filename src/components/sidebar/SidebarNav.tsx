@@ -628,6 +628,21 @@ export function SidebarNav({
                   </div>
                 </div>
 
+                {/* Barra de progresso quando colapsado */}
+                {isCollapsed && (
+                  <div className="flex justify-center mt-1">
+                    <div 
+                      className="h-1 bg-[#FF6B00] rounded-full opacity-30"
+                      style={{ width: "40px" }}
+                    >
+                      <div 
+                        className="h-full bg-[#FF6B00] rounded-full transition-all duration-300"
+                        style={{ width: "65%" }}
+                      />
+                    </div>
+                  </div>
+                )}
+
                 {/* File input component */}
                 <input
                   type="file"
@@ -783,6 +798,21 @@ export function SidebarNav({
                     )}
                   </div>
                 </div>
+
+                {/* Barra de progresso quando colapsado */}
+                {isCollapsed && (
+                  <div className="flex justify-center mt-1">
+                    <div 
+                      className="h-1 bg-[#2461E7] rounded-full opacity-30"
+                      style={{ width: "40px" }}
+                    >
+                      <div 
+                        className="h-full bg-[#2461E7] rounded-full transition-all duration-300"
+                        style={{ width: "65%" }}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               {isUploading && (
