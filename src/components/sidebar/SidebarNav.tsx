@@ -543,17 +543,6 @@ export function SidebarNav({
                 isCollapsed ? "w-14 p-2" : "w-full p-4",
               )}
             >
-              {/* Ícone de graduação no canto superior esquerdo quando expandido */}
-              {!isCollapsed && (
-                <div className="absolute top-3 left-3 z-10">
-                  <div className="w-6 h-6">
-                    <div className="w-full h-full rounded-full border-2 border-orange-500 bg-orange-600 bg-opacity-20 flex items-center justify-center">
-                      <GraduationCap size={14} className="text-orange-500" />
-                    </div>
-                  </div>
-                </div>
-              )}
-
               {/* Botão Flip circular na mesma altura do ícone de graduação */}
               {!isCollapsed && (
                 <button
@@ -589,11 +578,20 @@ export function SidebarNav({
               >
                 <div
                   className={cn(
-                    "rounded-full overflow-hidden bg-gradient-to-r from-[#FF6B00] via-[#FF8736] to-[#FFB366] p-0.5 cursor-pointer transition-all duration-300",
+                    "relative rounded-full overflow-hidden bg-gradient-to-r from-[#FF6B00] via-[#FF8736] to-[#FFB366] p-0.5 cursor-pointer transition-all duration-300",
                     isCollapsed ? "w-10 h-10" : "w-20 h-20",
                   )}
                   onClick={() => fileInputRef.current?.click()}
                 >
+                  {/* Ícone de graduação posicionado no canto superior esquerdo sobre a imagem de perfil */}
+                  {!isCollapsed && (
+                    <div className="absolute -top-1 -left-1 z-20">
+                      <div className="w-6 h-6 rounded-full border-2 border-orange-500 bg-orange-600 bg-opacity-20 flex items-center justify-center shadow-lg">
+                        <GraduationCap size={14} className="text-orange-500" />
+                      </div>
+                    </div>
+                  )}
+                  
                   <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-[#001427] flex items-center justify-center">
                     {profileImage ? (
                       <img
@@ -720,21 +718,6 @@ export function SidebarNav({
                 isCollapsed ? "w-14 p-2" : "w-full p-4",
               )}
             >
-              {/* Ícone de Briefcase no canto superior esquerdo quando expandido */}
-              {!isCollapsed && (
-                <div className="absolute top-3 left-3 z-10">
-                  <div className="w-6 h-6">
-                    <div className="w-full h-full rounded-full border-2 border-[#2462EA] bg-[#0f26aa] bg-opacity-20 flex items-center justify-center">
-                      <Briefcase
-                        size={12}
-                        className="text-[#2462EA]"
-                        strokeWidth={2.5}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
               {/* Botão Flip circular na mesma altura do ícone de Briefcase */}
               {!isCollapsed && (
                 <button
@@ -770,11 +753,24 @@ export function SidebarNav({
               >
                 <div
                   className={cn(
-                    "rounded-full overflow-hidden bg-gradient-to-r from-blue-500 via-purple-520 to-blue-600 p-0.5 cursor-pointer transition-all duration-300",
+                    "relative rounded-full overflow-hidden bg-gradient-to-r from-blue-500 via-purple-520 to-blue-600 p-0.5 cursor-pointer transition-all duration-300",
                     isCollapsed ? "w-10 h-10" : "w-20 h-20",
                   )}
                   onClick={() => fileInputRef.current?.click()}
                 >
+                  {/* Ícone de Briefcase posicionado no canto superior esquerdo sobre a imagem de perfil */}
+                  {!isCollapsed && (
+                    <div className="absolute -top-1 -left-1 z-20">
+                      <div className="w-6 h-6 rounded-full border-2 border-[#2462EA] bg-[#0f26aa] bg-opacity-20 flex items-center justify-center shadow-lg">
+                        <Briefcase
+                          size={12}
+                          className="text-[#2462EA]"
+                          strokeWidth={2.5}
+                        />
+                      </div>
+                    </div>
+                  )}
+                  
                   <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-[#001427] flex items-center justify-center">
                     {profileImage ? (
                       <img
