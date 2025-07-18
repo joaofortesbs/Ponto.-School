@@ -630,7 +630,7 @@ export function SidebarNav({
 
                 {/* Barra de progresso quando colapsado */}
                 {isCollapsed && (
-                  <div className="flex justify-center mt-1">
+                  <div className="flex justify-center mt-2">
                     <div 
                       className="h-1 bg-[#FF6B00] rounded-full opacity-30"
                       style={{ width: "40px" }}
@@ -801,7 +801,7 @@ export function SidebarNav({
 
                 {/* Barra de progresso quando colapsado */}
                 {isCollapsed && (
-                  <div className="flex justify-center mt-1">
+                  <div className="flex justify-center mt-2">
                     <div 
                       className="h-1 bg-[#2461E7] rounded-full opacity-30"
                       style={{ width: "40px" }}
