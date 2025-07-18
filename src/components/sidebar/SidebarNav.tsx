@@ -698,6 +698,15 @@ export function SidebarNav({
                         />
                       </div>
                     </div>
+                    <div className="flex justify-center mt-2">
+                      <div 
+                        className="px-3 py-1 border border-[#FF6B00] bg-[#FF6B00] bg-opacity-20 rounded-md"
+                      >
+                        <span className="text-xs font-medium text-[#FF6B00]">
+                          ALUNO
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
