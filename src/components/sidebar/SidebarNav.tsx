@@ -546,7 +546,7 @@ export function SidebarNav({
               {/* Ícone de graduação no canto superior esquerdo quando expandido */}
               {!isCollapsed && (
                 <div className="absolute top-3 left-3 z-10">
-                  <div className="w-6 h-6">
+                  <div className="w-7 h-7">
                     <div className="w-full h-full rounded-full border-2 border-orange-500 bg-orange-600 bg-opacity-20 flex items-center justify-center">
                       <GraduationCap size={14} className="text-orange-500" />
                     </div>
@@ -723,7 +723,7 @@ export function SidebarNav({
               {/* Ícone de Briefcase no canto superior esquerdo quando expandido */}
               {!isCollapsed && (
                 <div className="absolute top-3 left-3 z-10">
-                  <div className="w-6 h-6">
+                  <div className="w-7 h-7">
                     <div className="w-full h-full rounded-full border-2 border-[#2462EA] bg-[#0f26aa] bg-opacity-20 flex items-center justify-center">
                       <Briefcase
                         size={12}
