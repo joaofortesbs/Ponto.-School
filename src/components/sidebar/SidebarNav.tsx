@@ -846,32 +846,27 @@ export function SidebarNav({
                     !
                   </h3>
                   <div className="flex flex-col items-center mt-1">
-                    <div className="space-y-1">
-                      <p className="text-sm text-white/90 leading-relaxed">
-                        
-                      </p>
-                      <div className="flex justify-center mt-2">
+                    <p className="text-xs text-[#001427]/70 dark:text-white/70 mb-0.5">
+                      Nível {userProfile?.level || 1}
+                    </p>
+                    <div className="flex justify-center">
+                      <div 
+                        className="h-1.5 bg-[#2461E7] rounded-full opacity-30"
+                        style={{ width: "80px" }}
+                      >
                         <div 
-                          className="px-5 py-0.5 border border-[#2461E7] bg-[#2461E7] bg-opacity-20 rounded-md flex items-center justify-center"
-                        >
-                          <span className="text-xs font-medium text-[#2461E7]">
-                            PROFESSOR
-                          </span>
-                        </div>
+                          className="h-full bg-[#2461E7] rounded-full transition-all duration-300"
+                          style={{ width: "65%" }}
+                        />
                       </div>
-                      <p className="text-xs text-[#001427]/70 dark:text-white/70 mb-0.5">
-                        Nível {userProfile?.level || 1}
-                      </p>
-                      <div className="flex justify-center">
-                        <div 
-                          className="h-1.5 bg-[#2461E7] rounded-full opacity-30"
-                          style={{ width: "80px" }}
-                        >
-                          <div 
-                            className="h-full bg-[#2461E7] rounded-full transition-all duration-300"
-                            style={{ width: "65%" }}
-                          />
-                        </div>
+                    </div>
+                    <div className="flex justify-center mt-2">
+                      <div 
+                        className="px-5 py-0.5 border border-[#2461E7] bg-[#2461E7] bg-opacity-20 rounded-md flex items-center justify-center"
+                      >
+                        <span className="text-xs font-medium text-[#2461E7]">
+                          PROFESSOR
+                        </span>
                       </div>
                     </div>
                   </div>
