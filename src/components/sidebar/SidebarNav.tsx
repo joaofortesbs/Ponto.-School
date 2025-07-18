@@ -579,6 +579,33 @@ export function SidebarNav({
                   </svg>
                 </button>
               )}
+
+              {/* Botão Flip circular pequeno */}
+              {!isCollapsed && (
+                <button
+                  className="absolute top-11 right-3 w-5 h-5 rounded-full bg-orange-100 dark:bg-orange-900/40 hover:bg-orange-200 dark:hover:bg-orange-800/60 flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-sm"
+                  onClick={() => setIsCardFlipped(!isCardFlipped)}
+                  title="Flip Card"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="10"
+                    height="10"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="text-orange-600 dark:text-orange-400"
+                  >
+                    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                    <path d="M21 3v5h-5" />
+                    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+                    <path d="M8 16H3v5" />
+                  </svg>
+                </button>
+              )}
               {/* Profile Image Component - Responsive avatar */}
               <div
                 className={cn(
@@ -751,6 +778,33 @@ export function SidebarNav({
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     className="text-[#CC5500]"
+                  >
+                    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                    <path d="M21 3v5h-5" />
+                    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+                    <path d="M8 16H3v5" />
+                  </svg>
+                </button>
+              )}
+
+              {/* Botão Flip circular pequeno */}
+              {!isCollapsed && (
+                <button
+                  className="absolute top-11 right-3 w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900/40 hover:bg-blue-200 dark:hover:bg-blue-800/60 flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-sm"
+                  onClick={() => setIsCardFlipped(!isCardFlipped)}
+                  title="Flip Card"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="10"
+                    height="10"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="text-blue-600 dark:text-blue-400"
                   >
                     <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
                     <path d="M21 3v5h-5" />
