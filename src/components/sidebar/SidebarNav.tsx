@@ -848,11 +848,11 @@ export function SidebarNav({
                   <div className="flex flex-col items-center mt-1">
                     <div className="space-y-1">
                       <p className="text-sm text-white/90 leading-relaxed">
-                        {isCardFlipped ? 'Transformando' : 'Olá'}, {userProfile?.display_name || 'Usuário'}!
+                        
                       </p>
                       <div className="flex justify-center mt-2">
                         <div 
-                          className="px-3 py-1 border border-[#2461E7] bg-[#2461E7] bg-opacity-20 rounded-md"
+                          className="px-5 py-0.5 border border-[#2461E7] bg-[#2461E7] bg-opacity-20 rounded-md flex items-center justify-center"
                         >
                           <span className="text-xs font-medium text-[#2461E7]">
                             PROFESSOR
