@@ -846,6 +846,19 @@ export function SidebarNav({
                     !
                   </h3>
                   <div className="flex flex-col items-center mt-1">
+                    <div className="space-y-1">
+                    <p className="text-sm text-white/90 leading-relaxed">
+                      {isCardFlipped ? 'Transformando' : 'Olá'}, {userProfile?.display_name || 'Usuário'}!
+                    </p>
+                    <div className="flex justify-center mt-2">
+                      <div 
+                        className="px-3 py-1 border border-[#2461E7] bg-[#2461E7] bg-opacity-20 rounded-md"
+                      >
+                        <span className="text-xs font-medium text-[#2461E7]">
+                          PROFESSOR
+                        </span>
+                      </div>
+                    </div>
                     <p className="text-xs text-[#001427]/70 dark:text-white/70 mb-0.5">
                       Nível {userProfile?.level || 1}
                     </p>
