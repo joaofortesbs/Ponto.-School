@@ -810,6 +810,17 @@ export function SidebarNav({
                     <p className="text-xs text-[#001427]/70 dark:text-white/70 mb-0.5">
                       Nível {userProfile?.level || 1}
                     </p>
+                    <div className="flex justify-center">
+                      <div 
+                        className="h-1.5 bg-[#2461E7] rounded-full opacity-30"
+                        style={{ width: "80px" }}
+                      >
+                        <div 
+                          className="h-full bg-[#2461E7] rounded-full transition-all duration-300"
+                          style={{ width: "65%" }}
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
