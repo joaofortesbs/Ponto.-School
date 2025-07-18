@@ -583,49 +583,47 @@ export function SidebarNav({
                   )}
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  <div className="relative w-full h-full">
-                    {/* Ícone de graduação posicionado no canto superior esquerdo sobre a imagem de perfil */}
-                    {!isCollapsed && (
-                      <div className="absolute -top-2 -left-2 z-50">
-                        <div className="w-6 h-6 rounded-full border-2 border-orange-500 bg-orange-600 bg-opacity-20 flex items-center justify-center shadow-lg">
-                          <GraduationCap size={14} className="text-orange-500" />
+                  {/* Ícone de graduação posicionado no canto superior esquerdo sobre a imagem de perfil */}
+                  {!isCollapsed && (
+                    <div className="absolute -top-1 -left-1 z-20">
+                      <div className="w-6 h-6 rounded-full border-2 border-orange-500 bg-orange-600 bg-opacity-20 flex items-center justify-center shadow-lg">
+                        <GraduationCap size={14} className="text-orange-500" />
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-[#001427] flex items-center justify-center">
+                    {profileImage ? (
+                      <img
+                        src={profileImage}
+                        alt="Profile"
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          console.error("Error loading profile image");
+                          setProfileImage(null);
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
+                        <div
+                          className={cn(
+                            "bg-yellow-300 rounded-full flex items-center justify-center",
+                            isCollapsed ? "w-5 h-5" : "w-10 h-10",
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              "text-black font-bold",
+                              isCollapsed ? "text-xs" : "text-lg",
+                            )}
+                          >
+                            {firstName
+                              ? firstName.charAt(0).toUpperCase()
+                              : "U"}
+                          </span>
                         </div>
                       </div>
                     )}
-                    
-                    <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-[#001427] flex items-center justify-center">
-                      {profileImage ? (
-                        <img
-                          src={profileImage}
-                          alt="Profile"
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            console.error("Error loading profile image");
-                            setProfileImage(null);
-                          }}
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
-                          <div
-                            className={cn(
-                              "bg-yellow-300 rounded-full flex items-center justify-center",
-                              isCollapsed ? "w-5 h-5" : "w-10 h-10",
-                            )}
-                          >
-                            <span
-                              className={cn(
-                                "text-black font-bold",
-                                isCollapsed ? "text-xs" : "text-lg",
-                              )}
-                            >
-                              {firstName
-                                ? firstName.charAt(0).toUpperCase()
-                                : "U"}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
                   </div>
                 </div>
 
@@ -762,7 +760,7 @@ export function SidebarNav({
                 >
                   {/* Ícone de Briefcase posicionado no canto superior esquerdo sobre a imagem de perfil */}
                   {!isCollapsed && (
-                    <div className="absolute -top-2 -left-2 z-50">
+                    <div className="absolute -top-1 -left-1 z-20">
                       <div className="w-6 h-6 rounded-full border-2 border-[#2462EA] bg-[#0f26aa] bg-opacity-20 flex items-center justify-center shadow-lg">
                         <Briefcase
                           size={12}
