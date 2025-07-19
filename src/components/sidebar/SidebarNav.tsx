@@ -896,8 +896,8 @@ export function SidebarNav({
                   animationDelay: `${index * 80}ms`
                 }}
               >
-                {(item.label === "Minhas Turmas" || item.label === "Agenda") && !isCollapsed ? (
-                  item.label === "Minhas Turmas" ? <TurmasNav /> : <AgendaNav />
+                {item.label === "Agenda" && !isCollapsed ? (
+                  <AgendaNav />
                 ) : (
                   <div 
                     className={cn(
