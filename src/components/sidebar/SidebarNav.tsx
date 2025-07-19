@@ -80,7 +80,6 @@ export function SidebarNav({
   const [cascadeIndex, setCascadeIndex] = useState(0);
   const [isModeTransitioning, setIsModeTransitioning] = useState(false);
   const [isMenuAnimating, setIsMenuAnimating] = useState(false);
-  const [pendingModeChange, setPendingModeChange] = useState(false);
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
 
   // Função para adicionar timeouts ao array
@@ -513,39 +512,24 @@ export function SidebarNav({
                     // Limpar timeouts anteriores se existirem
                     clearAllTimeouts();
 
+                    // Iniciar todas as animações simultaneamente
                     setIsModeTransitioning(true);
                     setIsMenuAnimating(true);
                     setIsMenuFlipping(true);
-                    setPendingModeChange(true);
+                    setIsCardFlipped(!isCardFlipped); // Flip imediato do card
 
                     // Calcular tempo total baseado no número de itens do menu
                     const totalItems = navItems.length;
-                    const baseAnimationTime = 400; // Tempo base da animação
                     const cascadeDelay = 80; // Delay entre cada item
-                    const totalCascadeTime = totalItems * cascadeDelay;
-                    const totalAnimationTime = baseAnimationTime + totalCascadeTime + 400; // Extra buffer
+                    const totalAnimationTime = (totalItems * cascadeDelay) + 600; // Tempo total da cascata
 
-                    // Iniciar animação em cascata dos itens do menu
-                    const flipTimeout1 = setTimeout(() => {
-                      // Aguardar todas as animações terminarem antes de mudar o modo
-                      const modeChangeTimeout = setTimeout(() => {
-                        setIsCardFlipped(!isCardFlipped);
-                        setPendingModeChange(false);
-                      }, totalAnimationTime);
-                      addTimeout(modeChangeTimeout);
-
-                      // Continuar animação do menu por mais tempo após mudança de modo
-                      const transitionTimeout = setTimeout(() => {
-                        setIsModeTransitioning(false);
-                        const finishTimeout = setTimeout(() => {
-                          setIsMenuFlipping(false);
-                          setIsMenuAnimating(false);
-                        }, 800);
-                        addTimeout(finishTimeout);
-                      }, totalAnimationTime + 600);
-                      addTimeout(transitionTimeout);
-                    }, 100);
-                    addTimeout(flipTimeout1);
+                    // Finalizar todas as animações após o tempo calculado
+                    const finishTimeout = setTimeout(() => {
+                      setIsModeTransitioning(false);
+                      setIsMenuFlipping(false);
+                      setIsMenuAnimating(false);
+                    }, totalAnimationTime);
+                    addTimeout(finishTimeout);
                   }}
                   title="Flip Card"
                 >
@@ -731,39 +715,24 @@ export function SidebarNav({
                     // Limpar timeouts anteriores se existirem
                     clearAllTimeouts();
 
+                    // Iniciar todas as animações simultaneamente
                     setIsModeTransitioning(true);
                     setIsMenuAnimating(true);
                     setIsMenuFlipping(true);
-                    setPendingModeChange(true);
+                    setIsCardFlipped(!isCardFlipped); // Flip imediato do card
 
                     // Calcular tempo total baseado no número de itens do menu
                     const totalItems = navItems.length;
-                    const baseAnimationTime = 400; // Tempo base da animação
                     const cascadeDelay = 80; // Delay entre cada item
-                    const totalCascadeTime = totalItems * cascadeDelay;
-                    const totalAnimationTime = baseAnimationTime + totalCascadeTime + 400; // Extra buffer
+                    const totalAnimationTime = (totalItems * cascadeDelay) + 600; // Tempo total da cascata
 
-                    // Iniciar animação em cascata dos itens do menu
-                    const flipTimeout2 = setTimeout(() => {
-                      // Aguardar todas as animações terminarem antes de mudar o modo
-                      const modeChangeTimeout = setTimeout(() => {
-                        setIsCardFlipped(!isCardFlipped);
-                        setPendingModeChange(false);
-                      }, totalAnimationTime);
-                      addTimeout(modeChangeTimeout);
-
-                      // Continuar animação do menu por mais tempo após mudança de modo
-                      const transitionTimeout = setTimeout(() => {
-                        setIsModeTransitioning(false);
-                        const finishTimeout = setTimeout(() => {
-                          setIsMenuFlipping(false);
-                          setIsMenuAnimating(false);
-                        }, 800);
-                        addTimeout(finishTimeout);
-                      }, totalAnimationTime + 600);
-                      addTimeout(transitionTimeout);
-                    }, 100);
-                    addTimeout(flipTimeout2);
+                    // Finalizar todas as animações após o tempo calculado
+                    const finishTimeout = setTimeout(() => {
+                      setIsModeTransitioning(false);
+                      setIsMenuFlipping(false);
+                      setIsMenuAnimating(false);
+                    }, totalAnimationTime);
+                    addTimeout(finishTimeout);
                   }}
                   title="Flip Card"
                 >
