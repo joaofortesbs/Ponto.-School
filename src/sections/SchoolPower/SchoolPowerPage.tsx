@@ -15,7 +15,7 @@ import { ContextualizationCard } from "../../features/schoolpower/contextualizat
 export function SchoolPowerPage() {
   const [isDarkTheme] = useState(true);
   const [isCentralExpanded, setIsCentralExpanded] = useState(false);
-  
+
   // Hook para gerenciar o fluxo do School Power
   const {
     flowState,
@@ -51,105 +51,64 @@ export function SchoolPowerPage() {
       {/* Background de estrelas */}
       <ParticlesBackground isDarkTheme={isDarkTheme} />
 
-      {/* Vertical dock positioned at right side - com animação de fade */}
-      <motion.div 
-        className="absolute right-8 top-1/2 transform -translate-y-1/2"
-        initial={{ opacity: 1, x: 0 }}
-        animate={{ 
-          opacity: componentsVisible ? 1 : 0, 
-          x: componentsVisible ? 0 : 100 
-        }}
-        transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
-      >
+      {/* Vertical dock positioned at right side */}
+      <div className="absolute right-8 top-1/2 transform -translate-y-1/2">
         <SideMenu />
-      </motion.div>
+      </div>
 
-      {/* Container Ripple fixo e centralizado no background - com animação de fade e scale */}
-      <motion.div 
-        className="absolute top-[57%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none"
-        initial={{ opacity: 1, scale: 1 }}
-        animate={{ 
-          opacity: componentsVisible ? 1 : 0, 
-          scale: componentsVisible ? 1 : 0.8,
-          y: componentsVisible ? 0 : -50
-        }}
-        transition={{ duration: 0.7, ease: [0.25, 0.1, 0.25, 1] }}
-      >
+      {/* Container Ripple fixo e centralizado no background */}
+      <div className="absolute top-[57%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none">
         <div className="relative" style={{ width: "900px", height: "617px" }}>
           {/* TechCircle posicionado no topo do container Ripple */}
-          <motion.div
+          <div
             className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-full z-30 pointer-events-none"
             style={{ marginTop: "7px" }}
-            initial={{ opacity: 1, y: 0 }}
-            animate={{ 
-              opacity: componentsVisible ? 1 : 0, 
-              y: componentsVisible ? 0 : -30 
-            }}
-            transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
           >
             <TopHeader isDarkTheme={isDarkTheme} />
-          </motion.div>
+          </div>
 
           {/* Ripple centralizado */}
-          <motion.div 
-            className="absolute inset-0"
-            initial={{ opacity: 1, scale: 1 }}
-            animate={{ 
-              opacity: componentsVisible ? 1 : 0, 
-              scale: componentsVisible ? 1 : 0.9 
-            }}
-            transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
-          >
+          <div className="absolute inset-0">
             <Particles3D isDarkTheme={isDarkTheme} isBlurred={isCentralExpanded} />
-          </motion.div>
+          </div>
 
           {/* Ícone Central no centro do Ripple */}
-          <motion.div
+          <div
             className="absolute z-50 pointer-events-auto"
             style={{
               top: "50%",
               left: "50%",
               transform: "translate(-50%, -50%)",
             }}
-            initial={{ opacity: 1, scale: 1 }}
-            animate={{ 
-              opacity: componentsVisible ? 1 : 0, 
-              scale: componentsVisible ? 1 : 0.7 
-            }}
-            transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
           >
             <ProfileSelector
               isDarkTheme={isDarkTheme}
               onExpandedChange={handleCentralExpandedChange}
             />
-          </motion.div>
+          </div>
 
           {/* Caixa de Mensagem dentro do mesmo container Ripple */}
-          <motion.div 
-            className="absolute bottom-24 left-1/2 transform -translate-x-1/2 translate-y-full z-40 pointer-events-auto" 
-            style={{ marginTop: "-150px" }}
-            initial={{ opacity: 1, y: 0 }}
-            animate={{ 
-              opacity: componentsVisible ? 1 : 0, 
-              y: componentsVisible ? 0 : 50 
-            }}
-            transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
-          >
+          <div className="absolute bottom-24 left-1/2 transform -translate-x-1/2 translate-y-full z-40 pointer-events-auto" style={{ marginTop: "-150px" }}>
             <ChatInput 
               isDarkTheme={isDarkTheme} 
               onSend={handleSendMessage}
             />
-          </motion.div>
+          </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* Card de Contextualização - aparece quando flowState é 'contextualizing' */}
       {flowState === 'contextualizing' && (
-        <div className="absolute inset-0 flex items-center justify-center z-30 px-4">
+        <motion.div 
+          className="absolute inset-0 flex items-center justify-center z-30 px-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
           <ContextualizationCard 
             onSubmit={handleSubmitContextualization}
           />
-        </div>
+        </motion.div>
       )}
 
       {/* Estado de geração - aparece quando flowState é 'generating' */}
