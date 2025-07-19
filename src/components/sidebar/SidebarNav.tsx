@@ -312,32 +312,38 @@ export function SidebarNav({
       icon: <Home className="h-5 w-5" />,
       label: "Painel",
       path: "/",
+      gradient: "from-blue-500 to-purple-600",
+      hoverGradient: "from-blue-400 to-purple-500",
+      accentColor: "#6366f1",
     },
     {
       icon: <BookOpen className="h-5 w-5" />,
       label: "Minhas Turmas",
       path: "/turmas",
       component: <TurmasNav />,
+      gradient: "from-emerald-500 to-teal-600",
+      hoverGradient: "from-emerald-400 to-teal-500",
+      accentColor: "#10b981",
       subItems: [
         {
           name: "Visão Geral",
           path: "/turmas",
-          icon: <Home className="h-4 w-4 text-[#29335C]" />,
+          icon: <Home className="h-4 w-4" />,
         },
         {
           name: "Turmas Ativas",
           path: "/turmas?view=ativas",
-          icon: <BookOpen className="h-4 w-4 text-[#29335C]" />,
+          icon: <BookOpen className="h-4 w-4" />,
         },
         {
           name: "Grupos de Estudo",
           path: "/turmas?view=grupos-estudo",
-          icon: <Users2 className="h-4 w-4 text-[#29335C]" />,
+          icon: <Users2 className="h-4 w-4" />,
         },
         {
           name: "Desempenho",
           path: "/turmas?view=desempenho",
-          icon: <BarChart className="h-4 w-4 text-[#29335C]" />,
+          icon: <BarChart className="h-4 w-4" />,
         },
       ],
     },
@@ -345,44 +351,56 @@ export function SidebarNav({
       icon: <Users2 className="h-5 w-5" />,
       label: "Comunidades",
       path: "/comunidades",
+      gradient: "from-pink-500 to-rose-600",
+      hoverGradient: "from-pink-400 to-rose-500",
+      accentColor: "#ec4899",
     },
     {
       icon: <Brain className="h-5 w-5" />,
       label: "Epictus IA",
       path: "/epictus-ia",
       isSpecial: true,
+      gradient: "from-cyan-500 to-blue-600",
+      hoverGradient: "from-cyan-400 to-blue-500",
+      accentColor: "#06b6d4",
     },
     {
       icon: <Rocket className="h-5 w-5" />,
       label: "School Power",
       path: "/school-power",
       isSpecial: true,
+      gradient: "from-orange-500 to-red-600",
+      hoverGradient: "from-orange-400 to-red-500",
+      accentColor: "#f97316",
     },
     {
       icon: <Calendar className="h-5 w-5" />,
       label: "Agenda",
       path: "/agenda",
       component: <AgendaNav />,
+      gradient: "from-violet-500 to-purple-600",
+      hoverGradient: "from-violet-400 to-purple-500",
+      accentColor: "#8b5cf6",
       subItems: [
         {
           name: "Visão Geral",
           path: "/agenda?view=visao-geral",
-          icon: <Home className="h-4 w-4 text-[#29335C]" />,
+          icon: <Home className="h-4 w-4" />,
         },
         {
           name: "Calendário",
           path: "/agenda?view=calendario",
-          icon: <Calendar className="h-4 w-4 text-[#29335C]" />,
+          icon: <Calendar className="h-4 w-4" />,
         },
         {
           name: "Tarefas",
           path: "/agenda?view=tarefas",
-          icon: <CheckSquare className="h-4 w-4 text-[#29335C]" />,
+          icon: <CheckSquare className="h-4 w-4" />,
         },
         {
           name: "Desafios",
           path: "/agenda?view=desafios",
-          icon: <Target className="h-4 w-4 text-[#29335C]" />,
+          icon: <Target className="h-4 w-4" />,
         },
       ],
     },
@@ -390,11 +408,17 @@ export function SidebarNav({
       icon: <Trophy className="h-5 w-5" />,
       label: "Conquistas",
       path: "/conquistas",
+      gradient: "from-yellow-500 to-orange-600",
+      hoverGradient: "from-yellow-400 to-orange-500",
+      accentColor: "#eab308",
     },
     {
       icon: <Wallet className="h-5 w-5" />,
       label: "Carteira",
       path: "/carteira",
+      gradient: "from-green-500 to-emerald-600",
+      hoverGradient: "from-green-400 to-emerald-500",
+      accentColor: "#22c55e",
     },
   ];
 
@@ -796,7 +820,7 @@ export function SidebarNav({
           isCollapsed ? "h-[calc(100%-180px)]" : "h-[calc(100%-300px)]",
         )}
       >
-        <nav className="grid gap-1 px-2">
+        <nav className="grid gap-2 px-3">
           {navItems.map((item, index) => (
             <div key={index} className="relative">
               {item.component ? (
@@ -804,29 +828,38 @@ export function SidebarNav({
                   <Button
                     variant="ghost"
                     className={cn(
-                      "flex items-center justify-center rounded-lg px-3 py-2 text-start w-full",
-                      isActive(item.path)
-                        ? "bg-[#FF6B00]/10 text-[#FF6B00] dark:bg-[#FF6B00]/20 dark:text-[#FF6B00]"
-                        : "text-[#001427] hover:bg-[#FF6B00]/5 dark:text-white dark:hover:bg-[#FF6B00]/10",
-                      "group hover:scale-[1.02] transition-all duration-200 hover:shadow-sm active:scale-[0.98]",
+                      "relative flex items-center justify-center rounded-xl px-3 py-3 text-start w-full overflow-hidden group",
+                      "backdrop-blur-sm border border-white/10 bg-white/5 dark:bg-gray-800/30",
+                      "hover:bg-white/10 dark:hover:bg-gray-700/40 hover:border-white/20",
+                      "transition-all duration-300 hover:scale-105 hover:shadow-lg",
+                      isActive(item.path) && "ring-2 ring-white/30 bg-white/15 shadow-lg scale-105"
                     )}
                     onClick={() => handleNavigation(item.path)}
                   >
-                    <div className="mx-auto">
-                      {item.label === "Portal" ? (
-                        <BookMarked className="h-5 w-5 text-[#001427] dark:text-white" />
-                      ) : (
-                        <Calendar className="h-5 w-5 text-[#001427] dark:text-white" />
-                      )}
+                    <div className={cn(
+                      "relative z-10 p-1 rounded-lg",
+                      `bg-gradient-to-br ${item.gradient || 'from-gray-400 to-gray-600'}`,
+                      "shadow-md"
+                    )}>
+                      <div className="text-white">
+                        {item.icon}
+                      </div>
                     </div>
-                    <div
-                      className={cn(
-                        "absolute left-0 top-0 h-full w-1 rounded-r-md transition-all duration-300",
-                        isActive(item.path)
-                          ? "bg-[#FF6B00]"
-                          : "bg-transparent group-hover:bg-[#FF6B00]/30",
-                      )}
-                    />
+                    
+                    {/* Glow effect */}
+                    <div className={cn(
+                      "absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-300",
+                      `bg-gradient-to-br ${item.hoverGradient || item.gradient}`,
+                      "rounded-xl"
+                    )} />
+                    
+                    {/* Active indicator */}
+                    {isActive(item.path) && (
+                      <div 
+                        className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 rounded-r-full"
+                        style={{ backgroundColor: item.accentColor }}
+                      />
+                    )}
                   </Button>
                 ) : (
                   item.component
@@ -835,15 +868,13 @@ export function SidebarNav({
                 <Button
                   variant="ghost"
                   className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2 text-start w-full",
+                    "relative flex items-center gap-3 rounded-xl px-4 py-3 text-start w-full overflow-hidden group",
                     isCollapsed ? "justify-center" : "justify-between",
-                    isActive(item.path)
-                      ? "bg-[#FF6B00]/10 text-[#FF6B00] dark:bg-[#FF6B00]/20 dark:text-[#FF6B00]"
-                      : "text-[#001427] hover:bg-[#FF6B00]/5 dark:text-white dark:hover:bg-[#FF6B00]/10",
-                    "group hover:scale-[1.02] transition-all duration-200 hover:shadow-sm active:scale-[0.98]",
-                    item.label === "Novidades"
-                      ? "relative overflow-hidden"
-                      : "",
+                    "backdrop-blur-sm border border-white/10 bg-white/5 dark:bg-gray-800/30",
+                    "hover:bg-white/10 dark:hover:bg-gray-700/40 hover:border-white/20",
+                    "transition-all duration-300 hover:scale-[1.02] hover:shadow-lg",
+                    isActive(item.path) && "ring-2 ring-white/30 bg-white/15 shadow-lg scale-[1.02]",
+                    item.isSpecial && "border-gradient-to-r from-cyan-400/30 to-purple-400/30"
                   )}
                   onClick={(e) => {
                     if (item.subItems && !isCollapsed) {
@@ -854,59 +885,60 @@ export function SidebarNav({
                     }
                   }}
                 >
-                  {item.label === "Novidades" && (
-                    <div className="absolute inset-0 rounded-lg border border-transparent bg-gradient-to-r from-[#FFD700] to-[#FF6B00] opacity-10 animate-gradient-x"></div>
-                  )}
+                  {/* Background gradient overlay */}
+                  <div className={cn(
+                    "absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-300",
+                    `bg-gradient-to-br ${item.hoverGradient || item.gradient}`,
+                    "rounded-xl"
+                  )} />
+                  
                   <div className="flex items-center relative z-10">
                     <div
                       className={cn(
-                        "transition-all duration-300",
+                        "transition-all duration-300 p-2 rounded-lg shadow-sm",
                         isCollapsed ? "mx-auto" : "mr-3",
-                        isActive(item.path)
-                          ? "text-[#FF6B00] dark:text-[#FF6B00]"
-                          : item.label === "Novidades"
-                            ? "text-[#FF6B00] dark:text-[#FF6B00]"
-                            : "text-[#001427] dark:text-white",
+                        `bg-gradient-to-br ${item.gradient}`,
+                        "text-white"
                       )}
                     >
                       {item.icon}
                     </div>
                     {!isCollapsed && (
                       <div className="flex items-center gap-2">
-                        <span
-                          className={cn(
-                            item.label === "Novidades"
-                              ? "text-[#FF6B00] font-bold"
-                              : "",
-                          )}
-                        >
+                        <span className={cn(
+                          "font-medium text-white/90 dark:text-white/90",
+                          item.isSpecial && "bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent font-semibold"
+                        )}>
                           {item.label}
                         </span>
-                        {item.label === "Explorar" && (
-                          <span className="px-1.5 py-0.5 text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-md">
-                            Em breve
-                          </span>
+                        {item.isSpecial && (
+                          <div className="flex">
+                            <div className="w-1 h-1 rounded-full bg-cyan-400 animate-pulse mr-1" />
+                            <div className="w-1 h-1 rounded-full bg-purple-400 animate-pulse delay-150 mr-1" />
+                            <div className="w-1 h-1 rounded-full bg-pink-400 animate-pulse delay-300" />
+                          </div>
                         )}
                       </div>
                     )}
                   </div>
+                  
                   {!isCollapsed && item.subItems && (
-                    <div className="text-[#001427] dark:text-white">
-                      {expandedSection === item.label ? (
-                        <ChevronUp className="h-4 w-4" />
-                      ) : (
+                    <div className="relative z-10">
+                      <div className={cn(
+                        "p-1 rounded-md transition-transform duration-200",
+                        expandedSection === item.label ? "rotate-180" : "rotate-0",
+                        "bg-white/10 text-white/70"
+                      )}>
                         <ChevronDown className="h-4 w-4" />
-                      )}
+                      </div>
                     </div>
                   )}
-                  {item.label !== "Novidades" && (
-                    <div
-                      className={cn(
-                        "absolute left-0 top-0 h-full w-1 rounded-r-md transition-all duration-300",
-                        isActive(item.path)
-                          ? "bg-[#FF6B00]"
-                          : "bg-transparent group-hover:bg-[#FF6B00]/30",
-                      )}
+                  
+                  {/* Active indicator */}
+                  {isActive(item.path) && (
+                    <div 
+                      className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 rounded-r-full"
+                      style={{ backgroundColor: item.accentColor }}
                     />
                   )}
                 </Button>
@@ -916,50 +948,44 @@ export function SidebarNav({
               {!isCollapsed &&
                 item.subItems &&
                 expandedSection === item.label && (
-                  <div className="mt-1 space-y-1">
+                  <div className="mt-2 ml-4 space-y-1 animate-in slide-in-from-top-2 duration-200">
                     {item.subItems.map((subItem, subIndex) => (
                       <Button
                         key={subIndex}
                         variant="ghost"
                         className={cn(
-                          "flex items-center gap-2 rounded-lg px-3 py-2 text-start w-full justify-start",
-                          isActive(subItem.path)
-                            ? "bg-[#FF6B00]/10 text-[#FF6B00] dark:bg-[#FF6B00]/20 dark:text-[#FF6B00] font-medium"
-                            : "text-[#001427] hover:bg-[#FF6B00]/5 dark:text-white dark:hover:bg-[#FF6B00]/10",
-                          "hover:translate-x-1 transition-transform pl-2",
+                          "flex items-center gap-3 rounded-lg px-3 py-2.5 text-start w-full justify-start group",
+                          "backdrop-blur-sm border border-white/5 bg-white/3 dark:bg-gray-800/20",
+                          "hover:bg-white/8 dark:hover:bg-gray-700/30 hover:border-white/15",
+                          "transition-all duration-200 hover:translate-x-1 hover:shadow-md",
+                          isActive(subItem.path) && "bg-white/10 border-white/20 shadow-sm translate-x-1"
                         )}
                         onClick={() => navigate(subItem.path)}
                       >
-                        {subItem.icon}
-                        <div className="flex items-center gap-2 w-full">
-                          <span>{subItem.name}</span>
-                          {item.label === "Explorar" && (
-                            <span className="ml-auto">
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="14"
-                                height="14"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                className="text-gray-500 dark:text-gray-400"
-                              >
-                                <rect
-                                  width="18"
-                                  height="11"
-                                  x="3"
-                                  y="11"
-                                  rx="2"
-                                  ry="2"
-                                ></rect>
-                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                              </svg>
-                            </span>
-                          )}
+                        <div className={cn(
+                          "p-1.5 rounded-md transition-colors duration-200",
+                          isActive(subItem.path) 
+                            ? "text-white" 
+                            : "text-white/60 group-hover:text-white/80"
+                        )}>
+                          {subItem.icon}
                         </div>
+                        <span className={cn(
+                          "text-sm font-medium transition-colors duration-200",
+                          isActive(subItem.path) 
+                            ? "text-white" 
+                            : "text-white/70 group-hover:text-white/90"
+                        )}>
+                          {subItem.name}
+                        </span>
+                        
+                        {/* Active indicator for sub items */}
+                        {isActive(subItem.path) && (
+                          <div 
+                            className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 rounded-r-full"
+                            style={{ backgroundColor: item.accentColor }}
+                          />
+                        )}
                       </Button>
                     ))}
                   </div>
