@@ -500,9 +500,9 @@ export function SidebarNav({
                       setIsCardFlipped(!isCardFlipped);
                       setTimeout(() => {
                         setIsMenuFlipping(false);
-                        setTimeout(() => setIsModeChanging(false), 200);
-                      }, 300);
-                    }, 200);
+                        setTimeout(() => setIsModeChanging(false), 400);
+                      }, 500);
+                    }, 300);
                   }}
                   title="Flip Card"
                 >
@@ -691,9 +691,9 @@ export function SidebarNav({
                       setIsCardFlipped(!isCardFlipped);
                       setTimeout(() => {
                         setIsMenuFlipping(false);
-                        setTimeout(() => setIsModeChanging(false), 200);
-                      }, 300);
-                    }, 200);
+                        setTimeout(() => setIsModeChanging(false), 400);
+                      }, 500);
+                    }, 300);
                   }}
                   title="Flip Card"
                 >
