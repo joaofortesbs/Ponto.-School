@@ -1387,7 +1387,7 @@ export function SidebarNav({
             transform: scale(1.01);
             filter: brightness(1.08);
           }
-        }
+          }
 
         /* Animações para o flip do menu */
         .menu-animating .menu-item-wrapper {
