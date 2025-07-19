@@ -339,11 +339,6 @@ export function SidebarNav({
       path: "/turmas",
     },
     {
-      icon: "fas fa-users",
-      label: "Comunidades",
-      path: "/comunidades",
-    },
-    {
       icon: "fas fa-route",
       label: "Trilhas School",
       path: "/trilhas-school",
@@ -363,6 +358,11 @@ export function SidebarNav({
       label: "Epictus IA",
       path: "/epictus-ia",
       isSpecial: true,
+    },
+    {
+      icon: "fas fa-users",
+      label: "Comunidades",
+      path: "/comunidades",
     },
     {
       icon: "fas fa-calendar-alt",
@@ -409,14 +409,14 @@ export function SidebarNav({
       isSpecial: true,
     },
     {
-      icon: "fas fa-calendar-alt",
-      label: "Agenda",
-      path: "/agenda",
-    },
-    {
       icon: "fas fa-globe",
       label: "Portal",
       path: "/portal",
+    },
+    {
+      icon: "fas fa-calendar-alt",
+      label: "Agenda",
+      path: "/agenda",
     },
     {
       icon: "fas fa-users",
