@@ -311,7 +311,7 @@ export function SidebarNav({
     setExpandedSection(expandedSection === section ? null : section);
   };
 
-  const navItems = [
+  const navItemsAluno = [
     {
       icon: "fas fa-home",
       label: "Painel",
@@ -364,6 +364,62 @@ export function SidebarNav({
       path: "/explorar",
     },
   ];
+
+  const navItemsProfessor = [
+    {
+      icon: "fas fa-home",
+      label: "Painel",
+      path: "/",
+    },
+    {
+      icon: "fas fa-chalkboard-teacher",
+      label: "Minhas Turmas",
+      path: "/turmas",
+    },
+    {
+      icon: "fas fa-rocket",
+      label: "School Power",
+      path: "/school-power",
+    },
+    {
+      icon: "fas fa-route",
+      label: "Trilhas School",
+      path: "/trilhas-school",
+    },
+    {
+      icon: "fas fa-brain",
+      label: "Epictus IA",
+      path: "/epictus-ia",
+      isSpecial: true,
+    },
+    {
+      icon: "fas fa-calendar-alt",
+      label: "Agenda",
+      path: "/agenda",
+    },
+    {
+      icon: "fas fa-globe",
+      label: "Portal",
+      path: "/portal",
+    },
+    {
+      icon: "fas fa-users",
+      label: "Comunidades",
+      path: "/comunidades",
+    },
+    {
+      icon: "fas fa-trophy",
+      label: "Conquistas",
+      path: "/conquistas",
+    },
+    {
+      icon: "fas fa-compass",
+      label: "Explorar",
+      path: "/explorar",
+    },
+  ];
+
+  const navItems = isCardFlipped ? navItemsProfessor : navItemsAluno;
 
   return (
     <div className="relative h-full">
@@ -777,9 +833,21 @@ export function SidebarNav({
       >
         {/* Navigation Menu com novo design */}
         <div className={cn("navigation-menu-container px-2", isCollapsed && "sidebar-collapsed")}>
-          <nav className="menu-navigation">
+          <nav className={cn(
+            "menu-navigation",
+            isMenuFlipping && "menu-flipping"
+          )}>
             {navItems.map((item, index) => (
-              <div key={index} className="relative">
+              <div 
+                key={`${isCardFlipped ? 'professor' : 'aluno'}-${item.path}-${index}`} 
+                className={cn(
+                  "relative menu-item-wrapper",
+                  isMenuFlipping && "animate-menu-transition"
+                )}
+                style={{
+                  animationDelay: `${index * 50}ms`
+                }}
+              >
                 {(item.label === "Minhas Turmas" || item.label === "Agenda") && !isCollapsed ? (
                   item.label === "Minhas Turmas" ? <TurmasNav /> : <AgendaNav />
                 ) : (
@@ -891,7 +959,8 @@ export function SidebarNav({
           transition: all 0.3s ease;
           position: relative;
           overflow: hidden;
-          flex-shrink: 0 !important``.
+          flex-shrink: 0 !important;
+        }
 
         .icon-container.active {
           background: linear-gradient(135deg, #FF6B00, #FF6B00);
@@ -1018,6 +1087,50 @@ export function SidebarNav({
         @keyframes orangeBounce {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-3px); }
+        }
+
+        /* Animações para transição entre menus */
+        .menu-flipping .menu-item-wrapper {
+          animation: menuItemExit 0.3s ease-in-out forwards;
+        }
+
+        @keyframes menuItemExit {
+          0% {
+            opacity: 1;
+            transform: translateX(0) scale(1);
+          }
+          50% {
+            opacity: 0;
+            transform: translateX(-20px) scale(0.95);
+          }
+          100% {
+            opacity: 1;
+            transform: translateX(0) scale(1);
+          }
+        }
+
+        .animate-menu-transition {
+          animation: menuItemEnter 0.4s ease-out forwards;
+        }
+
+        @keyframes menuItemEnter {
+          0% {
+            opacity: 0;
+            transform: translateX(20px) scale(0.9);
+          }
+          100% {
+            opacity: 1;
+            transform: translateX(0) scale(1);
+          }
+        }
+
+        /* Efeitos especiais para diferentes modos */
+        .menu-item.professor-mode {
+          border-left: 2px solid #2461E7;
+        }
+
+        .menu-item.aluno-mode {
+          border-left: 2px solid #FF6B00;
         }
       `}</style>
     </div>
