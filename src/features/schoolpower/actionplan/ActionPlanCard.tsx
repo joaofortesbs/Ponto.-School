@@ -159,10 +159,16 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
                           {item.personalizedDescription || item.description}
                         </p>
                         
-                        {item.personalizedTitle && (
-                          <div className="flex items-center gap-2 text-xs text-purple-600">
+                        {(item.personalizedTitle || item.personalizedDescription) && (
+                          <div className="flex items-center gap-2 text-xs text-purple-600 bg-purple-50 px-2 py-1 rounded">
                             <Sparkles className="h-3 w-3" />
-                            <span>Personalizado pela IA</span>
+                            <span>Personalizado pela IA com base nos seus dados</span>
+                          </div>
+                        )}
+                        
+                        {!item.personalizedTitle && !item.personalizedDescription && (
+                          <div className="flex items-center gap-2 text-xs text-gray-500">
+                            <span>Atividade padrão do sistema</span>
                           </div>
                         )}
                       </div>

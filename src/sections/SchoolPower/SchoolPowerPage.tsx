@@ -101,10 +101,27 @@ export function SchoolPowerPage() {
 
               {/* Caixa de Mensagem dentro do mesmo container Ripple */}
               <div className="absolute bottom-24 left-1/2 transform -translate-x-1/2 translate-y-full z-40 pointer-events-auto" style={{ marginTop: "-150px" }}>
-                <ChatInput 
-                  isDarkTheme={isDarkTheme} 
-                  onSend={handleSendMessage}
-                />
+                <ChatInput
+            onSendMessage={(message) => {
+              console.log('📤 SCHOOL POWER - Mensagem inicial coletada:', message);
+              console.log('📊 SCHOOL POWER - Tamanho da mensagem:', message.length, 'caracteres');
+              console.log('📝 SCHOOL POWER - Conteúdo completo:', message);
+
+              if (!message || message.trim().length === 0) {
+                console.error('❌ Mensagem vazia não pode ser processada');
+                return;
+              }
+
+              if (message.length < 10) {
+                console.warn('⚠️ Mensagem muito curta, pode gerar análise limitada');
+              }
+
+              sendInitialMessage(message.trim());
+            }}
+            disabled={flowState !== 'idle' || isLoading}
+            placeholder="Descreva detalhadamente o que você precisa criar para seus alunos (quanto mais informações, melhor será a análise da IA)..."
+            className="w-full"
+          />
               </div>
             </div>
           </div>

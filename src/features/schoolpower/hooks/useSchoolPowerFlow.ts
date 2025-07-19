@@ -96,48 +96,78 @@ export function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
   const generateActionPlan = useCallback(async (message: string, contextData: ContextualizationData): Promise<ActionPlanItem[]> => {
     try {
       console.log('🤖 Iniciando geração de plano de ação com IA Gemini...');
-      console.log('📝 Dados coletados:', { message, contextData });
+      console.log('📝 ANÁLISE COMPLETA - Mensagem inicial:', message);
+      console.log('📝 ANÁLISE COMPLETA - Dados de contextualização:', contextData);
 
       // Importar lista de atividades disponíveis
       const activitiesModule = await import('../data/schoolPowerActivities.json');
       const schoolPowerActivities = activitiesModule.default;
 
-      // Preparar lista de atividades para o prompt
-      const activitiesText = schoolPowerActivities.map(activity => 
-        `- ${activity.id}: ${activity.title} - ${activity.description}`
-      ).join('\n');
+      // Preparar lista completa de atividades para análise
+      const activitiesAnalysisText = schoolPowerActivities
+        .filter(activity => activity.enabled)
+        .map(activity => 
+          `ID: ${activity.id}
+TÍTULO: ${activity.title}
+DESCRIÇÃO: ${activity.description}
+TAGS: ${activity.tags.join(', ')}
+API: ${activity.apiType}
+---`
+        ).join('\n');
 
-      // Construir prompt detalhado para a IA Gemini
-      const prompt = `Você é uma IA do School Power responsável por criar um plano de ação educacional para um professor ou coordenador. Use SOMENTE as atividades listadas abaixo que o School Power consegue gerar.
+      // Construir prompt ultra-detalhado para análise completa
+      const prompt = `Você é uma IA especializada do School Power que deve analisar COMPLETAMENTE todos os dados fornecidos pelo usuário para gerar um plano de ação educacional personalizado.
 
-Mensagem inicial do usuário:
+=== ANÁLISE OBRIGATÓRIA ===
+
+MENSAGEM INICIAL COMPLETA DO USUÁRIO:
 "${message}"
 
-Respostas do Quiz:
-Matérias e temas: "${contextData.subjects}"
-Público-alvo: "${contextData.audience}"
-Restrições ou preferências: "${contextData.restrictions}"
-Datas importantes: "${contextData.dates}"
-Observações adicionais: "${contextData.notes}"
+DADOS COMPLETOS DO QUESTIONÁRIO DE CONTEXTUALIZAÇÃO:
+▶️ Matérias e Temas Específicos: "${contextData.subjects}"
+▶️ Público-Alvo Detalhado: "${contextData.audience}"
+▶️ Restrições e Preferências: "${contextData.restrictions}"
+▶️ Datas e Prazos Importantes: "${contextData.dates}"
+▶️ Observações e Informações Adicionais: "${contextData.notes}"
 
-Aqui está a lista de atividades possíveis:
-${activitiesText}
+=== LISTA COMPLETA DE ATIVIDADES DISPONÍVEIS ===
+${activitiesAnalysisText}
 
-Com base nessas informações, gere de 3 a 5 atividades personalizadas em formato JSON, com campos:
-- id: mesmo id da atividade no banco de atividades
-- title: título personalizado de acordo com as informações coletadas
-- description: descrição curta e personalizada de acordo com as informações coletadas
+=== INSTRUÇÕES DE ANÁLISE ===
+1. ANALISE COMPLETAMENTE a mensagem inicial do usuário
+2. CORRELACIONE com TODOS os dados do questionário
+3. IDENTIFIQUE as necessidades educacionais específicas
+4. SELECIONE de 3 a 6 atividades mais adequadas da lista
+5. PERSONALIZE títulos e descrições baseando-se em TODAS as informações coletadas
 
-Exemplo de resposta:
+=== CRITÉRIOS DE SELEÇÃO ===
+- Adequação ao público-alvo especificado
+- Compatibilidade com as matérias/temas mencionados
+- Respeito às restrições indicadas
+- Consideração dos prazos e datas importantes
+- Alinhamento com as observações adicionais
+- Variedade de tipos de atividades (estudo, avaliação, prática, etc.)
+
+=== FORMATO DE RESPOSTA OBRIGATÓRIO ===
+Retorne APENAS o JSON no formato:
 [
   {
-    "id": "prova-interativa",
-    "title": "Prova de Matemática - 27/07 - Ensino Médio",
-    "description": "Avaliação focada em álgebra e geometria, programada para o dia 27/07."
+    "id": "id-exato-da-atividade-da-lista",
+    "personalizedTitle": "Título personalizado baseado em TODA a análise",
+    "personalizedDescription": "Descrição detalhada considerando TODOS os dados coletados"
   }
 ]
 
-Responda APENAS com o JSON válido, sem texto adicional.`;
+EXEMPLO BASEADO EM ANÁLISE COMPLETA:
+[
+  {
+    "id": "prova-interativa",
+    "personalizedTitle": "Avaliação de Matemática - Álgebra Linear - 3º EM - Prova 15/03",
+    "personalizedDescription": "Prova interativa sobre sistemas lineares e matrizes, adaptada para turma avançada do 3º ano, com correção automática para entregar resultados até 20/03."
+  }
+]
+
+RESPONDA APENAS COM O JSON - SEM TEXTO ADICIONAL.`;
 
       console.log('📤 Enviando prompt para Gemini API...');
 
@@ -178,56 +208,106 @@ Responda APENAS com o JSON válido, sem texto adicional.`;
       const generatedActivities = JSON.parse(jsonMatch[0]);
       console.log('✅ Atividades geradas pela IA:', generatedActivities);
 
-      // Validar se todas as atividades existem na lista disponível
-      const validActivities = generatedActivities.filter((activity: any) => {
-        const exists = schoolPowerActivities.some(available => available.id === activity.id);
-        if (!exists) {
-          console.warn(`⚠️ Atividade ${activity.id} não encontrada na lista de atividades disponíveis`);
-        }
-        return exists;
-      });
+      // Validar e processar atividades geradas
+      const validActivities = generatedActivities
+        .filter((activity: any) => {
+          // Verificar se o ID existe na lista de atividades
+          const exists = schoolPowerActivities.some(available => available.id === activity.id);
+          if (!exists) {
+            console.warn(`⚠️ Atividade ${activity.id} não encontrada na lista disponível`);
+          }
+          return exists && activity.personalizedTitle && activity.personalizedDescription;
+        })
+        .slice(0, 6); // Limitar a 6 atividades máximo
 
       if (validActivities.length === 0) {
-        throw new Error('Nenhuma atividade válida foi gerada pela IA');
+        console.error('❌ Nenhuma atividade válida foi gerada pela IA');
+        throw new Error('IA não conseguiu gerar atividades válidas com base nos dados fornecidos');
       }
 
-      // Converter para ActionPlanItem[]
-      const actionPlanItems: ActionPlanItem[] = validActivities.map((item: any, index: number) => ({
-        id: item.id || `action-${index + 1}`,
-        title: item.title || 'Atividade personalizada',
-        description: item.description || 'Descrição personalizada',
-        approved: false
-      }));
+      // Converter para ActionPlanItem[] com dados originais + personalizados
+      const actionPlanItems: ActionPlanItem[] = validActivities.map((item: any) => {
+        const originalActivity = schoolPowerActivities.find(orig => orig.id === item.id);
+        
+        return {
+          id: item.id,
+          title: originalActivity?.title || 'Atividade',
+          description: originalActivity?.description || 'Descrição da atividade',
+          personalizedTitle: item.personalizedTitle,
+          personalizedDescription: item.personalizedDescription,
+          approved: false
+        };
+      });
 
-      console.log('✅ Plano de ação gerado com sucesso:', actionPlanItems);
+      console.log('✅ Plano de ação gerado com análise completa:', actionPlanItems);
+      console.log('📊 Atividades personalizadas baseadas em:', {
+        mensagemInicial: message,
+        dadosContextualizacao: contextData,
+        atividadesGeradas: actionPlanItems.length
+      });
+      
       return actionPlanItems;
       
     } catch (error) {
       console.error('❌ Erro ao gerar plano de ação com IA Gemini:', error);
       
-      // Fallback com atividades básicas personalizadas
-      const fallbackActivities: ActionPlanItem[] = [
-        {
+      // Fallback com análise dos dados coletados
+      const fallbackActivities: ActionPlanItem[] = [];
+      
+      // Gerar fallback baseado nos dados reais coletados
+      if (contextData.subjects) {
+        fallbackActivities.push({
           id: "resumo-inteligente",
-          title: `Resumo Inteligente - ${contextData.subjects}`,
-          description: `Resumo personalizado para ${contextData.audience} sobre ${contextData.subjects}`,
+          title: "Resumo Inteligente",
+          description: "Criar resumos otimizados dos conteúdos principais",
+          personalizedTitle: `Resumo de ${contextData.subjects} para ${contextData.audience}`,
+          personalizedDescription: `Resumo personalizado sobre ${contextData.subjects}, adaptado para ${contextData.audience}${contextData.dates ? ` - Prazo: ${contextData.dates}` : ''}`,
           approved: false
-        },
-        {
-          id: "lista-exercicios",
-          title: `Lista de Exercícios - ${contextData.subjects}`,
-          description: `Exercícios práticos personalizados para ${contextData.audience}`,
-          approved: false
-        },
-        {
-          id: "prova-interativa",
-          title: `Prova Interativa - ${contextData.subjects}`,
-          description: `Avaliação interativa personalizada para ${contextData.audience}`,
-          approved: false
-        }
-      ];
+        });
+      }
 
-      console.log('🔄 Usando plano de ação fallback:', fallbackActivities);
+      if (contextData.audience && contextData.subjects) {
+        fallbackActivities.push({
+          id: "lista-exercicios",
+          title: "Lista de Exercícios", 
+          description: "Gerar exercícios práticos sobre o tema",
+          personalizedTitle: `Exercícios de ${contextData.subjects} - ${contextData.audience}`,
+          personalizedDescription: `Lista de exercícios práticos sobre ${contextData.subjects} para ${contextData.audience}${contextData.restrictions ? ` - Observações: ${contextData.restrictions}` : ''}`,
+          approved: false
+        });
+
+        fallbackActivities.push({
+          id: "prova-interativa",
+          title: "Prova Interativa",
+          description: "Criar avaliação com correção automática", 
+          personalizedTitle: `Avaliação de ${contextData.subjects} - ${contextData.audience}`,
+          personalizedDescription: `Prova interativa sobre ${contextData.subjects} adaptada para ${contextData.audience}${contextData.notes ? ` - ${contextData.notes}` : ''}`,
+          approved: false
+        });
+      }
+
+      // Adicionar atividade baseada na mensagem inicial se não houver suficientes
+      if (fallbackActivities.length < 3 && message) {
+        fallbackActivities.push({
+          id: "plano-estudo",
+          title: "Plano de Estudos",
+          description: "Cronograma personalizado de estudos",
+          personalizedTitle: "Plano de Estudos Personalizado",
+          personalizedDescription: `Cronograma baseado na solicitação: "${message.substring(0, 100)}..."`,
+          approved: false
+        });
+      }
+
+      console.log('🔄 Fallback com análise dos dados coletados:', fallbackActivities);
+      console.log('📝 Dados utilizados no fallback:', {
+        mensagem: message,
+        materias: contextData.subjects,
+        publico: contextData.audience,
+        restricoes: contextData.restrictions,
+        datas: contextData.dates,
+        observacoes: contextData.notes
+      });
+
       return fallbackActivities;
     }
   }, []);
