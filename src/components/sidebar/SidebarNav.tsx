@@ -859,6 +859,8 @@ export function SidebarNav({
           height: 100% !important;
           min-height: 56px !important;
           box-sizing: border-box !important;
+          flex-wrap: nowrap !important;
+          overflow: hidden !important;
         }
 
         .icon-container {
@@ -927,6 +929,8 @@ export function SidebarNav({
           gap: 2px;
           min-height: 36px !important;
           justify-content: center !important;
+          min-width: 0 !important;
+          overflow: hidden !important;
         }
 
         .item-title {
@@ -934,8 +938,13 @@ export function SidebarNav({
           font-weight: 600;
           color: #1a202c;
           transition: color 0.3s ease;
-          line-height: 1.2 !important;
+          line-height: 1.4 !important;
           margin: 0 !important;
+          white-space: nowrap !important;
+          overflow: hidden !important;
+          text-overflow: ellipsis !important;
+          display: block !important;
+          width: 100% !important;
         }
 
         .dark .item-title {
