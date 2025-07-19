@@ -78,10 +78,15 @@ export function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
 
   // Envia mensagem inicial e inicia processo de contextualização
   const sendInitialMessage = useCallback((message: string) => {
-    console.log('📤 Mensagem inicial enviada:', message);
+    console.log('📤 SCHOOL POWER FLOW - Mensagem inicial enviada:', message);
+    console.log('📊 SCHOOL POWER FLOW - Tamanho da mensagem:', message.length, 'caracteres');
+    console.log('📝 SCHOOL POWER FLOW - Conteúdo completo:', message);
+    
+    // Muda estado imediatamente para ocultar componentes padrão
+    setFlowState('contextualizing');
     
     const newData: SchoolPowerFlowData = {
-      initialMessage: message,
+      initialMessage: message.trim(),
       contextualizationData: null,
       actionPlan: null,
       timestamp: Date.now()
@@ -89,7 +94,9 @@ export function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
     
     setFlowData(newData);
     saveData(newData);
-    setFlowState('contextualizing');
+    
+    console.log('✅ SCHOOL POWER FLOW - Estado alterado para contextualizing');
+    console.log('💾 SCHOOL POWER FLOW - Dados salvos:', newData);
   }, [saveData]);
 
   // Função para gerar action plan com API Gemini
@@ -314,12 +321,24 @@ RESPONDA APENAS COM O JSON - SEM TEXTO ADICIONAL.`;
 
   // Submete dados de contextualização e gera action plan
   const submitContextualization = useCallback(async (data: ContextualizationData) => {
-    console.log('📝 Contextualização submetida:', data);
+    console.log('📝 SCHOOL POWER FLOW - Contextualização submetida:', data);
+    console.log('📊 SCHOOL POWER FLOW - Dados coletados:', {
+      materias: data.subjects,
+      publico: data.audience,
+      restricoes: data.restrictions,
+      datas: data.dates,
+      observacoes: data.notes
+    });
+    
+    // Alterar estado imediatamente para 'generating' 
+    setFlowState('generating');
     setIsLoading(true);
-    setFlowState('actionplan');
     
     try {
-      // Gerar action plan com IA Gemini usando dados reais
+      console.log('🤖 SCHOOL POWER FLOW - Iniciando geração com IA Gemini...');
+      console.log('📝 SCHOOL POWER FLOW - Mensagem inicial:', flowData.initialMessage);
+      
+      // Gerar action plan com IA Gemini usando dados reais coletados
       const actionPlan = await generateActionPlan(flowData.initialMessage || '', data);
       
       const newData: SchoolPowerFlowData = {
@@ -331,11 +350,16 @@ RESPONDA APENAS COM O JSON - SEM TEXTO ADICIONAL.`;
       
       setFlowData(newData);
       saveData(newData);
-      console.log('✅ Action plan gerado e salvo:', actionPlan);
+      
+      // Mudar para actionplan quando terminar a geração
+      setFlowState('actionplan');
+      
+      console.log('✅ SCHOOL POWER FLOW - Action plan gerado e salvo:', actionPlan);
+      console.log('📊 SCHOOL POWER FLOW - Total de atividades geradas:', actionPlan.length);
       
     } catch (error) {
-      console.error('❌ Erro ao processar contextualização:', error);
-      // Manter estado de erro visível para o usuário
+      console.error('❌ SCHOOL POWER FLOW - Erro ao processar contextualização:', error);
+      // Voltar para contextualização em caso de erro
       setFlowState('contextualizing');
     } finally {
       setIsLoading(false);

@@ -28,50 +28,29 @@ export function ContextualizationCard({ onSubmit }: ContextualizationCardProps) 
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = async () => {
-    if (!formData.subjects.trim() || !formData.audience.trim() || !formData.restrictions.trim()) {
-      alert('Por favor, preencha os campos obrigatórios.');
+  const handleSubmit = () => {
+    // Validação básica
+    if (!formData.subjects.trim()) {
+      alert('Por favor, informe as matérias ou temas específicos.');
       return;
     }
 
-    setIsLoading(true);
-
-    try {
-      // Simula processamento
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const contextData: ContextualizationData = {
-        subjects: formData.subjects.trim(),
-        audience: formData.audience.trim(),
-        restrictions: formData.restrictions.trim(),
-        dates: formData.dates.trim(),
-        notes: formData.notes.trim()
-      };
-
-      console.log('📋 CONTEXTUALIZAÇÃO COMPLETA - Dados coletados:');
-      console.log('📚 Matérias/Temas:', contextData.subjects);
-      console.log('👥 Público-alvo:', contextData.audience);
-      console.log('⚠️ Restrições:', contextData.restrictions || 'Nenhuma');
-      console.log('📅 Datas importantes:', contextData.dates || 'Nenhuma');
-      console.log('📝 Observações:', contextData.notes || 'Nenhuma');
-      console.log('📊 Total de campos preenchidos:', Object.values(contextData).filter(val => val.trim().length > 0).length);
-
-      // Validação adicional para garantir qualidade dos dados
-      if (contextData.subjects.length < 5) {
-        console.warn('⚠️ Descrição das matérias muito curta - pode limitar a análise da IA');
-      }
-
-      if (contextData.audience.length < 5) {
-        console.warn('⚠️ Descrição do público-alvo muito curta - pode limitar a personalização');
-      }
-
-      onSubmit(contextData);
-
-    } catch (error) {
-      console.error('Erro ao processar contextualização:', error);
-    } finally {
-      setIsLoading(false);
+    if (!formData.audience.trim()) {
+      alert('Por favor, informe o público-alvo.');
+      return;
     }
+
+    console.log('📝 CONTEXTUALIZAÇÃO - Dados coletados para envio:', formData);
+    console.log('📊 CONTEXTUALIZAÇÃO - Validação completa:', {
+      materias: formData.subjects?.length || 0,
+      publico: formData.audience?.length || 0,
+      restricoes: formData.restrictions?.length || 0,
+      datas: formData.dates?.length || 0,
+      observacoes: formData.notes?.length || 0
+    });
+
+    // Enviar dados imediatamente
+    onSubmit(formData);
   };
 
   return (
