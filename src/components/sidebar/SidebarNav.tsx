@@ -63,7 +63,7 @@ export function SidebarNav({
   const navigate = useNavigate();
   const location = useLocation();
   const [showMentorAI, setShowMentorAI] = useState(false);
-  const [showNovidadesPopup, setShowNovidadesPopup] = useState(false);
+  
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -347,12 +347,6 @@ export function SidebarNav({
       path: "/comunidades",
     },
     {
-      icon: <MessageCircle className="h-5 w-5" />,
-      label: "Conexão Expert",
-      path: "/pedidos-ajuda",
-      isSpecial: true,
-    },
-    {
       icon: <Brain className="h-5 w-5" />,
       label: "Epictus IA",
       path: "/epictus-ia",
@@ -393,39 +387,6 @@ export function SidebarNav({
       ],
     },
     {
-      icon: <BookMarked className="h-5 w-5" />,
-      label: "Portal",
-      path: "/portal",
-    },
-    {
-      icon: <Compass className="h-5 w-5" />,
-      label: "Explorar",
-      path: "/explorar",
-      subItems: [
-        {
-          name: "Trilha School",
-          path: "/trilha-conhecimento",
-          icon: <Map className="h-4 w-4 text-[#FF6B00]" />,
-        },
-        {
-          name: "Trade School",
-          path: "/trade-school",
-          icon: <GraduationCap className="h-4 w-4 text-[#FF6B00]" />,
-        },
-        {
-          name: "Eventos",
-          path: "/eventos",
-          icon: <CalendarClock className="h-4 w-4 text-[#FF6B00]" />,
-        },
-        {
-          name: "EPC",
-          path: "/epc",
-          icon: <Upload className="h-4 w-4 text-[#FF6B00]" />,
-        },
-      ],
-    },
-
-    {
       icon: <Trophy className="h-5 w-5" />,
       label: "Conquistas",
       path: "/conquistas",
@@ -434,12 +395,6 @@ export function SidebarNav({
       icon: <Wallet className="h-5 w-5" />,
       label: "Carteira",
       path: "/carteira",
-    },
-    {
-      icon: <Rocket className="h-5 w-5" />,
-      label: "Novidades",
-      path: "/novidades",
-      isSpecial: true,
     },
   ];
 
@@ -469,51 +424,7 @@ export function SidebarNav({
         </div>
       )}
 
-      {/* Novidades Popup - Center of the screen */}
-      {showNovidadesPopup && (
-        <div className="fixed inset-0 z-[9999] bg-background/60 backdrop-blur-sm flex items-center justify-center">
-          <div className="w-[600px] max-w-[90vw] max-h-[80vh] overflow-hidden">
-            <div className="relative bg-white dark:bg-[#121212] rounded-xl shadow-xl overflow-hidden flex flex-col">
-              <div className="flex items-center justify-between p-4 border-b">
-                <div className="flex items-center gap-2">
-                  <Rocket className="h-6 w-6 text-[#FF6B00]" />
-                  <h2 className="text-2xl font-semibold text-[#FF6B00]">
-                    Novidades da Plataforma
-                  </h2>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setShowNovidadesPopup(false)}
-                  className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-[#FF6B00]"
-                >
-                  <X className="h-5 w-5" />
-                </Button>
-              </div>
-              <div className="flex-1 overflow-hidden p-8 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
-                    <Rocket className="h-8 w-8 text-gray-400" />
-                  </div>
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-1">
-                    Página de Novidades em Desenvolvimento
-                  </h3>
-                  <p className="text-gray-500 dark:text-gray-400 mb-4">
-                    Esta funcionalidade está sendo implementada e estará
-                    disponível em breve.
-                  </p>
-                  <Button
-                    className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
-                    onClick={() => setShowNovidadesPopup(false)}
-                  >
-                    Entendi
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      
 
       {/* User Profile Component - Greeting and progress section */}
       <div
