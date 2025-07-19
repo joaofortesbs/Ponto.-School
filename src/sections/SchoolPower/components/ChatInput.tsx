@@ -1,4 +1,3 @@
-
 "use client";
 import React, { useState, useRef, useEffect } from "react";
 import { motion, useMotionValue, useTransform, useAnimationFrame, useMotionTemplate } from "framer-motion";
@@ -68,10 +67,11 @@ const MovingBorder = ({
 
 interface ChatInputProps {
   isDarkTheme?: boolean;
+  onSend?: (message: string) => void;
 }
 
 // Componente AIMessageBox
-const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true }) => {
+const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => {
   const [message, setMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
@@ -87,6 +87,11 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true }) => {
   const handleSend = () => {
     if (message.trim()) {
       console.log("Enviando mensagem:", message);
+
+      if (onSend) {
+        onSend(message.trim());
+      }
+
       setMessage("");
       setIsTyping(false);
     }
