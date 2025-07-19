@@ -1,0 +1,102 @@
+🚀 Objetivo:
+Dar vida à caixa de envio de mensagens do School Power para que, ao enviar a mensagem:
+
+✅ A mensagem seja enviada e armazenada no sistema (mensagem inicial do usuário).
+✅ Todos os componentes da interface (TopHeader, ProfileSelector, SideMenu, ChatInput) desapareçam temporariamente.
+✅ Apareça um Card central de Quiz de Contextualização, com perguntas estratégicas.
+✅ As respostas do usuário neste Quiz sejam coletadas e armazenadas junto com a mensagem inicial.
+✅ Estes dados fiquem prontos para a IA utilizar na geração do Plano de Ação (CheckList) e Atividades posteriormente.
+
+📁 Arquivos a serem criados:
+1️⃣ src/features/schoolpower/contextualization/ContextualizationCard.tsx
+✅ Componente React responsável por exibir o quiz de contextualização.
+✅ Deve renderizar um card centralizado na tela com as seguintes perguntas estratégicas em formato de formulário (campo de texto ou seleção):
+
+📌 Quais matérias e temas serão trabalhados? (campo texto longo)
+
+📌 Qual o público-alvo? (ex: turma, faixa etária, nível) (campo texto curto)
+
+📌 Quais restrições ou preferências específicas? (campo texto longo)
+
+📌 Qual o período de entrega ou datas importantes? (campo data opcional)
+
+📌 Outras observações importantes? (campo texto longo opcional)
+
+✅ Botão “Enviar”, que dispara o envio das respostas e dispara a próxima etapa do fluxo.
+✅ Utilizar Tailwind para estilização minimalista, com feedback visual de progresso (loading enquanto envia).
+
+✅ Deve receber via props:
+
+onSubmit: (data: ContextualizationData) => void
+
+✅ Interface ContextualizationData:
+
+ts
+Copiar
+Editar
+interface ContextualizationData {
+  subjects: string;
+  audience: string;
+  restrictions: string;
+  dates?: string;
+  notes?: string;
+}
+2️⃣ src/features/schoolpower/hooks/useSchoolPowerFlow.ts
+✅ Hook responsável por gerenciar o estado de fluxo da seção de School Power, incluindo:
+
+Estado do passo atual:
+
+"idle" ➔ exibe interface normal
+
+"contextualizing" ➔ exibe Card de Contextualização
+
+"generating" ➔ gera o plano de ação
+
+Armazenamento seguro e persistente da mensagem inicial enviada.
+
+Armazenamento seguro e persistente das respostas do quiz de contextualização.
+
+Interface clara para transição de estados.
+
+Disponibilizar funções:
+
+sendInitialMessage(message: string): void ➔ armazena mensagem e troca estado para "contextualizing"
+
+submitContextualization(data: ContextualizationData): void ➔ armazena respostas e troca estado para "generating"
+
+✅ O armazenamento inicial pode ser em localStorage ou Zustand, garantindo persistência enquanto o usuário estiver na seção, ou conforme arquitetura da Ponto. School.
+
+3️⃣ Modificação em SchoolPowerPage.tsx
+✅ Importar e utilizar useSchoolPowerFlow.
+✅ Substituir a renderização dos componentes (TopHeader, ProfileSelector, ChatInput, SideMenu) por:
+
+Se flowState === "idle" ➔ renderiza interface normal.
+
+Se flowState === "contextualizing" ➔ renderiza <ContextualizationCard />.
+
+Se flowState === "generating" ➔ exibe tela de carregamento ou plano de ação quando estiver pronto.
+
+✅ No componente ChatInput, substituir a função de envio para:
+
+ts
+Copiar
+Editar
+onSend={(message) => {
+  sendInitialMessage(message);
+}}
+📌 Considerações e requisitos importantes:
+✅ Utilize TypeScript estrito em todo o fluxo.
+✅ Usar localStorage apenas se compatível com sua arquitetura; caso use Zustand, seguir padrão existente.
+✅ O fluxo precisa ser fluido, sem bugs ou travamentos, e com feedback de carregamento entre transições de estados.
+✅ Estrutura pronta para posteriormente acionar a API Gemini e gerar o plano de ação em formato de checklist usando os dados coletados.
+
+✅ Organize e comente claramente cada parte para facilitar futuras manutenções e expansões.
+
+✅ Caso necessário, deixe prontos eventos de logs para debug.
+
+🎯 Objetivo final:
+Ter um fluxo funcional, limpo e modular, pronto para escalar, permitindo que:
+1️⃣ O professor envie sua necessidade de materiais pelo School Power.
+2️⃣ A IA colete todas as informações estratégicas antes de gerar qualquer plano.
+3️⃣ O sistema da Ponto. School crie materiais personalizados, completos e de alta qualidade de forma automática.
+
