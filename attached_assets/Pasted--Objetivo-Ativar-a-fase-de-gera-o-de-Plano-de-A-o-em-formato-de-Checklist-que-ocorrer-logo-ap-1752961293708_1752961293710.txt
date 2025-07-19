@@ -1,0 +1,154 @@
+🚀 Objetivo:
+Ativar a fase de geração de Plano de Ação em formato de Checklist, que ocorrerá logo após o usuário preencher o Card de Contextualização, dentro da seção School Power da Ponto. School, utilizando a API Gemini, gerando tarefas personalizadas e possíveis de serem executadas pelo School Power, vinculadas às Atividades Gerais cadastradas.
+
+🎯 Resumo do fluxo:
+✅ O usuário envia a mensagem inicial na ChatInput.
+✅ O usuário preenche o Card de Contextualização.
+✅ Após o envio, a API Gemini será chamada, utilizando:
+
+Mensagem inicial
+
+Respostas do Quiz de Contextualização
+
+Lista de Atividades Gerais disponíveis no School Power (consultadas do schoolPowerFeatures.json)
+
+✅ A IA retornará um Plano de Ação em formato de Checklist com no mínimo 5 tarefas, garantindo que todas as tarefas sejam atividades que o School Power consegue gerar.
+
+✅ Um novo Card de Plano de Ação será exibido, substituindo suavemente o Card de Contextualização (com animação), exibindo:
+
+O título de cada tarefa
+
+Descrição curta de cada tarefa
+
+Checkbox interativo para marcar como lida
+
+Botão “Aprovar Plano”, que ao ser clicado, dispara a geração de todas as tarefas aprovadas automaticamente pelo School Power.
+
+📁 Arquivo a ser criado:
+1️⃣ src/features/schoolpower/actionplan/ActionPlanCard.tsx
+✅ Componente React responsável por exibir o Plano de Ação em formato de Checklist gerado pela IA.
+
+Funcionalidades do componente:
+
+Recebe via props:
+
+actionPlan: ActionPlanItem[]
+
+onApprove: () => void
+
+Interface:
+
+ts
+Copiar
+Editar
+interface ActionPlanItem {
+  id: string;
+  title: string;
+  description: string;
+  approved: boolean;
+}
+Renderiza:
+
+Título: Plano de Ação Gerado
+
+Descrição orientando o usuário: “Revise o plano abaixo e clique em aprovar para gerar as atividades automaticamente.”
+
+Lista de CheckList:
+
+Cada item com:
+
+Checkbox para marcar como lido
+
+Título da tarefa
+
+Descrição curta
+
+Botão laranja “Aprovar Plano”, estilizado de forma coerente com o design Ponto. School.
+
+Feedback visual de loading durante o carregamento e envio das aprovações.
+
+✅ Utilizar animação suave com Framer Motion para a transição do ContextualizationCard para o ActionPlanCard.
+
+⚙️ Integração com o fluxo atual:
+1️⃣ Ao o usuário enviar o Quiz de Contextualização:
+
+Chamar a API Gemini (usando a GEMINI API Key: AIzaSyD-Sso0SdyYKoA4M3tQhcWjQ1AoddB7Wo4)
+
+Enviar no prompt:
+
+Mensagem inicial enviada pelo usuário
+
+Respostas do Card de Contextualização
+
+Lista de Atividades Gerais disponíveis em schoolPowerFeatures.json
+
+Solicitar que a IA gere no mínimo 5 tarefas em formato de checklist, garantindo:
+
+Cada tarefa seja uma das atividades que o School Power consegue gerar.
+
+Cada tarefa tenha título curto e descrição curta.
+
+Retorne em formato JSON:
+
+json
+Copiar
+Editar
+[
+  {
+    "id": "atividade-1",
+    "title": "Atividade 1",
+    "description": "Descrição curta da atividade"
+  },
+  ...
+]
+Armazenar a lista no estado global de School Power.
+
+2️⃣ Trocar o estado do fluxo de "contextualizing" para "actionplan" e exibir o ActionPlanCard.
+
+3️⃣ Ao clicar em “Aprovar Plano”:
+
+Trocar o estado do fluxo para "generatingActivities" para ativar a geração automática das atividades pelo School Power.
+
+Utilizar a lista aprovada para gerar as atividades reais.
+
+Ativar loaders e feedbacks visuais enquanto as atividades são geradas.
+
+📌 Considerações Técnicas:
+✅ Utilizar TypeScript estrito para consistência.
+✅ Utilizar Framer Motion para transições suaves.
+✅ Garantir que o ActionPlanCard seja modular, reativo e reutilizável.
+✅ Se necessário, utilizar zustand para armazenar o actionPlan de forma persistente no fluxo da seção.
+✅ Utilizar axios ou fetch para chamada da API Gemini com manuseio robusto de erros e timeouts.
+✅ Estruturar de forma que futuras expansões (como personalização dos planos ou geração incremental) possam ser facilmente implementadas.
+
+🔍 Exemplo de prompt para enviar à Gemini:
+css
+Copiar
+Editar
+Você é uma IA que ajuda professores a planejar atividades para seus alunos. Aqui estão as informações:
+
+Mensagem inicial do professor:
+"{mensagem_inicial}"
+
+Respostas do Quiz:
+Matérias e temas: "{subjects}"
+Público-alvo: "{audience}"
+Restrições: "{restrictions}"
+Datas importantes: "{dates}"
+Observações: "{notes}"
+
+Lista de atividades que você pode sugerir:
+{atividades_permitidas_do_school_power}
+
+Com base nessas informações, gere um plano de ação em formato de checklist, com no mínimo 5 tarefas, garantindo que cada tarefa seja uma das atividades da lista, com um título curto e uma descrição curta para cada uma. Responda em JSON no formato:
+[
+  {"id":"atividade-1","title":"Título","description":"Descrição"},
+  ...
+]
+✅ Resumo do que será entregue:
+✅ Um ActionPlanCard.tsx funcional, limpo e esteticamente integrado.
+✅ Integração completa com o fluxo do School Power.
+✅ Geração automática e personalizada de plano de ação utilizando a API Gemini.
+✅ Restrições que garantem que apenas atividades possíveis pelo School Power sejam sugeridas.
+✅ Preparação para geração de atividades após a aprovação do plano pelo usuário.
+
