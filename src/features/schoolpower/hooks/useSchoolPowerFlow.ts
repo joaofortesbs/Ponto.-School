@@ -126,93 +126,23 @@ export function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
           title: "Resumo Inteligente",
           description: "Criar resumos otimizados dos conteúdos principais",
           approved: false
-        }
-Datas importantes: "${contextData.dates}"
-Observações: "${contextData.notes}"
-
-Lista de atividades que você pode sugerir:
-${activitiesText}
-
-Com base nessas informações, gere um plano de ação em formato de checklist, com no mínimo 5 tarefas, garantindo que cada tarefa seja uma das atividades da lista, com um título curto e uma descrição curta para cada uma. Responda APENAS em JSON no formato:
-[
-  {"id":"atividade-1","title":"Título","description":"Descrição"},
-  {"id":"atividade-2","title":"Título","description":"Descrição"}
-]`;
-
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: prompt
-            }]
-          }]
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`API Error: ${response.status}`);
-      }
-
-      const result = await response.json();
-      const generatedText = result.candidates?.[0]?.content?.parts?.[0]?.text;
-      
-      if (!generatedText) {
-        throw new Error('No content generated');
-      }
-
-      // Parse JSON do response
-      const jsonMatch = generatedText.match(/\[[\s\S]*\]/);
-      if (!jsonMatch) {
-        throw new Error('No valid JSON found in response');
-      }
-
-      const actionPlanData = JSON.parse(jsonMatch[0]);
-      
-      // Converter para ActionPlanItem[]
-      return actionPlanData.map((item: any, index: number) => ({
-        id: item.id || `action-${index + 1}`,
-        title: item.title || 'Atividade sem título',
-        description: item.description || 'Descrição não disponível',
-        approved: false
-      }));
-      
-    } catch (error) {
-      console.error('❌ Erro ao gerar action plan:', error);
-      
-      // Fallback para plano genérico
-      return [
         {
-          id: 'fallback-1',
-          title: 'Resumo Inteligente',
-          description: 'Criar resumos otimizados dos conteúdos principais',
+          id: 'lista-exercicios',
+          title: 'Lista de Exercícios',
+          description: 'Exercícios práticos sobre o tema',
           approved: false
         },
         {
-          id: 'fallback-2',
+          id: 'mapa-mental',
+          title: 'Mapa Mental',
+          description: 'Organização visual dos conceitos',
+          approved: false
+        },
+        {
+          id: 'prova-interativa',
           title: 'Prova Interativa',
-          description: 'Gerar avaliação com correção automática',
-          approved: false
-        },
-        {
-          id: 'fallback-3',
-          title: 'Plano de Estudo',
-          description: 'Cronograma personalizado para o aluno',
-          approved: false
-        },
-        {
-          id: 'fallback-4',
-          title: 'Exercícios Práticos',
-          description: 'Lista de exercícios sobre o tema',
-          approved: false
-        },
-        {
-          id: 'fallback-5',
-          title: 'Material de Apoio',
-          description: 'Recursos complementares para estudo',
+          description: 'Avaliação com correção automática',
           approved: false
         }
       ];
