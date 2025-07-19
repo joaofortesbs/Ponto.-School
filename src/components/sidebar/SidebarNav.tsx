@@ -312,44 +312,32 @@ export function SidebarNav({
       icon: <Home className="h-5 w-5" />,
       label: "Painel",
       path: "/",
-      gradient: "from-blue-500 to-blue-600",
-      hoverGradient: "from-blue-600 to-blue-700",
-      iconBg: "bg-gradient-to-r from-blue-100 to-blue-200 dark:from-blue-900/30 dark:to-blue-800/30",
-      accent: "#3B82F6",
     },
     {
       icon: <BookOpen className="h-5 w-5" />,
       label: "Minhas Turmas",
       path: "/turmas",
       component: <TurmasNav />,
-      gradient: "from-emerald-500 to-emerald-600",
-      hoverGradient: "from-emerald-600 to-emerald-700",
-      iconBg: "bg-gradient-to-r from-emerald-100 to-emerald-200 dark:from-emerald-900/30 dark:to-emerald-800/30",
-      accent: "#10B981",
       subItems: [
         {
           name: "Visão Geral",
           path: "/turmas",
-          icon: <Home className="h-4 w-4" />,
-          color: "#10B981",
+          icon: <Home className="h-4 w-4 text-[#29335C]" />,
         },
         {
           name: "Turmas Ativas",
           path: "/turmas?view=ativas",
-          icon: <BookOpen className="h-4 w-4" />,
-          color: "#10B981",
+          icon: <BookOpen className="h-4 w-4 text-[#29335C]" />,
         },
         {
           name: "Grupos de Estudo",
           path: "/turmas?view=grupos-estudo",
-          icon: <Users2 className="h-4 w-4" />,
-          color: "#10B981",
+          icon: <Users2 className="h-4 w-4 text-[#29335C]" />,
         },
         {
           name: "Desempenho",
           path: "/turmas?view=desempenho",
-          icon: <BarChart className="h-4 w-4" />,
-          color: "#10B981",
+          icon: <BarChart className="h-4 w-4 text-[#29335C]" />,
         },
       ],
     },
@@ -357,66 +345,44 @@ export function SidebarNav({
       icon: <Users2 className="h-5 w-5" />,
       label: "Comunidades",
       path: "/comunidades",
-      gradient: "from-purple-500 to-purple-600",
-      hoverGradient: "from-purple-600 to-purple-700",
-      iconBg: "bg-gradient-to-r from-purple-100 to-purple-200 dark:from-purple-900/30 dark:to-purple-800/30",
-      accent: "#8B5CF6",
     },
     {
       icon: <Brain className="h-5 w-5" />,
       label: "Epictus IA",
       path: "/epictus-ia",
       isSpecial: true,
-      gradient: "from-cyan-500 to-cyan-600",
-      hoverGradient: "from-cyan-600 to-cyan-700",
-      iconBg: "bg-gradient-to-r from-cyan-100 to-cyan-200 dark:from-cyan-900/30 dark:to-cyan-800/30",
-      accent: "#06B6D4",
-      badge: "IA",
     },
     {
       icon: <Rocket className="h-5 w-5" />,
       label: "School Power",
       path: "/school-power",
       isSpecial: true,
-      gradient: "from-orange-500 to-orange-600",
-      hoverGradient: "from-orange-600 to-orange-700",
-      iconBg: "bg-gradient-to-r from-orange-100 to-orange-200 dark:from-orange-900/30 dark:to-orange-800/30",
-      accent: "#F97316",
-      badge: "POWER",
     },
     {
       icon: <Calendar className="h-5 w-5" />,
       label: "Agenda",
       path: "/agenda",
       component: <AgendaNav />,
-      gradient: "from-indigo-500 to-indigo-600",
-      hoverGradient: "from-indigo-600 to-indigo-700",
-      iconBg: "bg-gradient-to-r from-indigo-100 to-indigo-200 dark:from-indigo-900/30 dark:to-indigo-800/30",
-      accent: "#6366F1",
       subItems: [
         {
           name: "Visão Geral",
           path: "/agenda?view=visao-geral",
-          icon: <Home className="h-4 w-4" />,
-          color: "#6366F1",
+          icon: <Home className="h-4 w-4 text-[#29335C]" />,
         },
         {
           name: "Calendário",
           path: "/agenda?view=calendario",
-          icon: <Calendar className="h-4 w-4" />,
-          color: "#6366F1",
+          icon: <Calendar className="h-4 w-4 text-[#29335C]" />,
         },
         {
           name: "Tarefas",
           path: "/agenda?view=tarefas",
-          icon: <CheckSquare className="h-4 w-4" />,
-          color: "#6366F1",
+          icon: <CheckSquare className="h-4 w-4 text-[#29335C]" />,
         },
         {
           name: "Desafios",
           path: "/agenda?view=desafios",
-          icon: <Target className="h-4 w-4" />,
-          color: "#6366F1",
+          icon: <Target className="h-4 w-4 text-[#29335C]" />,
         },
       ],
     },
@@ -424,19 +390,11 @@ export function SidebarNav({
       icon: <Trophy className="h-5 w-5" />,
       label: "Conquistas",
       path: "/conquistas",
-      gradient: "from-yellow-500 to-yellow-600",
-      hoverGradient: "from-yellow-600 to-yellow-700",
-      iconBg: "bg-gradient-to-r from-yellow-100 to-yellow-200 dark:from-yellow-900/30 dark:to-yellow-800/30",
-      accent: "#EAB308",
     },
     {
       icon: <Wallet className="h-5 w-5" />,
       label: "Carteira",
       path: "/carteira",
-      gradient: "from-green-500 to-green-600",
-      hoverGradient: "from-green-600 to-green-700",
-      iconBg: "bg-gradient-to-r from-green-100 to-green-200 dark:from-green-900/30 dark:to-green-800/30",
-      accent: "#22C55E",
     },
   ];
 
@@ -877,22 +835,16 @@ export function SidebarNav({
                 <Button
                   variant="ghost"
                   className={cn(
-                    "flex items-center gap-3 rounded-xl px-3 py-3 text-start w-full relative overflow-hidden backdrop-blur-sm",
+                    "flex items-center gap-3 rounded-lg px-3 py-2 text-start w-full",
                     isCollapsed ? "justify-center" : "justify-between",
                     isActive(item.path)
-                      ? `bg-gradient-to-r ${item.gradient} text-white shadow-lg shadow-${item.accent}20 dark:shadow-${item.accent}30`
-                      : "text-[#001427] hover:bg-white/80 dark:text-white dark:hover:bg-white/5 hover:shadow-md",
-                    "group hover:scale-[1.02] transition-all duration-300 hover:shadow-lg active:scale-[0.98]",
-                    "border border-transparent hover:border-white/20 dark:hover:border-white/10",
+                      ? "bg-[#FF6B00]/10 text-[#FF6B00] dark:bg-[#FF6B00]/20 dark:text-[#FF6B00]"
+                      : "text-[#001427] hover:bg-[#FF6B00]/5 dark:text-white dark:hover:bg-[#FF6B00]/10",
+                    "group hover:scale-[1.02] transition-all duration-200 hover:shadow-sm active:scale-[0.98]",
+                    item.label === "Novidades"
+                      ? "relative overflow-hidden"
+                      : "",
                   )}
-                  style={{
-                    background: isActive(item.path) 
-                      ? `linear-gradient(135deg, ${item.accent}15 0%, ${item.accent}25 100%)`
-                      : undefined,
-                    borderColor: isActive(item.path) 
-                      ? `${item.accent}40`
-                      : undefined,
-                  }}
                   onClick={(e) => {
                     if (item.subItems && !isCollapsed) {
                       e.preventDefault();
@@ -902,271 +854,112 @@ export function SidebarNav({
                     }
                   }}
                 >
-                  {/* Gradient overlay for active state */}
-                  {isActive(item.path) && (
-                    <div 
-                      className="absolute inset-0 rounded-xl opacity-10"
-                      style={{
-                        background: `linear-gradient(135deg, ${item.accent} 0%, transparent 100%)`
-                      }}
-                    />
+                  {item.label === "Novidades" && (
+                    <div className="absolute inset-0 rounded-lg border border-transparent bg-gradient-to-r from-[#FFD700] to-[#FF6B00] opacity-10 animate-gradient-x"></div>
                   )}
-                  
-                  {/* Hover glow effect */}
-                  <div 
-                    className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-5 transition-opacity duration-300"
-                    style={{
-                      background: `linear-gradient(135deg, ${item.accent} 0%, transparent 100%)`
-                    }}
-                  />
-                  
                   <div className="flex items-center relative z-10">
-                    {/* Sophisticated icon container */}
                     <div
                       className={cn(
-                        "relative transition-all duration-300 rounded-lg p-2 flex items-center justify-center",
+                        "transition-all duration-300",
                         isCollapsed ? "mx-auto" : "mr-3",
                         isActive(item.path)
-                          ? "text-white transform scale-110"
-                          : `text-[${item.accent}] ${item.iconBg}`,
-                        "group-hover:scale-110 group-hover:rotate-3",
+                          ? "text-[#FF6B00] dark:text-[#FF6B00]"
+                          : item.label === "Novidades"
+                            ? "text-[#FF6B00] dark:text-[#FF6B00]"
+                            : "text-[#001427] dark:text-white",
                       )}
-                      style={{
-                        color: isActive(item.path) ? 'white' : item.accent,
-                      }}
                     >
-                      {/* Icon glow effect */}
-                      <div 
-                        className={cn(
-                          "absolute inset-0 rounded-lg blur-md opacity-0 transition-opacity duration-300",
-                          isActive(item.path) ? "opacity-30" : "group-hover:opacity-20"
-                        )}
-                        style={{
-                          background: item.accent,
-                        }}
-                      />
-                      
-                      <div className="relative z-10">
-                        {item.icon}
-                      </div>
-                      
-                      {/* Pulse animation for special items */}
-                      {item.isSpecial && (
-                        <div 
-                          className="absolute inset-0 rounded-lg animate-pulse opacity-20"
-                          style={{
-                            background: `linear-gradient(45deg, ${item.accent}, transparent)`
-                          }}
-                        />
-                      )}
+                      {item.icon}
                     </div>
-                    
                     {!isCollapsed && (
-                      <div className="flex items-center gap-2 flex-1">
+                      <div className="flex items-center gap-2">
                         <span
                           className={cn(
-                            "font-medium transition-all duration-300",
-                            isActive(item.path)
-                              ? "text-white"
-                              : "text-[#001427] dark:text-white group-hover:font-semibold",
-                            item.isSpecial ? "tracking-wide" : "",
+                            item.label === "Novidades"
+                              ? "text-[#FF6B00] font-bold"
+                              : "",
                           )}
                         >
                           {item.label}
                         </span>
-                        
-                        {/* Special badges for AI and Power items */}
-                        {item.badge && (
-                          <span 
-                            className={cn(
-                              "px-2 py-0.5 text-xs rounded-full font-bold tracking-wider",
-                              "bg-gradient-to-r text-white shadow-sm",
-                              isActive(item.path) 
-                                ? "bg-white/20 text-white" 
-                                : "text-white"
-                            )}
-                            style={{
-                              background: isActive(item.path) 
-                                ? 'rgba(255,255,255,0.2)' 
-                                : `linear-gradient(135deg, ${item.accent}, ${item.accent}dd)`
-                            }}
-                          >
-                            {item.badge}
+                        {item.label === "Explorar" && (
+                          <span className="px-1.5 py-0.5 text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-md">
+                            Em breve
                           </span>
                         )}
                       </div>
                     )}
                   </div>
-                  
                   {!isCollapsed && item.subItems && (
-                    <div 
-                      className={cn(
-                        "transition-all duration-300 rounded p-1",
-                        isActive(item.path) ? "text-white" : `text-[${item.accent}]`
-                      )}
-                      style={{
-                        color: isActive(item.path) ? 'white' : item.accent,
-                      }}
-                    >
+                    <div className="text-[#001427] dark:text-white">
                       {expandedSection === item.label ? (
-                        <ChevronUp className="h-4 w-4 transform rotate-180 transition-transform duration-300" />
+                        <ChevronUp className="h-4 w-4" />
                       ) : (
-                        <ChevronDown className="h-4 w-4 transition-transform duration-300" />
+                        <ChevronDown className="h-4 w-4" />
                       )}
                     </div>
                   )}
-                  
-                  {/* Sophisticated left accent bar */}
-                  <div
-                    className={cn(
-                      "absolute left-0 top-0 h-full w-1 rounded-r-full transition-all duration-300",
-                      isActive(item.path)
-                        ? "w-2 opacity-100 shadow-lg"
-                        : "w-0 opacity-0 group-hover:w-1 group-hover:opacity-60",
-                    )}
-                    style={{
-                      background: `linear-gradient(to bottom, ${item.accent}, ${item.accent}80)`,
-                      boxShadow: isActive(item.path) ? `0 0 20px ${item.accent}60` : 'none',
-                    }}
-                  />
-                  
-                  {/* Bottom glow line for active items */}
-                  {isActive(item.path) && (
-                    <div 
-                      className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-8 h-0.5 rounded-full opacity-60"
-                      style={{
-                        background: `linear-gradient(to right, transparent, ${item.accent}, transparent)`,
-                        boxShadow: `0 0 10px ${item.accent}`,
-                      }}
+                  {item.label !== "Novidades" && (
+                    <div
+                      className={cn(
+                        "absolute left-0 top-0 h-full w-1 rounded-r-md transition-all duration-300",
+                        isActive(item.path)
+                          ? "bg-[#FF6B00]"
+                          : "bg-transparent group-hover:bg-[#FF6B00]/30",
+                      )}
                     />
                   )}
                 </Button>
               )}
 
-              {/* Sophisticated Sub Items with enhanced animation */}
+              {/* Sub Items */}
               {!isCollapsed &&
                 item.subItems &&
                 expandedSection === item.label && (
-                  <div className="mt-2 space-y-1 pl-4 border-l-2 border-gradient-to-b relative">
-                    {/* Animated connection line */}
-                    <div 
-                      className="absolute left-0 top-0 w-0.5 h-full rounded-full opacity-30 animate-pulse"
-                      style={{
-                        background: `linear-gradient(to bottom, ${item.accent}60, transparent)`,
-                      }}
-                    />
-                    
+                  <div className="mt-1 space-y-1">
                     {item.subItems.map((subItem, subIndex) => (
                       <Button
                         key={subIndex}
                         variant="ghost"
                         className={cn(
-                          "flex items-center gap-3 rounded-lg px-3 py-2.5 text-start w-full justify-start relative overflow-hidden",
-                          "backdrop-blur-sm transition-all duration-300 border border-transparent",
+                          "flex items-center gap-2 rounded-lg px-3 py-2 text-start w-full justify-start",
                           isActive(subItem.path)
-                            ? "bg-gradient-to-r text-white shadow-md font-medium transform scale-105"
-                            : "text-[#001427] hover:bg-white/60 dark:text-white dark:hover:bg-white/10 hover:shadow-sm",
-                          "group hover:translate-x-2 hover:scale-[1.02] active:scale-[0.98]",
+                            ? "bg-[#FF6B00]/10 text-[#FF6B00] dark:bg-[#FF6B00]/20 dark:text-[#FF6B00] font-medium"
+                            : "text-[#001427] hover:bg-[#FF6B00]/5 dark:text-white dark:hover:bg-[#FF6B00]/10",
+                          "hover:translate-x-1 transition-transform pl-2",
                         )}
-                        style={{
-                          background: isActive(subItem.path) 
-                            ? `linear-gradient(135deg, ${subItem.color}20 0%, ${subItem.color}10 100%)`
-                            : undefined,
-                          borderColor: isActive(subItem.path) 
-                            ? `${subItem.color}30`
-                            : undefined,
-                        }}
                         onClick={() => navigate(subItem.path)}
                       >
-                        {/* Gradient overlay for active state */}
-                        {isActive(subItem.path) && (
-                          <div 
-                            className="absolute inset-0 rounded-lg opacity-5"
-                            style={{
-                              background: `linear-gradient(135deg, ${subItem.color} 0%, transparent 100%)`
-                            }}
-                          />
-                        )}
-                        
-                        {/* Hover effect */}
-                        <div 
-                          className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-3 transition-opacity duration-300"
-                          style={{
-                            background: `linear-gradient(135deg, ${subItem.color} 0%, transparent 100%)`
-                          }}
-                        />
-                        
-                        {/* Sophisticated icon container */}
-                        <div
-                          className={cn(
-                            "relative transition-all duration-300 rounded-md p-1.5 flex items-center justify-center",
-                            isActive(subItem.path)
-                              ? "transform scale-110 text-white"
-                              : "text-[#001427] dark:text-white group-hover:scale-110",
-                            "group-hover:rotate-6",
+                        {subItem.icon}
+                        <div className="flex items-center gap-2 w-full">
+                          <span>{subItem.name}</span>
+                          {item.label === "Explorar" && (
+                            <span className="ml-auto">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="14"
+                                height="14"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="text-gray-500 dark:text-gray-400"
+                              >
+                                <rect
+                                  width="18"
+                                  height="11"
+                                  x="3"
+                                  y="11"
+                                  rx="2"
+                                  ry="2"
+                                ></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                              </svg>
+                            </span>
                           )}
-                          style={{
-                            background: isActive(subItem.path) 
-                              ? `${subItem.color}20` 
-                              : `${subItem.color}10`,
-                            color: isActive(subItem.path) ? subItem.color : undefined,
-                          }}
-                        >
-                          {/* Icon glow effect */}
-                          <div 
-                            className={cn(
-                              "absolute inset-0 rounded-md blur-sm opacity-0 transition-opacity duration-300",
-                              isActive(subItem.path) ? "opacity-20" : "group-hover:opacity-10"
-                            )}
-                            style={{
-                              background: subItem.color,
-                            }}
-                          />
-                          
-                          <div className="relative z-10">
-                            {subItem.icon}
-                          </div>
                         </div>
-                        
-                        <div className="flex items-center gap-2 w-full relative z-10">
-                          <span 
-                            className={cn(
-                              "font-medium transition-all duration-300",
-                              isActive(subItem.path)
-                                ? "font-semibold"
-                                : "group-hover:font-semibold",
-                            )}
-                            style={{
-                              color: isActive(subItem.path) ? subItem.color : undefined,
-                            }}
-                          >
-                            {subItem.name}
-                          </span>
-                        </div>
-                        
-                        {/* Connection dot */}
-                        <div 
-                          className={cn(
-                            "absolute -left-4 top-1/2 transform -translate-y-1/2 w-2 h-2 rounded-full transition-all duration-300",
-                            isActive(subItem.path) ? "scale-125 opacity-100" : "scale-75 opacity-40 group-hover:scale-100 group-hover:opacity-70"
-                          )}
-                          style={{
-                            background: subItem.color,
-                            boxShadow: isActive(subItem.path) ? `0 0 10px ${subItem.color}60` : 'none',
-                          }}
-                        />
-                        
-                        {/* Micro accent line */}
-                        <div
-                          className={cn(
-                            "absolute bottom-0 left-0 h-0.5 rounded-full transition-all duration-300",
-                            isActive(subItem.path) ? "w-full opacity-100" : "w-0 opacity-0 group-hover:w-1/3 group-hover:opacity-60"
-                          )}
-                          style={{
-                            background: `linear-gradient(to right, ${subItem.color}, transparent)`,
-                            boxShadow: isActive(subItem.path) ? `0 0 5px ${subItem.color}40` : 'none',
-                          }}
-                        />
                       </Button>
                     ))}
                   </div>
