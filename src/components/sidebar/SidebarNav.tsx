@@ -9,7 +9,7 @@ interface SidebarNavProps {
   onToggle: () => void;
 }
 
-const SidebarNav: React.FC<SidebarNavProps> = ({ isOpen, onToggle }) => {
+export const SidebarNav: React.FC<SidebarNavProps> = ({ isOpen, onToggle }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [activeSection, setActiveSection] = useState('painel');
@@ -318,4 +318,3 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ isOpen, onToggle }) => {
   );
 };
 
-export default SidebarNav;
