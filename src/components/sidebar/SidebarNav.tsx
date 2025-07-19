@@ -337,6 +337,11 @@ export function SidebarNav({
       path: "/school-planner",
     },
     {
+      icon: "fas fa-rocket",
+      label: "School Power",
+      path: "/school-power",
+    },
+    {
       icon: "fas fa-brain",
       label: "Epictus IA",
       path: "/epictus-ia",
@@ -933,9 +938,17 @@ export function SidebarNav({
           margin: 0 !important;
         }
 
+        .dark .item-title {
+          color: white !important;
+        }
+
         .menu-item.active .item-title {
           color: #FF6B00 !important;
           font-weight: 700;
+        }
+
+        .dark .menu-item.active .item-title {
+          color: #FF6B00 !important;
         }
 
         .menu-item:hover:not(.active) .item-title {
