@@ -360,14 +360,14 @@ export function SidebarNav({
       isSpecial: true,
     },
     {
-      icon: "fas fa-users",
-      label: "Comunidades",
-      path: "/comunidades",
-    },
-    {
       icon: "fas fa-calendar-alt",
       label: "Agenda",
       path: "/agenda",
+    },
+    {
+      icon: "fas fa-users",
+      label: "Comunidades",
+      path: "/comunidades",
     },
     {
       icon: "fas fa-trophy",
@@ -393,14 +393,14 @@ export function SidebarNav({
       path: "/turmas",
     },
     {
-      icon: "fas fa-rocket",
-      label: "School Power",
-      path: "/school-power",
-    },
-    {
       icon: "fas fa-route",
       label: "Trilhas School",
       path: "/trilhas-school",
+    },
+    {
+      icon: "fas fa-rocket",
+      label: "School Power",
+      path: "/school-power",
     },
     {
       icon: "fas fa-brain",
