@@ -1,6 +1,6 @@
 
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Check, Clock, ArrowRight } from "lucide-react";
 
@@ -18,8 +18,15 @@ interface ActionPlanCardProps {
 }
 
 export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: ActionPlanCardProps) {
-  const [items, setItems] = useState<ActionPlanItem[]>(actionPlan);
+  const [items, setItems] = useState<ActionPlanItem[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Atualiza os items quando actionPlan muda
+  useEffect(() => {
+    if (actionPlan && actionPlan.length > 0) {
+      setItems(actionPlan.map(item => ({ ...item, approved: false })));
+    }
+  }, [actionPlan]);
 
   const handleToggleApproval = (itemId: string) => {
     setItems(prevItems =>
@@ -48,8 +55,9 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
   };
 
   const approvedCount = items.filter(item => item.approved).length;
+  const totalItems = items.length;
 
-  if (isLoading) {
+  if (isLoading || (!actionPlan || actionPlan.length === 0)) {
     return (
       <motion.div
         className="w-full max-w-2xl mx-auto bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl rounded-2xl p-8 shadow-2xl border border-white/20"
@@ -94,18 +102,18 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
       <div className="p-6">
         {/* Progress Indicator */}
         <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-          <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center justify-between text-sm mb-2">
             <span className="text-gray-600 dark:text-gray-400">
               Atividades selecionadas:
             </span>
             <span className="font-semibold text-[#FF6B00]">
-              {approvedCount} de {items.length}
+              {approvedCount} de {totalItems}
             </span>
           </div>
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mt-2">
+          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
             <div
               className="bg-gradient-to-r from-[#FF6B00] to-[#FF8736] h-2 rounded-full transition-all duration-300"
-              style={{ width: `${(approvedCount / items.length) * 100}%` }}
+              style={{ width: totalItems > 0 ? `${(approvedCount / totalItems) * 100}%` : '0%' }}
             />
           </div>
         </div>
