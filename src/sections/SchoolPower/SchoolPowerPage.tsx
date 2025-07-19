@@ -24,7 +24,8 @@ export function SchoolPowerPage() {
     sendInitialMessage,
     submitContextualization,
     approveActionPlan,
-    resetFlow
+    resetFlow,
+    isLoading
   } = useSchoolPowerFlow();
 
   const handleCentralExpandedChange = (expanded: boolean) => {
