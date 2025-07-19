@@ -80,6 +80,19 @@ export function SidebarNav({
   const [cascadeIndex, setCascadeIndex] = useState(0);
   const [isModeTransitioning, setIsModeTransitioning] = useState(false);
   const [isMenuAnimating, setIsMenuAnimating] = useState(false);
+  const [pendingModeChange, setPendingModeChange] = useState(false);
+  const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
+
+  // Função para adicionar timeouts ao array
+  const addTimeout = (timeout: NodeJS.Timeout) => {
+    timeoutsRef.current.push(timeout);
+  };
+
+  // Função para limpar todos os timeouts
+  const clearAllTimeouts = () => {
+    timeoutsRef.current.forEach(timeout => clearTimeout(timeout));
+    timeoutsRef.current = []; // Limpar o array após remover os timeouts
+  };
 
   useEffect(() => {
     // Listener para atualizações de avatar feitas em outros componentes
@@ -497,23 +510,42 @@ export function SidebarNav({
                 <button
                   className="absolute top-3 right-3 w-6 h-6 rounded-full border-2 border-orange-500 bg-orange-600 bg-opacity-20 hover:bg-orange-600 hover:bg-opacity-30 flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-sm cursor-pointer z-10"
                   onClick={() => {
+                    // Limpar timeouts anteriores se existirem
+                    clearAllTimeouts();
+
                     setIsModeTransitioning(true);
                     setIsMenuAnimating(true);
                     setIsMenuFlipping(true);
+                    setPendingModeChange(true);
+
+                    // Calcular tempo total baseado no número de itens do menu
+                    const totalItems = navItems.length;
+                    const baseAnimationTime = 400; // Tempo base da animação
+                    const cascadeDelay = 80; // Delay entre cada item
+                    const totalCascadeTime = totalItems * cascadeDelay;
+                    const totalAnimationTime = baseAnimationTime + totalCascadeTime + 400; // Extra buffer
 
                     // Iniciar animação em cascata dos itens do menu
-                    setTimeout(() => {
-                      setIsCardFlipped(!isCardFlipped);
+                    const flipTimeout1 = setTimeout(() => {
+                      // Aguardar todas as animações terminarem antes de mudar o modo
+                      const modeChangeTimeout = setTimeout(() => {
+                        setIsCardFlipped(!isCardFlipped);
+                        setPendingModeChange(false);
+                      }, totalAnimationTime);
+                      addTimeout(modeChangeTimeout);
 
-                      // Continuar animação do menu por mais tempo
-                      setTimeout(() => {
+                      // Continuar animação do menu por mais tempo após mudança de modo
+                      const transitionTimeout = setTimeout(() => {
                         setIsModeTransitioning(false);
-                        setTimeout(() => {
+                        const finishTimeout = setTimeout(() => {
                           setIsMenuFlipping(false);
                           setIsMenuAnimating(false);
                         }, 800);
-                      }, 1200);
+                        addTimeout(finishTimeout);
+                      }, totalAnimationTime + 600);
+                      addTimeout(transitionTimeout);
                     }, 100);
+                    addTimeout(flipTimeout1);
                   }}
                   title="Flip Card"
                 >
@@ -696,23 +728,42 @@ export function SidebarNav({
                 <button
                   className="absolute top-3 right-3 w-6 h-6 rounded-full border-2 border-[#2462EA] bg-[#0f26aa] bg-opacity-20 hover:bg-[#0f26aa] hover:bg-opacity-30 flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-sm cursor-pointer z-10"
                   onClick={() => {
+                    // Limpar timeouts anteriores se existirem
+                    clearAllTimeouts();
+
                     setIsModeTransitioning(true);
                     setIsMenuAnimating(true);
                     setIsMenuFlipping(true);
+                    setPendingModeChange(true);
+
+                    // Calcular tempo total baseado no número de itens do menu
+                    const totalItems = navItems.length;
+                    const baseAnimationTime = 400; // Tempo base da animação
+                    const cascadeDelay = 80; // Delay entre cada item
+                    const totalCascadeTime = totalItems * cascadeDelay;
+                    const totalAnimationTime = baseAnimationTime + totalCascadeTime + 400; // Extra buffer
 
                     // Iniciar animação em cascata dos itens do menu
-                    setTimeout(() => {
-                      setIsCardFlipped(!isCardFlipped);
+                    const flipTimeout2 = setTimeout(() => {
+                      // Aguardar todas as animações terminarem antes de mudar o modo
+                      const modeChangeTimeout = setTimeout(() => {
+                        setIsCardFlipped(!isCardFlipped);
+                        setPendingModeChange(false);
+                      }, totalAnimationTime);
+                      addTimeout(modeChangeTimeout);
 
-                      // Continuar animação do menu por mais tempo
-                      setTimeout(() => {
+                      // Continuar animação do menu por mais tempo após mudança de modo
+                      const transitionTimeout = setTimeout(() => {
                         setIsModeTransitioning(false);
-                        setTimeout(() => {
+                        const finishTimeout = setTimeout(() => {
                           setIsMenuFlipping(false);
                           setIsMenuAnimating(false);
                         }, 800);
-                      }, 1200);
+                        addTimeout(finishTimeout);
+                      }, totalAnimationTime + 600);
+                      addTimeout(transitionTimeout);
                     }, 100);
+                    addTimeout(flipTimeout2);
                   }}
                   title="Flip Card"
                 >
