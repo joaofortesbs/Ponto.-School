@@ -28,23 +28,29 @@ export function ContextualizationCard({ onSubmit }: ContextualizationCardProps) 
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = async () => {
-    if (!formData.subjects.trim() || !formData.audience.trim() || !formData.restrictions.trim()) {
-      alert('Por favor, preencha os campos obrigatórios.');
+  const handleSubmit = () => {
+    // Validação básica
+    if (!formData.subjects.trim()) {
+      alert('Por favor, informe as matérias ou temas específicos.');
       return;
     }
 
-    setIsLoading(true);
-
-    try {
-      // Simula processamento
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      onSubmit(formData);
-    } catch (error) {
-      console.error('Erro ao processar contextualização:', error);
-    } finally {
-      setIsLoading(false);
+    if (!formData.audience.trim()) {
+      alert('Por favor, informe o público-alvo.');
+      return;
     }
+
+    console.log('📝 CONTEXTUALIZAÇÃO - Dados coletados para envio:', formData);
+    console.log('📊 CONTEXTUALIZAÇÃO - Validação completa:', {
+      materias: formData.subjects?.length || 0,
+      publico: formData.audience?.length || 0,
+      restricoes: formData.restrictions?.length || 0,
+      datas: formData.dates?.length || 0,
+      observacoes: formData.notes?.length || 0
+    });
+
+    // Enviar dados imediatamente
+    onSubmit(formData);
   };
 
   return (
