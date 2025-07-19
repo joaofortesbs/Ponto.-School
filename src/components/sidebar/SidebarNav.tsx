@@ -10,40 +10,19 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   Home,
   BookOpen,
-  Briefcase,
-  ShoppingCart,
-  Calendar,
   Users,
-  Settings,
-  LogOut,
-  Menu,
-  X,
-  Brain,
-  MessageCircle,
-  ChevronLeft,
-  ChevronRight,
-  HelpCircle,
-  Trophy,
-  Wallet,
-  ChevronDown,
-  ChevronUp,
-  Users2,
-  FolderKanban,
-  Rocket,
-  CheckSquare,
-  Bell,
-  Target,
-  BarChart,
-  DollarSign,
-  Plus,
-  BookText,
-  Heart,
-  BookMarked,
-  Map,
-  Compass,
   GraduationCap,
-  CalendarClock,
+  Calendar,
+  Trophy,
+  Search,
+  Brain,
   Upload,
+  CalendarClock,
+  Target,
+  Compass,
+  Settings,
+  HelpCircle,
+  Wallet,
 } from "lucide-react";
 import MentorAI from "@/components/mentor/MentorAI";
 import AgendaNav from "./AgendaNav";
@@ -63,14 +42,13 @@ export function SidebarNav({
   const navigate = useNavigate();
   const location = useLocation();
   const [showMentorAI, setShowMentorAI] = useState(false);
-  
+
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [profileImage, setProfileImage] = useState<string | null>(null);
-  const [isUploading, setIsUploading] = useState(isCollapsed);
+  const [isUploading, setIsUploading] = useState(false);
   const [firstName, setFirstName] = useState<string | null>(null);
-  const [isCardFlipped, setIsCardFlipped] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -161,17 +139,15 @@ export function SidebarNav({
 
           if (error) {
             console.error("Error fetching user profile:", error);
-            if (!firstName) setFirstName("Usuário"); // Fallback if profile fetch fails
+            if (!firstName) setFirstName("Usuário");
           } else if (data) {
             setUserProfile(data as UserProfile);
 
-            // Se o perfil tiver um avatar_url, usar ele e atualizar localStorage
             if (data.avatar_url) {
               setProfileImage(data.avatar_url);
               localStorage.setItem("userAvatarUrl", data.avatar_url);
             }
 
-            // Determinar o primeiro nome com a mesma lógica do Dashboard
             const firstName =
               data.full_name?.split(" ")[0] ||
               data.display_name ||
@@ -181,7 +157,6 @@ export function SidebarNav({
             setFirstName(firstName);
             localStorage.setItem("userFirstName", firstName);
 
-            // Disparar evento para outros componentes
             document.dispatchEvent(
               new CustomEvent("usernameUpdated", {
                 detail: {
@@ -193,11 +168,11 @@ export function SidebarNav({
             );
           }
         } else {
-          if (!firstName) setFirstName("Usuário"); // Fallback if user is not authenticated
+          if (!firstName) setFirstName("Usuário");
         }
       } catch (error) {
         console.error("Error:", error);
-        if (!firstName) setFirstName("Usuário"); // Fallback for any other error
+        if (!firstName) setFirstName("Usuário");
       } finally {
         setLoading(false);
       }
@@ -218,18 +193,15 @@ export function SidebarNav({
       try {
         setIsUploading(true);
 
-        // Obter o usuário atual
         const { data: currentUser } = await supabase.auth.getUser();
         if (!currentUser.user) {
           throw new Error("Usuário não autenticado");
         }
 
-        // Upload da imagem para o Supabase Storage
         const fileExt = file.name.split(".").pop();
         const fileName = `avatar-${currentUser.user.id}-${Date.now()}.${fileExt}`;
         const filePath = `avatars/${fileName}`;
 
-        // Fazer upload para o storage do Supabase
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from("profile-images")
           .upload(filePath, file, {
@@ -242,7 +214,6 @@ export function SidebarNav({
           throw new Error(uploadError.message);
         }
 
-        // Obter a URL pública da imagem
         const { data: publicUrlData } = supabase.storage
           .from("profile-images")
           .getPublicUrl(filePath);
@@ -251,7 +222,6 @@ export function SidebarNav({
           throw new Error("Não foi possível obter a URL pública da imagem");
         }
 
-        // Atualizar o perfil do usuário com a URL da imagem
         const { error: updateError } = await supabase
           .from("profiles")
           .update({
@@ -265,13 +235,9 @@ export function SidebarNav({
           throw new Error(updateError.message);
         }
 
-        // Atualizar o estado local
         setProfileImage(publicUrlData.publicUrl);
-
-        // Salvar no localStorage para persistência
         localStorage.setItem("userAvatarUrl", publicUrlData.publicUrl);
 
-        // Disparar evento para outros componentes saberem que o avatar foi atualizado
         document.dispatchEvent(
           new CustomEvent("userAvatarUpdated", {
             detail: { url: publicUrlData.publicUrl },
@@ -303,10 +269,6 @@ export function SidebarNav({
     return location.pathname === path;
   };
 
-  const toggleSection = (section: string) => {
-    setExpandedSection(expandedSection === section ? null : section);
-  };
-
   const navItems = [
     {
       icon: <Home className="h-5 w-5" />,
@@ -314,37 +276,24 @@ export function SidebarNav({
       path: "/",
     },
     {
-      icon: <BookOpen className="h-5 w-5" />,
+      icon: <GraduationCap className="h-5 w-5" />,
       label: "Minhas Turmas",
       path: "/turmas",
-      component: <TurmasNav />,
-      subItems: [
-        {
-          name: "Visão Geral",
-          path: "/turmas",
-          icon: <Home className="h-4 w-4 text-[#29335C]" />,
-        },
-        {
-          name: "Turmas Ativas",
-          path: "/turmas?view=ativas",
-          icon: <BookOpen className="h-4 w-4 text-[#29335C]" />,
-        },
-        {
-          name: "Grupos de Estudo",
-          path: "/turmas?view=grupos-estudo",
-          icon: <Users2 className="h-4 w-4 text-[#29335C]" />,
-        },
-        {
-          name: "Desempenho",
-          path: "/turmas?view=desempenho",
-          icon: <BarChart className="h-4 w-4 text-[#29335C]" />,
-        },
-      ],
     },
     {
-      icon: <Users2 className="h-5 w-5" />,
+      icon: <Users className="h-5 w-5" />,
       label: "Comunidades",
       path: "/comunidades",
+    },
+    {
+      icon: <BookOpen className="h-5 w-5" />,
+      label: "Trilhas School",
+      path: "/biblioteca",
+    },
+    {
+      icon: <Target className="h-5 w-5" />,
+      label: "School Planner",
+      path: "/agenda",
     },
     {
       icon: <Brain className="h-5 w-5" />,
@@ -353,38 +302,9 @@ export function SidebarNav({
       isSpecial: true,
     },
     {
-      icon: <Rocket className="h-5 w-5" />,
-      label: "School Power",
-      path: "/school-power",
-      isSpecial: true,
-    },
-    {
       icon: <Calendar className="h-5 w-5" />,
       label: "Agenda",
       path: "/agenda",
-      component: <AgendaNav />,
-      subItems: [
-        {
-          name: "Visão Geral",
-          path: "/agenda?view=visao-geral",
-          icon: <Home className="h-4 w-4 text-[#29335C]" />,
-        },
-        {
-          name: "Calendário",
-          path: "/agenda?view=calendario",
-          icon: <Calendar className="h-4 w-4 text-[#29335C]" />,
-        },
-        {
-          name: "Tarefas",
-          path: "/agenda?view=tarefas",
-          icon: <CheckSquare className="h-4 w-4 text-[#29335C]" />,
-        },
-        {
-          name: "Desafios",
-          path: "/agenda?view=desafios",
-          icon: <Target className="h-4 w-4 text-[#29335C]" />,
-        },
-      ],
     },
     {
       icon: <Trophy className="h-5 w-5" />,
@@ -392,14 +312,14 @@ export function SidebarNav({
       path: "/conquistas",
     },
     {
-      icon: <Wallet className="h-5 w-5" />,
-      label: "Carteira",
-      path: "/carteira",
+      icon: <Compass className="h-5 w-5" />,
+      label: "Explorar",
+      path: "/explorar",
     },
   ];
 
   return (
-    <div className="relative h-full">
+    <div className="relative h-full bg-gray-50/80 dark:bg-gray-900/50">
       {showMentorAI && (
         <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm">
           <div className="fixed inset-10 z-50 bg-white dark:bg-[#121212] rounded-xl shadow-xl overflow-hidden flex flex-col">
@@ -414,7 +334,7 @@ export function SidebarNav({
                 onClick={() => setShowMentorAI(false)}
                 className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
               >
-                <X className="h-5 w-5" />
+                <span className="text-xl">×</span>
               </Button>
             </div>
             <div className="flex-1 overflow-hidden">
@@ -424,550 +344,119 @@ export function SidebarNav({
         </div>
       )}
 
-      
-
-      {/* User Profile Component - Greeting and progress section */}
-      <div
-        className={cn(
-          "bg-white dark:bg-[#001427] p-4 mb-4 flex flex-col items-center relative group",
-          isCollapsed ? "mt-6 px-2" : "mt-4",
-        )}
-      >
-        {/* Card wrapper com bordas arredondadas e flip effect */}
-        <div
-          className={cn(
-            "relative w-full h-auto",
-            isCollapsed ? "w-14" : "w-full",
-          )}
-          style={{ perspective: "1000px" }}
-        >
-          <div
-            className={cn(
-              "relative w-full h-auto transition-transform duration-700 transform-style-preserve-3d",
-              isCardFlipped ? "rotate-y-180" : "",
-            )}
-          >
-            {/* Front Side */}
+      {/* User Profile Component */}
+      {!isCollapsed && (
+        <div className="p-4 mb-6">
+          <div className="relative flex items-center space-x-3 p-3 rounded-2xl bg-white dark:bg-gray-800 shadow-sm border border-gray-100 dark:border-gray-700">
             <div
-              className={cn(
-                "bg-white dark:bg-[#29335C]/20 rounded-xl border border-gray-200 dark:border-[#29335C]/30 backdrop-blur-sm relative backface-hidden",
-                isCollapsed ? "w-14 p-2" : "w-full p-4",
-              )}
+              className="relative w-12 h-12 rounded-full overflow-hidden bg-gradient-to-r from-orange-400 to-orange-600 p-0.5 cursor-pointer transition-all duration-300 hover:scale-105"
+              onClick={handleImageUploadClick}
             >
-              {/* Ícone de graduação no canto superior esquerdo quando expandido */}
-              {!isCollapsed && (
-                <div className="absolute top-3 left-3 z-10">
-                  <div className="w-7 h-7">
-                    <div className="w-full h-full rounded-full border-2 border-orange-500 bg-orange-600 bg-opacity-20 flex items-center justify-center">
-                      <GraduationCap size={14} className="text-orange-500" />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Botão Flip circular na mesma altura do ícone de graduação */}
-              {!isCollapsed && (
-                <button
-                  className="absolute top-3 right-3 w-6 h-6 rounded-full border-2 border-orange-500 bg-orange-600 bg-opacity-20 hover:bg-orange-600 hover:bg-opacity-30 flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-sm cursor-pointer z-10"
-                  onClick={() => setIsCardFlipped(!isCardFlipped)}
-                  title="Flip Card"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="text-orange-500"
-                  >
-                    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
-                    <path d="M21 3v5h-5" />
-                    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
-                    <path d="M8 16H3v5" />
-                  </svg>
-                </button>
-              )}
-              {/* Profile Image Component - Responsive avatar */}
-              <div
-                className={cn(
-                  "relative flex justify-center flex-col items-center",
-                  isCollapsed ? "mb-1" : "mb-4",
-                )}
-              >
-                <div
-                  className={cn(
-                    "rounded-full overflow-hidden bg-gradient-to-r from-[#FF6B00] via-[#FF8736] to-[#FFB366] p-0.5 cursor-pointer transition-all duration-300",
-                    isCollapsed ? "w-10 h-10" : "w-20 h-20",
-                  )}
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-[#001427] flex items-center justify-center">
-                    {profileImage ? (
-                      <img
-                        src={profileImage}
-                        alt="Profile"
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          console.error("Error loading profile image");
-                          setProfileImage(null);
-                        }}
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
-                        <div
-                          className={cn(
-                            "bg-yellow-300 rounded-full flex items-center justify-center",
-                            isCollapsed ? "w-5 h-5" : "w-10 h-10",
-                          )}
-                        >
-                          <span
-                            className={cn(
-                              "text-black font-bold",
-                              isCollapsed ? "text-xs" : "text-lg",
-                            )}
-                          >
-                            {firstName
-                              ? firstName.charAt(0).toUpperCase()
-                              : "U"}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Barra de progresso quando colapsado */}
-                {isCollapsed && (
-                  <div className="flex justify-center mt-2">
-                    <div 
-                      className="h-1 bg-[#FF6B00] rounded-full opacity-30"
-                      style={{ width: "40px" }}
-                    >
-                      <div 
-                        className="h-full bg-[#FF6B00] rounded-full transition-all duration-300"
-                        style={{ width: "65%" }}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* File input component */}
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="hidden"
-                />
-              </div>
-
-              {isUploading && (
-                <div className="mb-3 text-xs text-gray-500 dark:text-gray-400">
-                  Enviando...
-                </div>
-              )}
-
-              {/* Hidden File Input */}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="hidden"
-              />
-
-              {!isCollapsed && (
-                <div className="text-[#001427] dark:text-white text-center w-full">
-                  <h3 className="font-semibold text-base mb-2 flex items-center justify-center">
-                    <span className="mr-1">👋</span> Olá,{" "}
-                    {(() => {
-                      // Obter o primeiro nome com a mesma lógica do Dashboard
-                      const firstName =
-                        userProfile?.full_name?.split(" ")[0] ||
-                        userProfile?.display_name ||
-                        localStorage.getItem("userFirstName") ||
-                        "Estudante";
-                      return firstName;
-                    })()}
-                    !
-                  </h3>
-                  <div className="flex flex-col items-center mt-1">
-                    <p className="text-xs text-[#001427]/70 dark:text-white/70 mb-0.5">
-                      Nível {userProfile?.level || 1}
-                    </p>
-                    <div className="flex justify-center">
-                      <div 
-                        className="h-1.5 bg-[#FF6B00] rounded-full opacity-30"
-                        style={{ width: "80px" }}
-                      >
-                        <div 
-                          className="h-full bg-[#FF6B00] rounded-full transition-all duration-300"
-                          style={{ width: "65%" }}
-                        />
-                      </div>
-                    </div>
-                    <div className="flex justify-center mt-2">
-                      <div 
-                        className="px-5 py-0.5 border border-[#FF6B00] bg-[#FF6B00] bg-opacity-20 rounded-md flex items-center justify-center"
-                      >
-                        <span className="text-xs font-medium text-[#FF6B00]">
-                          ALUNO
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Back Side - Idêntico ao front */}
-            <div
-              className={cn(
-                "bg-white dark:bg-[#29335C]/20 rounded-xl border border-gray-200 dark:border-[#29335C]/30 backdrop-blur-sm relative backface-hidden absolute inset-0 rotate-y-180",
-                isCollapsed ? "w-14 p-2" : "w-full p-4",
-              )}
-            >
-              {/* Ícone de Briefcase no canto superior esquerdo quando expandido */}
-              {!isCollapsed && (
-                <div className="absolute top-3 left-3 z-10">
-                  <div className="w-7 h-7">
-                    <div className="w-full h-full rounded-full border-2 border-[#2462EA] bg-[#0f26aa] bg-opacity-20 flex items-center justify-center">
-                      <Briefcase
-                        size={12}
-                        className="text-[#2462EA]"
-                        strokeWidth={2.5}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Botão Flip circular na mesma altura do ícone de Briefcase */}
-              {!isCollapsed && (
-                <button
-                  className="absolute top-3 right-3 w-6 h-6 rounded-full border-2 border-[#2462EA] bg-[#0f26aa] bg-opacity-20 hover:bg-[#0f26aa] hover:bg-opacity-30 flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-sm cursor-pointer z-10"
-                  onClick={() => setIsCardFlipped(!isCardFlipped)}
-                  title="Flip Card"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="text-[#2462EA]"
-                  >
-                    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
-                    <path d="M21 3v5h-5" />
-                    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
-                    <path d="M8 16H3v5" />
-                  </svg>
-                </button>
-              )}
-              {/* Profile Image Component - Responsive avatar */}
-              <div
-                className={cn(
-                  "relative flex justify-center flex-col items-center",
-                  isCollapsed ? "mb-1" : "mb-4",
-                )}
-              >
-                <div
-                  className={cn(
-                    "rounded-full overflow-hidden bg-gradient-to-r from-blue-500 via-purple-520 to-blue-600 p-0.5 cursor-pointer transition-all duration-300",
-                    isCollapsed ? "w-10 h-10" : "w-20 h-20",
-                  )}
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-[#001427] flex items-center justify-center">
-                    {profileImage ? (
-                      <img
-                        src={profileImage}
-                        alt="Profile"
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          console.error("Error loading profile image");
-                          setProfileImage(null);
-                        }}
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
-                        <div
-                          className={cn(
-                            "bg-yellow-300 rounded-full flex items-center justify-center",
-                            isCollapsed ? "w-5 h-5" : "w-10 h-10",
-                          )}
-                        >
-                          <span
-                            className={cn(
-                              "text-black font-bold",
-                              isCollapsed ? "text-xs" : "text-lg",
-                            )}
-                          >
-                            {firstName
-                              ? firstName.charAt(0).toUpperCase()
-                              : "U"}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Barra de progresso quando colapsado */}
-                {isCollapsed && (
-                  <div className="flex justify-center mt-2">
-                    <div 
-                      className="h-1 bg-[#2461E7] rounded-full opacity-30"
-                      style={{ width: "40px" }}
-                    >
-                      <div 
-                        className="h-full bg-[#2461E7] rounded-full transition-all duration-300"
-                        style={{ width: "65%" }}
-                      />
-                    </div>
+              <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-gray-800 flex items-center justify-center">
+                {profileImage ? (
+                  <img
+                    src={profileImage}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                    onError={() => setProfileImage(null)}
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center">
+                    <span className="text-white font-bold text-lg">
+                      {firstName ? firstName.charAt(0).toUpperCase() : "U"}
+                    </span>
                   </div>
                 )}
               </div>
-
-              {isUploading && (
-                <div className="mb-3 text-xs text-gray-500 dark:text-gray-400">
-                  Enviando...
-                </div>
-              )}
-
-              {!isCollapsed && (
-                <div className="text-[#001427] dark:text-white text-center w-full">
-                  <h3 className="font-semibold text-base mb-2 flex items-center justify-center">
-                    <span className="mr-1">👋</span> Olá,{" "}
-                    {(() => {
-                      // Obter o primeiro nome com a mesma lógica do Dashboard
-                      const firstName =
-                        userProfile?.full_name?.split(" ")[0] ||
-                        userProfile?.display_name ||
-                        localStorage.getItem("userFirstName") ||
-                        "Estudante";
-                      return firstName;
-                    })()}
-                    !
-                  </h3>
-                  <div className="flex flex-col items-center mt-1">
-                    <p className="text-xs text-[#001427]/70 dark:text-white/70 mb-0.5">
-                      Nível {userProfile?.level || 1}
-                    </p>
-                    <div className="flex justify-center">
-                      <div 
-                        className="h-1.5 bg-[#2461E7] rounded-full opacity-30"
-                        style={{ width: "80px" }}
-                      >
-                        <div 
-                          className="h-full bg-[#2461E7] rounded-full transition-all duration-300"
-                          style={{ width: "65%" }}
-                        />
-                      </div>
-                    </div>
-                    <div className="flex justify-center mt-2">
-                      <div 
-                        className="px-5 py-0.5 border border-[#2461E7] bg-[#2461E7] bg-opacity-20 rounded-md flex items-center justify-center"
-                      >
-                        <span className="text-xs font-medium text-[#2461E7]">
-                          PROFESSOR
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
+
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                {firstName || "Usuário"}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Nível {userProfile?.level || 1} • Estudante
+              </p>
+            </div>
+
+            <div className="w-2 h-2 rounded-full bg-orange-500"></div>
+
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="image/*"
+              onChange={handleImageChange}
+              className="hidden"
+            />
           </div>
         </div>
-      </div>
+      )}
 
-      <ScrollArea
-        className={cn(
-          "py-2",
-          isCollapsed ? "h-[calc(100%-180px)]" : "h-[calc(100%-300px)]",
-        )}
-      >
-        <nav className="grid gap-1 px-2">
+      <ScrollArea className={cn("px-3", isCollapsed ? "h-[calc(100%-80px)]" : "h-[calc(100%-200px)]")}>
+        <nav className="space-y-1">
           {navItems.map((item, index) => (
             <div key={index} className="relative">
-              {item.component ? (
-                isCollapsed ? (
-                  <Button
-                    variant="ghost"
-                    className={cn(
-                      "flex items-center justify-center rounded-lg px-3 py-2 text-start w-full",
-                      isActive(item.path)
-                        ? "bg-[#FF6B00]/10 text-[#FF6B00] dark:bg-[#FF6B00]/20 dark:text-[#FF6B00]"
-                        : "text-[#001427] hover:bg-[#FF6B00]/5 dark:text-white dark:hover:bg-[#FF6B00]/10",
-                      "group hover:scale-[1.02] transition-all duration-200 hover:shadow-sm active:scale-[0.98]",
-                    )}
-                    onClick={() => handleNavigation(item.path)}
-                  >
-                    <div className="mx-auto">
-                      {item.label === "Portal" ? (
-                        <BookMarked className="h-5 w-5 text-[#001427] dark:text-white" />
-                      ) : (
-                        <Calendar className="h-5 w-5 text-[#001427] dark:text-white" />
-                      )}
-                    </div>
-                    <div
-                      className={cn(
-                        "absolute left-0 top-0 h-full w-1 rounded-r-md transition-all duration-300",
-                        isActive(item.path)
-                          ? "bg-[#FF6B00]"
-                          : "bg-transparent group-hover:bg-[#FF6B00]/30",
-                      )}
-                    />
-                  </Button>
-                ) : (
-                  item.component
-                )
-              ) : (
-                <Button
-                  variant="ghost"
-                  className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2 text-start w-full",
-                    isCollapsed ? "justify-center" : "justify-between",
-                    isActive(item.path)
-                      ? "bg-[#FF6B00]/10 text-[#FF6B00] dark:bg-[#FF6B00]/20 dark:text-[#FF6B00]"
-                      : "text-[#001427] hover:bg-[#FF6B00]/5 dark:text-white dark:hover:bg-[#FF6B00]/10",
-                    "group hover:scale-[1.02] transition-all duration-200 hover:shadow-sm active:scale-[0.98]",
-                    item.label === "Novidades"
-                      ? "relative overflow-hidden"
-                      : "",
-                  )}
-                  onClick={(e) => {
-                    if (item.subItems && !isCollapsed) {
-                      e.preventDefault();
-                      toggleSection(item.label);
-                    } else {
-                      handleNavigation(item.path, item.isSpecial);
-                    }
-                  }}
-                >
-                  {item.label === "Novidades" && (
-                    <div className="absolute inset-0 rounded-lg border border-transparent bg-gradient-to-r from-[#FFD700] to-[#FF6B00] opacity-10 animate-gradient-x"></div>
-                  )}
-                  <div className="flex items-center relative z-10">
-                    <div
-                      className={cn(
-                        "transition-all duration-300",
-                        isCollapsed ? "mx-auto" : "mr-3",
-                        isActive(item.path)
-                          ? "text-[#FF6B00] dark:text-[#FF6B00]"
-                          : item.label === "Novidades"
-                            ? "text-[#FF6B00] dark:text-[#FF6B00]"
-                            : "text-[#001427] dark:text-white",
-                      )}
-                    >
-                      {item.icon}
-                    </div>
-                    {!isCollapsed && (
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={cn(
-                            item.label === "Novidades"
-                              ? "text-[#FF6B00] font-bold"
-                              : "",
-                          )}
-                        >
-                          {item.label}
-                        </span>
-                        {item.label === "Explorar" && (
-                          <span className="px-1.5 py-0.5 text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-md">
-                            Em breve
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  {!isCollapsed && item.subItems && (
-                    <div className="text-[#001427] dark:text-white">
-                      {expandedSection === item.label ? (
-                        <ChevronUp className="h-4 w-4" />
-                      ) : (
-                        <ChevronDown className="h-4 w-4" />
-                      )}
-                    </div>
-                  )}
-                  {item.label !== "Novidades" && (
-                    <div
-                      className={cn(
-                        "absolute left-0 top-0 h-full w-1 rounded-r-md transition-all duration-300",
-                        isActive(item.path)
-                          ? "bg-[#FF6B00]"
-                          : "bg-transparent group-hover:bg-[#FF6B00]/30",
-                      )}
-                    />
-                  )}
-                </Button>
-              )}
-
-              {/* Sub Items */}
-              {!isCollapsed &&
-                item.subItems &&
-                expandedSection === item.label && (
-                  <div className="mt-1 space-y-1">
-                    {item.subItems.map((subItem, subIndex) => (
-                      <Button
-                        key={subIndex}
-                        variant="ghost"
-                        className={cn(
-                          "flex items-center gap-2 rounded-lg px-3 py-2 text-start w-full justify-start",
-                          isActive(subItem.path)
-                            ? "bg-[#FF6B00]/10 text-[#FF6B00] dark:bg-[#FF6B00]/20 dark:text-[#FF6B00] font-medium"
-                            : "text-[#001427] hover:bg-[#FF6B00]/5 dark:text-white dark:hover:bg-[#FF6B00]/10",
-                          "hover:translate-x-1 transition-transform pl-2",
-                        )}
-                        onClick={() => navigate(subItem.path)}
-                      >
-                        {subItem.icon}
-                        <div className="flex items-center gap-2 w-full">
-                          <span>{subItem.name}</span>
-                          {item.label === "Explorar" && (
-                            <span className="ml-auto">
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="14"
-                                height="14"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                className="text-gray-500 dark:text-gray-400"
-                              >
-                                <rect
-                                  width="18"
-                                  height="11"
-                                  x="3"
-                                  y="11"
-                                  rx="2"
-                                  ry="2"
-                                ></rect>
-                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                              </svg>
-                            </span>
-                          )}
-                        </div>
-                      </Button>
-                    ))}
-                  </div>
+              <Button
+                variant="ghost"
+                className={cn(
+                  "w-full flex items-center gap-3 h-12 px-3 rounded-xl text-left font-medium transition-all duration-200",
+                  isCollapsed ? "justify-center" : "justify-start",
+                  isActive(item.path)
+                    ? "bg-orange-500 text-white shadow-lg hover:bg-orange-600"
+                    : "text-gray-700 dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-orange-950/20 hover:text-orange-600 dark:hover:text-orange-400"
                 )}
+                onClick={() => handleNavigation(item.path, item.isSpecial)}
+              >
+                <div className={cn(
+                  "transition-all duration-300",
+                  isActive(item.path)
+                    ? "text-white"
+                    : "text-orange-500"
+                )}>
+                  {item.icon}
+                </div>
+                {!isCollapsed && (
+                  <span className="truncate">
+                    {item.label}
+                  </span>
+                )}
+              </Button>
             </div>
           ))}
         </nav>
       </ScrollArea>
+
+      {/* Bottom Navigation */}
+      {!isCollapsed && (
+        <div className="mt-auto p-3 space-y-1">
+          <Button
+            variant="ghost"
+            className="w-full flex items-center gap-3 h-12 px-3 rounded-xl text-left font-medium text-gray-700 dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-orange-950/20 hover:text-orange-600 dark:hover:text-orange-400 transition-all duration-200"
+            onClick={() => navigate("/carteira")}
+          >
+            <Wallet className="h-5 w-5 text-orange-500" />
+            <span>Carteira</span>
+          </Button>
+
+          <Button
+            variant="ghost"
+            className="w-full flex items-center gap-3 h-12 px-3 rounded-xl text-left font-medium text-gray-700 dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-orange-950/20 hover:text-orange-600 dark:hover:text-orange-400 transition-all duration-200"
+            onClick={() => navigate("/ajuda")}
+          >
+            <HelpCircle className="h-5 w-5 text-orange-500" />
+            <span>Ajuda</span>
+          </Button>
+
+          <Button
+            variant="ghost"
+            className="w-full flex items-center gap-3 h-12 px-3 rounded-xl text-left font-medium text-gray-700 dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-orange-950/20 hover:text-orange-600 dark:hover:text-orange-400 transition-all duration-200"
+            onClick={() => navigate("/configuracoes")}
+          >
+            <Settings className="h-5 w-5 text-orange-500" />
+            <span>Configurações</span>
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
