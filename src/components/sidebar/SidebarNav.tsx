@@ -79,6 +79,7 @@ export function SidebarNav({
   const [isModeChanging, setIsModeChanging] = useState(false);
   const [cascadeIndex, setCascadeIndex] = useState(0);
   const [isModeTransitioning, setIsModeTransitioning] = useState(false);
+  const [isMenuAnimating, setIsMenuAnimating] = useState(false);
 
   useEffect(() => {
     // Listener para atualizações de avatar feitas em outros componentes
@@ -497,10 +498,20 @@ export function SidebarNav({
                   className="absolute top-3 right-3 w-6 h-6 rounded-full border-2 border-orange-500 bg-orange-600 bg-opacity-20 hover:bg-orange-600 hover:bg-opacity-30 flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-sm cursor-pointer z-10"
                   onClick={() => {
                     setIsModeTransitioning(true);
+                    setIsMenuAnimating(true);
+                    setIsMenuFlipping(true);
+
+                    // Iniciar animação em cascata dos itens do menu
                     setTimeout(() => {
                       setIsCardFlipped(!isCardFlipped);
+
+                      // Continuar animação do menu por mais tempo
                       setTimeout(() => {
                         setIsModeTransitioning(false);
+                        setTimeout(() => {
+                          setIsMenuFlipping(false);
+                          setIsMenuAnimating(false);
+                        }, 800);
                       }, 1200);
                     }, 100);
                   }}
@@ -686,10 +697,20 @@ export function SidebarNav({
                   className="absolute top-3 right-3 w-6 h-6 rounded-full border-2 border-[#2462EA] bg-[#0f26aa] bg-opacity-20 hover:bg-[#0f26aa] hover:bg-opacity-30 flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-sm cursor-pointer z-10"
                   onClick={() => {
                     setIsModeTransitioning(true);
+                    setIsMenuAnimating(true);
+                    setIsMenuFlipping(true);
+
+                    // Iniciar animação em cascata dos itens do menu
                     setTimeout(() => {
                       setIsCardFlipped(!isCardFlipped);
+
+                      // Continuar animação do menu por mais tempo
                       setTimeout(() => {
                         setIsModeTransitioning(false);
+                        setTimeout(() => {
+                          setIsMenuFlipping(false);
+                          setIsMenuAnimating(false);
+                        }, 800);
                       }, 1200);
                     }, 100);
                   }}
@@ -898,8 +919,7 @@ export function SidebarNav({
 
         * {
           font-family: 'Inter', sans-serif;
-        }
-
+        }```python
         .navigation-menu-container {
           position: relative;
         }
@@ -1350,6 +1370,172 @@ export function SidebarNav({
           75% {
             transform: scale(1.01);
             filter: brightness(1.08);
+          }
+        }
+
+        /* Animações para o flip do menu */
+        .menu-animating .menu-item-wrapper {
+          animation: menuFlipCascade 1.5s ease-in-out;
+          animation-delay: var(--cascade-delay, 0s);
+        }
+
+        .menu-item-flip-animation {
+          animation: menuItemFlipTransition 1.8s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        @keyframes menuFlipCascade {
+          0% {
+            transform: rotateY(0deg) scale(1);
+            opacity: 1;
+          }
+          15% {
+            transform: rotateY(-15deg) scale(0.95);
+            opacity: 0.8;
+          }
+          30% {
+            transform: rotateY(-30deg) scale(0.9);
+            opacity: 0.6;
+          }
+          50% {
+            transform: rotateY(180deg) scale(0.85);
+            opacity: 0.4;
+          }
+          65% {
+            transform: rotateY(195deg) scale(0.9);
+            opacity: 0.6;
+          }
+          80% {
+            transform: rotateY(345deg) scale(0.95);
+            opacity: 0.8;
+          }
+          100% {
+            transform: rotateY(360deg) scale(1);
+            opacity: 1;
+          }
+        }
+
+        @keyframes menuItemFlipTransition {
+          0% {
+            transform: translateX(0) rotateY(0deg) scale(1);
+            filter: brightness(1) hue-rotate(0deg);
+            box-shadow: 0 0 0 rgba(255, 107, 0, 0);
+          }
+          10% {
+            transform: translateX(-8px) rotateY(-20deg) scale(0.98);
+            filter: brightness(1.1) hue-rotate(10deg);
+            box-shadow: 0 2px 8px rgba(255, 107, 0, 0.1);
+          }
+          25% {
+            transform: translateX(-15px) rotateY(-45deg) scale(0.92);
+            filter: brightness(1.2) hue-rotate(30deg);
+            box-shadow: 0 4px 16px rgba(255, 107, 0, 0.2);
+          }
+          40% {
+            transform: translateX(-20px) rotateY(-90deg) scale(0.85);
+            filter: brightness(1.3) hue-rotate(60deg);
+            box-shadow: 0 6px 24px rgba(255, 107, 0, 0.3);
+          }
+          50% {
+            transform: translateX(-15px) rotateY(-135deg) scale(0.8);
+            filter: brightness(1.4) hue-rotate(90deg);
+            box-shadow: 0 8px 32px rgba(255, 107, 0, 0.4);
+          }
+          60% {
+            transform: translateX(-5px) rotateY(-180deg) scale(0.85);
+            filter: brightness(1.3) hue-rotate(120deg);
+            box-shadow: 0 6px 24px rgba(37, 99, 235, 0.3);
+          }
+          75% {
+            transform: translateX(5px) rotateY(-225deg) scale(0.92);
+            filter: brightness(1.2) hue-rotate(150deg);
+            box-shadow: 0 4px 16px rgba(37, 99, 235, 0.2);
+          }
+          90% {
+            transform: translateX(8px) rotateY(-340deg) scale(0.98);
+            filter: brightness(1.1) hue-rotate(170deg);
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
+          }
+          100% {
+            transform: translateX(0) rotateY(-360deg) scale(1);
+            filter: brightness(1) hue-rotate(180deg);
+            box-shadow: 0 0 0 rgba(37, 99, 235, 0);
+          }
+        }
+
+        /* Animação específica para modo professor */
+        .professor-mode .menu-item-flip-animation {
+          animation: menuItemFlipTransitionProfessor 1.8s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        @keyframes menuItemFlipTransitionProfessor {
+          0% {
+            transform: translateX(0) rotateY(0deg) scale(1);
+            filter: brightness(1) hue-rotate(0deg);
+            box-shadow: 0 0 0 rgba(37, 99, 235, 0);
+          }
+          10% {
+            transform: translateX(-8px) rotateY(-20deg) scale(0.98);
+            filter: brightness(1.1) hue-rotate(-10deg);
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
+          }
+          25% {
+            transform: translateX(-15px) rotateY(-45deg) scale(0.92);
+            filter: brightness(1.2) hue-rotate(-30deg);
+            box-shadow: 0 4px 16px rgba(37, 99, 235, 0.2);
+          }
+          40% {
+            transform: translateX(-20px) rotateY(-90deg) scale(0.85);
+            filter: brightness(1.3) hue-rotate(-60deg);
+            box-shadow: 0 6px 24px rgba(37, 99, 235, 0.3);
+          }
+          50% {
+            transform: translateX(-15px) rotateY(-135deg) scale(0.8);
+            filter: brightness(1.4) hue-rotate(-90deg);
+            box-shadow: 0 8px 32px rgba(37, 99, 235, 0.4);
+          }
+          60% {
+            transform: translateX(-5px) rotateY(-180deg) scale(0.85);
+            filter: brightness(1.3) hue-rotate(-120deg);
+            box-shadow: 0 6px 24px rgba(255, 107, 0, 0.3);
+          }
+          75% {
+            transform: translateX(5px) rotateY(-225deg) scale(0.92);
+            filter: brightness(1.2) hue-rotate(-150deg);
+            box-shadow: 0 4px 16px rgba(255, 107, 0, 0.2);
+          }
+          90% {
+            transform: translateX(8px) rotateY(-340deg) scale(0.98);
+            filter: brightness(1.1) hue-rotate(-170deg);
+            box-shadow: 0 2px 8px rgba(255, 107, 0, 0.1);
+          }
+          100% {
+            transform: translateX(0) rotateY(-360deg) scale(1);
+            filter: brightness(1) hue-rotate(-180deg);
+            box-shadow: 0 0 0 rgba(255, 107, 0, 0);
+          }
+        }
+
+        /* Efeito de onda no container durante a animação */
+        .menu-animating .menu-navigation {
+          animation: menuContainerPulse 2s ease-in-out;
+        }
+
+        @keyframes menuContainerPulse {
+          0%, 100% {
+            transform: scale(1);
+            filter: brightness(1);
+          }
+          25% {
+            transform: scale(1.02);
+            filter: brightness(1.05);
+          }
+          50% {
+            transform: scale(1.01);
+            filter: brightness(1.1);
+          }
+          75% {
+            transform: scale(1.02);
+            filter: brightness(1.05);
           }
         }
       `}</style>
