@@ -841,7 +841,12 @@ export function SidebarNav({
         )}
       >
         {/* Navigation Menu com novo design */}
-        <div className={cn("navigation-menu-container px-2", isCollapsed && "sidebar-collapsed")}>
+        <div className={cn(
+          "navigation-menu-container px-2", 
+          isCollapsed && "sidebar-collapsed",
+          isCardFlipped ? "professor-mode" : "aluno-mode",
+          isModeChanging && "mode-changing"
+        )}>
           <nav className={cn(
             "menu-navigation",
             isMenuFlipping && "menu-flipping"
@@ -854,7 +859,7 @@ export function SidebarNav({
                   isMenuFlipping && "animate-menu-transition"
                 )}
                 style={{
-                  animationDelay: `${index * 50}ms`
+                  animationDelay: `${index * 80}ms`
                 }}
               >
                 {(item.label === "Minhas Turmas" || item.label === "Agenda") && !isCollapsed ? (
@@ -1093,6 +1098,67 @@ export function SidebarNav({
           box-shadow: 0 0 8px rgba(255, 107, 0, 0.6);
         }
 
+        /* ESTILOS ESPECÍFICOS PARA MODO PROFESSOR */
+        .professor-mode .menu-item::before {
+          background: linear-gradient(90deg, transparent, rgba(37, 99, 235, 0.1), transparent);
+        }
+
+        .professor-mode .menu-item:hover:not(.active) {
+          background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(37, 99, 235, 0.08));
+        }
+
+        .professor-mode .menu-item.active {
+          background: linear-gradient(135deg, rgba(37, 99, 235, 0.15), rgba(37, 99, 235, 0.15));
+          border: 1px solid rgba(37, 99, 235, 0.3);
+          box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1) !important;
+        }
+
+        .professor-mode .icon-container {
+          background: rgba(37, 99, 235, 0.1);
+        }
+
+        .professor-mode .icon-container i {
+          color: #2563eb !important;
+        }
+
+        .professor-mode .icon-container.active {
+          background: linear-gradient(135deg, #2563eb, #2563eb);
+          color: white;
+          box-shadow: 0 8px 16px rgba(37, 99, 235, 0.3);
+        }
+
+        .professor-mode .icon-container.active i {
+          color: white !important;
+        }
+
+        .professor-mode .menu-item:hover:not(.active) .icon-container {
+          background: linear-gradient(135deg, rgba(37, 99, 235, 0.2), rgba(37, 99, 235, 0.2));
+        }
+
+        .professor-mode .menu-item:hover:not(.active) .icon-container i {
+          color: #2563eb !important;
+        }
+
+        .professor-mode .menu-item.active .item-title {
+          color: #2563eb !important;
+        }
+
+        .professor-mode .menu-item:hover:not(.active) .item-title {
+          color: #2563eb !important;
+        }
+
+        .professor-mode .item-indicator {
+          background: #2563eb;
+        }
+
+        .professor-mode .menu-item.active .item-indicator {
+          box-shadow: 0 0 8px rgba(37, 99, 235, 0.6);
+        }
+
+        .professor-mode .icon-glow {
+          background: radial-gradient(circle, rgba(37, 99, 235, 0.5), transparent);
+        }
+
         @keyframes orangeBounce {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-3px); }
@@ -1100,42 +1166,58 @@ export function SidebarNav({
 
         /* Animações para transição entre menus */
         .menu-flipping .menu-item-wrapper {
-          animation: menuItemExit 0.3s ease-in-out forwards;
+          animation: menuItemExit 0.4s ease-in-out forwards;
         }
 
         @keyframes menuItemExit {
           0% {
             opacity: 1;
-            transform: translateX(0) scale(1);
+            transform: translateX(0) rotateY(0deg) scale(1);
           }
           50% {
             opacity: 0;
-            transform: translateX(-20px) scale(0.95);
+            transform: translateX(-30px) rotateY(-45deg) scale(0.8);
           }
           100% {
             opacity: 1;
-            transform: translateX(0) scale(1);
+            transform: translateX(0) rotateY(0deg) scale(1);
           }
         }
 
         .animate-menu-transition {
-          animation: menuItemEnter 0.4s ease-out forwards;
+          animation: menuItemEnter 0.5s ease-out forwards;
         }
 
         @keyframes menuItemEnter {
           0% {
             opacity: 0;
-            transform: translateX(20px) scale(0.9);
+            transform: translateX(30px) rotateY(45deg) scale(0.8);
           }
           100% {
             opacity: 1;
-            transform: translateX(0) scale(1);
+            transform: translateX(0) rotateY(0deg) scale(1);
+          }
+        }
+
+        /* Pulso da navegação durante mudança de modo */
+        .mode-changing .menu-navigation {
+          animation: navigationPulse 0.6s ease-in-out;
+        }
+
+        @keyframes navigationPulse {
+          0%, 100% {
+            transform: scale(1);
+            opacity: 1;
+          }
+          50% {
+            transform: scale(0.98);
+            opacity: 0.8;
           }
         }
 
         /* Efeitos especiais para diferentes modos */
         .menu-item.professor-mode {
-          border-left: 2px solid #2461E7;
+          border-left: 2px solid #2563eb;
         }
 
         .menu-item.aluno-mode {
