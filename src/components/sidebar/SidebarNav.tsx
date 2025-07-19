@@ -461,7 +461,7 @@ export function SidebarNav({
       {/* User Profile Component - Greeting and progress section */}
       <div
         className={cn(
-          "bg-white dark:bg-[#001427] p-4 mb-4 flex flex-col items-center relative group",
+          "bg-white dark:bg-[#001427] p-4 mb-2 flex flex-col items-center relative group",
           isCollapsed ? "mt-6 px-2" : "mt-4",
         )}
       >
@@ -484,7 +484,7 @@ export function SidebarNav({
             {/* Front Side */}
             <div
               className={cn(
-                "bg-white dark:bg-[#29335C]/20 rounded-xl border border-gray-200 dark:border-[#29335C]/30 backdrop-blur-sm relative backface-hidden",
+                "bg-white dark:bg-[#29335C]/20 rounded-2xl border border-gray-200 dark:border-[#29335C]/30 backdrop-blur-sm relative backface-hidden",
                 isCollapsed ? "w-14 p-2" : "w-full p-4",
               )}
             >
