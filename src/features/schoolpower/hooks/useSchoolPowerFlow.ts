@@ -2,7 +2,6 @@
 import { useState, useCallback } from 'react';
 import { ContextualizationData } from '../contextualization/ContextualizationCard';
 import { ActionPlanItem } from '../actionplan/ActionPlanCard';
-import { GEMINI_API_KEY } from '../activitiesManager';
 
 export type FlowState = 'idle' | 'contextualizing' | 'actionplan' | 'generating' | 'generatingActivities';
 
@@ -95,17 +94,31 @@ export function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
   // Função para gerar action plan com API Gemini
   const generateActionPlan = useCallback(async (message: string, contextData: ContextualizationData): Promise<ActionPlanItem[]> => {
     try {
-      // Buscar atividades disponíveis
-      const { getEnabledSchoolPowerActivities } = await import('../activitiesManager');
-      const availableActivities = getEnabledSchoolPowerActivities();
+      // Usar o serviço de geração de plano de ação
+      const { generateActionPlan: generatePlan } = await import('../services/actionPlanService');
       
-      const activitiesText = availableActivities.map(activity => 
-        `- ${activity.name}: ${activity.description}`
-      ).join('\n');
+      const result = await generatePlan({
+        initialMessage: message,
+        contextualizationData: contextData
+      });
 
-      const prompt = `Você é uma IA que ajuda professores a planejar atividades para seus alunos. Aqui estão as informações:
+      // Converter para o formato esperado pelo ActionPlanCard
+      return result.map(activity => ({
+        id: activity.id,
+        title: activity.personalizedTitle || activity.title,
+        description: activity.personalizedDescription || activity.description,
+        approved: false
+      }));
 
-Mensagem inicial do professor:
+    } catch (error) {
+      console.error('❌ Erro ao gerar plano de ação:', error);
+      
+      // Fallback com atividades básicas
+      return [
+        {
+          id: "plano-aula",
+          title: `Plano de Aula - ${contextData.subjects}`,
+          description: `Plano detalhado para ${contextData.audience}`,rofessor:
 "${message}"
 
 Respostas do Quiz:

@@ -1,0 +1,423 @@
+
+[
+  {
+    "id": "ideias-confraternizacoes",
+    "title": "Ideias para Confraternizações",
+    "description": "Sugere dinâmicas e cronogramas para eventos escolares"
+  },
+  {
+    "id": "mensagens-agradecimento",
+    "title": "Mensagens de Agradecimento",
+    "description": "Gera mensagens motivacionais para alunos e colegas"
+  },
+  {
+    "id": "questoes-video",
+    "title": "Questões sobre um Vídeo",
+    "description": "Cria questões baseadas no conteúdo de vídeos"
+  },
+  {
+    "id": "resumo-video",
+    "title": "Resumo de Vídeo",
+    "description": "Extrai pontos principais de conteúdo audiovisual"
+  },
+  {
+    "id": "atividades-contos-infantis",
+    "title": "Atividades de Contos Infantis",
+    "description": "Cria atividades baseadas em contos clássicos"
+  },
+  {
+    "id": "ideias-brincadeiras-infantis",
+    "title": "Ideias de Brincadeiras Infantis",
+    "description": "Sugere brincadeiras educativas para Educação Infantil e EF1"
+  },
+  {
+    "id": "jogos-educativos",
+    "title": "Jogos Educativos",
+    "description": "Sugere jogos com propósito pedagógico"
+  },
+  {
+    "id": "projeto",
+    "title": "Projeto",
+    "description": "Organiza projetos didáticos com cronograma e critérios"
+  },
+  {
+    "id": "aulas-eletivas",
+    "title": "Aulas Eletivas",
+    "description": "Propõe aulas opcionais baseadas em interesses dos alunos"
+  },
+  {
+    "id": "consulta-video",
+    "title": "Consulta sobre um Vídeo",
+    "description": "Permite interagir com conteúdo de vídeos como chat"
+  },
+  {
+    "id": "ideias-datas-comemorativas",
+    "title": "Ideias para Datas Comemorativas",
+    "description": "Propõe atividades para datas do calendário escolar"
+  },
+  {
+    "id": "pergunte-texto",
+    "title": "Pergunte sobre Texto",
+    "description": "Cria questões interativas sobre textos específicos"
+  },
+  {
+    "id": "pei-pdi",
+    "title": "PEI/PDI - Plano Individualizado",
+    "description": "Desenvolve planos educacionais individualizados"
+  },
+  {
+    "id": "projeto-vida",
+    "title": "Projeto de Vida",
+    "description": "Planeja atividades focadas em autoconhecimento e propósito"
+  },
+  {
+    "id": "relatorio",
+    "title": "Relatório",
+    "description": "Produz relatórios personalizados com base no progresso do aluno"
+  },
+  {
+    "id": "ideias-aulas-acessiveis",
+    "title": "Ideias para Aulas Acessíveis",
+    "description": "Sugere aulas inclusivas e adaptadas"
+  },
+  {
+    "id": "caca-palavras",
+    "title": "Caça-Palavras",
+    "description": "Produz caça-palavras com até 20 termos e gabarito"
+  },
+  {
+    "id": "lista-exercicios",
+    "title": "Lista de Exercícios",
+    "description": "Gera questões objetivas ou dissertativas com gabarito"
+  },
+  {
+    "id": "prova",
+    "title": "Prova",
+    "description": "Cria avaliações completas com diferentes tipos de questões"
+  },
+  {
+    "id": "resumo",
+    "title": "Resumo",
+    "description": "Produz resumos didáticos de temas ou arquivos"
+  },
+  {
+    "id": "atividades-matematica",
+    "title": "Atividades de Matemática",
+    "description": "Gera exercícios específicos de matemática por nível"
+  },
+  {
+    "id": "atividades-ortografia-alfabeto",
+    "title": "Atividades de Ortografia e Alfabeto",
+    "description": "Cria atividades de alfabetização e ortografia"
+  },
+  {
+    "id": "jogos-educacionais-interativos",
+    "title": "Jogos Educacionais Interativos",
+    "description": "Desenvolve jogos interativos para aprendizagem"
+  },
+  {
+    "id": "desenho-simetrico",
+    "title": "Desenho Simétrico",
+    "description": "Gera atividades de simetria e geometria visual"
+  },
+  {
+    "id": "ideias-atividades",
+    "title": "Ideias de Atividades",
+    "description": "Gera cinco dinâmicas alinhadas ao tema e turma"
+  },
+  {
+    "id": "sequencia-didatica",
+    "title": "Sequência Didática",
+    "description": "Organiza aulas com objetivos, atividades e alinhamento à BNCC"
+  },
+  {
+    "id": "proposta-redacao",
+    "title": "Proposta de Redação",
+    "description": "Cria propostas de redação com temas relevantes"
+  },
+  {
+    "id": "plano-recuperacao-aprendizagem",
+    "title": "Plano de Recuperação de Aprendizagem",
+    "description": "Cria planos focados em superar dificuldades dos alunos"
+  },
+  {
+    "id": "plano-aula",
+    "title": "Plano de Aula",
+    "description": "Desenvolve planos detalhados para aulas específicas"
+  },
+  {
+    "id": "apresentacao-slides",
+    "title": "Apresentação de Slides",
+    "description": "Gera slides didáticos sobre um tema específico"
+  },
+  {
+    "id": "revisao-guiada",
+    "title": "Revisão Guiada",
+    "description": "Cria roteiros de revisão estruturados"
+  },
+  {
+    "id": "mapa-mental",
+    "title": "Mapa Mental",
+    "description": "Converte temas em mapas mentais editáveis"
+  },
+  {
+    "id": "imagem-colorir",
+    "title": "Imagem para Colorir",
+    "description": "Gera desenhos para imprimir e pintar"
+  },
+  {
+    "id": "lista-vocabulario",
+    "title": "Lista de Vocabulário",
+    "description": "Lista termos principais com explicações"
+  },
+  {
+    "id": "bncc-descomplicada",
+    "title": "BNCC Descomplicada",
+    "description": "Explica componentes da BNCC de forma acessível"
+  },
+  {
+    "id": "texto-apoio",
+    "title": "Texto de Apoio",
+    "description": "Gera textos explicativos personalizados"
+  },
+  {
+    "id": "experimento-cientifico",
+    "title": "Experimento Científico",
+    "description": "Propõe experimentos com materiais acessíveis"
+  },
+  {
+    "id": "capitulo-livro",
+    "title": "Capítulo de livro",
+    "description": "Desenvolve capítulos educativos estruturados"
+  },
+  {
+    "id": "charadas",
+    "title": "Charadas",
+    "description": "Cria charadas temáticas para raciocínio lógico"
+  },
+  {
+    "id": "criterios-avaliacao",
+    "title": "Critérios de Avaliação",
+    "description": "Personaliza critérios avaliativos para atividades"
+  },
+  {
+    "id": "exemplos-contextualizados",
+    "title": "Exemplos Contextualizados",
+    "description": "Gera exemplos práticos de conceitos"
+  },
+  {
+    "id": "tornar-relevante",
+    "title": "Tornar Relevante",
+    "description": "Melhora conteúdos para torná-los mais aplicáveis e engajadores"
+  },
+  {
+    "id": "tabela-apoio",
+    "title": "Tabela de Apoio",
+    "description": "Gera tabelas organizadas por tema"
+  },
+  {
+    "id": "perguntas-bloom",
+    "title": "Perguntas Baseadas em Taxonomia de Bloom",
+    "description": "Cria perguntas em diferentes níveis cognitivos"
+  },
+  {
+    "id": "emails-escolares",
+    "title": "E-mails Escolares",
+    "description": "Cria modelos formais de e-mails"
+  },
+  {
+    "id": "fichamento-obra-literaria",
+    "title": "Fichamento de uma obra literária",
+    "description": "Organiza informações de livros em estrutura padrão"
+  },
+  {
+    "id": "resposta-email",
+    "title": "Resposta de E-mail",
+    "description": "Produz respostas formais para e-mails escolares"
+  },
+  {
+    "id": "corretor-questoes",
+    "title": "Corretor de Questões",
+    "description": "Corrige questões abertas com justificativas detalhadas"
+  },
+  {
+    "id": "atividades-ia",
+    "title": "Atividades com IA",
+    "description": "Cria atividades baseadas em tema, idade e objetivos"
+  },
+  {
+    "id": "questoes-site",
+    "title": "Questões sobre um Site",
+    "description": "Desenvolve questões baseadas em conteúdo web"
+  },
+  {
+    "id": "corretor-provas-papel",
+    "title": "Corretor de Provas em Papel",
+    "description": "Corrige automaticamente provas escaneadas ou digitadas"
+  },
+  {
+    "id": "acessibilidade-texto",
+    "title": "Acessibilidade de um Texto",
+    "description": "Torna textos acessíveis para necessidades específicas"
+  },
+  {
+    "id": "atividade-adaptada",
+    "title": "Atividade Adaptada",
+    "description": "Gera versões acessíveis ou diferenciadas de atividades"
+  },
+  {
+    "id": "musica-engajar",
+    "title": "Música para Engajar",
+    "description": "Cria letras de músicas educativas sobre conteúdos"
+  },
+  {
+    "id": "ideias-avaliacoes-adaptadas",
+    "title": "Ideias para Avaliações Adaptadas",
+    "description": "Cria avaliações focadas em alunos com deficiência"
+  },
+  {
+    "id": "objetivos-aprendizagem",
+    "title": "Objetivos de Aprendizagem",
+    "description": "Gera objetivos claros alinhados à BNCC"
+  },
+  {
+    "id": "corretor-gramatical",
+    "title": "Corretor Gramatical",
+    "description": "Corrige ortografia e gramática de textos escolares"
+  },
+  {
+    "id": "corretor-redacao",
+    "title": "Corretor de Redação",
+    "description": "Avalia redações com critérios objetivos e subjetivos"
+  },
+  {
+    "id": "questoes-pdf",
+    "title": "Questões sobre um PDF",
+    "description": "Gera questões baseadas em documentos PDF"
+  },
+  {
+    "id": "simulado",
+    "title": "Simulado",
+    "description": "Monta simulados por tema, matéria e nível de dificuldade"
+  },
+  {
+    "id": "niveador-textos",
+    "title": "Niveador de Textos",
+    "description": "Ajusta a complexidade de textos conforme a série"
+  },
+  {
+    "id": "tarefa-adaptada",
+    "title": "Tarefa Adaptada",
+    "description": "Adapta tarefas para necessidades específicas de alunos"
+  },
+  {
+    "id": "resumo-texto",
+    "title": "Resumo de Texto",
+    "description": "Extrai ideias principais de textos longos"
+  },
+  {
+    "id": "instrucoes-claras",
+    "title": "Instruções Claras",
+    "description": "Reescreve enunciados para maior clareza"
+  },
+  {
+    "id": "desenvolvimento-caligrafia",
+    "title": "Desenvolvimento da Caligrafia",
+    "description": "Cria exercícios para melhorar a escrita manual"
+  },
+  {
+    "id": "reflexao-incidente",
+    "title": "Reflexão sobre um Incidente",
+    "description": "Cria textos reflexivos sobre ocorrências escolares"
+  },
+  {
+    "id": "sugestoes-intervencao",
+    "title": "Sugestões de Intervenção",
+    "description": "Propõe ações para reforçar ou recuperar conteúdos"
+  },
+  {
+    "id": "erros-comuns",
+    "title": "Erros Comuns",
+    "description": "Identifica e corrige erros frequentes em atividades"
+  },
+  {
+    "id": "maquete",
+    "title": "Maquete",
+    "description": "Sugere ideias de maquetes com materiais simples"
+  },
+  {
+    "id": "historias-sociais",
+    "title": "Histórias Sociais",
+    "description": "Gera narrativas para desenvolvimento socioemocional"
+  },
+  {
+    "id": "dinamicas-sala-aula",
+    "title": "Dinâmicas para Sala de Aula",
+    "description": "Sugere dinâmicas rápidas para fixação de conteúdos"
+  },
+  {
+    "id": "rescritor-texto",
+    "title": "Rescritor de Texto",
+    "description": "Reescreve textos para maior clareza ou adaptação"
+  },
+  {
+    "id": "palavra-cruzada",
+    "title": "Palavra Cruzada",
+    "description": "Gera cruzadinhas personalizadas com gabarito"
+  },
+  {
+    "id": "questoes-texto",
+    "title": "Questões sobre um Texto",
+    "description": "Cria questões interpretativas sobre textos específicos"
+  },
+  {
+    "id": "corretor-provas-automatico",
+    "title": "Corretor de Provas automaticamente gerando feedback",
+    "description": "Correção automática com feedback detalhado"
+  },
+  {
+    "id": "plano-ensino",
+    "title": "Plano de Ensino",
+    "description": "Gera planos com objetivos, metodologia, recursos e avaliação"
+  },
+  {
+    "id": "relatorio-desempenho",
+    "title": "Relatório de Desempenho",
+    "description": "Produz relatórios personalizados com base no progresso do aluno"
+  },
+  {
+    "id": "geracao-questoes",
+    "title": "Geração de Questões",
+    "description": "Produz questões baseadas em textos, vídeos, sites ou PDFs"
+  },
+  {
+    "id": "texto-acessibilidade",
+    "title": "Texto com Acessibilidade",
+    "description": "Adapta textos para alunos com baixa visão, TEA ou dislexia"
+  },
+  {
+    "id": "chatbot-bncc",
+    "title": "Chatbot com a BNCC",
+    "description": "Responde perguntas sobre a BNCC em formato de chat"
+  },
+  {
+    "id": "redacao",
+    "title": "Redação",
+    "description": "Gera propostas ou avaliações de redação"
+  },
+  {
+    "id": "reescritor-texto",
+    "title": "Reescritor de Texto",
+    "description": "Reescreve textos para maior clareza ou adaptação"
+  },
+  {
+    "id": "revisor-gramatical",
+    "title": "Revisor Gramatical",
+    "description": "Corrige ortografia e gramática de textos escolares"
+  },
+  {
+    "id": "gerador-formatos-tracejados",
+    "title": "Gerador de Formatos Tracejados",
+    "description": "Cria atividades tracejadas para letras e formas"
+  }
+]
