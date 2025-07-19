@@ -80,6 +80,9 @@ export function SidebarNav({
   const [cascadeIndex, setCascadeIndex] = useState(0);
   const [isModeTransitioning, setIsModeTransitioning] = useState(false);
   const [isMenuAnimating, setIsMenuAnimating] = useState(false);
+  const [animationsCompleted, setAnimationsCompleted] = useState(0);
+  const [totalAnimations, setTotalAnimations] = useState(0);
+  const [pendingModeChange, setPendingModeChange] = useState(false);
 
   useEffect(() => {
     // Listener para atualizações de avatar feitas em outros componentes
@@ -497,22 +500,42 @@ export function SidebarNav({
                 <button
                   className="absolute top-3 right-3 w-6 h-6 rounded-full border-2 border-orange-500 bg-orange-600 bg-opacity-20 hover:bg-orange-600 hover:bg-opacity-30 flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-sm cursor-pointer z-10"
                   onClick={() => {
+                    if (isMenuAnimating || isModeTransitioning) return;
+
                     setIsModeTransitioning(true);
                     setIsMenuAnimating(true);
                     setIsMenuFlipping(true);
+                    setPendingModeChange(true);
+
+                    // Calcular total de animações baseado no número de itens do menu
+                    const totalItems = navItems.length;
+                    setTotalAnimations(totalItems);
+                    setAnimationsCompleted(0);
 
                     // Iniciar animação em cascata dos itens do menu
                     setTimeout(() => {
-                      setIsCardFlipped(!isCardFlipped);
+                      // Aguardar que todas as animações dos itens terminem
+                      const checkAnimationsComplete = () => {
+                        if (animationsCompleted >= totalAnimations && pendingModeChange) {
+                          setIsCardFlipped(!isCardFlipped);
+                          setPendingModeChange(false);
 
-                      // Continuar animação do menu por mais tempo
-                      setTimeout(() => {
-                        setIsModeTransitioning(false);
-                        setTimeout(() => {
-                          setIsMenuFlipping(false);
-                          setIsMenuAnimating(false);
-                        }, 800);
-                      }, 1200);
+                          // Continuar animação do menu por mais tempo
+                          setTimeout(() => {
+                            setIsModeTransitioning(false);
+                            setTimeout(() => {
+                              setIsMenuFlipping(false);
+                              setIsMenuAnimating(false);
+                              setAnimationsCompleted(0);
+                              setTotalAnimations(0);
+                            }, 800);
+                          }, 1200);
+                        } else if (pendingModeChange) {
+                          setTimeout(checkAnimationsComplete, 50);
+                        }
+                      };
+
+                      setTimeout(checkAnimationsComplete, 100);
                     }, 100);
                   }}
                   title="Flip Card"
@@ -696,22 +719,42 @@ export function SidebarNav({
                 <button
                   className="absolute top-3 right-3 w-6 h-6 rounded-full border-2 border-[#2462EA] bg-[#0f26aa] bg-opacity-20 hover:bg-[#0f26aa] hover:bg-opacity-30 flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-sm cursor-pointer z-10"
                   onClick={() => {
+                    if (isMenuAnimating || isModeTransitioning) return;
+
                     setIsModeTransitioning(true);
                     setIsMenuAnimating(true);
                     setIsMenuFlipping(true);
+                    setPendingModeChange(true);
+
+                    // Calcular total de animações baseado no número de itens do menu
+                    const totalItems = navItems.length;
+                    setTotalAnimations(totalItems);
+                    setAnimationsCompleted(0);
 
                     // Iniciar animação em cascata dos itens do menu
                     setTimeout(() => {
-                      setIsCardFlipped(!isCardFlipped);
+                      // Aguardar que todas as animações dos itens terminem
+                      const checkAnimationsComplete = () => {
+                        if (animationsCompleted >= totalAnimations && pendingModeChange) {
+                          setIsCardFlipped(!isCardFlipped);
+                          setPendingModeChange(false);
 
-                      // Continuar animação do menu por mais tempo
-                      setTimeout(() => {
-                        setIsModeTransitioning(false);
-                        setTimeout(() => {
-                          setIsMenuFlipping(false);
-                          setIsMenuAnimating(false);
-                        }, 800);
-                      }, 1200);
+                          // Continuar animação do menu por mais tempo
+                          setTimeout(() => {
+                            setIsModeTransitioning(false);
+                            setTimeout(() => {
+                              setIsMenuFlipping(false);
+                              setIsMenuAnimating(false);
+                              setAnimationsCompleted(0);
+                              setTotalAnimations(0);
+                            }, 800);
+                          }, 1200);
+                        } else if (pendingModeChange) {
+                          setTimeout(checkAnimationsComplete, 50);
+                        }
+                      };
+
+                      setTimeout(checkAnimationsComplete, 100);
                     }, 100);
                   }}
                   title="Flip Card"
