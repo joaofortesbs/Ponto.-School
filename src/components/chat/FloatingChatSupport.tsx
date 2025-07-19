@@ -3149,7 +3149,8 @@ Exemplo de formato da resposta:
                                         titulo: "Conclusão e Reflexões",
                                         topicos: ["Síntese dos conceitos", "Importância do tema", "Próximos passos"],
                                         explicacao: conclusion + "\n\nPerguntas para reflexão:\n\n" +
-                                                    "• Como este conhecimento pode ser aplicado no seu contexto?\n" +
+                                                    "• Como este conhecimento pode ser aplicado na prática?"
+                                      };icado no seu contexto?\n" +
                                                     "• Quais desdobramentos futuros podemos antecipar nesta área?",
                                         imagemOpcional: ""
                                       },
