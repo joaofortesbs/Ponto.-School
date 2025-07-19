@@ -494,14 +494,14 @@ export function SidebarNav({
                 <button
                   className="absolute top-3 right-3 w-6 h-6 rounded-full border-2 border-orange-500 bg-orange-600 bg-opacity-20 hover:bg-orange-600 hover:bg-opacity-30 flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-sm cursor-pointer z-10"
                   onClick={() => {
-                    setIsMenuFlipping(true);
                     setIsModeChanging(true);
+                    setIsMenuFlipping(true);
                     setTimeout(() => {
                       setIsCardFlipped(!isCardFlipped);
                       setTimeout(() => {
                         setIsMenuFlipping(false);
-                        setTimeout(() => setIsModeChanging(false), 400);
-                      }, 500);
+                        setTimeout(() => setIsModeChanging(false), 600);
+                      }, 600);
                     }, 300);
                   }}
                   title="Flip Card"
@@ -685,14 +685,14 @@ export function SidebarNav({
                 <button
                   className="absolute top-3 right-3 w-6 h-6 rounded-full border-2 border-[#2462EA] bg-[#0f26aa] bg-opacity-20 hover:bg-[#0f26aa] hover:bg-opacity-30 flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-sm cursor-pointer z-10"
                   onClick={() => {
-                    setIsMenuFlipping(true);
                     setIsModeChanging(true);
+                    setIsMenuFlipping(true);
                     setTimeout(() => {
                       setIsCardFlipped(!isCardFlipped);
                       setTimeout(() => {
                         setIsMenuFlipping(false);
-                        setTimeout(() => setIsModeChanging(false), 400);
-                      }, 500);
+                        setTimeout(() => setIsModeChanging(false), 600);
+                      }, 600);
                     }, 300);
                   }}
                   title="Flip Card"
