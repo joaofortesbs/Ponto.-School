@@ -1,0 +1,129 @@
+Você está dando vida real e funcional ao School Power da Ponto. School, garantindo personalização real via API Gemini, utilizando dados do usuário e as 137 atividades possíveis.
+
+Atualmente:
+❌ O sistema exibe atividades genéricas não personalizadas após o envio do ContextualizationCard.
+❌ O sistema não está usando a API Gemini corretamente para analisar a mensagem inicial e as respostas do quiz.
+❌ O sistema não consulta corretamente o arquivo schoolPowerActivities.json para limitar sugestões apenas às 137 atividades disponíveis.
+
+🔹 Objetivo
+Fazer o fluxo funcionar perfeitamente:
+
+1️⃣ Usuário envia a mensagem no ChatInput (ex: “Preciso de materiais de revisão para 3º ano, focando em redação e interpretação, para prova dia 28/07.”)
+2️⃣ Usuário preenche o ContextualizationCard (matérias, público-alvo, restrições, datas, observações).
+3️⃣ Após envio do quiz, o sistema faz uma chamada em tempo real para a API Gemini, enviando:
+
+A mensagem inicial completa.
+
+Todas as respostas do quiz.
+
+As 137 atividades disponíveis do schoolPowerActivities.json.
+
+4️⃣ A API Gemini analisa as informações e retorna entre 3 a 5 atividades reais, personalizadas, alinhadas ao contexto do usuário, incluindo:
+
+id (obrigatório e deve existir no arquivo de atividades).
+
+title (personalizado, ex: “Prova de Redação - 28/07 - 3º Ano”).
+
+description (personalizada, ex: “Avaliação com foco em dissertação argumentativa para o 3º ano.”).
+
+5️⃣ O sistema valida a resposta da IA:
+✅ Se todos os id existem no schoolPowerActivities.json, renderiza no ActionPlanCard.
+✅ Se vier algo fora do escopo, solicita nova geração ou remove inconsistências automaticamente.
+
+6️⃣ Renderização no ActionPlanCard:
+
+Exibe os mini-cards checkbox com título, descrição e seleção.
+
+Mostra contador de atividades selecionadas.
+
+Permite aprovação apenas após selecionar ao menos 1 atividade.
+
+🔹 O que precisa ser criado e ajustado
+✅ 1. Garantir coleta e armazenamento correto dos dados:
+
+Garantir que a mensagem do ChatInput seja salva em schoolPowerStore imediatamente ao enviar.
+
+Garantir que todas as respostas do ContextualizationCard sejam armazenadas no mesmo store.
+
+✅ 2. Criar um arquivo ou utilitário generatePersonalizedPlan.ts:
+
+Faz a chamada à API Gemini usando fetch ou client Gemini SDK com a Key AIzaSyD-Sso0SdyYKoA4M3tQhcWjQ1AoddB7Wo4.
+
+Envia o payload estruturado:
+
+json
+Copiar
+Editar
+{
+  "userMessage": "{mensagem_inicial}",
+  "quizResponses": {
+    "materiasETemas": "{materias}",
+    "publicoAlvo": "{publico_alvo}",
+    "restricoes": "{restricoes}",
+    "datasImportantes": "{datas}",
+    "observacoes": "{observacoes}"
+  },
+  "availableActivities": [{lista das 137 atividades em JSON}]
+}
+Recebe o JSON da IA Gemini com as sugestões personalizadas.
+
+✅ 3. Criar um validador validateGeminiPlan.ts:
+
+Verifica se todos os id retornados existem em schoolPowerActivities.json.
+
+Remove ou alerta se houver inconsistências.
+
+✅ 4. Renderizar o retorno no ActionPlanCard:
+
+Renderizar os mini-cards checkbox dinâmicos conforme os dados da IA.
+
+Utilizar animação suave (Framer Motion) durante a transição do ContextualizationCard para o ActionPlanCard.
+
+Habilitar botão de aprovação apenas quando ao menos 1 item for selecionado.
+
+✅ 5. Utilizar Skeleton Loader ou Spinner durante a requisição.
+
+🔹 Exemplo de prompt enviado para a API Gemini:
+javascript
+Copiar
+Editar
+Você é a IA do School Power. Seu trabalho é gerar de 3 a 5 atividades personalizadas para um professor ou coordenador educacional, utilizando SOMENTE as atividades disponíveis abaixo.
+
+Mensagem inicial:
+"{mensagem_inicial}"
+
+Respostas do Quiz:
+- Matérias e temas: "{materias}"
+- Público-alvo: "{publico_alvo}"
+- Restrições ou preferências: "{restricoes}"
+- Datas importantes: "{datas}"
+- Observações: "{observacoes}"
+
+Atividades disponíveis:
+{JSON.stringify(atividadesDisponiveis)}
+
+Retorne um JSON com atividades, cada uma com:
+- id (da atividade existente)
+- title (personalizado, curto e claro)
+- description (personalizada)
+
+Exemplo:
+[
+  {
+    "id": "prova-interativa",
+    "title": "Prova de Redação - 28/07 - 3º Ano",
+    "description": "Avaliação interativa com foco em dissertação argumentativa para o 3º ano."
+  },
+  ...
+]
+🔹 Considerações Técnicas Importantes
+✅ Utilize TypeScript estrito.
+✅ Use zustand para o gerenciamento de estado centralizado.
+✅ Padronize estilos e utilize Framer Motion para UX suave.
+✅ Crie logs claros em caso de erro na resposta da IA.
+✅ Permita reenvio caso a IA retorne dados inconsistentes.
+✅ Prepare para escalabilidade (fácil adição de novas atividades).
+✅ Código limpo, modular, fácil de auditar.
+
+✅ Resultado Esperado
+✅ Usuário envia mensagem > Responde quiz > API Gemini gera plano personalizado real > Sugestões aparecem corretamente no ActionPlanCard > Usuário aprova > Atividades são geradas corretamente de forma personalizada.
