@@ -24,8 +24,7 @@ export function SchoolPowerPage() {
     sendInitialMessage,
     submitContextualization,
     approveActionPlan,
-    resetFlow,
-    isLoading
+    resetFlow
   } = useSchoolPowerFlow();
 
   const handleCentralExpandedChange = (expanded: boolean) => {
@@ -52,10 +51,6 @@ export function SchoolPowerPage() {
 
   // Determina se os componentes devem estar visíveis
   const componentsVisible = flowState === 'idle';
-  const showContextualization = flowState === 'contextualizing';
-  const showActionPlan = flowState === 'actionplan';
-  const showGenerating = flowState === 'generating';
-  const showGeneratingActivities = flowState === 'generatingActivities';
 
   return (
     <div
@@ -106,27 +101,10 @@ export function SchoolPowerPage() {
 
               {/* Caixa de Mensagem dentro do mesmo container Ripple */}
               <div className="absolute bottom-24 left-1/2 transform -translate-x-1/2 translate-y-full z-40 pointer-events-auto" style={{ marginTop: "-150px" }}>
-                <ChatInput
-            onSendMessage={(message) => {
-              console.log('📤 SCHOOL POWER - Mensagem inicial coletada:', message);
-              console.log('📊 SCHOOL POWER - Tamanho da mensagem:', message.length, 'caracteres');
-              console.log('📝 SCHOOL POWER - Conteúdo completo:', message);
-
-              if (!message || message.trim().length === 0) {
-                console.error('❌ Mensagem vazia não pode ser processada');
-                return;
-              }
-
-              if (message.length < 10) {
-                console.warn('⚠️ Mensagem muito curta, pode gerar análise limitada');
-              }
-
-              sendInitialMessage(message.trim());
-            }}
-            disabled={flowState !== 'idle' || isLoading}
-            placeholder="Descreva detalhadamente o que você precisa criar para seus alunos (quanto mais informações, melhor será a análise da IA)..."
-            className="w-full"
-          />
+                <ChatInput 
+                  isDarkTheme={isDarkTheme} 
+                  onSend={handleSendMessage}
+                />
               </div>
             </div>
           </div>
@@ -134,13 +112,12 @@ export function SchoolPowerPage() {
       )}
 
       {/* Card de Contextualização - aparece quando flowState é 'contextualizing' */}
-      {showContextualization && (
+      {flowState === 'contextualizing' && (
         <motion.div 
-          className="absolute inset-0 flex items-center justify-center z-50 px-4 bg-black/5 backdrop-blur-[1px]"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.2, ease: "easeOut" }}
+          className="absolute inset-0 flex items-center justify-center z-30 px-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
         >
           <ContextualizationCard 
             onSubmit={handleSubmitContextualization}
@@ -149,24 +126,24 @@ export function SchoolPowerPage() {
       )}
 
       {/* Card de Action Plan - aparece quando flowState é 'actionplan' */}
-      {showActionPlan && (
+      {flowState === 'actionplan' && (
         <motion.div 
-          className="absolute inset-0 flex items-center justify-center z-50 px-4 bg-black/5 backdrop-blur-[1px]"
-          initial={{ opacity: 0, scale: 0.95, y: 30 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: -30 }}
-          transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+          className="absolute inset-0 flex items-center justify-center z-30 px-4"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.9 }}
+          transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
         >
           <ActionPlanCard 
             actionPlan={flowData.actionPlan || []}
             onApprove={handleApproveActionPlan}
-            isLoading={isLoading || !flowData.actionPlan}
+            isLoading={!flowData.actionPlan}
           />
         </motion.div>
       )}
 
       {/* Estado de geração de atividades - aparece quando flowState é 'generatingActivities' */}
-      {showGeneratingActivities && (
+      {flowState === 'generatingActivities' && (
         <motion.div 
           className="absolute inset-0 bg-black/10 backdrop-blur-sm flex items-center justify-center z-40"
           initial={{ opacity: 0 }}
@@ -197,27 +174,25 @@ export function SchoolPowerPage() {
       )}
 
       {/* Estado de geração - aparece quando flowState é 'generating' */}
-      {showGenerating && (
+      {flowState === 'generating' && (
         <motion.div 
-          className="absolute inset-0 bg-black/10 backdrop-blur-sm flex items-center justify-center z-50"
+          className="absolute inset-0 bg-black/10 backdrop-blur-sm flex items-center justify-center z-40"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
+          transition={{ duration: 0.3 }}
         >
           <motion.div 
             className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl rounded-2xl p-8 max-w-md w-full mx-4 text-center shadow-2xl border border-white/20"
-            initial={{ opacity: 0, scale: 0.9, y: 30 }}
+            initial={{ opacity: 0, scale: 0.8, y: 50 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: -30 }}
-            transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+            transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
           >
             <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#FF6B00]/20 border-t-[#FF6B00] mx-auto mb-6"></div>
             <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
-              Analisando sua Solicitação
+              Gerando Plano de Ação
             </h3>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
-              A IA está processando todas as informações para gerar o plano de ação personalizado...
+              A IA está processando sua solicitação e criando um plano personalizado...
             </p>
             <button 
               onClick={resetFlow}
