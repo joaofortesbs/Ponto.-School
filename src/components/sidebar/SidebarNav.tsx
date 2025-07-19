@@ -919,7 +919,8 @@ export function SidebarNav({
 
         * {
           font-family: 'Inter', sans-serif;
-        }```python
+        }
+
         .navigation-menu-container {
           position: relative;
         }
