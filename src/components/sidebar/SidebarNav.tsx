@@ -761,7 +761,7 @@ export function SidebarNav({
         )}
       >
         {/* Navigation Menu com novo design */}
-        <div className="navigation-menu-container px-2">
+        <div className={cn("navigation-menu-container px-2", isCollapsed && "sidebar-collapsed")}>
           <nav className="menu-navigation">
             {navItems.map((item, index) => (
               <div key={index} className="relative">
@@ -962,6 +962,24 @@ export function SidebarNav({
 
         .menu-item:hover:not(.active) .item-title {
           color: #FF6B00 !important;
+        }
+
+        /* Estilos para sidebar colapsado - apenas ícones */
+        .sidebar-collapsed .item-text {
+          display: none !important;
+        }
+
+        .sidebar-collapsed .menu-item {
+          justify-content: center !important;
+        }
+
+        .sidebar-collapsed .item-content {
+          justify-content: center !important;
+          padding: 12px 8px !important;
+        }
+
+        .sidebar-collapsed .item-indicator {
+          display: none !important;
         }
 
         .item-indicator {
