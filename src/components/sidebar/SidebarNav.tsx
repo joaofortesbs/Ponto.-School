@@ -1,3 +1,4 @@
+
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -44,6 +45,8 @@ import {
   GraduationCap,
   CalendarClock,
   Upload,
+  Route,
+  ProjectDiagram,
 } from "lucide-react";
 import MentorAI from "@/components/mentor/MentorAI";
 import AgendaNav from "./AgendaNav";
@@ -309,12 +312,12 @@ export function SidebarNav({
 
   const navItems = [
     {
-      icon: <Home className="h-5 w-5" />,
+      icon: "fas fa-home",
       label: "Painel",
       path: "/",
     },
     {
-      icon: <BookOpen className="h-5 w-5" />,
+      icon: "fas fa-user-graduate",
       label: "Minhas Turmas",
       path: "/turmas",
       component: <TurmasNav />,
@@ -342,24 +345,28 @@ export function SidebarNav({
       ],
     },
     {
-      icon: <Users2 className="h-5 w-5" />,
+      icon: "fas fa-users",
       label: "Comunidades",
       path: "/comunidades",
     },
     {
-      icon: <Brain className="h-5 w-5" />,
+      icon: "fas fa-route",
+      label: "Trilhas School",
+      path: "/trilhas-school",
+    },
+    {
+      icon: "fas fa-project-diagram",
+      label: "School Planner",
+      path: "/school-planner",
+    },
+    {
+      icon: "fas fa-brain",
       label: "Epictus IA",
       path: "/epictus-ia",
       isSpecial: true,
     },
     {
-      icon: <Rocket className="h-5 w-5" />,
-      label: "School Power",
-      path: "/school-power",
-      isSpecial: true,
-    },
-    {
-      icon: <Calendar className="h-5 w-5" />,
+      icon: "fas fa-calendar-alt",
       label: "Agenda",
       path: "/agenda",
       component: <AgendaNav />,
@@ -387,14 +394,14 @@ export function SidebarNav({
       ],
     },
     {
-      icon: <Trophy className="h-5 w-5" />,
+      icon: "fas fa-trophy",
       label: "Conquistas",
       path: "/conquistas",
     },
     {
-      icon: <Wallet className="h-5 w-5" />,
-      label: "Carteira",
-      path: "/carteira",
+      icon: "fas fa-compass",
+      label: "Explorar",
+      path: "/explorar",
     },
   ];
 
@@ -423,8 +430,6 @@ export function SidebarNav({
           </div>
         </div>
       )}
-
-      
 
       {/* User Profile Component - Greeting and progress section */}
       <div
@@ -796,178 +801,249 @@ export function SidebarNav({
           isCollapsed ? "h-[calc(100%-180px)]" : "h-[calc(100%-300px)]",
         )}
       >
-        <nav className="grid gap-1 px-2">
-          {navItems.map((item, index) => (
-            <div key={index} className="relative">
-              {item.component ? (
-                isCollapsed ? (
-                  <Button
-                    variant="ghost"
-                    className={cn(
-                      "flex items-center justify-center rounded-lg px-3 py-2 text-start w-full",
-                      isActive(item.path)
-                        ? "bg-[#FF6B00]/10 text-[#FF6B00] dark:bg-[#FF6B00]/20 dark:text-[#FF6B00]"
-                        : "text-[#001427] hover:bg-[#FF6B00]/5 dark:text-white dark:hover:bg-[#FF6B00]/10",
-                      "group hover:scale-[1.02] transition-all duration-200 hover:shadow-sm active:scale-[0.98]",
-                    )}
-                    onClick={() => handleNavigation(item.path)}
-                  >
-                    <div className="mx-auto">
-                      {item.label === "Portal" ? (
-                        <BookMarked className="h-5 w-5 text-[#001427] dark:text-white" />
-                      ) : (
-                        <Calendar className="h-5 w-5 text-[#001427] dark:text-white" />
-                      )}
-                    </div>
-                    <div
-                      className={cn(
-                        "absolute left-0 top-0 h-full w-1 rounded-r-md transition-all duration-300",
-                        isActive(item.path)
-                          ? "bg-[#FF6B00]"
-                          : "bg-transparent group-hover:bg-[#FF6B00]/30",
-                      )}
-                    />
-                  </Button>
-                ) : (
+        {/* Navigation Menu com novo design */}
+        <div className="navigation-menu-container px-2">
+          <nav className="menu-navigation">
+            {navItems.map((item, index) => (
+              <div key={index} className="relative">
+                {item.component && !isCollapsed ? (
                   item.component
-                )
-              ) : (
-                <Button
-                  variant="ghost"
-                  className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2 text-start w-full",
-                    isCollapsed ? "justify-center" : "justify-between",
-                    isActive(item.path)
-                      ? "bg-[#FF6B00]/10 text-[#FF6B00] dark:bg-[#FF6B00]/20 dark:text-[#FF6B00]"
-                      : "text-[#001427] hover:bg-[#FF6B00]/5 dark:text-white dark:hover:bg-[#FF6B00]/10",
-                    "group hover:scale-[1.02] transition-all duration-200 hover:shadow-sm active:scale-[0.98]",
-                    item.label === "Novidades"
-                      ? "relative overflow-hidden"
-                      : "",
-                  )}
-                  onClick={(e) => {
-                    if (item.subItems && !isCollapsed) {
-                      e.preventDefault();
-                      toggleSection(item.label);
-                    } else {
-                      handleNavigation(item.path, item.isSpecial);
-                    }
-                  }}
-                >
-                  {item.label === "Novidades" && (
-                    <div className="absolute inset-0 rounded-lg border border-transparent bg-gradient-to-r from-[#FFD700] to-[#FF6B00] opacity-10 animate-gradient-x"></div>
-                  )}
-                  <div className="flex items-center relative z-10">
-                    <div
-                      className={cn(
-                        "transition-all duration-300",
-                        isCollapsed ? "mx-auto" : "mr-3",
-                        isActive(item.path)
-                          ? "text-[#FF6B00] dark:text-[#FF6B00]"
-                          : item.label === "Novidades"
-                            ? "text-[#FF6B00] dark:text-[#FF6B00]"
-                            : "text-[#001427] dark:text-white",
-                      )}
-                    >
-                      {item.icon}
-                    </div>
-                    {!isCollapsed && (
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={cn(
-                            item.label === "Novidades"
-                              ? "text-[#FF6B00] font-bold"
-                              : "",
-                          )}
-                        >
-                          {item.label}
-                        </span>
-                        {item.label === "Explorar" && (
-                          <span className="px-1.5 py-0.5 text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-md">
-                            Em breve
-                          </span>
-                        )}
-                      </div>
+                ) : (
+                  <div 
+                    className={cn(
+                      "menu-item",
+                      isActive(item.path) ? "active" : ""
                     )}
-                  </div>
-                  {!isCollapsed && item.subItems && (
-                    <div className="text-[#001427] dark:text-white">
-                      {expandedSection === item.label ? (
-                        <ChevronUp className="h-4 w-4" />
-                      ) : (
-                        <ChevronDown className="h-4 w-4" />
-                      )}
-                    </div>
-                  )}
-                  {item.label !== "Novidades" && (
-                    <div
-                      className={cn(
-                        "absolute left-0 top-0 h-full w-1 rounded-r-md transition-all duration-300",
-                        isActive(item.path)
-                          ? "bg-[#FF6B00]"
-                          : "bg-transparent group-hover:bg-[#FF6B00]/30",
-                      )}
-                    />
-                  )}
-                </Button>
-              )}
-
-              {/* Sub Items */}
-              {!isCollapsed &&
-                item.subItems &&
-                expandedSection === item.label && (
-                  <div className="mt-1 space-y-1">
-                    {item.subItems.map((subItem, subIndex) => (
-                      <Button
-                        key={subIndex}
-                        variant="ghost"
-                        className={cn(
-                          "flex items-center gap-2 rounded-lg px-3 py-2 text-start w-full justify-start",
-                          isActive(subItem.path)
-                            ? "bg-[#FF6B00]/10 text-[#FF6B00] dark:bg-[#FF6B00]/20 dark:text-[#FF6B00] font-medium"
-                            : "text-[#001427] hover:bg-[#FF6B00]/5 dark:text-white dark:hover:bg-[#FF6B00]/10",
-                          "hover:translate-x-1 transition-transform pl-2",
-                        )}
-                        onClick={() => navigate(subItem.path)}
-                      >
-                        {subItem.icon}
-                        <div className="flex items-center gap-2 w-full">
-                          <span>{subItem.name}</span>
-                          {item.label === "Explorar" && (
-                            <span className="ml-auto">
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="14"
-                                height="14"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                className="text-gray-500 dark:text-gray-400"
-                              >
-                                <rect
-                                  width="18"
-                                  height="11"
-                                  x="3"
-                                  y="11"
-                                  rx="2"
-                                  ry="2"
-                                ></rect>
-                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                              </svg>
-                            </span>
-                          )}
+                    onClick={(e) => {
+                      if (item.subItems && !isCollapsed) {
+                        e.preventDefault();
+                        toggleSection(item.label);
+                      } else {
+                        handleNavigation(item.path, item.isSpecial);
+                      }
+                    }}
+                  >
+                    <div className="item-content">
+                      <div className={cn(
+                        "icon-container",
+                        isActive(item.path) ? "active" : ""
+                      )}>
+                        <i className={item.icon}></i>
+                        <div className="icon-glow"></div>
+                      </div>
+                      {!isCollapsed && (
+                        <div className="item-text">
+                          <span className="item-title">{item.label}</span>
                         </div>
-                      </Button>
-                    ))}
+                      )}
+                      <div className="item-indicator"></div>
+                    </div>
                   </div>
                 )}
-            </div>
-          ))}
-        </nav>
+
+                {/* Sub Items */}
+                {!isCollapsed &&
+                  item.subItems &&
+                  expandedSection === item.label && (
+                    <div className="mt-1 space-y-1">
+                      {item.subItems.map((subItem, subIndex) => (
+                        <Button
+                          key={subIndex}
+                          variant="ghost"
+                          className={cn(
+                            "flex items-center gap-2 rounded-lg px-3 py-2 text-start w-full justify-start",
+                            isActive(subItem.path)
+                              ? "bg-[#FF6B00]/10 text-[#FF6B00] dark:bg-[#FF6B00]/20 dark:text-[#FF6B00] font-medium"
+                              : "text-[#001427] hover:bg-[#FF6B00]/5 dark:text-white dark:hover:bg-[#FF6B00]/10",
+                            "hover:translate-x-1 transition-transform pl-2",
+                          )}
+                          onClick={() => navigate(subItem.path)}
+                        >
+                          {subItem.icon}
+                          <div className="flex items-center gap-2 w-full">
+                            <span>{subItem.name}</span>
+                          </div>
+                        </Button>
+                      ))}
+                    </div>
+                  )}
+              </div>
+            ))}
+          </nav>
+        </div>
       </ScrollArea>
+
+      <style jsx>{`
+        * {
+          font-family: 'Inter', sans-serif;
+        }
+
+        .navigation-menu-container {
+          position: relative;
+        }
+
+        .menu-navigation {
+          padding: 16px 0;
+        }
+
+        .menu-item {
+          margin: 0 0 4px;
+          border-radius: 16px;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          cursor: pointer;
+          position: relative;
+          overflow: hidden;
+          min-height: 72px !important;
+          height: 72px !important;
+        }
+
+        .menu-item::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255, 107, 0, 0.1), transparent);
+          transition: left 0.6s;
+        }
+
+        .menu-item:hover::before {
+          left: 100%;
+        }
+
+        .menu-item:hover:not(.active) {
+          transform: translateX(6px);
+          background: linear-gradient(135deg, rgba(255, 107, 0, 0.08), rgba(255, 107, 0, 0.08));
+        }
+
+        .menu-item.active {
+          background: linear-gradient(135deg, rgba(255, 107, 0, 0.15), rgba(255, 107, 0, 0.15));
+          border: 1px solid rgba(255, 107, 0, 0.3);
+          box-shadow: 0 4px 12px rgba(255, 107, 0, 0.1) !important;
+        }
+
+        .item-content {
+          display: flex;
+          align-items: center;
+          padding: 16px;
+          gap: 14px;
+          position: relative;
+          height: 100% !important;
+          min-height: 72px !important;
+          box-sizing: border-box !important;
+        }
+
+        .icon-container {
+          width: 40px !important;
+          height: 40px !important;
+          min-width: 40px !important;
+          min-height: 40px !important;
+          border-radius: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: rgba(255, 107, 0, 0.1);
+          transition: all 0.3s ease;
+          position: relative;
+          overflow: hidden;
+          flex-shrink: 0 !important;
+        }
+
+        .icon-container.active {
+          background: linear-gradient(135deg, #FF6B00, #FF6B00);
+          color: white;
+          box-shadow: 0 8px 16px rgba(255, 107, 0, 0.3);
+        }
+
+        .icon-container i {
+          font-size: 16px;
+          color: #FF6B00 !important;
+          transition: all 0.3s ease;
+          position: relative;
+          z-index: 1;
+        }
+
+        .icon-container.active i {
+          color: white !important;
+        }
+
+        .menu-item:hover:not(.active) .icon-container {
+          background: linear-gradient(135deg, rgba(255, 107, 0, 0.2), rgba(255, 107, 0, 0.2));
+          transform: scale(1.08);
+        }
+
+        .menu-item:hover:not(.active) .icon-container i {
+          color: #FF6B00 !important;
+        }
+
+        .icon-glow {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 24px;
+          height: 24px;
+          background: radial-gradient(circle, rgba(255, 107, 0, 0.5), transparent);
+          border-radius: 50%;
+          transform: translate(-50%, -50%) scale(0);
+          transition: transform 0.3s ease;
+        }
+
+        .icon-container.active .icon-glow {
+          transform: translate(-50%, -50%) scale(2.5);
+        }
+
+        .item-text {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          min-height: 40px !important;
+          justify-content: center !important;
+        }
+
+        .item-title {
+          font-size: 16px !important;
+          font-weight: 600;
+          color: #1a202c;
+          transition: color 0.3s ease;
+          line-height: 1.2 !important;
+          margin: 0 !important;
+        }
+
+        .menu-item.active .item-title {
+          color: #FF6B00 !important;
+          font-weight: 700;
+        }
+
+        .menu-item:hover:not(.active) .item-title {
+          color: #FF6B00 !important;
+        }
+
+        .item-indicator {
+          width: 8px !important;
+          height: 8px !important;
+          min-width: 8px !important;
+          min-height: 8px !important;
+          border-radius: 50%;
+          background: #FF6B00;
+          opacity: 0;
+          transform: scale(0);
+          transition: all 0.3s ease;
+          flex-shrink: 0 !important;
+        }
+
+        .menu-item.active .item-indicator {
+          opacity: 1;
+          transform: scale(1);
+          box-shadow: 0 0 8px rgba(255, 107, 0, 0.6);
+        }
+
+        @keyframes orangeBounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-3px); }
+        }
+      `}</style>
     </div>
   );
 }
