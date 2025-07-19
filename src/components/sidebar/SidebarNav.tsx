@@ -78,6 +78,7 @@ export function SidebarNav({
   const [isMenuFlipping, setIsMenuFlipping] = useState(false);
   const [isModeChanging, setIsModeChanging] = useState(false);
   const [cascadeIndex, setCascadeIndex] = useState(0);
+  const [isModeTransitioning, setIsModeTransitioning] = useState(false);
 
   useEffect(() => {
     // Listener para atualizações de avatar feitas em outros componentes
@@ -495,33 +496,13 @@ export function SidebarNav({
                 <button
                   className="absolute top-3 right-3 w-6 h-6 rounded-full border-2 border-orange-500 bg-orange-600 bg-opacity-20 hover:bg-orange-600 hover:bg-opacity-30 flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-sm cursor-pointer z-10"
                   onClick={() => {
-                    setIsModeChanging(true);
-                    setIsMenuFlipping(true);
-                    setCascadeIndex(0);
-
-                    // Iniciar efeito cascata em todos os itens
-                    const startCascade = () => {
-                      for (let i = 0; i < navItems.length; i++) {
-                        setTimeout(() => {
-                          setCascadeIndex(i);
-                        }, i * 120);
-                      }
-                    };
-
-                    startCascade();
-
+                    setIsModeTransitioning(true);
                     setTimeout(() => {
                       setIsCardFlipped(!isCardFlipped);
                       setTimeout(() => {
-                        setIsMenuFlipping(false);
-                        // Manter cascata ativa por mais tempo
-                        setTimeout(() => {
-                          // Reiniciar cascata após flip terminar
-                          startCascade();
-                          setTimeout(() => setIsModeChanging(false), 800);
-                        }, 400);
-                      }, 600);
-                    }, 300);
+                        setIsModeTransitioning(false);
+                      }, 1200);
+                    }, 100);
                   }}
                   title="Flip Card"
                 >
@@ -704,33 +685,13 @@ export function SidebarNav({
                 <button
                   className="absolute top-3 right-3 w-6 h-6 rounded-full border-2 border-[#2462EA] bg-[#0f26aa] bg-opacity-20 hover:bg-[#0f26aa] hover:bg-opacity-30 flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-sm cursor-pointer z-10"
                   onClick={() => {
-                    setIsModeChanging(true);
-                    setIsMenuFlipping(true);
-                    setCascadeIndex(0);
-
-                    // Iniciar efeito cascata em todos os itens
-                    const startCascade = () => {
-                      for (let i = 0; i < navItems.length; i++) {
-                        setTimeout(() => {
-                          setCascadeIndex(i);
-                        }, i * 120);
-                      }
-                    };
-
-                    startCascade();
-
+                    setIsModeTransitioning(true);
                     setTimeout(() => {
                       setIsCardFlipped(!isCardFlipped);
                       setTimeout(() => {
-                        setIsMenuFlipping(false);
-                        // Manter cascata ativa por mais tempo
-                        setTimeout(() => {
-                          // Reiniciar cascata após flip terminar
-                          startCascade();
-                          setTimeout(() => setIsModeChanging(false), 800);
-                        }, 400);
-                      }, 600);
-                    }, 300);
+                        setIsModeTransitioning(false);
+                      }, 1200);
+                    }, 100);
                   }}
                   title="Flip Card"
                 >
