@@ -74,6 +74,7 @@ export function SidebarNav({
   const [isUploading, setIsUploading] = useState(isCollapsed);
   const [firstName, setFirstName] = useState<string | null>(null);
   const [isCardFlipped, setIsCardFlipped] = useState(false);
+  const [isCardHovered, setIsCardHovered] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -404,6 +405,8 @@ export function SidebarNav({
             isCollapsed ? "w-14" : "w-full",
           )}
           style={{ perspective: "1000px" }}
+          onMouseEnter={() => setIsCardHovered(true)}
+          onMouseLeave={() => setIsCardHovered(false)}
         >
           <div
             className={cn(
@@ -430,7 +433,7 @@ export function SidebarNav({
               )}
 
               {/* Botão Flip circular na mesma altura do ícone de graduação */}
-              {!isCollapsed && (
+              {!isCollapsed && isCardHovered && (
                 <button
                   className="absolute top-3 right-3 w-6 h-6 rounded-full border-2 border-orange-500 bg-orange-600 bg-opacity-20 hover:bg-orange-600 hover:bg-opacity-30 flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-sm cursor-pointer z-10"
                   onClick={() => setIsCardFlipped(!isCardFlipped)}
@@ -611,7 +614,7 @@ export function SidebarNav({
               )}
 
               {/* Botão Flip circular na mesma altura do ícone de Briefcase */}
-              {!isCollapsed && (
+              {!isCollapsed && isCardHovered && (
                 <button
                   className="absolute top-3 right-3 w-6 h-6 rounded-full border-2 border-[#2462EA] bg-[#0f26aa] bg-opacity-20 hover:bg-[#0f26aa] hover:bg-opacity-30 flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-sm cursor-pointer z-10"
                   onClick={() => setIsCardFlipped(!isCardFlipped)}
