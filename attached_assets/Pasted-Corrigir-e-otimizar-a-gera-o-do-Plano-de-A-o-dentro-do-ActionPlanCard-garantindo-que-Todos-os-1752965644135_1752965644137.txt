@@ -1,0 +1,136 @@
+Corrigir e otimizar a geração do Plano de Ação dentro do ActionPlanCard, garantindo que:
+
+✅ Todos os dados coletados do usuário (mensagem inicial e respostas do quiz) sejam analisados pela IA Gemini, sem automatização ou uso de dados padronizados do sistema.
+
+✅ A IA Gemini processe todas as informações, consulte a lista de 137 atividades disponíveis, e gere atividades personalizadas com títulos e descrições reais alinhadas ao contexto enviado pelo usuário.
+
+✅ Os mini-cards de atividades em formato de checkbox exibidos dentro do ActionPlanCard reflitam fielmente essa análise, sem uso de dados fixos.
+
+🔹 Contexto atual da estrutura:
+📂 Arquivos existentes:
+SchoolPowerPage.tsx: Página principal da seção.
+
+TopHeader, ProfileSelector, ChatInput, SideMenu, ParticlesBackground: Estrutura visual e UX.
+
+ContextualizationCard.tsx: Card de Quiz de Contextualização.
+
+ActionPlanCard.tsx: Card de Plano de Ação com atividades.
+
+schoolPowerActivities.json: Lista com as 137 atividades que o School Power consegue gerar.
+
+🛠️ Ações a serem executadas:
+1️⃣ Coleta e Armazenamento Correto dos Dados
+Garantir que:
+
+A mensagem inicial enviada pelo usuário em ChatInput seja armazenada corretamente em schoolPowerStore ou equivalente.
+
+As respostas do ContextualizationCard (matérias, público-alvo, restrições, datas importantes, observações) sejam armazenadas e associadas ao usuário.
+
+✅ Se os dados não estiverem sendo salvos ou sincronizados, corrigir imediatamente.
+
+2️⃣ Análise Real pela IA Gemini
+Após o envio do ContextualizationCard, deve ser executada uma requisição em tempo real para a API Gemini, utilizando a API Key AIzaSyD-Sso0SdyYKoA4M3tQhcWjQ1AoddB7Wo4, enviando no prompt para análise:
+
+Prompt a ser enviado ao Gemini:
+
+javascript
+Copiar
+Editar
+Você é uma IA do School Power responsável por criar um plano de ação educacional para um professor ou coordenador. Use SOMENTE as atividades listadas abaixo que o School Power consegue gerar.
+
+Mensagem inicial do usuário:
+"{mensagem_inicial}"
+
+Respostas do Quiz:
+Matérias e temas: "{materias_e_temas}"
+Público-alvo: "{publico_alvo}"
+Restrições ou preferências: "{restricoes_preferencias}"
+Datas importantes: "{datas_importantes}"
+Observações adicionais: "{observacoes}"
+
+Aqui está a lista de atividades possíveis:
+{JSON.stringify(atividades_disponiveis)}
+
+Com base nessas informações, gere de 3 a 5 atividades personalizadas em formato JSON, com campos:
+- id: mesmo id da atividade no banco de atividades
+- title: título personalizado de acordo com as informações coletadas
+- description: descrição curta e personalizada de acordo com as informações coletadas
+
+Exemplo de resposta:
+[
+  {
+    "id": "prova-interativa",
+    "title": "Prova de Matemática - 27/07 - Ensino Médio",
+    "description": "Avaliação focada em álgebra e geometria, programada para o dia 27/07."
+  },
+  ...
+]
+3️⃣ Validação dos Dados Gerados pela IA
+Validar cada item gerado pela IA:
+✅ Verificar se o id gerado pela IA está presente em schoolPowerActivities.json.
+✅ Se houver inconsistências ou atividades fora da lista, ignorar e solicitar novamente à IA.
+✅ Garantir consistência dos dados recebidos para renderização no ActionPlanCard.
+
+4️⃣ Renderização Correta no ActionPlanCard
+Exibir mini-cards checkbox com:
+
+Título personalizado gerado pela IA
+
+Descrição curta gerada pela IA
+
+Checkbox de seleção
+
+Exibir contador de atividades selecionadas, ativando o botão Aprovar Plano somente se pelo menos 1 atividade for selecionada.
+
+Utilizar animações suaves (Framer Motion) durante a transição do ContextualizationCard para o ActionPlanCard.
+
+🔹 Exemplos de geração real após correção:
+Usuário escreveu na ChatInput:
+
+“Preciso de atividades para reforço de matemática para alunos do 9º ano, focando em equações e geometria, para a prova do dia 27 de julho.”
+
+Respostas no Quiz:
+
+Matérias: Matemática – Equações e Geometria
+
+Público-alvo: 9º ano
+
+Restrições: Precisa ser interativo, tempo curto
+
+Datas: 27/07
+
+Observações: Envolver geometria do triângulo
+
+✅ Atividades geradas:
+
+Título: Prova de Matemática – 27/07 – 9º Ano
+
+Descrição: Avaliação interativa focada em equações e geometria para reforço antes da prova do dia 27/07.
+
+Título: Resumo de Geometria – Triângulos – 9º Ano
+
+Descrição: Resumo otimizado sobre propriedades dos triângulos para os alunos do 9º ano.
+
+Título: Lista de Exercícios – Equações do 1º Grau
+
+Descrição: Exercícios práticos para fixação de equações do 1º grau, visando a prova de 27/07.
+
+📌 Considerações Técnicas Importantes:
+✅ Usar TypeScript estrito.
+✅ Utilizar zustand ou state manager para consistência entre os componentes.
+✅ Usar Framer Motion para animações suaves.
+✅ Preparar estrutura modular para escalabilidade futura.
+✅ Utilizar feedback visual (skeleton/loading spinner) durante a requisição ao Gemini.
+✅ Registrar logs de erro claros caso a IA retorne dados inconsistentes.
+✅ Manter código limpo, comentado e padronizado, pronto para auditoria.
+
+🎯 Resultado esperado:
+✅ Atividades sugeridas personalizadas e reais, geradas pela IA Gemini, alinhadas ao contexto do usuário.
+✅ Eliminação de dados mockados ou padronizados automatizados.
+✅ Integração funcional com as 137 atividades possíveis do School Power.
+✅ Fluxo completo School Power totalmente funcional, sem falhas de consistência ou falta de personalização.
+
+✅ Avise quando finalizar esta etapa.
+Assim que corrigido, prosseguiremos com:
+✅ Geração automática das atividades aprovadas pelo usuário, usando a IA para construir cada material.
+✅ Integração ao fluxo de progresso do usuário dentro da plataforma Ponto. School.
