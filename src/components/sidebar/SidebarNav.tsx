@@ -1,4 +1,3 @@
-
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -313,16 +312,12 @@ export function SidebarNav({
       icon: <Home className="h-5 w-5" />,
       label: "Painel",
       path: "/",
-      iconBg: "bg-gradient-to-br from-orange-400 to-orange-600",
-      dotColor: "bg-orange-500",
     },
     {
       icon: <BookOpen className="h-5 w-5" />,
       label: "Minhas Turmas",
       path: "/turmas",
       component: <TurmasNav />,
-      iconBg: "bg-gradient-to-br from-blue-400 to-blue-600",
-      dotColor: "bg-blue-500",
       subItems: [
         {
           name: "Visão Geral",
@@ -350,38 +345,24 @@ export function SidebarNav({
       icon: <Users2 className="h-5 w-5" />,
       label: "Comunidades",
       path: "/comunidades",
-      iconBg: "bg-gradient-to-br from-purple-400 to-purple-600",
-      dotColor: "bg-purple-500",
-    },
-    {
-      icon: <BookMarked className="h-5 w-5" />,
-      label: "Trilhas School",
-      path: "/trilhas-school",
-      iconBg: "bg-gradient-to-br from-green-400 to-green-600",
-      dotColor: "bg-green-500",
-    },
-    {
-      icon: <Calendar className="h-5 w-5" />,
-      label: "School Planner",
-      path: "/school-planner",
-      iconBg: "bg-gradient-to-br from-red-400 to-red-600",
-      dotColor: "bg-red-500",
     },
     {
       icon: <Brain className="h-5 w-5" />,
       label: "Epictus IA",
       path: "/epictus-ia",
-      iconBg: "bg-gradient-to-br from-cyan-400 to-cyan-600",
-      dotColor: "bg-cyan-500",
       isSpecial: true,
     },
     {
-      icon: <CalendarClock className="h-5 w-5" />,
+      icon: <Rocket className="h-5 w-5" />,
+      label: "School Power",
+      path: "/school-power",
+      isSpecial: true,
+    },
+    {
+      icon: <Calendar className="h-5 w-5" />,
       label: "Agenda",
       path: "/agenda",
       component: <AgendaNav />,
-      iconBg: "bg-gradient-to-br from-indigo-400 to-indigo-600",
-      dotColor: "bg-indigo-500",
       subItems: [
         {
           name: "Visão Geral",
@@ -409,15 +390,11 @@ export function SidebarNav({
       icon: <Trophy className="h-5 w-5" />,
       label: "Conquistas",
       path: "/conquistas",
-      iconBg: "bg-gradient-to-br from-yellow-400 to-yellow-600",
-      dotColor: "bg-yellow-500",
     },
     {
-      icon: <Compass className="h-5 w-5" />,
-      label: "Explorar",
-      path: "/explorar",
-      iconBg: "bg-gradient-to-br from-pink-400 to-pink-600",
-      dotColor: "bg-pink-500",
+      icon: <Wallet className="h-5 w-5" />,
+      label: "Carteira",
+      path: "/carteira",
     },
   ];
 
@@ -446,6 +423,8 @@ export function SidebarNav({
           </div>
         </div>
       )}
+
+      
 
       {/* User Profile Component - Greeting and progress section */}
       <div
@@ -817,19 +796,54 @@ export function SidebarNav({
           isCollapsed ? "h-[calc(100%-180px)]" : "h-[calc(100%-300px)]",
         )}
       >
-        <nav className="grid gap-2 px-4">
+        <nav className="grid gap-1 px-2">
           {navItems.map((item, index) => (
             <div key={index} className="relative">
-              {item.component && !isCollapsed ? (
-                item.component
+              {item.component ? (
+                isCollapsed ? (
+                  <Button
+                    variant="ghost"
+                    className={cn(
+                      "flex items-center justify-center rounded-lg px-3 py-2 text-start w-full",
+                      isActive(item.path)
+                        ? "bg-[#FF6B00]/10 text-[#FF6B00] dark:bg-[#FF6B00]/20 dark:text-[#FF6B00]"
+                        : "text-[#001427] hover:bg-[#FF6B00]/5 dark:text-white dark:hover:bg-[#FF6B00]/10",
+                      "group hover:scale-[1.02] transition-all duration-200 hover:shadow-sm active:scale-[0.98]",
+                    )}
+                    onClick={() => handleNavigation(item.path)}
+                  >
+                    <div className="mx-auto">
+                      {item.label === "Portal" ? (
+                        <BookMarked className="h-5 w-5 text-[#001427] dark:text-white" />
+                      ) : (
+                        <Calendar className="h-5 w-5 text-[#001427] dark:text-white" />
+                      )}
+                    </div>
+                    <div
+                      className={cn(
+                        "absolute left-0 top-0 h-full w-1 rounded-r-md transition-all duration-300",
+                        isActive(item.path)
+                          ? "bg-[#FF6B00]"
+                          : "bg-transparent group-hover:bg-[#FF6B00]/30",
+                      )}
+                    />
+                  </Button>
+                ) : (
+                  item.component
+                )
               ) : (
-                <div
+                <Button
+                  variant="ghost"
                   className={cn(
-                    "flex items-center gap-4 p-4 rounded-2xl cursor-pointer transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]",
-                    isActive(item.path) 
-                      ? "bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 shadow-lg border border-orange-200 dark:border-orange-700" 
-                      : "bg-white dark:bg-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-800 shadow-sm border border-gray-200 dark:border-gray-700",
-                    isCollapsed && "justify-center p-3"
+                    "flex items-center gap-3 rounded-lg px-3 py-2 text-start w-full",
+                    isCollapsed ? "justify-center" : "justify-between",
+                    isActive(item.path)
+                      ? "bg-[#FF6B00]/10 text-[#FF6B00] dark:bg-[#FF6B00]/20 dark:text-[#FF6B00]"
+                      : "text-[#001427] hover:bg-[#FF6B00]/5 dark:text-white dark:hover:bg-[#FF6B00]/10",
+                    "group hover:scale-[1.02] transition-all duration-200 hover:shadow-sm active:scale-[0.98]",
+                    item.label === "Novidades"
+                      ? "relative overflow-hidden"
+                      : "",
                   )}
                   onClick={(e) => {
                     if (item.subItems && !isCollapsed) {
@@ -840,51 +854,69 @@ export function SidebarNav({
                     }
                   }}
                 >
-                  {/* Icon Circle */}
-                  <div className={cn(
-                    "w-10 h-10 rounded-full flex items-center justify-center shadow-md",
-                    isCollapsed ? "w-8 h-8" : "w-10 h-10",
-                    item.iconBg
-                  )}>
-                    <div className="text-white">
+                  {item.label === "Novidades" && (
+                    <div className="absolute inset-0 rounded-lg border border-transparent bg-gradient-to-r from-[#FFD700] to-[#FF6B00] opacity-10 animate-gradient-x"></div>
+                  )}
+                  <div className="flex items-center relative z-10">
+                    <div
+                      className={cn(
+                        "transition-all duration-300",
+                        isCollapsed ? "mx-auto" : "mr-3",
+                        isActive(item.path)
+                          ? "text-[#FF6B00] dark:text-[#FF6B00]"
+                          : item.label === "Novidades"
+                            ? "text-[#FF6B00] dark:text-[#FF6B00]"
+                            : "text-[#001427] dark:text-white",
+                      )}
+                    >
                       {item.icon}
                     </div>
-                  </div>
-
-                  {/* Label and dot indicator */}
-                  {!isCollapsed && (
-                    <div className="flex items-center justify-between flex-1">
-                      <span className="font-medium text-gray-800 dark:text-gray-200">
-                        {item.label}
-                      </span>
-                      
+                    {!isCollapsed && (
                       <div className="flex items-center gap-2">
-                        {/* Activity dot */}
-                        {item.label === "Painel" && (
-                          <div className={cn("w-2 h-2 rounded-full", item.dotColor)} />
-                        )}
-                        
-                        {/* Expand arrow for items with subItems */}
-                        {item.subItems && (
-                          <div className="text-gray-400">
-                            {expandedSection === item.label ? (
-                              <ChevronUp className="h-4 w-4" />
-                            ) : (
-                              <ChevronDown className="h-4 w-4" />
-                            )}
-                          </div>
+                        <span
+                          className={cn(
+                            item.label === "Novidades"
+                              ? "text-[#FF6B00] font-bold"
+                              : "",
+                          )}
+                        >
+                          {item.label}
+                        </span>
+                        {item.label === "Explorar" && (
+                          <span className="px-1.5 py-0.5 text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-md">
+                            Em breve
+                          </span>
                         )}
                       </div>
+                    )}
+                  </div>
+                  {!isCollapsed && item.subItems && (
+                    <div className="text-[#001427] dark:text-white">
+                      {expandedSection === item.label ? (
+                        <ChevronUp className="h-4 w-4" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4" />
+                      )}
                     </div>
                   )}
-                </div>
+                  {item.label !== "Novidades" && (
+                    <div
+                      className={cn(
+                        "absolute left-0 top-0 h-full w-1 rounded-r-md transition-all duration-300",
+                        isActive(item.path)
+                          ? "bg-[#FF6B00]"
+                          : "bg-transparent group-hover:bg-[#FF6B00]/30",
+                      )}
+                    />
+                  )}
+                </Button>
               )}
 
               {/* Sub Items */}
               {!isCollapsed &&
                 item.subItems &&
                 expandedSection === item.label && (
-                  <div className="mt-2 ml-14 space-y-1">
+                  <div className="mt-1 space-y-1">
                     {item.subItems.map((subItem, subIndex) => (
                       <Button
                         key={subIndex}
@@ -901,6 +933,32 @@ export function SidebarNav({
                         {subItem.icon}
                         <div className="flex items-center gap-2 w-full">
                           <span>{subItem.name}</span>
+                          {item.label === "Explorar" && (
+                            <span className="ml-auto">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="14"
+                                height="14"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="text-gray-500 dark:text-gray-400"
+                              >
+                                <rect
+                                  width="18"
+                                  height="11"
+                                  x="3"
+                                  y="11"
+                                  rx="2"
+                                  ry="2"
+                                ></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                              </svg>
+                            </span>
+                          )}
                         </div>
                       </Button>
                     ))}
