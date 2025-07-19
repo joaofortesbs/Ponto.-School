@@ -78,6 +78,8 @@ export function SidebarNav({
   const [isMenuFlipping, setIsMenuFlipping] = useState(false);
   const [isModeChanging, setIsModeChanging] = useState(false);
   const [cascadeIndex, setCascadeIndex] = useState(0);
+  const [continuousCascade, setContinuousCascade] = useState(false);
+  const [cascadeDirection, setCascadeDirection] = useState<'forward' | 'backward'>('forward');
 
   useEffect(() => {
     // Listener para atualizações de avatar feitas em outros componentes
@@ -132,6 +134,11 @@ export function SidebarNav({
         "usernameSynchronized",
         handleUsernameUpdate as EventListener,
       );
+      
+      // Limpar interval de cascata se existir
+      if ((window as any).cascadeInterval) {
+        clearInterval((window as any).cascadeInterval);
+      }
     };
   }, []);
 
@@ -497,29 +504,49 @@ export function SidebarNav({
                   onClick={() => {
                     setIsModeChanging(true);
                     setIsMenuFlipping(true);
+                    setContinuousCascade(true);
                     setCascadeIndex(0);
 
-                    // Iniciar efeito cascata em todos os itens
-                    const startCascade = () => {
-                      for (let i = 0; i < navItems.length; i++) {
-                        setTimeout(() => {
-                          setCascadeIndex(i);
-                        }, i * 120);
-                      }
+                    // Função para cascata contínua
+                    const startContinuousCascade = () => {
+                      let currentIndex = 0;
+                      let direction: 'forward' | 'backward' = 'forward';
+                      
+                      const cascadeInterval = setInterval(() => {
+                        if (direction === 'forward') {
+                          setCascadeIndex(currentIndex);
+                          setCascadeDirection('forward');
+                          currentIndex++;
+                          if (currentIndex >= navItems.length) {
+                            direction = 'backward';
+                            currentIndex = navItems.length - 1;
+                          }
+                        } else {
+                          setCascadeIndex(currentIndex);
+                          setCascadeDirection('backward');
+                          currentIndex--;
+                          if (currentIndex < 0) {
+                            direction = 'forward';
+                            currentIndex = 0;
+                          }
+                        }
+                      }, 150);
+
+                      // Armazenar o interval para poder limpar depois
+                      (window as any).cascadeInterval = cascadeInterval;
                     };
 
-                    startCascade();
+                    startContinuousCascade();
 
                     setTimeout(() => {
                       setIsCardFlipped(!isCardFlipped);
                       setTimeout(() => {
                         setIsMenuFlipping(false);
-                        // Manter cascata ativa por mais tempo
+                        // Continuar cascata após flip terminar
                         setTimeout(() => {
-                          // Reiniciar cascata após flip terminar
-                          startCascade();
-                          setTimeout(() => setIsModeChanging(false), 800);
-                        }, 400);
+                          setIsModeChanging(false);
+                          // Cascata continua indefinidamente
+                        }, 1000);
                       }, 600);
                     }, 300);
                   }}
@@ -706,29 +733,49 @@ export function SidebarNav({
                   onClick={() => {
                     setIsModeChanging(true);
                     setIsMenuFlipping(true);
+                    setContinuousCascade(true);
                     setCascadeIndex(0);
 
-                    // Iniciar efeito cascata em todos os itens
-                    const startCascade = () => {
-                      for (let i = 0; i < navItems.length; i++) {
-                        setTimeout(() => {
-                          setCascadeIndex(i);
-                        }, i * 120);
-                      }
+                    // Função para cascata contínua
+                    const startContinuousCascade = () => {
+                      let currentIndex = 0;
+                      let direction: 'forward' | 'backward' = 'forward';
+                      
+                      const cascadeInterval = setInterval(() => {
+                        if (direction === 'forward') {
+                          setCascadeIndex(currentIndex);
+                          setCascadeDirection('forward');
+                          currentIndex++;
+                          if (currentIndex >= navItems.length) {
+                            direction = 'backward';
+                            currentIndex = navItems.length - 1;
+                          }
+                        } else {
+                          setCascadeIndex(currentIndex);
+                          setCascadeDirection('backward');
+                          currentIndex--;
+                          if (currentIndex < 0) {
+                            direction = 'forward';
+                            currentIndex = 0;
+                          }
+                        }
+                      }, 150);
+
+                      // Armazenar o interval para poder limpar depois
+                      (window as any).cascadeInterval = cascadeInterval;
                     };
 
-                    startCascade();
+                    startContinuousCascade();
 
                     setTimeout(() => {
                       setIsCardFlipped(!isCardFlipped);
                       setTimeout(() => {
                         setIsMenuFlipping(false);
-                        // Manter cascata ativa por mais tempo
+                        // Continuar cascata após flip terminar
                         setTimeout(() => {
-                          // Reiniciar cascata após flip terminar
-                          startCascade();
-                          setTimeout(() => setIsModeChanging(false), 800);
-                        }, 400);
+                          setIsModeChanging(false);
+                          // Cascata continua indefinidamente
+                        }, 1000);
                       }, 600);
                     }, 300);
                   }}
@@ -893,11 +940,14 @@ export function SidebarNav({
                 key={`${isCardFlipped ? 'professor' : 'aluno'}-${item.path}-${index}`} 
                 className={cn(
                   "relative menu-item-wrapper",
-                  isMenuFlipping && "animate-menu-transition"
+                  isMenuFlipping && "animate-menu-transition",
+                  continuousCascade && index === cascadeIndex && "cascading-effect",
+                  continuousCascade && "continuous-cascade-active"
                 )}
                 style={{
-                  animationDelay: `${index * 80}ms`
-                }}
+                  animationDelay: isMenuFlipping ? `${index * 80}ms` : '0ms',
+                  "--cascade-delay": `${index * 100}ms`
+                } as React.CSSProperties}
               >
                 {(item.label === "Minhas Turmas" || item.label === "Agenda") && !isCollapsed ? (
                   item.label === "Minhas Turmas" ? <TurmasNav /> : <AgendaNav />
@@ -1250,33 +1300,48 @@ export function SidebarNav({
           }
         }
 
-        /* Efeito cascata contínuo */
+        /* Efeito cascata contínuo mais intenso */
         .cascading-effect {
-          animation: cascadeWave 1.2s ease-in-out infinite;
+          animation: intenseCascadeWave 0.8s ease-in-out;
           transform-origin: center;
+          z-index: 10;
         }
 
-        @keyframes cascadeWave {
+        @keyframes intenseCascadeWave {
           0% {
             transform: translateX(0) rotateY(0deg) scale(1);
             filter: brightness(1);
+            box-shadow: 0 0 0 0 rgba(255, 107, 0, 0);
           }
           25% {
-            transform: translateX(-15px) rotateY(-10deg) scale(0.95);
-            filter: brightness(1.1);
+            transform: translateX(-20px) rotateY(-15deg) scale(0.9);
+            filter: brightness(1.2);
+            box-shadow: 0 8px 25px rgba(255, 107, 0, 0.4);
           }
           50% {
-            transform: translateX(0) rotateY(0deg) scale(1.02);
-            filter: brightness(1.15);
+            transform: translateX(0) rotateY(0deg) scale(1.1);
+            filter: brightness(1.3);
+            box-shadow: 0 12px 30px rgba(255, 107, 0, 0.6);
           }
           75% {
-            transform: translateX(15px) rotateY(10deg) scale(0.98);
-            filter: brightness(1.1);
+            transform: translateX(20px) rotateY(15deg) scale(0.95);
+            filter: brightness(1.2);
+            box-shadow: 0 8px 25px rgba(255, 107, 0, 0.4);
           }
           100% {
             transform: translateX(0) rotateY(0deg) scale(1);
             filter: brightness(1);
+            box-shadow: 0 0 0 0 rgba(255, 107, 0, 0);
           }
+        }
+
+        /* Efeito cascata contínua ativa */
+        .continuous-cascade-active {
+          transition: all 0.3s ease;
+        }
+
+        .continuous-cascade-active:not(.cascading-effect) {
+          opacity: 0.7;
         }
 
         /* Efeito cascata para modo aluno */
@@ -1307,32 +1372,41 @@ export function SidebarNav({
           }
         }
 
-        /* Efeito cascata para modo professor */
+        /* Efeito cascata para modo professor mais intenso */
         .professor-mode .cascading-effect {
-          animation: cascadeWaveBlue 1.2s ease-in-out infinite;
+          animation: intenseCascadeWaveBlue 0.8s ease-in-out;
         }
 
-        @keyframes cascadeWaveBlue {
+        @keyframes intenseCascadeWaveBlue {
           0% {
             transform: translateX(0) rotateY(0deg) scale(1);
+            filter: brightness(1);
             box-shadow: 0 0 0 0 rgba(37, 99, 235, 0);
           }
           25% {
-            transform: translateX(-15px) rotateY(-10deg) scale(0.95);
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+            transform: translateX(-20px) rotateY(-15deg) scale(0.9);
+            filter: brightness(1.2);
+            box-shadow: 0 8px 25px rgba(37, 99, 235, 0.4);
           }
           50% {
-            transform: translateX(0) rotateY(0deg) scale(1.02);
-            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+            transform: translateX(0) rotateY(0deg) scale(1.1);
+            filter: brightness(1.3);
+            box-shadow: 0 12px 30px rgba(37, 99, 235, 0.6);
           }
           75% {
-            transform: translateX(15px) rotateY(10deg) scale(0.98);
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+            transform: translateX(20px) rotateY(15deg) scale(0.95);
+            filter: brightness(1.2);
+            box-shadow: 0 8px 25px rgba(37, 99, 235, 0.4);
           }
           100% {
             transform: translateX(0) rotateY(0deg) scale(1);
+            filter: brightness(1);
             box-shadow: 0 0 0 0 rgba(37, 99, 235, 0);
           }
+        }
+
+        .professor-mode .continuous-cascade-active:not(.cascading-effect) {
+          opacity: 0.7;
         }
 
         /* Efeito cascata para itens individuais */
@@ -1389,6 +1463,54 @@ export function SidebarNav({
           75% {
             transform: scale(1.01);
             filter: brightness(1.08);
+          }
+        }
+
+        /* Efeito de onda suave para itens adjacentes */
+        .continuous-cascade-active .menu-item {
+          transition: all 0.3s ease;
+        }
+
+        .continuous-cascade-active .menu-item:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(255, 107, 0, 0.2);
+        }
+
+        .professor-mode .continuous-cascade-active .menu-item:hover {
+          box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        }
+
+        /* Efeito de destaque adicional para item ativo na cascata */
+        .cascading-effect .menu-item {
+          position: relative;
+          overflow: visible;
+        }
+
+        .cascading-effect .menu-item::after {
+          content: '';
+          position: absolute;
+          top: -2px;
+          left: -2px;
+          right: -2px;
+          bottom: -2px;
+          background: linear-gradient(45deg, rgba(255, 107, 0, 0.3), rgba(255, 107, 0, 0.1));
+          border-radius: 18px;
+          z-index: -1;
+          animation: glowPulse 0.8s ease-in-out;
+        }
+
+        .professor-mode .cascading-effect .menu-item::after {
+          background: linear-gradient(45deg, rgba(37, 99, 235, 0.3), rgba(37, 99, 235, 0.1));
+        }
+
+        @keyframes glowPulse {
+          0%, 100% {
+            opacity: 0;
+            transform: scale(1);
+          }
+          50% {
+            opacity: 1;
+            transform: scale(1.05);
           }
         }
       `}</style>
