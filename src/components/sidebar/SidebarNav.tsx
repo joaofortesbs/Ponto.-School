@@ -461,7 +461,7 @@ export function SidebarNav({
       {/* User Profile Component - Greeting and progress section */}
       <div
         className={cn(
-          "bg-white dark:bg-[#001427] p-4 mb-2 flex flex-col items-center relative group",
+          "bg-white dark:bg-[#001427] p-4 mb-0 flex flex-col items-center relative group",
           isCollapsed ? "mt-6 px-2" : "mt-4",
         )}
       >
