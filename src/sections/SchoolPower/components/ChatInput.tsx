@@ -88,10 +88,12 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
     if (message.trim()) {
       console.log("Enviando mensagem:", message);
 
+      // Chama a função onSend se fornecida
       if (onSend) {
         onSend(message.trim());
       }
 
+      // Limpa o campo apenas após o envio
       setMessage("");
       setIsTyping(false);
     }
