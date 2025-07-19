@@ -1,12 +1,15 @@
 
 import { useState, useCallback } from 'react';
 import { ContextualizationData } from '../contextualization/ContextualizationCard';
+import { ActionPlanItem } from '../actionplan/ActionPlanCard';
+import { GEMINI_API_KEY } from '../activitiesManager';
 
-export type FlowState = 'idle' | 'contextualizing' | 'generating';
+export type FlowState = 'idle' | 'contextualizing' | 'actionplan' | 'generating' | 'generatingActivities';
 
 interface SchoolPowerFlowData {
   initialMessage: string | null;
   contextualizationData: ContextualizationData | null;
+  actionPlan: ActionPlanItem[] | null;
   timestamp: number;
 }
 
@@ -15,6 +18,7 @@ interface UseSchoolPowerFlowReturn {
   flowData: SchoolPowerFlowData;
   sendInitialMessage: (message: string) => void;
   submitContextualization: (data: ContextualizationData) => void;
+  approveActionPlan: (approvedItems: ActionPlanItem[]) => void;
   resetFlow: () => void;
   isLoading: boolean;
 }
@@ -41,6 +45,7 @@ export function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
     return {
       initialMessage: null,
       contextualizationData: null,
+      actionPlan: null,
       timestamp: Date.now()
     };
   };
@@ -51,7 +56,10 @@ export function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
     if (stored.initialMessage && !stored.contextualizationData) {
       return 'contextualizing';
     }
-    if (stored.initialMessage && stored.contextualizationData) {
+    if (stored.initialMessage && stored.contextualizationData && !stored.actionPlan) {
+      return 'actionplan';
+    }
+    if (stored.initialMessage && stored.contextualizationData && stored.actionPlan) {
       return 'generating';
     }
     return 'idle';
@@ -75,6 +83,7 @@ export function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
     const newData: SchoolPowerFlowData = {
       initialMessage: message,
       contextualizationData: null,
+      actionPlan: null,
       timestamp: Date.now()
     };
     
@@ -83,30 +92,164 @@ export function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
     setFlowState('contextualizing');
   }, [saveData]);
 
-  // Submete dados de contextualização e inicia geração
-  const submitContextualization = useCallback((data: ContextualizationData) => {
+  // Função para gerar action plan com API Gemini
+  const generateActionPlan = useCallback(async (message: string, contextData: ContextualizationData): Promise<ActionPlanItem[]> => {
+    try {
+      // Buscar atividades disponíveis
+      const { getEnabledSchoolPowerActivities } = await import('../activitiesManager');
+      const availableActivities = getEnabledSchoolPowerActivities();
+      
+      const activitiesText = availableActivities.map(activity => 
+        `- ${activity.name}: ${activity.description}`
+      ).join('\n');
+
+      const prompt = `Você é uma IA que ajuda professores a planejar atividades para seus alunos. Aqui estão as informações:
+
+Mensagem inicial do professor:
+"${message}"
+
+Respostas do Quiz:
+Matérias e temas: "${contextData.subjects}"
+Público-alvo: "${contextData.audience}"
+Restrições: "${contextData.restrictions}"
+Datas importantes: "${contextData.dates}"
+Observações: "${contextData.notes}"
+
+Lista de atividades que você pode sugerir:
+${activitiesText}
+
+Com base nessas informações, gere um plano de ação em formato de checklist, com no mínimo 5 tarefas, garantindo que cada tarefa seja uma das atividades da lista, com um título curto e uma descrição curta para cada uma. Responda APENAS em JSON no formato:
+[
+  {"id":"atividade-1","title":"Título","description":"Descrição"},
+  {"id":"atividade-2","title":"Título","description":"Descrição"}
+]`;
+
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: prompt
+            }]
+          }]
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.status}`);
+      }
+
+      const result = await response.json();
+      const generatedText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+      
+      if (!generatedText) {
+        throw new Error('No content generated');
+      }
+
+      // Parse JSON do response
+      const jsonMatch = generatedText.match(/\[[\s\S]*\]/);
+      if (!jsonMatch) {
+        throw new Error('No valid JSON found in response');
+      }
+
+      const actionPlanData = JSON.parse(jsonMatch[0]);
+      
+      // Converter para ActionPlanItem[]
+      return actionPlanData.map((item: any, index: number) => ({
+        id: item.id || `action-${index + 1}`,
+        title: item.title || 'Atividade sem título',
+        description: item.description || 'Descrição não disponível',
+        approved: false
+      }));
+      
+    } catch (error) {
+      console.error('❌ Erro ao gerar action plan:', error);
+      
+      // Fallback para plano genérico
+      return [
+        {
+          id: 'fallback-1',
+          title: 'Resumo Inteligente',
+          description: 'Criar resumos otimizados dos conteúdos principais',
+          approved: false
+        },
+        {
+          id: 'fallback-2',
+          title: 'Prova Interativa',
+          description: 'Gerar avaliação com correção automática',
+          approved: false
+        },
+        {
+          id: 'fallback-3',
+          title: 'Plano de Estudo',
+          description: 'Cronograma personalizado para o aluno',
+          approved: false
+        },
+        {
+          id: 'fallback-4',
+          title: 'Exercícios Práticos',
+          description: 'Lista de exercícios sobre o tema',
+          approved: false
+        },
+        {
+          id: 'fallback-5',
+          title: 'Material de Apoio',
+          description: 'Recursos complementares para estudo',
+          approved: false
+        }
+      ];
+    }
+  }, []);
+
+  // Submete dados de contextualização e gera action plan
+  const submitContextualization = useCallback(async (data: ContextualizationData) => {
     console.log('📝 Contextualização submetida:', data);
     setIsLoading(true);
+    setFlowState('actionplan');
     
-    const newData: SchoolPowerFlowData = {
-      ...flowData,
-      contextualizationData: data,
-      timestamp: Date.now()
-    };
-    
-    setFlowData(newData);
-    saveData(newData);
-    setFlowState('generating');
-    
-    // Simula processamento - aqui será integrado com a API Gemini
-    setTimeout(() => {
-      console.log('🤖 Dados prontos para IA:', {
-        message: newData.initialMessage,
-        context: newData.contextualizationData
-      });
+    try {
+      // Gerar action plan com API Gemini
+      const actionPlan = await generateActionPlan(flowData.initialMessage || '', data);
+      
+      const newData: SchoolPowerFlowData = {
+        ...flowData,
+        contextualizationData: data,
+        actionPlan,
+        timestamp: Date.now()
+      };
+      
+      setFlowData(newData);
+      saveData(newData);
+      console.log('✅ Action plan gerado:', actionPlan);
+      
+    } catch (error) {
+      console.error('❌ Erro ao processar contextualização:', error);
+    } finally {
       setIsLoading(false);
+    }
+  }, [flowData, saveData, generateActionPlan]);
+
+  // Aprova action plan e inicia geração de atividades
+  const approveActionPlan = useCallback((approvedItems: ActionPlanItem[]) => {
+    console.log('✅ Action plan aprovado:', approvedItems);
+    setIsLoading(true);
+    setFlowState('generatingActivities');
+    
+    // Simula geração das atividades
+    setTimeout(() => {
+      console.log('🤖 Gerando atividades aprovadas:', approvedItems);
+      setIsLoading(false);
+      
+      // Aqui será integrado com a geração real das atividades
+      // Por enquanto, volta para o estado idle após gerar
+      setTimeout(() => {
+        setFlowState('idle');
+      }, 3000);
     }, 2000);
-  }, [flowData, saveData]);
+  }, []);
 
   // Reseta todo o fluxo
   const resetFlow = useCallback(() => {
@@ -115,6 +258,7 @@ export function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
     const emptyData: SchoolPowerFlowData = {
       initialMessage: null,
       contextualizationData: null,
+      actionPlan: null,
       timestamp: Date.now()
     };
     
@@ -132,6 +276,7 @@ export function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
     flowData,
     sendInitialMessage,
     submitContextualization,
+    approveActionPlan,
     resetFlow,
     isLoading
   };

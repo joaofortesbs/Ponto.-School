@@ -11,6 +11,7 @@ import {
 } from "./components";
 import { useSchoolPowerFlow } from "../../features/schoolpower/hooks/useSchoolPowerFlow";
 import { ContextualizationCard } from "../../features/schoolpower/contextualization/ContextualizationCard";
+import { ActionPlanCard } from "../../features/schoolpower/actionplan/ActionPlanCard";
 
 export function SchoolPowerPage() {
   const [isDarkTheme] = useState(true);
@@ -19,8 +20,10 @@ export function SchoolPowerPage() {
   // Hook para gerenciar o fluxo do School Power
   const {
     flowState,
+    flowData,
     sendInitialMessage,
     submitContextualization,
+    approveActionPlan,
     resetFlow
   } = useSchoolPowerFlow();
 
@@ -38,6 +41,12 @@ export function SchoolPowerPage() {
   const handleSubmitContextualization = (data: any) => {
     console.log("📝 Submetendo contextualização:", data);
     submitContextualization(data);
+  };
+
+  // Função para aprovar action plan
+  const handleApproveActionPlan = (approvedItems: any) => {
+    console.log("✅ Aprovando action plan:", approvedItems);
+    approveActionPlan(approvedItems);
   };
 
   // Determina se os componentes devem estar visíveis
@@ -108,6 +117,54 @@ export function SchoolPowerPage() {
           <ContextualizationCard 
             onSubmit={handleSubmitContextualization}
           />
+        </motion.div>
+      )}
+
+      {/* Card de Action Plan - aparece quando flowState é 'actionplan' */}
+      {flowState === 'actionplan' && (
+        <motion.div 
+          className="absolute inset-0 flex items-center justify-center z-30 px-4"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.9 }}
+          transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+        >
+          <ActionPlanCard 
+            actionPlan={flowData.actionPlan || []}
+            onApprove={handleApproveActionPlan}
+            isLoading={!flowData.actionPlan}
+          />
+        </motion.div>
+      )}
+
+      {/* Estado de geração de atividades - aparece quando flowState é 'generatingActivities' */}
+      {flowState === 'generatingActivities' && (
+        <motion.div 
+          className="absolute inset-0 bg-black/10 backdrop-blur-sm flex items-center justify-center z-40"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          <motion.div 
+            className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl rounded-2xl p-8 max-w-md w-full mx-4 text-center shadow-2xl border border-white/20"
+            initial={{ opacity: 0, scale: 0.8, y: 50 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+          >
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#FF6B00]/20 border-t-[#FF6B00] mx-auto mb-6"></div>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
+              Gerando Atividades
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              As atividades aprovadas estão sendo geradas automaticamente pelo School Power...
+            </p>
+            <button 
+              onClick={resetFlow}
+              className="px-6 py-2 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200"
+            >
+              Cancelar
+            </button>
+          </motion.div>
         </motion.div>
       )}
 
