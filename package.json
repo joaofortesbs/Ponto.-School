@@ -73,8 +73,6 @@
     "lovable-tagger": "^1.1.8",
     "lucide-react": "^0.394.0",
     "moment": "^2.30.1",
-    "postcss-import": "^16.1.1",
-    "postcss-nesting": "^13.0.2",
     "react": "^18.2.0",
     "react-beautiful-dnd": "^13.1.1",
     "react-big-calendar": "^1.18.0",

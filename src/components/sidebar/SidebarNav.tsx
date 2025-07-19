@@ -80,7 +80,7 @@ export function SidebarNav({
   const [cascadeIndex, setCascadeIndex] = useState(0);
   const [isModeTransitioning, setIsModeTransitioning] = useState(false);
   const [isMenuAnimating, setIsMenuAnimating] = useState(false);
-  const [timeoutsRef = useRef<NodeJS.Timeout[]>([]);
+  const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
 
   // Função para adicionar timeouts ao array
   const addTimeout = (timeout: NodeJS.Timeout) => {
@@ -929,8 +929,7 @@ export function SidebarNav({
         </div>
       </ScrollArea>
 
-      <style jsx>
-        {`
+      <style jsx>{`
         @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
 
         * {
@@ -1555,8 +1554,7 @@ export function SidebarNav({
             filter: brightness(1.05);
           }
         }
-      `}
-      </style>
+      `}</style>
     </div>
   );
 }
