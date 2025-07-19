@@ -33,66 +33,49 @@ export async function generateActionPlan(params: GenerateActionPlanParams): Prom
       `- ${activity.id}: ${activity.title} - ${activity.description}`
     ).join('\n');
 
-    // Construir prompt ultra-detalhado para análise completa
-    const prompt = `Você é uma IA especializada do School Power que deve realizar uma análise PROFUNDA e COMPLETA de todos os dados fornecidos pelo usuário.
+    // Construir prompt detalhado para a IA
+    const prompt = `Você é uma IA especializada em gerar planos de ação educacionais para professores e coordenadores utilizando apenas as atividades possíveis listadas abaixo.
 
-=== ANÁLISE OBRIGATÓRIA DE TODOS OS DADOS ===
+Aqui estão as informações coletadas:
 
-🎯 MENSAGEM INICIAL COMPLETA:
+Mensagem inicial do professor:
 "${initialMessage}"
 
-📋 DADOS COMPLETOS DO QUESTIONÁRIO:
-📚 Matérias e Temas Específicos: "${contextualizationData.subjects}"
-👥 Público-Alvo Detalhado: "${contextualizationData.audience}"  
-⚠️ Restrições e Preferências: "${contextualizationData.restrictions || 'Nenhuma especificada'}"
-📅 Datas e Prazos Importantes: "${contextualizationData.dates || 'Nenhuma especificada'}"
-📝 Observações Adicionais: "${contextualizationData.notes || 'Nenhuma especificada'}"
+Respostas do Quiz de Contextualização:
+- Matérias e temas: "${contextualizationData.subjects}"
+- Público-alvo: "${contextualizationData.audience}"
+- Restrições: "${contextualizationData.restrictions}"
+- Datas importantes: "${contextualizationData.dates}"
+- Observações adicionais: "${contextualizationData.notes}"
 
-=== ATIVIDADES DISPONÍVEIS PARA SELEÇÃO ===
+Lista completa de atividades disponíveis no School Power:
 ${availableActivities}
 
-=== PROCESSO DE ANÁLISE OBRIGATÓRIO ===
+INSTRUÇÕES:
+1. Analise cuidadosamente todas as informações fornecidas
+2. Selecione de 3 a 5 atividades da lista que melhor se adequem ao contexto
+3. Personalize o título e descrição de cada atividade com base nas informações coletadas
+4. Retorne APENAS um JSON válido no formato especificado
 
-1. 🔍 ANALISE PALAVRA POR PALAVRA a mensagem inicial
-2. 📊 CORRELACIONE todos os dados do questionário  
-3. 🎯 IDENTIFIQUE necessidades educacionais específicas
-4. 📝 DETERMINE o tipo de conteúdo mais adequado
-5. 👥 CONSIDERE as características do público-alvo
-6. ⏰ LEVE EM CONTA prazos e datas mencionadas
-7. 🚫 RESPEITE todas as restrições indicadas
-8. 💡 INCORPORE observações adicionais na personalização
-
-=== CRITÉRIOS RIGOROSOS DE SELEÇÃO ===
-✅ Compatibilidade com matérias/temas mencionados
-✅ Adequação ao público-alvo especificado
-✅ Resposta direta à mensagem inicial
-✅ Consideração de prazos e datas
-✅ Respeito às restrições mencionadas  
-✅ Incorporação das observações adicionais
-✅ Variedade nos tipos de atividades (estudo, avaliação, prática)
-✅ Personalização baseada em TODOS os dados coletados
-
-=== FORMATO OBRIGATÓRIO DE RESPOSTA ===
+Formato de resposta (JSON):
 [
   {
-    "id": "id-exato-da-atividade-disponível",
-    "personalizedTitle": "Título altamente personalizado baseado em TODA a análise",
-    "personalizedDescription": "Descrição detalhada incorporando TODOS os dados coletados"
+    "id": "id-da-atividade-da-lista",
+    "personalizedTitle": "Título personalizado baseado no contexto",
+    "personalizedDescription": "Descrição personalizada baseada no contexto"
   }
 ]
 
-⚠️ EXEMPLO DE ANÁLISE COMPLETA:
-Para uma solicitação sobre "Prova de matemática para 3º ano sobre funções quadráticas" com público "Ensino Médio avançado", prazo "15/03", observação "turma com dificuldades em gráficos":
-
+Exemplo:
 [
   {
-    "id": "prova-interativa", 
-    "personalizedTitle": "Avaliação de Funções Quadráticas - 3º Ano EM - Entrega 15/03",
-    "personalizedDescription": "Prova interativa focada em funções quadráticas com ênfase em interpretação de gráficos, adaptada para alunos de nível avançado com exercícios extras de visualização para superar dificuldades identificadas."
+    "id": "prova-interativa",
+    "personalizedTitle": "Prova de Matemática - Álgebra - 9º Ano",
+    "personalizedDescription": "Avaliação interativa focada em equações do 1º grau para alunos do 9º ano."
   }
 ]
 
-🚨 RESPONDA APENAS COM O JSON - ZERO TEXTO ADICIONAL 🚨`;
+Responda APENAS com o JSON, sem texto adicional.`;
 
     console.log('📤 Enviando requisição para Gemini API...');
 
