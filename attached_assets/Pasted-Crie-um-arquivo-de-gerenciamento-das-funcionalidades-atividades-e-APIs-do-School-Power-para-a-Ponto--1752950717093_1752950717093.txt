@@ -1,0 +1,78 @@
+Crie um arquivo de gerenciamento das funcionalidades/atividades e APIs do School Power para a Ponto. School.
+
+📁 Arquivo a ser criado:
+src/features/schoolpower/activitiesManager.ts
+
+Função do arquivo:
+1️⃣ Gerenciar todas as funcionalidades/atividades que o School Power pode gerar de forma escalável.
+2️⃣ Permitir adicionar novas atividades de forma rápida e modular.
+3️⃣ Permitir personalizar qual API (ou pipeline) será usada para cada tipo de atividade.
+4️⃣ Ter compatibilidade nativa com TypeScript para autocompletar em toda a aplicação.
+5️⃣ Ser a única fonte de verdade (SSOT) para saber:
+
+Nome da atividade
+
+Descrição curta
+
+ID único
+
+Tag ("ponto-ativo" ou "geral")
+
+API utilizada
+
+Pipeline ou prompt específico, se necessário
+
+Status de ativo/inativo para testes e habilitação gradual
+
+Detalhes técnicos:
+✅ Crie uma interface SchoolPowerActivity com:
+
+id: string
+
+name: string
+
+description: string
+
+tags: string[] (ex: ["ponto-ativo", "avaliacao"])
+
+apiKey: string (inicie com a constante do Gemini)
+
+apiType: "gemini" | "openai" | "custom"
+
+pipelinePrompt?: string
+
+enabled: boolean
+
+✅ Crie um array schoolPowerActivities que exporta todas as atividades registradas inicialmente, por exemplo:
+
+ts
+Copiar
+Editar
+{
+  id: "prova-interativa",
+  name: "Prova Interativa",
+  description: "Gera uma prova interativa com correção automática.",
+  tags: ["ponto-ativo", "avaliacao"],
+  apiKey: GEMINI_API_KEY,
+  apiType: "gemini",
+  pipelinePrompt: "Crie uma prova interativa para o seguinte tema e nível...",
+  enabled: true,
+}
+✅ Crie uma função utilitária getSchoolPowerActivityById(id: string): SchoolPowerActivity | undefined para facilitar buscas rápidas por ID.
+
+✅ Crie uma função listSchoolPowerActivitiesByTag(tag: string): SchoolPowerActivity[] para permitir filtrar por "ponto-ativo", "geral" etc, facilitando o sistema de sugestão automática para trilhas.
+
+✅ Crie e exporte a constante GEMINI_API_KEY:
+
+ts
+Copiar
+Editar
+export const GEMINI_API_KEY = 'AIzaSyD-Sso0SdyYKoA4M3tQhcWjQ1AoddB7Wo4';
+✅ Adicione comentários claros em cada parte para facilitar futuras modificações.
+
+Restrições importantes:
+✅ O arquivo deve ser extremamente limpo, modular e organizado.
+✅ Usar export default onde necessário.
+✅ Utilizar TypeScript estrito para facilitar integrações futuras.
+✅ Estrutura pronta para escalar para outros modelos de IA ou pipelines proprietários no futuro.
+
