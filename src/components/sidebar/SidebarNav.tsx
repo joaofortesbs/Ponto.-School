@@ -1,320 +1,973 @@
-"use client";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Progress } from "@/components/ui/progress";
+import { useState, useEffect, useRef } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { supabase } from "@/lib/supabase";
+import type { UserProfile } from "@/types/user-profile";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import {
+  Home,
+  BookOpen,
+  Briefcase,
+  ShoppingCart,
+  Calendar,
+  Users,
+  Settings,
+  LogOut,
+  Menu,
+  X,
+  Brain,
+  MessageCircle,
+  ChevronLeft,
+  ChevronRight,
+  HelpCircle,
+  Trophy,
+  Wallet,
+  ChevronDown,
+  ChevronUp,
+  Users2,
+  FolderKanban,
+  Rocket,
+  CheckSquare,
+  Bell,
+  Target,
+  BarChart,
+  DollarSign,
+  Plus,
+  BookText,
+  Heart,
+  BookMarked,
+  Map,
+  Compass,
+  GraduationCap,
+  CalendarClock,
+  Upload,
+} from "lucide-react";
+import MentorAI from "@/components/mentor/MentorAI";
+import AgendaNav from "./AgendaNav";
+import TurmasNav from "./TurmasNav";
 
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
-
-interface SidebarNavProps {
-  isOpen: boolean;
-  onToggle: () => void;
+interface SidebarNavProps extends React.HTMLAttributes<HTMLDivElement> {
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
-export const SidebarNav: React.FC<SidebarNavProps> = ({ isOpen, onToggle }) => {
+export function SidebarNav({
+  className,
+  isCollapsed = false,
+  onToggleCollapse,
+  ...props
+}: SidebarNavProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const [activeSection, setActiveSection] = useState('painel');
-
-  // Mapeamento das seções antigas para as novas
-  const navigationItems = [
-    {
-      id: 'painel',
-      title: 'Painel',
-      icon: 'fas fa-home',
-      path: '/',
-      hasInterface: true
-    },
-    {
-      id: 'turmas',
-      title: 'Minhas Turmas',
-      icon: 'fas fa-user-graduate',
-      path: '/turmas',
-      hasInterface: true
-    },
-    {
-      id: 'comunidades',
-      title: 'Comunidades',
-      icon: 'fas fa-users',
-      path: '/comunidades',
-      hasInterface: true
-    },
-    {
-      id: 'trilhas',
-      title: 'Trilhas School',
-      icon: 'fas fa-route',
-      path: '/portal', // Mapeando para portal existente
-      hasInterface: true
-    },
-    {
-      id: 'assistente',
-      title: 'School Planner',
-      icon: 'fas fa-project-diagram',
-      path: '/agenda', // Mapeando para agenda existente
-      hasInterface: true
-    },
-    {
-      id: 'epictus',
-      title: 'Epictus IA',
-      icon: 'fas fa-brain',
-      path: '/epictus-ia',
-      hasInterface: true
-    },
-    {
-      id: 'agenda',
-      title: 'Agenda',
-      icon: 'fas fa-calendar-alt',
-      path: '/agenda',
-      hasInterface: true
-    },
-    {
-      id: 'conquistas',
-      title: 'Conquistas',
-      icon: 'fas fa-trophy',
-      path: '/conquistas',
-      hasInterface: true
-    },
-    {
-      id: 'explorar',
-      title: 'Explorar',
-      icon: 'fas fa-compass',
-      path: '/carteira', // Mapeando para carteira existente
-      hasInterface: true
-    }
-  ];
+  const [showMentorAI, setShowMentorAI] = useState(false);
+  
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(isCollapsed);
+  const [firstName, setFirstName] = useState<string | null>(null);
+  const [isCardFlipped, setIsCardFlipped] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    // Determinar seção ativa baseada na rota atual
-    const currentPath = location.pathname;
-    const currentItem = navigationItems.find(item => item.path === currentPath);
-    if (currentItem) {
-      setActiveSection(currentItem.id);
-    }
-  }, [location.pathname]);
+    // Listener para atualizações de avatar feitas em outros componentes
+    const handleAvatarUpdate = (event: CustomEvent) => {
+      if (event.detail && event.detail.url) {
+        setProfileImage(event.detail.url);
+      }
+    };
 
-  const handleNavigation = (item: any) => {
-    if (item.hasInterface) {
-      setActiveSection(item.id);
-      navigate(item.path);
-    }
-    // Se não tem interface, não faz nada por enquanto
+    // Listener para atualizações de nome de usuário
+    const handleUsernameUpdate = (event: CustomEvent) => {
+      if (event.detail?.displayName) {
+        setFirstName(event.detail.displayName);
+      } else if (event.detail?.firstName) {
+        setFirstName(event.detail.firstName);
+      }
+    };
+
+    // Adicionar os listeners
+    document.addEventListener(
+      "userAvatarUpdated",
+      handleAvatarUpdate as EventListener,
+    );
+    document.addEventListener(
+      "usernameUpdated",
+      handleUsernameUpdate as EventListener,
+    );
+    document.addEventListener(
+      "usernameReady",
+      handleUsernameUpdate as EventListener,
+    );
+    document.addEventListener(
+      "usernameSynchronized",
+      handleUsernameUpdate as EventListener,
+    );
+
+    // Remover os listeners quando o componente for desmontado
+    return () => {
+      document.removeEventListener(
+        "userAvatarUpdated",
+        handleAvatarUpdate as EventListener,
+      );
+      document.removeEventListener(
+        "usernameUpdated",
+        handleUsernameUpdate as EventListener,
+      );
+      document.removeEventListener(
+        "usernameReady",
+        handleUsernameUpdate as EventListener,
+      );
+      document.removeEventListener(
+        "usernameSynchronized",
+        handleUsernameUpdate as EventListener,
+      );
+    };
+  }, []);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        // Primeiro tentar obter do localStorage para display rápido
+        const storedFirstName = localStorage.getItem("userFirstName");
+        const storedDisplayName = localStorage.getItem("userDisplayName");
+        const storedAvatarUrl = localStorage.getItem("userAvatarUrl");
+
+        if (storedDisplayName) {
+          setFirstName(storedDisplayName);
+        } else if (storedFirstName) {
+          setFirstName(storedFirstName);
+        }
+
+        if (storedAvatarUrl) {
+          setProfileImage(storedAvatarUrl);
+        }
+
+        // Depois buscar do Supabase para dados atualizados
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (user) {
+          const { data, error } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", user.id)
+            .single();
+
+          if (error) {
+            console.error("Error fetching user profile:", error);
+            if (!firstName) setFirstName("Usuário"); // Fallback if profile fetch fails
+          } else if (data) {
+            setUserProfile(data as UserProfile);
+
+            // Se o perfil tiver um avatar_url, usar ele e atualizar localStorage
+            if (data.avatar_url) {
+              setProfileImage(data.avatar_url);
+              localStorage.setItem("userAvatarUrl", data.avatar_url);
+            }
+
+            // Determinar o primeiro nome com a mesma lógica do Dashboard
+            const firstName =
+              data.full_name?.split(" ")[0] ||
+              data.display_name ||
+              data.username ||
+              "";
+
+            setFirstName(firstName);
+            localStorage.setItem("userFirstName", firstName);
+
+            // Disparar evento para outros componentes
+            document.dispatchEvent(
+              new CustomEvent("usernameUpdated", {
+                detail: {
+                  displayName: data.display_name,
+                  firstName: firstName,
+                  username: data.username,
+                },
+              }),
+            );
+          }
+        } else {
+          if (!firstName) setFirstName("Usuário"); // Fallback if user is not authenticated
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        if (!firstName) setFirstName("Usuário"); // Fallback for any other error
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
+
+  const handleImageUploadClick = () => {
+    fileInputRef.current?.click();
   };
 
-  if (!isOpen) return null;
+  const handleImageChange = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      try {
+        setIsUploading(true);
+
+        // Obter o usuário atual
+        const { data: currentUser } = await supabase.auth.getUser();
+        if (!currentUser.user) {
+          throw new Error("Usuário não autenticado");
+        }
+
+        // Upload da imagem para o Supabase Storage
+        const fileExt = file.name.split(".").pop();
+        const fileName = `avatar-${currentUser.user.id}-${Date.now()}.${fileExt}`;
+        const filePath = `avatars/${fileName}`;
+
+        // Fazer upload para o storage do Supabase
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("profile-images")
+          .upload(filePath, file, {
+            cacheControl: "3600",
+            upsert: true,
+          });
+
+        if (uploadError) {
+          console.error("Erro ao fazer upload da imagem:", uploadError);
+          throw new Error(uploadError.message);
+        }
+
+        // Obter a URL pública da imagem
+        const { data: publicUrlData } = supabase.storage
+          .from("profile-images")
+          .getPublicUrl(filePath);
+
+        if (!publicUrlData.publicUrl) {
+          throw new Error("Não foi possível obter a URL pública da imagem");
+        }
+
+        // Atualizar o perfil do usuário com a URL da imagem
+        const { error: updateError } = await supabase
+          .from("profiles")
+          .update({
+            avatar_url: publicUrlData.publicUrl,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", currentUser.user.id);
+
+        if (updateError) {
+          console.error("Erro ao atualizar perfil com avatar:", updateError);
+          throw new Error(updateError.message);
+        }
+
+        // Atualizar o estado local
+        setProfileImage(publicUrlData.publicUrl);
+
+        // Salvar no localStorage para persistência
+        localStorage.setItem("userAvatarUrl", publicUrlData.publicUrl);
+
+        // Disparar evento para outros componentes saberem que o avatar foi atualizado
+        document.dispatchEvent(
+          new CustomEvent("userAvatarUpdated", {
+            detail: { url: publicUrlData.publicUrl },
+          }),
+        );
+
+        console.log("Avatar atualizado com sucesso!");
+      } catch (error) {
+        console.error("Erro ao processar upload de avatar:", error);
+      } finally {
+        setIsUploading(false);
+      }
+    }
+  };
+
+  const handleNavigation = (path: string, isSpecial?: boolean) => {
+    if (path === "/mentor-ia") {
+      setShowMentorAI(true);
+    } else {
+      setShowMentorAI(false);
+      navigate(path);
+    }
+  };
+
+  const isActive = (path: string) => {
+    if (path === "/mentor-ia") {
+      return showMentorAI;
+    }
+    return location.pathname === path;
+  };
+
+  const toggleSection = (section: string) => {
+    setExpandedSection(expandedSection === section ? null : section);
+  };
+
+  const navItems = [
+    {
+      icon: <Home className="h-5 w-5" />,
+      label: "Painel",
+      path: "/",
+    },
+    {
+      icon: <BookOpen className="h-5 w-5" />,
+      label: "Minhas Turmas",
+      path: "/turmas",
+      component: <TurmasNav />,
+      subItems: [
+        {
+          name: "Visão Geral",
+          path: "/turmas",
+          icon: <Home className="h-4 w-4 text-[#29335C]" />,
+        },
+        {
+          name: "Turmas Ativas",
+          path: "/turmas?view=ativas",
+          icon: <BookOpen className="h-4 w-4 text-[#29335C]" />,
+        },
+        {
+          name: "Grupos de Estudo",
+          path: "/turmas?view=grupos-estudo",
+          icon: <Users2 className="h-4 w-4 text-[#29335C]" />,
+        },
+        {
+          name: "Desempenho",
+          path: "/turmas?view=desempenho",
+          icon: <BarChart className="h-4 w-4 text-[#29335C]" />,
+        },
+      ],
+    },
+    {
+      icon: <Users2 className="h-5 w-5" />,
+      label: "Comunidades",
+      path: "/comunidades",
+    },
+    {
+      icon: <Brain className="h-5 w-5" />,
+      label: "Epictus IA",
+      path: "/epictus-ia",
+      isSpecial: true,
+    },
+    {
+      icon: <Rocket className="h-5 w-5" />,
+      label: "School Power",
+      path: "/school-power",
+      isSpecial: true,
+    },
+    {
+      icon: <Calendar className="h-5 w-5" />,
+      label: "Agenda",
+      path: "/agenda",
+      component: <AgendaNav />,
+      subItems: [
+        {
+          name: "Visão Geral",
+          path: "/agenda?view=visao-geral",
+          icon: <Home className="h-4 w-4 text-[#29335C]" />,
+        },
+        {
+          name: "Calendário",
+          path: "/agenda?view=calendario",
+          icon: <Calendar className="h-4 w-4 text-[#29335C]" />,
+        },
+        {
+          name: "Tarefas",
+          path: "/agenda?view=tarefas",
+          icon: <CheckSquare className="h-4 w-4 text-[#29335C]" />,
+        },
+        {
+          name: "Desafios",
+          path: "/agenda?view=desafios",
+          icon: <Target className="h-4 w-4 text-[#29335C]" />,
+        },
+      ],
+    },
+    {
+      icon: <Trophy className="h-5 w-5" />,
+      label: "Conquistas",
+      path: "/conquistas",
+    },
+    {
+      icon: <Wallet className="h-5 w-5" />,
+      label: "Carteira",
+      path: "/carteira",
+    },
+  ];
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: -100 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -100 }}
-      transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
-      className="navigation-menu"
-      style={{
-        position: 'fixed',
-        top: '50%',
-        left: '32px',
-        transform: 'translateY(-50%)',
-        width: '380px',
-        background: 'transparent',
-        borderRadius: '24px',
-        overflow: 'hidden',
-        zIndex: 1000
-      }}
-    >
-      <nav className="menu-navigation" style={{ padding: '16px 0' }}>
-        {navigationItems.map((item) => (
-          <div
-            key={item.id}
-            className={`menu-item ${activeSection === item.id ? 'active' : ''}`}
-            onClick={() => handleNavigation(item)}
-            style={{
-              margin: '0 16px 4px',
-              borderRadius: '16px',
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-              cursor: item.hasInterface ? 'pointer' : 'default',
-              position: 'relative',
-              overflow: 'hidden',
-              minHeight: '72px',
-              height: '72px',
-              background: activeSection === item.id 
-                ? 'linear-gradient(135deg, rgba(255, 107, 0, 0.15), rgba(255, 107, 0, 0.15))'
-                : 'transparent',
-              border: activeSection === item.id 
-                ? '1px solid rgba(255, 107, 0, 0.3)'
-                : '1px solid transparent',
-              boxShadow: activeSection === item.id 
-                ? '0 4px 12px rgba(255, 107, 0, 0.1)'
-                : 'none'
-            }}
-            onMouseEnter={(e) => {
-              if (activeSection !== item.id && item.hasInterface) {
-                e.currentTarget.style.transform = 'translateX(6px)';
-                e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 107, 0, 0.08), rgba(255, 107, 0, 0.08))';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (activeSection !== item.id) {
-                e.currentTarget.style.transform = '';
-                e.currentTarget.style.background = 'transparent';
-              }
-            }}
-          >
-            <div className="item-content" style={{
-              display: 'flex',
-              alignItems: 'center',
-              padding: '16px',
-              gap: '14px',
-              position: 'relative',
-              height: '100%',
-              minHeight: '72px',
-              boxSizing: 'border-box'
-            }}>
-              <div 
-                className={`icon-container ${activeSection === item.id ? 'active' : ''}`}
-                style={{
-                  width: '40px',
-                  height: '40px',
-                  minWidth: '40px',
-                  minHeight: '40px',
-                  borderRadius: '14px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  background: activeSection === item.id 
-                    ? 'linear-gradient(135deg, #FF6B00, #FF6B00)'
-                    : 'rgba(255, 107, 0, 0.1)',
-                  transition: 'all 0.3s ease',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  flexShrink: 0,
-                  boxShadow: activeSection === item.id 
-                    ? '0 8px 16px rgba(255, 107, 0, 0.3)'
-                    : 'none'
-                }}
+    <div className="relative h-full">
+      {showMentorAI && (
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm">
+          <div className="fixed inset-10 z-50 bg-white dark:bg-[#121212] rounded-xl shadow-xl overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b">
+              <div className="flex items-center gap-2">
+                <Brain className="h-5 w-5 text-[#00FFFF]" />
+                <h2 className="text-xl font-semibold">Mentor IA</h2>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowMentorAI(false)}
+                className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
               >
-                <i 
-                  className={item.icon}
-                  style={{
-                    fontSize: '16px',
-                    color: activeSection === item.id ? 'white' : '#FF6B00',
-                    transition: 'all 0.3s ease',
-                    position: 'relative',
-                    zIndex: 1
-                  }}
-                />
-                <div 
-                  className="icon-glow"
-                  style={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    width: '24px',
-                    height: '24px',
-                    background: 'radial-gradient(circle, rgba(255, 107, 0, 0.5), transparent)',
-                    borderRadius: '50%',
-                    transform: activeSection === item.id 
-                      ? 'translate(-50%, -50%) scale(2.5)'
-                      : 'translate(-50%, -50%) scale(0)',
-                    transition: 'transform 0.3s ease'
-                  }}
-                />
-              </div>
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <MentorAI />
+            </div>
+          </div>
+        </div>
+      )}
 
-              <div className="item-text" style={{
-                flex: 1,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '4px',
-                minHeight: '40px',
-                justifyContent: 'center'
-              }}>
-                <span 
-                  className="item-title"
-                  style={{
-                    fontSize: '16px',
-                    fontWeight: activeSection === item.id ? 700 : 600,
-                    color: activeSection === item.id ? '#FF6B00' : '#1a202c',
-                    transition: 'color 0.3s ease',
-                    lineHeight: '1.2',
-                    margin: 0
-                  }}
+      
+
+      {/* User Profile Component - Greeting and progress section */}
+      <div
+        className={cn(
+          "bg-white dark:bg-[#001427] p-4 mb-4 flex flex-col items-center relative group",
+          isCollapsed ? "mt-6 px-2" : "mt-4",
+        )}
+      >
+        {/* Card wrapper com bordas arredondadas e flip effect */}
+        <div
+          className={cn(
+            "relative w-full h-auto",
+            isCollapsed ? "w-14" : "w-full",
+          )}
+          style={{ perspective: "1000px" }}
+        >
+          <div
+            className={cn(
+              "relative w-full h-auto transition-transform duration-700 transform-style-preserve-3d",
+              isCardFlipped ? "rotate-y-180" : "",
+            )}
+          >
+            {/* Front Side */}
+            <div
+              className={cn(
+                "bg-white dark:bg-[#29335C]/20 rounded-xl border border-gray-200 dark:border-[#29335C]/30 backdrop-blur-sm relative backface-hidden",
+                isCollapsed ? "w-14 p-2" : "w-full p-4",
+              )}
+            >
+              {/* Ícone de graduação no canto superior esquerdo quando expandido */}
+              {!isCollapsed && (
+                <div className="absolute top-3 left-3 z-10">
+                  <div className="w-7 h-7">
+                    <div className="w-full h-full rounded-full border-2 border-orange-500 bg-orange-600 bg-opacity-20 flex items-center justify-center">
+                      <GraduationCap size={14} className="text-orange-500" />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Botão Flip circular na mesma altura do ícone de graduação */}
+              {!isCollapsed && (
+                <button
+                  className="absolute top-3 right-3 w-6 h-6 rounded-full border-2 border-orange-500 bg-orange-600 bg-opacity-20 hover:bg-orange-600 hover:bg-opacity-30 flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-sm cursor-pointer z-10"
+                  onClick={() => setIsCardFlipped(!isCardFlipped)}
+                  title="Flip Card"
                 >
-                  {item.title}
-                </span>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="text-orange-500"
+                  >
+                    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                    <path d="M21 3v5h-5" />
+                    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+                    <path d="M8 16H3v5" />
+                  </svg>
+                </button>
+              )}
+              {/* Profile Image Component - Responsive avatar */}
+              <div
+                className={cn(
+                  "relative flex justify-center flex-col items-center",
+                  isCollapsed ? "mb-1" : "mb-4",
+                )}
+              >
+                <div
+                  className={cn(
+                    "rounded-full overflow-hidden bg-gradient-to-r from-[#FF6B00] via-[#FF8736] to-[#FFB366] p-0.5 cursor-pointer transition-all duration-300",
+                    isCollapsed ? "w-10 h-10" : "w-20 h-20",
+                  )}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-[#001427] flex items-center justify-center">
+                    {profileImage ? (
+                      <img
+                        src={profileImage}
+                        alt="Profile"
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          console.error("Error loading profile image");
+                          setProfileImage(null);
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
+                        <div
+                          className={cn(
+                            "bg-yellow-300 rounded-full flex items-center justify-center",
+                            isCollapsed ? "w-5 h-5" : "w-10 h-10",
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              "text-black font-bold",
+                              isCollapsed ? "text-xs" : "text-lg",
+                            )}
+                          >
+                            {firstName
+                              ? firstName.charAt(0).toUpperCase()
+                              : "U"}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Barra de progresso quando colapsado */}
+                {isCollapsed && (
+                  <div className="flex justify-center mt-2">
+                    <div 
+                      className="h-1 bg-[#FF6B00] rounded-full opacity-30"
+                      style={{ width: "40px" }}
+                    >
+                      <div 
+                        className="h-full bg-[#FF6B00] rounded-full transition-all duration-300"
+                        style={{ width: "65%" }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* File input component */}
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
+                />
               </div>
 
-              {activeSection === item.id && (
-                <div 
-                  className="item-indicator"
-                  style={{
-                    width: '8px',
-                    height: '8px',
-                    minWidth: '8px',
-                    minHeight: '8px',
-                    borderRadius: '50%',
-                    background: '#FF6B00',
-                    flexShrink: 0,
-                    boxShadow: '0 0 8px rgba(255, 107, 0, 0.6)'
-                  }}
-                />
+              {isUploading && (
+                <div className="mb-3 text-xs text-gray-500 dark:text-gray-400">
+                  Enviando...
+                </div>
+              )}
+
+              {/* Hidden File Input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="hidden"
+              />
+
+              {!isCollapsed && (
+                <div className="text-[#001427] dark:text-white text-center w-full">
+                  <h3 className="font-semibold text-base mb-2 flex items-center justify-center">
+                    <span className="mr-1">👋</span> Olá,{" "}
+                    {(() => {
+                      // Obter o primeiro nome com a mesma lógica do Dashboard
+                      const firstName =
+                        userProfile?.full_name?.split(" ")[0] ||
+                        userProfile?.display_name ||
+                        localStorage.getItem("userFirstName") ||
+                        "Estudante";
+                      return firstName;
+                    })()}
+                    !
+                  </h3>
+                  <div className="flex flex-col items-center mt-1">
+                    <p className="text-xs text-[#001427]/70 dark:text-white/70 mb-0.5">
+                      Nível {userProfile?.level || 1}
+                    </p>
+                    <div className="flex justify-center">
+                      <div 
+                        className="h-1.5 bg-[#FF6B00] rounded-full opacity-30"
+                        style={{ width: "80px" }}
+                      >
+                        <div 
+                          className="h-full bg-[#FF6B00] rounded-full transition-all duration-300"
+                          style={{ width: "65%" }}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex justify-center mt-2">
+                      <div 
+                        className="px-5 py-0.5 border border-[#FF6B00] bg-[#FF6B00] bg-opacity-20 rounded-md flex items-center justify-center"
+                      >
+                        <span className="text-xs font-medium text-[#FF6B00]">
+                          ALUNO
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Back Side - Idêntico ao front */}
+            <div
+              className={cn(
+                "bg-white dark:bg-[#29335C]/20 rounded-xl border border-gray-200 dark:border-[#29335C]/30 backdrop-blur-sm relative backface-hidden absolute inset-0 rotate-y-180",
+                isCollapsed ? "w-14 p-2" : "w-full p-4",
+              )}
+            >
+              {/* Ícone de Briefcase no canto superior esquerdo quando expandido */}
+              {!isCollapsed && (
+                <div className="absolute top-3 left-3 z-10">
+                  <div className="w-7 h-7">
+                    <div className="w-full h-full rounded-full border-2 border-[#2462EA] bg-[#0f26aa] bg-opacity-20 flex items-center justify-center">
+                      <Briefcase
+                        size={12}
+                        className="text-[#2462EA]"
+                        strokeWidth={2.5}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Botão Flip circular na mesma altura do ícone de Briefcase */}
+              {!isCollapsed && (
+                <button
+                  className="absolute top-3 right-3 w-6 h-6 rounded-full border-2 border-[#2462EA] bg-[#0f26aa] bg-opacity-20 hover:bg-[#0f26aa] hover:bg-opacity-30 flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-sm cursor-pointer z-10"
+                  onClick={() => setIsCardFlipped(!isCardFlipped)}
+                  title="Flip Card"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="text-[#2462EA]"
+                  >
+                    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                    <path d="M21 3v5h-5" />
+                    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+                    <path d="M8 16H3v5" />
+                  </svg>
+                </button>
+              )}
+              {/* Profile Image Component - Responsive avatar */}
+              <div
+                className={cn(
+                  "relative flex justify-center flex-col items-center",
+                  isCollapsed ? "mb-1" : "mb-4",
+                )}
+              >
+                <div
+                  className={cn(
+                    "rounded-full overflow-hidden bg-gradient-to-r from-blue-500 via-purple-520 to-blue-600 p-0.5 cursor-pointer transition-all duration-300",
+                    isCollapsed ? "w-10 h-10" : "w-20 h-20",
+                  )}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-[#001427] flex items-center justify-center">
+                    {profileImage ? (
+                      <img
+                        src={profileImage}
+                        alt="Profile"
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          console.error("Error loading profile image");
+                          setProfileImage(null);
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
+                        <div
+                          className={cn(
+                            "bg-yellow-300 rounded-full flex items-center justify-center",
+                            isCollapsed ? "w-5 h-5" : "w-10 h-10",
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              "text-black font-bold",
+                              isCollapsed ? "text-xs" : "text-lg",
+                            )}
+                          >
+                            {firstName
+                              ? firstName.charAt(0).toUpperCase()
+                              : "U"}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Barra de progresso quando colapsado */}
+                {isCollapsed && (
+                  <div className="flex justify-center mt-2">
+                    <div 
+                      className="h-1 bg-[#2461E7] rounded-full opacity-30"
+                      style={{ width: "40px" }}
+                    >
+                      <div 
+                        className="h-full bg-[#2461E7] rounded-full transition-all duration-300"
+                        style={{ width: "65%" }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {isUploading && (
+                <div className="mb-3 text-xs text-gray-500 dark:text-gray-400">
+                  Enviando...
+                </div>
+              )}
+
+              {!isCollapsed && (
+                <div className="text-[#001427] dark:text-white text-center w-full">
+                  <h3 className="font-semibold text-base mb-2 flex items-center justify-center">
+                    <span className="mr-1">👋</span> Olá,{" "}
+                    {(() => {
+                      // Obter o primeiro nome com a mesma lógica do Dashboard
+                      const firstName =
+                        userProfile?.full_name?.split(" ")[0] ||
+                        userProfile?.display_name ||
+                        localStorage.getItem("userFirstName") ||
+                        "Estudante";
+                      return firstName;
+                    })()}
+                    !
+                  </h3>
+                  <div className="flex flex-col items-center mt-1">
+                    <p className="text-xs text-[#001427]/70 dark:text-white/70 mb-0.5">
+                      Nível {userProfile?.level || 1}
+                    </p>
+                    <div className="flex justify-center">
+                      <div 
+                        className="h-1.5 bg-[#2461E7] rounded-full opacity-30"
+                        style={{ width: "80px" }}
+                      >
+                        <div 
+                          className="h-full bg-[#2461E7] rounded-full transition-all duration-300"
+                          style={{ width: "65%" }}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex justify-center mt-2">
+                      <div 
+                        className="px-5 py-0.5 border border-[#2461E7] bg-[#2461E7] bg-opacity-20 rounded-md flex items-center justify-center"
+                      >
+                        <span className="text-xs font-medium text-[#2461E7]">
+                          PROFESSOR
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
           </div>
-        ))}
-      </nav>
+        </div>
+      </div>
 
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+      <ScrollArea
+        className={cn(
+          "py-2",
+          isCollapsed ? "h-[calc(100%-180px)]" : "h-[calc(100%-300px)]",
+        )}
+      >
+        <nav className="grid gap-1 px-2">
+          {navItems.map((item, index) => (
+            <div key={index} className="relative">
+              {item.component ? (
+                isCollapsed ? (
+                  <Button
+                    variant="ghost"
+                    className={cn(
+                      "flex items-center justify-center rounded-lg px-3 py-2 text-start w-full",
+                      isActive(item.path)
+                        ? "bg-[#FF6B00]/10 text-[#FF6B00] dark:bg-[#FF6B00]/20 dark:text-[#FF6B00]"
+                        : "text-[#001427] hover:bg-[#FF6B00]/5 dark:text-white dark:hover:bg-[#FF6B00]/10",
+                      "group hover:scale-[1.02] transition-all duration-200 hover:shadow-sm active:scale-[0.98]",
+                    )}
+                    onClick={() => handleNavigation(item.path)}
+                  >
+                    <div className="mx-auto">
+                      {item.label === "Portal" ? (
+                        <BookMarked className="h-5 w-5 text-[#001427] dark:text-white" />
+                      ) : (
+                        <Calendar className="h-5 w-5 text-[#001427] dark:text-white" />
+                      )}
+                    </div>
+                    <div
+                      className={cn(
+                        "absolute left-0 top-0 h-full w-1 rounded-r-md transition-all duration-300",
+                        isActive(item.path)
+                          ? "bg-[#FF6B00]"
+                          : "bg-transparent group-hover:bg-[#FF6B00]/30",
+                      )}
+                    />
+                  </Button>
+                ) : (
+                  item.component
+                )
+              ) : (
+                <Button
+                  variant="ghost"
+                  className={cn(
+                    "flex items-center gap-3 rounded-lg px-3 py-2 text-start w-full",
+                    isCollapsed ? "justify-center" : "justify-between",
+                    isActive(item.path)
+                      ? "bg-[#FF6B00]/10 text-[#FF6B00] dark:bg-[#FF6B00]/20 dark:text-[#FF6B00]"
+                      : "text-[#001427] hover:bg-[#FF6B00]/5 dark:text-white dark:hover:bg-[#FF6B00]/10",
+                    "group hover:scale-[1.02] transition-all duration-200 hover:shadow-sm active:scale-[0.98]",
+                    item.label === "Novidades"
+                      ? "relative overflow-hidden"
+                      : "",
+                  )}
+                  onClick={(e) => {
+                    if (item.subItems && !isCollapsed) {
+                      e.preventDefault();
+                      toggleSection(item.label);
+                    } else {
+                      handleNavigation(item.path, item.isSpecial);
+                    }
+                  }}
+                >
+                  {item.label === "Novidades" && (
+                    <div className="absolute inset-0 rounded-lg border border-transparent bg-gradient-to-r from-[#FFD700] to-[#FF6B00] opacity-10 animate-gradient-x"></div>
+                  )}
+                  <div className="flex items-center relative z-10">
+                    <div
+                      className={cn(
+                        "transition-all duration-300",
+                        isCollapsed ? "mx-auto" : "mr-3",
+                        isActive(item.path)
+                          ? "text-[#FF6B00] dark:text-[#FF6B00]"
+                          : item.label === "Novidades"
+                            ? "text-[#FF6B00] dark:text-[#FF6B00]"
+                            : "text-[#001427] dark:text-white",
+                      )}
+                    >
+                      {item.icon}
+                    </div>
+                    {!isCollapsed && (
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={cn(
+                            item.label === "Novidades"
+                              ? "text-[#FF6B00] font-bold"
+                              : "",
+                          )}
+                        >
+                          {item.label}
+                        </span>
+                        {item.label === "Explorar" && (
+                          <span className="px-1.5 py-0.5 text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-md">
+                            Em breve
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  {!isCollapsed && item.subItems && (
+                    <div className="text-[#001427] dark:text-white">
+                      {expandedSection === item.label ? (
+                        <ChevronUp className="h-4 w-4" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4" />
+                      )}
+                    </div>
+                  )}
+                  {item.label !== "Novidades" && (
+                    <div
+                      className={cn(
+                        "absolute left-0 top-0 h-full w-1 rounded-r-md transition-all duration-300",
+                        isActive(item.path)
+                          ? "bg-[#FF6B00]"
+                          : "bg-transparent group-hover:bg-[#FF6B00]/30",
+                      )}
+                    />
+                  )}
+                </Button>
+              )}
 
-        .navigation-menu * {
-          font-family: 'Inter', sans-serif !important;
-        }
-
-        .menu-item::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: -100%;
-          width: 100%;
-          height: 100%;
-          background: linear-gradient(90deg, transparent, rgba(255, 107, 0, 0.1), transparent);
-          transition: left 0.6s;
-        }
-
-        .menu-item:hover::before {
-          left: 100%;
-        }
-
-        .menu-item:hover:not(.active) .icon-container {
-          background: linear-gradient(135deg, rgba(255, 107, 0, 0.2), rgba(255, 107, 0, 0.2)) !important;
-          transform: scale(1.08);
-        }
-
-        .menu-item:hover:not(.active) .icon-container i {
-          color: #FF6B00 !important;
-        }
-
-        .menu-item:hover:not(.active) .item-title {
-          color: #FF6B00 !important;
-        }
-
-        @keyframes orangeBounce {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-3px); }
-        }
-
-        @media (max-width: 768px) {
-          .navigation-menu {
-            position: relative !important;
-            top: auto !important;
-            left: auto !important;
-            transform: none !important;
-            margin: 20px auto;
-            width: 90% !important;
-            max-width: 380px;
-          }
-        }
-      `}</style>
-    </motion.div>
+              {/* Sub Items */}
+              {!isCollapsed &&
+                item.subItems &&
+                expandedSection === item.label && (
+                  <div className="mt-1 space-y-1">
+                    {item.subItems.map((subItem, subIndex) => (
+                      <Button
+                        key={subIndex}
+                        variant="ghost"
+                        className={cn(
+                          "flex items-center gap-2 rounded-lg px-3 py-2 text-start w-full justify-start",
+                          isActive(subItem.path)
+                            ? "bg-[#FF6B00]/10 text-[#FF6B00] dark:bg-[#FF6B00]/20 dark:text-[#FF6B00] font-medium"
+                            : "text-[#001427] hover:bg-[#FF6B00]/5 dark:text-white dark:hover:bg-[#FF6B00]/10",
+                          "hover:translate-x-1 transition-transform pl-2",
+                        )}
+                        onClick={() => navigate(subItem.path)}
+                      >
+                        {subItem.icon}
+                        <div className="flex items-center gap-2 w-full">
+                          <span>{subItem.name}</span>
+                          {item.label === "Explorar" && (
+                            <span className="ml-auto">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="14"
+                                height="14"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="text-gray-500 dark:text-gray-400"
+                              >
+                                <rect
+                                  width="18"
+                                  height="11"
+                                  x="3"
+                                  y="11"
+                                  rx="2"
+                                  ry="2"
+                                ></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                              </svg>
+                            </span>
+                          )}
+                        </div>
+                      </Button>
+                    ))}
+                  </div>
+                )}
+            </div>
+          ))}
+        </nav>
+      </ScrollArea>
+    </div>
   );
-};
-
+}
