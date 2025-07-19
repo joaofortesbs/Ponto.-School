@@ -349,11 +349,6 @@ export function SidebarNav({
       path: "/school-planner",
     },
     {
-      icon: "fas fa-rocket",
-      label: "School Power",
-      path: "/school-power",
-    },
-    {
       icon: "fas fa-brain",
       label: "Epictus IA",
       path: "/epictus-ia",
