@@ -1,4 +1,3 @@
-
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -66,7 +65,7 @@ export function SidebarNav({
   const navigate = useNavigate();
   const location = useLocation();
   const [showMentorAI, setShowMentorAI] = useState(false);
-  
+
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -76,6 +75,7 @@ export function SidebarNav({
   const [isCardFlipped, setIsCardFlipped] = useState(false);
   const [isCardHovered, setIsCardHovered] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isMenuFlipping, setIsMenuFlipping] = useState(false);
 
   useEffect(() => {
     // Listener para atualizações de avatar feitas em outros componentes
@@ -436,7 +436,13 @@ export function SidebarNav({
               {!isCollapsed && isCardHovered && (
                 <button
                   className="absolute top-3 right-3 w-6 h-6 rounded-full border-2 border-orange-500 bg-orange-600 bg-opacity-20 hover:bg-orange-600 hover:bg-opacity-30 flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-sm cursor-pointer z-10"
-                  onClick={() => setIsCardFlipped(!isCardFlipped)}
+                  onClick={() => {
+                    setIsMenuFlipping(true);
+                    setTimeout(() => {
+                      setIsCardFlipped(!isCardFlipped);
+                      setTimeout(() => setIsMenuFlipping(false), 300);
+                    }, 200);
+                  }}
                   title="Flip Card"
                 >
                   <svg
@@ -617,7 +623,13 @@ export function SidebarNav({
               {!isCollapsed && isCardHovered && (
                 <button
                   className="absolute top-3 right-3 w-6 h-6 rounded-full border-2 border-[#2462EA] bg-[#0f26aa] bg-opacity-20 hover:bg-[#0f26aa] hover:bg-opacity-30 flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-sm cursor-pointer z-10"
-                  onClick={() => setIsCardFlipped(!isCardFlipped)}
+                  onClick={() => {
+                    setIsMenuFlipping(true);
+                    setTimeout(() => {
+                      setIsCardFlipped(!isCardFlipped);
+                      setTimeout(() => setIsMenuFlipping(false), 300);
+                    }, 200);
+                  }}
                   title="Flip Card"
                 >
                   <svg
@@ -803,7 +815,7 @@ export function SidebarNav({
 
       <style jsx>{`
         @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
-        
+
         * {
           font-family: 'Inter', sans-serif;
         }
@@ -879,8 +891,7 @@ export function SidebarNav({
           transition: all 0.3s ease;
           position: relative;
           overflow: hidden;
-          flex-shrink: 0 !important;
-        }
+          flex-shrink: 0 !important``.
 
         .icon-container.active {
           background: linear-gradient(135deg, #FF6B00, #FF6B00);
