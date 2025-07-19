@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Calendar } from "lucide-react";
 
 export default function AgendaNav() {
@@ -14,19 +15,27 @@ export default function AgendaNav() {
 
   return (
     <div className="space-y-1">
-      <Button
-        variant="ghost"
-        className={`flex items-center justify-start rounded-lg px-3 py-2 text-start w-full group hover:scale-[1.02] transition-all duration-200 relative ${isActive ? "bg-[#FF6B00]/10 text-[#FF6B00] dark:bg-[#FF6B00]/20 dark:text-white" : "text-[#001427] hover:bg-[#FF6B00]/5 dark:text-white dark:hover:bg-[#FF6B00]/10"}`}
+      <div 
+        className={cn(
+          "menu-item",
+          isActive ? "active" : ""
+        )}
         onClick={handleMainClick}
       >
-        <Calendar
-          className={`h-5 w-5 mr-3 ${isActive ? "text-[#FF6B00]" : "text-[#001427] dark:text-white"}`}
-        />
-        <span className={isActive ? "text-[#FF6B00]" : ""}>Agenda</span>
-        <div
-          className={`absolute left-0 top-0 h-full w-1 rounded-r-md transition-all duration-300 ${isActive ? "bg-[#FF6B00]" : "bg-transparent group-hover:bg-[#FF6B00]/50"}`}
-        />
-      </Button>
+        <div className="item-content">
+          <div className={cn(
+            "icon-container",
+            isActive ? "active" : ""
+          )}>
+            <i className="fas fa-calendar-alt"></i>
+            <div className="icon-glow"></div>
+          </div>
+          <div className="item-text">
+            <span className="item-title">Agenda</span>
+          </div>
+          <div className="item-indicator"></div>
+        </div>
+      </div>
     </div>
   );
 }

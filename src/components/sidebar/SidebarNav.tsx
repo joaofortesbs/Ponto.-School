@@ -320,29 +320,6 @@ export function SidebarNav({
       icon: "fas fa-user-graduate",
       label: "Minhas Turmas",
       path: "/turmas",
-      component: <TurmasNav />,
-      subItems: [
-        {
-          name: "Visão Geral",
-          path: "/turmas",
-          icon: <Home className="h-4 w-4 text-[#29335C]" />,
-        },
-        {
-          name: "Turmas Ativas",
-          path: "/turmas?view=ativas",
-          icon: <BookOpen className="h-4 w-4 text-[#29335C]" />,
-        },
-        {
-          name: "Grupos de Estudo",
-          path: "/turmas?view=grupos-estudo",
-          icon: <Users2 className="h-4 w-4 text-[#29335C]" />,
-        },
-        {
-          name: "Desempenho",
-          path: "/turmas?view=desempenho",
-          icon: <BarChart className="h-4 w-4 text-[#29335C]" />,
-        },
-      ],
     },
     {
       icon: "fas fa-users",
@@ -369,29 +346,6 @@ export function SidebarNav({
       icon: "fas fa-calendar-alt",
       label: "Agenda",
       path: "/agenda",
-      component: <AgendaNav />,
-      subItems: [
-        {
-          name: "Visão Geral",
-          path: "/agenda?view=visao-geral",
-          icon: <Home className="h-4 w-4 text-[#29335C]" />,
-        },
-        {
-          name: "Calendário",
-          path: "/agenda?view=calendario",
-          icon: <Calendar className="h-4 w-4 text-[#29335C]" />,
-        },
-        {
-          name: "Tarefas",
-          path: "/agenda?view=tarefas",
-          icon: <CheckSquare className="h-4 w-4 text-[#29335C]" />,
-        },
-        {
-          name: "Desafios",
-          path: "/agenda?view=desafios",
-          icon: <Target className="h-4 w-4 text-[#29335C]" />,
-        },
-      ],
     },
     {
       icon: "fas fa-trophy",
@@ -806,22 +760,15 @@ export function SidebarNav({
           <nav className="menu-navigation">
             {navItems.map((item, index) => (
               <div key={index} className="relative">
-                {item.component && !isCollapsed ? (
-                  item.component
+                {(item.label === "Minhas Turmas" || item.label === "Agenda") && !isCollapsed ? (
+                  item.label === "Minhas Turmas" ? <TurmasNav /> : <AgendaNav />
                 ) : (
                   <div 
                     className={cn(
                       "menu-item",
                       isActive(item.path) ? "active" : ""
                     )}
-                    onClick={(e) => {
-                      if (item.subItems && !isCollapsed) {
-                        e.preventDefault();
-                        toggleSection(item.label);
-                      } else {
-                        handleNavigation(item.path, item.isSpecial);
-                      }
-                    }}
+                    onClick={() => handleNavigation(item.path, item.isSpecial)}
                   >
                     <div className="item-content">
                       <div className={cn(
@@ -840,33 +787,6 @@ export function SidebarNav({
                     </div>
                   </div>
                 )}
-
-                {/* Sub Items */}
-                {!isCollapsed &&
-                  item.subItems &&
-                  expandedSection === item.label && (
-                    <div className="mt-1 space-y-1">
-                      {item.subItems.map((subItem, subIndex) => (
-                        <Button
-                          key={subIndex}
-                          variant="ghost"
-                          className={cn(
-                            "flex items-center gap-2 rounded-lg px-3 py-2 text-start w-full justify-start",
-                            isActive(subItem.path)
-                              ? "bg-[#FF6B00]/10 text-[#FF6B00] dark:bg-[#FF6B00]/20 dark:text-[#FF6B00] font-medium"
-                              : "text-[#001427] hover:bg-[#FF6B00]/5 dark:text-white dark:hover:bg-[#FF6B00]/10",
-                            "hover:translate-x-1 transition-transform pl-2",
-                          )}
-                          onClick={() => navigate(subItem.path)}
-                        >
-                          {subItem.icon}
-                          <div className="flex items-center gap-2 w-full">
-                            <span>{subItem.name}</span>
-                          </div>
-                        </Button>
-                      ))}
-                    </div>
-                  )}
               </div>
             ))}
           </nav>
@@ -874,6 +794,8 @@ export function SidebarNav({
       </ScrollArea>
 
       <style jsx>{`
+        @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+        
         * {
           font-family: 'Inter', sans-serif;
         }
