@@ -820,8 +820,8 @@ export function SidebarNav({
           cursor: pointer;
           position: relative;
           overflow: hidden;
-          min-height: 72px !important;
-          height: 72px !important;
+          min-height: 56px !important;
+          height: 56px !important;
         }
 
         .menu-item::before {
@@ -853,20 +853,20 @@ export function SidebarNav({
         .item-content {
           display: flex;
           align-items: center;
-          padding: 16px;
-          gap: 14px;
+          padding: 12px;
+          gap: 12px;
           position: relative;
           height: 100% !important;
-          min-height: 72px !important;
+          min-height: 56px !important;
           box-sizing: border-box !important;
         }
 
         .icon-container {
-          width: 40px !important;
-          height: 40px !important;
-          min-width: 40px !important;
-          min-height: 40px !important;
-          border-radius: 14px;
+          width: 36px !important;
+          height: 36px !important;
+          min-width: 36px !important;
+          min-height: 36px !important;
+          border-radius: 12px;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -884,7 +884,7 @@ export function SidebarNav({
         }
 
         .icon-container i {
-          font-size: 16px;
+          font-size: 15px;
           color: #FF6B00 !important;
           transition: all 0.3s ease;
           position: relative;
@@ -908,8 +908,8 @@ export function SidebarNav({
           position: absolute;
           top: 50%;
           left: 50%;
-          width: 24px;
-          height: 24px;
+          width: 20px;
+          height: 20px;
           background: radial-gradient(circle, rgba(255, 107, 0, 0.5), transparent);
           border-radius: 50%;
           transform: translate(-50%, -50%) scale(0);
@@ -924,13 +924,13 @@ export function SidebarNav({
           flex: 1;
           display: flex;
           flex-direction: column;
-          gap: 4px;
-          min-height: 40px !important;
+          gap: 2px;
+          min-height: 36px !important;
           justify-content: center !important;
         }
 
         .item-title {
-          font-size: 16px !important;
+          font-size: 15px !important;
           font-weight: 600;
           color: #1a202c;
           transition: color 0.3s ease;
