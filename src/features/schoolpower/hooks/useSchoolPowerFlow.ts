@@ -118,13 +118,15 @@ export function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
         {
           id: "plano-aula",
           title: `Plano de Aula - ${contextData.subjects}`,
-          description: `Plano detalhado para ${contextData.audience}`,rofessor:
-"${message}"
-
-Respostas do Quiz:
-Matérias e temas: "${contextData.subjects}"
-Público-alvo: "${contextData.audience}"
-Restrições: "${contextData.restrictions}"
+          description: `Plano detalhado para ${contextData.audience}`,
+          approved: false
+        },
+        {
+          id: "resumo-inteligente",
+          title: "Resumo Inteligente",
+          description: "Criar resumos otimizados dos conteúdos principais",
+          approved: false
+        }
 Datas importantes: "${contextData.dates}"
 Observações: "${contextData.notes}"
 
