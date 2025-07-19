@@ -1,67 +1,40 @@
 
-/**
- * School Power Activities Manager
- * Central management system for all School Power functionalities and APIs
- * 
- * This file serves as the Single Source of Truth (SSOT) for:
- * - Activity definitions and metadata
- * - API configurations and pipelines
- * - Feature flags and enablement status
- * - Scalable activity registration system
- */
+import schoolPowerActivities from './data/schoolPowerActivities.json';
 
-import schoolPowerActivitiesData from './data/schoolPowerActivities.json';
+export interface SchoolPowerActivity {
+  id: string;
+  title: string;
+  description: string;
+  tags: string[];
+  apiType: 'gemini' | 'openai' | 'claude';
+  enabled: boolean;
+}
 
-// API Key Configuration
+export interface ActionPlanActivity {
+  id: string;
+  title: string;
+  description: string;
+  personalizedTitle?: string;
+  personalizedDescription?: string;
+  approved: boolean;
+}
+
+// Chave da API Gemini para School Power
 export const GEMINI_API_KEY = 'AIzaSyD-Sso0SdyYKoA4M3tQhcWjQ1AoddB7Wo4';
 
-// Type definitions for School Power activities
-export interface SchoolPowerActivity {
-  /** Unique identifier for the activity */
-  id: string;
-  
-  /** Display name of the activity */
-  title: string;
-  
-  /** Short description of what the activity does */
-  description: string;
-}
-
-// Type for action plan items (used in the flow)
-export interface ActionPlanActivity extends SchoolPowerActivity {
-  /** Whether this activity is approved by the user */
-  approved: boolean;
-  
-  /** Personalized title based on user context */
-  personalizedTitle?: string;
-  
-  /** Personalized description based on user context */
-  personalizedDescription?: string;
-}
-
 /**
- * Registry of all School Power activities from JSON file
- * These are the 137 activities that School Power can generate
- */
-export const schoolPowerActivities: SchoolPowerActivity[] = schoolPowerActivitiesData;
-
-/**
- * Utility Functions
- */
-
-/**
- * Finds a School Power activity by its unique ID
- * @param id - The unique identifier of the activity
- * @returns The activity object if found, undefined otherwise
+ * Encontra uma atividade do School Power pelo ID
+ * @param id - Identificador único da atividade
+ * @returns A atividade encontrada ou undefined
  */
 export function getSchoolPowerActivityById(id: string): SchoolPowerActivity | undefined {
   return schoolPowerActivities.find(activity => activity.id === id);
 }
 
 /**
- * Filters School Power activities by tag
- * @param tag - The tag to filter by (e.g., "ponto-ativo", "geral", "avaliacao")
- * @returns Array of activities that include the specified tag
+ * Filtra atividades do School Power por tag
+ * @param tag - Tag para filtrar (ex: "estudo", "avaliação", "prática")
+ * @returns Array de atividades que incluem a tag especificada
  */
 export function listSchoolPowerActivitiesByTag(tag: string): SchoolPowerActivity[] {
   return schoolPowerActivities.filter(activity => 
@@ -70,16 +43,16 @@ export function listSchoolPowerActivitiesByTag(tag: string): SchoolPowerActivity
 }
 
 /**
- * Gets all enabled School Power activities
- * @returns Array of all currently enabled activities
+ * Obtém todas as atividades habilitadas do School Power
+ * @returns Array de todas as atividades atualmente habilitadas
  */
 export function getEnabledSchoolPowerActivities(): SchoolPowerActivity[] {
   return schoolPowerActivities.filter(activity => activity.enabled);
 }
 
 /**
- * Gets all available tags from registered activities
- * @returns Array of unique tags used across all activities
+ * Obtém todas as tags disponíveis das atividades registradas
+ * @returns Array de tags únicas usadas em todas as atividades
  */
 export function getAvailableActivityTags(): string[] {
   const allTags = schoolPowerActivities.flatMap(activity => activity.tags);
@@ -87,9 +60,9 @@ export function getAvailableActivityTags(): string[] {
 }
 
 /**
- * Checks if an activity is available and enabled
- * @param id - The unique identifier of the activity
- * @returns Boolean indicating if the activity is available and enabled
+ * Verifica se uma atividade está disponível e habilitada
+ * @param id - Identificador único da atividade
+ * @returns Boolean indicando se a atividade está disponível e habilitada
  */
 export function isActivityEnabled(id: string): boolean {
   const activity = getSchoolPowerActivityById(id);
@@ -97,9 +70,9 @@ export function isActivityEnabled(id: string): boolean {
 }
 
 /**
- * Gets activities by API type
- * @param apiType - The type of API to filter by
- * @returns Array of activities using the specified API type
+ * Obtém atividades por tipo de API
+ * @param apiType - Tipo de API para filtrar
+ * @returns Array de atividades que usam o tipo de API especificado
  */
 export function getActivitiesByApiType(apiType: SchoolPowerActivity['apiType']): SchoolPowerActivity[] {
   return schoolPowerActivities.filter(activity => 
@@ -107,5 +80,66 @@ export function getActivitiesByApiType(apiType: SchoolPowerActivity['apiType']):
   );
 }
 
-// Export the main registry as default for easy importing
+/**
+ * Converte atividade para formato de Action Plan
+ * @param activity - Atividade do School Power
+ * @param personalizedTitle - Título personalizado opcional
+ * @param personalizedDescription - Descrição personalizada opcional
+ * @returns Atividade no formato ActionPlanActivity
+ */
+export function convertToActionPlanActivity(
+  activity: SchoolPowerActivity,
+  personalizedTitle?: string,
+  personalizedDescription?: string
+): ActionPlanActivity {
+  return {
+    id: activity.id,
+    title: activity.title,
+    description: activity.description,
+    personalizedTitle,
+    personalizedDescription,
+    approved: false
+  };
+}
+
+/**
+ * Valida se um ID de atividade existe na lista
+ * @param id - ID da atividade a ser validado
+ * @returns Boolean indicando se o ID é válido
+ */
+export function validateActivityId(id: string): boolean {
+  return schoolPowerActivities.some(activity => activity.id === id);
+}
+
+/**
+ * Obtém estatísticas das atividades
+ * @returns Objeto com estatísticas das atividades
+ */
+export function getActivityStats() {
+  const total = schoolPowerActivities.length;
+  const enabled = schoolPowerActivities.filter(a => a.enabled).length;
+  const disabled = total - enabled;
+  const byApiType = {
+    gemini: getActivitiesByApiType('gemini').length,
+    openai: getActivitiesByApiType('openai').length,
+    claude: getActivitiesByApiType('claude').length
+  };
+
+  return {
+    total,
+    enabled,
+    disabled,
+    byApiType,
+    tags: getAvailableActivityTags().length
+  };
+}
+
+// Log de inicialização
+console.log('📚 School Power Activities Manager inicializado');
+console.log('📊 Estatísticas:', getActivityStats());
+
+// Export da lista principal como default para fácil importação
 export default schoolPowerActivities;
+
+// Export nomeado para maior clareza
+export { schoolPowerActivities };

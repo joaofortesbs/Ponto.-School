@@ -23,6 +23,7 @@ interface UseSchoolPowerFlowReturn {
 }
 
 const STORAGE_KEY = 'schoolpower_flow_data';
+const GEMINI_API_KEY = 'AIzaSyD-Sso0SdyYKoA4M3tQhcWjQ1AoddB7Wo4';
 
 export function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
   // Carrega dados salvos do localStorage
@@ -94,58 +95,140 @@ export function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
   // Função para gerar action plan com API Gemini
   const generateActionPlan = useCallback(async (message: string, contextData: ContextualizationData): Promise<ActionPlanItem[]> => {
     try {
-      // Usar o serviço de geração de plano de ação
-      const { generateActionPlan: generatePlan } = await import('../services/actionPlanService');
-      
-      const result = await generatePlan({
-        initialMessage: message,
-        contextualizationData: contextData
+      console.log('🤖 Iniciando geração de plano de ação com IA Gemini...');
+      console.log('📝 Dados coletados:', { message, contextData });
+
+      // Importar lista de atividades disponíveis
+      const activitiesModule = await import('../data/schoolPowerActivities.json');
+      const schoolPowerActivities = activitiesModule.default;
+
+      // Preparar lista de atividades para o prompt
+      const activitiesText = schoolPowerActivities.map(activity => 
+        `- ${activity.id}: ${activity.title} - ${activity.description}`
+      ).join('\n');
+
+      // Construir prompt detalhado para a IA Gemini
+      const prompt = `Você é uma IA do School Power responsável por criar um plano de ação educacional para um professor ou coordenador. Use SOMENTE as atividades listadas abaixo que o School Power consegue gerar.
+
+Mensagem inicial do usuário:
+"${message}"
+
+Respostas do Quiz:
+Matérias e temas: "${contextData.subjects}"
+Público-alvo: "${contextData.audience}"
+Restrições ou preferências: "${contextData.restrictions}"
+Datas importantes: "${contextData.dates}"
+Observações adicionais: "${contextData.notes}"
+
+Aqui está a lista de atividades possíveis:
+${activitiesText}
+
+Com base nessas informações, gere de 3 a 5 atividades personalizadas em formato JSON, com campos:
+- id: mesmo id da atividade no banco de atividades
+- title: título personalizado de acordo com as informações coletadas
+- description: descrição curta e personalizada de acordo com as informações coletadas
+
+Exemplo de resposta:
+[
+  {
+    "id": "prova-interativa",
+    "title": "Prova de Matemática - 27/07 - Ensino Médio",
+    "description": "Avaliação focada em álgebra e geometria, programada para o dia 27/07."
+  }
+]
+
+Responda APENAS com o JSON válido, sem texto adicional.`;
+
+      console.log('📤 Enviando prompt para Gemini API...');
+
+      // Fazer requisição para API Gemini
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: prompt
+            }]
+          }]
+        })
       });
 
-      // Converter para o formato esperado pelo ActionPlanCard
-      return result.map(activity => ({
-        id: activity.id,
-        title: activity.personalizedTitle || activity.title,
-        description: activity.personalizedDescription || activity.description,
+      if (!response.ok) {
+        throw new Error(`Erro na API Gemini: ${response.status} - ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      const generatedText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+      
+      if (!generatedText) {
+        throw new Error('Nenhum conteúdo gerado pela IA Gemini');
+      }
+
+      console.log('📥 Resposta recebida da IA Gemini:', generatedText);
+
+      // Extrair JSON da resposta
+      const jsonMatch = generatedText.match(/\[[\s\S]*\]/);
+      if (!jsonMatch) {
+        throw new Error('Formato JSON inválido na resposta da IA');
+      }
+
+      const generatedActivities = JSON.parse(jsonMatch[0]);
+      console.log('✅ Atividades geradas pela IA:', generatedActivities);
+
+      // Validar se todas as atividades existem na lista disponível
+      const validActivities = generatedActivities.filter((activity: any) => {
+        const exists = schoolPowerActivities.some(available => available.id === activity.id);
+        if (!exists) {
+          console.warn(`⚠️ Atividade ${activity.id} não encontrada na lista de atividades disponíveis`);
+        }
+        return exists;
+      });
+
+      if (validActivities.length === 0) {
+        throw new Error('Nenhuma atividade válida foi gerada pela IA');
+      }
+
+      // Converter para ActionPlanItem[]
+      const actionPlanItems: ActionPlanItem[] = validActivities.map((item: any, index: number) => ({
+        id: item.id || `action-${index + 1}`,
+        title: item.title || 'Atividade personalizada',
+        description: item.description || 'Descrição personalizada',
         approved: false
       }));
 
-    } catch (error) {
-      console.error('❌ Erro ao gerar plano de ação:', error);
+      console.log('✅ Plano de ação gerado com sucesso:', actionPlanItems);
+      return actionPlanItems;
       
-      // Fallback com atividades básicas
-      return [
-        {
-          id: "plano-aula",
-          title: `Plano de Aula - ${contextData.subjects}`,
-          description: `Plano detalhado para ${contextData.audience}`,
-          approved: false
-        },
+    } catch (error) {
+      console.error('❌ Erro ao gerar plano de ação com IA Gemini:', error);
+      
+      // Fallback com atividades básicas personalizadas
+      const fallbackActivities: ActionPlanItem[] = [
         {
           id: "resumo-inteligente",
-          title: "Resumo Inteligente",
-          description: "Criar resumos otimizados dos conteúdos principais",
+          title: `Resumo Inteligente - ${contextData.subjects}`,
+          description: `Resumo personalizado para ${contextData.audience} sobre ${contextData.subjects}`,
           approved: false
         },
         {
-          id: 'lista-exercicios',
-          title: 'Lista de Exercícios',
-          description: 'Exercícios práticos sobre o tema',
+          id: "lista-exercicios",
+          title: `Lista de Exercícios - ${contextData.subjects}`,
+          description: `Exercícios práticos personalizados para ${contextData.audience}`,
           approved: false
         },
         {
-          id: 'mapa-mental',
-          title: 'Mapa Mental',
-          description: 'Organização visual dos conceitos',
-          approved: false
-        },
-        {
-          id: 'prova-interativa',
-          title: 'Prova Interativa',
-          description: 'Avaliação com correção automática',
+          id: "prova-interativa",
+          title: `Prova Interativa - ${contextData.subjects}`,
+          description: `Avaliação interativa personalizada para ${contextData.audience}`,
           approved: false
         }
       ];
+
+      console.log('🔄 Usando plano de ação fallback:', fallbackActivities);
+      return fallbackActivities;
     }
   }, []);
 
@@ -156,7 +239,7 @@ export function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
     setFlowState('actionplan');
     
     try {
-      // Gerar action plan com API Gemini
+      // Gerar action plan com IA Gemini usando dados reais
       const actionPlan = await generateActionPlan(flowData.initialMessage || '', data);
       
       const newData: SchoolPowerFlowData = {
@@ -168,10 +251,12 @@ export function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
       
       setFlowData(newData);
       saveData(newData);
-      console.log('✅ Action plan gerado:', actionPlan);
+      console.log('✅ Action plan gerado e salvo:', actionPlan);
       
     } catch (error) {
       console.error('❌ Erro ao processar contextualização:', error);
+      // Manter estado de erro visível para o usuário
+      setFlowState('contextualizing');
     } finally {
       setIsLoading(false);
     }
@@ -183,7 +268,7 @@ export function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
     setIsLoading(true);
     setFlowState('generatingActivities');
     
-    // Simula geração das atividades
+    // Simula geração das atividades aprovadas
     setTimeout(() => {
       console.log('🤖 Gerando atividades aprovadas:', approvedItems);
       setIsLoading(false);

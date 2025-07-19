@@ -1,23 +1,40 @@
 
-import { GEMINI_API_KEY, schoolPowerActivities, ActionPlanActivity } from '../activitiesManager';
 import { ContextualizationData } from '../contextualization/ContextualizationCard';
+
+export interface ActionPlanActivity {
+  id: string;
+  title: string;
+  description: string;
+  personalizedTitle?: string;
+  personalizedDescription?: string;
+  approved: boolean;
+}
 
 export interface GenerateActionPlanParams {
   initialMessage: string;
   contextualizationData: ContextualizationData;
 }
 
+const GEMINI_API_KEY = 'AIzaSyD-Sso0SdyYKoA4M3tQhcWjQ1AoddB7Wo4';
+
 export async function generateActionPlan(params: GenerateActionPlanParams): Promise<ActionPlanActivity[]> {
   const { initialMessage, contextualizationData } = params;
   
   try {
+    console.log('🚀 Iniciando geração de plano de ação...');
+    console.log('📋 Parâmetros recebidos:', params);
+
+    // Importar lista de atividades disponíveis
+    const activitiesModule = await import('../data/schoolPowerActivities.json');
+    const schoolPowerActivities = activitiesModule.default;
+
     // Preparar lista de atividades disponíveis para o prompt
     const availableActivities = schoolPowerActivities.map(activity => 
       `- ${activity.id}: ${activity.title} - ${activity.description}`
     ).join('\n');
 
     // Construir prompt detalhado para a IA
-    const prompt = `Você é uma IA especializada em gerar planos de ação para professores utilizando apenas as atividades possíveis listadas abaixo.
+    const prompt = `Você é uma IA especializada em gerar planos de ação educacionais para professores e coordenadores utilizando apenas as atividades possíveis listadas abaixo.
 
 Aqui estão as informações coletadas:
 
@@ -34,29 +51,35 @@ Respostas do Quiz de Contextualização:
 Lista completa de atividades disponíveis no School Power:
 ${availableActivities}
 
-Com base nessas informações, gere um plano de ação em formato JSON com entre 5 a 8 atividades, utilizando APENAS as atividades listadas acima. Para cada atividade, crie um título personalizado e uma descrição personalizada que seja relevante aos dados coletados.
+INSTRUÇÕES:
+1. Analise cuidadosamente todas as informações fornecidas
+2. Selecione de 3 a 5 atividades da lista que melhor se adequem ao contexto
+3. Personalize o título e descrição de cada atividade com base nas informações coletadas
+4. Retorne APENAS um JSON válido no formato especificado
 
-Formato de resposta esperado (JSON válido):
+Formato de resposta (JSON):
 [
   {
     "id": "id-da-atividade-da-lista",
-    "title": "Título original da atividade",
-    "description": "Descrição original da atividade",
-    "personalizedTitle": "Título personalizado baseado no contexto (ex: 'Prova de Matemática para 27/07')",
-    "personalizedDescription": "Descrição personalizada explicando como essa atividade específica vai ajudar no contexto fornecido",
-    "approved": false
+    "personalizedTitle": "Título personalizado baseado no contexto",
+    "personalizedDescription": "Descrição personalizada baseada no contexto"
   }
 ]
 
-IMPORTANTE: 
-- Use APENAS os IDs das atividades que estão na lista fornecida
-- Personalize os títulos e descrições para serem relevantes ao contexto
-- Inclua datas específicas se mencionadas pelo professor
-- Foque nas matérias e temas mencionados
-- Considere o público-alvo ao personalizar as atividades
-- Retorne APENAS o JSON, sem texto adicional`;
+Exemplo:
+[
+  {
+    "id": "prova-interativa",
+    "personalizedTitle": "Prova de Matemática - Álgebra - 9º Ano",
+    "personalizedDescription": "Avaliação interativa focada em equações do 1º grau para alunos do 9º ano."
+  }
+]
 
-    // Fazer chamada para a API Gemini
+Responda APENAS com o JSON, sem texto adicional.`;
+
+    console.log('📤 Enviando requisição para Gemini API...');
+
+    // Fazer requisição para API Gemini
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
@@ -67,44 +90,43 @@ IMPORTANTE:
           parts: [{
             text: prompt
           }]
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 2048,
-        }
+        }]
       })
     });
 
     if (!response.ok) {
-      throw new Error(`Gemini API error: ${response.statusText}`);
+      const errorText = await response.text();
+      throw new Error(`Erro na API Gemini: ${response.status} - ${errorText}`);
     }
 
-    const data = await response.json();
-    const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-    if (!responseText) {
-      throw new Error('Resposta vazia da API Gemini');
+    const result = await response.json();
+    const generatedText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+    
+    if (!generatedText) {
+      throw new Error('Nenhum conteúdo foi gerado pela IA Gemini');
     }
+
+    console.log('📥 Resposta bruta da IA:', generatedText);
 
     // Extrair JSON da resposta
-    let jsonMatch = responseText.match(/\[[\s\S]*\]/);
+    const jsonMatch = generatedText.match(/\[[\s\S]*\]/);
     if (!jsonMatch) {
-      // Tentar encontrar o JSON de outra forma
-      const cleanedResponse = responseText.replace(/```json\n?|\n?```/g, '').trim();
-      jsonMatch = cleanedResponse.match(/\[[\s\S]*\]/);
+      throw new Error('Formato JSON inválido na resposta da IA');
     }
 
-    if (!jsonMatch) {
-      throw new Error('Não foi possível extrair JSON válido da resposta da IA');
-    }
+    const generatedActivities: Array<{
+      id: string;
+      personalizedTitle: string;
+      personalizedDescription: string;
+    }> = JSON.parse(jsonMatch[0]);
 
-    const generatedActivities: ActionPlanActivity[] = JSON.parse(jsonMatch[0]);
+    console.log('🔍 Atividades extraídas:', generatedActivities);
 
     // Validar se todas as atividades existem na lista disponível
     const validActivities = generatedActivities.filter(activity => {
       const exists = schoolPowerActivities.some(available => available.id === activity.id);
       if (!exists) {
-        console.warn(`Atividade ${activity.id} não encontrada na lista de atividades disponíveis`);
+        console.warn(`⚠️ Atividade ${activity.id} não encontrada na lista de atividades disponíveis`);
       }
       return exists;
     });
@@ -113,13 +135,19 @@ IMPORTANTE:
       throw new Error('Nenhuma atividade válida foi gerada pela IA');
     }
 
-    // Garantir que todas as atividades tenham as propriedades necessárias
-    const finalActivities = validActivities.map(activity => ({
-      ...activity,
-      approved: false, // Sempre começar com false
-      personalizedTitle: activity.personalizedTitle || activity.title,
-      personalizedDescription: activity.personalizedDescription || activity.description
-    }));
+    // Converter para o formato ActionPlanActivity
+    const finalActivities: ActionPlanActivity[] = validActivities.map(activity => {
+      const originalActivity = schoolPowerActivities.find(orig => orig.id === activity.id);
+      
+      return {
+        id: activity.id,
+        title: originalActivity?.title || 'Atividade',
+        description: originalActivity?.description || 'Descrição da atividade',
+        personalizedTitle: activity.personalizedTitle,
+        personalizedDescription: activity.personalizedDescription,
+        approved: false
+      };
+    });
 
     console.log('✅ Plano de ação gerado com sucesso:', finalActivities);
     return finalActivities;
@@ -127,35 +155,35 @@ IMPORTANTE:
   } catch (error) {
     console.error('❌ Erro ao gerar plano de ação:', error);
     
-    // Fallback: retornar algumas atividades padrão baseadas no contexto
+    // Fallback com atividades personalizadas básicas
     const fallbackActivities: ActionPlanActivity[] = [
       {
-        id: "plano-aula",
-        title: "Plano de Aula",
-        description: "Desenvolve planos detalhados para aulas específicas",
-        personalizedTitle: `Plano de Aula - ${contextualizationData.subjects}`,
-        personalizedDescription: `Plano detalhado para aula de ${contextualizationData.subjects} direcionado para ${contextualizationData.audience}`,
+        id: 'resumo-inteligente',
+        title: 'Resumo Inteligente',
+        description: 'Criar resumos otimizados dos conteúdos principais',
+        personalizedTitle: `Resumo de ${contextualizationData.subjects} para ${contextualizationData.audience}`,
+        personalizedDescription: `Resumo personalizado de ${contextualizationData.subjects} adaptado para ${contextualizationData.audience}`,
         approved: false
       },
       {
-        id: "lista-exercicios",
-        title: "Lista de Exercícios",
-        description: "Gera questões objetivas ou dissertativas com gabarito",
-        personalizedTitle: `Lista de Exercícios - ${contextualizationData.subjects}`,
-        personalizedDescription: `Exercícios personalizados de ${contextualizationData.subjects} para ${contextualizationData.audience}`,
+        id: 'lista-exercicios',
+        title: 'Lista de Exercícios',
+        description: 'Gerar exercícios práticos sobre o tema',
+        personalizedTitle: `Exercícios de ${contextualizationData.subjects} - ${contextualizationData.audience}`,
+        personalizedDescription: `Lista de exercícios práticos sobre ${contextualizationData.subjects} para ${contextualizationData.audience}`,
         approved: false
       },
       {
-        id: "resumo",
-        title: "Resumo",
-        description: "Produz resumos didáticos de temas ou arquivos",
-        personalizedTitle: `Resumo - ${contextualizationData.subjects}`,
-        personalizedDescription: `Resumo estruturado dos principais conceitos de ${contextualizationData.subjects}`,
+        id: 'prova-interativa',
+        title: 'Prova Interativa',
+        description: 'Criar avaliação com correção automática',
+        personalizedTitle: `Prova de ${contextualizationData.subjects} - ${contextualizationData.audience}`,
+        personalizedDescription: `Avaliação interativa de ${contextualizationData.subjects} adaptada para ${contextualizationData.audience}`,
         approved: false
       }
     ];
 
-    console.log('🔄 Usando atividades de fallback:', fallbackActivities);
+    console.log('🔄 Retornando atividades fallback personalizadas');
     return fallbackActivities;
   }
 }
