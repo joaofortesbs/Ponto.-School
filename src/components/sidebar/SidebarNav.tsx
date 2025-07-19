@@ -461,7 +461,7 @@ export function SidebarNav({
       {/* User Profile Component - Greeting and progress section */}
       <div
         className={cn(
-          "bg-white dark:bg-[#001427] p-4 mb-4 flex flex-col items-center relative group",
+          "bg-white dark:bg-[#001427] p-4 mb-4 flex flex-col items-center relative group rounded-16px",
           isCollapsed ? "mt-6 px-2" : "mt-4",
         )}
       >
@@ -484,7 +484,7 @@ export function SidebarNav({
             {/* Front Side */}
             <div
               className={cn(
-                "bg-white dark:bg-[#29335C]/20 rounded-xl border border-gray-200 dark:border-[#29335C]/30 backdrop-blur-sm relative backface-hidden",
+                "bg-white dark:bg-[#29335C]/20 rounded-16px border border-gray-200 dark:border-[#29335C]/30 backdrop-blur-sm relative backface-hidden",
                 isCollapsed ? "w-14 p-2" : "w-full p-4",
               )}
             >
@@ -683,7 +683,7 @@ export function SidebarNav({
             {/* Back Side - Idêntico ao front */}
             <div
               className={cn(
-                "bg-white dark:bg-[#29335C]/20 rounded-xl border border-gray-200 dark:border-[#29335C]/30 backdrop-blur-sm relative backface-hidden absolute inset-0 rotate-y-180",
+                "bg-white dark:bg-[#29335C]/20 rounded-16px border border-gray-200 dark:border-[#29335C]/30 backdrop-blur-sm relative backface-hidden absolute inset-0 rotate-y-180",
                 isCollapsed ? "w-14 p-2" : "w-full p-4",
               )}
             >
@@ -953,6 +953,12 @@ export function SidebarNav({
           overflow: hidden;
           min-height: 56px !important;
           height: 56px !important;
+          background: rgba(255, 255, 255, 0.05);
+        }
+
+        .dark .menu-item {
+          background: rgba(41, 51, 92, 0.1);
+          border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .menu-item::before {
@@ -975,10 +981,22 @@ export function SidebarNav({
           background: linear-gradient(135deg, rgba(255, 107, 0, 0.08), rgba(255, 107, 0, 0.08));
         }
 
+        .dark .menu-item:hover:not(.active) {
+          background: linear-gradient(135deg, rgba(255, 107, 0, 0.15), rgba(255, 107, 0, 0.1));
+          border-color: rgba(255, 107, 0, 0.2);
+          box-shadow: 0 4px 12px rgba(255, 107, 0, 0.1);
+        }
+
         .menu-item.active {
           background: linear-gradient(135deg, rgba(255, 107, 0, 0.15), rgba(255, 107, 0, 0.15));
           border: 1px solid rgba(255, 107, 0, 0.3);
           box-shadow: 0 4px 12px rgba(255, 107, 0, 0.1) !important;
+        }
+
+        .dark .menu-item.active {
+          background: linear-gradient(135deg, rgba(255, 107, 0, 0.25), rgba(255, 107, 0, 0.2));
+          border: 1px solid rgba(255, 107, 0, 0.4);
+          box-shadow: 0 6px 16px rgba(255, 107, 0, 0.15) !important;
         }
 
         .item-content {
@@ -1008,6 +1026,11 @@ export function SidebarNav({
           position: relative;
           overflow: hidden;
           flex-shrink: 0 !important;
+        }
+
+        .dark .icon-container {
+          background: rgba(255, 107, 0, 0.15);
+          border: 1px solid rgba(255, 107, 0, 0.1);
         }
 
         .icon-container.active {
@@ -1079,7 +1102,8 @@ export function SidebarNav({
         }
 
         .dark .item-title {
-          color: white !important;
+          color: rgba(255, 255, 255, 0.9) !important;
+          text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
         }
 
         .menu-item.active .item-title {
