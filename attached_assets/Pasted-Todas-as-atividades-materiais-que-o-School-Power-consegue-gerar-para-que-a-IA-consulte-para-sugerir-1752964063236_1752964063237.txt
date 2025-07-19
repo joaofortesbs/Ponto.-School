@@ -1,0 +1,139 @@
+Todas as atividades/materiais que o School Power consegue gerar, para que a IA consulte para sugerir tudo da meneira correta:
+
+1. Ideias para Confraternizações
+2. Mensagens de Agradecimento
+3. Questões sobre um Vídeo
+4. Resumo de Vídeo
+5. Atividades de Contos Infantis
+6. Ideias de Brincadeiras Infantis
+7. Jogos Educativos
+8. Projeto
+9. Aulas Eletivas
+10. Consulta sobre um Vídeo
+11. Ideias para Datas Comemorativas
+12. Pergunte sobre Texto
+13. PEI/PDI - Plano Individualizado
+14. Projeto de Vida
+15. Relatório
+16. Ideias para Aulas Acessíveis
+17. Caça-Palavras
+18. Lista de Exercícios
+19. Prova
+20. Resumo
+21. Atividades de Matemática
+22. Atividades de Ortografia e Alfabeto
+23. Jogos Educacionais Interativos
+24. Desenho Simétrico
+25. Ideias de Atividades
+26. Sequência Didática
+27. Proposta de Redação
+28. Plano de Recuperação de Aprendizagem
+29. Plano de Aula
+30. Apresentação de Slides
+31. Revisão Guiada
+32. Mapa Mental
+33. Imagem para Colorir
+34. Lista de Vocabulário
+35. BNCC Descomplicada
+36. Texto de Apoio
+37. Experimento Científico
+38. Capítulo de livro
+39. Charadas
+40. Critérios de Avaliação
+41. Exemplos Contextualizados
+42. Tornar Relevante
+43. Tabela de Apoio
+44. Perguntas Baseadas em Taxonomia de Bloom
+45. E-mails Escolares
+46. Fichamento de uma obra literária
+47. Resposta de E-mail
+48. Corretor de Questões
+49. Atividades com IA
+50. Questões sobre um Site
+51. Corretor de Provas em Papel
+52. Acessibilidade de um Texto
+53. Atividade Adaptada
+54. Música para Engajar
+55. Ideias para Avaliações Adaptadas
+56. Objetivos de Aprendizagem
+57. Corretor Gramatical
+58. Corretor de Redação
+59. Questões sobre um PDF
+60. Simulado
+61. Niveador de Textos
+62. Tarefa Adaptada
+63. Resumo de Texto
+64. Instruções Claras
+65. Desenvolvimento da Caligrafia
+66. Reflexão sobre um Incidente
+67. Sugestões de Intervenção
+68. Erros Comuns
+69. Maquete
+70. Histórias Sociais
+71. Dinâmicas para Sala de Aula
+72. Rescritor de Texto
+73. Palavra Cruzada
+74. Questões sobre um Texto
+75. Corretor de Provas automaticamente gerando feedback
+76. Plano de Ensino - Gera planos com objetivos, metodologia, recursos e avaliação
+77. Sequência Didática - Organiza aulas com objetivos, atividades e alinhamento à BNCC
+78. Simulado - Monta simulados por tema, matéria e nível de dificuldade
+79. Relatório de Desempenho - Produz relatórios personalizados com base no progresso do aluno
+80. Plano de Recuperação de Aprendizagem - Cria planos focados em superar dificuldades dos alunos
+81. Tarefa Adaptada - Adapta tarefas para necessidades específicas de alunos
+82. Atividade Adaptada - Gera versões acessíveis ou diferenciadas de atividades
+83. Corretor de Provas em Papel - Corrige automaticamente provas escaneadas ou digitadas
+84. Corretor de Redação - Avalia redações com critérios objetivos e subjetivos
+85. Corretor de Questões - Corrige questões abertas com justificativas detalhadas
+86. Geração de Questões - Produz questões baseadas em textos, vídeos, sites ou PDFs
+87. Perguntas Baseadas na Taxonomia de Bloom - Cria perguntas em diferentes níveis cognitivos
+88. Texto com Acessibilidade - Adapta textos para alunos com baixa visão, TEA ou dislexia
+89. Acessibilidade de um Texto - Torna textos acessíveis para necessidades específicas
+90. Chatbot com a BNCC - Responde perguntas sobre a BNCC em formato de chat
+91. Lista de Exercícios - Gera questões objetivas ou dissertativas com gabarito
+92. Projeto de Vida - Planeja atividades focadas em autoconhecimento e propósito
+93. Projeto (com etapas, critérios) - Organiza projetos didáticos com cronograma e critérios
+94. Critérios de Avaliação - Personaliza critérios avaliativos para atividades
+95. Objetivos de Aprendizagem - Gera objetivos claros alinhados à BNCC
+96. Niveador de Textos - Ajusta a complexidade de textos conforme a série
+97. Tornar Relevante - Melhora conteúdos para torná-los mais aplicáveis e engajadores
+98. Sugestões de Intervenção - Propõe ações para reforçar ou recuperar conteúdos
+99. Reflexão sobre um Incidente - Cria textos reflexivos sobre ocorrências escolares
+100. Apresentação de Slides - Gera slides didáticos sobre um tema específico
+101. Resumo - Produz resumos didáticos de temas ou arquivos
+102. Resumo de Texto - Extrai ideias principais de textos longos
+103. Texto de Apoio - Gera textos explicativos personalizados
+104. Lista de Vocabulário - Lista termos principais com explicações
+105. Dinâmicas para Sala de Aula - Sugere dinâmicas rápidas para fixação de conteúdos
+106. Aulas Eletivas - Propõe aulas opcionais baseadas em interesses dos alunos
+107. Ideias para Aulas Acessíveis - Sugere aulas inclusivas e adaptadas
+108. Ideias para Avaliações Adaptadas - Cria avaliações focadas em alunos com deficiência
+109. Ideias de Atividades - Gera cinco dinâmicas alinhadas ao tema e turma
+110. Atividades com IA - Cria atividades baseadas em tema, idade e objetivos
+111. Jogos Educativos - Sugere jogos com propósito pedagógico
+112. Experimento Científico - Propõe experimentos com materiais acessíveis
+113. Consulta sobre um Vídeo - Permite interagir com conteúdo de vídeos como chat
+114. Redação - Gera propostas ou avaliações de redação
+115. Reescritor de Texto - Reescreve textos para maior clareza ou adaptação
+116. Revisor Gramatical - Corrige ortografia e gramática de textos escolares
+117. E-mails Escolares - Cria modelos formais de e-mails
+118. Mensagens de Agradecimento - Gera mensagens motivacionais para alunos e colegas
+119. Resposta de E-mail - Produz respostas formais para e-mails escolares
+120. Imagem para Colorir - Gera desenhos para imprimir e pintar
+121. Gerador de Formatos Tracejados - Cria atividades tracejadas para letras e formas
+122. Ideias para Confraternizações - Sugere dinâmicas e cronogramas para eventos escolares
+123. Ideias para Datas Comemorativas - Propõe atividades para datas do calendário escolar
+124. Ideias de Brincadeiras Infantis - Sugere brincadeiras educativas para Educação Infantil e EF1
+125. Atividades de Contos Infantis - Cria atividades baseadas em contos clássicos
+126. Palavras Cruzadas - Gera cruzadinhas personalizadas com gabarito
+127. Caça-Palavras - Produz caça-palavras com até 20 termos e gabarito
+128. Charadas - Cria charadas temáticas para raciocínio lógico
+129. Exemplos Contextualizados - Gera exemplos práticos de conceitos
+130. Mapa Mental - Converte temas em mapas mentais editáveis
+131. Maquete - Sugere ideias de maquetes com materiais simples
+132. Músicas para Engajar - Cria letras de músicas educativas sobre conteúdos
+133. Tabela de Apoio - Gera tabelas organizadas por tema
+134. Instruções Claras - Reescreve enunciados para maior clareza
+135. BNCC Descomplicada - Explica componentes da BNCC de forma acessível
+136. Fichamento de Obra Literária - Organiza informações de livros em estrutura padrão
+137. Histórias Sociais - Gera narrativas para desenvolvimento socioemocional

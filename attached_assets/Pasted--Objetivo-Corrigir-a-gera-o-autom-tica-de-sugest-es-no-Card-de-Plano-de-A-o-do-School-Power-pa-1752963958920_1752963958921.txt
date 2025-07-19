@@ -1,0 +1,148 @@
+🚀 Objetivo:
+
+Corrigir a geração automática de sugestões no Card de Plano de Ação do School Power para que:
+
+✅ As atividades/materiais sugeridos no Plano de Ação sejam geradas em tempo real pela API Gemini usando:
+
+Mensagem inicial do usuário enviada na ChatInput
+
+Respostas coletadas no ContextualizationCard
+
+Lista completa das 137 Atividades Gerais que o School Power consegue gerar, consultadas em um arquivo específico de atividades
+
+✅ As atividades sugeridas não sejam fixas ou pré-determinadas, mas reais e personalizadas com títulos e descrições baseados nos dados coletados.
+
+✅ As atividades sugeridas sejam verificadas se existem dentro das Atividades Gerais (atividades possíveis de serem geradas pelo School Power), garantindo que a IA não sugira atividades fora do escopo.
+
+✅ Os títulos das atividades devem ser personalizados de acordo com os dados coletados. Exemplo:
+
+“Prova de Matemática – 27/07”
+
+“Resumo de História do Brasil”
+
+“Plano de Estudo para Vestibular de Outubro”
+
+📁 Arquivos a serem criados ou revisados:
+1️⃣ src/features/schoolpower/data/schoolPowerActivities.json (se ainda não existir)
+✅ Arquivo que contém as 137 atividades gerais que o School Power consegue gerar, em formato:
+
+json
+Copiar
+Editar
+[
+  {
+    "id": "prova-interativa",
+    "title": "Prova Interativa",
+    "description": "Gerar avaliação com correção automática"
+  },
+  {
+    "id": "resumo-inteligente",
+    "title": "Resumo Inteligente",
+    "description": "Gerar resumo otimizado"
+  },
+  ...
+]
+2️⃣ Revisar/garantir:
+✅ Os dados enviados pelo usuário (mensagem inicial + respostas do Quiz de Contextualização) estão sendo coletados corretamente e armazenados em um state global (zustand/context) ou no backend.
+
+✅ A chamada da API Gemini está sendo realizada logo após o envio do Card de Contextualização, utilizando:
+
+Mensagem inicial
+
+Respostas do Quiz
+
+Lista completa das 137 atividades disponíveis como referência para a IA escolher apenas atividades que ela pode sugerir.
+
+✅ O prompt enviado ao Gemini seja claro, por exemplo:
+
+csharp
+Copiar
+Editar
+Você é uma IA especializada em gerar planos de ação para professores utilizando apenas as atividades possíveis listadas abaixo. Aqui estão as informações coletadas:
+
+Mensagem inicial do professor:
+"{mensagem_inicial}"
+
+Respostas do Quiz:
+Matérias e temas: "{subjects}"
+Público-alvo: "{audience}"
+Restrições: "{restrictions}"
+Datas importantes: "{dates}"
+Observações: "{notes}"
+
+Lista completa de atividades disponíveis:
+{atividades_do_school_power}
+
+Com base nessas informações, gere um plano de ação em formato de checklist com no mínimo 5 atividades, utilizando apenas as atividades listadas, com títulos e descrições personalizados de acordo com os dados coletados. Exemplo:
+[
+  {
+    "id": "prova-interativa",
+    "title": "Prova de Matemática para 27/07",
+    "description": "Prova com questões de matemática com foco em álgebra e geometria, programada para o dia 27/07"
+  },
+  ...
+]
+✅ Fazer a chamada ao Gemini utilizando a API Key AIzaSyD-Sso0SdyYKoA4M3tQhcWjQ1AoddB7Wo4.
+
+✅ Validar a resposta da IA, garantindo:
+
+Que todas as atividades sugeridas existem em schoolPowerActivities.json (fazer o match por id).
+
+Se a IA sugerir algo fora da lista, descartar e solicitar nova sugestão automaticamente ou notificar o usuário.
+
+3️⃣ src/features/schoolpower/actionplan/ActionPlanCard.tsx
+✅ Garantir que o ActionPlanCard utilize os dados gerados em tempo real pela IA Gemini e não dados mockados ou fixos.
+
+✅ Renderizar:
+
+Título e descrição da atividade personalizada
+
+Checkbox interativo para o usuário selecionar
+
+Indicador do número mínimo/máximo de atividades
+
+Botão “Aprovar Plano (X atividades)”, que só habilita quando pelo menos 1 atividade for selecionada.
+
+✅ Ao aprovar, ativar o fluxo de geração automática das atividades no School Power.
+
+✅ Transição suave do ContextualizationCard para o ActionPlanCard usando Framer Motion.
+
+📌 Considerações técnicas:
+✅ Utilizar TypeScript estrito.
+✅ Utilizar zustand ou outro state manager para armazenar:
+
+Mensagem inicial
+
+Respostas do quiz
+
+Resultado do plano de ação
+✅ Utilizar Framer Motion para transições.
+✅ Utilizar feedback visual com loader enquanto a IA está gerando o plano.
+✅ Modularizar para fácil expansão, permitindo:
+
+Troca do provider da IA (Gemini > Claude > ChatGPT)
+
+Alterações futuras nos fluxos de geração de atividades
+
+Inserção de regras de prioridade ou bloqueio de atividades
+
+🚨 Importante:
+✅ Se schoolPowerActivities.json ainda não existir, CRIAR AGORA listando todas as 137 atividades possíveis com:
+
+id (slug curto)
+
+title (nome completo da atividade)
+
+description (descrição curta)
+
+✅ Se já existir, garantir que está sendo consultado corretamente.
+
+🎯 Resumo do que esperamos com esta tarefa:
+✅ Atividades personalizadas, geradas em tempo real pela IA Gemini, utilizando dados reais coletados do usuário.
+
+✅ Garantia de que as atividades sugeridas estão entre as atividades que o School Power consegue realizar.
+
+✅ Renderização limpa, com títulos personalizados relevantes, dentro do ActionPlanCard com mini-cards estilo checkbox, prontos para geração automática após aprovação do usuário.
+
+✅ Sistema modular, expansível, limpo e funcional dentro da seção School Power da Ponto. School.
+
