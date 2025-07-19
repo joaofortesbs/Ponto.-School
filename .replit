@@ -53,7 +53,7 @@ localPort = 8081
 externalPort = 8081
 
 [workflows]
-runButton = "Run"
+runButton = "Restart School Power"
 
 [[workflows.workflow]]
 name = "Run App"
@@ -207,6 +207,15 @@ mode = "sequential"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "node scripts/setup-storage-buckets.js"
+
+[[workflows.workflow]]
+name = "Restart School Power"
+author = 45264147
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev"
 
 [auth]
 pageEnabled = false

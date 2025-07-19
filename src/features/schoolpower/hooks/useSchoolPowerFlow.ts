@@ -1,3 +1,4 @@
+
 import { useCallback } from 'react';
 import { useSchoolPowerStore, SchoolPowerFlowState } from '../store/schoolPowerStore';
 import { ContextualizationData } from '../contextualization/ContextualizationCard';
@@ -47,48 +48,45 @@ export function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
   // Submete dados de contextualização e gera action plan
   const submitContextualization = useCallback(async (data: ContextualizationData) => {
     console.log('📝 Submetendo contextualização:', data);
-
-    if (!initialMessage) {
-      console.error('❌ Mensagem inicial não encontrada');
-      return;
-    }
-
+    
     try {
-      // Salvar dados de contextualização
+      setLoading(true);
       setContextualizationData(data);
-
-      // Iniciar geração do plano
       setGeneratingPlan(true);
 
-      console.log('🤖 Gerando plano personalizado com API Gemini...');
+      // Gera o plano personalizado
+      const personalizedPlan = await generatePersonalizedPlan(data);
+      
+      // Converte para o formato ActionPlanItem
+      const actionPlanItems: ActionPlanItem[] = personalizedPlan.map((item, index) => ({
+        id: `item-${index + 1}`,
+        title: item.titulo,
+        description: item.descricao,
+        approved: false,
+        completed: false
+      }));
 
-      // Gerar plano personalizado usando API Gemini
-      const personalizedPlan = await generatePersonalizedPlan(initialMessage, data);
-
-      // Salvar plano gerado
-      setActionPlan(personalizedPlan);
-
-      console.log('✅ Plano personalizado gerado com sucesso:', personalizedPlan);
-
-    } catch (error) {
-      console.error('❌ Erro ao processar contextualização:', error);
+      setActionPlan(actionPlanItems);
       setGeneratingPlan(false);
-
-      // Em caso de erro, voltar para contextualização
-      setFlowState('contextualizing');
+      setLoading(false);
+      
+    } catch (error) {
+      console.error('Erro ao gerar plano:', error);
+      setLoading(false);
+      setGeneratingPlan(false);
     }
-  }, [initialMessage, setContextualizationData, setGeneratingPlan, setActionPlan, setFlowState]);
+  }, [setLoading, setContextualizationData, setGeneratingPlan, setActionPlan]);
 
   // Aprova action plan e inicia geração de atividades
   const approveActionPlan = useCallback((approvedItems: ActionPlanItem[]) => {
-    console.log('✅ Action plan aprovado:', approvedItems);
-
-    setLoading(true);
+    console.log('✅ Aprovando action plan:', approvedItems);
+    
     setFlowState('approved');
+    setLoading(true);
 
-    // Simula geração das atividades aprovadas
+    // Simula geração de atividades
     setTimeout(() => {
-      console.log('🚀 Iniciando geração das atividades aprovadas...');
+      console.log('🎉 Gerando atividades...');
       setLoading(false);
 
       // Aqui será integrado com a geração real das atividades
@@ -121,5 +119,3 @@ export function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
     resetFlow,
   };
 }
-
-export default useSchoolPowerFlow;

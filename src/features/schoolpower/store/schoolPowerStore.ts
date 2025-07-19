@@ -1,5 +1,5 @@
 
-import { create } from 'zustand';
+import { create } from 'zustand/vanilla';
 import { persist } from 'zustand/middleware';
 import { ContextualizationData } from '../contextualization/ContextualizationCard';
 import { ActionPlanItem } from '../actionplan/ActionPlanCard';

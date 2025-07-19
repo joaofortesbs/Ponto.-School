@@ -16,7 +16,11 @@ export default defineConfig(({ command }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "zustand": "zustand/esm"
     },
+  },
+  optimizeDeps: {
+    include: ["zustand"]
   },
   esbuild: {
     target: 'esnext',
