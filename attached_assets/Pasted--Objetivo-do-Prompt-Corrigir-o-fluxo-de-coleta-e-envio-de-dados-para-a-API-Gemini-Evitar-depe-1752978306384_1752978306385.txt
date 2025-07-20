@@ -1,0 +1,128 @@
+🎯 Objetivo do Prompt
+✅ Corrigir o fluxo de coleta e envio de dados para a API Gemini.
+✅ Evitar dependência de LocalStorage temporário para coleta dos dados no momento de envio.
+✅ Garantir que os dados fluam diretamente do estado para a API no momento certo.
+✅ Validar e filtrar atividades geradas pela Gemini apenas com as permitidas em schoolPowerActivities.json.
+✅ Renderizar mini-cards checkbox personalizados com títulos reais e coerentes no ActionPlanCard.
+✅ Garantir logs claros em cada etapa para facilitar rastreamento de falhas.
+✅ Manter o código limpo, modular e escalável.
+
+🛠️ Tarefas a serem executadas:
+1️⃣ Corrigir fluxo de coleta e envio de dados:
+No useSchoolPowerFlow.ts, substituir dependências de LocalStorage ou qualquer cache temporário por uso centralizado de Zustand ou Context API.
+
+Garantir que ao enviar o ChatInput, os dados sejam salvos imediatamente no store schoolPowerStore.message.
+
+Garantir que ao submeter o ContextualizationCard, os dados sejam salvos em schoolPowerStore.contextualizationData.
+
+Imediatamente após a submissão do ContextualizationCard, disparar a função generatePersonalizedPlan, que irá:
+
+Coletar schoolPowerStore.message.
+
+Coletar schoolPowerStore.contextualizationData.
+
+Consultar schoolPowerActivities.json com as 137 atividades disponíveis.
+
+2️⃣ Corrigir o arquivo generatePersonalizedPlan.ts:
+Construir o prompt enviado para a API Gemini de forma clara, enviando:
+
+json
+Copiar
+Editar
+{
+  "userMessage": "{conteúdo salvo em schoolPowerStore.message}",
+  "quizResponses": { ...schoolPowerStore.contextualizationData },
+  "availableActivities": [{ todas as 137 atividades do JSON }]
+}
+Utilizar a API Key AIzaSyD-Sso0SdyYKoA4M3tQhcWjQ1AoddB7Wo4 corretamente.
+
+Implementar tratamento de erro e fallback em caso de falha de resposta.
+
+3️⃣ Corrigir o arquivo validateGeminiPlan.ts:
+Validar cada id retornado pela API Gemini, conferindo se existe em schoolPowerActivities.json.
+
+Se não existir, remover do array antes de renderizar no ActionPlanCard.
+
+Retornar apenas as atividades válidas, no formato:
+
+json
+Copiar
+Editar
+[
+  {
+    "id": "prova-interativa",
+    "title": "Prova de Matemática - 28/07 - 3º Ano",
+    "description": "Avaliação focada nos conteúdos de geometria e álgebra para o 3º ano."
+  }
+]
+4️⃣ Corrigir renderização no ActionPlanCard.tsx:
+O componente deve receber as atividades validadas e personalizadas como props.
+
+Renderizar mini-cards checkbox dinamicamente com título e descrição personalizados.
+
+Manter o contador de atividades selecionadas dinâmico.
+
+Habilitar o botão “Aprovar Plano” apenas quando ao menos 1 atividade for selecionada.
+
+Usar animação suave com Framer Motion na transição de ContextualizationCard -> ActionPlanCard.
+
+5️⃣ Logging e rastreamento:
+Adicionar logs claros em cada etapa:
+✅ Envio do ChatInput.
+✅ Submissão do ContextualizationCard.
+✅ Chamada para a API Gemini.
+✅ Resposta da API Gemini.
+✅ Validação das atividades.
+✅ Renderização no ActionPlanCard.
+
+6️⃣ Remover LocalStorage ou Sincronizar se realmente necessário:
+Se o LocalStorage for utilizado, garantir:
+✅ Dados atualizados imediatamente após envio.
+✅ Sincronização entre LocalStorage e Zustand para evitar valores defasados.
+
+Recomendado: utilizar Zustand ou Context puro para evitar inconsistências.
+
+📋 Resumo Técnico para a IA Programadora:
+✅ Revisar useSchoolPowerFlow.ts e garantir coleta e passagem correta dos dados em tempo real.
+✅ Garantir chamada estruturada e correta à API Gemini utilizando todos os dados coletados.
+✅ Validar a resposta da Gemini com as atividades disponíveis em schoolPowerActivities.json.
+✅ Renderizar corretamente no ActionPlanCard com títulos personalizados e coerentes.
+✅ Garantir rastreabilidade com logs.
+✅ Evitar dependências de dados defasados por cache/LocalStorage.
+
+⚡ Exemplo de prompt a ser enviado para a API Gemini dentro de generatePersonalizedPlan.ts:
+javascript
+Copiar
+Editar
+Você é a IA do School Power. Gere entre 3 e 5 atividades personalizadas, utilizando SOMENTE as atividades disponíveis abaixo.
+
+Mensagem inicial:
+"{mensagem do usuário}"
+
+Respostas do Quiz:
+- Matérias e temas: "{materias}"
+- Público-alvo: "{publico_alvo}"
+- Restrições ou preferências: "{restricoes}"
+- Datas importantes: "{datas}"
+- Observações: "{observacoes}"
+
+Atividades disponíveis:
+[{todas as 137 atividades do JSON}]
+
+Retorne em JSON:
+[
+  {
+    "id": "id_existente",
+    "title": "Título personalizado com base nos dados",
+    "description": "Descrição personalizada com base nos dados"
+  },
+  ...
+]
+✅ Entrega esperada
+🔹 Sistema do School Power 100% funcional:
+✅ Dados reais coletados e enviados corretamente.
+✅ Consultando a Gemini com os dados reais e as atividades disponíveis.
+✅ Renderizando atividades personalizadas reais no card de Plano de Ação.
+✅ Sem automatismos engessados.
+✅ Com rastreabilidade e clareza de logs.
+
