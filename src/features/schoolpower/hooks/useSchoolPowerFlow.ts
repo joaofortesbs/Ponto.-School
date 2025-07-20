@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { ContextualizationData } from '../contextualization/ContextualizationCard';
 import { ActionPlanItem } from '../actionplan/ActionPlanCard';
@@ -75,7 +74,7 @@ export function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
     const storedData = loadStoredData();
     if (storedData) {
       setFlowData(storedData);
-      
+
       // Definir estado baseado nos dados carregados
       if (storedData.initialMessage && !storedData.contextualizationData) {
         setFlowState('contextualizing');
@@ -101,7 +100,7 @@ export function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
     // Atualizar estado imediatamente
     setFlowData(newData);
     setFlowState('contextualizing');
-    
+
     // Salvar no localStorage de forma sincronizada
     saveData(newData);
 
@@ -132,41 +131,64 @@ export function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
     setFlowData(dataWithContext);
     saveData(dataWithContext);
 
-    console.log('✅ Dados de contextualização salvos, iniciando geração do plano...');
+    console.log('✅ Dados de contextualização salvos:', dataWithContext);
 
     try {
-      // Chamar API Gemini com dados em tempo real do estado
-      console.log('🔄 Chamando generatePersonalizedPlan com dados atuais...');
-      const actionPlan = await generatePersonalizedPlan(flowData.initialMessage, contextData);
+      // Gera action plan usando o novo serviço personalizado
+      console.log('🤖 Iniciando geração de plano de ação com IA Gemini...');
+      console.log('📝 Dados coletados:', {
+        message: flowData.initialMessage,
+        contextData
+      });
 
-      const finalData: SchoolPowerFlowData = {
+      console.log('📤 Enviando para geração personalizada...');
+      const actionPlan = await generatePersonalizedPlan(
+        flowData.initialMessage,
+        contextData
+      );
+
+      console.log('✅ Action plan personalizado gerado:', actionPlan);
+
+      // Salvar action plan gerado
+      const finalData = {
         ...dataWithContext,
-        actionPlan: actionPlan,
+        actionPlan,
         timestamp: Date.now()
       };
 
-      // Atualizar estado com o action plan gerado
       setFlowData(finalData);
       saveData(finalData);
       setFlowState('actionplan');
 
-      console.log('✅ Action plan gerado e salvo com sucesso:', actionPlan);
+      console.log('✅ Action plan gerado e salvo:', actionPlan);
 
     } catch (error) {
-      console.error('❌ Erro ao gerar action plan:', error);
+      console.error('❌ Erro ao gerar plano de ação com IA Gemini:', error);
 
-      // Em caso de erro, ainda assim atualiza o estado para permitir visualização do erro
-      const errorData: SchoolPowerFlowData = {
-        ...dataWithContext,
-        actionPlan: [],
-        timestamp: Date.now()
-      };
+      // Em caso de erro, o generatePersonalizedPlan já retorna um fallback
+      // Então tentamos novamente com dados mínimos
+      try {
+        console.log('🔄 Tentando fallback...');
+        const fallbackPlan = await generatePersonalizedPlan(
+          flowData.initialMessage || 'Atividades educacionais gerais',
+          contextData
+        );
 
-      setFlowData(errorData);
-      saveData(errorData);
-      setFlowState('actionplan');
-      
-      console.log('⚠️ Estado atualizado para actionplan mesmo com erro para permitir recuperação');
+        const finalData = {
+          ...dataWithContext,
+          actionPlan: fallbackPlan,
+          timestamp: Date.now()
+        };
+
+        setFlowData(finalData);
+        saveData(finalData);
+        setFlowState('actionplan');
+
+        console.log('🔄 Plano de fallback aplicado:', fallbackPlan);
+      } catch (fallbackError) {
+        console.error('❌ Erro crítico no fallback:', fallbackError);
+        setFlowState('idle');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -200,7 +222,7 @@ export function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
       setFlowData(resetData);
       saveData(resetData);
       setFlowState('idle');
-      
+
       console.log('🔄 Flow resetado para idle após sucesso');
     }, 3000);
   }, [saveData]);
@@ -219,7 +241,7 @@ export function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
     setFlowData(resetData);
     setFlowState('idle');
     setIsLoading(false);
-    
+
     // Limpar localStorage
     try {
       localStorage.removeItem(STORAGE_KEY);

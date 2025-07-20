@@ -1,44 +1,112 @@
+
 import { ContextualizationData } from '../contextualization/ContextualizationCard';
 import { ActionPlanItem } from '../actionplan/ActionPlanCard';
 import schoolPowerActivities from '../data/schoolPowerActivities.json';
+import { validateGeminiPlan } from './validateGeminiPlan';
 
+// API Key da Gemini para School Power
 const GEMINI_API_KEY = 'AIzaSyD-Sso0SdyYKoA4M3tQhcWjQ1AoddB7Wo4';
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
 
-export interface GeminiActivityResponse {
+interface GeminiResponse {
+  candidates?: {
+    content?: {
+      parts?: {
+        text?: string;
+      }[];
+    };
+  }[];
+}
+
+/**
+ * Interface para resposta esperada da Gemini
+ */
+interface GeminiActivityResponse {
   id: string;
   title: string;
   description: string;
+  personalizedTitle?: string;
+  personalizedDescription?: string;
 }
 
-export async function generatePersonalizedPlan(
-  userMessage: string,
-  quizResponses: ContextualizationData
-): Promise<ActionPlanItem[]> {
+/**
+ * Constrói o prompt estruturado para a API Gemini
+ */
+function buildGeminiPrompt(
+  initialMessage: string, 
+  contextualizationData: ContextualizationData,
+  allowedActivities: typeof schoolPowerActivities
+): string {
+  const prompt = `
+🎯 SISTEMA: Você é a IA especializada do School Power, responsável por gerar planos de ação educacionais 100% personalizados.
+
+📝 DADOS DO USUÁRIO:
+Mensagem Inicial: "${initialMessage}"
+
+Contextualização Detalhada:
+- Disciplinas/Matérias: ${contextualizationData.subjects}
+- Público-Alvo: ${contextualizationData.audience}
+- Restrições/Limitações: ${contextualizationData.restrictions}
+- Datas/Cronograma: ${contextualizationData.dates}
+- Observações Adicionais: ${contextualizationData.notes}
+
+🎯 ATIVIDADES PERMITIDAS (${allowedActivities.length} disponíveis):
+${JSON.stringify(allowedActivities.map(activity => ({
+  id: activity.id,
+  name: activity.name,
+  description: activity.description,
+  tags: activity.tags
+})), null, 2)}
+
+📋 INSTRUÇÕES ESPECÍFICAS:
+1. Analise CUIDADOSAMENTE a mensagem inicial e os dados de contextualização
+2. Selecione entre 3 a 5 atividades que sejam PERFEITAMENTE adequadas ao pedido
+3. Use EXCLUSIVAMENTE os IDs das atividades da lista acima
+4. Personalize os títulos e descrições baseando-se nos dados fornecidos
+5. Garanta que cada atividade seja única e relevante para o contexto
+
+🎯 FORMATO DE RESPOSTA (JSON PURO, SEM MARKDOWN):
+[
+  {
+    "id": "id-da-atividade-permitida",
+    "title": "Título Personalizado Baseado no Contexto",
+    "description": "Descrição personalizada que conecta a atividade com os dados fornecidos",
+    "personalizedTitle": "Título ainda mais específico se necessário",
+    "personalizedDescription": "Descrição detalhada e contextualizada"
+  }
+]
+
+⚠️ REGRAS CRÍTICAS:
+- Use APENAS IDs das atividades permitidas listadas acima
+- NÃO invente novos IDs ou atividades
+- Personalize títulos e descrições baseando-se nos dados reais
+- Retorne APENAS o JSON sem explicações adicionais
+- Garanta relevância total com a solicitação inicial
+
+GERE AGORA o plano de ação personalizado:`;
+
+  return prompt;
+}
+
+/**
+ * Faz a chamada para a API Gemini
+ */
+async function callGeminiAPI(prompt: string): Promise<string> {
+  console.log('🚀 Fazendo chamada para API Gemini...');
+  console.log('📤 Prompt enviado:', prompt.substring(0, 500) + '...');
+
   try {
-    console.log('🤖 Iniciando geração de plano personalizado via API Gemini...');
-    console.log('📝 Dados coletados:', { message: userMessage, contextData: quizResponses });
-
-    // Construir prompt otimizado para a API Gemini
-    const prompt = createOptimizedPrompt(userMessage, quizResponses);
-    console.log('📤 Enviando prompt para Gemini API...');
-
-    // Fazer chamada para API Gemini
     const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        contents: [
-          {
-            parts: [
-              {
-                text: prompt
-              }
-            ]
-          }
-        ],
+        contents: [{
+          parts: [{
+            text: prompt
+          }]
+        }],
         generationConfig: {
           temperature: 0.7,
           topK: 40,
@@ -50,203 +118,199 @@ export async function generatePersonalizedPlan(
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('❌ Erro na API Gemini:', response.status, errorText);
+      console.error('❌ Erro na resposta da API Gemini:', response.status, errorText);
       throw new Error(`Erro na API Gemini: ${response.status} - ${errorText}`);
     }
 
-    const result = await response.json();
-    console.log('📥 Resposta bruta da API Gemini:', result);
+    const data: GeminiResponse = await response.json();
+    console.log('📥 Resposta bruta da Gemini:', data);
 
-    const generatedText = result.candidates?.[0]?.content?.parts?.[0]?.text;
-
+    const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    
     if (!generatedText) {
-      throw new Error('Nenhum conteúdo foi gerado pela IA Gemini');
+      console.error('❌ Resposta vazia da API Gemini');
+      throw new Error('Resposta vazia da API Gemini');
     }
 
-    console.log('📥 Texto gerado pela Gemini:', generatedText);
-
-    // Processar resposta da IA
-    const activities = extractAndValidateActivities(generatedText);
-
-    if (activities.length > 0) {
-      console.log('✅ Plano de ação gerado com sucesso via IA:', activities);
-      return activities;
-    } else {
-      throw new Error('Nenhuma atividade válida foi extraída da resposta da IA');
-    }
+    console.log('✅ Texto gerado pela Gemini:', generatedText);
+    return generatedText;
 
   } catch (error) {
-    console.error('❌ Erro ao gerar plano personalizado via IA:', error);
-
-    // Retornar plano fallback inteligente
-    console.log('🔄 Usando plano de ação fallback:');
-    return generateIntelligentFallbackPlan(userMessage, quizResponses);
+    console.error('❌ Erro ao chamar API Gemini:', error);
+    throw error;
   }
 }
 
-function createOptimizedPrompt(userMessage: string, quizResponses: ContextualizationData): string {
-  const prompt = `Você é a IA do School Power. Gere entre 3 e 5 atividades personalizadas, utilizando SOMENTE as atividades disponíveis abaixo.
-
-Mensagem inicial:
-"${userMessage}"
-
-Respostas do Quiz:
-- Matérias e temas: "${quizResponses.subjects}"
-- Público-alvo: "${quizResponses.audience}"
-- Restrições ou preferências: "${quizResponses.restrictions}"
-- Datas importantes: "${quizResponses.dates}"
-- Observações: "${quizResponses.notes}"
-
-Atividades disponíveis:
-${JSON.stringify(schoolPowerActivities, null, 2)}
-
-Retorne APENAS em formato JSON válido:
-[
-  {
-    "id": "id_existente_da_lista",
-    "title": "Título personalizado com base nos dados fornecidos",
-    "description": "Descrição personalizada detalhada com base nos dados fornecidos"
-  }
-]
-
-IMPORTANTE: Use apenas IDs que existem na lista de atividades disponíveis. Personalize os títulos e descrições baseado nos dados fornecidos pelo usuário.`;
-
-  return prompt;
-}
-
-function extractAndValidateActivities(generatedText: string): ActionPlanItem[] {
+/**
+ * Processa e limpa a resposta da Gemini
+ */
+function parseGeminiResponse(responseText: string): GeminiActivityResponse[] {
+  console.log('🔍 Processando resposta da Gemini...');
+  
   try {
-    // Tentar extrair JSON da resposta
-    let jsonString = generatedText.trim();
-
-    // Procurar por array JSON na resposta
-    const jsonMatch = jsonString.match(/\[\s*\{[\s\S]*?\}\s*\]/);
-    if (jsonMatch) {
-      jsonString = jsonMatch[0];
-    } else {
-      // Tentar encontrar JSON entre códigos
-      const codeBlockMatch = jsonString.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-      if (codeBlockMatch) {
-        const codeContent = codeBlockMatch[1];
-        const arrayMatch = codeContent.match(/\[\s*\{[\s\S]*?\}\s*\]/);
-        if (arrayMatch) {
-          jsonString = arrayMatch[0];
-        }
-      }
+    // Remove markdown e outros caracteres indesejados
+    let cleanedText = responseText.trim();
+    
+    // Remove blocos de código markdown se existirem
+    cleanedText = cleanedText.replace(/```json\n?/g, '').replace(/```\n?/g, '');
+    
+    // Remove quebras de linha extras
+    cleanedText = cleanedText.trim();
+    
+    console.log('🧹 Texto limpo:', cleanedText);
+    
+    // Tenta fazer parse do JSON
+    const parsedActivities: GeminiActivityResponse[] = JSON.parse(cleanedText);
+    
+    if (!Array.isArray(parsedActivities)) {
+      throw new Error('Resposta não é um array válido');
     }
 
-    const generatedActivities: GeminiActivityResponse[] = JSON.parse(jsonString);
-    console.log('🔍 Atividades extraídas da IA:', generatedActivities);
+    console.log('✅ Atividades parseadas:', parsedActivities);
+    return parsedActivities;
 
-    if (!Array.isArray(generatedActivities)) {
-      throw new Error('Resposta da IA não é um array válido');
-    }
-
-    // Validar e filtrar atividades usando o validateGeminiPlan
-    const { validateGeminiPlan } = require('./validateGeminiPlan');
-    const validationResult = validateGeminiPlan(generatedActivities);
-
-    if (validationResult.isValid && validationResult.validActivities.length > 0) {
-      console.log('✅ Atividades validadas com sucesso:', validationResult.validActivities);
-      return validationResult.validActivities;
-    } else {
-      console.warn('⚠️ Validação falhou, usando fallback:', validationResult.errors);
-      throw new Error('Atividades geradas pela IA não passaram na validação');
-    }
-
-  } catch (parseError) {
-    console.error('❌ Erro ao processar resposta da IA:', parseError);
-    throw new Error('Erro ao processar resposta da IA Gemini');
+  } catch (error) {
+    console.error('❌ Erro ao fazer parse da resposta:', error);
+    console.error('📝 Texto original:', responseText);
+    throw new Error('Erro ao processar resposta da IA');
   }
 }
 
-function generateIntelligentFallbackPlan(
-  userMessage: string, 
-  quizResponses: ContextualizationData
+/**
+ * Converte resposta da Gemini para formato ActionPlanItem
+ */
+function convertToActionPlanItems(
+  geminiActivities: GeminiActivityResponse[], 
+  allowedActivities: typeof schoolPowerActivities
 ): ActionPlanItem[] {
-  console.log('🔄 Gerando plano fallback inteligente baseado nos dados do usuário...');
+  console.log('🔄 Convertendo atividades para ActionPlanItems...');
 
-  // Combinar todas as informações para análise
-  const allText = [
-    userMessage,
-    quizResponses.subjects,
-    quizResponses.audience,
-    quizResponses.notes
-  ].join(' ').toLowerCase();
-
-  // Mapear palavras-chave para atividades específicas
-  const keywordMapping = [
-    { keywords: ['caça palavras', 'caça-palavras', 'cruzadinha'], activityId: 'caca-palavras', priority: 10 },
-    { keywords: ['colorir', 'pintar', 'desenho'], activityId: 'atividade-colorir', priority: 10 },
-    { keywords: ['verbos', 'verbo', 'conjugação'], activityId: 'lista-exercicios', priority: 9 },
-    { keywords: ['redação', 'texto', 'escrita'], activityId: 'lista-exercicios', priority: 8 },
-    { keywords: ['prova', 'avaliação', 'teste'], activityId: 'prova-interativa', priority: 8 },
-    { keywords: ['resumo', 'revisão'], activityId: 'resumo-inteligente', priority: 7 },
-    { keywords: ['exercício', 'atividade', 'prática'], activityId: 'lista-exercicios', priority: 6 },
-    { keywords: ['apresentação', 'slides'], activityId: 'slides-educativos', priority: 6 }
-  ];
-
-  // Pontuar atividades baseado nas palavras-chave
-  const activityScores: { [key: string]: number } = {};
-
-  keywordMapping.forEach(mapping => {
-    const matchCount = mapping.keywords.filter(keyword => 
-      allText.includes(keyword)
-    ).length;
-
-    if (matchCount > 0) {
-      const score = matchCount * mapping.priority;
-      activityScores[mapping.activityId] = (activityScores[mapping.activityId] || 0) + score;
-    }
-  });
-
-  // Selecionar atividades com maior pontuação
-  let selectedActivityIds = Object.entries(activityScores)
-    .sort(([,a], [,b]) => b - a)
-    .slice(0, 5)
-    .map(([id]) => id);
-
-  // Se não encontrou atividades específicas, usar padrão inteligente
-  if (selectedActivityIds.length === 0) {
-    selectedActivityIds = ['lista-exercicios', 'resumo-inteligente', 'prova-interativa'];
-  }
-
-  // Garantir pelo menos 3 atividades
-  const defaultActivities = ['slides-educativos', 'mapa-mental', 'cronograma-estudos'];
-  while (selectedActivityIds.length < 3) {
-    const nextDefault = defaultActivities.find(id => !selectedActivityIds.includes(id));
-    if (nextDefault) {
-      selectedActivityIds.push(nextDefault);
-    } else {
-      break;
-    }
-  }
-
-  // Gerar atividades personalizadas baseadas nos dados reais
-  const fallbackActivities: ActionPlanItem[] = selectedActivityIds.map(activityId => {
-    const baseActivity = schoolPowerActivities.find(a => a.id === activityId);
-
-    if (!baseActivity) {
-      return {
-        id: 'resumo-inteligente',
-        title: 'Resumo Inteligente Personalizado',
-        description: `Resumo personalizado baseado em: ${quizResponses.subjects || 'seu contexto de estudo'}.`,
-        approved: false
-      };
+  return geminiActivities.map(activity => {
+    // Busca a atividade original no JSON para validação
+    const originalActivity = allowedActivities.find(a => a.id === activity.id);
+    
+    if (!originalActivity) {
+      console.warn(`⚠️ Atividade não encontrada: ${activity.id}`);
+      return null;
     }
 
-    // Personalizar baseado nos dados do usuário
-    const audience = quizResponses.audience || 'estudantes';
-    const subject = quizResponses.subjects || 'o tema solicitado';
-
-    return {
-      id: baseActivity.id,
-      title: `${baseActivity.title} - ${audience}`,
-      description: `${baseActivity.description} Personalizado para ${subject} com foco em ${audience}.`,
+    const actionPlanItem: ActionPlanItem = {
+      id: activity.id,
+      title: activity.personalizedTitle || activity.title || originalActivity.name,
+      description: activity.personalizedDescription || activity.description || originalActivity.description,
       approved: false
     };
+
+    console.log('✅ ActionPlanItem criado:', actionPlanItem);
+    return actionPlanItem;
+  }).filter((item): item is ActionPlanItem => item !== null);
+}
+
+/**
+ * Gera um plano de ação de fallback caso a API falhe
+ */
+function generateFallbackPlan(
+  initialMessage: string, 
+  contextualizationData: ContextualizationData
+): ActionPlanItem[] {
+  console.log('🔄 Gerando plano de fallback...');
+
+  // Seleciona atividades relevantes baseadas em palavras-chave
+  const keywords = [
+    initialMessage.toLowerCase(),
+    contextualizationData.subjects?.toLowerCase() || '',
+    contextualizationData.audience?.toLowerCase() || '',
+  ].join(' ');
+
+  let relevantActivities = schoolPowerActivities.filter(activity => {
+    return activity.enabled && (
+      keywords.includes('prova') && activity.tags.includes('avaliação') ||
+      keywords.includes('exercicio') && activity.tags.includes('exercícios') ||
+      keywords.includes('resumo') && activity.tags.includes('resumo') ||
+      keywords.includes('jogo') && activity.tags.includes('jogos') ||
+      keywords.includes('atividade') && activity.tags.includes('atividades')
+    );
   });
 
-  console.log('✅ Plano fallback inteligente gerado:', fallbackActivities);
-  return fallbackActivities.slice(0, 5);
+  // Se não encontrar atividades específicas, usa as mais populares
+  if (relevantActivities.length === 0) {
+    relevantActivities = schoolPowerActivities.filter(activity => 
+      activity.enabled && [
+        'lista-exercicios',
+        'resumo',
+        'prova',
+        'atividades-matematica',
+        'plano-aula'
+      ].includes(activity.id)
+    );
+  }
+
+  // Limita a 4 atividades
+  relevantActivities = relevantActivities.slice(0, 4);
+
+  const fallbackPlan: ActionPlanItem[] = relevantActivities.map(activity => ({
+    id: activity.id,
+    title: `${activity.name} - ${contextualizationData.subjects || 'Personalizado'}`,
+    description: `${activity.description} Baseado em: "${initialMessage.substring(0, 100)}..."`,
+    approved: false
+  }));
+
+  console.log('✅ Plano de fallback gerado:', fallbackPlan);
+  return fallbackPlan;
+}
+
+/**
+ * Função principal para gerar plano personalizado
+ */
+export async function generatePersonalizedPlan(
+  initialMessage: string,
+  contextualizationData: ContextualizationData
+): Promise<ActionPlanItem[]> {
+  console.log('🤖 Iniciando geração de plano personalizado...');
+  console.log('📝 Dados de entrada:', { initialMessage, contextualizationData });
+
+  try {
+    // Validação dos dados de entrada
+    if (!initialMessage?.trim()) {
+      throw new Error('Mensagem inicial é obrigatória');
+    }
+
+    if (!contextualizationData) {
+      throw new Error('Dados de contextualização são obrigatórios');
+    }
+
+    // Carrega atividades permitidas
+    console.log('📚 Atividades disponíveis:', schoolPowerActivities.length);
+
+    // Constrói o prompt estruturado
+    const prompt = buildGeminiPrompt(initialMessage, contextualizationData, schoolPowerActivities);
+    console.log('📝 Prompt construído com sucesso');
+
+    // Chama a API Gemini
+    const geminiResponse = await callGeminiAPI(prompt);
+
+    // Processa a resposta
+    const geminiActivities = parseGeminiResponse(geminiResponse);
+
+    // Valida as atividades retornadas
+    const validatedActivities = await validateGeminiPlan(geminiActivities, schoolPowerActivities);
+
+    if (validatedActivities.length === 0) {
+      console.warn('⚠️ Nenhuma atividade válida retornada, usando fallback');
+      return generateFallbackPlan(initialMessage, contextualizationData);
+    }
+
+    // Converte para ActionPlanItems
+    const actionPlanItems = convertToActionPlanItems(validatedActivities, schoolPowerActivities);
+
+    console.log('✅ Plano personalizado gerado com sucesso:', actionPlanItems);
+    return actionPlanItems;
+
+  } catch (error) {
+    console.error('❌ Erro ao gerar plano personalizado:', error);
+    
+    // Em caso de erro, retorna o plano de fallback
+    console.log('🔄 Usando plano de fallback devido ao erro');
+    return generateFallbackPlan(initialMessage, contextualizationData);
+  }
 }

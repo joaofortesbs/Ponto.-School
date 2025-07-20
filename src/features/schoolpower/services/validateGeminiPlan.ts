@@ -1,200 +1,297 @@
 
-import { ActionPlanItem } from '../actionplan/ActionPlanCard';
 import schoolPowerActivities from '../data/schoolPowerActivities.json';
-import { GeminiActivityResponse } from './generatePersonalizedPlan';
 
-export interface ValidationResult {
-  isValid: boolean;
-  validActivities: ActionPlanItem[];
-  invalidActivities: GeminiActivityResponse[];
-  errors: string[];
+/**
+ * Interface para atividade retornada pela Gemini
+ */
+interface GeminiActivity {
+  id: string;
+  title?: string;
+  description?: string;
+  personalizedTitle?: string;
+  personalizedDescription?: string;
+  [key: string]: any;
 }
 
-export function validateGeminiPlan(generatedActivities: GeminiActivityResponse[]): ValidationResult {
-  console.log('🔍 Validando plano gerado pela IA Gemini...');
-  console.log('📊 Atividades recebidas para validação:', generatedActivities);
-  console.log('📋 Total de atividades disponíveis no JSON:', schoolPowerActivities.length);
+/**
+ * Interface para atividade válida
+ */
+interface ValidatedActivity {
+  id: string;
+  title: string;
+  description: string;
+  personalizedTitle?: string;
+  personalizedDescription?: string;
+}
 
-  const validActivities: ActionPlanItem[] = [];
-  const invalidActivities: GeminiActivityResponse[] = [];
-  const errors: string[] = [];
+/**
+ * Relatório de validação
+ */
+interface ValidationReport {
+  total: number;
+  valid: number;
+  invalid: number;
+  duplicates: number;
+  validActivities: ValidatedActivity[];
+  invalidIds: string[];
+  duplicateIds: string[];
+}
 
-  // Verificar se é um array válido
-  if (!Array.isArray(generatedActivities)) {
-    errors.push('Resposta da IA não é um array válido');
-    console.error('❌ Resposta da IA não é um array válido');
-    return {
-      isValid: false,
-      validActivities: [],
-      invalidActivities: [],
-      errors
-    };
+/**
+ * Valida se um ID de atividade existe na lista permitida
+ */
+function isValidActivityId(activityId: string, allowedActivities: typeof schoolPowerActivities): boolean {
+  if (!activityId || typeof activityId !== 'string') {
+    return false;
   }
 
-  // Verificar quantidade de atividades
-  if (generatedActivities.length === 0) {
-    errors.push('Nenhuma atividade foi gerada');
-    console.error('❌ Nenhuma atividade foi gerada');
-  } else if (generatedActivities.length > 5) {
-    errors.push(`Muitas atividades geradas (${generatedActivities.length}). Máximo permitido: 5`);
-    console.warn(`⚠️ Limitando ${generatedActivities.length} atividades para 5`);
-    generatedActivities = generatedActivities.slice(0, 5);
+  return allowedActivities.some(activity => 
+    activity.id === activityId.trim().toLowerCase() && activity.enabled
+  );
+}
+
+/**
+ * Busca uma atividade pela ID na lista permitida
+ */
+function findActivityById(activityId: string, allowedActivities: typeof schoolPowerActivities) {
+  return allowedActivities.find(activity => 
+    activity.id === activityId.trim().toLowerCase() && activity.enabled
+  );
+}
+
+/**
+ * Valida uma única atividade retornada pela Gemini
+ */
+function validateSingleActivity(
+  activity: GeminiActivity, 
+  allowedActivities: typeof schoolPowerActivities
+): ValidatedActivity | null {
+  console.log('🔍 Validando atividade:', activity);
+
+  // Verifica se a atividade tem ID
+  if (!activity.id) {
+    console.warn('⚠️ Atividade sem ID ignorada:', activity);
+    return null;
   }
 
-  // Validar cada atividade individualmente
-  generatedActivities.forEach((activity, index) => {
-    console.log(`🔍 Validando atividade ${index + 1}:`, activity);
+  // Normaliza o ID
+  const normalizedId = activity.id.trim().toLowerCase();
 
-    // Verificar se tem campos obrigatórios
-    if (!activity.id || !activity.title || !activity.description) {
-      const error = `Atividade ${index + 1}: Campos obrigatórios ausentes (id: "${activity.id}", title: "${activity.title}", description: "${activity.description}")`;
-      errors.push(error);
-      invalidActivities.push(activity);
-      console.error(`❌ ${error}`);
-      return;
-    }
+  // Verifica se o ID é válido
+  if (!isValidActivityId(normalizedId, allowedActivities)) {
+    console.warn(`❌ ID de atividade inválido: ${normalizedId}`);
+    return null;
+  }
 
-    // Verificar se o ID existe na lista de atividades disponíveis
-    const existingActivity = schoolPowerActivities.find(a => a.id === activity.id);
-    if (!existingActivity) {
-      const error = `Atividade ${index + 1}: ID "${activity.id}" não existe na lista de atividades disponíveis`;
-      errors.push(error);
-      invalidActivities.push(activity);
-      console.error(`❌ ${error}`);
-      console.log('📋 IDs disponíveis:', schoolPowerActivities.map(a => a.id));
-      return;
-    }
+  // Busca a atividade original
+  const originalActivity = findActivityById(normalizedId, allowedActivities);
+  
+  if (!originalActivity) {
+    console.warn(`❌ Atividade não encontrada: ${normalizedId}`);
+    return null;
+  }
 
-    // Verificar se a atividade está habilitada
-    if (!existingActivity.enabled) {
-      const error = `Atividade ${index + 1}: ID "${activity.id}" está desabilitada`;
-      errors.push(error);
-      invalidActivities.push(activity);
-      console.error(`❌ ${error}`);
-      return;
-    }
-
-    // Verificar duplicatas
-    const isDuplicate = validActivities.some(validActivity => validActivity.id === activity.id);
-    if (isDuplicate) {
-      const error = `Atividade ${index + 1}: ID "${activity.id}" duplicado`;
-      errors.push(error);
-      invalidActivities.push(activity);
-      console.error(`❌ ${error}`);
-      return;
-    }
-
-    // Verificar tamanho dos campos para evitar problemas de renderização
-    if (activity.title.length > 100) {
-      console.warn(`⚠️ Atividade ${index + 1}: Título muito longo, será truncado`);
-      activity.title = activity.title.substring(0, 97) + '...';
-    }
-
-    if (activity.description.length > 500) {
-      console.warn(`⚠️ Atividade ${index + 1}: Descrição muito longa, será truncada`);
-      activity.description = activity.description.substring(0, 497) + '...';
-    }
-
-    // Se chegou até aqui, a atividade é válida
-    const validActivity: ActionPlanItem = {
-      id: activity.id,
-      title: activity.title.trim(),
-      description: activity.description.trim(),
-      approved: false
-    };
-
-    validActivities.push(validActivity);
-    console.log(`✅ Atividade ${index + 1} validada com sucesso:`, validActivity);
-  });
-
-  const isValid = validActivities.length > 0 && invalidActivities.length === 0;
-
-  const result: ValidationResult = {
-    isValid,
-    validActivities,
-    invalidActivities,
-    errors
+  // Cria atividade validada
+  const validatedActivity: ValidatedActivity = {
+    id: originalActivity.id,
+    title: activity.personalizedTitle || activity.title || originalActivity.name,
+    description: activity.personalizedDescription || activity.description || originalActivity.description,
   };
 
-  // Log de resumo da validação
-  if (isValid) {
-    console.log(`✅ Validação concluída com sucesso: ${validActivities.length} atividades válidas`);
-  } else {
-    console.log(`⚠️ Validação concluída com problemas: ${validActivities.length} válidas, ${invalidActivities.length} inválidas`);
-    console.log('🔍 Erros encontrados:', errors);
+  // Adiciona campos de personalização se existirem
+  if (activity.personalizedTitle) {
+    validatedActivity.personalizedTitle = activity.personalizedTitle;
   }
 
-  console.log('📊 Resultado final da validação:', result);
-  return result;
+  if (activity.personalizedDescription) {
+    validatedActivity.personalizedDescription = activity.personalizedDescription;
+  }
+
+  console.log('✅ Atividade validada:', validatedActivity);
+  return validatedActivity;
 }
 
-export function sanitizeAndFixActivities(activities: GeminiActivityResponse[]): ActionPlanItem[] {
-  console.log('🔧 Sanitizando e corrigindo atividades...');
-  console.log('📋 Atividades para sanitizar:', activities);
+/**
+ * Remove atividades duplicadas mantendo a primeira ocorrência
+ */
+function removeDuplicates(activities: ValidatedActivity[]): { 
+  uniqueActivities: ValidatedActivity[], 
+  duplicateIds: string[] 
+} {
+  console.log('🔄 Removendo duplicatas...');
+  
+  const seen = new Set<string>();
+  const uniqueActivities: ValidatedActivity[] = [];
+  const duplicateIds: string[] = [];
 
-  const sanitizedActivities: ActionPlanItem[] = [];
-
-  activities.forEach((activity, index) => {
-    console.log(`🔧 Sanitizando atividade ${index + 1}:`, activity);
-
-    // Tentar corrigir problemas comuns
-    let sanitizedActivity = { ...activity };
-
-    // Corrigir ID - remover caracteres especiais e espaços
-    if (sanitizedActivity.id) {
-      const originalId = sanitizedActivity.id;
-      sanitizedActivity.id = sanitizedActivity.id
-        .toLowerCase()
-        .replace(/[^a-z0-9\-]/g, '-')
-        .replace(/-+/g, '-')
-        .replace(/^-|-$/g, '');
-      
-      if (originalId !== sanitizedActivity.id) {
-        console.log(`🔧 ID corrigido: "${originalId}" -> "${sanitizedActivity.id}"`);
-      }
-    }
-
-    // Truncar título se muito longo
-    if (sanitizedActivity.title && sanitizedActivity.title.length > 100) {
-      console.log(`🔧 Título truncado: ${sanitizedActivity.title.length} chars -> 100 chars`);
-      sanitizedActivity.title = sanitizedActivity.title.substring(0, 97) + '...';
-    }
-
-    // Truncar descrição se muito longa
-    if (sanitizedActivity.description && sanitizedActivity.description.length > 500) {
-      console.log(`🔧 Descrição truncada: ${sanitizedActivity.description.length} chars -> 500 chars`);
-      sanitizedActivity.description = sanitizedActivity.description.substring(0, 497) + '...';
-    }
-
-    // Verificar se o ID corrigido existe nas atividades disponíveis
-    const existingActivity = schoolPowerActivities.find(a => a.id === sanitizedActivity.id);
-    if (existingActivity && existingActivity.enabled) {
-      const finalActivity: ActionPlanItem = {
-        id: sanitizedActivity.id,
-        title: sanitizedActivity.title?.trim() || existingActivity.title,
-        description: sanitizedActivity.description?.trim() || existingActivity.description,
-        approved: false
-      };
-
-      sanitizedActivities.push(finalActivity);
-      console.log(`✅ Atividade ${index + 1} sanitizada com sucesso:`, finalActivity);
+  for (const activity of activities) {
+    if (seen.has(activity.id)) {
+      duplicateIds.push(activity.id);
+      console.warn(`⚠️ Atividade duplicada removida: ${activity.id}`);
     } else {
-      console.error(`❌ Atividade ${index + 1} não pôde ser corrigida: ID "${sanitizedActivity.id}" inválido ou desabilitado`);
+      seen.add(activity.id);
+      uniqueActivities.push(activity);
     }
-  });
+  }
 
-  console.log(`🔧 Sanitização concluída: ${sanitizedActivities.length} atividades válidas de ${activities.length} originais`);
-  return sanitizedActivities;
+  console.log(`✅ Remoção de duplicatas concluída: ${uniqueActivities.length} únicas, ${duplicateIds.length} removidas`);
+  return { uniqueActivities, duplicateIds };
 }
 
-export function getActivityValidationStats() {
-  const stats = {
-    totalAvailableActivities: schoolPowerActivities.length,
-    enabledActivities: schoolPowerActivities.filter(a => a.enabled).length,
-    disabledActivities: schoolPowerActivities.filter(a => !a.enabled).length,
-    uniqueTags: [...new Set(schoolPowerActivities.flatMap(a => a.tags || []))].length
+/**
+ * Gera relatório detalhado da validação
+ */
+function generateValidationReport(
+  originalActivities: GeminiActivity[],
+  validActivities: ValidatedActivity[],
+  invalidIds: string[],
+  duplicateIds: string[]
+): ValidationReport {
+  const report: ValidationReport = {
+    total: originalActivities.length,
+    valid: validActivities.length,
+    invalid: invalidIds.length,
+    duplicates: duplicateIds.length,
+    validActivities,
+    invalidIds,
+    duplicateIds
   };
 
-  console.log('📊 Estatísticas das atividades disponíveis:', stats);
-  return stats;
+  console.log('📊 Relatório de validação:', {
+    total: report.total,
+    valid: report.valid,
+    invalid: report.invalid,
+    duplicates: report.duplicates
+  });
+
+  return report;
+}
+
+/**
+ * Valida o plano completo retornado pela Gemini
+ */
+export async function validateGeminiPlan(
+  geminiActivities: GeminiActivity[],
+  allowedActivities: typeof schoolPowerActivities = schoolPowerActivities
+): Promise<ValidatedActivity[]> {
+  console.log('🔍 Iniciando validação do plano da Gemini...');
+  console.log('📊 Dados de entrada:', { 
+    activitiesCount: geminiActivities.length, 
+    allowedCount: allowedActivities.length 
+  });
+
+  // Validação dos parâmetros de entrada
+  if (!Array.isArray(geminiActivities)) {
+    console.error('❌ geminiActivities deve ser um array');
+    throw new Error('Lista de atividades inválida');
+  }
+
+  if (!Array.isArray(allowedActivities)) {
+    console.error('❌ allowedActivities deve ser um array');
+    throw new Error('Lista de atividades permitidas inválida');
+  }
+
+  if (geminiActivities.length === 0) {
+    console.warn('⚠️ Nenhuma atividade para validar');
+    return [];
+  }
+
+  const validatedActivities: ValidatedActivity[] = [];
+  const invalidIds: string[] = [];
+
+  // Valida cada atividade individualmente
+  for (let i = 0; i < geminiActivities.length; i++) {
+    const activity = geminiActivities[i];
+    console.log(`🔍 Validando atividade ${i + 1}/${geminiActivities.length}:`, activity);
+
+    const validatedActivity = validateSingleActivity(activity, allowedActivities);
+    
+    if (validatedActivity) {
+      validatedActivities.push(validatedActivity);
+    } else {
+      invalidIds.push(activity.id || `atividade-${i}`);
+    }
+  }
+
+  // Remove duplicatas
+  const { uniqueActivities, duplicateIds } = removeDuplicates(validatedActivities);
+
+  // Gera relatório final
+  const report = generateValidationReport(
+    geminiActivities,
+    uniqueActivities,
+    invalidIds,
+    duplicateIds
+  );
+
+  // Log de relatório detalhado
+  console.log('📋 Relatório final de validação:');
+  console.log(`✅ Total processado: ${report.total}`);
+  console.log(`✅ Atividades válidas: ${report.valid}`);
+  console.log(`❌ Atividades inválidas: ${report.invalid}`);
+  console.log(`🔄 Duplicatas removidas: ${report.duplicates}`);
+
+  if (report.invalidIds.length > 0) {
+    console.warn('❌ IDs inválidos encontrados:', report.invalidIds);
+  }
+
+  if (report.duplicateIds.length > 0) {
+    console.warn('🔄 IDs duplicados removidos:', report.duplicateIds);
+  }
+
+  // Alerta se muitas atividades foram rejeitadas
+  if (report.valid === 0 && report.total > 0) {
+    console.error('❌ CRÍTICO: Todas as atividades foram rejeitadas na validação!');
+    console.error('📝 Atividades originais:', geminiActivities);
+    console.error('📋 IDs permitidos:', allowedActivities.map(a => a.id));
+  } else if (report.valid < report.total / 2) {
+    console.warn('⚠️ ATENÇÃO: Mais da metade das atividades foram rejeitadas');
+  }
+
+  console.log('✅ Validação concluída com sucesso');
+  console.log('📊 Atividades aprovadas:', uniqueActivities.map(a => ({ id: a.id, title: a.title })));
+
+  return uniqueActivities;
+}
+
+/**
+ * Valida apenas os IDs de atividades (função auxiliar)
+ */
+export function validateActivityIds(activityIds: string[]): {
+  validIds: string[];
+  invalidIds: string[];
+} {
+  console.log('🔍 Validando IDs de atividades:', activityIds);
+
+  const validIds: string[] = [];
+  const invalidIds: string[] = [];
+
+  for (const id of activityIds) {
+    if (isValidActivityId(id, schoolPowerActivities)) {
+      validIds.push(id.trim().toLowerCase());
+    } else {
+      invalidIds.push(id);
+    }
+  }
+
+  console.log('✅ Validação de IDs concluída:', { validIds, invalidIds });
+  return { validIds, invalidIds };
+}
+
+/**
+ * Obtém lista de IDs de atividades válidas (função auxiliar)
+ */
+export function getValidActivityIds(): string[] {
+  return schoolPowerActivities
+    .filter(activity => activity.enabled)
+    .map(activity => activity.id);
+}
+
+/**
+ * Verifica se existe pelo menos uma atividade válida
+ */
+export function hasValidActivities(activities: GeminiActivity[]): boolean {
+  return activities.some(activity => 
+    activity.id && isValidActivityId(activity.id, schoolPowerActivities)
+  );
 }
