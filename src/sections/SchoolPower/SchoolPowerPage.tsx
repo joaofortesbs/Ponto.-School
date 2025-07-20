@@ -127,106 +127,30 @@ export function SchoolPowerPage() {
         </>
       )}
 
-      {/* Card de Construção unificado - aparece baseado no flowState */}
-      {(flowState === 'contextualizing' || flowState === 'actionplan') && (
+      {/* Card de Construção unificado - aparece baseado no flowState e nunca some */}
+      {(flowState === 'contextualizing' || flowState === 'actionplan' || flowState === 'generating' || flowState === 'generatingActivities') && (
         <motion.div 
-          className="absolute inset-0 bg-black/10 backdrop-blur-sm flex items-center justify-center z-40"
+          className="absolute inset-0 flex items-center justify-center z-40"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
+          style={{ background: 'transparent' }}
         >
           <div className="w-full max-w-4xl mx-4">
             <CardDeConstrucao
-              step={flowState === 'contextualizing' ? 'contextualization' : 'actionPlan'}
+              step={
+                flowState === 'contextualizing' ? 'contextualization' :
+                flowState === 'actionplan' ? 'actionPlan' :
+                flowState === 'generating' ? 'generating' : 'generatingActivities'
+              }
               contextualizationData={flowData.contextualizationData}
               actionPlan={flowData.actionPlan}
               onSubmitContextualization={handleSubmitContextualization}
               onApproveActionPlan={handleApproveActionPlan}
+              onResetFlow={handleResetFlow}
               isLoading={isLoading}
             />
           </div>
-        </motion.div>
-      )}
-
-      {(flowState === 'generating' || flowState === 'generatingActivities') && (
-        <motion.div 
-          className="absolute inset-0 bg-black/10 backdrop-blur-sm flex items-center justify-center z-40"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
-        >
-          <motion.div 
-            className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-2xl p-8 max-w-lg w-full mx-4 text-center shadow-2xl border border-white/30"
-            initial={{ opacity: 0, scale: 0.8, y: 50 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
-          >
-            <div className="relative mb-6">
-              <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#FF6B00]/20 border-t-[#FF6B00] mx-auto"></div>
-              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[#FF6B00]/10 to-transparent animate-pulse"></div>
-            </div>
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
-              🤖 Analisando com IA Gemini
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              A IA está processando sua mensagem e contexto para criar um plano de ação personalizado...
-            </p>
-            <div className="bg-gradient-to-r from-[#FF6B00]/10 to-[#29335C]/10 rounded-lg p-4 mb-6 border border-[#FF6B00]/20">
-              <p className="text-sm text-gray-700 dark:text-gray-300">
-                ✨ Consultando 137 atividades disponíveis<br/>
-                🎯 Personalizando para seu contexto específico<br/>
-                📝 Gerando sugestões inteligentes<br/>
-                🔍 Validando compatibilidade das atividades
-              </p>
-            </div>
-            <div className="flex gap-3 justify-center">
-              <button 
-                onClick={handleResetFlow}
-                className="px-6 py-2 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200"
-              >
-                Cancelar
-              </button>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-
-      {/* Estado de geração de atividades - aparece quando flowState é 'generatingActivities' */}
-      {flowState === 'generatingActivities' && (
-        <motion.div 
-          className="absolute inset-0 bg-black/10 backdrop-blur-sm flex items-center justify-center z-40"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
-        >
-          <motion.div 
-            className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl rounded-2xl p-8 max-w-md w-full mx-4 text-center shadow-2xl border border-white/20"
-            initial={{ opacity: 0, scale: 0.8, y: 50 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
-          >
-            <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#FF6B00]/20 border-t-[#FF6B00] mx-auto mb-6"></div>
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
-              🎯 Gerando Atividades
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
-              As atividades aprovadas estão sendo geradas automaticamente pelo School Power...
-            </p>
-            <div className="bg-gradient-to-r from-[#FF6B00]/10 to-[#29335C]/10 rounded-lg p-4 mb-6 border border-[#FF6B00]/20">
-              <p className="text-sm text-gray-700 dark:text-gray-300">
-                ✅ Personalizando conteúdo das atividades<br/>
-                🎨 Criando materiais visuais<br/>
-                📝 Formatando atividades finais<br/>
-                🚀 Preparando download
-              </p>
-            </div>
-            <button 
-              onClick={handleResetFlow}
-              className="px-6 py-2 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200"
-            >
-              Cancelar
-            </button>
-          </motion.div>
         </motion.div>
       )}
     </div>
