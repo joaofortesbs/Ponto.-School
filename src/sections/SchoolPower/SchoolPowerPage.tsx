@@ -29,30 +29,40 @@ export function SchoolPowerPage() {
     isLoading
   } = useSchoolPowerFlow();
 
+  console.log('🏠 SchoolPowerPage renderizada com estado:', { flowState, flowData, isLoading });
+
   const handleCentralExpandedChange = (expanded: boolean) => {
     setIsCentralExpanded(expanded);
+    console.log('🔄 Central expanded alterado:', expanded);
   };
 
   // Função para enviar mensagem inicial
   const handleSendMessage = (message: string) => {
-    console.log("📤 Enviando mensagem para School Power:", message);
+    console.log("📤 Enviando mensagem inicial do SchoolPowerPage:", message);
     sendInitialMessage(message);
   };
 
   // Função para submeter contextualização
   const handleSubmitContextualization = (data: any) => {
-    console.log("📝 Submetendo contextualização:", data);
+    console.log("📝 Submetendo contextualização do SchoolPowerPage:", data);
     submitContextualization(data);
   };
 
   // Função para aprovar action plan
   const handleApproveActionPlan = (approvedItems: any) => {
-    console.log("✅ Aprovando action plan:", approvedItems);
+    console.log("✅ Aprovando action plan do SchoolPowerPage:", approvedItems);
     approveActionPlan(approvedItems);
   };
 
-  // Determina se os componentes devem estar visíveis
+  // Função para resetar o fluxo
+  const handleResetFlow = () => {
+    console.log("🔄 Resetando fluxo do SchoolPowerPage");
+    resetFlow();
+  };
+
+  // Determina se os componentes padrão devem estar visíveis
   const componentsVisible = flowState === 'idle';
+  console.log('👁️ Componentes padrão visíveis:', componentsVisible);
 
   return (
     <div
@@ -117,9 +127,10 @@ export function SchoolPowerPage() {
       {flowState === 'contextualizing' && (
         <motion.div 
           className="absolute inset-0 flex items-center justify-center z-30 px-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.9 }}
+          transition={{ duration: 0.5 }}
         >
           <ContextualizationCard 
             onSubmit={handleSubmitContextualization}
@@ -141,45 +152,6 @@ export function SchoolPowerPage() {
             onApprove={handleApproveActionPlan}
             isLoading={isLoading || !flowData.actionPlan}
           />
-        </motion.div>
-      )}
-
-      {/* Estado de geração de atividades - aparece quando flowState é 'generatingActivities' */}
-      {flowState === 'generatingActivities' && (
-        <motion.div 
-          className="absolute inset-0 bg-black/10 backdrop-blur-sm flex items-center justify-center z-40"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
-        >
-          <motion.div 
-            className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl rounded-2xl p-8 max-w-md w-full mx-4 text-center shadow-2xl border border-white/20"
-            initial={{ opacity: 0, scale: 0.8, y: 50 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
-          >
-            <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#FF6B00]/20 border-t-[#FF6B00] mx-auto mb-6"></div>
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
-              🎯 Gerando Atividades
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
-              As atividades aprovadas estão sendo geradas automaticamente pelo School Power...
-            </p>
-            <div className="bg-gradient-to-r from-[#FF6B00]/10 to-[#29335C]/10 rounded-lg p-4 mb-6 border border-[#FF6B00]/20">
-              <p className="text-sm text-gray-700 dark:text-gray-300">
-                ✅ Personalizando conteúdo<br/>
-                🎨 Criando materiais visuais<br/>
-                📝 Formatando atividades<br/>
-                🚀 Finalizando download
-              </p>
-            </div>
-            <button 
-              onClick={resetFlow}
-              className="px-6 py-2 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200"
-            >
-              Cancelar
-            </button>
-          </motion.div>
         </motion.div>
       )}
 
@@ -209,20 +181,59 @@ export function SchoolPowerPage() {
             </p>
             <div className="bg-gradient-to-r from-[#FF6B00]/10 to-[#29335C]/10 rounded-lg p-4 mb-6 border border-[#FF6B00]/20">
               <p className="text-sm text-gray-700 dark:text-gray-300">
-                ✨ Analisando 137 atividades disponíveis<br/>
-                🎯 Personalizando para seu contexto<br/>
+                ✨ Consultando 137 atividades disponíveis<br/>
+                🎯 Personalizando para seu contexto específico<br/>
                 📝 Gerando sugestões inteligentes<br/>
-                🔍 Validando compatibilidade
+                🔍 Validando compatibilidade das atividades
               </p>
             </div>
             <div className="flex gap-3 justify-center">
               <button 
-                onClick={resetFlow}
+                onClick={handleResetFlow}
                 className="px-6 py-2 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200"
               >
                 Cancelar
               </button>
             </div>
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* Estado de geração de atividades - aparece quando flowState é 'generatingActivities' */}
+      {flowState === 'generatingActivities' && (
+        <motion.div 
+          className="absolute inset-0 bg-black/10 backdrop-blur-sm flex items-center justify-center z-40"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          <motion.div 
+            className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl rounded-2xl p-8 max-w-md w-full mx-4 text-center shadow-2xl border border-white/20"
+            initial={{ opacity: 0, scale: 0.8, y: 50 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+          >
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#FF6B00]/20 border-t-[#FF6B00] mx-auto mb-6"></div>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
+              🎯 Gerando Atividades
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              As atividades aprovadas estão sendo geradas automaticamente pelo School Power...
+            </p>
+            <div className="bg-gradient-to-r from-[#FF6B00]/10 to-[#29335C]/10 rounded-lg p-4 mb-6 border border-[#FF6B00]/20">
+              <p className="text-sm text-gray-700 dark:text-gray-300">
+                ✅ Personalizando conteúdo das atividades<br/>
+                🎨 Criando materiais visuais<br/>
+                📝 Formatando atividades finais<br/>
+                🚀 Preparando download
+              </p>
+            </div>
+            <button 
+              onClick={handleResetFlow}
+              className="px-6 py-2 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200"
+            >
+              Cancelar
+            </button>
           </motion.div>
         </motion.div>
       )}

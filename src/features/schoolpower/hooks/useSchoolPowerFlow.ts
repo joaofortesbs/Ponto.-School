@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { ContextualizationData } from '../contextualization/ContextualizationCard';
 import { ActionPlanItem } from '../actionplan/ActionPlanCard';
@@ -25,8 +26,29 @@ interface UseSchoolPowerFlowReturn {
 const STORAGE_KEY = 'schoolpower_flow_data';
 
 export function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
-  // Carrega dados salvos do localStorage
-  const loadStoredData = (): SchoolPowerFlowData => {
+  // Estado centralizado sem dependência de cache defasado
+  const [flowData, setFlowData] = useState<SchoolPowerFlowData>({
+    initialMessage: null,
+    contextualizationData: null,
+    actionPlan: null,
+    timestamp: Date.now()
+  });
+
+  const [flowState, setFlowState] = useState<FlowState>('idle');
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Salva dados no localStorage de forma sincronizada
+  const saveData = useCallback((data: SchoolPowerFlowData) => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      console.log('💾 Dados do School Power Flow salvos no localStorage:', data);
+    } catch (error) {
+      console.error('❌ Erro ao salvar dados do School Power Flow no localStorage:', error);
+    }
+  }, []);
+
+  // Carrega dados do localStorage apenas na inicialização
+  const loadStoredData = useCallback((): SchoolPowerFlowData | null => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
@@ -34,50 +56,40 @@ export function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
         // Verifica se os dados não são muito antigos (1 hora)
         const oneHour = 60 * 60 * 1000;
         if (Date.now() - data.timestamp < oneHour) {
+          console.log('📥 Dados carregados do localStorage:', data);
           return data;
+        } else {
+          console.log('⏰ Dados do localStorage expiraram, usando estado limpo');
+          localStorage.removeItem(STORAGE_KEY);
         }
       }
     } catch (error) {
-      console.error('❌ Erro ao carregar dados do School Power Flow:', error);
+      console.error('❌ Erro ao carregar dados do localStorage:', error);
+      localStorage.removeItem(STORAGE_KEY);
     }
-
-    return {
-      initialMessage: null,
-      contextualizationData: null,
-      actionPlan: null,
-      timestamp: Date.now()
-    };
-  };
-
-  const [flowData, setFlowData] = useState<SchoolPowerFlowData>(loadStoredData);
-  const [flowState, setFlowState] = useState<FlowState>(() => {
-    const stored = loadStoredData();
-    if (stored.initialMessage && !stored.contextualizationData) {
-      return 'contextualizing';
-    }
-    if (stored.initialMessage && stored.contextualizationData && !stored.actionPlan) {
-      return 'actionplan';
-    }
-    if (stored.initialMessage && stored.contextualizationData && stored.actionPlan) {
-      return 'generating';
-    }
-    return 'idle';
-  });
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Salva dados no localStorage
-  const saveData = useCallback((data: SchoolPowerFlowData) => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-      console.log('💾 Dados do School Power Flow salvos:', data);
-    } catch (error) {
-      console.error('❌ Erro ao salvar dados do School Power Flow:', error);
-    }
+    return null;
   }, []);
+
+  // Inicializar com dados salvos se existirem
+  React.useEffect(() => {
+    const storedData = loadStoredData();
+    if (storedData) {
+      setFlowData(storedData);
+      
+      // Definir estado baseado nos dados carregados
+      if (storedData.initialMessage && !storedData.contextualizationData) {
+        setFlowState('contextualizing');
+      } else if (storedData.initialMessage && storedData.contextualizationData && !storedData.actionPlan) {
+        setFlowState('actionplan');
+      } else if (storedData.initialMessage && storedData.contextualizationData && storedData.actionPlan) {
+        setFlowState('generating');
+      }
+    }
+  }, [loadStoredData]);
 
   // Envia mensagem inicial e inicia processo de contextualização
   const sendInitialMessage = useCallback((message: string) => {
-    console.log('📤 Mensagem inicial enviada:', message);
+    console.log('📤 Enviando mensagem inicial para School Power:', message);
 
     const newData: SchoolPowerFlowData = {
       initialMessage: message,
@@ -86,54 +98,75 @@ export function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
       timestamp: Date.now()
     };
 
+    // Atualizar estado imediatamente
     setFlowData(newData);
-    saveData(newData);
     setFlowState('contextualizing');
+    
+    // Salvar no localStorage de forma sincronizada
+    saveData(newData);
+
+    console.log('✅ Mensagem inicial salva e estado atualizado para contextualizing');
   }, [saveData]);
 
   // Submete contextualização e gera action plan
   const submitContextualization = useCallback(async (contextData: ContextualizationData) => {
     console.log('📝 Contextualização submetida:', contextData);
+    console.log('📋 Dados atuais do flow:', flowData);
 
     if (!flowData.initialMessage) {
-      console.error('❌ Mensagem inicial não encontrada');
+      console.error('❌ Mensagem inicial não encontrada no estado atual');
       return;
     }
 
+    // Atualizar estado para generating imediatamente
     setIsLoading(true);
     setFlowState('generating');
 
+    // Salvar dados de contextualização no estado
+    const dataWithContext = {
+      ...flowData,
+      contextualizationData: contextData,
+      timestamp: Date.now()
+    };
+
+    setFlowData(dataWithContext);
+    saveData(dataWithContext);
+
+    console.log('✅ Dados de contextualização salvos, iniciando geração do plano...');
+
     try {
-      // Usar o serviço de geração personalizada
+      // Chamar API Gemini com dados em tempo real do estado
+      console.log('🔄 Chamando generatePersonalizedPlan com dados atuais...');
       const actionPlan = await generatePersonalizedPlan(flowData.initialMessage, contextData);
 
-      const updatedData: SchoolPowerFlowData = {
-        ...flowData,
-        contextualizationData: contextData,
+      const finalData: SchoolPowerFlowData = {
+        ...dataWithContext,
         actionPlan: actionPlan,
         timestamp: Date.now()
       };
 
-      setFlowData(updatedData);
-      saveData(updatedData);
+      // Atualizar estado com o action plan gerado
+      setFlowData(finalData);
+      saveData(finalData);
       setFlowState('actionplan');
 
-      console.log('✅ Action plan gerado e salvo:', actionPlan);
+      console.log('✅ Action plan gerado e salvo com sucesso:', actionPlan);
 
     } catch (error) {
       console.error('❌ Erro ao gerar action plan:', error);
 
-      // Em caso de erro, ainda assim continua o fluxo com dados vazios
-      const updatedData: SchoolPowerFlowData = {
-        ...flowData,
-        contextualizationData: contextData,
+      // Em caso de erro, ainda assim atualiza o estado para permitir visualização do erro
+      const errorData: SchoolPowerFlowData = {
+        ...dataWithContext,
         actionPlan: [],
         timestamp: Date.now()
       };
 
-      setFlowData(updatedData);
-      saveData(updatedData);
+      setFlowData(errorData);
+      saveData(errorData);
       setFlowState('actionplan');
+      
+      console.log('⚠️ Estado atualizado para actionplan mesmo com erro para permitir recuperação');
     } finally {
       setIsLoading(false);
     }
@@ -150,7 +183,9 @@ export function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
 
     setFlowState('generatingActivities');
 
-    // Simular processo de geração (aqui você implementaria a lógica real)
+    console.log('🎯 Iniciando geração de atividades com itens aprovados...');
+
+    // Simular processo de geração (aqui seria implementada a lógica real de geração de atividades)
     setTimeout(() => {
       console.log('🎉 Atividades geradas com sucesso!');
 
@@ -165,12 +200,14 @@ export function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
       setFlowData(resetData);
       saveData(resetData);
       setFlowState('idle');
+      
+      console.log('🔄 Flow resetado para idle após sucesso');
     }, 3000);
   }, [saveData]);
 
   // Reset do fluxo
   const resetFlow = useCallback(() => {
-    console.log('🔄 Resetando School Power Flow');
+    console.log('🔄 Resetando School Power Flow...');
 
     const resetData: SchoolPowerFlowData = {
       initialMessage: null,
@@ -180,10 +217,19 @@ export function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
     };
 
     setFlowData(resetData);
-    saveData(resetData);
     setFlowState('idle');
     setIsLoading(false);
-  }, [saveData]);
+    
+    // Limpar localStorage
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+      console.log('🗑️ LocalStorage limpo');
+    } catch (error) {
+      console.error('❌ Erro ao limpar localStorage:', error);
+    }
+
+    console.log('✅ School Power Flow resetado completamente');
+  }, []);
 
   return {
     flowState,
