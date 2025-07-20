@@ -1,6 +1,6 @@
 
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import {
   TopHeader,
@@ -18,8 +18,6 @@ export function SchoolPowerPage() {
   const [isDarkTheme] = useState(true);
   const [isCentralExpanded, setIsCentralExpanded] = useState(false);
 
-  console.log('🏠 SchoolPowerPage: Componente inicializado');
-
   // Hook para gerenciar o fluxo do School Power
   const {
     flowState,
@@ -31,200 +29,203 @@ export function SchoolPowerPage() {
     isLoading
   } = useSchoolPowerFlow();
 
-  // Log detalhado do estado atual
-  useEffect(() => {
-    console.log('🏠 SchoolPowerPage: Estado atual do fluxo atualizado');
-    console.log('📊 Flow State:', flowState);
-    console.log('📊 Is Loading:', isLoading);
-    console.log('📊 Flow Data:', {
-      hasInitialMessage: !!flowData.initialMessage,
-      hasContextualizationData: !!flowData.contextualizationData,
-      hasActionPlan: !!flowData.actionPlan,
-      actionPlanCount: flowData.actionPlan?.length || 0,
-      messagePreview: flowData.initialMessage?.substring(0, 50) + '...'
-    });
-  }, [flowState, flowData, isLoading]);
-
   const handleCentralExpandedChange = (expanded: boolean) => {
-    console.log('🎛️ Central expansion changed:', expanded);
     setIsCentralExpanded(expanded);
   };
 
   // Função para enviar mensagem inicial
   const handleSendMessage = (message: string) => {
-    console.log("🏠 SchoolPowerPage: Recebeu mensagem para envio");
-    console.log("📤 Mensagem recebida:", message);
-    console.log("📊 Estado atual antes do envio:", flowState);
-    
-    if (!message || message.trim().length === 0) {
-      console.error("❌ Mensagem vazia recebida");
-      return;
-    }
-    
-    console.log("✅ Enviando mensagem para School Power Flow...");
+    console.log("📤 Enviando mensagem para School Power:", message);
     sendInitialMessage(message);
   };
 
   // Função para submeter contextualização
   const handleSubmitContextualization = (data: any) => {
-    console.log("🏠 SchoolPowerPage: Recebeu dados de contextualização");
-    console.log("📝 Dados de contextualização:", data);
-    console.log("📊 Estado atual antes da submissão:", flowState);
-    console.log("📊 Mensagem inicial disponível:", !!flowData.initialMessage);
-    
-    if (!data) {
-      console.error("❌ Dados de contextualização vazios");
-      return;
-    }
-    
-    console.log("✅ Submetendo contextualização para School Power Flow...");
+    console.log("📝 Submetendo contextualização:", data);
     submitContextualization(data);
   };
 
   // Função para aprovar action plan
-  const handleApproveActionPlan = (approvedItems: any[]) => {
-    console.log("🏠 SchoolPowerPage: Recebeu itens aprovados do action plan");
-    console.log("✅ Itens aprovados:", approvedItems);
-    console.log("📊 Número de itens aprovados:", approvedItems.length);
-    console.log("📋 IDs dos itens aprovados:", approvedItems.map(item => item.id));
-    
-    if (!approvedItems || approvedItems.length === 0) {
-      console.error("❌ Nenhum item aprovado recebido");
-      return;
-    }
-    
-    console.log("✅ Enviando itens aprovados para School Power Flow...");
+  const handleApproveActionPlan = (approvedItems: any) => {
+    console.log("✅ Aprovando action plan:", approvedItems);
     approveActionPlan(approvedItems);
   };
 
-  // Determinar qual componente renderizar baseado no estado do fluxo
-  const renderCurrentStep = () => {
-    console.log('🎨 Determinando componente a renderizar baseado no estado:', flowState);
-    
-    switch (flowState) {
-      case 'idle':
-        console.log('🎨 Renderizando: Estado inicial (ChatInput)');
-        return (
-          <ChatInput
-            onSendMessage={handleSendMessage}
-            onCentralExpandedChange={handleCentralExpandedChange}
-          />
-        );
-        
-      case 'contextualizing':
-        console.log('🎨 Renderizando: Card de contextualização');
-        console.log('📝 Mensagem inicial para contextualização:', flowData.initialMessage);
-        return (
-          <ContextualizationCard
-            initialMessage={flowData.initialMessage || ''}
-            onSubmit={handleSubmitContextualization}
-            isLoading={isLoading}
-          />
-        );
-        
-      case 'generating':
-        console.log('🎨 Renderizando: Estado de geração (loading)');
-        return (
-          <ActionPlanCard
-            actionPlan={[]}
-            onApprove={handleApproveActionPlan}
-            isLoading={true}
-          />
-        );
-        
-      case 'actionplan':
-        console.log('🎨 Renderizando: Card do action plan');
-        console.log('📋 Action plan para renderização:', flowData.actionPlan);
-        console.log('📊 Número de atividades no action plan:', flowData.actionPlan?.length || 0);
-        return (
-          <ActionPlanCard
-            actionPlan={flowData.actionPlan || []}
-            onApprove={handleApproveActionPlan}
-            isLoading={false}
-          />
-        );
-        
-      case 'generatingActivities':
-        console.log('🎨 Renderizando: Estado de geração de atividades');
-        return (
-          <motion.div 
-            className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-2xl p-8 max-w-4xl w-full mx-4 shadow-2xl border border-white/30"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
-          >
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#FF6B00]/20 border-t-[#FF6B00] mx-auto mb-6"></div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
-                🚀 Gerando Atividades
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400">
-                Suas atividades estão sendo criadas. Isso pode levar alguns momentos...
-              </p>
-            </div>
-          </motion.div>
-        );
-        
-      default:
-        console.warn('🎨 Estado de fluxo desconhecido:', flowState);
-        console.log('🔄 Renderizando estado padrão (ChatInput)');
-        return (
-          <ChatInput
-            onSendMessage={handleSendMessage}
-            onCentralExpandedChange={handleCentralExpandedChange}
-          />
-        );
-    }
-  };
-
-  console.log('🎨 SchoolPowerPage: Renderizando componente principal');
+  // Determina se os componentes devem estar visíveis
+  const componentsVisible = flowState === 'idle';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 relative overflow-hidden">
-      {/* Background Effects */}
-      <ParticlesBackground />
-      <Particles3D />
+    <div
+      className="relative flex h-[90vh] min-h-[650px] w-full flex-col items-center justify-center overflow-hidden rounded-lg"
+      style={{ backgroundColor: "transparent" }}
+    >
+      {/* Background de estrelas - sempre visível */}
+      <ParticlesBackground isDarkTheme={isDarkTheme} />
 
-      {/* Header */}
-      <TopHeader />
-
-      {/* Main Content */}
-      <div className="relative z-10 flex items-center justify-center min-h-screen p-4">
-        <div className="w-full max-w-6xl mx-auto">
-          {/* Profile Selector (sempre visível no topo) */}
-          {flowState === 'idle' && (
-            <div className="mb-8">
-              <ProfileSelector />
-            </div>
-          )}
-
-          {/* Componente principal baseado no estado do fluxo */}
-          <div className="flex items-center justify-center">
-            {renderCurrentStep()}
+      {/* Componentes padrões - só aparecem quando flowState é 'idle' */}
+      {componentsVisible && (
+        <>
+          {/* Vertical dock positioned at right side */}
+          <div className="absolute right-8 top-1/2 transform -translate-y-1/2">
+            <SideMenu />
           </div>
 
-          {/* Debug Panel - remover em produção */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="fixed bottom-4 right-4 bg-black/80 text-white p-4 rounded-lg text-xs max-w-sm">
-              <h4 className="font-bold mb-2">Debug - School Power</h4>
-              <p><strong>Estado:</strong> {flowState}</p>
-              <p><strong>Loading:</strong> {isLoading ? 'Sim' : 'Não'}</p>
-              <p><strong>Mensagem:</strong> {flowData.initialMessage ? 'Sim' : 'Não'}</p>
-              <p><strong>Contextualização:</strong> {flowData.contextualizationData ? 'Sim' : 'Não'}</p>
-              <p><strong>Action Plan:</strong> {flowData.actionPlan?.length || 0} atividades</p>
+          {/* Container Ripple fixo e centralizado no background */}
+          <div className="absolute top-[57%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none">
+            <div className="relative" style={{ width: "900px", height: "617px" }}>
+              {/* TechCircle posicionado no topo do container Ripple */}
+              <div
+                className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-full z-30 pointer-events-none"
+                style={{ marginTop: "7px" }}
+              >
+                <TopHeader isDarkTheme={isDarkTheme} />
+              </div>
+
+              {/* Ripple centralizado */}
+              <div className="absolute inset-0">
+                <Particles3D isDarkTheme={isDarkTheme} isBlurred={isCentralExpanded} />
+              </div>
+
+              {/* Ícone Central no centro do Ripple */}
+              <div
+                className="absolute z-50 pointer-events-auto"
+                style={{
+                  top: "50%",
+                  left: "50%",
+                  transform: "translate(-50%, -50%)",
+                }}
+              >
+                <ProfileSelector
+                  isDarkTheme={isDarkTheme}
+                  onExpandedChange={handleCentralExpandedChange}
+                />
+              </div>
+
+              {/* Caixa de Mensagem dentro do mesmo container Ripple */}
+              <div className="absolute bottom-24 left-1/2 transform -translate-x-1/2 translate-y-full z-40 pointer-events-auto" style={{ marginTop: "-150px" }}>
+                <ChatInput 
+                  isDarkTheme={isDarkTheme} 
+                  onSend={handleSendMessage}
+                />
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Card de Contextualização - aparece quando flowState é 'contextualizing' */}
+      {flowState === 'contextualizing' && (
+        <motion.div 
+          className="absolute inset-0 flex items-center justify-center z-30 px-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          <ContextualizationCard 
+            onSubmit={handleSubmitContextualization}
+          />
+        </motion.div>
+      )}
+
+      {/* Card de Action Plan - aparece quando flowState é 'actionplan' */}
+      {flowState === 'actionplan' && (
+        <motion.div 
+          className="absolute inset-0 flex items-center justify-center z-30 px-4"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.9 }}
+          transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+        >
+          <ActionPlanCard 
+            actionPlan={flowData.actionPlan || []}
+            onApprove={handleApproveActionPlan}
+            isLoading={isLoading || !flowData.actionPlan}
+          />
+        </motion.div>
+      )}
+
+      {/* Estado de geração de atividades - aparece quando flowState é 'generatingActivities' */}
+      {flowState === 'generatingActivities' && (
+        <motion.div 
+          className="absolute inset-0 bg-black/10 backdrop-blur-sm flex items-center justify-center z-40"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          <motion.div 
+            className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl rounded-2xl p-8 max-w-md w-full mx-4 text-center shadow-2xl border border-white/20"
+            initial={{ opacity: 0, scale: 0.8, y: 50 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+          >
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#FF6B00]/20 border-t-[#FF6B00] mx-auto mb-6"></div>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
+              🎯 Gerando Atividades
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              As atividades aprovadas estão sendo geradas automaticamente pelo School Power...
+            </p>
+            <div className="bg-gradient-to-r from-[#FF6B00]/10 to-[#29335C]/10 rounded-lg p-4 mb-6 border border-[#FF6B00]/20">
+              <p className="text-sm text-gray-700 dark:text-gray-300">
+                ✅ Personalizando conteúdo<br/>
+                🎨 Criando materiais visuais<br/>
+                📝 Formatando atividades<br/>
+                🚀 Finalizando download
+              </p>
+            </div>
+            <button 
+              onClick={resetFlow}
+              className="px-6 py-2 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200"
+            >
+              Cancelar
+            </button>
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* Estado de geração - aparece quando flowState é 'generating' */}
+      {flowState === 'generating' && (
+        <motion.div 
+          className="absolute inset-0 bg-black/10 backdrop-blur-sm flex items-center justify-center z-40"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          <motion.div 
+            className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-2xl p-8 max-w-lg w-full mx-4 text-center shadow-2xl border border-white/30"
+            initial={{ opacity: 0, scale: 0.8, y: 50 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+          >
+            <div className="relative mb-6">
+              <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#FF6B00]/20 border-t-[#FF6B00] mx-auto"></div>
+              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[#FF6B00]/10 to-transparent animate-pulse"></div>
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
+              🤖 Analisando com IA Gemini
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              A IA está processando sua mensagem e contexto para criar um plano de ação personalizado...
+            </p>
+            <div className="bg-gradient-to-r from-[#FF6B00]/10 to-[#29335C]/10 rounded-lg p-4 mb-6 border border-[#FF6B00]/20">
+              <p className="text-sm text-gray-700 dark:text-gray-300">
+                ✨ Analisando 137 atividades disponíveis<br/>
+                🎯 Personalizando para seu contexto<br/>
+                📝 Gerando sugestões inteligentes<br/>
+                🔍 Validando compatibilidade
+              </p>
+            </div>
+            <div className="flex gap-3 justify-center">
               <button 
                 onClick={resetFlow}
-                className="mt-2 px-2 py-1 bg-red-600 rounded text-xs"
+                className="px-6 py-2 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200"
               >
-                Reset Flow
+                Cancelar
               </button>
             </div>
-          )}
-        </div>
-      </div>
-
-      {/* Side Menu */}
-      <SideMenu />
+          </motion.div>
+        </motion.div>
+      )}
     </div>
   );
 }

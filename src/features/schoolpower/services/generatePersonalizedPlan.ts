@@ -22,7 +22,6 @@ export async function generatePersonalizedPlan(
 
     // Construir prompt otimizado para a API Gemini
     const prompt = createOptimizedPrompt(userMessage, quizResponses);
-    console.log('📤 Prompt construído para Gemini:', prompt.substring(0, 200) + '...');
 
     // Fazer chamada para API Gemini
     console.log('📤 Enviando requisição para API Gemini...');
@@ -51,8 +50,6 @@ export async function generatePersonalizedPlan(
       })
     });
 
-    console.log('📥 Status da resposta Gemini:', response.status);
-
     if (!response.ok) {
       const errorText = await response.text();
       console.error('❌ Erro na API Gemini:', response.status, errorText);
@@ -60,12 +57,9 @@ export async function generatePersonalizedPlan(
     }
 
     const result = await response.json();
-    console.log('📥 Resposta completa da API Gemini:', result);
-    
     const generatedText = result.candidates?.[0]?.content?.parts?.[0]?.text;
     
     if (!generatedText) {
-      console.error('❌ Nenhum conteúdo foi gerado pela IA Gemini');
       throw new Error('Nenhum conteúdo foi gerado pela IA Gemini');
     }
 
@@ -78,7 +72,6 @@ export async function generatePersonalizedPlan(
       console.log('✅ Plano de ação gerado com sucesso via IA:', activities);
       return activities;
     } else {
-      console.warn('⚠️ Nenhuma atividade válida extraída, usando fallback');
       throw new Error('Nenhuma atividade válida foi extraída da resposta da IA');
     }
 
@@ -93,43 +86,37 @@ export async function generatePersonalizedPlan(
 
 function createOptimizedPrompt(userMessage: string, quizResponses: ContextualizationData): string {
   // Criar lista compacta de atividades disponíveis
-  const availableActivities = schoolPowerActivities
-    .filter(activity => activity.enabled)
-    .slice(0, 30)
-    .map(activity => `${activity.id}: ${activity.title}`)
-    .join('\n- ');
+  const availableActivities = schoolPowerActivities.slice(0, 20).map(activity => 
+    `${activity.id}: ${activity.title}`
+  ).join(', ');
 
-  const prompt = `Você é uma IA especializada em educação do School Power. Analise a solicitação do professor e gere 3-5 atividades personalizadas.
+  return `Você é uma IA especializada em educação. Analise a solicitação do professor e gere 3-5 atividades personalizadas.
 
-SOLICITAÇÃO DO PROFESSOR: "${userMessage}"
+SOLICITAÇÃO: "${userMessage}"
 
-CONTEXTO EDUCACIONAL:
-- Matérias/Disciplinas: ${quizResponses.subjects || 'Não especificado'}
-- Público-alvo: ${quizResponses.audience || 'Não especificado'}  
-- Restrições/Limitações: ${quizResponses.restrictions || 'Nenhuma'}
-- Datas/Prazos: ${quizResponses.dates || 'Flexível'}
-- Observações Adicionais: ${quizResponses.notes || 'Nenhuma'}
+CONTEXTO:
+- Matérias: ${quizResponses.subjects}
+- Público: ${quizResponses.audience}  
+- Restrições: ${quizResponses.restrictions}
+- Datas: ${quizResponses.dates}
+- Observações: ${quizResponses.notes}
 
-ATIVIDADES DISPONÍVEIS:
-- ${availableActivities}
+ATIVIDADES DISPONÍVEIS: ${availableActivities}
 
-INSTRUÇÕES IMPORTANTES:
-1. Retorne APENAS um JSON válido
-2. Use SOMENTE IDs da lista de atividades disponíveis acima
-3. Personalize títulos e descrições para o contexto específico
-4. Retorne entre 3-5 atividades
-5. Não inclua texto adicional antes ou depois do JSON
-
-FORMATO DE RESPOSTA OBRIGATÓRIO:
+RESPONDA APENAS COM JSON VÁLIDO:
 [
   {
     "id": "id_da_atividade_disponivel",
-    "title": "Título Personalizado para o Contexto",
-    "description": "Descrição detalhada e personalizada considerando a solicitação"
+    "title": "Título Personalizado",
+    "description": "Descrição detalhada e personalizada"
   }
-]`;
+]
 
-  return prompt;
+REGRAS:
+1. Use apenas IDs da lista de atividades disponíveis
+2. Personalize títulos e descrições para o contexto específico
+3. Retorne 3-5 atividades
+4. JSON válido apenas, sem texto adicional`;
 }
 
 function extractAndValidateActivities(
@@ -138,8 +125,6 @@ function extractAndValidateActivities(
   quizResponses: ContextualizationData
 ): ActionPlanItem[] {
   try {
-    console.log('🔍 Iniciando extração e validação das atividades...');
-    
     // Tentar extrair JSON da resposta
     let jsonString = generatedText.trim();
     
@@ -147,7 +132,6 @@ function extractAndValidateActivities(
     const jsonMatch = jsonString.match(/\[\s*{[\s\S]*}\s*\]/);
     if (jsonMatch) {
       jsonString = jsonMatch[0];
-      console.log('✅ JSON encontrado via regex de array');
     } else {
       // Tentar encontrar JSON entre código
       const codeBlockMatch = jsonString.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
@@ -156,32 +140,20 @@ function extractAndValidateActivities(
         const arrayMatch = codeContent.match(/\[\s*{[\s\S]*}\s*\]/);
         if (arrayMatch) {
           jsonString = arrayMatch[0];
-          console.log('✅ JSON encontrado em bloco de código');
         }
       }
     }
 
-    console.log('📋 JSON extraído para parsing:', jsonString);
-
     const generatedActivities: GeminiActivityResponse[] = JSON.parse(jsonString);
     console.log('🔍 Atividades extraídas da IA:', generatedActivities);
 
-    // Validar se é um array
-    if (!Array.isArray(generatedActivities)) {
-      throw new Error('Resposta não é um array válido');
-    }
-
     // Validar e filtrar atividades
     const validActivities = generatedActivities.filter(activity => {
-      console.log(`🔍 Validando atividade: ${activity.id}`);
-      
-      const exists = schoolPowerActivities.some(available => 
-        available.id === activity.id && available.enabled
-      );
+      const exists = schoolPowerActivities.some(available => available.id === activity.id);
       const hasRequiredFields = activity.id && activity.title && activity.description;
       
       if (!exists) {
-        console.warn(`⚠️ Atividade ${activity.id} não encontrada ou desabilitada na lista disponível`);
+        console.warn(`⚠️ Atividade ${activity.id} não encontrada na lista disponível`);
       }
       if (!hasRequiredFields) {
         console.warn(`⚠️ Atividade ${activity.id} tem campos obrigatórios faltando`);
@@ -189,8 +161,6 @@ function extractAndValidateActivities(
       
       return exists && hasRequiredFields;
     });
-
-    console.log(`✅ ${validActivities.length} atividades válidas encontradas`);
 
     if (validActivities.length === 0) {
       throw new Error('Nenhuma atividade válida foi gerada pela IA');
@@ -204,12 +174,10 @@ function extractAndValidateActivities(
       approved: false
     }));
 
-    console.log('✅ Atividades convertidas para ActionPlanItem:', actionPlanItems);
     return actionPlanItems;
 
   } catch (parseError) {
     console.error('❌ Erro ao processar resposta da IA:', parseError);
-    console.error('📄 Texto original:', generatedText);
     throw new Error('Erro ao processar resposta da IA Gemini');
   }
 }
@@ -219,58 +187,55 @@ function generateIntelligentFallbackPlan(
   quizResponses: ContextualizationData
 ): ActionPlanItem[] {
   console.log('🔄 Gerando plano fallback inteligente...');
-  console.log('📊 Dados para fallback:', { userMessage, quizResponses });
   
   // Combinar todas as informações para análise
   const allText = [
-    userMessage || '',
-    quizResponses.subjects || '',
-    quizResponses.audience || '',
-    quizResponses.notes || ''
+    userMessage,
+    quizResponses.subjects,
+    quizResponses.audience,
+    quizResponses.notes
   ].join(' ').toLowerCase();
-
-  console.log('🔍 Texto combinado para análise:', allText);
 
   // Mapear palavras-chave para atividades específicas
   const keywordMapping = [
     { 
-      keywords: ['caça palavras', 'caça-palavras', 'cruzadinha', 'palavra'], 
-      activityIds: ['lista-exercicios', 'atividades-fixacao'],
+      keywords: ['caça palavras', 'caça-palavras', 'cruzadinha'], 
+      activityId: 'caca-palavras',
       priority: 10 
     },
     { 
-      keywords: ['colorir', 'pintar', 'desenho', 'imagem'], 
-      activityIds: ['lista-exercicios', 'atividades-fixacao'],
+      keywords: ['colorir', 'pintar', 'desenho'], 
+      activityId: 'atividade-colorir',
       priority: 10 
     },
     { 
-      keywords: ['verbos', 'verbo', 'conjugação', 'português', 'portugues'], 
-      activityIds: ['lista-exercicios', 'atividades-fixacao', 'flashcards'],
+      keywords: ['verbos', 'verbo', 'conjugação'], 
+      activityId: 'lista-exercicios',
       priority: 9 
     },
     { 
-      keywords: ['redação', 'texto', 'escrita', 'redacao'], 
-      activityIds: ['redacao-temas', 'lista-exercicios'],
+      keywords: ['redação', 'texto', 'escrita'], 
+      activityId: 'lista-exercicios',
       priority: 8 
     },
     { 
-      keywords: ['prova', 'avaliação', 'teste', 'avaliacao'], 
-      activityIds: ['prova-interativa', 'simulado-enem'],
+      keywords: ['prova', 'avaliação', 'teste'], 
+      activityId: 'prova-interativa',
       priority: 8 
     },
     { 
-      keywords: ['resumo', 'revisão', 'revisao'], 
-      activityIds: ['resumo-inteligente', 'flashcards'],
+      keywords: ['resumo', 'revisão'], 
+      activityId: 'resumo-inteligente',
       priority: 7 
     },
     { 
-      keywords: ['exercício', 'atividade', 'prática', 'exercicio', 'pratica'], 
-      activityIds: ['lista-exercicios', 'atividades-fixacao'],
+      keywords: ['exercício', 'atividade', 'prática'], 
+      activityId: 'lista-exercicios',
       priority: 6 
     },
     { 
-      keywords: ['apresentação', 'slides', 'apresentacao'], 
-      activityIds: ['apresentacao-slides', 'apostila-completa'],
+      keywords: ['apresentação', 'slides'], 
+      activityId: 'slides-educativos',
       priority: 6 
     }
   ];
@@ -284,11 +249,8 @@ function generateIntelligentFallbackPlan(
     ).length;
     
     if (matchCount > 0) {
-      mapping.activityIds.forEach(activityId => {
-        const score = matchCount * mapping.priority;
-        activityScores[activityId] = (activityScores[activityId] || 0) + score;
-        console.log(`📊 Atividade ${activityId} ganhou ${score} pontos (total: ${activityScores[activityId]})`);
-      });
+      const score = matchCount * mapping.priority;
+      activityScores[mapping.activityId] = (activityScores[mapping.activityId] || 0) + score;
     }
   });
 
@@ -298,24 +260,17 @@ function generateIntelligentFallbackPlan(
     .slice(0, 5)
     .map(([id]) => id);
 
-  console.log('🏆 Atividades selecionadas por pontuação:', selectedActivityIds);
-
   // Se não encontrou atividades específicas, usar padrão inteligente
   if (selectedActivityIds.length === 0) {
     selectedActivityIds = ['lista-exercicios', 'resumo-inteligente', 'prova-interativa'];
-    console.log('📋 Usando atividades padrão:', selectedActivityIds);
   }
 
   // Garantir pelo menos 3 atividades
-  const defaultActivities = ['apresentacao-slides', 'mapa-mental', 'cronograma-estudos', 'flashcards', 'atividades-fixacao'];
+  const defaultActivities = ['slides-educativos', 'mapa-mental', 'cronograma-estudos'];
   while (selectedActivityIds.length < 3) {
-    const nextDefault = defaultActivities.find(id => 
-      !selectedActivityIds.includes(id) && 
-      schoolPowerActivities.some(a => a.id === id && a.enabled)
-    );
+    const nextDefault = defaultActivities.find(id => !selectedActivityIds.includes(id));
     if (nextDefault) {
       selectedActivityIds.push(nextDefault);
-      console.log(`➕ Adicionada atividade padrão: ${nextDefault}`);
     } else {
       break;
     }
@@ -323,11 +278,15 @@ function generateIntelligentFallbackPlan(
 
   // Gerar atividades personalizadas
   const fallbackActivities: ActionPlanItem[] = selectedActivityIds.map(activityId => {
-    const baseActivity = schoolPowerActivities.find(a => a.id === activityId && a.enabled);
+    const baseActivity = schoolPowerActivities.find(a => a.id === activityId);
     
     if (!baseActivity) {
-      console.warn(`⚠️ Atividade ${activityId} não encontrada ou desabilitada`);
-      return null;
+      return {
+        id: 'resumo-inteligente',
+        title: 'Resumo Inteligente Personalizado',
+        description: `Resumo personalizado baseado em: ${quizResponses.subjects || 'seu contexto de estudo'}.`,
+        approved: false
+      };
     }
 
     const audience = quizResponses.audience || 'estudantes';
@@ -339,7 +298,7 @@ function generateIntelligentFallbackPlan(
       description: `${baseActivity.description} Personalizado para ${subject} com foco em ${audience}.`,
       approved: false
     };
-  }).filter(Boolean) as ActionPlanItem[];
+  });
 
   console.log('✅ Plano fallback inteligente gerado:', fallbackActivities);
   return fallbackActivities.slice(0, 5); // Máximo de 5 atividades

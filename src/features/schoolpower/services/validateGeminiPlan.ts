@@ -11,9 +11,8 @@ export interface ValidationResult {
 }
 
 export function validateGeminiPlan(generatedActivities: GeminiActivityResponse[]): ValidationResult {
-  console.log('🔍 Iniciando validação do plano gerado pela IA Gemini...');
-  console.log('📊 Atividades recebidas para validação:', generatedActivities);
-  console.log('📚 Total de atividades disponíveis no sistema:', schoolPowerActivities.length);
+  console.log('🔍 Validando plano gerado pela IA Gemini...');
+  console.log('📊 Atividades recebidas:', generatedActivities);
 
   const validActivities: ActionPlanItem[] = [];
   const invalidActivities: GeminiActivityResponse[] = [];
@@ -21,9 +20,7 @@ export function validateGeminiPlan(generatedActivities: GeminiActivityResponse[]
 
   // Verificar se é um array válido
   if (!Array.isArray(generatedActivities)) {
-    const error = 'Resposta da IA não é um array válido';
-    console.error('❌', error);
-    errors.push(error);
+    errors.push('Resposta da IA não é um array válido');
     return {
       isValid: false,
       validActivities: [],
@@ -34,32 +31,19 @@ export function validateGeminiPlan(generatedActivities: GeminiActivityResponse[]
 
   // Verificar quantidade de atividades
   if (generatedActivities.length === 0) {
-    const error = 'Nenhuma atividade foi gerada pela IA';
-    console.error('❌', error);
-    errors.push(error);
+    errors.push('Nenhuma atividade foi gerada');
   } else if (generatedActivities.length > 5) {
-    const warning = `Muitas atividades geradas (${generatedActivities.length}). Máximo permitido: 5`;
-    console.warn('⚠️', warning);
-    errors.push(warning);
+    errors.push(`Muitas atividades geradas (${generatedActivities.length}). Máximo permitido: 5`);
     generatedActivities = generatedActivities.slice(0, 5); // Limitar a 5
-    console.log('✂️ Atividades limitadas a 5:', generatedActivities.map(a => a.id));
   }
-
-  console.log(`🔢 Validando ${generatedActivities.length} atividades...`);
 
   // Validar cada atividade
   generatedActivities.forEach((activity, index) => {
-    console.log(`🔍 Validando atividade ${index + 1}/${generatedActivities.length}:`, {
-      id: activity.id,
-      title: activity.title?.substring(0, 50) + '...',
-      hasDescription: !!activity.description
-    });
+    console.log(`🔍 Validando atividade ${index + 1}:`, activity);
 
     // Verificar se tem campos obrigatórios
     if (!activity.id || !activity.title || !activity.description) {
-      const error = `Atividade ${index + 1}: Campos obrigatórios ausentes (id: ${!!activity.id}, title: ${!!activity.title}, description: ${!!activity.description})`;
-      console.error('❌', error);
-      errors.push(error);
+      errors.push(`Atividade ${index + 1}: Campos obrigatórios ausentes (id, title, description)`);
       invalidActivities.push(activity);
       return;
     }
@@ -67,19 +51,14 @@ export function validateGeminiPlan(generatedActivities: GeminiActivityResponse[]
     // Verificar se o ID existe na lista de atividades disponíveis
     const existingActivity = schoolPowerActivities.find(a => a.id === activity.id);
     if (!existingActivity) {
-      const error = `Atividade ${index + 1}: ID "${activity.id}" não existe na lista de atividades disponíveis`;
-      console.error('❌', error);
-      console.log('📋 IDs disponíveis:', schoolPowerActivities.slice(0, 10).map(a => a.id));
-      errors.push(error);
+      errors.push(`Atividade ${index + 1}: ID "${activity.id}" não existe na lista de atividades disponíveis`);
       invalidActivities.push(activity);
       return;
     }
 
     // Verificar se a atividade está habilitada
     if (!existingActivity.enabled) {
-      const error = `Atividade ${index + 1}: ID "${activity.id}" está desabilitada no sistema`;
-      console.error('❌', error);
-      errors.push(error);
+      errors.push(`Atividade ${index + 1}: ID "${activity.id}" está desabilitada`);
       invalidActivities.push(activity);
       return;
     }
@@ -87,24 +66,18 @@ export function validateGeminiPlan(generatedActivities: GeminiActivityResponse[]
     // Verificar duplicatas
     const isDuplicate = validActivities.some(validActivity => validActivity.id === activity.id);
     if (isDuplicate) {
-      const error = `Atividade ${index + 1}: ID "${activity.id}" duplicado`;
-      console.warn('⚠️', error);
-      errors.push(error);
+      errors.push(`Atividade ${index + 1}: ID "${activity.id}" duplicado`);
       invalidActivities.push(activity);
       return;
     }
 
     // Verificar tamanho dos campos
     if (activity.title.length > 100) {
-      const warning = `Atividade ${index + 1}: Título muito longo (${activity.title.length} caracteres, máximo 100)`;
-      console.warn('⚠️', warning);
-      errors.push(warning);
+      errors.push(`Atividade ${index + 1}: Título muito longo (máximo 100 caracteres)`);
     }
 
     if (activity.description.length > 500) {
-      const warning = `Atividade ${index + 1}: Descrição muito longa (${activity.description.length} caracteres, máximo 500)`;
-      console.warn('⚠️', warning);
-      errors.push(warning);
+      errors.push(`Atividade ${index + 1}: Descrição muito longa (máximo 500 caracteres)`);
     }
 
     // Se chegou até aqui, a atividade é válida
@@ -115,10 +88,10 @@ export function validateGeminiPlan(generatedActivities: GeminiActivityResponse[]
       approved: false
     });
 
-    console.log(`✅ Atividade ${index + 1} validada com sucesso: ${activity.id}`);
+    console.log(`✅ Atividade ${index + 1} validada com sucesso`);
   });
 
-  const isValid = validActivities.length > 0 && errors.filter(e => !e.includes('muito longo')).length === 0;
+  const isValid = validActivities.length > 0 && errors.length === 0;
 
   const result: ValidationResult = {
     isValid,
@@ -127,74 +100,48 @@ export function validateGeminiPlan(generatedActivities: GeminiActivityResponse[]
     errors
   };
 
-  // Log de resumo detalhado
-  console.log('📊 RESUMO DA VALIDAÇÃO:');
-  console.log(`✅ Atividades válidas: ${validActivities.length}`);
-  console.log(`❌ Atividades inválidas: ${invalidActivities.length}`);
-  console.log(`⚠️ Total de erros/avisos: ${errors.length}`);
-  
-  if (validActivities.length > 0) {
-    console.log('📋 IDs das atividades válidas:', validActivities.map(a => a.id));
-  }
-  
-  if (invalidActivities.length > 0) {
-    console.log('🚫 IDs das atividades inválidas:', invalidActivities.map(a => a.id));
-  }
-  
-  if (errors.length > 0) {
-    console.log('📝 Lista de erros:', errors);
-  }
+  console.log('📊 Resultado da validação:', result);
 
+  // Log de resumo
   if (isValid) {
-    console.log(`🎉 Validação concluída com SUCESSO: ${validActivities.length} atividades válidas`);
+    console.log(`✅ Validação concluída: ${validActivities.length} atividades válidas`);
   } else {
-    console.log(`💥 Validação FALHOU: ${errors.length} erros encontrados`);
+    console.log(`❌ Validação falhou: ${errors.length} erros encontrados`);
+    console.log('🔍 Erros:', errors);
   }
 
   return result;
 }
 
 export function sanitizeAndFixActivities(activities: GeminiActivityResponse[]): ActionPlanItem[] {
-  console.log('🔧 Iniciando sanitização e correção de atividades...');
-  console.log('📋 Atividades recebidas para sanitização:', activities.length);
+  console.log('🔧 Sanitizando e corrigindo atividades...');
 
   const sanitizedActivities: ActionPlanItem[] = [];
 
   activities.forEach((activity, index) => {
-    console.log(`🔧 Sanitizando atividade ${index + 1}: ${activity.id}`);
-    
     // Tentar corrigir problemas comuns
     let sanitizedActivity = { ...activity };
 
     // Corrigir ID - remover caracteres especiais e espaços
     if (sanitizedActivity.id) {
-      const originalId = sanitizedActivity.id;
       sanitizedActivity.id = sanitizedActivity.id
         .toLowerCase()
         .replace(/[^a-z0-9\-]/g, '-')
         .replace(/-+/g, '-')
         .replace(/^-|-$/g, '');
-      
-      if (originalId !== sanitizedActivity.id) {
-        console.log(`🔧 ID corrigido: "${originalId}" → "${sanitizedActivity.id}"`);
-      }
     }
 
     // Truncar título se muito longo
     if (sanitizedActivity.title && sanitizedActivity.title.length > 100) {
-      const originalLength = sanitizedActivity.title.length;
       sanitizedActivity.title = sanitizedActivity.title.substring(0, 97) + '...';
-      console.log(`✂️ Título truncado de ${originalLength} para ${sanitizedActivity.title.length} caracteres`);
     }
 
     // Truncar descrição se muito longa
     if (sanitizedActivity.description && sanitizedActivity.description.length > 500) {
-      const originalLength = sanitizedActivity.description.length;
       sanitizedActivity.description = sanitizedActivity.description.substring(0, 497) + '...';
-      console.log(`✂️ Descrição truncada de ${originalLength} para ${sanitizedActivity.description.length} caracteres`);
     }
 
-    // Verificar se o ID corrigido existe e está habilitado
+    // Verificar se o ID corrigido existe
     const existingActivity = schoolPowerActivities.find(a => a.id === sanitizedActivity.id);
     if (existingActivity && existingActivity.enabled) {
       sanitizedActivities.push({
@@ -204,60 +151,21 @@ export function sanitizeAndFixActivities(activities: GeminiActivityResponse[]): 
         approved: false
       });
 
-      console.log(`✅ Atividade ${index + 1} sanitizada com sucesso: ${sanitizedActivity.id}`);
+      console.log(`✅ Atividade ${index + 1} sanitizada com sucesso`);
     } else {
-      console.log(`❌ Atividade ${index + 1} não pôde ser corrigida: ID "${sanitizedActivity.id}" inválido ou desabilitado`);
-      
-      // Tentar encontrar atividade similar
-      const similarActivity = findSimilarActivity(activity.title || '', activity.description || '');
-      if (similarActivity) {
-        console.log(`🔍 Atividade similar encontrada: ${similarActivity.id}`);
-        sanitizedActivities.push({
-          id: similarActivity.id,
-          title: activity.title?.trim() || similarActivity.title,
-          description: activity.description?.trim() || similarActivity.description,
-          approved: false
-        });
-      }
+      console.log(`❌ Atividade ${index + 1} não pôde ser corrigida: ID "${sanitizedActivity.id}" inválido`);
     }
   });
 
-  console.log(`🔧 Sanitização concluída: ${sanitizedActivities.length}/${activities.length} atividades válidas`);
+  console.log(`🔧 Sanitização concluída: ${sanitizedActivities.length} atividades válidas`);
   return sanitizedActivities;
 }
 
-function findSimilarActivity(title: string, description: string): any {
-  const searchText = `${title} ${description}`.toLowerCase();
-  
-  // Buscar por palavras-chave nas atividades disponíveis
-  return schoolPowerActivities.find(activity => {
-    if (!activity.enabled) return false;
-    
-    const activityText = `${activity.title} ${activity.description} ${activity.tags.join(' ')}`.toLowerCase();
-    
-    // Verificar se há palavras em comum
-    const searchWords = searchText.split(/\s+/).filter(word => word.length > 3);
-    const matches = searchWords.filter(word => activityText.includes(word));
-    
-    return matches.length > 0;
-  });
-}
-
 export function getActivityValidationStats() {
-  const stats = {
+  return {
     totalAvailableActivities: schoolPowerActivities.length,
     enabledActivities: schoolPowerActivities.filter(a => a.enabled).length,
     disabledActivities: schoolPowerActivities.filter(a => !a.enabled).length,
-    uniqueTags: [...new Set(schoolPowerActivities.flatMap(a => a.tags))].length,
-    activitiesByType: {} as { [key: string]: number }
+    uniqueTags: [...new Set(schoolPowerActivities.flatMap(a => a.tags))].length
   };
-
-  // Contar atividades por tipo de API
-  schoolPowerActivities.forEach(activity => {
-    const type = activity.apiType || 'unknown';
-    stats.activitiesByType[type] = (stats.activitiesByType[type] || 0) + 1;
-  });
-
-  console.log('📊 Estatísticas das atividades:', stats);
-  return stats;
 }
