@@ -1,0 +1,143 @@
+🎯 Objetivo:
+
+1️⃣ Transformar o Card de Contextualização atual em um Card de Construção fixo, mantendo todas as funcionalidades e campos que existiam.
+
+2️⃣ Após o usuário preencher e enviar os dados no Card de Construção, o mesmo card (mesma estrutura) deverá mudar de interface:
+
+Exibir o Plano de Ação Personalizado em formato de checklist estilo checkbox.
+
+Listar as atividades geradas pela IA Gemini, validadas, em mini-cards com checkbox.
+
+Continuar exibindo o cabeçalho superior com o título atualizado como “Plano de Ação Personalizado”.
+
+3️⃣ Garantir nenhuma quebra de funcionalidade:
+
+Coleta e armazenamento de dados continuam no LocalStorage e Supabase.
+
+Consulta e envio de dados continuam funcionando com o Gemini.
+
+O fluxo no useSchoolPowerFlow.ts continua sem interrupção.
+
+O generatePersonalizedPlan.ts e validateGeminiPlan.ts continuam sem alterações no funcionamento.
+
+Nenhuma animação ou transição quebra a interação do usuário.
+
+🎨 Especificações Visuais
+✅ Card de Construção:
+
+Estrutura fixa e retangular.
+
+Cabeçalho superior:
+
+Etapa de Contextualização como título.
+
+Ícone representativo (🛠️ ou 🗂️).
+
+Cor de fundo do cabeçalho em tom de laranja suave (#FFA726) ou primário do School Power.
+
+Dentro do card:
+
+Campos que estavam no Card de Contextualização (matérias, público-alvo, restrições, datas importantes, observações).
+
+Botão Enviar Contextualização ao final.
+
+✅ Após envio:
+
+Mesmo Card de Construção, mas agora:
+
+Cabeçalho muda para Plano de Ação Personalizado.
+
+Ícone representativo (✅ ou 🚀).
+
+Lista de atividades geradas pela IA Gemini com:
+
+Checkbox.
+
+Nome da atividade.
+
+Descrição curta.
+
+Contador de atividades selecionadas no topo ou no botão.
+
+Botão Aprovar Plano fica habilitado quando pelo menos uma atividade for selecionada.
+
+✅ A transição pode usar uma animação suave (fade/slide de 300ms) para indicar claramente a mudança de etapa.
+
+🛠️ Tarefas Técnicas para a IA executar:
+1️⃣ Criação/Reestruturação do Componente:
+Criar CardDeConstrucao.tsx ou adaptar ContextualizationCard.tsx para ser o novo Card de Construção, controlado por props:
+
+ts
+Copiar
+Editar
+<CardDeConstrucao
+   step="contextualization" // ou "actionPlan"
+   contextualizationData={...}
+   actionPlan={...}
+   onSubmit={...}
+/>
+Se step === "contextualization", renderizar os campos para preenchimento.
+
+Se step === "actionPlan", renderizar a lista de atividades sugeridas com checkbox.
+
+2️⃣ Lógica de Transição:
+No useSchoolPowerFlow.ts:
+
+Após handleSubmitContextualization(), automaticamente:
+
+ts
+Copiar
+Editar
+setFlowState('generating')
+Quando receber os dados do plano de ação:
+
+ts
+Copiar
+Editar
+setFlowState('actionPlan')
+O CardDeConstrucao renderiza a interface de acordo com flowState.
+
+3️⃣ Garantias de Integração:
+✅ Coleta de dados (mensagem + contextualização) permanece intacta.
+✅ Envio para o Gemini permanece intacto.
+✅ Recebimento das atividades personalizadas e filtradas permanece intacto.
+✅ Validação com a lista de 137 atividades permanece intacta.
+✅ Armazenamento em LocalStorage e Supabase permanece funcional.
+✅ Botão Aprovar Plano aciona normalmente a produção das atividades.
+
+4️⃣ Testes obrigatórios:
+✅ Enviar dados de teste (ex: “Quero um caça-palavras de verbos para o 6º ano”).
+✅ Verificar se após o envio o Card de Construção muda corretamente para o Plano de Ação.
+✅ Selecionar atividades, aprovar plano e verificar a produção correta.
+✅ Monitorar logs para confirmar:
+
+Dados enviados ao Gemini corretos.
+
+Dados retornados corretos.
+
+Dados armazenados no LocalStorage/Supabase corretos.
+
+Nenhuma quebra de fluxo na interface.
+
+🚨 Lembretes importantes:
+✅ Não remover ou alterar endpoints, hooks ou serviços já implementados.
+
+✅ Não remover integrações com Supabase ou Gemini.
+
+✅ Garantir que o card seja responsivo e funcione bem em dispositivos mobile e desktop.
+
+✅ Manter a performance, evitando renders desnecessários no React.
+
+✅ Testar comportamento em recarregamento de página para garantir que o estado seja persistente.
+
+✅ Conclusão para a IA:
+Implemente o novo Card de Construção com mudança dinâmica de interface, garantindo:
+
+Consistência visual.
+
+Integração funcional com todo o pipeline do School Power.
+
+Zero impacto negativo em funcionalidades existentes.
+
+Organização, escalabilidade e legibilidade no código.
+
