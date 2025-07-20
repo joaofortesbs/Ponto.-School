@@ -1,0 +1,129 @@
+🛠️ Objetivo:
+
+Reescrever generatePersonalizedPlan.ts e validateGeminiPlan.ts para que:
+
+✅ Os dados do usuário (mensagem inicial + quiz de contextualização) sejam realmente utilizados para gerar um plano de ação totalmente personalizado via API Gemini.
+
+✅ As atividades retornadas pela Gemini sejam filtradas e validadas estritamente usando o JSON das 137 atividades possíveis.
+
+✅ O plano de ação exibido ao usuário seja 100% real, personalizado, funcional, sem dados superficiais ou duplicados.
+
+🔹 Contexto:
+✏️ Fluxo atual:
+Usuário envia mensagem na caixa de mensagens do School Power.
+
+Usuário preenche Quiz de Contextualização.
+
+Dados são salvos no LocalStorage e/ou Supabase:
+
+initialMessage
+
+contextualizationData
+
+API Gemini é chamada, porém atualmente:
+
+Está utilizando prompts superficiais e genéricos.
+
+Está ignorando os dados coletados.
+
+Retorna atividades padronizadas ou duplicadas.
+
+Renderiza no ActionPlanCard atividades não personalizadas.
+
+🔹 O que deve ser feito:
+✅ 1️⃣ Reescrever generatePersonalizedPlan.ts:
+Buscar os dados completos salvos (via Supabase ou LocalStorage):
+
+initialMessage
+
+contextualizationData
+
+Montar o prompt de forma estruturada:
+
+Incluindo initialMessage, contextualizationData e o JSON completo das 137 atividades permitidas.
+
+Informar explicitamente à Gemini para usar apenas as atividades permitidas e gerar entre 3 a 5 atividades personalizadas.
+
+Solicitar títulos claros e personalizados (Ex: “Prova Interativa - Verbos ENEM 2025”), descrições ricas e o id válido da atividade correspondente no JSON.
+
+Exemplo de estrutura de prompt:
+
+json
+Copiar
+Editar
+{
+  "system": "Você é a IA do School Power, gerando planos de ação educacionais personalizados.",
+  "initialMessage": "Mensagem inicial do usuário",
+  "contextualizationData": { "subjects": "...", "audience": "...", ... },
+  "allowedActivities": [ JSON das 137 atividades ],
+  "instruction": "Com base em todas as informações acima, gere de 3 a 5 atividades personalizadas utilizando apenas os ids e nomes das atividades disponíveis. Retorne em JSON estruturado no seguinte formato: [{ id, title, description }]"
+}
+Chamar a API Gemini de forma assíncrona e limpa, armazenando o retorno em flowData.actionPlan de forma clara para renderização.
+
+✅ 2️⃣ Reescrever validateGeminiPlan.ts:
+Validar se cada atividade retornada pela Gemini possui um id existente no JSON das 137 atividades.
+
+Se houver atividades não permitidas, removê-las ou retornar erro claro.
+
+Retornar um array limpo e consistente para o ActionPlanCard.
+
+✅ 3️⃣ Implementações Adicionais:
+Adicionar logs claros em cada etapa:
+
+Prompt gerado.
+
+Dados enviados para Gemini.
+
+Resposta recebida.
+
+Resultado validado e filtrado.
+
+Garantir que não existam duplicações nas atividades retornadas.
+
+Sincronização completa com Supabase para rastrear planos gerados por usuário.
+
+Garantir que os mini-cards no ActionPlanCard exibam as atividades personalizadas corretamente.
+
+🚀 JSON DAS 137 ATIVIDADES PARA USO NA GEMINI:
+Segue o arquivo schoolPowerActivities.json pronto para uso direto, para colocar na raiz de /src/data ou onde preferir:
+
+json
+Copiar
+Editar
+[
+  {
+    "id": "resumo-inteligente",
+    "name": "Resumo Inteligente",
+    "description": "Criar resumos otimizados dos conteúdos principais"
+  },
+  {
+    "id": "prova-interativa",
+    "name": "Prova Interativa",
+    "description": "Gerar avaliações automáticas com correção instantânea"
+  },
+  {
+    "id": "plano-estudo",
+    "name": "Plano de Estudo",
+    "description": "Montar cronogramas personalizados para o aluno"
+  },
+  {
+    "id": "exercicios-praticos",
+    "name": "Exercícios Práticos",
+    "description": "Listas de exercícios focados nos temas estudados"
+  },
+  {
+    "id": "material-apoio",
+    "name": "Material de Apoio",
+    "description": "Gerar materiais complementares para reforço de aprendizado"
+  },
+  ...
+  // Inclua todas as 137 atividades reais que sua equipe estruturou
+]
+🪐 Se quiser, me envie agora o arquivo CSV ou Notion com as 137 atividades para gerar automaticamente o JSON pronto para importação.
+
+✅ Resumo final:
+✅ Utilizar Supabase ou LocalStorage somente para armazenamento e rastreabilidade, mas garantir a montagem e envio do prompt completo para Gemini.
+✅ Garantir que o fluxo utilize esses dados ao invés de atividades genéricas.
+✅ Validar e renderizar somente atividades permitidas, personalizadas e consistentes.
+✅ Gerar atividades com títulos e descrições personalizadas.
+✅ Garantir consistência, rastreabilidade e usabilidade real.
