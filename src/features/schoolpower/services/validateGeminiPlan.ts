@@ -45,9 +45,16 @@ function isValidActivityId(activityId: string, allowedActivities: typeof schoolP
     return false;
   }
 
-  return allowedActivities.some(activity => 
-    activity.id === activityId.trim().toLowerCase() && activity.enabled
-  );
+  const normalizedId = activityId.trim().toLowerCase();
+  
+  return allowedActivities.some(activity => {
+    const activityNormalizedId = activity.id.toLowerCase();
+    return (
+      (activityNormalizedId === normalizedId || 
+       activity.id === activityId.trim()) && 
+      activity.enabled
+    );
+  });
 }
 
 /**

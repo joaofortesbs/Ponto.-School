@@ -112,8 +112,22 @@ export function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
     console.log('📝 Contextualização submetida:', contextData);
     console.log('📋 Dados atuais do flow:', flowData);
 
-    if (!flowData.initialMessage) {
-      console.error('❌ Mensagem inicial não encontrada no estado atual');
+    // Validar se temos initialMessage (buscar também no localStorage se necessário)
+    let currentMessage = flowData.initialMessage;
+    if (!currentMessage) {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          const storedData = JSON.parse(stored);
+          currentMessage = storedData.initialMessage;
+        }
+      } catch (error) {
+        console.error('Erro ao buscar mensagem do localStorage:', error);
+      }
+    }
+
+    if (!currentMessage) {
+      console.error('❌ Mensagem inicial não encontrada');
       return;
     }
 
@@ -123,8 +137,9 @@ export function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
 
     // Salvar dados de contextualização no estado
     const dataWithContext = {
-      ...flowData,
+      initialMessage: currentMessage, // Garantir que a mensagem está presente
       contextualizationData: contextData,
+      actionPlan: null,
       timestamp: Date.now()
     };
 
@@ -137,13 +152,13 @@ export function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
       // Gera action plan usando o novo serviço personalizado
       console.log('🤖 Iniciando geração de plano de ação com IA Gemini...');
       console.log('📝 Dados coletados:', {
-        message: flowData.initialMessage,
+        message: currentMessage,
         contextData
       });
 
       console.log('📤 Enviando para geração personalizada...');
       const actionPlan = await generatePersonalizedPlan(
-        flowData.initialMessage,
+        currentMessage,
         contextData
       );
 

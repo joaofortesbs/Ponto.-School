@@ -4,9 +4,11 @@ import { ActionPlanItem } from '../actionplan/ActionPlanCard';
 import schoolPowerActivities from '../data/schoolPowerActivities.json';
 import { validateGeminiPlan } from './validateGeminiPlan';
 
-// API Key da Gemini para School Power
-const GEMINI_API_KEY = 'AIzaSyD-Sso0SdyYKoA4M3tQhcWjQ1AoddB7Wo4';
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
+// Usar API Key centralizada
+import { API_KEYS, API_URLS } from '@/config/apiKeys';
+
+const GEMINI_API_KEY = API_KEYS.GEMINI;
+const GEMINI_API_URL = API_URLS.GEMINI;
 
 interface GeminiResponse {
   candidates?: {
@@ -30,60 +32,33 @@ interface GeminiActivityResponse {
 }
 
 /**
- * Constrói o prompt estruturado para a API Gemini
+ * Constrói o prompt otimizado para a API Gemini
  */
 function buildGeminiPrompt(
   initialMessage: string, 
   contextualizationData: ContextualizationData,
   allowedActivities: typeof schoolPowerActivities
 ): string {
-  const prompt = `
-🎯 SISTEMA: Você é a IA especializada do School Power, responsável por gerar planos de ação educacionais 100% personalizados.
+  // Simplificar lista de atividades para economizar tokens
+  const activitiesIds = allowedActivities
+    .filter(a => a.enabled)
+    .map(a => a.id)
+    .slice(0, 50); // Limitar para evitar overflow
 
-📝 DADOS DO USUÁRIO:
-Mensagem Inicial: "${initialMessage}"
+  const prompt = `Você é o assistente educacional School Power. 
 
-Contextualização Detalhada:
-- Disciplinas/Matérias: ${contextualizationData.subjects}
-- Público-Alvo: ${contextualizationData.audience}
-- Restrições/Limitações: ${contextualizationData.restrictions}
-- Datas/Cronograma: ${contextualizationData.dates}
-- Observações Adicionais: ${contextualizationData.notes}
+DADOS:
+- Pedido: "${initialMessage}"
+- Disciplinas: ${contextualizationData.subjects || 'Geral'}
+- Público: ${contextualizationData.audience || 'Estudantes'}
+- Observações: ${contextualizationData.notes || 'Nenhuma'}
 
-🎯 ATIVIDADES PERMITIDAS (${allowedActivities.length} disponíveis):
-${JSON.stringify(allowedActivities.map(activity => ({
-  id: activity.id,
-  name: activity.name,
-  description: activity.description,
-  tags: activity.tags
-})), null, 2)}
+ATIVIDADES DISPONÍVEIS: ${activitiesIds.join(', ')}
 
-📋 INSTRUÇÕES ESPECÍFICAS:
-1. Analise CUIDADOSAMENTE a mensagem inicial e os dados de contextualização
-2. Selecione entre 3 a 5 atividades que sejam PERFEITAMENTE adequadas ao pedido
-3. Use EXCLUSIVAMENTE os IDs das atividades da lista acima
-4. Personalize os títulos e descrições baseando-se nos dados fornecidos
-5. Garanta que cada atividade seja única e relevante para o contexto
+TAREFA: Selecione 3-4 atividades adequadas ao pedido. Retorne APENAS este JSON:
+[{"id":"atividade-id","title":"Título Personalizado","description":"Descrição contextualizada"}]
 
-🎯 FORMATO DE RESPOSTA (JSON PURO, SEM MARKDOWN):
-[
-  {
-    "id": "id-da-atividade-permitida",
-    "title": "Título Personalizado Baseado no Contexto",
-    "description": "Descrição personalizada que conecta a atividade com os dados fornecidos",
-    "personalizedTitle": "Título ainda mais específico se necessário",
-    "personalizedDescription": "Descrição detalhada e contextualizada"
-  }
-]
-
-⚠️ REGRAS CRÍTICAS:
-- Use APENAS IDs das atividades permitidas listadas acima
-- NÃO invente novos IDs ou atividades
-- Personalize títulos e descrições baseando-se nos dados reais
-- Retorne APENAS o JSON sem explicações adicionais
-- Garanta relevância total com a solicitação inicial
-
-GERE AGORA o plano de ação personalizado:`;
+IMPORTANTE: Use SOMENTE os IDs listados acima.`;
 
   return prompt;
 }
@@ -93,27 +68,37 @@ GERE AGORA o plano de ação personalizado:`;
  */
 async function callGeminiAPI(prompt: string): Promise<string> {
   console.log('🚀 Fazendo chamada para API Gemini...');
-  console.log('📤 Prompt enviado:', prompt.substring(0, 500) + '...');
+  console.log('📤 Prompt enviado (primeiros 300 chars):', prompt.substring(0, 300));
+  console.log('🔑 API Key disponível:', !!GEMINI_API_KEY);
+  console.log('🌐 URL da API:', GEMINI_API_URL);
+
+  if (!GEMINI_API_KEY) {
+    throw new Error('API Key do Gemini não está configurada');
+  }
 
   try {
+    const requestBody = {
+      contents: [{
+        parts: [{
+          text: prompt
+        }]
+      }],
+      generationConfig: {
+        temperature: 0.3, // Reduzido para respostas mais consistentes
+        topK: 20,
+        topP: 0.8,
+        maxOutputTokens: 1024, // Reduzido para economizar tokens
+      }
+    };
+
+    console.log('📋 Request body:', JSON.stringify(requestBody, null, 2));
+
     const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: prompt
-          }]
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 2048,
-        }
-      })
+      body: JSON.stringify(requestBody)
     });
 
     if (!response.ok) {
