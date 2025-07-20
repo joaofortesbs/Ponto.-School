@@ -9,6 +9,7 @@ import {
   Particles3D,
   SideMenu,
   ParticlesBackground,
+  DebugPanel,
 } from "./components";
 import { useSchoolPowerFlow } from "../../features/schoolpower/hooks/useSchoolPowerFlow";
 import { ContextualizationCard } from "../../features/schoolpower/contextualization/ContextualizationCard";
@@ -69,6 +70,9 @@ export function SchoolPowerPage() {
       className="relative flex h-[90vh] min-h-[650px] w-full flex-col items-center justify-center overflow-hidden rounded-lg"
       style={{ backgroundColor: "transparent" }}
     >
+      {/* Debug Panel - sempre visível no canto superior direito */}
+      <DebugPanel />
+
       {/* Background de estrelas - sempre visível */}
       <ParticlesBackground isDarkTheme={isDarkTheme} />
 
