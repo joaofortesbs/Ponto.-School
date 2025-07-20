@@ -1,4 +1,3 @@
-
 "use client";
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
@@ -15,14 +14,14 @@ interface CardDeConstrucaoProps {
   isLoading?: boolean;
 }
 
-export function CardDeConstrucao({ 
-  step, 
-  contextualizationData, 
-  actionPlan, 
-  onSubmitContextualization, 
+export function CardDeConstrucao({
+  step,
+  contextualizationData,
+  actionPlan,
+  onSubmitContextualization,
   onApproveActionPlan,
-  isLoading = false 
-}: CardDeConstrucaoProps) {
+  isLoading = false
+}: CardDeConstrucaoProps): JSX.Element {
   // Form data for contextualization
   const [formData, setFormData] = useState<ContextualizationData>({
     materias: '',
@@ -224,7 +223,7 @@ export function CardDeConstrucao({
             <div className="space-y-3 max-h-96 overflow-y-auto">
               {actionPlan?.map((activity) => {
                 const isSelected = selectedActivities.some(item => item.id === activity.id);
-                
+
                 return (
                   <motion.div
                     key={activity.id}

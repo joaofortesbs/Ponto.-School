@@ -13,6 +13,7 @@ import {
 import { useSchoolPowerFlow } from "../../features/schoolpower/hooks/useSchoolPowerFlow";
 import { ContextualizationCard } from "../../features/schoolpower/contextualization/ContextualizationCard";
 import { ActionPlanCard } from "../../features/schoolpower/actionplan/ActionPlanCard";
+import { CardDeConstrucao } from "../../features/schoolpower/construction/CardDeConstrucao";
 
 export function SchoolPowerPage() {
   const [isDarkTheme] = useState(true);
@@ -128,15 +129,23 @@ export function SchoolPowerPage() {
 
       {/* Card de Construção unificado - aparece baseado no flowState */}
       {(flowState === 'contextualizing' || flowState === 'actionplan') && (
-        
-          {/* Replacing with the correct import statement */}
-        
-        
-          
-        
-        
-          
-        
+        <motion.div 
+          className="absolute inset-0 bg-black/10 backdrop-blur-sm flex items-center justify-center z-40"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="w-full max-w-4xl mx-4">
+            <CardDeConstrucao
+              step={flowState === 'contextualizing' ? 'contextualization' : 'actionPlan'}
+              contextualizationData={flowData.contextualizationData}
+              actionPlan={flowData.actionPlan}
+              onSubmitContextualization={handleSubmitContextualization}
+              onApproveActionPlan={handleApproveActionPlan}
+              isLoading={isLoading}
+            />
+          </div>
+        </motion.div>
       )}
 
       {(flowState === 'generating' || flowState === 'generatingActivities') && (
