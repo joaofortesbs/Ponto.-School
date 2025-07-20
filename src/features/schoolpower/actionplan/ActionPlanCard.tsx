@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, Circle, Sparkles, Brain, Target, ArrowRight } from 'lucide-react';
@@ -31,7 +30,7 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
   const handleItemToggle = (item: ActionPlanItem) => {
     setSelectedItems(prev => {
       const isSelected = prev.some(selected => selected.id === item.id);
-      
+
       if (isSelected) {
         return prev.filter(selected => selected.id !== item.id);
       } else {
@@ -53,41 +52,34 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
 
   if (isLoading) {
     return (
-      <motion.div
+      <motion.div 
+        className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 p-8 w-full max-w-4xl mx-auto"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="w-full max-w-4xl mx-auto"
+        transition={{ duration: 0.5 }}
       >
-        <Card className="bg-gradient-to-br from-purple-50 to-blue-50 border-purple-200 shadow-xl">
-          <CardHeader className="text-center space-y-4">
-            <div className="flex items-center justify-center gap-3">
+        <div className="text-center">
+          <div className="relative mb-6">
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#FF6B00]/20 border-t-[#FF6B00] mx-auto"></div>
+            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[#FF6B00]/10 to-transparent animate-pulse"></div>
+          </div>
+          <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
+            🎯 Criando Plano Personalizado
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            A IA Gemini está analisando seu contexto e gerando atividades específicas para suas necessidades
+          </p>
+          <div className="bg-gradient-to-r from-[#FF6B00]/5 to-[#29335C]/5 rounded-lg p-4 border border-[#FF6B00]/10">
+            <div className="flex items-center justify-center space-x-2 text-sm text-gray-700 dark:text-gray-300">
               <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                animate={{ opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
               >
-                <Brain className="h-8 w-8 text-purple-600" />
+                ⚡ Processando dados...
               </motion.div>
-              <CardTitle className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-                Gerando Seu Plano de Ação
-              </CardTitle>
             </div>
-            <p className="text-gray-600">
-              Nossa IA está analisando suas informações e criando atividades personalizadas...
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {[1, 2, 3, 4].map((index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.2, duration: 0.5 }}
-                className="h-16 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg animate-pulse"
-              />
-            ))}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </motion.div>
     );
   }
@@ -158,7 +150,7 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
                         <p className="text-sm text-gray-600">
                           {item.personalizedDescription || item.description}
                         </p>
-                        
+
                         {item.personalizedTitle && (
                           <div className="flex items-center gap-2 text-xs text-purple-600">
                             <Sparkles className="h-3 w-3" />

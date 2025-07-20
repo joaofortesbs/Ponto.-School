@@ -182,24 +182,36 @@ export function SchoolPowerPage() {
           transition={{ duration: 0.3 }}
         >
           <motion.div 
-            className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl rounded-2xl p-8 max-w-md w-full mx-4 text-center shadow-2xl border border-white/20"
+            className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-2xl p-8 max-w-lg w-full mx-4 text-center shadow-2xl border border-white/30"
             initial={{ opacity: 0, scale: 0.8, y: 50 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
           >
-            <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#FF6B00]/20 border-t-[#FF6B00] mx-auto mb-6"></div>
+            <div className="relative mb-6">
+              <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#FF6B00]/20 border-t-[#FF6B00] mx-auto"></div>
+              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[#FF6B00]/10 to-transparent animate-pulse"></div>
+            </div>
             <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
-              Gerando Plano de Ação
+              🤖 Analisando com IA Gemini
             </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
-              A IA está processando sua solicitação e criando um plano personalizado...
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              A IA está processando sua mensagem e contexto para criar um plano de ação personalizado...
             </p>
-            <button 
-              onClick={resetFlow}
-              className="px-6 py-2 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200"
-            >
-              Cancelar
-            </button>
+            <div className="bg-gradient-to-r from-[#FF6B00]/10 to-[#29335C]/10 rounded-lg p-4 mb-6 border border-[#FF6B00]/20">
+              <p className="text-sm text-gray-700 dark:text-gray-300">
+                ✨ Analisando 137 atividades disponíveis<br/>
+                🎯 Personalizando para seu contexto<br/>
+                📝 Gerando sugestões inteligentes
+              </p>
+            </div>
+            <div className="flex gap-3 justify-center">
+              <button 
+                onClick={resetFlow}
+                className="px-6 py-2 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200"
+              >
+                Cancelar
+              </button>
+            </div>
           </motion.div>
         </motion.div>
       )}

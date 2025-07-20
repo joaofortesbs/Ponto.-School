@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { ContextualizationData } from '../contextualization/ContextualizationCard';
 import { ActionPlanItem } from '../actionplan/ActionPlanCard';
@@ -41,7 +40,7 @@ export function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
     } catch (error) {
       console.error('❌ Erro ao carregar dados do School Power Flow:', error);
     }
-    
+
     return {
       initialMessage: null,
       contextualizationData: null,
@@ -79,14 +78,14 @@ export function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
   // Envia mensagem inicial e inicia processo de contextualização
   const sendInitialMessage = useCallback((message: string) => {
     console.log('📤 Mensagem inicial enviada:', message);
-    
+
     const newData: SchoolPowerFlowData = {
       initialMessage: message,
       contextualizationData: null,
       actionPlan: null,
       timestamp: Date.now()
     };
-    
+
     setFlowData(newData);
     saveData(newData);
     setFlowState('contextualizing');
@@ -162,7 +161,7 @@ Responda APENAS com o JSON válido, sem texto adicional.`;
 
       const result = await response.json();
       const generatedText = result.candidates?.[0]?.content?.parts?.[0]?.text;
-      
+
       if (!generatedText) {
         throw new Error('Nenhum conteúdo gerado pela IA Gemini');
       }
@@ -201,10 +200,10 @@ Responda APENAS com o JSON válido, sem texto adicional.`;
 
       console.log('✅ Plano de ação gerado com sucesso:', actionPlanItems);
       return actionPlanItems;
-      
+
     } catch (error) {
       console.error('❌ Erro ao gerar plano de ação com IA Gemini:', error);
-      
+
       // Fallback com atividades básicas personalizadas
       const fallbackActivities: ActionPlanItem[] = [
         {
@@ -237,22 +236,22 @@ Responda APENAS com o JSON válido, sem texto adicional.`;
     console.log('📝 Contextualização submetida:', data);
     setIsLoading(true);
     setFlowState('actionplan');
-    
+
     try {
       // Gerar action plan com IA Gemini usando dados reais
       const actionPlan = await generateActionPlan(flowData.initialMessage || '', data);
-      
+
       const newData: SchoolPowerFlowData = {
         ...flowData,
         contextualizationData: data,
         actionPlan,
         timestamp: Date.now()
       };
-      
+
       setFlowData(newData);
       saveData(newData);
       console.log('✅ Action plan gerado e salvo:', actionPlan);
-      
+
     } catch (error) {
       console.error('❌ Erro ao processar contextualização:', error);
       // Manter estado de erro visível para o usuário
@@ -267,12 +266,12 @@ Responda APENAS com o JSON válido, sem texto adicional.`;
     console.log('✅ Action plan aprovado:', approvedItems);
     setIsLoading(true);
     setFlowState('generatingActivities');
-    
+
     // Simula geração das atividades aprovadas
     setTimeout(() => {
       console.log('🤖 Gerando atividades aprovadas:', approvedItems);
       setIsLoading(false);
-      
+
       // Aqui será integrado com a geração real das atividades
       // Por enquanto, volta para o estado idle após gerar
       setTimeout(() => {
@@ -284,19 +283,19 @@ Responda APENAS com o JSON válido, sem texto adicional.`;
   // Reseta todo o fluxo
   const resetFlow = useCallback(() => {
     console.log('🔄 Resetando School Power Flow');
-    
+
     const emptyData: SchoolPowerFlowData = {
       initialMessage: null,
       contextualizationData: null,
       actionPlan: null,
       timestamp: Date.now()
     };
-    
+
     setFlowData(emptyData);
     saveData(emptyData);
     setFlowState('idle');
     setIsLoading(false);
-    
+
     // Limpa localStorage
     localStorage.removeItem(STORAGE_KEY);
   }, [saveData]);
