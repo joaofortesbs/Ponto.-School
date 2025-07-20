@@ -1,3 +1,4 @@
+
 "use client";
 import React, { useState } from "react";
 import { motion } from "framer-motion";
@@ -24,7 +25,8 @@ export function SchoolPowerPage() {
     sendInitialMessage,
     submitContextualization,
     approveActionPlan,
-    resetFlow
+    resetFlow,
+    isLoading
   } = useSchoolPowerFlow();
 
   const handleCentralExpandedChange = (expanded: boolean) => {
@@ -137,7 +139,7 @@ export function SchoolPowerPage() {
           <ActionPlanCard 
             actionPlan={flowData.actionPlan || []}
             onApprove={handleApproveActionPlan}
-            isLoading={!flowData.actionPlan}
+            isLoading={isLoading || !flowData.actionPlan}
           />
         </motion.div>
       )}
@@ -158,11 +160,19 @@ export function SchoolPowerPage() {
           >
             <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#FF6B00]/20 border-t-[#FF6B00] mx-auto mb-6"></div>
             <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
-              Gerando Atividades
+              🎯 Gerando Atividades
             </h3>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
               As atividades aprovadas estão sendo geradas automaticamente pelo School Power...
             </p>
+            <div className="bg-gradient-to-r from-[#FF6B00]/10 to-[#29335C]/10 rounded-lg p-4 mb-6 border border-[#FF6B00]/20">
+              <p className="text-sm text-gray-700 dark:text-gray-300">
+                ✅ Personalizando conteúdo<br/>
+                🎨 Criando materiais visuais<br/>
+                📝 Formatando atividades<br/>
+                🚀 Finalizando download
+              </p>
+            </div>
             <button 
               onClick={resetFlow}
               className="px-6 py-2 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200"
@@ -201,7 +211,8 @@ export function SchoolPowerPage() {
               <p className="text-sm text-gray-700 dark:text-gray-300">
                 ✨ Analisando 137 atividades disponíveis<br/>
                 🎯 Personalizando para seu contexto<br/>
-                📝 Gerando sugestões inteligentes
+                📝 Gerando sugestões inteligentes<br/>
+                🔍 Validando compatibilidade
               </p>
             </div>
             <div className="flex gap-3 justify-center">

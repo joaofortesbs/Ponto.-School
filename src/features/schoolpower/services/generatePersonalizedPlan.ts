@@ -20,60 +20,8 @@ export async function generatePersonalizedPlan(
     console.log('🤖 Iniciando geração de plano personalizado via API Gemini...');
     console.log('📝 Dados recebidos:', { userMessage, quizResponses });
 
-    // Preparar payload estruturado
-    const payload = {
-      userMessage,
-      quizResponses: {
-        materiasETemas: quizResponses.subjects,
-        publicoAlvo: quizResponses.audience,
-        restricoes: quizResponses.restrictions,
-        datasImportantes: quizResponses.dates,
-        observacoes: quizResponses.notes
-      },
-      availableActivities: schoolPowerActivities
-    };
-
-    // Construir prompt para a API Gemini
-    const prompt = `Você é a IA do School Power. Seu trabalho é gerar de 3 a 5 atividades personalizadas para um professor ou coordenador educacional, utilizando SOMENTE as atividades disponíveis abaixo.
-
-Mensagem inicial:
-"${userMessage}"
-
-Respostas do Quiz:
-- Matérias e temas: "${quizResponses.subjects}"
-- Público-alvo: "${quizResponses.audience}"
-- Restrições ou preferências: "${quizResponses.restrictions}"
-- Datas importantes: "${quizResponses.dates}"
-- Observações: "${quizResponses.notes}"
-
-Atividades disponíveis:
-${JSON.stringify(schoolPowerActivities, null, 2)}
-
-Retorne um JSON válido com atividades, cada uma com:
-- id (da atividade existente na lista acima)
-- title (personalizado, curto e claro)
-- description (personalizada, detalhada)
-
-Exemplo de resposta:
-[
-  {
-    "id": "prova-interativa",
-    "title": "Prova de Redação - 28/07 - 3º Ano",
-    "description": "Avaliação interativa com foco em dissertação argumentativa para o 3º ano."
-  },
-  {
-    "id": "lista-exercicios",
-    "title": "Lista de Exercícios - Verbos em Português",
-    "description": "Exercícios práticos sobre conjugação e classificação de verbos para o 3º ano."
-  }
-]
-
-Certifique-se de que:
-1. Os IDs das atividades existam na lista fornecida
-2. Os títulos sejam personalizados e relevantes
-3. As descrições sejam detalhadas e específicas
-4. Retorne entre 3 a 5 atividades
-5. O JSON seja válido e bem formatado`;
+    // Construir prompt otimizado para a API Gemini
+    const prompt = createOptimizedPrompt(userMessage, quizResponses);
 
     // Fazer chamada para API Gemini
     console.log('📤 Enviando requisição para API Gemini...');
@@ -117,54 +65,108 @@ Certifique-se de que:
 
     console.log('📥 Resposta bruta da IA Gemini:', generatedText);
 
-    // Extrair JSON da resposta
-    const jsonMatch = generatedText.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) {
-      console.warn('⚠️ Formato JSON inválido, tentando extrair JSON de outra forma...');
-      
-      // Tentar encontrar JSON entre ```json```
-      const codeBlockMatch = generatedText.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-      if (codeBlockMatch) {
-        const codeBlockContent = codeBlockMatch[1];
-        const jsonInCodeBlock = codeBlockContent.match(/\[[\s\S]*\]/);
-        if (jsonInCodeBlock) {
-          return parseAndValidateActivities(jsonInCodeBlock[0], userMessage);
-        }
-      }
-      
-      throw new Error('Formato JSON inválido na resposta da IA');
+    // Processar resposta da IA
+    const activities = extractAndValidateActivities(generatedText, userMessage, quizResponses);
+    
+    if (activities.length > 0) {
+      console.log('✅ Plano de ação gerado com sucesso via IA:', activities);
+      return activities;
+    } else {
+      throw new Error('Nenhuma atividade válida foi extraída da resposta da IA');
     }
 
-    return parseAndValidateActivities(jsonMatch[0], userMessage);
-
   } catch (error) {
-    console.error('❌ Erro ao gerar plano personalizado:', error);
+    console.error('❌ Erro ao gerar plano personalizado via IA:', error);
     
-    // Retornar plano fallback personalizado
-    console.log('🔄 Usando plano fallback personalizado...');
-    return generateFallbackPlan(userMessage, quizResponses);
+    // Retornar plano fallback inteligente
+    console.log('🔄 Usando plano fallback inteligente...');
+    return generateIntelligentFallbackPlan(userMessage, quizResponses);
   }
 }
 
-function parseAndValidateActivities(jsonString: string, userMessage: string): ActionPlanItem[] {
-  try {
-    const generatedActivities: GeminiActivityResponse[] = JSON.parse(jsonString);
-    console.log('🔍 Atividades extraídas:', generatedActivities);
+function createOptimizedPrompt(userMessage: string, quizResponses: ContextualizationData): string {
+  // Criar lista compacta de atividades disponíveis
+  const availableActivities = schoolPowerActivities.slice(0, 20).map(activity => 
+    `${activity.id}: ${activity.title}`
+  ).join(', ');
 
-    // Validar se todas as atividades existem na lista disponível
+  return `Você é uma IA especializada em educação. Analise a solicitação do professor e gere 3-5 atividades personalizadas.
+
+SOLICITAÇÃO: "${userMessage}"
+
+CONTEXTO:
+- Matérias: ${quizResponses.subjects}
+- Público: ${quizResponses.audience}  
+- Restrições: ${quizResponses.restrictions}
+- Datas: ${quizResponses.dates}
+- Observações: ${quizResponses.notes}
+
+ATIVIDADES DISPONÍVEIS: ${availableActivities}
+
+RESPONDA APENAS COM JSON VÁLIDO:
+[
+  {
+    "id": "id_da_atividade_disponivel",
+    "title": "Título Personalizado",
+    "description": "Descrição detalhada e personalizada"
+  }
+]
+
+REGRAS:
+1. Use apenas IDs da lista de atividades disponíveis
+2. Personalize títulos e descrições para o contexto específico
+3. Retorne 3-5 atividades
+4. JSON válido apenas, sem texto adicional`;
+}
+
+function extractAndValidateActivities(
+  generatedText: string, 
+  userMessage: string, 
+  quizResponses: ContextualizationData
+): ActionPlanItem[] {
+  try {
+    // Tentar extrair JSON da resposta
+    let jsonString = generatedText.trim();
+    
+    // Procurar por array JSON
+    const jsonMatch = jsonString.match(/\[\s*{[\s\S]*}\s*\]/);
+    if (jsonMatch) {
+      jsonString = jsonMatch[0];
+    } else {
+      // Tentar encontrar JSON entre código
+      const codeBlockMatch = jsonString.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+      if (codeBlockMatch) {
+        const codeContent = codeBlockMatch[1];
+        const arrayMatch = codeContent.match(/\[\s*{[\s\S]*}\s*\]/);
+        if (arrayMatch) {
+          jsonString = arrayMatch[0];
+        }
+      }
+    }
+
+    const generatedActivities: GeminiActivityResponse[] = JSON.parse(jsonString);
+    console.log('🔍 Atividades extraídas da IA:', generatedActivities);
+
+    // Validar e filtrar atividades
     const validActivities = generatedActivities.filter(activity => {
       const exists = schoolPowerActivities.some(available => available.id === activity.id);
+      const hasRequiredFields = activity.id && activity.title && activity.description;
+      
       if (!exists) {
-        console.warn(`⚠️ Atividade ${activity.id} não encontrada na lista de atividades disponíveis`);
+        console.warn(`⚠️ Atividade ${activity.id} não encontrada na lista disponível`);
       }
-      return exists && activity.id && activity.title && activity.description;
+      if (!hasRequiredFields) {
+        console.warn(`⚠️ Atividade ${activity.id} tem campos obrigatórios faltando`);
+      }
+      
+      return exists && hasRequiredFields;
     });
 
     if (validActivities.length === 0) {
-      throw new Error('Nenhuma atividade válida foi gerada');
+      throw new Error('Nenhuma atividade válida foi gerada pela IA');
     }
 
-    // Converter para formato ActionPlanItem
+    // Converter para ActionPlanItem
     const actionPlanItems: ActionPlanItem[] = validActivities.map(activity => ({
       id: activity.id,
       title: activity.title,
@@ -172,81 +174,132 @@ function parseAndValidateActivities(jsonString: string, userMessage: string): Ac
       approved: false
     }));
 
-    console.log('✅ Plano de ação gerado com sucesso:', actionPlanItems);
     return actionPlanItems;
 
   } catch (parseError) {
-    console.error('❌ Erro ao fazer parse do JSON:', parseError);
-    throw new Error('Erro ao processar resposta da IA');
+    console.error('❌ Erro ao processar resposta da IA:', parseError);
+    throw new Error('Erro ao processar resposta da IA Gemini');
   }
 }
 
-function generateFallbackPlan(userMessage: string, quizResponses: ContextualizationData): ActionPlanItem[] {
-  console.log('🔄 Gerando plano fallback personalizado...');
+function generateIntelligentFallbackPlan(
+  userMessage: string, 
+  quizResponses: ContextualizationData
+): ActionPlanItem[] {
+  console.log('🔄 Gerando plano fallback inteligente...');
   
-  // Selecionar atividades baseadas nas palavras-chave da mensagem e quiz
-  const keywords = [
-    userMessage.toLowerCase(),
-    quizResponses.subjects.toLowerCase(),
-    quizResponses.audience.toLowerCase(),
-    quizResponses.notes.toLowerCase()
-  ].join(' ');
+  // Combinar todas as informações para análise
+  const allText = [
+    userMessage,
+    quizResponses.subjects,
+    quizResponses.audience,
+    quizResponses.notes
+  ].join(' ').toLowerCase();
 
-  // Atividades prioritárias baseadas em palavras-chave comuns
-  const priorityActivities = [
-    { keywords: ['redação', 'texto', 'escrita'], id: 'lista-exercicios' },
-    { keywords: ['prova', 'avaliação', 'teste'], id: 'prova-interativa' },
-    { keywords: ['resumo', 'revisão'], id: 'resumo-inteligente' },
-    { keywords: ['exercício', 'atividade'], id: 'lista-exercicios' },
-    { keywords: ['apresentação', 'slides'], id: 'slides-educativos' }
+  // Mapear palavras-chave para atividades específicas
+  const keywordMapping = [
+    { 
+      keywords: ['caça palavras', 'caça-palavras', 'cruzadinha'], 
+      activityId: 'caca-palavras',
+      priority: 10 
+    },
+    { 
+      keywords: ['colorir', 'pintar', 'desenho'], 
+      activityId: 'atividade-colorir',
+      priority: 10 
+    },
+    { 
+      keywords: ['verbos', 'verbo', 'conjugação'], 
+      activityId: 'lista-exercicios',
+      priority: 9 
+    },
+    { 
+      keywords: ['redação', 'texto', 'escrita'], 
+      activityId: 'lista-exercicios',
+      priority: 8 
+    },
+    { 
+      keywords: ['prova', 'avaliação', 'teste'], 
+      activityId: 'prova-interativa',
+      priority: 8 
+    },
+    { 
+      keywords: ['resumo', 'revisão'], 
+      activityId: 'resumo-inteligente',
+      priority: 7 
+    },
+    { 
+      keywords: ['exercício', 'atividade', 'prática'], 
+      activityId: 'lista-exercicios',
+      priority: 6 
+    },
+    { 
+      keywords: ['apresentação', 'slides'], 
+      activityId: 'slides-educativos',
+      priority: 6 
+    }
   ];
 
-  let selectedActivities: string[] = [];
+  // Pontuar atividades baseado nas palavras-chave
+  const activityScores: { [key: string]: number } = {};
   
-  // Selecionar atividades baseadas nas palavras-chave
-  for (const priority of priorityActivities) {
-    if (priority.keywords.some(keyword => keywords.includes(keyword)) && 
-        !selectedActivities.includes(priority.id)) {
-      selectedActivities.push(priority.id);
+  keywordMapping.forEach(mapping => {
+    const matchCount = mapping.keywords.filter(keyword => 
+      allText.includes(keyword)
+    ).length;
+    
+    if (matchCount > 0) {
+      const score = matchCount * mapping.priority;
+      activityScores[mapping.activityId] = (activityScores[mapping.activityId] || 0) + score;
+    }
+  });
+
+  // Selecionar atividades com maior pontuação
+  let selectedActivityIds = Object.entries(activityScores)
+    .sort(([,a], [,b]) => b - a)
+    .slice(0, 5)
+    .map(([id]) => id);
+
+  // Se não encontrou atividades específicas, usar padrão inteligente
+  if (selectedActivityIds.length === 0) {
+    selectedActivityIds = ['lista-exercicios', 'resumo-inteligente', 'prova-interativa'];
+  }
+
+  // Garantir pelo menos 3 atividades
+  const defaultActivities = ['slides-educativos', 'mapa-mental', 'cronograma-estudos'];
+  while (selectedActivityIds.length < 3) {
+    const nextDefault = defaultActivities.find(id => !selectedActivityIds.includes(id));
+    if (nextDefault) {
+      selectedActivityIds.push(nextDefault);
+    } else {
+      break;
     }
   }
-
-  // Se não encontrou atividades específicas, usar atividades genéricas
-  if (selectedActivities.length === 0) {
-    selectedActivities = ['resumo-inteligente', 'lista-exercicios', 'prova-interativa'];
-  }
-
-  // Garantir 3-5 atividades
-  while (selectedActivities.length < 3) {
-    const randomActivity = schoolPowerActivities[Math.floor(Math.random() * schoolPowerActivities.length)];
-    if (!selectedActivities.includes(randomActivity.id)) {
-      selectedActivities.push(randomActivity.id);
-    }
-  }
-
-  // Limitar a 5 atividades
-  selectedActivities = selectedActivities.slice(0, 5);
 
   // Gerar atividades personalizadas
-  const fallbackActivities: ActionPlanItem[] = selectedActivities.map(activityId => {
+  const fallbackActivities: ActionPlanItem[] = selectedActivityIds.map(activityId => {
     const baseActivity = schoolPowerActivities.find(a => a.id === activityId);
+    
     if (!baseActivity) {
       return {
         id: 'resumo-inteligente',
         title: 'Resumo Inteligente Personalizado',
-        description: 'Resumo personalizado baseado no seu contexto de estudo.',
+        description: `Resumo personalizado baseado em: ${quizResponses.subjects || 'seu contexto de estudo'}.`,
         approved: false
       };
     }
 
+    const audience = quizResponses.audience || 'estudantes';
+    const subject = quizResponses.subjects || 'o tema solicitado';
+
     return {
       id: baseActivity.id,
-      title: `${baseActivity.title} - ${quizResponses.audience || 'Personalizado'}`,
-      description: `${baseActivity.description} Personalizado para: ${quizResponses.subjects || 'seu contexto de estudo'}.`,
+      title: `${baseActivity.title} - ${audience}`,
+      description: `${baseActivity.description} Personalizado para ${subject} com foco em ${audience}.`,
       approved: false
     };
   });
 
-  console.log('✅ Plano fallback gerado:', fallbackActivities);
-  return fallbackActivities;
+  console.log('✅ Plano fallback inteligente gerado:', fallbackActivities);
+  return fallbackActivities.slice(0, 5); // Máximo de 5 atividades
 }

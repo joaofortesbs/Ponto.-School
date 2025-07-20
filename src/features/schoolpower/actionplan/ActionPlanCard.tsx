@@ -1,16 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle, Circle, Sparkles, Brain, Target, ArrowRight } from 'lucide-react';
-import { Button } from '../../../components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Check, X, ChevronLeft, Sparkles } from 'lucide-react';
 
 export interface ActionPlanItem {
   id: string;
   title: string;
   description: string;
   approved: boolean;
-  personalizedTitle?: string;
-  personalizedDescription?: string;
 }
 
 interface ActionPlanCardProps {
@@ -20,206 +16,174 @@ interface ActionPlanCardProps {
 }
 
 export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: ActionPlanCardProps) {
-  const [selectedItems, setSelectedItems] = useState<ActionPlanItem[]>([]);
-  const [isVisible, setIsVisible] = useState(false);
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    setIsVisible(true);
-  }, []);
-
-  const handleItemToggle = (item: ActionPlanItem) => {
-    setSelectedItems(prev => {
-      const isSelected = prev.some(selected => selected.id === item.id);
-
-      if (isSelected) {
-        return prev.filter(selected => selected.id !== item.id);
-      } else {
-        return [...prev, { ...item, approved: true }];
-      }
-    });
-  };
-
-  const isItemSelected = (itemId: string) => {
-    return selectedItems.some(item => item.id === itemId);
+  const handleItemToggle = (itemId: string) => {
+    const newSelected = new Set(selectedItems);
+    if (newSelected.has(itemId)) {
+      newSelected.delete(itemId);
+    } else {
+      newSelected.add(itemId);
+    }
+    setSelectedItems(newSelected);
   };
 
   const handleApprove = () => {
-    if (selectedItems.length > 0) {
-      console.log('✅ Aprovando plano de ação:', selectedItems);
-      onApprove(selectedItems);
+    const approvedItems = actionPlan
+      .filter(item => selectedItems.has(item.id))
+      .map(item => ({ ...item, approved: true }));
+
+    if (approvedItems.length > 0) {
+      onApprove(approvedItems);
     }
+  };
+
+  const handleBack = () => {
+    // Implementar lógica de voltar se necessário
+    window.location.reload();
   };
 
   if (isLoading) {
     return (
       <motion.div 
-        className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 p-8 w-full max-w-4xl mx-auto"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+        className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-2xl p-8 max-w-4xl w-full mx-4 shadow-2xl border border-white/30"
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5 }}
       >
         <div className="text-center">
-          <div className="relative mb-6">
-            <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#FF6B00]/20 border-t-[#FF6B00] mx-auto"></div>
-            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[#FF6B00]/10 to-transparent animate-pulse"></div>
-          </div>
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#FF6B00]/20 border-t-[#FF6B00] mx-auto mb-6"></div>
           <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
-            🎯 Criando Plano Personalizado
+            🤖 Gerando Plano de Ação
           </h3>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">
-            A IA Gemini está analisando seu contexto e gerando atividades específicas para suas necessidades
+          <p className="text-gray-600 dark:text-gray-400">
+            A IA está criando atividades personalizadas para você...
           </p>
-          <div className="bg-gradient-to-r from-[#FF6B00]/5 to-[#29335C]/5 rounded-lg p-4 border border-[#FF6B00]/10">
-            <div className="flex items-center justify-center space-x-2 text-sm text-gray-700 dark:text-gray-300">
-              <motion.div
-                animate={{ opacity: [0.5, 1, 0.5] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-              >
-                ⚡ Processando dados...
-              </motion.div>
-            </div>
-          </div>
         </div>
       </motion.div>
     );
   }
 
   return (
-    <AnimatePresence>
-      {isVisible && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.6 }}
-          className="w-full max-w-4xl mx-auto"
+    <motion.div 
+      className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-2xl p-8 max-w-4xl w-full mx-4 shadow-2xl border border-white/30"
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
+        <button
+          onClick={handleBack}
+          className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
         >
-          <Card className="bg-gradient-to-br from-purple-50 to-blue-50 border-purple-200 shadow-xl">
-            <CardHeader className="text-center space-y-4">
-              <div className="flex items-center justify-center gap-3">
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.2, type: "spring" }}
-                >
-                  <Target className="h-8 w-8 text-purple-600" />
-                </motion.div>
-                <CardTitle className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-                  Seu Plano de Ação Personalizado
-                </CardTitle>
-              </div>
-              <p className="text-gray-600">
-                Selecione as atividades que deseja gerar. Nossa IA criou essas sugestões com base nas suas informações.
-              </p>
-            </CardHeader>
+          <ChevronLeft className="w-5 h-5" />
+          <span>Voltar</span>
+        </button>
 
-            <CardContent className="space-y-4">
-              <div className="grid gap-4">
-                {actionPlan.map((item, index) => (
-                  <motion.div
-                    key={item.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1, duration: 0.5 }}
-                    onClick={() => handleItemToggle(item)}
-                    className={`
-                      p-4 rounded-lg border-2 cursor-pointer transition-all duration-300 hover:shadow-md
-                      ${isItemSelected(item.id)
-                        ? 'border-purple-400 bg-purple-50 shadow-sm'
-                        : 'border-gray-200 bg-white hover:border-purple-200'
-                      }
-                    `}
-                  >
-                    <div className="flex items-start gap-4">
-                      <motion.div
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="flex-shrink-0 mt-1"
-                      >
-                        {isItemSelected(item.id) ? (
-                          <CheckCircle className="h-6 w-6 text-purple-600" />
-                        ) : (
-                          <Circle className="h-6 w-6 text-gray-400" />
-                        )}
-                      </motion.div>
+        <div className="text-center">
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+            <Sparkles className="w-8 h-8 text-[#FF6B00]" />
+            Plano de Ação Personalizado
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">
+            Selecione as atividades que deseja gerar
+          </p>
+        </div>
 
-                      <div className="flex-1 space-y-2">
-                        <h3 className="font-semibold text-gray-900">
-                          {item.personalizedTitle || item.title}
-                        </h3>
-                        <p className="text-sm text-gray-600">
-                          {item.personalizedDescription || item.description}
-                        </p>
+        <div className="w-20"></div>
+      </div>
 
-                        {item.personalizedTitle && (
-                          <div className="flex items-center gap-2 text-xs text-purple-600">
-                            <Sparkles className="h-3 w-3" />
-                            <span>Personalizado pela IA</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-
-              {/* Contador e botão de aprovação */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-                className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200"
-              >
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Target className="h-4 w-4" />
-                  <span>
-                    {selectedItems.length} de {actionPlan.length} atividades selecionadas
-                  </span>
+      {/* Lista de Atividades */}
+      <div className="space-y-4 mb-8">
+        {actionPlan.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="text-6xl mb-4">🤖</div>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              Nenhuma atividade disponível
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400">
+              Houve um problema ao gerar as atividades. Tente novamente.
+            </p>
+          </div>
+        ) : (
+          actionPlan.map((item, index) => (
+            <motion.div
+              key={item.id}
+              className={`relative p-6 rounded-xl border-2 transition-all duration-200 cursor-pointer ${
+                selectedItems.has(item.id)
+                  ? 'border-[#FF6B00] bg-[#FF6B00]/5 dark:bg-[#FF6B00]/10'
+                  : 'border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 hover:border-[#FF6B00]/50'
+              }`}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: index * 0.1 }}
+              onClick={() => handleItemToggle(item.id)}
+            >
+              <div className="flex items-start gap-4">
+                {/* Checkbox */}
+                <div className={`flex-shrink-0 w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
+                  selectedItems.has(item.id)
+                    ? 'border-[#FF6B00] bg-[#FF6B00]'
+                    : 'border-gray-300 dark:border-gray-600'
+                }`}>
+                  {selectedItems.has(item.id) && (
+                    <Check className="w-4 h-4 text-white" />
+                  )}
                 </div>
 
-                <Button
-                  onClick={handleApprove}
-                  disabled={selectedItems.length === 0}
-                  className={`
-                    flex items-center gap-2 transition-all duration-300
-                    ${selectedItems.length > 0
-                      ? 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700'
-                      : 'bg-gray-300 cursor-not-allowed'
-                    }
-                  `}
-                >
-                  {selectedItems.length > 0 ? (
-                    <>
-                      <span>Aprovar Plano</span>
-                      <ArrowRight className="h-4 w-4" />
-                    </>
-                  ) : (
-                    <span>Selecione ao menos 1 atividade</span>
-                  )}
-                </Button>
-              </motion.div>
+                {/* Conteúdo */}
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                    {item.title}
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+                    {item.description}
+                  </p>
+                </div>
 
-              {/* Informação sobre o que acontece após aprovação */}
-              {selectedItems.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.3 }}
-                  className="p-3 bg-gradient-to-r from-purple-100 to-blue-100 rounded-lg border border-purple-200"
-                >
-                  <div className="flex items-center gap-2 text-sm text-purple-700">
-                    <Brain className="h-4 w-4" />
-                    <span>
-                      Após aprovar, nossa IA gerará automaticamente todos os materiais selecionados!
-                    </span>
+                {/* Indicador de seleção */}
+                {selectedItems.has(item.id) && (
+                  <div className="flex-shrink-0">
+                    <div className="w-3 h-3 bg-[#FF6B00] rounded-full animate-pulse"></div>
                   </div>
-                </motion.div>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
+                )}
+              </div>
+            </motion.div>
+          ))
+        )}
+      </div>
+
+      {/* Footer com estatísticas e ações */}
+      {actionPlan.length > 0 && (
+        <div className="flex items-center justify-between pt-6 border-t border-gray-200 dark:border-gray-700">
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            {selectedItems.size} de {actionPlan.length} atividades selecionadas
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={handleBack}
+              className="px-6 py-3 text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+            >
+              Cancelar
+            </button>
+
+            <button
+              onClick={handleApprove}
+              disabled={selectedItems.size === 0}
+              className={`px-8 py-3 rounded-lg font-semibold transition-all ${
+                selectedItems.size > 0
+                  ? 'bg-gradient-to-r from-[#FF6B00] to-[#FF8533] text-white hover:shadow-lg hover:scale-105'
+                  : 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+              }`}
+            >
+              Gerar Atividades ({selectedItems.size})
+            </button>
+          </div>
+        </div>
       )}
-    </AnimatePresence>
+    </motion.div>
   );
 }
 
