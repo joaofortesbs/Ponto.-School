@@ -202,7 +202,7 @@ export function CardDeConstrucao({
                   Filtros e Ações
                 </h3>
               </div>
-              
+
               <div className="py-1 space-y-1">
                 <button
                   onClick={() => {
@@ -214,7 +214,7 @@ export function CardDeConstrucao({
                   <CheckSquare className="w-4 h-4 text-[#FF6B00] group-hover:scale-110 transition-transform duration-200" />
                   <span className="font-medium">Selecionar todos</span>
                 </button>
-                
+
                 <button
                   onClick={() => {
                     onFilterApply('selectRecommended');
@@ -227,9 +227,9 @@ export function CardDeConstrucao({
                   </svg>
                   <span className="font-medium">Selecionar recomendações</span>
                 </button>
-                
+
                 <div className="border-t border-gray-200 dark:border-gray-600 my-1"></div>
-                
+
                 <button
                   onClick={() => {
                     onFilterApply('viewSelected');
@@ -242,7 +242,7 @@ export function CardDeConstrucao({
                   </svg>
                   <span className="font-medium">Ver apenas selecionados</span>
                 </button>
-                
+
                 <button
                   onClick={() => {
                     onFilterApply('clearSelected');
@@ -255,7 +255,7 @@ export function CardDeConstrucao({
                   </svg>
                   <span className="font-medium">Tirar selecionados</span>
                 </button>
-                
+
                 <button
                   onClick={() => {
                     onFilterApply('viewAll');
@@ -303,6 +303,21 @@ export function CardDeConstrucao({
         break;
       default:
         break;
+    }
+  };
+
+  const getIconByActivityId = (activityId: string) => {
+    // Implemente a lógica para retornar o ícone com base no ID da atividade
+    // Este é apenas um exemplo, substitua com sua própria lógica
+    switch (activityId) {
+      case '1':
+        return Wrench;
+      case '2':
+        return Target;
+      case '3':
+        return CheckSquare;
+      default:
+        return Wrench; // Ícone padrão
     }
   };
 
@@ -409,7 +424,7 @@ export function CardDeConstrucao({
           <div className="relative flex items-center justify-between w-44">
             {/* Background progress line */}
             <div className="absolute top-1/2 transform -translate-y-1/2 h-1.5 bg-white/30 rounded-full z-0" style={{ left: '16px', right: '16px' }}></div>
-            
+
             {/* Active progress line */}
             <div 
               className="absolute top-1/2 transform -translate-y-1/2 h-1.5 bg-white rounded-full z-0 transition-all duration-500 ease-out"
@@ -422,7 +437,7 @@ export function CardDeConstrucao({
                 }`
               }}
             ></div>
-            
+
             {/* Step indicators */}
             <div className={`relative z-10 w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
               step === "contextualization" ? 'bg-white border-white text-[#FF6B00]' : 'bg-[#FF6B00] border-white text-white'
@@ -435,7 +450,7 @@ export function CardDeConstrucao({
                 </svg>
               )}
             </div>
-            
+
             <div className={`relative z-10 w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
               step === "actionPlan" ? 'bg-white border-white text-[#FF6B00]' :
               (step === "generating" || step === "generatingActivities") ? 'bg-[#FF6B00] border-white text-white' :
@@ -451,7 +466,7 @@ export function CardDeConstrucao({
                 <span className="text-sm font-semibold">2</span>
               )}
             </div>
-            
+
             <div className={`relative z-10 w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
               (step === "generating" || step === "generatingActivities") ? 'bg-white border-white text-[#FF6B00]' : 'bg-white/20 border-white/30 text-white'
             }`}>
@@ -532,7 +547,7 @@ export function CardDeConstrucao({
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2, duration: 0.5 }}
         >
-          <div className="text-center mb-4 sm:mb-6"></div>
+<div className="text-center mb-4 sm:mb-6"></div>
 
           {step === "contextualization" ? (
             <motion.div
@@ -665,6 +680,21 @@ export function CardDeConstrucao({
                 </div>
               </div>
 
+              const getIconByActivityId = (activityId: string) => {
+    // Implemente a lógica para retornar o ícone com base no ID da atividade
+    // Este é apenas um exemplo, substitua com sua própria lógica
+    switch (activityId) {
+      case '1':
+        return Wrench;
+      case '2':
+        return Target;
+      case '3':
+        return CheckSquare;
+      default:
+        return Wrench; // Ícone padrão
+    }
+  };
+
               <div
                 className={`flex-1 overflow-y-auto mb-3 sm:mb-4 pr-1 sm:pr-2 ${
                   viewMode === 'grid' 
@@ -680,7 +710,7 @@ export function CardDeConstrucao({
                 {(filterState === 'selected' 
                   ? selectedActivities 
                   : actionPlan || []
-                )?.map((activity) => {
+                )?.map((activity, index) => {
                   const isSelected = selectedActivities.some(
                     (item) => item.id === activity.id,
                   );
@@ -688,69 +718,131 @@ export function CardDeConstrucao({
                   return (
                     <motion.div
                       key={activity.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3 }}
-                      className={`
-                      p-3 sm:p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 h-fit
-                      ${
+                      className={`relative p-6 border-2 transition-all duration-300 cursor-pointer ${
+                        viewMode === 'grid' ? 'rounded-[32px]' : 'rounded-[32px] mb-4'
+                      } ${
                         isSelected
-                          ? "border-[#FF6B00] bg-[#FF6B00]/20 shadow-lg shadow-[#FF6B00]/20"
-                          : "border-gray-300 dark:border-gray-600 bg-gray-100/80 dark:bg-gray-800/50"
-                      }
-                      hover:border-[#FF6B00] hover:bg-[#FF6B00]/10
-                    `}
+                          ? 'border-[#FF6B00] bg-[#FF6B00]/5 dark:bg-[#FF6B00]/10 shadow-lg transform scale-[1.02]'
+                          : 'border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 hover:border-[#FF6B00]/50 hover:shadow-md'
+                      }`}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: index * 0.05 }}
                       onClick={() => handleActivityToggle(activity)}
                     >
-                      <div className="flex items-start gap-3">
-                        <div
-                          className={`
-                        w-5 h-5 rounded-full border-2 flex-shrink-0 mt-1 transition-colors duration-200
-                        ${
+                      <div className="flex items-start gap-4">
+                        {/* Checkbox customizado */}
+                        <div className={`flex-shrink-0 w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
                           isSelected
-                            ? "border-[#FF6B00] bg-[#FF6B00]"
-                            : "border-gray-400"
-                        }
-                      `}
-                        >
+                            ? 'border-[#FF6B00] bg-[#FF6B00] shadow-md'
+                            : 'border-gray-300 dark:border-gray-600 hover:border-[#FF6B00]/50'
+                        }`}>
                           {isSelected && (
-                            <svg
-                              className="w-3 h-3 text-white ml-0.5 mt-0.5"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                clipRule="evenodd"
-                              />
+                            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                             </svg>
                           )}
                         </div>
+
+                        {/* Conteúdo da atividade */}
                         <div className="flex-1">
-                          <h4 className="font-semibold text-gray-900 dark:text-white mb-1 text-sm sm:text-base">
-                            {activity.title}
-                          </h4>
-                          <p className={`text-xs sm:text-sm text-gray-600 dark:text-gray-300 mb-2 ${viewMode === 'grid' ? 'line-clamp-3' : 'line-clamp-2'}`}>
+                          <div className="flex items-center gap-3 mb-2">
+                            {/* Ícone animado da atividade */}
+                            <div 
+                              className={`icon-container ${isSelected ? 'active' : ''}`}
+                              style={{
+                                width: '40px',
+                                height: '40px',
+                                minWidth: '40px',
+                                minHeight: '40px',
+                                borderRadius: '14px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                background: isSelected 
+                                  ? 'linear-gradient(135deg, #FF6E06, #FF8A39)' 
+                                  : 'rgba(255, 110, 6, 0.1)',
+                                transition: 'all 0.3s ease',
+                                position: 'relative',
+                                overflow: 'hidden',
+                                cursor: 'pointer',
+                                boxShadow: isSelected 
+                                  ? '0 6px 12px rgba(255, 110, 6, 0.3)' 
+                                  : 'none',
+                                transform: isSelected ? 'scale(1.05)' : 'scale(1)'
+                              }}
+                            >
+                              {React.createElement(getIconByActivityId(activity.id), {
+                                className: `w-5 h-5 transition-all duration-300 relative z-10`,
+                                style: {
+                                  color: isSelected ? 'white' : '#FF6E06'
+                                }
+                              })}
+                              <div 
+                                className="icon-glow"
+                                style={{
+                                  position: 'absolute',
+                                  top: '50%',
+                                  left: '50%',
+                                  width: '20px',
+                                  height: '20px',
+                                  background: 'radial-gradient(circle, rgba(255, 110, 6, 0.5), transparent)',
+                                  borderRadius: '50%',
+                                  transform: isSelected 
+                                    ? 'translate(-50%, -50%) scale(2.2)' 
+                                    : 'translate(-50%, -50%) scale(0)',
+                                  transition: 'transform 0.3s ease'
+                                }}
+                              />
+                            </div>
+
+                            {/* Título da atividade */}
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white line-clamp-2 flex-1">
+                              {activity.title}
+                            </h3>
+                          </div>
+
+                          <p className="text-gray-600 dark:text-gray-400 leading-relaxed line-clamp-3 mb-3">
                             {activity.description}
                           </p>
-                          <div className="flex gap-1 sm:gap-2 flex-wrap">
-                            <span className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-200 rounded border border-blue-200 dark:border-blue-600/30">
-                              {activity.duration}
+
+                          {/* Metadados da atividade */}
+                          <div className="flex flex-wrap gap-2">
+                            <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full">
+                              {activity.duration || '30 min'}
                             </span>
-                            <span className="px-2 py-1 text-xs bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-200 rounded border border-green-200 dark:border-green-600/30">
-                              {activity.difficulty}
+                            <span className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full">
+                              {activity.difficulty || 'Médio'}
                             </span>
-                            <span className="px-2 py-1 text-xs bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-200 rounded border border-purple-200 dark:border-purple-600/30">
-                              {activity.category}
+                            <span className="text-xs px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full">
+                              {activity.category || 'Geral'}
+                            </span>
+                          </div>
+
+                          {/* ID da atividade (para debug) */}
+                          <div className="mt-2">
+                            <span className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded">
+                              ID: {activity.id}
                             </span>
                           </div>
                         </div>
+
+                        {/* Indicador visual de seleção */}
+                        {isSelected && (
+                          <div className="flex-shrink-0">
+                            <div className="w-3 h-3 bg-[#FF6B00] rounded-full animate-pulse shadow-md"></div>
+                          </div>
+                        )}
                       </div>
+
+                      {/* Borda animada para item selecionado */}
+                      {isSelected && (
+                        <div className="absolute inset-0 rounded-[32px] border-2 border-[#FF6B00] animate-pulse opacity-50 pointer-events-none"></div>
+                      )}
                     </motion.div>
                   );
                 })}
-                
+
                 {filterState === 'selected' && selectedActivities.length === 0 && (
                   <div className="flex flex-col items-center justify-center py-12 text-center">
                     <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
