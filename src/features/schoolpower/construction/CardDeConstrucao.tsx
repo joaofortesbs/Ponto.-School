@@ -132,6 +132,39 @@ export function CardDeConstrucao({
       }}
       data-theme="adaptive"
     >
+      {/* Cabeçalho Persistente Fixo */}
+      <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-r from-[#FF6B00] to-[#FF9248] rounded-t-2xl flex items-center justify-between px-6 z-20">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+            <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+          <div>
+            <h1 className="text-white font-bold text-lg">School Power</h1>
+            <p className="text-white/80 text-xs">
+              {step === 'contextualization' ? 'Contextualização' :
+               step === 'actionPlan' ? 'Plano de Ação' :
+               step === 'generating' ? 'Gerando...' : 'Processando...'}
+            </p>
+          </div>
+        </div>
+        
+        {/* Indicador de Progresso */}
+        <div className="flex items-center gap-2">
+          <div className="flex gap-1">
+            <div className={`w-2 h-2 rounded-full ${step === 'contextualization' ? 'bg-white' : 'bg-white/40'}`}></div>
+            <div className={`w-2 h-2 rounded-full ${step === 'actionPlan' ? 'bg-white' : 'bg-white/40'}`}></div>
+            <div className={`w-2 h-2 rounded-full ${(step === 'generating' || step === 'generatingActivities') ? 'bg-white animate-pulse' : 'bg-white/40'}`}></div>
+          </div>
+          <span className="text-white/80 text-xs ml-2">
+            {step === 'contextualization' ? '1/3' :
+             step === 'actionPlan' ? '2/3' :
+             (step === 'generating' || step === 'generatingActivities') ? '3/3' : ''}
+          </span>
+        </div>
+      </div>
+
       {/* Background decorativo */}
       <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none">
         <div className="absolute -top-24 -right-24 w-48 h-48 bg-gradient-to-br from-[#FF6B00]/10 to-[#FF9248]/5 dark:from-[#FF6B00]/20 dark:to-[#FF9248]/10 rounded-full blur-3xl"></div>
@@ -141,7 +174,7 @@ export function CardDeConstrucao({
       {/* Renderização condicional baseada no step */}
       {(step === 'generating' || step === 'generatingActivities') ? (
         <motion.div 
-          className="relative z-10 flex flex-col items-center justify-center h-full text-center px-4"
+          className="relative z-10 flex flex-col items-center justify-center h-full text-center px-4 pt-16"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
@@ -191,7 +224,7 @@ export function CardDeConstrucao({
         </motion.div>
       ) : (
         <motion.div 
-          className="relative z-10 h-full flex flex-col"
+          className="relative z-10 h-full flex flex-col pt-16"
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2, duration: 0.5 }}
