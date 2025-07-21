@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Check, X, ChevronLeft, Sparkles, Activity } from 'lucide-react';
@@ -174,7 +173,7 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
                   <p className="text-gray-600 dark:text-gray-400 leading-relaxed line-clamp-3">
                     {item.description}
                   </p>
-                  
+
                   {/* ID da atividade (para debug) */}
                   <div className="mt-2">
                     <span className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded">

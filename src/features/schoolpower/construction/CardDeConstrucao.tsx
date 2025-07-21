@@ -135,21 +135,30 @@ export function CardDeConstrucao({
       {/* Cabeçalho Persistente Fixo */}
       <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-r from-[#FF6B00] to-[#FF9248] rounded-t-2xl flex items-center justify-between px-6 z-20">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-            <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
+          <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+            {step === 'contextualization' ? (
+              <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            ) : step === 'actionPlan' ? (
+              <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              </svg>
+            ) : (
+              <svg className="w-6 h-6 text-white animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            )}
           </div>
           <div>
-            <h1 className="text-white font-bold text-lg">School Power</h1>
-            <p className="text-white/80 text-xs">
-              {step === 'contextualization' ? 'Contextualização' :
+            <h1 className="text-white font-bold text-xl">
+              {step === 'contextualization' ? 'Quiz de Contextualização' :
                step === 'actionPlan' ? 'Plano de Ação' :
-               step === 'generating' ? 'Gerando...' : 'Processando...'}
-            </p>
+               step === 'generating' ? 'Gerando Conteúdo...' : 'School Power'}
+            </h1>
           </div>
         </div>
-        
+
         {/* Indicador de Progresso */}
         <div className="flex items-center gap-2">
           <div className="flex gap-1">
@@ -230,37 +239,9 @@ export function CardDeConstrucao({
           transition={{ delay: 0.2, duration: 0.5 }}
         >
         <div className="text-center mb-4 sm:mb-6">
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.3, duration: 0.5, type: "spring", stiffness: 200 }}
-              className="w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 bg-gradient-to-br from-[#FF6B00] to-[#FF9248] rounded-2xl flex items-center justify-center shadow-lg"
-            >
-              <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </motion.div>
+            
 
-            <motion.h2 
-              className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-2"
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.4, duration: 0.5 }}
-            >
-              {step === 'contextualization' ? 'Quiz de Contextualização' : 'Plano de Ação'}
-            </motion.h2>
-
-            <motion.p 
-              className="text-gray-600 dark:text-gray-300 text-sm"
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.5, duration: 0.5 }}
-            >
-              {step === 'contextualization' 
-                ? 'Responda algumas perguntas para personalizar sua experiência'
-                : 'Selecione as atividades que deseja incluir no seu plano'
-              }
-            </motion.p>
+            
           </div>
 
         {step === 'contextualization' ? (
