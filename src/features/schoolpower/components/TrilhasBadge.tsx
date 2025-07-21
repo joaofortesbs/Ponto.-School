@@ -44,8 +44,8 @@ export const TrilhasBadge: React.FC<TrilhasBadgeProps> = ({ className = '' }) =>
         .trilhas-component-container {
           display: flex;
           align-items: center;
-          gap: 8px;
-          padding: 6px 15px;
+          gap: 20px;
+          padding: 12px 30px;
           border: 2px solid #22C55E;
           border-radius: 30px;
           background: rgba(34, 197, 94, 0.1);
@@ -61,10 +61,10 @@ export const TrilhasBadge: React.FC<TrilhasBadgeProps> = ({ className = '' }) =>
         }
 
         .trilhas-icon-container {
-          width: 24px !important;
-          height: 24px !important;
-          min-width: 24px !important;
-          min-height: 24px !important;
+          width: 50px !important;
+          height: 50px !important;
+          min-width: 50px !important;
+          min-height: 50px !important;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -75,7 +75,7 @@ export const TrilhasBadge: React.FC<TrilhasBadgeProps> = ({ className = '' }) =>
         }
 
         .trilhas-icon {
-          font-size: 16px;
+          font-size: 36px;
           color: #16A34A !important;
           transition: all 0.3s ease;
           position: relative;
@@ -83,7 +83,7 @@ export const TrilhasBadge: React.FC<TrilhasBadgeProps> = ({ className = '' }) =>
         }
 
         .trilhas-component-text {
-          font-size: 12px;
+          font-size: 24px;
           font-weight: 700;
           color: #16A34A;
           transition: all 0.3s ease;
@@ -96,6 +96,10 @@ export const TrilhasBadge: React.FC<TrilhasBadgeProps> = ({ className = '' }) =>
 
         .trilhas-component-container:hover .trilhas-icon {
           color: #15803D !important;
+        }
+
+        .icon-glow {
+          display: none;
         }
 
         /* Animação de explosão */
@@ -123,8 +127,8 @@ export const TrilhasBadge: React.FC<TrilhasBadgeProps> = ({ className = '' }) =>
           position: absolute;
           top: 50%;
           left: 50%;
-          width: 24px;
-          height: 24px;
+          width: 50px;
+          height: 50px;
           border: 2px solid rgba(34, 197, 94, 0.6);
           border-radius: 50%;
           transform: translate(-50%, -50%);
@@ -135,14 +139,14 @@ export const TrilhasBadge: React.FC<TrilhasBadgeProps> = ({ className = '' }) =>
 
         @keyframes trilhasShockWave {
           0% {
-            width: 24px;
-            height: 24px;
+            width: 50px;
+            height: 50px;
             opacity: 1;
             border-width: 2px;
           }
           100% {
-            width: 40px;
-            height: 40px;
+            width: 80px;
+            height: 80px;
             opacity: 0;
             border-width: 1px;
           }
@@ -171,6 +175,7 @@ export const TrilhasBadge: React.FC<TrilhasBadgeProps> = ({ className = '' }) =>
       >
         <div className="trilhas-icon-container">
           <i className={`fas ${isSelected ? 'fa-check' : 'fa-route'} trilhas-icon`}></i>
+          <div className="icon-glow"></div>
         </div>
         <span className="trilhas-component-text">Trilhas</span>
       </div>
