@@ -123,7 +123,7 @@ export function CardDeConstrucao({
         }}
         className="relative backdrop-blur-xl rounded-2xl shadow-2xl border border-[#FF6B00]/30 dark:border-[#FF6B00]/30 w-full max-w-4xl"
         style={{
-          height: "700px",
+          height: "737px",
           background: `
             linear-gradient(135deg, 
               rgba(255, 255, 255, 0.95) 0%, 
