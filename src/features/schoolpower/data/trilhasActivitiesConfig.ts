@@ -3,6 +3,7 @@ export const trilhasActivitiesIds = [
   // === AVALIAÇÕES E TESTES ===
   'quiz-contextualizacao',
   'simulado-preparatorio',
+  'simulado',
   'prova-interativa',
   'questoes-multipla-escolha',
   'questoes-dissertativas',
@@ -11,6 +12,7 @@ export const trilhasActivitiesIds = [
   'teste-conhecimento',
   'exame-final',
   'prova-oral',
+  'prova',
   'teste-pratico',
   'simulado-enem',
   'vestibular-simulado',
