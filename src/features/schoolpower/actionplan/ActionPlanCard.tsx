@@ -8,6 +8,10 @@ export interface ActionPlanItem {
   description: string;
   approved: boolean;
   isTrilhasEligible?: boolean;
+  duration?: string;
+  difficulty?: string;
+  category?: string;
+  type?: string;
 }
 
 interface ActionPlanCardProps {

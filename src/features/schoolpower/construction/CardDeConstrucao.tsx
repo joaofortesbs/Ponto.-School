@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import { ContextualizationData } from "../contextualization/ContextualizationCard";
 import { ActionPlanItem } from "../actionplan/ActionPlanCard";
+import { isActivityEligibleForTrilhas, getTrilhasBadgeProps } from "../data/trilhasActivitiesConfig";
+import { TrilhasDebugPanel } from "../components/TrilhasDebugPanel";
 
 export interface ContextualizationData {
   materias: string;
@@ -75,6 +77,9 @@ export function CardDeConstrucao({
 
   // View mode state (list or grid)
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+
+  // Debug state for trilhas system
+  const [showTrilhasDebug, setShowTrilhasDebug] = useState<boolean>(false);
 
   // Load existing data when component mounts
   useEffect(() => {
@@ -1295,6 +1300,8 @@ export function CardDeConstrucao({
                     (item) => item.id === activity.id,
                   );
 
+                  const badgeProps = getTrilhasBadgeProps(activity.id);
+
                   return (
                     <motion.div
                       key={activity.id}
@@ -1310,6 +1317,21 @@ export function CardDeConstrucao({
                       transition={{ duration: 0.3, delay: index * 0.05 }}
                       onClick={() => handleActivityToggle(activity)}
                     >
+                      {/* Badge Trilhas - POSICIONADO NO CANTO SUPERIOR DIREITO */}
+                      {badgeProps.showBadge && (
+                        <div 
+                          className="absolute top-4 right-4 z-20 px-2 py-1 rounded-full text-xs font-semibold shadow-lg transform transition-all duration-300 hover:scale-105"
+                          style={{
+                            backgroundColor: badgeProps.badgeColor,
+                            color: badgeProps.badgeTextColor,
+                            border: '2px solid rgba(255, 255, 255, 0.8)',
+                            boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
+                          }}
+                        >
+                          {badgeProps.badgeText}
+                        </div>
+                      )}
+
                       <div className="flex items-start gap-4">
                         {/* Conteúdo da atividade */}
                         <div className="flex-1">
@@ -1384,7 +1406,7 @@ export function CardDeConstrucao({
                             </div>
 
                             {/* Título da atividade */}
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white line-clamp-2 flex-1">
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white line-clamp-2 flex-1 pr-8">
                               {activity.title}
                             </h3>
                           </div>
@@ -1404,6 +1426,12 @@ export function CardDeConstrucao({
                             <span className="text-xs px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full">
                               {activity.category || 'Geral'}
                             </span>
+                            {/* Badge adicional para indicar Trilhas nos metadados */}
+                            {badgeProps.showBadge && (
+                              <span className="text-xs px-2 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded-full border border-emerald-200 dark:border-emerald-700">
+                                🎯 Trilhas School
+                              </span>
+                            )}
                           </div>
 
                           {/* ID da atividade (para debug) */}
@@ -1411,6 +1439,12 @@ export function CardDeConstrucao({
                             <span className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded">
                               ID: {activity.id}
                             </span>
+                            {/* Indicador de elegibilidade para Trilhas (debug) */}
+                            {isActivityEligibleForTrilhas(activity.id) && (
+                              <span className="ml-2 text-xs px-2 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded">
+                                ✅ Trilhas Elegível
+                              </span>
+                            )}
                           </div>
                         </div>
 
@@ -1462,6 +1496,27 @@ export function CardDeConstrucao({
             </motion.div>
           )}
         </motion.div>
+      )}
+
+      {/* Debug Panel para verificar sistema de Trilhas */}
+      {actionPlan && (
+        <TrilhasDebugPanel 
+          activities={actionPlan.map(activity => ({ 
+            id: activity.id, 
+            title: activity.title 
+          }))}
+          isVisible={showTrilhasDebug}
+        />
+      )}
+
+      {/* Botão para toggle do debug (só visível em desenvolvimento) */}
+      {process.env.NODE_ENV === 'development' && actionPlan && (
+        <button
+          onClick={() => setShowTrilhasDebug(!showTrilhasDebug)}
+          className="fixed bottom-4 left-4 z-40 bg-blue-500 text-white px-3 py-2 rounded-lg text-xs font-medium shadow-lg hover:bg-blue-600 transition-colors"
+        >
+          {showTrilhasDebug ? '🔍 Fechar Debug' : '🔍 Debug Trilhas'}
+        </button>
       )}
     </motion.div>
   );

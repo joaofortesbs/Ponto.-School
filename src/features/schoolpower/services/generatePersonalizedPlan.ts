@@ -1,6 +1,7 @@
 import { ContextualizationData } from '../contextualization/ContextualizationCard';
 import { ActionPlanItem } from '../actionplan/ActionPlanCard';
 import schoolPowerActivities from '../data/schoolPowerActivities.json';
+import { isActivityEligibleForTrilhas } from '../data/trilhasActivitiesConfig';
 import { validateGeminiPlan } from './validateGeminiPlan';
 
 // Usar API Key centralizada
@@ -290,26 +291,19 @@ export async function generatePersonalizedPlan(
     // Valida as atividades retornadas
     const validatedActivities = await validateGeminiPlan(geminiActivities, schoolPowerActivities);
       
-     const isActivityEligibleForTrilhas = (activityId: string, activityName: string): boolean => {
-        // Lógica para determinar se a atividade é elegível para "Trilhas"
-        // Aqui você pode adicionar a lógica específica para verificar se a atividade
-        // deve receber o badge "Trilhas". Por exemplo, verificar se o ID da atividade
-        // está em uma lista específica, ou se o título contém certas palavras-chave.
-        // Por enquanto, retornaremos 'false' para todas as atividades.
-
-        // Implemente a lógica de elegibilidade aqui
-        return false;
-    };
+     
 
     // Mapear atividades validadas para o formato do ActionPlanItem
     const actionPlanItems = validatedActivities.map(activity => ({
         id: activity.id,
         title: activity.personalizedTitle || activity.title,
         description: activity.personalizedDescription || activity.description,
-        icon: '📝', // Ícone padrão, será substituído pelo componente
-        completed: false,
-        selected: false,
-        isTrilhasEligible: isActivityEligibleForTrilhas(activity.id, activity.personalizedTitle || activity.title)
+        approved: false,
+        isTrilhasEligible: isActivityEligibleForTrilhas(activity.id),
+        duration: '30 min', // Valor padrão
+        difficulty: 'Médio', // Valor padrão
+        category: 'Geral', // Valor padrão
+        type: 'atividade' // Valor padrão
     }));
 
     if (validatedActivities.length === 0) {

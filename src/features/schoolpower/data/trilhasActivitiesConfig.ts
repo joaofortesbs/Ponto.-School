@@ -1,0 +1,155 @@
+
+export const trilhasActivitiesIds = [
+  // === AVALIAÇÕES E TESTES ===
+  'quiz-contextualizacao',
+  'simulado-preparatorio',
+  'prova-interativa',
+  'questoes-multipla-escolha',
+  'questoes-dissertativas',
+  'autoavaliacao',
+  'avaliacao-diagnostica',
+  'teste-conhecimento',
+  'exame-final',
+  'prova-oral',
+  'teste-pratico',
+  'simulado-enem',
+  'vestibular-simulado',
+  'prova-rapida',
+  'quiz-relampago',
+  'avaliacao-formativa',
+  'teste-nivelamento',
+  'prova-recuperacao',
+  'exame-certificacao',
+  'teste-competencia',
+
+  // === PROJETOS E TRABALHOS ===
+  'projetos-praticos',
+  'projeto-pesquisa',
+  'projeto-cientifico',
+  'projeto-criativo',
+  'construcao-maquetes',
+  'feira-ciencias',
+  'projeto-colaborativo',
+  'projeto-individual',
+  'projeto-inovacao',
+  'projeto-sustentabilidade',
+  'projeto-social',
+  'projeto-tecnologico',
+  'projeto-artistico',
+  'projeto-empreendedor',
+  'projeto-interdisciplinar',
+  'projeto-experimental',
+  'projeto-aplicado',
+  'projeto-extensao',
+  'projeto-integrador',
+  'projeto-final',
+
+  // === TÉCNICAS DE ESTUDO ===
+  'mapas-mentais',
+  'resumos-inteligentes',
+  'fichas-estudo',
+  'tecnicas-memorizacao',
+  'leitura-dinamica',
+  'anotacoes-cornell',
+  'metodo-pomodoro',
+  'flashcards-digitais',
+  'tecnica-feynman',
+  'mnemotecnicas',
+  'skimming-scanning',
+  'mapas-conceituais',
+  'diagrama-ishikawa',
+  'matriz-eisenhower',
+  'tecnica-sqr3',
+  'mind-mapping',
+  'speed-reading',
+  'active-recall',
+  'spaced-repetition',
+  'elaborative-interrogation',
+
+  // === REDAÇÃO E ESCRITA ===
+  'redacao-tematica',
+  'producao-textual',
+  'escrita-criativa',
+  'dissertacao-argumentativa',
+  'resenha-critica',
+  'artigo-cientifico',
+  'ensaio-reflexivo',
+  'carta-formal',
+  'texto-narrativo',
+  'texto-descritivo',
+  'texto-expositivo',
+  'texto-injuntivo',
+  'cronica-literaria',
+  'editorial-jornalistico',
+  'manifesto-academico',
+  'relatorio-tecnico',
+  'memorial-descritivo',
+  'texto-argumentativo',
+  'escrita-academica',
+  'producao-poetica',
+
+  // === EXERCÍCIOS E PRÁTICA ===
+  'exercicios-praticos',
+  'lista-exercicios',
+  'exercicios-fixacao',
+  'problemas-contextualizados',
+  'atividades-aplicacao',
+  'exercicios-casa',
+  'pratica-laboratorio',
+  'simulacao-situacoes',
+  'exercicios-progressivos',
+  'problemas-desafio',
+  'atividades-diagnosticas',
+  'exercicios-remediais',
+  'pratica-supervisionada',
+  'exercicios-adaptativos',
+  'atividades-nivelamento',
+  'pratica-autonoma',
+  'exercicios-integrados',
+  'atividades-avaliativas',
+  'pratica-reflexiva',
+  'exercicios-criativos',
+
+  // === MATEMÁTICA E CÁLCULOS ===
+  'resolucao-problemas',
+  'exercicios-matematicos',
+  'geometria-pratica',
+  'calculos-aplicados',
+  'estatistica-dados',
+  'graficos-tabelas',
+  'algebra-pratica',
+  'trigonometria-aplicada',
+  'calculo-diferencial',
+  'calculo-integral',
+  'geometria-analitica',
+  'matematica-financeira',
+  'probabilidade-estatistica',
+  'analise-combinatoria',
+  'logica-matematica',
+  'teoria-numeros',
+  'matematica-discreta',
+  'analise-matematica',
+  'topologia-matematica',
+  'algebra-linear'
+];
+
+export const isActivityEligibleForTrilhas = (activityId: string): boolean => {
+  return trilhasActivitiesIds.includes(activityId);
+};
+
+export const getTrilhasBadgeProps = (activityId: string) => {
+  if (isActivityEligibleForTrilhas(activityId)) {
+    return {
+      showBadge: true,
+      badgeText: 'Trilhas',
+      badgeColor: '#10B981', // Verde
+      badgeTextColor: '#FFFFFF'
+    };
+  }
+  return {
+    showBadge: false,
+    badgeText: '',
+    badgeColor: '',
+    badgeTextColor: ''
+  };
+};
