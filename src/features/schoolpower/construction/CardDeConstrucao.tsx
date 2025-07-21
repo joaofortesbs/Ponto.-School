@@ -627,7 +627,7 @@ export function CardDeConstrucao({
       'historia-local': Home,
       'temporalidades-historicas': Clock,
 
-      // === GEOGRAFIA E MEIO AMBIENTE (aspectos únicos) ===
+      // === GEOGRAFIA E MEIOAMBIENTE (aspectos únicos) ===
       'mapa-conceitual': MapPin,
       'estudo-mapas': Compass,
       'clima-tempo': Cloud,
@@ -844,7 +844,7 @@ export function CardDeConstrucao({
       Lightbulb, Zap, Flag, Key, Shield, // Inovação/Segurança
       TreePine, Sun, Cloud, Home, Car // Ambiente/Contexto
     ];
-    
+
     // Gera hash consistente baseado no ID
     let hash = 0;
     for (let i = 0; i < activityId.length; i++) {
@@ -852,12 +852,45 @@ export function CardDeConstrucao({
       hash = ((hash << 5) - hash) + char;
       hash = hash & hash; // Converte para 32-bit integer
     }
-    
+
     // Usa o hash para selecionar um ícone de forma consistente
     const iconIndex = Math.abs(hash) % fallbackIcons.length;
-    
+
     return fallbackIcons[iconIndex];
   };
+
+  const [selectedTrilhasCount, setSelectedTrilhasCount] = useState(0);
+
+  useEffect(() => {
+    // IDs das atividades que são consideradas "trilhas"
+    const trilhasActivityIds = [
+      'projeto-pesquisa',
+      'projeto-cientifico',
+      'projeto-criativo',
+      'projeto-colaborativo',
+      'projeto-individual',
+      'projeto-inovacao',
+      'projeto-sustentabilidade',
+      'projeto-social',
+      'projeto-tecnologico',
+      'projeto-artistico',
+      'projeto-empreendedor',
+      'projeto-interdisciplinar',
+      'projeto-experimental',
+      'projeto-aplicado',
+      'projeto-extensao',
+      'projeto-integrador',
+      'projeto-final',
+    ];
+
+    // Filtra as atividades selecionadas que são "trilhas"
+    const selectedTrilhas = selectedActivities.filter(activity =>
+      trilhasActivityIds.includes(activity.id)
+    );
+
+    // Atualiza o estado com a contagem de "trilhas" selecionadas
+    setSelectedTrilhasCount(selectedTrilhas.length);
+  }, [selectedActivities]);
 
   return (
     <motion.div
@@ -1203,9 +1236,14 @@ export function CardDeConstrucao({
                 </h3>
                 <div className="flex items-center gap-2">
                   <div className="bg-[#FF6B00]/10 text-[#FF6B00] px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium">
-                    {selectedActivities.length} selecionada
-                    {selectedActivities.length !== 1 ? "s" : ""}
-                  </div>
+                  {selectedActivities.length} selecionada
+                  {selectedActivities.length !== 1 ? "s" : ""}
+                  {selectedTrilhasCount > 0 && (
+                    <span className="ml-1 text-orange-600">
+                      ({selectedTrilhasCount} trilha{selectedTrilhasCount !== 1 ? "s" : ""})
+                    </span>
+                  )}
+                </div>
                   <GridToggleComponent 
                     viewMode={viewMode}
                     onToggle={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
