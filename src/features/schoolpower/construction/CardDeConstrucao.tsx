@@ -307,18 +307,56 @@ export function CardDeConstrucao({
   };
 
   const getIconByActivityId = (activityId: string) => {
-    // Implemente a lógica para retornar o ícone com base no ID da atividade
-    // Este é apenas um exemplo, substitua com sua própria lógica
-    switch (activityId) {
-      case '1':
-        return Wrench;
-      case '2':
-        return Target;
-      case '3':
-        return CheckSquare;
-      default:
-        return Wrench; // Ícone padrão
+    // Mapeamento de IDs específicos para ícones apropriados
+    const iconMap: { [key: string]: any } = {
+      'quiz-contextualizacao': CheckSquare,
+      'atividades-interativas': Target,
+      'projetos-praticos': Wrench,
+      'cronograma-estudos': Target,
+      'brainstorming': Target,
+      'redacao-tematica': CheckSquare,
+      'simulado-preparatorio': Target,
+      'revisao-intensiva': CheckSquare,
+      'mapas-mentais': Target,
+      'autoavaliacao': CheckSquare,
+      'estudo-grupo': Target,
+      'pesquisa-aprofundada': CheckSquare,
+      'exercicios-praticos': Target,
+      'apresentacao-oral': CheckSquare,
+      'resumo-inteligente': CheckSquare,
+      'lista-exercicios': Target,
+      'prova-interativa': CheckSquare
+    };
+
+    // Se o ID específico for encontrado, usa o ícone mapeado
+    if (iconMap[activityId]) {
+      return iconMap[activityId];
     }
+
+    // Caso contrário, usa lógica baseada em palavras-chave no ID
+    const keywordMap = [
+      { keywords: ['quiz', 'questao', 'prova', 'simulado', 'avaliacao'], icon: CheckSquare },
+      { keywords: ['redacao', 'escrita', 'texto', 'resumo'], icon: CheckSquare },
+      { keywords: ['grupo', 'time', 'colabora', 'apresentacao'], icon: Target },
+      { keywords: ['cronograma', 'agenda', 'tempo'], icon: Target },
+      { keywords: ['brainstorm', 'ideia', 'criativ', 'mapas'], icon: Target },
+      { keywords: ['projeto', 'prático', 'exercicio', 'atividade'], icon: Wrench },
+      { keywords: ['revisao', 'revisar', 'estudo'], icon: CheckSquare },
+      { keywords: ['autoaval', 'reflexao'], icon: CheckSquare }
+    ];
+
+    // Converte o ID para minúsculo para comparação
+    const lowerCaseId = activityId.toLowerCase();
+    
+    // Procura por palavras-chave no ID
+    for (const mapping of keywordMap) {
+      if (mapping.keywords.some(keyword => lowerCaseId.includes(keyword))) {
+        return mapping.icon;
+      }
+    }
+
+    // Fallback para Wrench como ícone padrão
+    return Wrench;
   };
 
   return (
