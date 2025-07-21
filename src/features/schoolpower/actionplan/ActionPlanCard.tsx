@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Check, X, ChevronLeft, Sparkles, Activity } from 'lucide-react';
+import { Check, X, ChevronLeft, Sparkles, Activity, BookOpen, Users, Target, Calendar, Lightbulb, FileText, Trophy, Zap, Brain, Heart } from 'lucide-react';
 
 export interface ActionPlanItem {
   id: string;
@@ -19,6 +19,55 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
 
   console.log('🎯 ActionPlanCard renderizado com:', { actionPlan, isLoading });
+
+  const getIconByActivityId = (id: string) => {
+    // Mapeia IDs específicos para ícones apropriados
+    const iconMap: { [key: string]: any } = {
+      'quiz-contextualizacao': BookOpen,
+      'atividades-interativas': Users,
+      'projetos-praticos': Target,
+      'cronograma-estudos': Calendar,
+      'brainstorming': Lightbulb,
+      'redacao-tematica': FileText,
+      'simulado-preparatorio': Trophy,
+      'revisao-intensiva': Zap,
+      'mapas-mentais': Brain,
+      'autoavaliacao': Heart,
+      'estudo-grupo': Users,
+      'pesquisa-aprofundada': BookOpen,
+      'exercicios-praticos': Target,
+      'apresentacao-oral': Users
+    };
+
+    // Se o ID específico não for encontrado, usa um padrão baseado em palavras-chave
+    const keywordMap = [
+      { keywords: ['quiz', 'questao', 'prova', 'simulado'], icon: Trophy },
+      { keywords: ['redacao', 'escrita', 'texto'], icon: FileText },
+      { keywords: ['grupo', 'time', 'colabora'], icon: Users },
+      { keywords: ['cronograma', 'agenda', 'tempo'], icon: Calendar },
+      { keywords: ['brainstorm', 'ideia', 'criativ'], icon: Lightbulb },
+      { keywords: ['mapa', 'mental', 'visual'], icon: Brain },
+      { keywords: ['projeto', 'prático'], icon: Target },
+      { keywords: ['revisao', 'revisar'], icon: Zap },
+      { keywords: ['autoaval', 'reflexao'], icon: Heart }
+    ];
+
+    // Primeiro tenta encontrar por ID exato
+    if (iconMap[id]) {
+      return iconMap[id];
+    }
+
+    // Depois tenta por palavra-chave no ID
+    const lowerCaseId = id.toLowerCase();
+    for (const mapping of keywordMap) {
+      if (mapping.keywords.some(keyword => lowerCaseId.includes(keyword))) {
+        return mapping.icon;
+      }
+    }
+
+    // Fallback para Activity
+    return Activity;
+  };
 
   const handleItemToggle = (itemId: string) => {
     const newSelected = new Set(selectedItems);
@@ -136,7 +185,7 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
           actionPlan.map((item, index) => (
             <motion.div
               key={item.id}
-              className={`relative p-6 rounded-xl border-2 transition-all duration-300 cursor-pointer ${
+              className={`relative p-6 rounded-3xl border-2 transition-all duration-300 cursor-pointer ${
                 selectedItems.has(item.id)
                   ? 'border-[#FF6B00] bg-[#FF6B00]/5 dark:bg-[#FF6B00]/10 shadow-lg transform scale-[1.02]'
                   : 'border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 hover:border-[#FF6B00]/50 hover:shadow-md'
@@ -158,11 +207,54 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
                   )}
                 </div>
 
-                {/* Ícone da atividade */}
+                {/* Ícone animado da atividade */}
                 <div className="flex-shrink-0 mt-1">
-                  <Activity className={`w-5 h-5 ${
-                    selectedItems.has(item.id) ? 'text-[#FF6B00]' : 'text-gray-400'
-                  }`} />
+                  <div 
+                    className={`icon-container ${selectedItems.has(item.id) ? 'active' : ''}`}
+                    style={{
+                      width: '40px',
+                      height: '40px',
+                      minWidth: '40px',
+                      minHeight: '40px',
+                      borderRadius: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: selectedItems.has(item.id) 
+                        ? 'linear-gradient(135deg, #FF6E06, #FF8A39)' 
+                        : 'rgba(255, 110, 6, 0.1)',
+                      transition: 'all 0.3s ease',
+                      position: 'relative',
+                      overflow: 'hidden',
+                      cursor: 'pointer',
+                      boxShadow: selectedItems.has(item.id) 
+                        ? '0 4px 8px rgba(255, 110, 6, 0.3)' 
+                        : 'none'
+                    }}
+                  >
+                    {React.createElement(getIconByActivityId(item.id), {
+                      className: `w-5 h-5 transition-all duration-300 relative z-10`,
+                      style: {
+                        color: selectedItems.has(item.id) ? 'white' : '#FF6E06'
+                      }
+                    })}
+                    <div 
+                      className="icon-glow"
+                      style={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        width: '16px',
+                        height: '16px',
+                        background: 'radial-gradient(circle, rgba(255, 110, 6, 0.5), transparent)',
+                        borderRadius: '50%',
+                        transform: selectedItems.has(item.id) 
+                          ? 'translate(-50%, -50%) scale(2.5)' 
+                          : 'translate(-50%, -50%) scale(0)',
+                        transition: 'transform 0.3s ease'
+                      }}
+                    />
+                  </div>
                 </div>
 
                 {/* Conteúdo da atividade */}
@@ -192,7 +284,7 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
 
               {/* Borda animada para item selecionado */}
               {selectedItems.has(item.id) && (
-                <div className="absolute inset-0 rounded-xl border-2 border-[#FF6B00] animate-pulse opacity-50 pointer-events-none"></div>
+                <div className="absolute inset-0 rounded-3xl border-2 border-[#FF6B00] animate-pulse opacity-50 pointer-events-none"></div>
               )}
             </motion.div>
           ))
