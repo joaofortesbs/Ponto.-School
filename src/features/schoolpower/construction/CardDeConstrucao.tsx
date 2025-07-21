@@ -206,102 +206,58 @@ export function CardDeConstrucao({
           </div>
         </div>
 
-        {/* Barra de Progresso Melhorada */}
-        <div className="flex items-center gap-6">
-          <div className="relative flex items-center justify-between w-64">
-            {/* Background progress line with gradient shadow */}
-            <div 
-              className="absolute top-1/2 transform -translate-y-1/2 h-2 bg-gradient-to-r from-white/20 to-white/40 rounded-full z-0 shadow-inner"
-              style={{ left: '20px', right: '20px' }}
-            ></div>
+        {/* Barra de Progresso */}
+        <div className="flex items-center gap-4">
+          <div className="relative flex items-center justify-between w-44">
+            {/* Background progress line */}
+            <div className="absolute top-1/2 transform -translate-y-1/2 h-1.5 bg-white/30 rounded-full z-0" style={{ left: '16px', right: '16px' }}></div>
             
-            {/* Active progress line with animated gradient */}
+            {/* Active progress line */}
             <div 
-              className="absolute top-1/2 transform -translate-y-1/2 h-2 bg-gradient-to-r from-white via-white/95 to-white rounded-full z-0 transition-all duration-700 ease-out shadow-lg"
+              className="absolute top-1/2 transform -translate-y-1/2 h-1.5 bg-white rounded-full z-0 transition-all duration-500 ease-out"
               style={{ 
-                left: '20px',
+                left: '16px',
                 width: `${
                   step === "contextualization" ? "0%" :
                   step === "actionPlan" ? "50%" :
                   (step === "generating" || step === "generatingActivities") ? "100%" : "0%"
-                }`,
-                boxShadow: '0 0 12px rgba(255, 255, 255, 0.6), 0 0 24px rgba(255, 255, 255, 0.3)'
+                }`
               }}
             ></div>
             
-            {/* Step indicators with enhanced design */}
-            <div className={`relative z-10 w-10 h-10 rounded-full border-3 flex items-center justify-center transition-all duration-400 shadow-lg ${
-              step === "contextualization" 
-                ? 'bg-white border-white text-[#FF6B00] shadow-white/50 scale-110' 
-                : 'bg-[#FF6B00] border-white text-white shadow-orange-500/30 hover:scale-105'
-            }`}
-            style={{
-              boxShadow: step === "contextualization" 
-                ? '0 0 16px rgba(255, 255, 255, 0.8), 0 4px 8px rgba(255, 107, 0, 0.3)' 
-                : '0 0 12px rgba(255, 107, 0, 0.4), 0 4px 8px rgba(0, 0, 0, 0.2)'
-            }}>
+            {/* Step indicators */}
+            <div className={`relative z-10 w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+              step === "contextualization" ? 'bg-white border-white text-[#FF6B00]' : 'bg-[#FF6B00] border-white text-white'
+            }`}>
               {step === "contextualization" ? (
-                <span className="text-base font-bold">1</span>
+                <span className="text-sm font-semibold">1</span>
               ) : (
-                <svg className="w-5 h-5 drop-shadow-sm" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
               )}
             </div>
             
-            <div className={`relative z-10 w-10 h-10 rounded-full border-3 flex items-center justify-center transition-all duration-400 shadow-lg ${
-              step === "actionPlan" 
-                ? 'bg-white border-white text-[#FF6B00] shadow-white/50 scale-110' :
-              (step === "generating" || step === "generatingActivities") 
-                ? 'bg-[#FF6B00] border-white text-white shadow-orange-500/30 hover:scale-105' :
-              'bg-white/15 border-white/40 text-white/70 hover:bg-white/25'
-            }`}
-            style={{
-              boxShadow: step === "actionPlan" 
-                ? '0 0 16px rgba(255, 255, 255, 0.8), 0 4px 8px rgba(255, 107, 0, 0.3)' 
-                : (step === "generating" || step === "generatingActivities")
-                ? '0 0 12px rgba(255, 107, 0, 0.4), 0 4px 8px rgba(0, 0, 0, 0.2)'
-                : '0 2px 4px rgba(255, 255, 255, 0.1)'
-            }}>
+            <div className={`relative z-10 w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+              step === "actionPlan" ? 'bg-white border-white text-[#FF6B00]' :
+              (step === "generating" || step === "generatingActivities") ? 'bg-[#FF6B00] border-white text-white' :
+              'bg-white/20 border-white/30 text-white'
+            }`}>
               {step === "actionPlan" ? (
-                <span className="text-base font-bold">2</span>
+                <span className="text-sm font-semibold">2</span>
               ) : (step === "generating" || step === "generatingActivities") ? (
-                <svg className="w-5 h-5 drop-shadow-sm" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
               ) : (
-                <span className="text-base font-bold">2</span>
+                <span className="text-sm font-semibold">2</span>
               )}
             </div>
             
-            <div className={`relative z-10 w-10 h-10 rounded-full border-3 flex items-center justify-center transition-all duration-400 shadow-lg ${
-              (step === "generating" || step === "generatingActivities") 
-                ? 'bg-white border-white text-[#FF6B00] shadow-white/50 scale-110' 
-                : 'bg-white/15 border-white/40 text-white/70 hover:bg-white/25'
-            }`}
-            style={{
-              boxShadow: (step === "generating" || step === "generatingActivities")
-                ? '0 0 16px rgba(255, 255, 255, 0.8), 0 4px 8px rgba(255, 107, 0, 0.3)'
-                : '0 2px 4px rgba(255, 255, 255, 0.1)'
-            }}>
-              <span className="text-base font-bold">3</span>
-            </div>
-          </div>
-          
-          {/* Progress Indicator Text */}
-          <div className="hidden md:flex flex-col items-start">
-            <div className="text-white/90 text-xs font-medium mb-1">
-              {step === "contextualization" ? "Contextualizando" :
-               step === "actionPlan" ? "Plano de Ação" :
-               step === "generating" ? "Gerando..." :
-               "Concluído"}
-            </div>
-            <div className="text-white/70 text-xs">
-              Etapa {
-                step === "contextualization" ? "1" :
-                step === "actionPlan" ? "2" :
-                "3"
-              } de 3
+            <div className={`relative z-10 w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+              (step === "generating" || step === "generatingActivities") ? 'bg-white border-white text-[#FF6B00]' : 'bg-white/20 border-white/30 text-white'
+            }`}>
+              <span className="text-sm font-semibold">3</span>
             </div>
           </div>
         </div>
