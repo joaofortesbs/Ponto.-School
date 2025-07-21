@@ -136,7 +136,7 @@ export function SchoolPowerPage() {
           transition={{ duration: 0.3 }}
           style={{ background: 'transparent' }}
         >
-          <div className="w-full max-w-4xl mx-4">
+          <div className="flex items-center justify-center w-full h-full">
             <CardDeConstrucao
               step={
                 flowState === 'contextualizing' ? 'contextualization' :
