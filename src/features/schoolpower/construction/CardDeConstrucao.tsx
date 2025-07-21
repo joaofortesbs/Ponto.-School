@@ -627,7 +627,6 @@ export function CardDeConstrucao({
       'historia-local': Home,
       'temporalidades-historicas': Clock,
 
-      ```text
       // === GEOGRAFIA E MEIOAMBIENTE (aspectos únicos) ===
       'mapa-conceitual': MapPin,
       'estudo-mapas': Compass,
