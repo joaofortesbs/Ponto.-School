@@ -147,11 +147,11 @@ export function CardDeConstrucao({
     >
       {/* Cabeçalho Persistente Fixo */}
       <div className="absolute top-0 left-0 right-0 h-20 bg-gradient-to-r from-[#FF6B00] to-[#FF9248] rounded-t-2xl flex items-center justify-between px-6 z-20">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
             {step === "contextualization" ? (
               <svg
-                className="w-6 h-6 text-white"
+                className="w-7 h-7 text-white"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -165,7 +165,7 @@ export function CardDeConstrucao({
               </svg>
             ) : step === "actionPlan" ? (
               <svg
-                className="w-6 h-6 text-white"
+                className="w-7 h-7 text-white"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -179,7 +179,7 @@ export function CardDeConstrucao({
               </svg>
             ) : (
               <svg
-                className="w-6 h-6 text-white animate-spin"
+                className="w-7 h-7 text-white animate-spin"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -194,7 +194,7 @@ export function CardDeConstrucao({
             )}
           </div>
           <div>
-            <h1 className="text-white font-bold text-xl">
+            <h1 className="text-white font-bold text-2xl">
               {step === "contextualization"
                 ? "Quiz de Contextualização"
                 : step === "actionPlan"
@@ -206,28 +206,60 @@ export function CardDeConstrucao({
           </div>
         </div>
 
-        {/* Indicador de Progresso */}
-        <div className="flex items-center gap-2">
-          <div className="flex gap-1">
-            <div
-              className={`w-2 h-2 rounded-full ${step === "contextualization" ? "bg-white" : "bg-white/40"}`}
+        {/* Barra de Progresso */}
+        <div className="flex items-center gap-4">
+          <div className="relative flex items-center justify-between w-32">
+            {/* Background progress line */}
+            <div className="absolute top-1/2 transform -translate-y-1/2 h-1 bg-white/30 rounded-full z-0" style={{ left: '12px', right: '12px' }}></div>
+            
+            {/* Active progress line */}
+            <div 
+              className="absolute top-1/2 transform -translate-y-1/2 h-1 bg-white rounded-full z-0 transition-all duration-500 ease-out"
+              style={{ 
+                left: '12px',
+                width: `${
+                  step === "contextualization" ? "0%" :
+                  step === "actionPlan" ? "50%" :
+                  (step === "generating" || step === "generatingActivities") ? "100%" : "0%"
+                }`
+              }}
             ></div>
-            <div
-              className={`w-2 h-2 rounded-full ${step === "actionPlan" ? "bg-white" : "bg-white/40"}`}
-            ></div>
-            <div
-              className={`w-2 h-2 rounded-full ${step === "generating" || step === "generatingActivities" ? "bg-white animate-pulse" : "bg-white/40"}`}
-            ></div>
+            
+            {/* Step indicators */}
+            <div className={`relative z-10 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+              step === "contextualization" ? 'bg-white border-white text-[#FF6B00]' : 'bg-[#FF6B00] border-white text-white'
+            }`}>
+              {step === "contextualization" ? (
+                <span className="text-xs font-semibold">1</span>
+              ) : (
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              )}
+            </div>
+            
+            <div className={`relative z-10 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+              step === "actionPlan" ? 'bg-white border-white text-[#FF6B00]' :
+              (step === "generating" || step === "generatingActivities") ? 'bg-[#FF6B00] border-white text-white' :
+              'bg-white/20 border-white/30 text-white'
+            }`}>
+              {step === "actionPlan" ? (
+                <span className="text-xs font-semibold">2</span>
+              ) : (step === "generating" || step === "generatingActivities") ? (
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              ) : (
+                <span className="text-xs font-semibold">2</span>
+              )}
+            </div>
+            
+            <div className={`relative z-10 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+              (step === "generating" || step === "generatingActivities") ? 'bg-white border-white text-[#FF6B00]' : 'bg-white/20 border-white/30 text-white'
+            }`}>
+              <span className="text-xs font-semibold">3</span>
+            </div>
           </div>
-          <span className="text-white/80 text-xs ml-2">
-            {step === "contextualization"
-              ? "1/3"
-              : step === "actionPlan"
-                ? "2/3"
-                : step === "generating" || step === "generatingActivities"
-                  ? "3/3"
-                  : ""}
-          </span>
         </div>
       </div>
 
