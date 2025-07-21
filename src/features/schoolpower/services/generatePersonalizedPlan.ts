@@ -1,4 +1,3 @@
-
 import { ContextualizationData } from '../contextualization/ContextualizationCard';
 import { ActionPlanItem } from '../actionplan/ActionPlanCard';
 import schoolPowerActivities from '../data/schoolPowerActivities.json';
@@ -111,7 +110,7 @@ async function callGeminiAPI(prompt: string): Promise<string> {
     console.log('📥 Resposta bruta da Gemini:', data);
 
     const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    
+
     if (!generatedText) {
       console.error('❌ Resposta vazia da API Gemini');
       throw new Error('Resposta vazia da API Gemini');
@@ -131,22 +130,22 @@ async function callGeminiAPI(prompt: string): Promise<string> {
  */
 function parseGeminiResponse(responseText: string): GeminiActivityResponse[] {
   console.log('🔍 Processando resposta da Gemini...');
-  
+
   try {
     // Remove markdown e outros caracteres indesejados
     let cleanedText = responseText.trim();
-    
+
     // Remove blocos de código markdown se existirem
     cleanedText = cleanedText.replace(/```json\n?/g, '').replace(/```\n?/g, '');
-    
+
     // Remove quebras de linha extras
     cleanedText = cleanedText.trim();
-    
+
     console.log('🧹 Texto limpo:', cleanedText);
-    
+
     // Tenta fazer parse do JSON
     const parsedActivities: GeminiActivityResponse[] = JSON.parse(cleanedText);
-    
+
     if (!Array.isArray(parsedActivities)) {
       throw new Error('Resposta não é um array válido');
     }
@@ -170,10 +169,21 @@ function convertToActionPlanItems(
 ): ActionPlanItem[] {
   console.log('🔄 Convertendo atividades para ActionPlanItems...');
 
+  const isActivityEligibleForTrilhas = (activityId: string, activityName: string): boolean => {
+    // Lógica para determinar se a atividade é elegível para "Trilhas"
+    // Aqui você pode adicionar a lógica específica para verificar se a atividade
+    // deve receber o badge "Trilhas". Por exemplo, verificar se o ID da atividade
+    // está em uma lista específica, ou se o título contém certas palavras-chave.
+    // Por enquanto, retornaremos 'false' para todas as atividades.
+
+    // Implemente a lógica de elegibilidade aqui
+    return false;
+  };
+
   return geminiActivities.map(activity => {
     // Busca a atividade original no JSON para validação
     const originalActivity = allowedActivities.find(a => a.id === activity.id);
-    
+
     if (!originalActivity) {
       console.warn(`⚠️ Atividade não encontrada: ${activity.id}`);
       return null;
@@ -279,6 +289,28 @@ export async function generatePersonalizedPlan(
 
     // Valida as atividades retornadas
     const validatedActivities = await validateGeminiPlan(geminiActivities, schoolPowerActivities);
+      
+     const isActivityEligibleForTrilhas = (activityId: string, activityName: string): boolean => {
+        // Lógica para determinar se a atividade é elegível para "Trilhas"
+        // Aqui você pode adicionar a lógica específica para verificar se a atividade
+        // deve receber o badge "Trilhas". Por exemplo, verificar se o ID da atividade
+        // está em uma lista específica, ou se o título contém certas palavras-chave.
+        // Por enquanto, retornaremos 'false' para todas as atividades.
+
+        // Implemente a lógica de elegibilidade aqui
+        return false;
+    };
+
+    // Mapear atividades validadas para o formato do ActionPlanItem
+    const actionPlanItems = validatedActivities.map(activity => ({
+        id: activity.id,
+        title: activity.personalizedTitle || activity.title,
+        description: activity.personalizedDescription || activity.description,
+        icon: '📝', // Ícone padrão, será substituído pelo componente
+        completed: false,
+        selected: false,
+        isTrilhasEligible: isActivityEligibleForTrilhas(activity.id, activity.personalizedTitle || activity.title)
+    }));
 
     if (validatedActivities.length === 0) {
       console.warn('⚠️ Nenhuma atividade válida retornada, usando fallback');
@@ -286,14 +318,14 @@ export async function generatePersonalizedPlan(
     }
 
     // Converte para ActionPlanItems
-    const actionPlanItems = convertToActionPlanItems(validatedActivities, schoolPowerActivities);
+    const actionPlanItems2 = convertToActionPlanItems(validatedActivities, schoolPowerActivities);
 
     console.log('✅ Plano personalizado gerado com sucesso:', actionPlanItems);
     return actionPlanItems;
 
   } catch (error) {
     console.error('❌ Erro ao gerar plano personalizado:', error);
-    
+
     // Em caso de erro, retorna o plano de fallback
     console.log('🔄 Usando plano de fallback devido ao erro');
     return generateFallbackPlan(initialMessage, contextualizationData);

@@ -627,6 +627,7 @@ export function CardDeConstrucao({
       'historia-local': Home,
       'temporalidades-historicas': Clock,
 
+      ```text
       // === GEOGRAFIA E MEIOAMBIENTE (aspectos únicos) ===
       'mapa-conceitual': MapPin,
       'estudo-mapas': Compass,
@@ -857,6 +858,25 @@ export function CardDeConstrucao({
     const iconIndex = Math.abs(hash) % fallbackIcons.length;
 
     return fallbackIcons[iconIndex];
+  };
+
+  // Função para verificar se atividade é elegível para Trilhas School
+  const isEligibleForTrilhas = (activityId: string, activityName: string) => {
+    // Verifica se o ID da atividade está na lista de atividades Trilhas
+    const isInTrilhasList = atividadesTrilhas.atividadesTrilhas.includes(activityId);
+
+    if (isInTrilhasList) {
+      return true;
+    }
+
+    // Verificação adicional por nome/palavras-chave caso o ID não seja encontrado
+    const name = activityName.toLowerCase();
+    const trilhasKeywords = [
+      'prova', 'exercicios', 'lista', 'questoes', 'atividade', 'jogo', 'projeto',
+      'plano', 'resumo', 'simulado', 'avaliacao', 'teste', 'correcao', 'analise'
+    ];
+
+    return trilhasKeywords.some(keyword => name.includes(keyword));
   };
 
   const [selectedTrilhasCount, setSelectedTrilhasCount] = useState(0);

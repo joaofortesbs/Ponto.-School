@@ -7,6 +7,7 @@ export interface ActionPlanItem {
   title: string;
   description: string;
   approved: boolean;
+  isTrilhasEligible?: boolean;
 }
 
 interface ActionPlanCardProps {
@@ -212,6 +213,16 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
                 transition={{ duration: 0.3, delay: index * 0.1 }}
                 onClick={() => handleItemToggle(item.id)}
               >
+                {item.isTrilhasEligible && (
+                    <div className="absolute top-2 right-2 z-10">
+                      <Badge 
+                        variant="secondary" 
+                        className="bg-green-500 text-white text-xs font-semibold px-2 py-1 rounded-full border-0 shadow-md"
+                      >
+                        Trilhas
+                      </Badge>
+                    </div>
+                  )}
                 <div className="flex items-start gap-4">
                   {/* Checkbox customizado */}
                   {/* Conteúdo da atividade */}
