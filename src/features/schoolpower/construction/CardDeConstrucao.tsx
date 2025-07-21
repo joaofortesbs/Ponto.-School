@@ -63,6 +63,9 @@ export function CardDeConstrucao({
   // Filter state for action plan
   const [filterState, setFilterState] = useState<'all' | 'selected'>('all');
 
+  // View mode state (list or grid)
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+
   // Load existing data when component mounts
   useEffect(() => {
     if (contextualizationData) {
@@ -110,6 +113,30 @@ export function CardDeConstrucao({
   // Check if contextualization form is valid
   const isContextualizationValid =
     formData.materias.trim() && formData.publicoAlvo.trim();
+
+  // Grid Toggle Component
+  const GridToggleComponent = ({ viewMode, onToggle }: {
+    viewMode: 'list' | 'grid';
+    onToggle: () => void;
+  }) => {
+    return (
+      <button
+        onClick={onToggle}
+        className="w-9 h-9 flex items-center justify-center rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-750 hover:from-[#FF6B00]/5 hover:to-[#FF9248]/5 dark:hover:from-[#FF6B00]/10 dark:hover:to-[#FF9248]/10 border border-gray-200 dark:border-gray-600 hover:border-[#FF6B00]/30 transition-all duration-300 shadow-sm hover:shadow-md"
+        title={viewMode === 'list' ? 'Visualização em Grade' : 'Visualização em Lista'}
+      >
+        {viewMode === 'list' ? (
+          <svg className="w-4 h-4 text-gray-600 dark:text-gray-300 hover:text-[#FF6B00] transition-colors duration-200" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+          </svg>
+        ) : (
+          <svg className="w-4 h-4 text-gray-600 dark:text-gray-300 hover:text-[#FF6B00] transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+          </svg>
+        )}
+      </button>
+    );
+  };
 
   // Filter Component
   const FilterComponent = ({ activities, selectedActivities, onFilterApply }: {
@@ -626,6 +653,10 @@ export function CardDeConstrucao({
                     {selectedActivities.length} selecionada
                     {selectedActivities.length !== 1 ? "s" : ""}
                   </div>
+                  <GridToggleComponent 
+                    viewMode={viewMode}
+                    onToggle={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
+                  />
                   <FilterComponent 
                     activities={actionPlan || []}
                     selectedActivities={selectedActivities}
@@ -635,7 +666,11 @@ export function CardDeConstrucao({
               </div>
 
               <div
-                className="flex-1 overflow-y-auto space-y-2 sm:space-y-3 mb-3 sm:mb-4 pr-1 sm:pr-2"
+                className={`flex-1 overflow-y-auto mb-3 sm:mb-4 pr-1 sm:pr-2 ${
+                  viewMode === 'grid' 
+                    ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 auto-rows-min' 
+                    : 'space-y-2 sm:space-y-3'
+                }`}
                 style={{
                   maxHeight: "calc(100% - 80px)",
                   scrollbarWidth: "thin",
@@ -657,7 +692,7 @@ export function CardDeConstrucao({
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.3 }}
                       className={`
-                      p-3 sm:p-4 rounded-lg border-2 cursor-pointer transition-all duration-200
+                      p-3 sm:p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 h-fit
                       ${
                         isSelected
                           ? "border-[#FF6B00] bg-[#FF6B00]/20 shadow-lg shadow-[#FF6B00]/20"
@@ -696,7 +731,7 @@ export function CardDeConstrucao({
                           <h4 className="font-semibold text-gray-900 dark:text-white mb-1 text-sm sm:text-base">
                             {activity.title}
                           </h4>
-                          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 mb-2 line-clamp-2">
+                          <p className={`text-xs sm:text-sm text-gray-600 dark:text-gray-300 mb-2 ${viewMode === 'grid' ? 'line-clamp-3' : 'line-clamp-2'}`}>
                             {activity.description}
                           </p>
                           <div className="flex gap-1 sm:gap-2 flex-wrap">
