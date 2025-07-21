@@ -16,6 +16,7 @@ import { ContextualizationData } from "../contextualization/ContextualizationCar
 import { ActionPlanItem } from "../actionplan/ActionPlanCard";
 import { isActivityEligibleForTrilhas, getTrilhasBadgeProps } from "../data/trilhasActivitiesConfig";
 import { TrilhasDebugPanel } from "../components/TrilhasDebugPanel";
+import { TrilhasBadge } from "../components/TrilhasBadge";
 
 export interface ContextualizationData {
   materias: string;
@@ -1319,16 +1320,8 @@ export function CardDeConstrucao({
                     >
                       {/* Badge Trilhas - POSICIONADO NO CANTO SUPERIOR DIREITO */}
                       {badgeProps.showBadge && (
-                        <div 
-                          className="absolute top-4 right-4 z-20 px-2 py-1 rounded-full text-xs font-semibold shadow-lg transform transition-all duration-300 hover:scale-105"
-                          style={{
-                            backgroundColor: badgeProps.badgeColor,
-                            color: badgeProps.badgeTextColor,
-                            border: '2px solid rgba(255, 255, 255, 0.8)',
-                            boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
-                          }}
-                        >
-                          {badgeProps.badgeText}
+                        <div className="absolute top-4 right-4 z-20">
+                          <TrilhasBadge />
                         </div>
                       )}
 

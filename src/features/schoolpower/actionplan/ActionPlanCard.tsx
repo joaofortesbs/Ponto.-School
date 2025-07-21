@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Check, X, ChevronLeft, Sparkles, Activity, BookOpen, Users, Target, Calendar, Lightbulb, FileText, Trophy, Zap, Brain, Heart } from 'lucide-react';
 import { TrilhasBadge } from '../components/TrilhasBadge';
+import { isActivityEligibleForTrilhas } from '../data/trilhasActivitiesConfig';
 
 export interface ActionPlanItem {
   id: string;
@@ -218,8 +219,8 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
                 transition={{ duration: 0.3, delay: index * 0.1 }}
                 onClick={() => handleItemToggle(item.id)}
               >
-                {item.isTrilhasEligible && (
-                    <div className="absolute top-2 right-2 z-10">
+                {isActivityEligibleForTrilhas(item.id) && (
+                    <div className="absolute top-4 right-4 z-20">
                       <TrilhasBadge />
                     </div>
                   )}
