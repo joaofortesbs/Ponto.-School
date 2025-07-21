@@ -1,0 +1,75 @@
+IA, quero que você desenvolva agora uma melhoria completa na seção de Plano de Ação do School Power, implementando o sistema de identificação e exibição de atividades elegíveis para Trilhas School, garantindo que tudo funcione perfeitamente, sem quebrar nenhuma integração ou coleta de dados já existente.
+
+✅ Contexto:
+Na seção Plano de Ação do School Power, a IA gera sugestões de atividades de ensino (cards) para o usuário selecionar.
+
+Precisamos identificar automaticamente se alguma das atividades sugeridas faz parte do Grupo “Ponto.Ativo”, que são atividades elegíveis para futuras Trilhas School.
+
+Quando identificado, deve ser exibido um badge “Trilhas” no canto superior direito do card da atividade sugerida.
+
+Essa flag é visual, mas pode ser utilizada em futuras automações para criação de trilhas automaticamente.
+
+Nenhuma funcionalidade atual deve ser alterada ou quebrada.
+
+✅ Atividades elegíveis (Grupo Ponto.Ativo):
+Utilize estes 35 tipos de atividades para identificar se a atividade sugerida deve receber o badge Trilhas:
+
+css
+Copiar
+Editar
+Prova, Lista de Exercícios, Simulado, Atividade Adaptada, Tarefa Adaptada, Redação, Palavras Cruzadas, Caça-Palavras, Charadas, Imagem para Colorir, Gerador de Formatos Tracejados, Jogos Educativos, Dinâmicas para Sala de Aula, Experimento Científico, Mapa Mental, Tabela de Apoio, Apresentação de Slides, Música para Engajar, Histórias Sociais, Fichamento de Obra Literária, Resumo de Texto, Texto de Apoio, Questões sobre um Texto, Questões sobre um Vídeo, Consulta sobre um Vídeo, Questões sobre um Site, Questões sobre um PDF, Atividades de Contos Infantis, Ideias de Brincadeiras Infantis, Ideias para Confraternizações, Ideias para Datas Comemorativas, Maquete, Reescritor de Texto, Instruções Claras, Jogos Educacionais Interativos.
+Os IDs técnicos utilizados para checar são:
+
+json
+Copiar
+Editar
+[
+  "prova", "lista-exercicios", "simulado", "atividade-adaptada", "tarefa-adaptada", "redacao", "palavras-cruzadas",
+  "caca-palavras", "charadas", "imagem-colorir", "gerador-tracejados", "jogos-educativos", "dinamicas-sala",
+  "experimento-cientifico", "mapa-mental", "tabela-apoio", "apresentacao-slides", "musica-engajar", "historias-sociais",
+  "fichamento-obra", "resumo-texto", "texto-apoio", "questoes-texto", "questoes-video", "consulta-video",
+  "questoes-site", "questoes-pdf", "atividades-contos", "brincadeiras-infantis", "confraternizacoes",
+  "datas-comemorativas", "maquete", "reescritor-texto", "instrucoes-claras", "jogos-interativos"
+]
+✅ O que precisa ser feito:
+1️⃣ Crie um arquivo:
+
+swift
+Copiar
+Editar
+src/features/schoolpower/data/atividadesTrilhas.json
+Para armazenar o array de IDs acima, permitindo manutenção fácil no futuro.
+
+2️⃣ Dentro do componente de Plano de Ação:
+
+✅ Importe o JSON com os IDs.
+✅ Para cada card de atividade renderizado, verifique se o activity.id está contido nesse array.
+✅ Se estiver, renderize no canto superior direito do mini-card o badge “Trilhas” com estilo limpo e discreto, usando:
+
+Um ícone 🎯 ou similar.
+
+Texto: Trilhas.
+
+Estilo: bg-gradient-to-r from-orange-400 to-pink-500 text-white text-[10px] rounded-full px-2 py-0.5 shadow-lg animate-pulse.
+
+Tooltip ao passar o mouse: “Esta atividade é elegível para Trilhas School.”
+
+3️⃣ Garanta que:
+
+✅ Nenhuma funcionalidade atual de seleção de atividades, geração de plano ou salvamento no backend seja afetada.
+✅ O badge seja apenas visual, mas armazenável caso desejemos mapear posteriormente para automação de Trilhas.
+✅ O layout e espaçamento dos cards não sejam prejudicados.
+✅ Mantenha o mesmo padrão de código da base (TypeScript, React com Shadcn/Tailwind se já estiver usando).
+✅ Tudo esteja modular para reaproveitar em outras seções, como Trilhas Futuras e Relatórios.
+
+✅ Extras (se possível):
+✅ Adicione um filtro “Mostrar apenas Trilhas” no topo da lista de atividades, permitindo ao usuário visualizar apenas as atividades elegíveis para trilhas, sem afetar as demais funcionalidades.
+✅ Permitir que o contador de atividades selecionadas contabilize também quantas são elegíveis para Trilhas (Ex: “1 selecionada (1 trilha)”).
+
+⚠️ Importante:
+Não altere nenhuma lógica de geração das atividades atuais.
+
+Não modifique integrações com a API Gemini e pipelines de geração de plano.
+
+Apenas adicione este sistema de identificação visual e organizacional de forma limpa.
+
