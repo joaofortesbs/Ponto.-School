@@ -1,7 +1,17 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { Wrench, Target, CheckSquare, Filter } from "lucide-react";
+import { 
+  Wrench, Target, CheckSquare, Filter, BookOpen, Users, Calendar, 
+  Lightbulb, FileText, Trophy, Zap, Brain, Heart, Clock, 
+  PenTool, Presentation, Search, MapPin, Calculator, Globe,
+  Microscope, Palette, Music, Camera, Video, Headphones,
+  Gamepad2, Puzzle, Award, Star, Flag, Compass, Settings,
+  Download, Upload, Share2, MessageSquare, ThumbsUp, Eye,
+  Play, Pause, SkipForward, Volume2, Wifi, Battery,
+  Shield, Lock, Key, Mail, Phone, Home, Car, Plane,
+  TreePine, Sun, Moon, Cloud, Umbrella, Snowflake
+} from "lucide-react";
 import { ContextualizationData } from "../contextualization/ContextualizationCard";
 import { ActionPlanItem } from "../actionplan/ActionPlanCard";
 
@@ -307,25 +317,227 @@ export function CardDeConstrucao({
   };
 
   const getIconByActivityId = (activityId: string) => {
-    // Mapeamento de IDs específicos para ícones apropriados
+    // Mapeamento extensivo de IDs específicos para ícones únicos e representativos
     const iconMap: { [key: string]: any } = {
+      // Atividades de Avaliação e Testes
       'quiz-contextualizacao': CheckSquare,
-      'atividades-interativas': Target,
+      'simulado-preparatorio': Trophy,
+      'prova-interativa': Award,
+      'questoes-multipla-escolha': Target,
+      'questoes-dissertativas': PenTool,
+      'autoavaliacao': Heart,
+      'avaliacao-diagnostica': Search,
+      'teste-conhecimento': Star,
+      
+      // Atividades Interativas e Dinâmicas
+      'atividades-interativas': Gamepad2,
+      'jogos-educativos': Puzzle,
+      'simulacao-virtual': Play,
+      'laboratorio-virtual': Microscope,
+      'experimentos-praticos': Zap,
+      'atividades-ludicas': Music,
+      'gincana-educativa': Flag,
+      'quiz-relampago': Lightbulb,
+      
+      // Projetos e Trabalhos Práticos
       'projetos-praticos': Wrench,
-      'cronograma-estudos': Target,
-      'brainstorming': Target,
-      'redacao-tematica': CheckSquare,
-      'simulado-preparatorio': Target,
-      'revisao-intensiva': CheckSquare,
-      'mapas-mentais': Target,
-      'autoavaliacao': CheckSquare,
-      'estudo-grupo': Target,
-      'pesquisa-aprofundada': CheckSquare,
+      'projeto-pesquisa': Search,
+      'projeto-cientifico': Microscope,
+      'projeto-criativo': Palette,
+      'construcao-maquetes': Settings,
+      'feira-ciencias': Trophy,
+      'projeto-colaborativo': Users,
+      'projeto-individual': Eye,
+      
+      // Estudos em Grupo e Colaboração
+      'estudo-grupo': Users,
+      'discussao-tematica': MessageSquare,
+      'debate-estruturado': ThumbsUp,
+      'seminario-grupo': Presentation,
+      'workshop-colaborativo': Wrench,
+      'circulo-estudos': Compass,
+      'grupo-pesquisa': Search,
+      'sessao-brainstorming': Brain,
+      
+      // Cronograma e Organização
+      'cronograma-estudos': Calendar,
+      'planejamento-rotina': Clock,
+      'agenda-pessoal': BookOpen,
+      'metas-estudo': Target,
+      'organizacao-materiais': Settings,
+      'controle-tempo': Clock,
+      'agenda-provas': Calendar,
+      'cronograma-revisao': Calendar,
+      
+      // Técnicas de Estudo e Aprendizagem
+      'mapas-mentais': Brain,
+      'resumos-inteligentes': FileText,
+      'fichas-estudo': BookOpen,
+      'tecnicas-memorizacao': Brain,
+      'leitura-dinamica': Eye,
+      'anotacoes-cornell': PenTool,
+      'metodo-pomodoro': Clock,
+      'flashcards-digitais': Star,
+      
+      // Redação e Escrita
+      'redacao-tematica': PenTool,
+      'producao-textual': FileText,
+      'escrita-criativa': Palette,
+      'dissertacao-argumentativa': PenTool,
+      'resenha-critica': FileText,
+      'artigo-cientifico': Search,
+      'ensaio-reflexivo': Brain,
+      'carta-formal': Mail,
+      
+      // Apresentações e Comunicação
+      'apresentacao-oral': Presentation,
+      'slides-interativos': Play,
+      'teatro-educativo': Music,
+      'podcast-educativo': Headphones,
+      'video-aula': Video,
+      'transmissao-ao-vivo': Wifi,
+      'entrevista-simulada': MessageSquare,
+      'pitch-projeto': Star,
+      
+      // Revisão e Reforço
+      'revisao-intensiva': Zap,
+      'revisao-sistematica': CheckSquare,
+      'revisao-colaborativa': Users,
+      'revisao-guiada': Compass,
+      'reforco-conteudo': Target,
+      'plantao-duvidas': MessageSquare,
+      'sessao-esclarecimentos': Lightbulb,
+      'revisao-final': Trophy,
+      
+      // Pesquisa e Investigação
+      'pesquisa-aprofundada': Search,
+      'investigacao-cientifica': Microscope,
+      'coleta-dados': Download,
+      'analise-informacoes': Eye,
+      'estudo-caso': BookOpen,
+      'pesquisa-campo': MapPin,
+      'levantamento-bibliografico': BookOpen,
+      'analise-documentos': FileText,
+      
+      // Exercícios e Prática
       'exercicios-praticos': Target,
-      'apresentacao-oral': CheckSquare,
-      'resumo-inteligente': CheckSquare,
-      'lista-exercicios': Target,
-      'prova-interativa': CheckSquare
+      'lista-exercicios': CheckSquare,
+      'exercicios-fixacao': Star,
+      'problemas-contextualizados': Puzzle,
+      'atividades-aplicacao': Wrench,
+      'exercicios-casa': Home,
+      'pratica-laboratorio': Microscope,
+      'simulacao-situacoes': Play,
+      
+      // Matemática e Cálculos
+      'resolucao-problemas': Calculator,
+      'exercicios-matematicos': Calculator,
+      'geometria-pratica': Compass,
+      'calculos-aplicados': Calculator,
+      'estatistica-dados': Eye,
+      'graficos-tabelas': Eye,
+      'algebra-pratica': Calculator,
+      'trigonometria-aplicada': Calculator,
+      
+      // Ciências e Experimentos
+      'experimento-laboratorio': Microscope,
+      'observacao-fenomenos': Eye,
+      'coleta-amostras': Download,
+      'analise-resultados': Search,
+      'hipoteses-teorias': Brain,
+      'metodo-cientifico': Microscope,
+      'pratica-laboratorial': Zap,
+      'estudo-ecossistemas': TreePine,
+      
+      // História e Sociedade
+      'linha-tempo': Calendar,
+      'analise-historica': BookOpen,
+      'debate-historico': MessageSquare,
+      'dramatizacao-historica': Music,
+      'pesquisa-genealogica': Search,
+      'museu-virtual': Eye,
+      'documentario-educativo': Video,
+      'entrevista-historica': MessageSquare,
+      
+      // Geografia e Meio Ambiente
+      'mapa-conceitual': MapPin,
+      'estudo-mapas': Compass,
+      'clima-tempo': Cloud,
+      'sustentabilidade': TreePine,
+      'recursos-naturais': Sun,
+      'urbanizacao': Home,
+      'relevo-terrestre': MapPin,
+      'coordenadas-geograficas': Compass,
+      
+      // Línguas e Literatura
+      'leitura-interpretacao': BookOpen,
+      'analise-literaria': FileText,
+      'producao-oral': Headphones,
+      'conversacao': MessageSquare,
+      'traducao-textos': Globe,
+      'declamacao-poesia': Music,
+      'teatro-leitura': Presentation,
+      'clube-leitura': Users,
+      
+      // Arte e Criatividade
+      'criacao-artistica': Palette,
+      'desenho-tecnico': PenTool,
+      'composicao-musical': Music,
+      'fotografia-educativa': Camera,
+      'design-grafico': Palette,
+      'escultura-modelagem': Wrench,
+      'pintura-expressiva': Palette,
+      'arte-digital': Settings,
+      
+      // Tecnologia e Informática
+      'programacao-basica': Settings,
+      'robotica-educativa': Settings,
+      'design-digital': Palette,
+      'pesquisa-internet': Globe,
+      'apresentacao-multimidia': Video,
+      'planilhas-calculo': Calculator,
+      'base-dados': Download,
+      'seguranca-digital': Shield,
+      
+      // Educação Física e Saúde
+      'atividade-fisica': Heart,
+      'esportes-coletivos': Users,
+      'danca-expressiva': Music,
+      'yoga-relaxamento': Heart,
+      'alimentacao-saudavel': Heart,
+      'primeiros-socorros': Heart,
+      'anatomia-corpo': Search,
+      'exercicios-coordenacao': Target,
+      
+      // Empreendedorismo e Economia
+      'plano-negocios': Star,
+      'educacao-financeira': Calculator,
+      'mercado-trabalho': Users,
+      'lideranca-equipe': Star,
+      'inovacao-criatividade': Lightbulb,
+      'gestao-projetos': Settings,
+      'economia-domestica': Home,
+      'cooperativismo': Users,
+      
+      // Mindfulness e Desenvolvimento Pessoal
+      'meditacao-guiada': Heart,
+      'desenvolvimento-emocional': Heart,
+      'inteligencia-emocional': Brain,
+      'autoconhecimento': Eye,
+      'gestao-stress': Heart,
+      'relacionamentos-interpessoais': Users,
+      'comunicacao-assertiva': MessageSquare,
+      'lideranca-pessoal': Star,
+      
+      // Atividades Especiais
+      'feira-conhecimento': Trophy,
+      'olimpiada-academica': Award,
+      'concurso-talentos': Star,
+      'exposicao-trabalhos': Eye,
+      'mostra-cultural': Music,
+      'festival-ciencias': Microscope,
+      'competicao-academica': Trophy,
+      'evento-networking': Users
     };
 
     // Se o ID específico for encontrado, usa o ícone mapeado
@@ -333,16 +545,72 @@ export function CardDeConstrucao({
       return iconMap[activityId];
     }
 
-    // Caso contrário, usa lógica baseada em palavras-chave no ID
+    // Caso contrário, usa lógica baseada em palavras-chave no ID com ícones mais específicos
     const keywordMap = [
-      { keywords: ['quiz', 'questao', 'prova', 'simulado', 'avaliacao'], icon: CheckSquare },
-      { keywords: ['redacao', 'escrita', 'texto', 'resumo'], icon: CheckSquare },
-      { keywords: ['grupo', 'time', 'colabora', 'apresentacao'], icon: Target },
-      { keywords: ['cronograma', 'agenda', 'tempo'], icon: Target },
-      { keywords: ['brainstorm', 'ideia', 'criativ', 'mapas'], icon: Target },
-      { keywords: ['projeto', 'prático', 'exercicio', 'atividade'], icon: Wrench },
-      { keywords: ['revisao', 'revisar', 'estudo'], icon: CheckSquare },
-      { keywords: ['autoaval', 'reflexao'], icon: CheckSquare }
+      // Avaliações e Testes
+      { keywords: ['quiz', 'teste', 'prova', 'simulado', 'avaliacao', 'exame'], icon: CheckSquare },
+      { keywords: ['questao', 'pergunta', 'resposta'], icon: Target },
+      
+      // Escrita e Redação
+      { keywords: ['redacao', 'escrita', 'texto', 'carta', 'ensaio'], icon: PenTool },
+      { keywords: ['resumo', 'sintese', 'fichamento'], icon: FileText },
+      
+      // Colaboração e Grupos
+      { keywords: ['grupo', 'time', 'equipe', 'colabora', 'conjunto'], icon: Users },
+      { keywords: ['apresentacao', 'seminario', 'exposicao'], icon: Presentation },
+      { keywords: ['debate', 'discussao', 'dialogo'], icon: MessageSquare },
+      
+      // Organização e Tempo
+      { keywords: ['cronograma', 'agenda', 'planejamento'], icon: Calendar },
+      { keywords: ['tempo', 'horario', 'prazo'], icon: Clock },
+      { keywords: ['organizacao', 'estrutura'], icon: Settings },
+      
+      // Criatividade e Ideias
+      { keywords: ['brainstorm', 'ideia', 'criativ', 'inovacao'], icon: Lightbulb },
+      { keywords: ['mapa', 'mental', 'conceitual'], icon: Brain },
+      { keywords: ['arte', 'desenho', 'pintura'], icon: Palette },
+      
+      // Projetos e Construção
+      { keywords: ['projeto', 'construcao', 'desenvolvimento'], icon: Wrench },
+      { keywords: ['experimento', 'laboratorio', 'pratica'], icon: Microscope },
+      { keywords: ['investigacao', 'analise'], icon: Search },
+      
+      // Revisão e Estudo
+      { keywords: ['revisao', 'revisar', 'reforco'], icon: Zap },
+      { keywords: ['estudo', 'aprendizado', 'ensino'], icon: BookOpen },
+      { keywords: ['exercicio', 'atividade', 'tarefa'], icon: Target },
+      
+      // Reflexão e Autoavaliação
+      { keywords: ['autoaval', 'reflexao', 'introspec'], icon: Heart },
+      { keywords: ['analise', 'critica', 'avaliacao'], icon: Eye },
+      
+      // Tecnologia e Digital
+      { keywords: ['digital', 'online', 'virtual'], icon: Settings },
+      { keywords: ['video', 'multimidia', 'audiovisual'], icon: Video },
+      { keywords: ['pesquisa', 'busca', 'investigacao'], icon: Search },
+      
+      // Matemática e Cálculos
+      { keywords: ['matematica', 'calculo', 'numero'], icon: Calculator },
+      { keywords: ['geometria', 'medida'], icon: Compass },
+      
+      // Comunicação e Línguas
+      { keywords: ['comunicacao', 'fala', 'oral'], icon: Headphones },
+      { keywords: ['leitura', 'interpretacao'], icon: BookOpen },
+      { keywords: ['idioma', 'lingua', 'traducao'], icon: Globe },
+      
+      // Competições e Premiações
+      { keywords: ['competicao', 'concurso', 'olimpiada'], icon: Trophy },
+      { keywords: ['premio', 'reconhecimento'], icon: Award },
+      { keywords: ['destaque', 'excelencia'], icon: Star },
+      
+      // Saúde e Bem-estar
+      { keywords: ['saude', 'bem-estar', 'fisico'], icon: Heart },
+      { keywords: ['exercicio', 'movimento', 'esporte'], icon: Target },
+      
+      // Meio Ambiente e Natureza
+      { keywords: ['ambiente', 'natureza', 'ecologia'], icon: TreePine },
+      { keywords: ['clima', 'tempo', 'meteorologia'], icon: Cloud },
+      { keywords: ['geografia', 'mapa', 'localizacao'], icon: MapPin }
     ];
 
     // Converte o ID para minúsculo para comparação
@@ -355,8 +623,22 @@ export function CardDeConstrucao({
       }
     }
 
-    // Fallback para Wrench como ícone padrão
-    return Wrench;
+    // Fallback para ícones aleatórios baseados no hash do ID para garantir unicidade
+    const fallbackIcons = [
+      BookOpen, Users, Calendar, Lightbulb, FileText, Trophy, Zap, Brain, 
+      Heart, Clock, PenTool, Presentation, Search, MapPin, Calculator, 
+      Globe, Microscope, Palette, Music, Camera, Video, Headphones, 
+      Gamepad2, Puzzle, Award, Star, Flag, Compass, Settings, Target
+    ];
+    
+    // Gera um índice baseado no hash do ID para garantir consistência
+    let hash = 0;
+    for (let i = 0; i < activityId.length; i++) {
+      hash = ((hash << 5) - hash + activityId.charCodeAt(i)) & 0xffffffff;
+    }
+    const iconIndex = Math.abs(hash) % fallbackIcons.length;
+    
+    return fallbackIcons[iconIndex];
   };
 
   return (
