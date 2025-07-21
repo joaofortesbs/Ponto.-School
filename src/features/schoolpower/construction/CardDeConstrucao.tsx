@@ -1,7 +1,7 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { Wrench, Target, CheckSquare } from "lucide-react";
+import { Wrench, Target, CheckSquare, Filter } from "lucide-react";
 import { ContextualizationData } from "../contextualization/ContextualizationCard";
 import { ActionPlanItem } from "../actionplan/ActionPlanCard";
 
@@ -107,6 +107,109 @@ export function CardDeConstrucao({
   // Check if contextualization form is valid
   const isContextualizationValid =
     formData.materias.trim() && formData.publicoAlvo.trim();
+
+  // Filter Component
+  const FilterComponent = ({ activities, selectedActivities, onFilterApply }: {
+    activities: ActionPlanItem[];
+    selectedActivities: ActionPlanItem[];
+    onFilterApply: (filterType: string) => void;
+  }) => {
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
+    const filterRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
+          setIsFilterOpen(false);
+        }
+      };
+
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    return (
+      <div className="relative" ref={filterRef}>
+        <button
+          onClick={() => setIsFilterOpen(!isFilterOpen)}
+          className="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200"
+          title="Filtros"
+        >
+          <Filter className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+        </button>
+
+        {isFilterOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            transition={{ duration: 0.15 }}
+            className="absolute top-full right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden z-50"
+          >
+            <div className="py-1">
+              <button
+                onClick={() => {
+                  onFilterApply('selectAll');
+                  setIsFilterOpen(false);
+                }}
+                className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150 flex items-center gap-2"
+              >
+                <CheckSquare className="w-4 h-4 text-[#FF6B00]" />
+                Selecionar todos
+              </button>
+              
+              <button
+                onClick={() => {
+                  onFilterApply('selectRecommended');
+                  setIsFilterOpen(false);
+                }}
+                className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150 flex items-center gap-2"
+              >
+                <svg className="w-4 h-4 text-[#FF6B00]" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+                </svg>
+                Selecionar recomendações
+              </button>
+              
+              <button
+                onClick={() => {
+                  onFilterApply('viewSelected');
+                  setIsFilterOpen(false);
+                }}
+                className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150 flex items-center gap-2"
+              >
+                <svg className="w-4 h-4 text-[#FF6B00]" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                Selecionados
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </div>
+    );
+  };
+
+  // Handle filter actions
+  const handleFilterApply = (filterType: string) => {
+    if (!actionPlan) return;
+
+    switch (filterType) {
+      case 'selectAll':
+        setSelectedActivities([...actionPlan]);
+        break;
+      case 'selectRecommended':
+        // Seleciona as 3 primeiras atividades como "recomendadas"
+        const recommended = actionPlan.slice(0, Math.min(3, actionPlan.length));
+        setSelectedActivities(recommended);
+        break;
+      case 'viewSelected':
+        // Já está implementado através do estado selectedActivities
+        break;
+      default:
+        break;
+    }
+  };
 
   return (
     <motion.div
@@ -450,9 +553,16 @@ export function CardDeConstrucao({
                 <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
                   Atividades Sugeridas
                 </h3>
-                <div className="bg-[#FF6B00]/10 text-[#FF6B00] px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium">
-                  {selectedActivities.length} selecionada
-                  {selectedActivities.length !== 1 ? "s" : ""}
+                <div className="flex items-center gap-2">
+                  <div className="bg-[#FF6B00]/10 text-[#FF6B00] px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium">
+                    {selectedActivities.length} selecionada
+                    {selectedActivities.length !== 1 ? "s" : ""}
+                  </div>
+                  <FilterComponent 
+                    activities={actionPlan || []}
+                    selectedActivities={selectedActivities}
+                    onFilterApply={(filterType) => handleFilterApply(filterType)}
+                  />
                 </div>
               </div>
 
