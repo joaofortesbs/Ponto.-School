@@ -680,21 +680,6 @@ export function CardDeConstrucao({
                 </div>
               </div>
 
-              const getIconByActivityId = (activityId: string) => {
-    // Implemente a lógica para retornar o ícone com base no ID da atividade
-    // Este é apenas um exemplo, substitua com sua própria lógica
-    switch (activityId) {
-      case '1':
-        return Wrench;
-      case '2':
-        return Target;
-      case '3':
-        return CheckSquare;
-      default:
-        return Wrench; // Ícone padrão
-    }
-  };
-
               <div
                 className={`flex-1 overflow-y-auto mb-3 sm:mb-4 pr-1 sm:pr-2 ${
                   viewMode === 'grid' 
