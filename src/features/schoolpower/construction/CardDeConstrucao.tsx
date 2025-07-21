@@ -208,15 +208,15 @@ export function CardDeConstrucao({
 
         {/* Barra de Progresso */}
         <div className="flex items-center gap-4">
-          <div className="relative flex items-center justify-between w-32">
+          <div className="relative flex items-center justify-between w-44">
             {/* Background progress line */}
-            <div className="absolute top-1/2 transform -translate-y-1/2 h-1 bg-white/30 rounded-full z-0" style={{ left: '12px', right: '12px' }}></div>
+            <div className="absolute top-1/2 transform -translate-y-1/2 h-1.5 bg-white/30 rounded-full z-0" style={{ left: '16px', right: '16px' }}></div>
             
             {/* Active progress line */}
             <div 
-              className="absolute top-1/2 transform -translate-y-1/2 h-1 bg-white rounded-full z-0 transition-all duration-500 ease-out"
+              className="absolute top-1/2 transform -translate-y-1/2 h-1.5 bg-white rounded-full z-0 transition-all duration-500 ease-out"
               style={{ 
-                left: '12px',
+                left: '16px',
                 width: `${
                   step === "contextualization" ? "0%" :
                   step === "actionPlan" ? "50%" :
@@ -226,38 +226,38 @@ export function CardDeConstrucao({
             ></div>
             
             {/* Step indicators */}
-            <div className={`relative z-10 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+            <div className={`relative z-10 w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
               step === "contextualization" ? 'bg-white border-white text-[#FF6B00]' : 'bg-[#FF6B00] border-white text-white'
             }`}>
               {step === "contextualization" ? (
-                <span className="text-xs font-semibold">1</span>
+                <span className="text-sm font-semibold">1</span>
               ) : (
-                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
               )}
             </div>
             
-            <div className={`relative z-10 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+            <div className={`relative z-10 w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
               step === "actionPlan" ? 'bg-white border-white text-[#FF6B00]' :
               (step === "generating" || step === "generatingActivities") ? 'bg-[#FF6B00] border-white text-white' :
               'bg-white/20 border-white/30 text-white'
             }`}>
               {step === "actionPlan" ? (
-                <span className="text-xs font-semibold">2</span>
+                <span className="text-sm font-semibold">2</span>
               ) : (step === "generating" || step === "generatingActivities") ? (
-                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
               ) : (
-                <span className="text-xs font-semibold">2</span>
+                <span className="text-sm font-semibold">2</span>
               )}
             </div>
             
-            <div className={`relative z-10 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+            <div className={`relative z-10 w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
               (step === "generating" || step === "generatingActivities") ? 'bg-white border-white text-[#FF6B00]' : 'bg-white/20 border-white/30 text-white'
             }`}>
-              <span className="text-xs font-semibold">3</span>
+              <span className="text-sm font-semibold">3</span>
             </div>
           </div>
         </div>
