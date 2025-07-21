@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ícone Central</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="min-h-screen" style="background: transparent !important;">
+    <div class="central-icon-wrapper">
+        <div class="icon-container active">
+            <i class="fas fa-home"></i>
+            <div class="icon-glow"></div>
+        </div>
+    </div>
+
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: transparent !important;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+        }
+
+        .central-icon-wrapper {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+        }
+
+        .icon-container {
+            width: 60px !important;
+            height: 60px !important;
+            min-width: 60px !important;
+            min-height: 60px !important;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 110, 6, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0 !important;
+            cursor: pointer;
+        }
+
+        .icon-container.active {
+            background: linear-gradient(135deg, #FF6E06, #FF8A39);
+            color: white;
+            box-shadow: 0 8px 16px rgba(255, 110, 6, 0.3);
+        }
+
+        .icon-container i {
+            font-size: 24px;
+            color: #FF6E06 !important;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
+
+        .icon-container.active i {
+            color: white !important;
+        }
+
+        .icon-container:hover {
+            transform: scale(1.08);
+        }
+
+        .icon-glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 24px;
+            height: 24px;
+            background: radial-gradient(circle, rgba(255, 110, 6, 0.5), transparent);
+            border-radius: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            transition: transform 0.3s ease;
+        }
+
+        .icon-container.active .icon-glow {
+            transform: translate(-50%, -50%) scale(2.5);
+        }
+
+        /* Animação de explosão */
+        .icon-explode {
+            animation: iconExplode 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        @keyframes iconExplode {
+            0% {
+                transform: scale(1);
+            }
+            30% {
+                transform: scale(1.1);
+            }
+            60% {
+                transform: scale(0.98);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* Onda de choque */
+        .shock-wave {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 60px;
+            height: 60px;
+            border: 3px solid rgba(255, 110, 6, 0.6);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            animation: shockWave 0.6s ease-out;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes shockWave {
+            0% {
+                width: 60px;
+                height: 60px;
+                opacity: 1;
+                border-width: 3px;
+            }
+            100% {
+                width: 85px;
+                height: 85px;
+                opacity: 0;
+                border-width: 1px;
+            }
+        }
+
+        /* Animação de entrada */
+        .central-icon-wrapper {
+            animation: fadeInScale 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.5);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const iconContainer = document.querySelector('.icon-container');
+            const icon = iconContainer.querySelector('i');
+            let isSelected = false;
+            
+            iconContainer.addEventListener('click', function() {
+                // Criar onda de choque
+                const shockWave = document.createElement('div');
+                shockWave.classList.add('shock-wave');
+                this.appendChild(shockWave);
+                
+                // Adicionar animação de explosão ao ícone
+                icon.classList.add('icon-explode');
+                
+                // Alternar o ícone instantaneamente no pico da explosão
+                setTimeout(() => {
+                    if (!isSelected) {
+                        // Transformar em selecionado (apenas o ícone)
+                        icon.classList.remove('fa-home');
+                        icon.classList.add('fa-check');
+                        isSelected = true;
+                    } else {
+                        // Voltar ao estado normal (apenas o ícone)
+                        icon.classList.remove('fa-check');
+                        icon.classList.add('fa-home');
+                        isSelected = false;
+                    }
+                }, 150);
+                
+                // Limpar animações
+                setTimeout(() => {
+                    icon.classList.remove('icon-explode');
+                    if (shockWave.parentNode) {
+                        shockWave.parentNode.removeChild(shockWave);
+                    }
+                }, 600);
+            });
+        });
+    </script>
+</body>
+</html>
