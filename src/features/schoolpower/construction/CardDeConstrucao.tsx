@@ -121,9 +121,9 @@ export function CardDeConstrucao({
           stiffness: 100,
           damping: 15,
         }}
-        className="relative backdrop-blur-xl rounded-2xl shadow-2xl border border-[#FF6B00]/30 dark:border-[#FF6B00]/30 w-full max-w-4xl"
+        className="relative backdrop-blur-xl rounded-2xl shadow-2xl border border-[#FF6B00]/30 dark:border-[#FF6B00]/30 w-full max-w-5xl"
         style={{
-          height: "737px",
+          height: "800px",
           background: `
             linear-gradient(135deg, 
               rgba(255, 255, 255, 0.95) 0%, 
