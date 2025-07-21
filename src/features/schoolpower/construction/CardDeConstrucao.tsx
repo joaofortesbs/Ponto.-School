@@ -11,7 +11,7 @@ import {
   Play, Pause, SkipForward, Volume2, Wifi, Battery,
   Shield, Lock, Key, Mail, Phone, Home, Car, Plane,
   TreePine, Sun, Moon, Cloud, Umbrella, Snowflake, Triangle,
-  TrendingUp, BarChart, Grid
+  TrendingUp, BarChart, Grid3x3
 } from "lucide-react";
 import { ContextualizationData } from "../contextualization/ContextualizationCard";
 import { ActionPlanItem } from "../actionplan/ActionPlanCard";
@@ -364,7 +364,7 @@ export function CardDeConstrucao({
       'skimming-scanning': Eye, // 👀📄 Olhos com documento - leitura rápida e seletiva
       'mapas-conceituais': Globe, // 🕸️ Teia - conexões conceituais
       'diagrama-ishikawa': Search, // 🐟 Peixe - diagrama de causa e efeito
-      'matriz-eisenhower': Grid, // ⬜ Quadrado dividido - priorização
+      'matriz-eisenhower': Grid3x3, // ⬜ Quadrado dividido - priorização
       'tecnica-sqr3': Search, // 📚🔎 Livro com lupa - método de leitura ativa
       'mind-mapping': Brain, // 🧠🌐 Cérebro com rede - mapeamento mental
       'speed-reading': Zap, // ⚡📖 Raio com livro - leitura acelerada
