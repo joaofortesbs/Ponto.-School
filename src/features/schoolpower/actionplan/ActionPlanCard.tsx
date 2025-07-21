@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Check, X, ChevronLeft, Sparkles, Activity, BookOpen, Users, Target, Calendar, Lightbulb, FileText, Trophy, Zap, Brain, Heart } from 'lucide-react';
+import { TrilhasBadge } from '../components/TrilhasBadge';
 
 export interface ActionPlanItem {
   id: string;
@@ -219,12 +220,7 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
               >
                 {item.isTrilhasEligible && (
                     <div className="absolute top-2 right-2 z-10">
-                      <Badge 
-                        variant="secondary" 
-                        className="bg-green-500 text-white text-xs font-semibold px-2 py-1 rounded-full border-0 shadow-md"
-                      >
-                        Trilhas
-                      </Badge>
+                      <TrilhasBadge />
                     </div>
                   )}
                 <div className="flex items-start gap-4">

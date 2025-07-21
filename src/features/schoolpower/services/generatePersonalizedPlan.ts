@@ -29,6 +29,10 @@ interface GeminiActivityResponse {
   description: string;
   personalizedTitle?: string;
   personalizedDescription?: string;
+  duration: string;
+  difficulty: string;
+  category: string;
+  type: string;
 }
 
 /**
@@ -56,7 +60,7 @@ DADOS:
 ATIVIDADES DISPONÍVEIS: ${activitiesIds.join(', ')}
 
 TAREFA: Selecione 3-4 atividades adequadas ao pedido. Retorne APENAS este JSON:
-[{"id":"atividade-id","title":"Título Personalizado","description":"Descrição contextualizada"}]
+[{"id":"atividade-id","title":"Título Personalizado","description":"Descrição contextualizada", "duration": "30 min", "difficulty": "Médio", "category": "Geral", "type": "atividade"}]
 
 IMPORTANTE: Use SOMENTE os IDs listados acima.`;
 
@@ -290,8 +294,8 @@ export async function generatePersonalizedPlan(
 
     // Valida as atividades retornadas
     const validatedActivities = await validateGeminiPlan(geminiActivities, schoolPowerActivities);
-      
-     
+
+
 
     // Mapear atividades validadas para o formato do ActionPlanItem
     const actionPlanItems = validatedActivities.map(activity => ({
@@ -300,10 +304,10 @@ export async function generatePersonalizedPlan(
         description: activity.personalizedDescription || activity.description,
         approved: false,
         isTrilhasEligible: isActivityEligibleForTrilhas(activity.id),
-        duration: '30 min', // Valor padrão
-        difficulty: 'Médio', // Valor padrão
-        category: 'Geral', // Valor padrão
-        type: 'atividade' // Valor padrão
+        duration: activity.duration,
+        difficulty: activity.difficulty,
+        category: activity.category,
+        type: activity.type
     }));
 
     if (validatedActivities.length === 0) {
