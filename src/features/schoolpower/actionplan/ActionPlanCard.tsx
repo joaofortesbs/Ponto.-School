@@ -133,6 +133,16 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
     );
   }
 
+  const handleIconClick = (itemId: string) => {
+    const newSelected = new Set(selectedItems);
+    if (newSelected.has(itemId)) {
+      newSelected.delete(itemId);
+    } else {
+      newSelected.add(itemId);
+    }
+    setSelectedItems(newSelected);
+  };
+
   return (
     <motion.div 
       className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-2xl p-8 max-w-4xl w-full mx-4 shadow-2xl border border-white/30"
@@ -182,114 +192,112 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
             </button>
           </div>
         ) : (
-          actionPlan.map((item, index) => (
-            <motion.div
-              key={item.id}
-              className={`relative p-6 rounded-[32px] border-2 transition-all duration-300 cursor-pointer ${
-                selectedItems.has(item.id)
-                  ? 'border-[#FF6B00] bg-[#FF6B00]/5 dark:bg-[#FF6B00]/10 shadow-lg transform scale-[1.02]'
-                  : 'border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 hover:border-[#FF6B00]/50 hover:shadow-md'
-              }`}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.1 }}
-              onClick={() => handleItemToggle(item.id)}
-            >
-              <div className="flex items-start gap-4">
-                {/* Checkbox customizado */}
-                <div className={`flex-shrink-0 w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
-                  selectedItems.has(item.id)
-                    ? 'border-[#FF6B00] bg-[#FF6B00] shadow-md'
-                    : 'border-gray-300 dark:border-gray-600 hover:border-[#FF6B00]/50'
-                }`}>
+          actionPlan.map((item, index) => {
+            const Icon = getIconByActivityId(item.id);
+            const isSelected = selectedItems.has(item.id);
+
+            return (
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className={`relative p-6 rounded-[32px] border-2 transition-all duration-300 cursor-pointer ${
+                  isSelected 
+                    ? 'border-[#FF6B00] bg-[#FF6B00]/5 dark:bg-[#FF6B00]/10 shadow-lg transform scale-[1.02]'
+                    : 'border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 hover:border-[#FF6B00]/50 hover:shadow-md'
+                }`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
+                onClick={() => handleItemToggle(item.id)}
+              >
+                <div className="flex items-start gap-4">
+                  {/* Checkbox customizado */}
+                  {/* Conteúdo da atividade */}
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      {/* Ícone animado da atividade */}
+                      <div 
+                        className={`icon-container ${selectedItems.has(item.id) ? 'active' : ''}`}
+                        style={{
+                          width: '40px',
+                          height: '40px',
+                          minWidth: '40px',
+                          minHeight: '40px',
+                          borderRadius: '14px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          background: selectedItems.has(item.id) 
+                            ? 'linear-gradient(135deg, #FF6E06, #FF8A39)' 
+                            : 'rgba(255, 110, 6, 0.1)',
+                          transition: 'all 0.3s ease',
+                          position: 'relative',
+                          overflow: 'hidden',
+                          cursor: 'pointer',
+                          boxShadow: selectedItems.has(item.id) 
+                            ? '0 6px 12px rgba(255, 110, 6, 0.3)' 
+                            : 'none',
+                          transform: selectedItems.has(item.id) ? 'scale(1.05)' : 'scale(1)'
+                        }}
+                      >
+                        {React.createElement(getIconByActivityId(item.id), {
+                          className: `w-5 h-5 transition-all duration-300 relative z-10`,
+                          style: {
+                            color: selectedItems.has(item.id) ? 'white' : '#FF6E06'
+                          }
+                        })}
+                        <div 
+                          className="icon-glow"
+                          style={{
+                            position: 'absolute',
+                            top: '50%',
+                            left: '50%',
+                            width: '20px',
+                            height: '20px',
+                            background: 'radial-gradient(circle, rgba(255, 110, 6, 0.5), transparent)',
+                            borderRadius: '50%',
+                            transform: selectedItems.has(item.id) 
+                              ? 'translate(-50%, -50%) scale(2.2)' 
+                              : 'translate(-50%, -50%) scale(0)',
+                            transition: 'transform 0.3s ease'
+                          }}
+                        />
+                      </div>
+
+                      {/* Título da atividade */}
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white line-clamp-2 flex-1">
+                        {item.title}
+                      </h3>
+                    </div>
+                    <p className="text-gray-600 dark:text-gray-400 leading-relaxed line-clamp-3">
+                      {item.description}
+                    </p>
+
+                    {/* ID da atividade (para debug) */}
+                    <div className="mt-2">
+                      <span className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded">
+                        ID: {item.id}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Indicador visual de seleção */}
                   {selectedItems.has(item.id) && (
-                    <Check className="w-4 h-4 text-white" />
+                    <div className="flex-shrink-0">
+                      <div className="w-3 h-3 bg-[#FF6B00] rounded-full animate-pulse shadow-md"></div>
+                    </div>
                   )}
                 </div>
 
-                {/* Conteúdo da atividade */}
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    {/* Ícone animado da atividade */}
-                    <div 
-                      className={`icon-container ${selectedItems.has(item.id) ? 'active' : ''}`}
-                      style={{
-                        width: '40px',
-                        height: '40px',
-                        minWidth: '40px',
-                        minHeight: '40px',
-                        borderRadius: '14px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        background: selectedItems.has(item.id) 
-                          ? 'linear-gradient(135deg, #FF6E06, #FF8A39)' 
-                          : 'rgba(255, 110, 6, 0.1)',
-                        transition: 'all 0.3s ease',
-                        position: 'relative',
-                        overflow: 'hidden',
-                        cursor: 'pointer',
-                        boxShadow: selectedItems.has(item.id) 
-                          ? '0 6px 12px rgba(255, 110, 6, 0.3)' 
-                          : 'none',
-                        transform: selectedItems.has(item.id) ? 'scale(1.05)' : 'scale(1)'
-                      }}
-                    >
-                      {React.createElement(getIconByActivityId(item.id), {
-                        className: `w-5 h-5 transition-all duration-300 relative z-10`,
-                        style: {
-                          color: selectedItems.has(item.id) ? 'white' : '#FF6E06'
-                        }
-                      })}
-                      <div 
-                        className="icon-glow"
-                        style={{
-                          position: 'absolute',
-                          top: '50%',
-                          left: '50%',
-                          width: '20px',
-                          height: '20px',
-                          background: 'radial-gradient(circle, rgba(255, 110, 6, 0.5), transparent)',
-                          borderRadius: '50%',
-                          transform: selectedItems.has(item.id) 
-                            ? 'translate(-50%, -50%) scale(2.2)' 
-                            : 'translate(-50%, -50%) scale(0)',
-                          transition: 'transform 0.3s ease'
-                        }}
-                      />
-                    </div>
-
-                    {/* Título da atividade */}
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white line-clamp-2 flex-1">
-                      {item.title}
-                    </h3>
-                  </div>
-                  <p className="text-gray-600 dark:text-gray-400 leading-relaxed line-clamp-3">
-                    {item.description}
-                  </p>
-
-                  {/* ID da atividade (para debug) */}
-                  <div className="mt-2">
-                    <span className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded">
-                      ID: {item.id}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Indicador visual de seleção */}
+                {/* Borda animada para item selecionado */}
                 {selectedItems.has(item.id) && (
-                  <div className="flex-shrink-0">
-                    <div className="w-3 h-3 bg-[#FF6B00] rounded-full animate-pulse shadow-md"></div>
-                  </div>
+                  <div className="absolute inset-0 rounded-[32px] border-2 border-[#FF6B00] animate-pulse opacity-50 pointer-events-none"></div>
                 )}
-              </div>
-
-              {/* Borda animada para item selecionado */}
-              {selectedItems.has(item.id) && (
-                <div className="absolute inset-0 rounded-[32px] border-2 border-[#FF6B00] animate-pulse opacity-50 pointer-events-none"></div>
-              )}
-            </motion.div>
-          ))
+              </motion.div>
+            )
+          })
         )}
       </div>
 
