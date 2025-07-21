@@ -10,7 +10,8 @@ import {
   Download, Upload, Share2, MessageSquare, ThumbsUp, Eye,
   Play, Pause, SkipForward, Volume2, Wifi, Battery,
   Shield, Lock, Key, Mail, Phone, Home, Car, Plane,
-  TreePine, Sun, Moon, Cloud, Umbrella, Snowflake, Triangle
+  TreePine, Sun, Moon, Cloud, Umbrella, Snowflake, Triangle,
+  TrendingUp, BarChart, Grid
 } from "lucide-react";
 import { ContextualizationData } from "../contextualization/ContextualizationCard";
 import { ActionPlanItem } from "../actionplan/ActionPlanCard";
@@ -317,513 +318,59 @@ export function CardDeConstrucao({
   };
 
   const getIconByActivityId = (activityId: string) => {
-    // Sistema de mapeamento 100% único - cada ID tem seu próprio ícone específico
+    // Sistema de mapeamento único baseado nas especificações fornecidas
     const uniqueIconMapping: { [key: string]: any } = {
-      // === AVALIAÇÕES E TESTES (cada tipo único) ===
-      'quiz-contextualizacao': CheckSquare,
-      'simulado-preparatorio': Trophy,
-      'prova-interativa': Award,
-      'questoes-multipla-escolha': Target,
-      'questoes-dissertativas': PenTool,
-      'autoavaliacao': Heart,
-      'avaliacao-diagnostica': Search,
-      'teste-conhecimento': Star,
-      'exame-final': Flag,
-      'prova-oral': Headphones,
-      'teste-pratico': Wrench,
-      'simulado-enem': Award,
-      'vestibular-simulado': Trophy,
-      'prova-rapida': Zap,
-      'quiz-relampago': Lightbulb,
-      'avaliacao-formativa': Eye,
-      'teste-nivelamento': Target,
-      'prova-recuperacao': Heart,
-      'exame-certificacao': Star,
-      'teste-competencia': Award,
-
-      // === ATIVIDADES INTERATIVAS (cada uma única) ===
-      'atividades-interativas': Gamepad2,
-      'jogos-educativos': Puzzle,
-      'simulacao-virtual': Play,
-      'laboratorio-virtual': Microscope,
-      'experimentos-praticos': Zap,
-      'atividades-ludicas': Music,
-      'gincana-educativa': Flag,
-      'role-playing-educativo': Users,
-      'escape-room-academico': Key,
-      'gamificacao-conteudo': Star,
-      'atividade-investigativa': Search,
-      'simulador-situacoes': Settings,
-      'jogo-estrategia': Compass,
-      'quiz-competitivo': Trophy,
-      'desafio-colaborativo': Users,
-      'atividade-maker': Wrench,
-      'experiencia-imersiva': Eye,
-      'simulacao-laboratorio': Microscope,
-      'atividade-hands-on': Target,
-      'jogo-raciocinio': Brain,
-
-      // === PROJETOS E TRABALHOS (cada tipo específico) ===
-      'projetos-praticos': Wrench,
-      'projeto-pesquisa': Search,
-      'projeto-cientifico': Microscope,
-      'projeto-criativo': Palette,
-      'construcao-maquetes': Settings,
-      'feira-ciencias': Trophy,
-      'projeto-colaborativo': Users,
-      'projeto-individual': Eye,
-      'projeto-inovacao': Lightbulb,
-      'projeto-sustentabilidade': TreePine,
-      'projeto-social': Heart,
-      'projeto-tecnologico': Settings,
-      'projeto-artistico': Music,
-      'projeto-empreendedor': Star,
-      'projeto-interdisciplinar': Globe,
-      'projeto-experimental': Zap,
-      'projeto-aplicado': Target,
-      'projeto-extensao': Users,
-      'projeto-integrador': Compass,
-      'projeto-final': Flag,
-
-      // === ESTUDOS EM GRUPO (modalidades únicas) ===
-      'estudo-grupo': Users,
-      'discussao-tematica': MessageSquare,
-      'debate-estruturado': ThumbsUp,
-      'seminario-grupo': Presentation,
-      'workshop-colaborativo': Wrench,
-      'circulo-estudos': Compass,
-      'grupo-pesquisa': Search,
-      'sessao-brainstorming': Brain,
-      'mesa-redonda': Users,
-      'painel-discussao': MessageSquare,
-      'forum-academico': Globe,
-      'peer-teaching': Users,
-      'estudo-dirigido-grupo': BookOpen,
-      'sessao-tutoria-grupo': Users,
-      'clube-debate': ThumbsUp,
-      'grupo-leitura': BookOpen,
-      'laboratorio-ideias': Lightbulb,
-      'think-tank-estudantes': Brain,
-      'coletivo-estudos': Users,
-      'rede-aprendizagem': Globe,
-
-      // === CRONOGRAMA E ORGANIZAÇÃO (tipos específicos) ===
-      'cronograma-estudos': Calendar,
-      'planejamento-rotina': Clock,
-      'agenda-pessoal': BookOpen,
-      'metas-estudo': Target,
-      'organizacao-materiais': Settings,
-      'controle-tempo': Clock,
-      'agenda-provas': Calendar,
-      'cronograma-revisao': Calendar,
-      'planner-academico': BookOpen,
-      'organizador-tarefas': CheckSquare,
-      'calendario-atividades': Calendar,
-      'gestao-prazos': Clock,
-      'planejamento-semestral': Calendar,
-      'rotina-estudos': Clock,
-      'schedule-personalizado': Target,
-      'timeline-projetos': Calendar,
-      'organizacao-digital': Settings,
-      'agenda-inteligente': Brain,
-      'plano-estudos': BookOpen,
-      'matriz-prioridades': Target,
-
-      // === TÉCNICAS DE ESTUDO (cada técnica única) ===
-      'mapas-mentais': Brain,
-      'resumos-inteligentes': FileText,
-      'fichas-estudo': BookOpen,
-      'tecnicas-memorizacao': Brain,
-      'leitura-dinamica': Eye,
-      'anotacoes-cornell': PenTool,
-      'metodo-pomodoro': Clock,
-      'flashcards-digitais': Star,
-      'tecnica-feynman': Users,
-      'mnemotecnicas': Brain,
-      'skimming-scanning': Eye,
-      'mapas-conceituais': Brain,
-      'diagrama-ishikawa': Search,
-      'matriz-eisenhower': Target,
-      'tecnica-sqr3': BookOpen,
-      'mind-mapping': Brain,
-      'speed-reading': Zap,
-      'active-recall': Brain,
-      'spaced-repetition': Calendar,
-      'elaborative-interrogation': MessageSquare,
-
-      // === REDAÇÃO E ESCRITA (gêneros específicos) ===
-      'redacao-tematica': PenTool,
-      'producao-textual': FileText,
-      'escrita-criativa': Palette,
-      'dissertacao-argumentativa': PenTool,
-      'resenha-critica': FileText,
-      'artigo-cientifico': Search,
-      'ensaio-reflexivo': Brain,
-      'carta-formal': Mail,
-      'texto-narrativo': BookOpen,
-      'texto-descritivo': Eye,
-      'texto-expositivo': FileText,
-      'texto-injuntivo': Target,
-      'cronica-literaria': Music,
-      'editorial-jornalistico': Globe,
-      'manifesto-academico': Flag,
-      'relatorio-tecnico': Settings,
-      'memorial-descritivo': FileText,
-      'texto-argumentativo': ThumbsUp,
-      'escrita-academica': BookOpen,
-      'producao-poetica': Music,
-
-      // === APRESENTAÇÕES E COMUNICAÇÃO (formatos únicos) ===
-      'apresentacao-oral': Presentation,
-      'slides-interativos': Play,
-      'teatro-educativo': Music,
-      'podcast-educativo': Headphones,
-      'video-aula': Video,
-      'transmissao-ao-vivo': Wifi,
-      'entrevista-simulada': MessageSquare,
-      'pitch-projeto': Star,
-      'palestra-estudante': Presentation,
-      'webinar-academico': Globe,
-      'storytelling-educativo': BookOpen,
-      'apresentacao-poster': Eye,
-      'defesa-trabalho': Trophy,
-      'seminario-tematico': Users,
-      'workshop-apresentacao': Wrench,
-      'talk-inspiracional': Star,
-      'masterclass-estudante': Trophy,
-      'conferencia-mini': Globe,
-      'exposicao-oral': Headphones,
-      'comunicacao-cientifica': Microscope,
-
-      // === REVISÃO E REFORÇO (métodos específicos) ===
-      'revisao-intensiva': Zap,
-      'revisao-sistematica': CheckSquare,
-      'revisao-colaborativa': Users,
-      'revisao-guiada': Compass,
-      'reforco-conteudo': Target,
-      'plantao-duvidas': MessageSquare,
-      'sessao-esclarecimentos': Lightbulb,
-      'revisao-final': Trophy,
-      'revisao-ativa': Zap,
-      'revisao-espacada': Calendar,
-      'revisao-intercalada': Settings,
-      'revisao-elaborativa': Brain,
-      'revisao-multimodal': Eye,
-      'revisao-gamificada': Gamepad2,
-      'revisao-peer-to-peer': Users,
-      'maratona-revisao': Flag,
-      'intensivao-materia': Zap,
-      'revisao-personalizada': Heart,
-      'bootcamp-revisao': Trophy,
-      'revisao-express': Lightbulb,
-
-      // === PESQUISA E INVESTIGAÇÃO (tipos específicos) ===
-      'pesquisa-aprofundada': Search,
-      'investigacao-cientifica': Microscope,
-      'coleta-dados': Download,
-      'analise-informacoes': Eye,
-      'estudo-caso': BookOpen,
-      'pesquisa-campo': MapPin,
-      'levantamento-bibliografico': BookOpen,
-      'analise-documentos': FileText,
-      'pesquisa-qualitativa': Users,
-      'pesquisa-quantitativa': Calculator,
-      'pesquisa-experimental': Zap,
-      'pesquisa-exploratoria': Compass,
-      'pesquisa-descritiva': Eye,
-      'pesquisa-explicativa': Brain,
-      'survey-academico': Target,
-      'entrevista-pesquisa': MessageSquare,
-      'observacao-sistematica': Eye,
-      'grupo-focal': Users,
-      'analise-conteudo': FileText,
-      'meta-analise': Search,
-
-      // === EXERCÍCIOS E PRÁTICA (modalidades específicas) ===
-      'exercicios-praticos': Target,
-      'lista-exercicios': CheckSquare,
-      'exercicios-fixacao': Star,
-      'problemas-contextualizados': Puzzle,
-      'atividades-aplicacao': Wrench,
-      'exercicios-casa': Home,
-      'pratica-laboratorio': Microscope,
-      'simulacao-situacoes': Play,
-      'exercicios-progressivos': Target,
-      'problemas-desafio': Trophy,
-      'atividades-diagnosticas': Search,
-      'exercicios-remediais': Heart,
-      'pratica-supervisionada': Eye,
-      'exercicios-adaptativos': Settings,
-      'atividades-nivelamento': Target,
-      'pratica-autonoma': Star,
-      'exercicios-integrados': Globe,
-      'atividades-avaliativas': Award,
-      'pratica-reflexiva': Brain,
-      'exercicios-criativos': Palette,
-
-      // === MATEMÁTICA E CÁLCULOS (áreas específicas) ===
-      'resolucao-problemas': Calculator,
-      'exercicios-matematicos': Calculator,
-      'geometria-pratica': Compass,
-      'calculos-aplicados': Calculator,
-      'estatistica-dados': Eye,
-      'graficos-tabelas': Eye,
-      'algebra-pratica': Calculator,
-      'trigonometria-aplicada': Calculator,
-      'calculo-diferencial': Calculator,
-      'calculo-integral': Calculator,
-      'geometria-analitica': Compass,
-      'matematica-financeira': Calculator,
-      'probabilidade-estatistica': Eye,
-      'analise-combinatoria': Puzzle,
-      'logica-matematica': Brain,
-      'teoria-numeros': Calculator,
-      'matematica-discreta': Settings,
-      'analise-matematica': Search,
-      'topologia-matematica': Compass,
-      'algebra-linear': Calculator,
-
-      // === CIÊNCIAS E EXPERIMENTOS (disciplinas específicas) ===
-      'experimento-laboratorio': Microscope,
-      'observacao-fenomenos': Eye,
-      'coleta-amostras': Download,
-      'analise-resultados': Search,
-      'hipoteses-teorias': Brain,
-      'metodo-cientifico': Microscope,
-      'pratica-laboratorial': Zap,
-      'estudo-ecossistemas': TreePine,
-      'experimento-fisica': Zap,
-      'experimento-quimica': Microscope,
-      'experimento-biologia': TreePine,
-      'observacao-astronomica': Star,
-      'analise-geologica': MapPin,
-      'estudo-botanico': TreePine,
-      'pesquisa-zoologica': Eye,
-      'experimento-genetica': Microscope,
-      'analise-microbiologica': Microscope,
-      'estudo-anatomico': Search,
-      'experimento-eletricidade': Zap,
-      'analise-quimica': Microscope,
-
-      // === HISTÓRIA E SOCIEDADE (períodos/temas específicos) ===
-      'linha-tempo': Calendar,
-      'analise-historica': BookOpen,
-      'debate-historico': MessageSquare,
-      'dramatizacao-historica': Music,
-      'pesquisa-genealogica': Search,
-      'museu-virtual': Eye,
-      'documentario-educativo': Video,
-      'entrevista-historica': MessageSquare,
-      'simulacao-historica': Play,
-      'analise-fontes-primarias': FileText,
-      'estudo-civilizacoes': Globe,
-      'cronologia-eventos': Calendar,
-      'biografia-historica': BookOpen,
-      'contextualizacao-historica': Brain,
-      'historia-oral': Headphones,
-      'arqueologia-virtual': Search,
-      'patrimonio-cultural': Trophy,
-      'memoria-coletiva': Users,
-      'historia-local': Home,
-      'temporalidades-historicas': Clock,
-
-      // === GEOGRAFIA E MEIO AMBIENTE (aspectos únicos) ===
-      'mapa-conceitual': MapPin,
-      'estudo-mapas': Compass,
-      'clima-tempo': Cloud,
-      'sustentabilidade': TreePine,
-      'recursos-naturais': Sun,
-      'urbanizacao': Home,
-      'relevo-terrestre': MapPin,
-      'coordenadas-geograficas': Compass,
-      'cartografia-digital': MapPin,
-      'sensoriamento-remoto': Eye,
-      'geoprocessamento': Settings,
-      'geografia-fisica': MapPin,
-      'geografia-humana': Users,
-      'geopolitica-mundial': Globe,
-      'climatologia-aplicada': Cloud,
-      'hidrografia-brasileira': Cloud,
-      'biogeografia': TreePine,
-      'geografia-economica': Calculator,
-      'planejamento-urbano': Home,
-      'impactos-ambientais': TreePine,
-
-      // === LÍNGUAS E LITERATURA (modalidades específicas) ===
-      'leitura-interpretacao': BookOpen,
-      'analise-literaria': FileText,
-      'producao-oral': Headphones,
-      'conversacao': MessageSquare,
-      'traducao-textos': Globe,
-      'declamacao-poesia': Music,
-      'teatro-leitura': Presentation,
-      'clube-leitura': Users,
-      'literatura-comparada': BookOpen,
-      'critica-literaria': FileText,
-      'teoria-literaria': Brain,
-      'historia-literatura': Calendar,
-      'generos-literarios': BookOpen,
-      'estilistica-textual': PenTool,
-      'semantica-linguistica': Brain,
-      'fonologia-aplicada': Headphones,
-      'morfologia-sintaxe': Settings,
-      'pragmatica-linguistica': MessageSquare,
-      'sociolinguistica': Users,
-      'linguistica-textual': FileText,
-
-      // === ARTE E CRIATIVIDADE (expressões únicas) ===
-      'criacao-artistica': Palette,
-      'desenho-tecnico': PenTool,
-      'composicao-musical': Music,
-      'fotografia-educativa': Camera,
-      'design-grafico': Palette,
-      'escultura-modelagem': Wrench,
-      'pintura-expressiva': Palette,
-      'arte-digital': Settings,
-      'danca-coreografia': Music,
-      'teatro-dramatizacao': Presentation,
-      'cinema-audiovisual': Video,
-      'arte-conceitual': Brain,
-      'instalacao-artistica': Eye,
-      'performance-art': Music,
-      'arte-urbana': Home,
-      'artesanato-cultural': Wrench,
-      'arte-terapeutica': Heart,
-      'curadoria-artistica': Eye,
-      'critica-arte': FileText,
-      'historia-arte': Calendar,
-
-      // === TECNOLOGIA E INFORMÁTICA (áreas específicas) ===
-      'programacao-basica': Settings,
-      'robotica-educativa': Settings,
-      'design-digital': Palette,
-      'pesquisa-internet': Globe,
-      'apresentacao-multimidia': Video,
-      'planilhas-calculo': Calculator,
-      'base-dados': Download,
-      'seguranca-digital': Shield,
-      'desenvolvimento-web': Globe,
-      'aplicativos-mobile': Phone,
-      'inteligencia-artificial': Brain,
-      'machine-learning': Settings,
-      'ciencia-dados': Eye,
-      'computacao-nuvem': Cloud,
-      'internet-coisas': Wifi,
-      'realidade-virtual': Eye,
-      'blockchain-criptomoedas': Key,
-      'ciberseguranca': Shield,
-      'automacao-processos': Settings,
-      'programacao-avancada': Settings,
-
-      // === EDUCAÇÃO FÍSICA E SAÚDE (modalidades específicas) ===
-      'atividade-fisica': Heart,
-      'esportes-coletivos': Users,
-      'danca-expressiva': Music,
-      'yoga-relaxamento': Heart,
-      'alimentacao-saudavel': Heart,
-      'primeiros-socorros': Heart,
-      'anatomia-corpo': Search,
-      'exercicios-coordenacao': Target,
-      'treinamento-funcional': Target,
-      'esportes-individuais': Star,
-      'ginastica-artistica': Music,
-      'natacao-aquaticos': Cloud,
-      'artes-marciais': Target,
-      'atletismo-corrida': Flag,
-      'recreacao-lazer': Gamepad2,
-      'educacao-postural': Heart,
-      'fisiologia-exercicio': Search,
-      'psicomotricidade': Brain,
-      'atividades-adaptadas': Heart,
-      'wellness-qualidade-vida': Heart,
-
-      // === EMPREENDEDORISMO E ECONOMIA (aspectos únicos) ===
-      'plano-negocios': Star,
-      'educacao-financeira': Calculator,
-      'mercado-trabalho': Users,
-      'lideranca-equipe': Star,
-      'inovacao-criatividade': Lightbulb,
-      'gestao-projetos': Settings,
-      'economia-domestica': Home,
-      'cooperativismo': Users,
-      'startup-lean': Lightbulb,
-      'marketing-digital': Globe,
-      'vendas-negociacao': ThumbsUp,
-      'gestao-pessoas': Users,
-      'finanças-corporativas': Calculator,
-      'investimentos-mercado': Trophy,
-      'economia-sustentavel': TreePine,
-      'microempreendedorismo': Star,
-      'networking-profissional': Users,
-      'pitch-investidores': Presentation,
-      'modelo-negocio': Settings,
-      'analise-viabilidade': Search,
-
-      // === MINDFULNESS E DESENVOLVIMENTO PESSOAL (práticas específicas) ===
-      'meditacao-guiada': Heart,
-      'desenvolvimento-emocional': Heart,
-      'inteligencia-emocional': Brain,
-      'autoconhecimento': Eye,
-      'gestao-stress': Heart,
-      'relacionamentos-interpessoais': Users,
-      'comunicacao-assertiva': MessageSquare,
-      'lideranca-pessoal': Star,
-      'mindfulness-atencao': Brain,
-      'resiliencia-emocional': Heart,
-      'autoestima-autoconfianca': Star,
-      'gestao-conflitos': MessageSquare,
-      'empatia-compaixao': Heart,
-      'coaching-pessoal': Target,
-      'programacao-neurolinguistica': Brain,
-      'terapia-cognitiva': Brain,
-      'psicologia-positiva': Heart,
-      'desenvolvimento-carreira': Star,
-      'equilibrio-vida-trabalho': Heart,
-      'proposito-vida': Compass,
-
-      // === ATIVIDADES ESPECIAIS E EVENTOS (tipos únicos) ===
-      'feira-conhecimento': Trophy,
-      'olimpiada-academica': Award,
-      'concurso-talentos': Star,
-      'exposicao-trabalhos': Eye,
-      'mostra-cultural': Music,
-      'festival-ciencias': Microscope,
-      'competicao-academica': Trophy,
-      'evento-networking': Users,
-      'hackathon-educacional': Settings,
-      'maratona-programacao': Zap,
-      'simulacao-onu': Globe,
-      'tribunal-simulado': Flag,
-      'startup-weekend': Lightbulb,
-      'feira-profissoes': Users,
-      'congresso-estudantil': Globe,
-      'summit-inovacao': Star,
-      'workshop-intensivo': Wrench,
-      'bootcamp-skills': Trophy,
-      'conferencia-academica': Presentation,
-      'simposio-cientifico': Microscope,
-
-      // === ATIVIDADES INTERDISCIPLINARES (conexões únicas) ===
-      'steam-integrado': Settings,
-      'projeto-multidisciplinar': Globe,
-      'estudo-transversal': Compass,
-      'abordagem-holistica': Brain,
-      'conexoes-disciplinares': Users,
-      'visao-sistematica': Eye,
-      'pensamento-complexo': Brain,
-      'integracao-saberes': BookOpen,
-      'interdisciplinaridade': Globe,
-      'transdisciplinaridade': Compass,
-      'metodo-fenomenologico': Eye,
-      'abordagem-etnografica': Users,
-      'pesquisa-acao': Target,
-      'estudo-longitudinal': Calendar,
-      'analise-multivarivel': Calculator,
-      'metodologia-mista': Settings,
-      'triangulacao-dados': Triangle,
-      'validacao-cruzada': CheckSquare,
-      'meta-sintese': Search,
-      'revisao-sistematica-literatura': BookOpen
+      // Mapeamento baseado nas especificações fornecidas pelo usuário
+      'quiz-contextualizacao': Brain, // 🧠 Cérebro - compreensão e contextualização
+      'atividades-interativas': Users, // 🤝 Aperto de mãos - interação e engajamento  
+      'projetos-praticos': Wrench, // 🔧 Chave inglesa - trabalho prático e construção
+      'cronograma-estudos': Calendar, // 📅 Calendário - planejamento de estudos
+      'brainstorming': Lightbulb, // 💡 Lâmpada - ideias e criatividade
+      'redacao-tematica': PenTool, // ✍️ Caneta - escrita e redação
+      'simulado-preparatorio': FileText, // 📝 Folha com lápis - prática para provas
+      'revisao-intensiva': Search, // 🔍 Lupa - análise detalhada e revisão
+      'mapas-mentais': TreePine, // 🌳 Árvore - conexões e ramificações de ideias
+      'autoavaliacao': CheckSquare, // ✅ Checkmark - avaliação e autoverificação
+      'estudo-grupo': Users, // 👥 Silhueta de grupo - colaboração
+      'pesquisa-aprofundada': BookOpen, // 📚 Livros - estudo detalhado
+      'exercicios-praticos': Target, // 🏋️ Haltere - prática e esforço (usando Target como equivalente)
+      'apresentacao-oral': Headphones, // 🎤 Microfone - fala e apresentação
+      'planejamento-rotina': Clock, // 🕒 Relógio - organização do tempo
+      'agenda-pessoal': BookOpen, // 📓 Caderno - organização pessoal
+      'metas-estudo': Target, // 🎯 Alvo - objetivos claros
+      'organizacao-materiais': FileText, // 📂 Pasta - organização de recursos
+      'controle-tempo': Clock, // ⏱️ Cronômetro - gestão eficiente do tempo
+      'agenda-provas': FileText, // 📋 Prancheta - planejamento de avaliações
+      'cronograma-revisao': Settings, // 🔄 Setas circulares - ciclos de revisão
+      'planner-academico': Calendar, // 📆 Calendário com marcações - planejamento acadêmico
+      'organizador-tarefas': CheckSquare, // 📑 Lista de tarefas - organização
+      'calendario-atividades': Calendar, // 🗓️ Calendário com pinos - eventos agendados
+      'gestao-prazos': Clock, // ⏳ Ampulheta - controle de prazos
+      'planejamento-semestral': MapPin, // 🗺️ Mapa - planejamento de longo prazo
+      'rotina-estudos': BookOpen, // 📖 Livro aberto - consistência nos estudos
+      'schedule-personalizado': Clock, // 🕰️ Relógio personalizado - cronograma único
+      'timeline-projetos': TrendingUp, // 📈 Gráfico de linha - progresso de projetos
+      'organizacao-digital': Settings, // 💻 Laptop - organização em ambiente digital
+      'agenda-inteligente': Brain, // 🧠📅 Cérebro com calendário - planejamento inteligente
+      'plano-estudos': BarChart, // 📊 Gráfico - estratégia de estudo
+      'matriz-prioridades': MapPin, // 📍 Pino de localização - priorização de tarefas
+      'tecnicas-memorizacao': Puzzle, // 🧩 Quebra-cabeça - estratégias de memória
+      'leitura-dinamica': Zap, // 🚀📖 Foguete com livro - leitura rápida
+      'anotacoes-cornell': FileText, // 📜 Pergaminho - método estruturado de anotações
+      'metodo-pomodoro': Clock, // 🍅 Tomate - técnica de gestão de tempo
+      'flashcards-digitais': Star, // 📇 Cartões - aprendizado com flashcards
+      'tecnica-feynman': MessageSquare, // 🗣️📚 Fala com livro - explicação simplificada
+      'mnemotecnicas': Settings, // 🔗 Elos - conexões para memorização
+      'skimming-scanning': Eye, // 👀📄 Olhos com documento - leitura rápida e seletiva
+      'mapas-conceituais': Globe, // 🕸️ Teia - conexões conceituais
+      'diagrama-ishikawa': Search, // 🐟 Peixe - diagrama de causa e efeito
+      'matriz-eisenhower': Grid, // ⬜ Quadrado dividido - priorização
+      'tecnica-sqr3': Search, // 📚🔎 Livro com lupa - método de leitura ativa
+      'mind-mapping': Brain, // 🧠🌐 Cérebro com rede - mapeamento mental
+      'speed-reading': Zap, // ⚡📖 Raio com livro - leitura acelerada
+      'active-recall': Brain, // 🔁🧠 Setas com cérebro - recordação ativa
+      'spaced-repetition': Calendar, // ⏲️📚 Relógio com livro - repetição espaçada
+      'elaborative-interrogation': MessageSquare, // ❓🧠 Interrogação com cérebro - questionamento profundo
     };
 
     // Verifica se existe mapeamento direto para o ID
@@ -832,17 +379,15 @@ export function CardDeConstrucao({
     }
 
     // Sistema de fallback com hash consistente para IDs não mapeados
-    // Isso garante que IDs novos sempre tenham o mesmo ícone
     const fallbackIcons = [
-      // Ícones organizados por categoria para melhor representação
-      BookOpen, FileText, PenTool, Search, Brain, // Acadêmico/Intelectual
-      Users, MessageSquare, Presentation, ThumbsUp, Heart, // Social/Comunicação  
-      Settings, Wrench, Target, Compass, Trophy, // Técnico/Objetivos
-      Calendar, Clock, CheckSquare, Star, Award, // Organização/Conquistas
-      Microscope, Calculator, Eye, Globe, MapPin, // Científico/Análise
-      Music, Palette, Camera, Video, Headphones, // Criativo/Multimídia
-      Lightbulb, Zap, Flag, Key, Shield, // Inovação/Segurança
-      TreePine, Sun, Cloud, Home, Car // Ambiente/Contexto
+      BookOpen, FileText, PenTool, Search, Brain, 
+      Users, MessageSquare, Presentation, ThumbsUp, Heart,
+      Settings, Wrench, Target, Compass, Trophy,
+      Calendar, Clock, CheckSquare, Star, Award,
+      Microscope, Calculator, Eye, Globe, MapPin,
+      Music, Palette, Camera, Video, Headphones,
+      Lightbulb, Zap, Flag, Key, Shield,
+      TreePine, Sun, Cloud, Home, Car
     ];
     
     // Gera hash consistente baseado no ID
@@ -850,12 +395,10 @@ export function CardDeConstrucao({
     for (let i = 0; i < activityId.length; i++) {
       const char = activityId.charCodeAt(i);
       hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Converte para 32-bit integer
+      hash = hash & hash;
     }
     
-    // Usa o hash para selecionar um ícone de forma consistente
     const iconIndex = Math.abs(hash) % fallbackIcons.length;
-    
     return fallbackIcons[iconIndex];
   };
 
