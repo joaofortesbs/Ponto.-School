@@ -1254,25 +1254,16 @@ export function CardDeConstrucao({
                       onClick={() => handleActivityToggle(activity)}
                     >
                       <div className="flex items-start gap-4">
-                        {/* Checkbox customizado */}
-                        <div className={`flex-shrink-0 w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
-                          isSelected
-                            ? 'border-[#FF6B00] bg-[#FF6B00] shadow-md'
-                            : 'border-gray-300 dark:border-gray-600 hover:border-[#FF6B00]/50'
-                        }`}>
-                          {isSelected && (
-                            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                          )}
-                        </div>
-
                         {/* Conteúdo da atividade */}
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
-                            {/* Ícone animado da atividade */}
+                            {/* Ícone animado da atividade - CLICÁVEL PARA SELEÇÃO */}
                             <div 
                               className={`icon-container ${isSelected ? 'active' : ''}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleActivityToggle(activity);
+                              }}
                               style={{
                                 width: '40px',
                                 height: '40px',
@@ -1295,12 +1286,28 @@ export function CardDeConstrucao({
                                 transform: isSelected ? 'scale(1.05)' : 'scale(1)'
                               }}
                             >
-                              {React.createElement(getIconByActivityId(activity.id), {
-                                className: `w-5 h-5 transition-all duration-300 relative z-10`,
-                                style: {
-                                  color: isSelected ? 'white' : '#FF6E06'
-                                }
-                              })}
+                              {isSelected ? (
+                                // Mostra ícone de check quando selecionado
+                                <svg 
+                                  className="w-5 h-5 text-white transition-all duration-300 relative z-10" 
+                                  fill="currentColor" 
+                                  viewBox="0 0 20 20"
+                                >
+                                  <path 
+                                    fillRule="evenodd" 
+                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
+                                    clipRule="evenodd" 
+                                  />
+                                </svg>
+                              ) : (
+                                // Mostra ícone original quando não selecionado
+                                React.createElement(getIconByActivityId(activity.id), {
+                                  className: `w-5 h-5 transition-all duration-300 relative z-10`,
+                                  style: {
+                                    color: '#FF6E06'
+                                  }
+                                })
+                              )}
                               <div 
                                 className="icon-glow"
                                 style={{
