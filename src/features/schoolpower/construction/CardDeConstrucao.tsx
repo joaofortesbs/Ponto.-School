@@ -15,8 +15,8 @@
               import { ContextualizationData } from "../contextualization/ContextualizationCard";
               import { ActionPlanItem } from "../actionplan/ActionPlanCard";
               import { isActivityEligibleForTrilhas, getTrilhasBadgeProps } from "../data/trilhasActivitiesConfig";
-              import { TrilhasDebugPanel } from "../components/TrilhasDebugPanel";
               import { TrilhasBadge } from "../components/TrilhasBadge";
+              import { ManualBadge } from "../components/ManualBadge";
               import schoolPowerActivitiesData from '../data/schoolPowerActivities.json';
 
               // Convert to proper format with name field
@@ -133,7 +133,12 @@
                     if (isSelected) {
                       return prev.filter((item) => item.id !== activity.id);
                     } else {
-                      return [...prev, { ...activity, approved: true }];
+                      // Preservar todas as propriedades da atividade, incluindo isManual
+                      return [...prev, { 
+                        ...activity, 
+                        approved: true,
+                        isManual: activity.isManual === true // Garantir que seja boolean true para atividades manuais
+                      }];
                     }
                   });
                 };
@@ -141,7 +146,16 @@
                 // Handle action plan approval
                 const handleApproveActionPlan = () => {
                   if (onApproveActionPlan && selectedActivities.length > 0) {
-                    onApproveActionPlan(selectedActivities);
+                    // Combinar atividades selecionadas (incluindo manuais) para aprovação
+                    const allSelectedActivities = selectedActivities.map(activity => {
+                      // Verificar se é uma atividade manual para manter a flag
+                      const isManualActivity = manualActivities.some(manual => manual.id === activity.id);
+                      return {
+                        ...activity,
+                        isManual: isManualActivity || activity.isManual || false
+                      };
+                    });
+                    onApproveActionPlan(allSelectedActivities);
                   }
                 };
 
@@ -154,8 +168,11 @@
                   // Find the activity type from schoolPowerActivities
                   const activityType = schoolPowerActivities.find(activity => activity.id === manualActivityForm.typeId);
 
+                  // Gerar ID único para atividade manual para evitar conflitos
+                  const uniqueId = `manual-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
                   const newManualActivity: ActionPlanItem = {
-                    id: manualActivityForm.typeId, // Use the actual ID from the selected activity type
+                    id: uniqueId, // Use unique ID for manual activities
                     title: manualActivityForm.title,
                     description: manualActivityForm.description,
                     duration: "Personalizado",
@@ -607,8 +624,8 @@
                           {step === "contextualization" ? (
                             <svg
                               className="w-7 h-7 text-white"
-                              fill="none"
-                              viewBox="0 0 24 24"
+                              fill="none"```text
+viewBox="0 0 24 24"
                               stroke="currentColor"
                             >
                               <path
@@ -1063,6 +1080,12 @@
                                       {badgeProps.showBadge && (
                                         <div className="absolute top-4 right-4 z-20">
                                           <TrilhasBadge />
+                                        </div>
+                                      )}
+                                         {/* Badge Manual - POSICIONADO NO CANTO SUPERIOR ESQUERDO */}
+                                      {activity.isManual && (
+                                        <div className="absolute top-4 left-4 z-20">
+                                          <ManualBadge />
                                         </div>
                                       )}
 
