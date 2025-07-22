@@ -3,6 +3,12 @@ import { motion } from 'framer-motion';
 import { Check, X, ChevronLeft, Sparkles, Activity, BookOpen, Users, Target, Calendar, Lightbulb, FileText, Trophy, Zap, Brain, Heart } from 'lucide-react';
 import { TrilhasBadge } from '../components/TrilhasBadge';
 import { isActivityEligibleForTrilhas } from '../data/trilhasActivitiesConfig';
+import schoolPowerActivitiesData from '../data/schoolPowerActivities.json';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { CheckCircle2, Clock, BookOpen, Target, Trash2, Plus, X } from 'lucide-react';
+import { Separator } from "@/components/ui/separator";
 
 export interface ActionPlanItem {
   id: string;
@@ -16,6 +22,12 @@ export interface ActionPlanItem {
   type?: string;
   isManual?: boolean;
 }
+
+// Function to get the correct activity name from schoolPowerActivities
+const getActivityName = (id: string): string => {
+  const activity = schoolPowerActivitiesData.find(act => act.id === id);
+  return activity?.name || activity?.title || id;
+};
 
 interface ActionPlanCardProps {
   actionPlan: ActionPlanItem[];

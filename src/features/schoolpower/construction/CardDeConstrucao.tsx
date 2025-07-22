@@ -17,7 +17,13 @@ import { ActionPlanItem } from "../actionplan/ActionPlanCard";
 import { isActivityEligibleForTrilhas, getTrilhasBadgeProps } from "../data/trilhasActivitiesConfig";
 import { TrilhasDebugPanel } from "../components/TrilhasDebugPanel";
 import { TrilhasBadge } from "../components/TrilhasBadge";
-import schoolPowerActivities from "../data/schoolPowerActivities.json";
+import schoolPowerActivitiesData from '../data/schoolPowerActivities.json';
+
+// Convert to proper format with name field
+const schoolPowerActivities = schoolPowerActivitiesData.map(activity => ({
+  ...activity,
+  name: activity.name || activity.title || activity.description
+}));
 
 export interface ContextualizationData {
   materias: string;
@@ -147,7 +153,7 @@ export function CardDeConstrucao({
 
     // Find the activity type from schoolPowerActivities
     const activityType = schoolPowerActivities.find(activity => activity.id === manualActivityForm.typeId);
-    
+
     const newManualActivity: ActionPlanItem = {
       id: `manual-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       title: manualActivityForm.title,
