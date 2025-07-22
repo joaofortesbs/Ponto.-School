@@ -18,7 +18,6 @@
               import { TrilhasDebugPanel } from "../components/TrilhasDebugPanel";
               import { TrilhasBadge } from "../components/TrilhasBadge";
               import schoolPowerActivitiesData from '../data/schoolPowerActivities.json';
-              import { v4 as uuidv4 } from 'uuid';
 
               // Convert to proper format with name field
               const schoolPowerActivities = schoolPowerActivitiesData.map(activity => ({
@@ -43,8 +42,6 @@
                 category: string;
                 type: string;
                 isManual?: boolean;
-		approved?: boolean;
-                isTrilhasEligible?: boolean;
               }
 
               interface CardDeConstrucaoProps {
@@ -136,13 +133,7 @@
                     if (isSelected) {
                       return prev.filter((item) => item.id !== activity.id);
                     } else {
-                      // Preservar todas as propriedades da atividade, incluindo isManual
-                      return [...prev, { 
-                        ...activity, 
-                        approved: true,
-                        isManual: activity.isManual || false,
-                        isTrilhasEligible: activity.isTrilhasEligible || false
-                      }];
+                      return [...prev, { ...activity, approved: true }];
                     }
                   });
                 };
@@ -150,19 +141,7 @@
                 // Handle action plan approval
                 const handleApproveActionPlan = () => {
                   if (onApproveActionPlan && selectedActivities.length > 0) {
-                    // Combinar atividades selecionadas (incluindo manuais) para aprovação
-                    const allSelectedActivities = selectedActivities.map(activity => {
-                      // Verificar se é uma atividade manual para manter a flag
-                      const isManualActivity = manualActivities.some(manual => manual.id === activity.id);
-                      return {
-                        ...activity,
-                        isManual: isManualActivity || activity.isManual || false,
-                        approved: true,
-                        isTrilhasEligible: activity.isTrilhasEligible || false
-                      };
-                    });
-                    console.log('🎯 Atividades aprovadas com propriedades preservadas:', allSelectedActivities);
-                    onApproveActionPlan(allSelectedActivities);
+                    onApproveActionPlan(selectedActivities);
                   }
                 };
 
@@ -174,19 +153,16 @@
 
                   // Find the activity type from schoolPowerActivities
                   const activityType = schoolPowerActivities.find(activity => activity.id === manualActivityForm.typeId);
-                  const uniqueId = uuidv4();
 
                   const newManualActivity: ActionPlanItem = {
-                    id: uniqueId, // Use unique ID for manual activities
+                    id: manualActivityForm.typeId, // Use the actual ID from the selected activity type
                     title: manualActivityForm.title,
                     description: manualActivityForm.description,
                     duration: "Personalizado",
                     difficulty: "Personalizado", 
-                    category: activityType?.tags[0] || "Manual",
-                    type: activityType?.name || "Atividade Manual",
-                    isManual: true,
-                    approved: false,
-                    isTrilhasEligible: false
+                    category: activityType?.tags[0] || "",
+                    type: activityType?.name || "",
+                    isManual: true
                   };
 
                   // Add to manual activities list
