@@ -80,4 +80,5 @@
   { "id": "revisor-gramatical", "name": "Revisor Gramatical", "description": "Corrige erros de ortografia e gramática.", "tags": ["revisão", "gramática"], "apiType": "gemini", "enabled": true },
   { "id": "gerador-tracejados", "name": "Gerador de Formatos Tracejados", "description": "Gera atividades de caligrafia e letras tracejadas.", "tags": ["caligrafia", "tracejado"], "apiType": "gemini", "enabled": true },
   { "id": "chatbot-bncc", "name": "Chatbot com a BNCC", "description": "Responde perguntas sobre a BNCC em formato de chat.", "tags": ["BNCC", "chatbot"], "apiType": "gemini", "enabled": true }
+  { "id": "apresentacao-slides", "name": "Slides", "description": "Slides.", "tags": ["Apresentacaos", "Slides"], "apiType": "gemini", "enabled": true }
 ]

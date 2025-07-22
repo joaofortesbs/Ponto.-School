@@ -23,8 +23,6 @@ export const trilhasActivitiesIds = [
   'prova-recuperacao',
   'exame-certificacao',
   'teste-competencia',
-
-  // === PROJETOS E TRABALHOS ===
   'projetos-praticos',
   'projeto-pesquisa',
   'projeto-cientifico',
@@ -45,8 +43,6 @@ export const trilhasActivitiesIds = [
   'projeto-extensao',
   'projeto-integrador',
   'projeto-final',
-
-  // === TÉCNICAS DE ESTUDO ===
   'mapas-mentais',
   'resumos-inteligentes',
   'fichas-estudo',
@@ -67,8 +63,6 @@ export const trilhasActivitiesIds = [
   'active-recall',
   'spaced-repetition',
   'elaborative-interrogation',
-
-  // === REDAÇÃO E ESCRITA ===
   'redacao-tematica',
   'producao-textual',
   'escrita-criativa',
@@ -89,8 +83,6 @@ export const trilhasActivitiesIds = [
   'texto-argumentativo',
   'escrita-academica',
   'producao-poetica',
-
-  // === EXERCÍCIOS E PRÁTICA ===
   'exercicios-praticos',
   'lista-exercicios',
   'exercicios-fixacao',
@@ -111,8 +103,6 @@ export const trilhasActivitiesIds = [
   'atividades-avaliativas',
   'pratica-reflexiva',
   'exercicios-criativos',
-
-  // === MATEMÁTICA E CÁLCULOS ===
   'resolucao-problemas',
   'exercicios-matematicos',
   'geometria-pratica',
