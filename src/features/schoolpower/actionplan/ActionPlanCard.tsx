@@ -15,7 +15,6 @@ export interface ActionPlanItem {
   category?: string;
   type?: string;
   isManual?: boolean;
-  originalActivityId?: string;
 }
 
 interface ActionPlanCardProps {
