@@ -1,0 +1,86 @@
+TÍTULO:
+Adicionar sistema de “Adicionar Atividade Manual” no Plano de Ação dentro do Card de Construção do School Power, integrando backend e frontend.
+
+🛠️ Objetivo Geral:
+Atualmente, o Plano de Ação dentro do Card de Construção do School Power mostra apenas atividades sugeridas automaticamente pela IA Gemini em formato de checklist estilo checkbox.
+Agora, precisamos permitir que o usuário adicione manualmente atividades personalizadas que deseja que o agente IA realize, mantendo toda a funcionalidade atual, conexões e integrações, sem perder as sugestões já geradas pela IA.
+
+1️⃣ Funcionalidade a ser adicionada
+Adicionar um botão de “Adicionar Atividade” ao lado esquerdo do componente de Grade (ao lado do campo de quantidade de atividades selecionadas) dentro do Card de Construção.
+
+Este botão terá o mesmo estilo visual dos componentes de Grade e Filtros.
+
+2️⃣ Fluxo do usuário:
+✅ Usuário clica no botão “Adicionar Atividade”.
+✅ A interface de Plano de Ação é temporariamente substituída por uma interface de Adicionar Atividade Manual, sem perder os dados e sugestões atuais geradas pela IA.
+✅ Interface de Adicionar Atividade Manual conterá:
+
+Campo de Título da Atividade (input de texto).
+
+Campo de Tipo de Atividade (dropdown de seleção).
+
+Este campo irá puxar dinamicamente os valores do arquivo:
+
+swift
+Copiar
+Editar
+src/features/schoolpower/data/schoolPowerActivities.json
+Puxando o campo name para exibição.
+
+Mantendo internamente o id para conexão e rastreabilidade.
+
+Campo de Descrição da Atividade (textarea).
+
+Botão “Adicionar Atividade”.
+
+✅ Ao clicar em “Adicionar Atividade”, a atividade manual será:
+
+Validada localmente (todos os campos obrigatórios).
+
+Adicionada no mesmo formato das atividades sugeridas pela IA dentro do checklist de Plano de Ação do Card de Construção.
+
+Permitindo ao usuário selecioná-la, desmarcá-la e incluí-la no plano final como qualquer outra atividade gerada automaticamente.
+
+✅ Usuário pode adicionar quantas atividades manuais desejar sem perder os dados existentes.
+
+✅ Depois de adicionar, o sistema volta automaticamente para a interface de Plano de Ação normal, agora exibindo as atividades da IA + atividades manuais adicionadas pelo usuário.
+
+3️⃣ Alterações obrigatórias nos arquivos:
+📂 src/features/schoolpower/construction/CardDeConstrucao.tsx
+Adicionar o botão de “Adicionar Atividade” no topo ao lado de Grade e Filtros.
+
+Gerenciar o estado de troca de interface (Plano de Ação ↔ Adicionar Atividade) sem perder dados.
+
+Conectar o estado global/local para armazenar as atividades manuais adicionadas.
+
+Garantir animação/transição suave para não quebrar experiência do usuário.
+
+📂 src/features/schoolpower/actionplan/ActionPlanCard.tsx
+Modificar para exibir atividades manuais adicionadas pelo usuário dentro do checklist junto das atividades sugeridas pela IA.
+
+As atividades manuais devem seguir o mesmo padrão visual e de interação (checkbox, contagem de selecionadas, integração com Aprovar Plano).
+
+Incluir identificação visual sutil (ex: um badge Manual ou ícone 🖊️) para diferenciar atividades manuais das sugeridas pela IA, caso necessário.
+
+4️⃣ Backend
+Persistir as atividades manuais adicionadas pelo usuário junto com o plano de ação final para garantir rastreabilidade.
+
+Garantir que atividades manuais mantenham os campos: id, title, typeId, description.
+
+Se o sistema usar IndexedDB, Firebase ou Supabase, garantir que a estrutura de atividades manuais siga o mesmo schema de atividades sugeridas pela IA.
+
+As atividades manuais poderão ser reutilizadas em futuras Trilhas School, se o usuário desejar.
+
+5️⃣ Padrões e requisitos obrigatórios
+✅ Não quebrar nenhuma funcionalidade existente.
+✅ Não perder dados das sugestões da IA.
+✅ Manter toda integração e rastreabilidade de logs de atividades.
+✅ Usar loading, animações e transições suaves se necessário.
+✅ Código limpo, modular e organizado seguindo padrões do projeto.
+✅ Testar rigorosamente para garantir UX sem atritos.
+
+Resumo:
+✅ Permitir adição manual de atividades pelo usuário no Plano de Ação do Card de Construção.
+✅ Interface de adição clara, conectada ao arquivo schoolPowerActivities.json.
+✅ Persistir dados no backend e exibir no frontend de forma integrada.
+✅ Sem perder as sugestões existentes da IA e mantendo integrações, rastreabilidade e design unificado.
