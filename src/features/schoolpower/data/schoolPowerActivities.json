@@ -79,6 +79,7 @@
   { "id": "redacao", "name": "Redação", "description": "Gera propostas e corrige redações automaticamente.", "tags": ["redação", "escrita"], "apiType": "gemini", "enabled": true },
   { "id": "revisor-gramatical", "name": "Revisor Gramatical", "description": "Corrige erros de ortografia e gramática.", "tags": ["revisão", "gramática"], "apiType": "gemini", "enabled": true },
   { "id": "gerador-tracejados", "name": "Gerador de Formatos Tracejados", "description": "Gera atividades de caligrafia e letras tracejadas.", "tags": ["caligrafia", "tracejado"], "apiType": "gemini", "enabled": true },
-  { "id": "chatbot-bncc", "name": "Chatbot com a BNCC", "description": "Responde perguntas sobre a BNCC em formato de chat.", "tags": ["BNCC", "chatbot"], "apiType": "gemini", "enabled": true }
-  { "id": "apresentacao-slides", "name": "Slides", "description": "Slides.", "tags": ["Apresentacaos", "Slides"], "apiType": "gemini", "enabled": true }
+  { "id": "chatbot-bncc", "name": "Chatbot com a BNCC", "description": "Responde perguntas sobre a BNCC em formato de chat.", "tags": ["BNCC", "chatbot"], "apiType": "gemini", "enabled": true },
+  { "id": "apresentacao-slides", "name": "Crie apresentações inteiras com Slides", "description": "Construa apresentações completas em formato de Slides.", "tags": ["Apresentações", "Slides"], "apiType": "gemini", "enabled": true },
+  { "id": "gerar-questoes", "name": "Gerador de questões personalizadas completas e super didaticas", "description": "Gere questões que testam perfeitamente o seu público, de uma maneira engajada e única.", "tags": ["Questões", "Gerador"], "apiType": "gemini", "enabled": true }
 ]

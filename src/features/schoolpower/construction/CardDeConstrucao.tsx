@@ -325,8 +325,7 @@ export function CardDeConstrucao({
   const getIconByActivityId = (activityId: string) => {
     // Sistema de mapeamento 100% único - cada ID tem seu próprio ícone específico
     const uniqueIconMapping: { [key: string]: any } = {
-      // === AVALIAÇÕES E TESTES (cada tipo único) ===
-      "acessibilidade-texto": PenTool,
+      // === AVALIAÇÕES E TESTES (cada tipo único) ==="acessibilidade-texto": PenTool,
       "atividade-adaptada": Heart,
       "atividades-contos-infantis": BookOpen,
       "atividades-ia": Brain,
@@ -405,6 +404,8 @@ export function CardDeConstrucao({
       "tabela-apoio": Puzzle,
       "tarefa-adaptada": Heart,
       "texto-apoio": BookOpen,
+      "gerar-questoes": PenTool,
+      "apresentacao-slides": Target,
       "tornar-relevante": Star
     };
 
