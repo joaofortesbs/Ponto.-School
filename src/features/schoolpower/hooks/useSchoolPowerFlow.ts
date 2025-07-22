@@ -10,6 +10,7 @@ interface SchoolPowerFlowData {
   initialMessage: string | null;
   contextualizationData: ContextualizationData | null;
   actionPlan: ActionPlanItem[] | null;
+  manualActivities: ActionPlanItem[] | null;
   timestamp: number;
 }
 
@@ -31,6 +32,7 @@ export function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
     initialMessage: null,
     contextualizationData: null,
     actionPlan: null,
+    manualActivities: null,
     timestamp: Date.now()
   });
 

@@ -14,6 +14,7 @@ export interface ActionPlanItem {
   difficulty?: string;
   category?: string;
   type?: string;
+  isManual?: boolean;
 }
 
 interface ActionPlanCardProps {
@@ -184,7 +185,7 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
         ) : (
           actionPlan.map((item, index) => {
             const Icon = getIconByActivityId(item.id);
-            
+
 
             return (
               <motion.div
@@ -272,11 +273,11 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
                   </div>
 
                   {/* Indicador visual de seleção */}
-                  
+
                 </div>
 
                 {/* Borda animada para item selecionado */}
-                
+
               </motion.div>
             )
           })
@@ -307,10 +308,10 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
               onClick={handleApprove}
               className="px-8 py-3 rounded-lg font-semibold transition-all bg-gradient-to-r from-[#FF6B00] to-[#FF8533] text-white hover:shadow-lg hover:scale-105 transform"
             >
-              
+
                 <Sparkles className="w-4 h-4 inline mr-2" />
                 Gerar Atividades ({actionPlan.length})
-              
+
             </button>
           </div>
         </div>
