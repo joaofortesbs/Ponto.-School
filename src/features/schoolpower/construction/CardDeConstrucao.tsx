@@ -155,7 +155,7 @@ export function CardDeConstrucao({
     const activityType = schoolPowerActivities.find(activity => activity.id === manualActivityForm.typeId);
 
     const newManualActivity: ActionPlanItem = {
-      id: `manual-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      id: manualActivityForm.typeId, // Use the actual ID from the selected activity type
       title: manualActivityForm.title,
       description: manualActivityForm.description,
       duration: "Personalizado",
