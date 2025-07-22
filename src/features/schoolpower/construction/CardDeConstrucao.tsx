@@ -36,6 +36,7 @@ export interface ActionPlanItem {
   category: string;
   type: string;
   isManual?: boolean;
+  originalActivityId?: string;
 }
 
 interface CardDeConstrucaoProps {
@@ -147,7 +148,7 @@ export function CardDeConstrucao({
 
     // Find the activity type from schoolPowerActivities
     const activityType = schoolPowerActivities.find(activity => activity.id === manualActivityForm.typeId);
-    
+
     const newManualActivity: ActionPlanItem = {
       id: `manual-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       title: manualActivityForm.title,
@@ -156,7 +157,8 @@ export function CardDeConstrucao({
       difficulty: "Personalizado", 
       category: activityType?.tags[0] || "manual",
       type: activityType?.name || "Atividade Manual",
-      isManual: true
+      isManual: true,
+      originalActivityId: activityType?.id
     };
 
     // Add to manual activities list
@@ -1174,11 +1176,11 @@ export function CardDeConstrucao({
                                 </span>
                               )}
                               {/* Indicador de elegibilidade para Trilhas (debug) */}
-                              {!activity.isManual && isActivityEligibleForTrilhas(activity.id) && (
-                                <span className="ml-2 text-xs px-2 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded">
-                                  ✅ Trilhas Elegível
-                                </span>
-                              )}
+                            {((activity.isManual && activity.originalActivityId && isActivityEligibleForTrilhas(activity.originalActivityId)) || 
+                              (!activity.isManual && isActivityEligibleForTrilhas(activity.id))) && (                              <span className="ml-2 text-xs px-2 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded">
+                                ✅ Trilhas Elegível
+                              </span>
+                            )}
                             </div>
                           </div>
                         </div>
