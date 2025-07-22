@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Check, X, ChevronLeft, Sparkles, Activity, BookOpen, Users, Target, Calendar, Lightbulb, FileText, Trophy, Zap, Brain, Heart } from 'lucide-react';
 import { TrilhasBadge } from '../components/TrilhasBadge';
-import { ManualBadge } from '../components/ManualBadge';
 import { isActivityEligibleForTrilhas } from '../data/trilhasActivitiesConfig';
 import schoolPowerActivitiesData from '../data/schoolPowerActivities.json';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -213,7 +212,9 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
                 <div className="absolute top-4 right-4 z-20 flex gap-2">
                   {/* Badge Manual - para atividades manuais */}
                   {item.isManual && (
-                    <ManualBadge />
+                    <div className="inline-flex items-center justify-center w-16 h-6 bg-gradient-to-r from-purple-500 to-purple-600 text-white text-xs font-semibold rounded-full shadow-lg">
+                      Manual
+                    </div>
                   )}
                   
                   {/* Badge Trilhas */}
