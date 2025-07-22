@@ -15,7 +15,7 @@ export interface ActionPlanItem {
   id: string;
   title: string;
   description: string;
-  approved: boolean;
+  approved?: boolean;
   isTrilhasEligible?: boolean;
   duration?: string;
   difficulty?: string;
@@ -215,7 +215,7 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
                   {item.isManual && (
                     <ManualBadge />
                   )}
-                  
+
                   {/* Badge Trilhas */}
                   {isActivityEligibleForTrilhas(item.id) && (
                     <TrilhasBadge />

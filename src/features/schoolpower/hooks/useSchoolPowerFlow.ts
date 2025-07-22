@@ -281,3 +281,16 @@ export function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
     isLoading
   };
 }
+
+export interface ActionPlanItem {
+  id: string;
+  title: string;
+  description: string;
+  duration?: string;
+  difficulty?: string;
+  category?: string;
+  type?: string;
+  isManual?: boolean;
+  approved?: boolean;
+  isTrilhasEligible?: boolean;
+}
