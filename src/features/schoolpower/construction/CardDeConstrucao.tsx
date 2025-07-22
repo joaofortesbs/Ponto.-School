@@ -1059,21 +1059,20 @@ export function CardDeConstrucao({
                         transition={{ duration: 0.3, delay: index * 0.05 }}
                         onClick={() => handleActivityToggle(activity)}
                       >
-                        {/* Badge Trilhas - POSICIONADO NO CANTO SUPERIOR DIREITO */}
-                        {badgeProps.showBadge && (
-                          <div className="absolute top-4 right-4 z-20">
+                        {/* Badges Container - POSICIONADO NO CANTO SUPERIOR DIREITO */}
+                        <div className="absolute top-4 right-4 z-20 flex gap-2">
+                          {/* Badge Manual - para atividades manuais */}
+                          {activity.isManual && (
+                            <div className="inline-flex items-center justify-center w-16 h-6 bg-gradient-to-r from-purple-500 to-purple-600 text-white text-xs font-semibold rounded-full shadow-lg">
+                              Manual
+                            </div>
+                          )}
+                          
+                          {/* Badge Trilhas */}
+                          {badgeProps.showBadge && (
                             <TrilhasBadge />
-                          </div>
-                        )}
-
-                        {/* Badge Manual - para atividades manuais */}
-                        {activity.isManual && (
-                          <div className="absolute top-4 left-4 z-20">
-                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs font-medium rounded-full">
-                              🖊️ Manual
-                            </span>
-                          </div>
-                        )}
+                          )}
+                        </div>
 
                         <div className="flex items-start gap-4">
                           {/* Conteúdo da atividade */}
@@ -1174,11 +1173,6 @@ export function CardDeConstrucao({
                               <span className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded">
                                 ID: {activity.id}
                               </span>
-                              {activity.isManual && (
-                                <span className="ml-2 text-xs px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded">
-                                  🖊️ Atividade Manual
-                                </span>
-                              )}
                               {/* Indicador de elegibilidade para Trilhas (debug) */}
                               {!activity.isManual && isActivityEligibleForTrilhas(activity.id) && (
                                 <span className="ml-2 text-xs px-2 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded">

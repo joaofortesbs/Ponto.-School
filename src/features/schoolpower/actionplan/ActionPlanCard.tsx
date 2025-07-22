@@ -208,11 +208,20 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
                 className="relative bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border-2 transition-all duration-300 cursor-pointer hover:shadow-xl border-gray-200 dark:border-gray-700 hover:border-[#FF6B00]/50"
                 onClick={() => handleItemToggle(item.id)}
               >
-                {isActivityEligibleForTrilhas(item.id) && (
-                    <div className="absolute top-4 right-4 z-20">
-                      <TrilhasBadge />
+                {/* Badges Container - POSICIONADO NO CANTO SUPERIOR DIREITO */}
+                <div className="absolute top-4 right-4 z-20 flex gap-2">
+                  {/* Badge Manual - para atividades manuais */}
+                  {item.isManual && (
+                    <div className="inline-flex items-center justify-center w-16 h-6 bg-gradient-to-r from-purple-500 to-purple-600 text-white text-xs font-semibold rounded-full shadow-lg">
+                      Manual
                     </div>
                   )}
+                  
+                  {/* Badge Trilhas */}
+                  {isActivityEligibleForTrilhas(item.id) && (
+                    <TrilhasBadge />
+                  )}
+                </div>
                 <div className="flex items-start gap-4">
                   {/* Checkbox customizado */}
                   {/* Conteúdo da atividade */}
