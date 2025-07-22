@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Check, X, ChevronLeft, Sparkles, Activity, BookOpen, Users, Target, Calendar, Lightbulb, FileText, Trophy, Zap, Brain, Heart } from 'lucide-react';
 import { TrilhasBadge } from '../components/TrilhasBadge';
+import { ManualBadge } from '../components/ManualBadge';
 import { isActivityEligibleForTrilhas } from '../data/trilhasActivitiesConfig';
 import schoolPowerActivitiesData from '../data/schoolPowerActivities.json';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -208,11 +209,18 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
                 className="relative bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border-2 transition-all duration-300 cursor-pointer hover:shadow-xl border-gray-200 dark:border-gray-700 hover:border-[#FF6B00]/50"
                 onClick={() => handleItemToggle(item.id)}
               >
-                {isActivityEligibleForTrilhas(item.id) && (
-                    <div className="absolute top-4 right-4 z-20">
-                      <TrilhasBadge />
-                    </div>
+                {/* Badges Container - POSICIONADO NO CANTO SUPERIOR DIREITO */}
+                <div className="absolute top-4 right-4 z-20 flex gap-2">
+                  {/* Badge Manual - para atividades manuais */}
+                  {item.isManual && (
+                    <ManualBadge />
                   )}
+                  
+                  {/* Badge Trilhas */}
+                  {isActivityEligibleForTrilhas(item.id) && (
+                    <TrilhasBadge />
+                  )}
+                </div>
                 <div className="flex items-start gap-4">
                   {/* Checkbox customizado */}
                   {/* Conteúdo da atividade */}
