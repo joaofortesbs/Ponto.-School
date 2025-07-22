@@ -625,239 +625,6 @@ export function CardDeConstrucao({
       'estudo-civilizacoes': Globe,
       'cronologia-eventos': Calendar,
       'biografia-historica': BookOpen,
-      'contextualizacao-historeBookOpen,
-      'discussao-tematica': MessageSquare,
-      'debate-estruturado': ThumbsUp,
-      'seminario-grupo': Presentation,
-      'workshop-colaborativo': Wrench,
-      'circulo-estudos': Compass,
-      'grupo-pesquisa': Search,
-      'sessao-brainstorming': Brain,
-      'mesa-redonda': Users,
-      'painel-discussao': MessageSquare,
-      'forum-academico': Globe,
-      'peer-teaching': Users,
-      'estudo-dirigido-grupo': BookOpen,
-      'sessao-tutoria-grupo': Users,
-      'clube-debate': ThumbsUp,
-      'grupo-leitura': BookOpen,
-      'laboratorio-ideias': Lightbulb,
-      'think-tank-estudantes': Brain,
-      'coletivo-estudos': Users,
-      'rede-aprendizagem': Globe,
-
-      // === CRONOGRAMA E ORGANIZAÇÃO (tipos específicos) ===
-      'cronograma-estudos': Calendar,
-      'planejamento-rotina': Clock,
-      'agenda-pessoal': BookOpen,
-      'metas-estudo': Target,
-      'organizacao-materiais': Settings,
-      'controle-tempo': Clock,
-      'agenda-provas': Calendar,
-      'cronograma-revisao': Calendar,
-      'planner-academico': BookOpen,
-      'organizador-tarefas': CheckSquare,
-      'calendario-atividades': Calendar,
-      'gestao-prazos': Clock,
-      'planejamento-semestral': Calendar,
-      'rotina-estudos': Clock,
-      'schedule-personalizado': Target,
-      'timeline-projetos': Calendar,
-      'organizacao-digital': Settings,
-      'agenda-inteligente': Brain,
-      'plano-estudos': BookOpen,
-      'matriz-prioridades': Target,
-
-      // === TÉCNICAS DE ESTUDO (cada técnica única) ===
-      'mapas-mentais': Brain,
-      'resumos-inteligentes': FileText,
-      'fichas-estudo': BookOpen,
-      'tecnicas-memorizacao': Brain,
-      'leitura-dinamica': Eye,
-      'anotacoes-cornell': PenTool,
-      'metodo-pomodoro': Clock,
-      'flashcards-digitais': Star,
-      'tecnica-feynman': Users,
-      'mnemotecnicas': Brain,
-      'skimming-scanning': Eye,
-      'mapas-conceituais': Brain,
-      'diagrama-ishikawa': Search,
-      'matriz-eisenhower': Target,
-      'tecnica-sqr3': BookOpen,
-      'mind-mapping': Brain,
-      'speed-reading': Zap,
-      'active-recall': Brain,
-      'spaced-repetition': Calendar,
-      'elaborative-interrogation': MessageSquare,
-
-      // === REDAÇÃO E ESCRITA (gêneros específicos) ===
-      'redacao-tematica': PenTool,
-      'producao-textual': FileText,
-      'escrita-criativa': Palette,
-      'dissertacao-argumentativa': PenTool,
-      'resenha-critica': FileText,
-      'artigo-cientifico': Search,
-      'ensaio-reflexivo': Brain,
-      'carta-formal': Mail,
-      'texto-narrativo': BookOpen,
-      'texto-descritivo': Eye,
-      'texto-expositivo': FileText,
-      'texto-injuntivo': Target,
-      'cronica-literaria': Music,
-      'editorial-jornalistico': Globe,
-      'manifesto-academico': Flag,
-      'relatorio-tecnico': Settings,
-      'memorial-descritivo': FileText,
-      'texto-argumentativo': ThumbsUp,
-      'escrita-academica': BookOpen,
-      'producao-poetica': Music,
-
-      // === APRESENTAÇÕES E COMUNICAÇÃO (formatos únicos) ===
-      'apresentacao-oral': Presentation,
-      'slides-interativos': Play,
-      'teatro-educativo': Music,
-      'podcast-educativo': Headphones,
-      'video-aula': Video,
-      'transmissao-ao-vivo': Wifi,
-      'entrevista-simulada': MessageSquare,
-      'pitch-projeto': Star,
-      'palestra-estudante': Presentation,
-      'webinar-academico': Globe,
-      'storytelling-educativo': BookOpen,
-      'apresentacao-poster': Eye,
-      'defesa-trabalho': Trophy,
-      'seminario-tematico': Users,
-      'workshop-apresentacao': Wrench,
-      'talk-inspiracional': Star,
-      'masterclass-estudante': Trophy,
-      'conferencia-mini': Globe,
-      'exposicao-oral': Headphones,
-      'comunicacao-cientifica': Microscope,
-
-      // === REVISÃO E REFORÇO (métodos específicos) ===
-      'revisao-intensiva': Zap,
-      'revisao-sistematica': CheckSquare,
-      'revisao-colaborativa': Users,
-      'revisao-guiada': Compass,
-      'reforco-conteudo': Target,
-      'plantao-duvidas': MessageSquare,
-      'sessao-esclarecimentos': Lightbulb,
-      'revisao-final': Trophy,
-      'revisao-ativa': Zap,
-      'revisao-espacada': Calendar,
-      'revisao-intercalada': Settings,
-      'revisao-elaborativa': Brain,
-      'revisao-multimodal': Eye,
-      'revisao-gamificada': Gamepad2,
-      'revisao-peer-to-peer': Users,
-      'maratona-revisao': Flag,
-      'intensivao-materia': Zap,
-      'revisao-personalizada': Heart,
-      'bootcamp-revisao': Trophy,
-      'revisao-express': Lightbulb,
-
-      // === PESQUISA E INVESTIGAÇÃO (tipos específicos) ===
-      'pesquisa-aprofundada': Search,
-      'investigacao-cientifica': Microscope,
-      'coleta-dados': Download,
-      'analise-informacoes': Eye,
-      'estudo-caso': BookOpen,
-      'pesquisa-campo': MapPin,
-      'levantamento-bibliografico': BookOpen,
-      'analise-documentos': FileText,
-      'pesquisa-qualitativa': Users,
-      'pesquisa-quantitativa': Calculator,
-      'pesquisa-experimental': Zap,
-      'pesquisa-exploratoria': Compass,
-      'pesquisa-descritiva': Eye,
-      'pesquisa-explicativa': Brain,
-      'survey-academico': Target,
-      'entrevista-pesquisa': MessageSquare,
-      'observacao-sistematica': Eye,
-      'grupo-focal': Users,
-      'analise-conteudo': FileText,
-      'meta-analise': Search,
-
-      // === EXERCÍCIOS E PRÁTICA (modalidades específicas) ===
-      'exercicios-praticos': Target,
-      'lista-exercicios': CheckSquare,
-      'exercicios-fixacao': Star,
-      'problemas-contextualizados': Puzzle,
-      'atividades-aplicacao': Wrench,
-      'exercicios-casa': Home,
-      'pratica-laboratorio': Microscope,
-      'simulacao-situacoes': Play,
-      'exercicios-progressivos': Target,
-      'problemas-desafio': Trophy,
-      'atividades-diagnosticas': Search,
-      'exercicios-remediais': Heart,
-      'pratica-supervisionada': Eye,
-      'exercicios-adaptativos': Settings,
-      'atividades-nivelamento': Target,
-      'pratica-autonoma': Star,
-      'exercicios-integrados': Globe,
-      'atividades-avaliativas': Award,
-      'pratica-reflexiva': Brain,
-      'exercicios-criativos': Palette,
-
-      // === MATEMÁTICA E CÁLCULOS (áreas específicas) ===
-      'resolucao-problemas': Calculator,
-      'exercicios-matematicos': Calculator,
-      'geometria-pratica': Compass,
-      'calculos-aplicados': Calculator,
-      'estatistica-dados': Eye,
-      'graficos-tabelas': Eye,
-      'algebra-pratica': Calculator,
-      'trigonometria-aplicada': Calculator,
-      'calculo-diferencial': Calculator,
-      'calculo-integral': Calculator,
-      'geometria-analitica': Compass,
-      'matematica-financeira': Calculator,
-      'probabilidade-estatistica': Eye,
-      'analise-combinatoria': Puzzle,
-      'logica-matematica': Brain,
-      'teoria-numeros': Calculator,
-      'matematica-discreta': Settings,
-      'analise-matematica': Search,
-      'topologia-matematica': Compass,
-      'algebra-linear': Calculator,
-
-      // === CIÊNCIAS E EXPERIMENTOS (disciplinas específicas) ===
-      'experimento-laboratorio': Microscope,
-      'observacao-fenomenos': Eye,
-      'coleta-amostras': Download,
-      'analise-resultados': Search,
-      'hipoteses-teorias': Brain,
-      'metodo-cientifico': Microscope,
-      'pratica-laboratorial': Zap,
-      'estudo-ecossistemas': TreePine,
-      'experimento-fisica': Zap,
-      'experimento-quimica': Microscope,
-      'experimento-biologia': TreePine,
-      'observacao-astronomica': Star,
-      'analise-geologica': MapPin,
-      'estudo-botanico': TreePine,
-      'pesquisa-zoologica': Eye,
-      'experimento-genetica': Microscope,
-      'analise-microbiologica': Microscope,
-      'estudo-anatomico': Search,
-      'experimento-eletricidade': Zap,
-      'analise-quimica': Microscope,
-
-      // === HISTÓRIA E SOCIEDADE (períodos/temas específicos) ===
-      'linha-tempo': Calendar,
-      'analise-historica': BookOpen,
-      'debate-historico': MessageSquare,
-      'dramatizacao-historica': Music,
-      'pesquisa-genealogica': Search,
-      'museu-virtual': Eye,
-      'documentario-educativo': Video,
-      'entrevista-historica': MessageSquare,
-      'simulacao-historica': Play,
-      'analise-fontes-primarias': FileText,
-      'estudo-civilizacoes': Globe,
-      'cronologia-eventos': Calendar,
-      'biografia-historica': BookOpen,
       'contextualizacao-historica': Brain,
       'historia-oral': Headphones,
       'arqueologia-virtual': Search,
@@ -1296,7 +1063,7 @@ export function CardDeConstrucao({
               )}
             </div>
 
-            <div className={`relative z-10 w-8 h-8 rounded-full border-2 flex items-center justify```fy-center transition-all duration-300 ${
+            <div className={`relative z-10 w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
               (step === "generating" || step === "generatingActivities") ? 'bg-white border-white text-[#FF6B00]' : 'bg-white/20 border-white/30 text-white'
             }`}>
               <span className="text-sm font-semibold">3</span>
@@ -1641,7 +1408,24 @@ export function CardDeConstrucao({
                             {activity.description}
                           </p>
 
-                          
+                          {/* Metadados da atividade */}
+                          <div className="flex flex-wrap gap-2">
+                            <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full">
+                              {activity.duration || '30 min'}
+                            </span>
+                            <span className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full">
+                              {activity.difficulty || 'Médio'}
+                            </span>
+                            <span className="text-xs px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full">
+                              {activity.category || 'Geral'}
+                            </span>
+                            {/* Badge adicional para indicar Trilhas nos metadados */}
+                            {badgeProps.showBadge && (
+                              <span className="text-xs px-2 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded-full border border-emerald-200 dark:border-emerald-700">
+                                🎯 Trilhas School
+                              </span>
+                            )}
+                          </div>
 
                           {/* ID da atividade (para debug) */}
                           <div className="mt-2">
