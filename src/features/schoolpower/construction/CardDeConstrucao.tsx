@@ -999,12 +999,7 @@ export function CardDeConstrucao({
                           </div>
                         </div>
 
-                        {/* Indicador visual de seleção */}
-                        {isSelected && (
-                          <div className="flex-shrink-0">
-                            <div className="w-3 h-3 bg-[#FF6B00] rounded-full animate-pulse shadow-md"></div>
-                          </div>
-                        )}
+                        
                       </div>
 
                       {/* Borda animada para item selecionado */}
