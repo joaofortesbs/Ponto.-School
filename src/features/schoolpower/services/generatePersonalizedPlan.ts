@@ -198,7 +198,8 @@ function convertToActionPlanItems(
       id: activity.id,
       title: activity.personalizedTitle || activity.title || originalActivity.name,
       description: activity.personalizedDescription || activity.description || originalActivity.description,
-      approved: false
+      approved: false,
+      isTrilhasEligible: isActivityEligibleForTrilhas(activity.id)
     };
 
     console.log('✅ ActionPlanItem criado:', actionPlanItem);
@@ -303,11 +304,7 @@ export async function generatePersonalizedPlan(
         title: activity.personalizedTitle || activity.title,
         description: activity.personalizedDescription || activity.description,
         approved: false,
-        isTrilhasEligible: isActivityEligibleForTrilhas(activity.id),
-        duration: activity.duration,
-        difficulty: activity.difficulty,
-        category: activity.category,
-        type: activity.type
+        isTrilhasEligible: isActivityEligibleForTrilhas(activity.id)
     }));
 
     if (validatedActivities.length === 0) {
