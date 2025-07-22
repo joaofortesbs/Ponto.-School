@@ -77,30 +77,13 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
   };
 
   const handleItemToggle = (itemId: string) => {
-    const newSelected = new Set(selectedItems);
-    if (newSelected.has(itemId)) {
-      newSelected.delete(itemId);
-      console.log(`❌ Atividade ${itemId} desmarcada`);
-    } else {
-      newSelected.add(itemId);
-      console.log(`✅ Atividade ${itemId} selecionada`);
-    }
-    setSelectedItems(newSelected);
-    console.log('📊 Atividades atualmente selecionadas:', Array.from(newSelected));
+    // Funcionalidade de seleção removida - apenas log para debug
+    console.log('Item clicado:', itemId);
   };
 
   const handleApprove = () => {
-    const approvedItems = actionPlan
-      .filter(item => selectedItems.has(item.id))
-      .map(item => ({ ...item, approved: true }));
-
-    console.log('✅ Aprovando atividades selecionadas:', approvedItems);
-
-    if (approvedItems.length > 0) {
-      onApprove(approvedItems);
-    } else {
-      console.warn('⚠️ Nenhuma atividade selecionada para aprovação');
-    }
+    // Aprova todos os itens do plano de ação
+    onApprove(actionPlan);
   };
 
   const handleBack = () => {
@@ -201,7 +184,7 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
         ) : (
           actionPlan.map((item, index) => {
             const Icon = getIconByActivityId(item.id);
-            const isSelected = selectedItems.has(item.id);
+            
 
             return (
               <motion.div
@@ -209,14 +192,7 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className={`relative p-6 rounded-[32px] border-2 transition-all duration-300 cursor-pointer ${
-                  isSelected 
-                    ? 'border-[#FF6B00] bg-[#FF6B00]/5 dark:bg-[#FF6B00]/10 shadow-lg transform scale-[1.02]'
-                    : 'border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 hover:border-[#FF6B00]/50 hover:shadow-md'
-                }`}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.1 }}
+                className="relative bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border-2 transition-all duration-300 cursor-pointer hover:shadow-xl border-gray-200 dark:border-gray-700 hover:border-[#FF6B00]/50"
                 onClick={() => handleItemToggle(item.id)}
               >
                 {isActivityEligibleForTrilhas(item.id) && (
@@ -296,17 +272,11 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
                   </div>
 
                   {/* Indicador visual de seleção */}
-                  {selectedItems.has(item.id) && (
-                    <div className="flex-shrink-0">
-                      <div className="w-3 h-3 bg-[#FF6B00] rounded-full animate-pulse shadow-md"></div>
-                    </div>
-                  )}
+                  
                 </div>
 
                 {/* Borda animada para item selecionado */}
-                {selectedItems.has(item.id) && (
-                  <div className="absolute inset-0 rounded-[32px] border-2 border-[#FF6B00] animate-pulse opacity-50 pointer-events-none"></div>
-                )}
+                
               </motion.div>
             )
           })
@@ -335,21 +305,12 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
 
             <button
               onClick={handleApprove}
-              disabled={selectedItems.size === 0}
-              className={`px-8 py-3 rounded-lg font-semibold transition-all ${
-                selectedItems.size > 0
-                  ? 'bg-gradient-to-r from-[#FF6B00] to-[#FF8533] text-white hover:shadow-lg hover:scale-105 transform'
-                  : 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-              }`}
+              className="px-8 py-3 rounded-lg font-semibold transition-all bg-gradient-to-r from-[#FF6B00] to-[#FF8533] text-white hover:shadow-lg hover:scale-105 transform"
             >
-              {selectedItems.size > 0 ? (
-                <>
-                  <Sparkles className="w-4 h-4 inline mr-2" />
-                  Gerar Atividades ({selectedItems.size})
-                </>
-              ) : (
-                'Selecione pelo menos 1 atividade'
-              )}
+              
+                <Sparkles className="w-4 h-4 inline mr-2" />
+                Gerar Atividades ({actionPlan.length})
+              
             </button>
           </div>
         </div>
