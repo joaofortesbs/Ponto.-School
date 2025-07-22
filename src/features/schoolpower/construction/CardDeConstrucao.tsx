@@ -1066,14 +1066,6 @@
                                         </div>
                                       )}
 
-                                      {/* Badge Manual - para atividades manuais */}
-                                      {activity.isManual && (
-                                        <div className="absolute top-4 left-4 z-20">
-                                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs font-medium rounded-full">
-                                            🖊️ Manual
-                                          </span>
-                                        </div>
-                                      )}
 
                                       <div className="flex items-start gap-4">
                                         {/* Conteúdo da atividade */}
@@ -1176,12 +1168,6 @@
 
                                               </span>
 
-                                            {/* Indicador de elegibilidade para Trilhas (debug) */}
-                                            {!activity.isManual && isActivityEligibleForTrilhas(activity.id) && (
-                                              <span className="ml-2 text-xs px-2 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded">
-                                                ✅ Trilhas Elegível
-                                              </span>
-                                            )}
                                           </div>
                                         </div>
                                       </div>
