@@ -583,10 +583,7 @@
                 }, [selectedActivities]);
 
                 return (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.8, y: 50 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.8, y: -50 }}
+                  <div
                     transition={{
                       duration: 0.6,
                       ease: [0.25, 0.1, 0.25, 1],
@@ -626,8 +623,7 @@
                           {step === "contextualization" ? (
                             <svg
                               className="w-7 h-7 text-white"
-                              fill```text
-="none"
+                              fill="none"
                               viewBox="0 0 24 24"
                               stroke="currentColor"
                             >

@@ -354,7 +354,7 @@ const FloatingChatSupport: React.FC = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [userName, setUserName] = useState("Usuário");
   const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState('');;
   const [sessionId, setSessionId] = useState('');
   const [isMessageEmpty, setIsMessageEmpty] = useState(true);
   const [soundEnabled, setSoundEnabled] = useState(true); // Adicione o estado para habilitar/desabilitar sons
