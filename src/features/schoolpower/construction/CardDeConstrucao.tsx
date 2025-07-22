@@ -576,8 +576,10 @@
                     trilhasActivityIds.includes(activity.id)
                   );
 
+                  const count = selectedTrilhas.length;
+
                   // Atualiza o estado com a contagem de "trilhas" selecionadas
-                  setSelectedTrilhasCount(selectedTrilhas.length);
+                  setSelectedTrilhasCount(count);
                 }, [selectedActivities]);
 
                 return (
@@ -624,8 +626,9 @@
                           {step === "contextualization" ? (
                             <svg
                               className="w-7 h-7 text-white"
-                              fill="none"```text
-viewBox="0 0 24 24"
+                              fill```text
+="none"
+                              viewBox="0 0 24 24"
                               stroke="currentColor"
                             >
                               <path
