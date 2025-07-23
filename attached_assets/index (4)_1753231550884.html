@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="min-h-screen" style="background: transparent !important;">
+    <div class="central-component-wrapper">
+        <div class="component-container active">
+            <div class="icon-container">
+                <i class="fas fa-pen"></i>
+                <div class="icon-glow"></div>
+            </div>
+            <span class="component-text">Manual</span>
+        </div>
+    </div>
+
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: transparent !important;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+        }
+
+        .central-component-wrapper {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+        }
+
+        .component-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px 25px;
+            border: 2px solid #A855F7;
+            border-radius: 30px;
+            background: rgba(168, 85, 247, 0.1);
+            transition: all 0.3s ease;
+            cursor: default;
+        }
+
+        .component-container:hover {
+            transform: scale(1.02);
+            background: rgba(168, 85, 247, 0.15);
+            border-color: #9333EA;
+        }
+
+        .icon-container {
+            width: 50px !important;
+            height: 50px !important;
+            min-width: 50px !important;
+            min-height: 50px !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            transition: all 0.3s ease;
+            position: relative;
+            flex-shrink: 0 !important;
+        }
+
+        .icon-container i {
+            font-size: 30px;
+            color: #9333EA !important;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
+
+        .component-text {
+            font-size: 24px;
+            font-weight: 700;
+            color: #9333EA;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .component-container:hover .component-text {
+            color: #7C3AED;
+        }
+
+        .component-container:hover .icon-container i {
+            color: #7C3AED !important;
+        }
+
+        .icon-glow {
+            display: none;
+        }
+
+        /* Animação de explosão */
+        .icon-explode {
+            animation: iconExplode 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        @keyframes iconExplode {
+            0% {
+                transform: scale(1);
+            }
+            30% {
+                transform: scale(1.1);
+            }
+            60% {
+                transform: scale(0.98);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* Onda de choque */
+        .shock-wave {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(168, 85, 247, 0.6);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            animation: shockWave 0.6s ease-out;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes shockWave {
+            0% {
+                width: 50px;
+                height: 50px;
+                opacity: 1;
+                border-width: 3px;
+            }
+            100% {
+                width: 80px;
+                height: 80px;
+                opacity: 0;
+                border-width: 1px;
+            }
+        }
+
+        /* Animação de entrada */
+        .central-component-wrapper {
+            animation: fadeInScale 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.5);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+    </style>
+
+    <script>
+        // Componente não é mais clicável
+    </script>
+</body>
+</html>
