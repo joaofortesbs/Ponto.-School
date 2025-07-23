@@ -1,4 +1,3 @@
-
 import schoolPowerActivities from '../data/schoolPowerActivities.json';
 
 /**
@@ -46,7 +45,7 @@ function isValidActivityId(activityId: string, allowedActivities: typeof schoolP
   }
 
   const normalizedId = activityId.trim().toLowerCase();
-  
+
   return allowedActivities.some(activity => {
     const activityNormalizedId = activity.id.toLowerCase();
     return (
@@ -92,7 +91,7 @@ function validateSingleActivity(
 
   // Busca a atividade original
   const originalActivity = findActivityById(normalizedId, allowedActivities);
-  
+
   if (!originalActivity) {
     console.warn(`❌ Atividade não encontrada: ${normalizedId}`);
     return null;
@@ -126,7 +125,7 @@ function removeDuplicates(activities: ValidatedActivity[]): {
   duplicateIds: string[] 
 } {
   console.log('🔄 Removendo duplicatas...');
-  
+
   const seen = new Set<string>();
   const uniqueActivities: ValidatedActivity[] = [];
   const duplicateIds: string[] = [];
@@ -177,33 +176,23 @@ function generateValidationReport(
 /**
  * Valida o plano completo retornado pela Gemini
  */
-export async function validateGeminiPlan(
-  geminiActivities: GeminiActivity[],
-  allowedActivities: typeof schoolPowerActivities = schoolPowerActivities
-): Promise<ValidatedActivity[]> {
+export async function validateGeminiPlan(geminiActivities: any[], schoolPowerActivities: any[]): Promise<any[]> {
   console.log('🔍 Iniciando validação do plano da Gemini...');
-  console.log('📊 Dados de entrada:', { 
-    activitiesCount: geminiActivities.length, 
-    allowedCount: allowedActivities.length 
+  console.log('📊 Dados de entrada:', {
+    activitiesCount: geminiActivities?.length || 0,
+    allowedCount: schoolPowerActivities?.length || 0,
+    maxProcessing: 100 // Aumentando limite de processamento
   });
 
-  // Validação dos parâmetros de entrada
-  if (!Array.isArray(geminiActivities)) {
-    console.error('❌ geminiActivities deve ser um array');
-    throw new Error('Lista de atividades inválida');
-  }
+  const validActivities: any[] = [];
 
-  if (!Array.isArray(allowedActivities)) {
-    console.error('❌ allowedActivities deve ser um array');
-    throw new Error('Lista de atividades permitidas inválida');
-  }
-
-  if (geminiActivities.length === 0) {
-    console.warn('⚠️ Nenhuma atividade para validar');
+  if (!geminiActivities || !Array.isArray(geminiActivities) || geminiActivities.length === 0) {
+    console.warn('⚠️ Nenhuma atividade foi fornecida pela Gemini');
     return [];
   }
 
-  const validatedActivities: ValidatedActivity[] = [];
+  console.log('🚀 Processando até 100 atividades da Gemini...');
+
   const invalidIds: string[] = [];
 
   // Valida cada atividade individualmente
@@ -211,17 +200,17 @@ export async function validateGeminiPlan(
     const activity = geminiActivities[i];
     console.log(`🔍 Validando atividade ${i + 1}/${geminiActivities.length}:`, activity);
 
-    const validatedActivity = validateSingleActivity(activity, allowedActivities);
-    
+    const validatedActivity = validateSingleActivity(activity, schoolPowerActivities);
+
     if (validatedActivity) {
-      validatedActivities.push(validatedActivity);
+      validActivities.push(validatedActivity);
     } else {
       invalidIds.push(activity.id || `atividade-${i}`);
     }
   }
 
   // Remove duplicatas
-  const { uniqueActivities, duplicateIds } = removeDuplicates(validatedActivities);
+  const { uniqueActivities, duplicateIds } = removeDuplicates(validActivities);
 
   // Gera relatório final
   const report = generateValidationReport(
@@ -250,7 +239,7 @@ export async function validateGeminiPlan(
   if (report.valid === 0 && report.total > 0) {
     console.error('❌ CRÍTICO: Todas as atividades foram rejeitadas na validação!');
     console.error('📝 Atividades originais:', geminiActivities);
-    console.error('📋 IDs permitidos:', allowedActivities.map(a => a.id));
+    console.error('📋 IDs permitidos:', schoolPowerActivities.map(a => a.id));
   } else if (report.valid < report.total / 2) {
     console.warn('⚠️ ATENÇÃO: Mais da metade das atividades foram rejeitadas');
   }

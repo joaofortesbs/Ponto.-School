@@ -917,15 +917,20 @@ export function CardDeConstrucao({
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
                       </svg>
                     </button>
-                    <div className="bg-[#FF6B00]/10 text-[#FF6B00] px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium">
-                    {selectedActivities.length} selecionada
-                    {selectedActivities.length !== 1 ? "s" : ""}
-                    {selectedTrilhasCount > 0 && (
-                      <span className="ml-1 text-orange-600">
-                        ({selectedTrilhasCount} trilha{selectedTrilhasCount !== 1 ? "s" : ""})
-                      </span>
-                    )}
-                  </div>
+                    <div className="flex items-center gap-2">
+                      <div className="bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 px-2 py-1 rounded-full text-xs font-medium">
+                        {getCombinedActivities().length} total
+                      </div>
+                      <div className="bg-[#FF6B00]/10 text-[#FF6B00] px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium">
+                        {selectedActivities.length} selecionada
+                        {selectedActivities.length !== 1 ? "s" : ""}
+                        {selectedTrilhasCount > 0 && (
+                          <span className="ml-1 text-orange-600">
+                            ({selectedTrilhasCount} trilha{selectedTrilhasCount !== 1 ? "s" : ""})
+                          </span>
+                        )}
+                      </div>
+                    </div>
                     <GridToggleComponent 
                       viewMode={viewMode}
                       onToggle={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
@@ -1026,19 +1031,20 @@ export function CardDeConstrucao({
                 <div
                   className={`flex-1 overflow-y-auto mb-3 sm:mb-4 pr-1 sm:pr-2 ${
                     viewMode === 'grid' 
-                      ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 auto-rows-min' 
+                      ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 auto-rows-min' 
                       : 'space-y-2 sm:space-y-3'
                   }`}
                   style={{
                     maxHeight: "calc(100% - 80px)",
                     scrollbarWidth: "thin",
                     scrollbarColor: "#FF6B00 rgba(255,107,0,0.1)",
+                    minHeight: "400px",
                   }}
                 >
                   {(filterState === 'selected' 
                     ? selectedActivities 
                     : getCombinedActivities()
-                  )?.map((activity, index) => {
+                  )?.slice(0, 100).map((activity, index) => {
                     const isSelected = selectedActivities.some(
                       (item) => item.id === activity.id,
                     );
@@ -1057,7 +1063,7 @@ export function CardDeConstrucao({
                         }`}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, delay: index * 0.05 }}
+                        transition={{ duration: 0.2, delay: Math.min(index * 0.02, 0.5) }}
                         onClick={() => handleActivityToggle(activity)}
                       >
                         {/* Badge Manual - para atividades manuais */}
