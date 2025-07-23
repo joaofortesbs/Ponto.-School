@@ -18,6 +18,7 @@ import { isActivityEligibleForTrilhas, getTrilhasBadgeProps } from "../data/tril
 import { TrilhasDebugPanel } from "../components/TrilhasDebugPanel";
 import { TrilhasBadge } from "../components/TrilhasBadge";
 import schoolPowerActivitiesData from '../data/schoolPowerActivities.json';
+import atividadesTrilhas from '../data/atividadesTrilhas.json';
 
 // Convert to proper format with name field
 const schoolPowerActivities = schoolPowerActivitiesData.map(activity => ({
