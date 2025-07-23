@@ -53,9 +53,10 @@ ${availableActivities}
 
 INSTRUÇÕES:
 1. Analise cuidadosamente todas as informações fornecidas
-2. Selecione de 5 a 20 atividades da lista que melhor se adequem ao contexto (No mínimo 5 atividades)
+2. Selecione de 10 a 30 atividades da lista que melhor se adequem ao contexto (No mínimo 10 atividades, máximo 30)
 3. Personalize o título e descrição de cada atividade com base nas informações coletadas
-4. Retorne APENAS um JSON válido no formato especificado
+4. Priorize a diversidade de tipos de atividades para criar um plano completo e abrangente
+5. Retorne APENAS um JSON válido no formato especificado
 
 Formato de resposta (JSON):
 [
@@ -155,7 +156,7 @@ Responda APENAS com o JSON, sem texto adicional.`;
   } catch (error) {
     console.error('❌ Erro ao gerar plano de ação:', error);
     
-    // Fallback com atividades personalizadas básicas
+    // Fallback com atividades personalizadas básicas (mais abrangente)
     const fallbackActivities: ActionPlanActivity[] = [
       {
         id: 'resumo-inteligente',
@@ -179,6 +180,62 @@ Responda APENAS com o JSON, sem texto adicional.`;
         description: 'Criar avaliação com correção automática',
         personalizedTitle: `Prova de ${contextualizationData.subjects} - ${contextualizationData.audience}`,
         personalizedDescription: `Avaliação interativa de ${contextualizationData.subjects} adaptada para ${contextualizationData.audience}`,
+        approved: false
+      },
+      {
+        id: 'mapa-mental',
+        title: 'Mapa Mental',
+        description: 'Criar mapas mentais organizados',
+        personalizedTitle: `Mapa Mental: ${contextualizationData.subjects}`,
+        personalizedDescription: `Mapa mental estruturado sobre ${contextualizationData.subjects} para ${contextualizationData.audience}`,
+        approved: false
+      },
+      {
+        id: 'jogos-educativos',
+        title: 'Jogos Educativos',
+        description: 'Criar jogos interativos para aprendizado',
+        personalizedTitle: `Jogos Educativos: ${contextualizationData.subjects}`,
+        personalizedDescription: `Jogos interativos sobre ${contextualizationData.subjects} para ${contextualizationData.audience}`,
+        approved: false
+      },
+      {
+        id: 'plano-aula',
+        title: 'Plano de Aula',
+        description: 'Estruturar planos de aula detalhados',
+        personalizedTitle: `Plano de Aula: ${contextualizationData.subjects}`,
+        personalizedDescription: `Plano de aula estruturado para ${contextualizationData.subjects} e ${contextualizationData.audience}`,
+        approved: false
+      },
+      {
+        id: 'simulado',
+        title: 'Simulado',
+        description: 'Criar simulados completos',
+        personalizedTitle: `Simulado: ${contextualizationData.subjects}`,
+        personalizedDescription: `Simulado completo sobre ${contextualizationData.subjects} para ${contextualizationData.audience}`,
+        approved: false
+      },
+      {
+        id: 'cronograma-estudos',
+        title: 'Cronograma de Estudos',
+        description: 'Organizar cronograma personalizado',
+        personalizedTitle: `Cronograma: ${contextualizationData.subjects}`,
+        personalizedDescription: `Cronograma de estudos para ${contextualizationData.subjects} adaptado para ${contextualizationData.audience}`,
+        approved: false
+      },
+      {
+        id: 'flashcards',
+        title: 'Flashcards',
+        description: 'Criar flashcards para memorização',
+        personalizedTitle: `Flashcards: ${contextualizationData.subjects}`,
+        personalizedDescription: `Flashcards para memorização de ${contextualizationData.subjects} para ${contextualizationData.audience}`,
+        approved: false
+      },
+      {
+        id: 'projeto-pratico',
+        title: 'Projeto Prático',
+        description: 'Desenvolver projetos hands-on',
+        personalizedTitle: `Projeto Prático: ${contextualizationData.subjects}`,
+        personalizedDescription: `Projeto prático aplicado de ${contextualizationData.subjects} para ${contextualizationData.audience}`,
         approved: false
       }
     ];
