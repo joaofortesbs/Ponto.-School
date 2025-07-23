@@ -174,17 +174,6 @@ function convertToActionPlanItems(
 ): ActionPlanItem[] {
   console.log('🔄 Convertendo atividades para ActionPlanItems...');
 
-  const isActivityEligibleForTrilhas = (activityId: string, activityName: string): boolean => {
-    // Lógica para determinar se a atividade é elegível para "Trilhas"
-    // Aqui você pode adicionar a lógica específica para verificar se a atividade
-    // deve receber o badge "Trilhas". Por exemplo, verificar se o ID da atividade
-    // está em uma lista específica, ou se o título contém certas palavras-chave.
-    // Por enquanto, retornaremos 'false' para todas as atividades.
-
-    // Implemente a lógica de elegibilidade aqui
-    return false;
-  };
-
   return geminiActivities.map(activity => {
     // Busca a atividade original no JSON para validação
     const originalActivity = allowedActivities.find(a => a.id === activity.id);

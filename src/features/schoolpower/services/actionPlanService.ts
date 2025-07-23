@@ -53,10 +53,11 @@ ${availableActivities}
 
 INSTRUÇÕES:
 1. Analise cuidadosamente todas as informações fornecidas
-2. Selecione de 10 a 30 atividades da lista que melhor se adequem ao contexto (No mínimo 10 atividades, máximo 30)
+2. Selecione TODAS as atividades da lista que se adequem ao contexto solicitado (Mínimo de 15 atividades, máximo de 35)
 3. Personalize o título e descrição de cada atividade com base nas informações coletadas
 4. Priorize a diversidade de tipos de atividades para criar um plano completo e abrangente
-5. Retorne APENAS um JSON válido no formato especificado
+5. Se o usuário pediu atividades específicas (como "lista de exercícios", "prova", "mapa mental", etc.), INCLUA TODAS elas
+6. Retorne APENAS um JSON válido no formato especificado
 
 Formato de resposta (JSON):
 [
