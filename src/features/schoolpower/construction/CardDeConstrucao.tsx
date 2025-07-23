@@ -1059,26 +1059,26 @@ export function CardDeConstrucao({
                         transition={{ duration: 0.3, delay: index * 0.05 }}
                         onClick={() => handleActivityToggle(activity)}
                       >
+                        {/* Badge Manual - para atividades manuais */}
+                        {activity.isManual && (
+                          <div className={`absolute top-4 z-20 ${badgeProps.showBadge ? 'right-[120px]' : 'right-4'}`}>
+                            <div className="flex items-center gap-3 px-4 py-2 border-2 border-purple-500 rounded-full bg-purple-500/10 hover:bg-purple-500/15 hover:border-purple-600 transition-all duration-300 cursor-default hover:scale-105">
+                              <div className="w-6 h-6 min-w-6 min-h-6 flex items-center justify-center relative flex-shrink-0">
+                                <svg className="w-4 h-4 text-purple-600 transition-all duration-300 relative z-10" fill="currentColor" viewBox="0 0 20 20">
+                                  <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                                </svg>
+                              </div>
+                              <span className="text-sm font-bold text-purple-600 whitespace-nowrap transition-all duration-300">
+                                Manual
+                              </span>
+                            </div>
+                          </div>
+                        )}
+
                         {/* Badge Trilhas - POSICIONADO NO CANTO SUPERIOR DIREITO */}
                         {badgeProps.showBadge && (
                           <div className="absolute top-4 right-4 z-20">
                             <TrilhasBadge />
-                          </div>
-                        )}
-
-                        {/* Badge Manual - para atividades manuais */}
-                        {activity.isManual && (
-                          <div className="absolute top-4 left-4 z-20">
-                            <div className="flex items-center gap-3 px-6 py-3 border-2 border-purple-500 rounded-full bg-purple-500/10 hover:bg-purple-500/15 hover:border-purple-600 transition-all duration-300 cursor-default hover:scale-105">
-                              <div className="w-8 h-8 min-w-8 min-h-8 flex items-center justify-center relative flex-shrink-0">
-                                <svg className="w-5 h-5 text-purple-600 transition-all duration-300 relative z-10" fill="currentColor" viewBox="0 0 20 20">
-                                  <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                                </svg>
-                              </div>
-                              <span className="text-lg font-bold text-purple-600 whitespace-nowrap transition-all duration-300">
-                                Manual
-                              </span>
-                            </div>
                           </div>
                         )}
 
