@@ -46,7 +46,8 @@ function buildGeminiPrompt(
   // Simplificar lista de atividades para economizar tokens
   const activitiesIds = allowedActivities
     .filter(a => a.enabled)
-    .map(a => a.id); // Remover limitação para permitir todas as atividades
+    .map(a => a.id)
+    .slice(0, 50); // Limitar para evitar overflow
 
   const prompt = `Você é o assistente educacional School Power. 
 
@@ -58,7 +59,7 @@ DADOS:
 
 ATIVIDADES DISPONÍVEIS: ${activitiesIds.join(', ')}
 
-TAREFA: Selecione 10-20 atividades adequadas ao pedido, priorizando variedade e completude. Retorne APENAS este JSON:
+TAREFA: Selecione 3-4 atividades adequadas ao pedido. Retorne APENAS este JSON:
 [{"id":"atividade-id","title":"Título Personalizado","description":"Descrição contextualizada", "duration": "30 min", "difficulty": "Médio", "category": "Geral", "type": "atividade"}]
 
 IMPORTANTE: Use SOMENTE os IDs listados acima.`;
@@ -90,7 +91,7 @@ async function callGeminiAPI(prompt: string): Promise<string> {
         temperature: 0.3, // Reduzido para respostas mais consistentes
         topK: 20,
         topP: 0.8,
-        maxOutputTokens: 4096, // Aumentado para suportar mais atividades
+        maxOutputTokens: 1024, // Reduzido para economizar tokens
       }
     };
 
@@ -173,6 +174,17 @@ function convertToActionPlanItems(
 ): ActionPlanItem[] {
   console.log('🔄 Convertendo atividades para ActionPlanItems...');
 
+  const isActivityEligibleForTrilhas = (activityId: string, activityName: string): boolean => {
+    // Lógica para determinar se a atividade é elegível para "Trilhas"
+    // Aqui você pode adicionar a lógica específica para verificar se a atividade
+    // deve receber o badge "Trilhas". Por exemplo, verificar se o ID da atividade
+    // está em uma lista específica, ou se o título contém certas palavras-chave.
+    // Por enquanto, retornaremos 'false' para todas as atividades.
+
+    // Implemente a lógica de elegibilidade aqui
+    return false;
+  };
+
   return geminiActivities.map(activity => {
     // Busca a atividade original no JSON para validação
     const originalActivity = allowedActivities.find(a => a.id === activity.id);
@@ -229,23 +241,13 @@ function generateFallbackPlan(
         'resumo',
         'prova',
         'atividades-matematica',
-        'plano-aula',
-        'mapa-mental',
-        'jogos-educativos',
-        'atividades-ortografia-alfabeto',
-        'caca-palavras',
-        'projeto',
-        'slides-didaticos',
-        'palavra-cruzada',
-        'desenho-simetrico',
-        'sequencia-didatica',
-        'atividades-contos-infantis'
+        'plano-aula'
       ].includes(activity.id)
     );
   }
 
-  // Limita a 15 atividades para um plano mais completo
-  relevantActivities = relevantActivities.slice(0, 15);
+  // Limita a 4 atividades
+  relevantActivities = relevantActivities.slice(0, 4);
 
   const fallbackPlan: ActionPlanItem[] = relevantActivities.map(activity => ({
     id: activity.id,
