@@ -34,7 +34,7 @@ export async function generateActionPlan(params: GenerateActionPlanParams): Prom
     ).join('\n');
 
     // Construir prompt detalhado para a IA
-    const prompt = `Você é uma IA especializada em gerar planos de ação educacionais para professores e coordenadores utilizando apenas as atividades possíveis listadas abaixo.
+    const prompt = `Você é uma IA especializada em gerar planos de ação educacionais para professores e coordenadores, seguindo e planejando exatamente o que eles pedem, e seguindo muito bem os requesitos, sendo super treinado, utilizando apenas as atividades possíveis listadas abaixo.
 
 Aqui estão as informações coletadas:
 
@@ -56,8 +56,9 @@ INSTRUÇÕES:
 2. Selecione TODAS as atividades da lista que se adequem ao contexto solicitado (Mínimo de 15 atividades, máximo de 35)
 3. Personalize o título e descrição de cada atividade com base nas informações coletadas
 4. Priorize a diversidade de tipos de atividades para criar um plano completo e abrangente
-5. Se o usuário pediu atividades específicas (como "lista de exercícios", "prova", "mapa mental", etc.), INCLUA TODAS elas
-6. Retorne APENAS um JSON válido no formato especificado
+5. Se o usuário pediu atividades específicas (como "lista de exercícios", "prova", "mapa mental", etc.), INCLUA TODAS elas.
+6. Se o usuário pediu algo que demanda muitas atividades, faça o máximo de atividades, de uma maneira planejada, e priorizando a organização e planejamento para o professor/coordenador!
+7. Retorne APENAS um JSON válido no formato especificado
 
 Formato de resposta (JSON):
 [

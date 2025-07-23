@@ -48,18 +48,28 @@ function buildGeminiPrompt(
     .filter(a => a.enabled)
     .map(a => a.id); // Remover limitação para permitir todas as atividades
 
-  const prompt = `Você é o assistente educacional School Power. 
+  const prompt = `Você é uma IA especializada em gerar planos de ação educacionais para professores e coordenadores, seguindo e planejando exatamente o que eles pedem, e seguindo muito bem os requesitos, sendo super treinado, utilizando apenas as atividades possíveis listadas abaixo. 
+  
+Aqui estão as informações coletadas:
 
 DADOS:
 - Pedido: "${initialMessage}"
-- Disciplinas: ${contextualizationData.subjects || 'Geral'}
+- Matérias e temas: ${contextualizationData.subjects || 'Geral'}
 - Público: ${contextualizationData.audience || 'Estudantes'}
+- Restrições: "${contextualizationData.restrictions}"
+- Datas importantes: "${contextualizationData.dates}"
 - Observações: ${contextualizationData.notes || 'Nenhuma'}
 
 ATIVIDADES DISPONÍVEIS: ${activitiesIds.join(', ')}
 
-TAREFA: Selecione 10-20 atividades adequadas ao pedido, priorizando variedade e completude. Retorne APENAS este JSON:
+INSTRUÇÕES:
+1. Analise cuidadosamente todas as informações fornecidas
+2. TAREFA: Selecione 10-35 atividades adequadas ao pedido, priorizando variedade e completude. Retorne APENAS este JSON:
 [{"id":"atividade-id","title":"Título Personalizado","description":"Descrição contextualizada", "duration": "30 min", "difficulty": "Médio", "category": "Geral", "type": "atividade"}]
+3. Personalize o título e descrição de cada atividade com base nas informações coletadas
+4. Priorize a diversidade de tipos de atividades para criar um plano completo e abrangente
+5. Se o usuário pediu atividades específicas (como "lista de exercícios", "prova", "mapa mental", etc.), INCLUA TODAS elas!!!!!!!
+6. Se o usuário pediu algo que demanda muitas atividades, faça o máximo de atividades, de uma maneira planejada, e priorizando a organização e planejamento para o professor/coordenador!
 
 IMPORTANTE: Use SOMENTE os IDs listados acima.`;
 
@@ -244,8 +254,8 @@ function generateFallbackPlan(
     );
   }
 
-  // Limita a 15 atividades para um plano mais completo
-  relevantActivities = relevantActivities.slice(0, 15);
+  // Limita a 35 atividades para um plano mais completo
+  relevantActivities = relevantActivities.slice(0, 35);
 
   const fallbackPlan: ActionPlanItem[] = relevantActivities.map(activity => ({
     id: activity.id,
