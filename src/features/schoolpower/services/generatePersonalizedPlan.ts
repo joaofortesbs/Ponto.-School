@@ -69,7 +69,8 @@ INSTRUÇÕES:
 3. Personalize o título e descrição de cada atividade com base nas informações coletadas
 4. Priorize a diversidade de tipos de atividades para criar um plano completo e abrangente
 5. Se o usuário pediu atividades específicas (como "lista de exercícios", "prova", "mapa mental", etc.), INCLUA TODAS elas!!!!!!!
-6. Se o usuário pediu algo que demanda muitas atividades, faça o máximo de atividades, de uma maneira planejada, e priorizando a organização e planejamento para o professor/coordenador!
+6. Se o usuário pediu algo que demanda muitas atividades, faça o máximo de atividades possíveis, de uma maneira planejada, e priorizando a organização e planejamento para o professor/coordenador!
+7. Se por acaso nos dados coletados tiver um número de atividades especificas para ser criadas/geradas, gere exatamente a mesma quantidade de atividades, sem deixar nada faltando!!!!!!!
 
 IMPORTANTE: Use SOMENTE os IDs listados acima.`;
 
@@ -100,7 +101,7 @@ async function callGeminiAPI(prompt: string): Promise<string> {
         temperature: 0.3, // Reduzido para respostas mais consistentes
         topK: 20,
         topP: 0.8,
-        maxOutputTokens: 4096, // Aumentado para suportar mais atividades
+        maxOutputTokens: 12288, // Aumentado para suportar mais atividades
       }
     };
 

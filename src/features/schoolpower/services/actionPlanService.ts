@@ -58,7 +58,8 @@ INSTRUÇÕES:
 4. Priorize a diversidade de tipos de atividades para criar um plano completo e abrangente
 5. Se o usuário pediu atividades específicas (como "lista de exercícios", "prova", "mapa mental", etc.), INCLUA TODAS elas.
 6. Se o usuário pediu algo que demanda muitas atividades, faça o máximo de atividades, de uma maneira planejada, e priorizando a organização e planejamento para o professor/coordenador!
-7. Retorne APENAS um JSON válido no formato especificado
+7. Se por acaso nos dados coletados tiver um número de atividades especificas para ser criadas/geradas, gere exatamente a mesma quantidade de atividades, sem deixar nada faltando!!!!!!!
+8. Retorne APENAS um JSON válido no formato especificado
 
 Formato de resposta (JSON):
 [
