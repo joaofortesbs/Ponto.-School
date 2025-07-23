@@ -46,8 +46,7 @@ function buildGeminiPrompt(
   // Simplificar lista de atividades para economizar tokens
   const activitiesIds = allowedActivities
     .filter(a => a.enabled)
-    .map(a => a.id)
-    .slice(0, 50); // Limitar para evitar overflow
+    .map(a => a.id); // Remover limitação para permitir todas as atividades
 
   const prompt = `Você é o assistente educacional School Power. 
 
@@ -59,7 +58,7 @@ DADOS:
 
 ATIVIDADES DISPONÍVEIS: ${activitiesIds.join(', ')}
 
-TAREFA: Selecione 3-4 atividades adequadas ao pedido. Retorne APENAS este JSON:
+TAREFA: Selecione 10-20 atividades adequadas ao pedido, priorizando variedade e completude. Retorne APENAS este JSON:
 [{"id":"atividade-id","title":"Título Personalizado","description":"Descrição contextualizada", "duration": "30 min", "difficulty": "Médio", "category": "Geral", "type": "atividade"}]
 
 IMPORTANTE: Use SOMENTE os IDs listados acima.`;
@@ -91,7 +90,7 @@ async function callGeminiAPI(prompt: string): Promise<string> {
         temperature: 0.3, // Reduzido para respostas mais consistentes
         topK: 20,
         topP: 0.8,
-        maxOutputTokens: 1024, // Reduzido para economizar tokens
+        maxOutputTokens: 4096, // Aumentado para suportar mais atividades
       }
     };
 
@@ -230,13 +229,23 @@ function generateFallbackPlan(
         'resumo',
         'prova',
         'atividades-matematica',
-        'plano-aula'
+        'plano-aula',
+        'mapa-mental',
+        'jogos-educativos',
+        'atividades-ortografia-alfabeto',
+        'caca-palavras',
+        'projeto',
+        'slides-didaticos',
+        'palavra-cruzada',
+        'desenho-simetrico',
+        'sequencia-didatica',
+        'atividades-contos-infantis'
       ].includes(activity.id)
     );
   }
 
-  // Limita a 4 atividades
-  relevantActivities = relevantActivities.slice(0, 4);
+  // Limita a 15 atividades para um plano mais completo
+  relevantActivities = relevantActivities.slice(0, 15);
 
   const fallbackPlan: ActionPlanItem[] = relevantActivities.map(activity => ({
     id: activity.id,
