@@ -53,7 +53,7 @@ ${availableActivities}
 
 INSTRUÇÕES:
 1. Analise cuidadosamente todas as informações fornecidas
-2. Selecione de 3 a 5 atividades da lista que melhor se adequem ao contexto
+2. Selecione de 5 a 20 atividades da lista que melhor se adequem ao contexto (No mínimo 5 atividades)
 3. Personalize o título e descrição de cada atividade com base nas informações coletadas
 4. Retorne APENAS um JSON válido no formato especificado
 
