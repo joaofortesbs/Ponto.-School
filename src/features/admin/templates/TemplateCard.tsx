@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,7 +9,7 @@ import { Template } from './types';
 interface TemplateCardProps {
   template: Template;
   onEdit: (template: Template) => void;
-  onDelete: (id: string) => void;
+  onDelete: (template: Template) => void;
   onToggleEnabled: (id: string, enabled: boolean) => void;
   onView: (template: Template) => void;
 }
@@ -66,7 +65,7 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
           />
         </div>
       </CardHeader>
-      
+
       <CardContent className="pt-0">
         {/* Tags e Categoria */}
         <div className="flex flex-wrap gap-2 mb-4">

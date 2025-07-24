@@ -494,7 +494,7 @@ const FloatingChatSupport: React.FC = () => {
     setIsReformulating(true);
     try {
       // Find message that needs to be reformulated
-      const messageToReformulate = messages.find(msg => msg.id === messageId);
+      const messageToReformulate = messages.find(msg => msg.id === messageId);;
       if (!messageToReformulate) return;
 
       // Mark original message as needing improvement

@@ -2,14 +2,15 @@ export interface Template {
   id: string;
   name: string;
   description: string;
-  category: string;
   tags: string[];
-  difficulty: 'facil' | 'medio' | 'dificil';
-  apiType: 'gemini' | 'openai' | 'claude';
+  ia_provider: string;
   enabled: boolean;
-  prompt: string;
-  created_at?: string;
-  updated_at?: string;
+  fields?: Record<string, any>;
+  last_generated_preview?: string;
+  last_generated_at?: string;
+  generation_count?: number;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface TemplateFilters {
@@ -36,10 +37,13 @@ export interface TemplateField {
 }
 
 export interface GeneratedActivity {
+  id: string;
+  template_id: string;
+  user_id: string;
   title: string;
-  description: string;
-  content: any;
-  difficulty: string;
-  duration: number;
-  type: string;
+  content: string;
+  form_data: Record<string, string>;
+  status: 'generated' | 'in_construction' | 'completed' | 'sent';
+  created_at: string;
+  updated_at: string;
 }

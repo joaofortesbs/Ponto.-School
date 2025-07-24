@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,6 +8,7 @@ import { Search, Filter, Plus, RefreshCw } from 'lucide-react';
 import { useTemplates } from './hooks/useTemplates';
 import TemplateCard from './TemplateCard';
 import TemplateEditor from './TemplateEditor';
+import TemplateViewer from './TemplateViewer';
 import { Template, TemplateFilters } from './types';
 import { toast } from '@/components/ui/use-toast';
 
@@ -18,6 +18,8 @@ const TemplatesManager: React.FC = () => {
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [viewerTemplate, setViewerTemplate] = useState<Template | null>(null);
+  const [isViewerOpen, setIsViewerOpen] = useState(false);
 
   // Filtrar templates
   const filteredTemplates = templates.filter(template => {
@@ -37,43 +39,23 @@ const TemplatesManager: React.FC = () => {
     return true;
   });
 
-  const handleEditTemplate = (template: Template) => {
+  const handleEdit = (template: Template) => {
     setSelectedTemplate(template);
     setIsEditorOpen(true);
   };
 
-  const handleViewTemplate = (template: Template) => {
-    setSelectedTemplate(template);
-    // Implementar modal de visualização se necessário
-    toast({
-      title: "Visualizar Template",
-      description: `Template: ${template.name}`,
-    });
+  const handleView = (template: Template) => {
+    setViewerTemplate(template);
+    setIsViewerOpen(true);
   };
 
-  const handleDeleteTemplate = async (id: string) => {
-    if (window.confirm('Tem certeza que deseja deletar este template?')) {
-      const success = await deleteTemplate(id);
-      if (success) {
-        toast({
-          title: "Template deletado",
-          description: "O template foi removido com sucesso.",
-        });
-      }
+  const handleDelete = async (template: Template) => {
+    if (window.confirm(`Tem certeza que deseja excluir o template "${template.name}"?`)) {
+      await deleteTemplate(template.id);
     }
   };
 
-  const handleToggleEnabled = async (id: string, enabled: boolean) => {
-    const success = await updateTemplate(id, { enabled });
-    if (success) {
-      toast({
-        title: enabled ? "Template ativado" : "Template desativado",
-        description: `O template foi ${enabled ? 'ativado' : 'desativado'} com sucesso.`,
-      });
-    }
-  };
-
-  const handleSaveTemplate = async (templateData: Partial<Template>) => {
+  const handleSave = async (templateData: Partial<Template>) => {
     if (selectedTemplate) {
       const success = await updateTemplate(selectedTemplate.id, templateData);
       if (success) {
@@ -165,7 +147,7 @@ const TemplatesManager: React.FC = () => {
                 className="pl-10 bg-[#001427] border-[#FF6B00]/30 text-white"
               />
             </div>
-            
+
             <Select
               value={filters.category || 'all'}
               onValueChange={(value) => setFilters(prev => ({ ...prev, category: value === 'all' ? undefined : value }))}
@@ -287,10 +269,11 @@ const TemplatesManager: React.FC = () => {
                 <TemplateCard
                   key={template.id}
                   template={template}
-                  onEdit={handleEditTemplate}
-                  onDelete={handleDeleteTemplate}
+                  onEdit={handleEdit}
+                  onView={handleView}
+                  onDelete={handleDelete}
                   onToggleEnabled={handleToggleEnabled}
-                  onView={handleViewTemplate}
+                  
                 />
               ))}
             </div>
@@ -324,9 +307,15 @@ const TemplatesManager: React.FC = () => {
             setIsEditorOpen(false);
             setSelectedTemplate(null);
           }}
-          onSave={handleSaveTemplate}
+          onSave={handleSave}
         />
       )}
+
+      <TemplateViewer
+        template={viewerTemplate}
+        isOpen={isViewerOpen}
+        onClose={() => setIsViewerOpen(false)}
+      />
     </div>
   );
 };

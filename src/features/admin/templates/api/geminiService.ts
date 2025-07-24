@@ -65,7 +65,57 @@ Por favor, gere uma atividade completa e estruturada no formato JSON, incluindo:
 4. Instruções para o aluno
 5. Critérios de avaliação (se aplicável)
 
-A atividade deve ser educacionalmente relevante, bem estruturada e adequada para o nível de dificuldade especificado.`;
+A atividade deve ser educacionalmente relevante, bem estruturada e adequada para o nível de dificuldade especificado.
+
+Retorne apenas o conteúdo da atividade em formato texto limpo e bem estruturado.`;
+
+  try {
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text();
+  } catch (error) {
+    console.error('Erro ao gerar conteúdo do template:', error);
+    throw new Error('Falha ao gerar conteúdo com a IA');
+  }
+};
+
+export const generateTemplateContent = async (
+  template: Template,
+  formData: Record<string, string>
+): Promise<string> => {
+  const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+
+  let prompt = `Gere uma atividade educacional completa baseada no template "${template.name}".
+
+Descrição do template: ${template.description}
+Tipo de atividade: ${template.name}
+
+Dados fornecidos:`;
+
+  // Adicionar dados do formulário ao prompt
+  Object.entries(formData).forEach(([key, value]) => {
+    if (value) {
+      prompt += `\n- ${key}: ${value}`;
+    }
+  });
+
+  prompt += `
+
+INSTRUÇÕES ESPECÍFICAS:
+
+1. Para PLANOS DE AULA: Inclua objetivos, conteúdo programático, metodologia, recursos, avaliação e referências
+2. Para LISTAS DE EXERCÍCIOS: Gere exercícios numerados com diferentes níveis de dificuldade
+3. Para PROVAS: Inclua cabeçalho, instruções e questões bem formuladas
+4. Para RESUMOS: Organize por tópicos com informações claras e objetivas
+5. Para ATIVIDADES: Seja criativo e educativo, adequado à faixa etária
+
+FORMATAÇÃO:
+- Use formatação clara com títulos e subtítulos
+- Organize o conteúdo de forma lógica
+- Inclua instruções quando necessário
+- Mantenha linguagem adequada ao público-alvo
+
+Gere um conteúdo completo, detalhado e pronto para uso:`;
 
   return prompt;
 };
