@@ -167,14 +167,14 @@ const TemplatesManager: React.FC = () => {
             </div>
             
             <Select
-              value={filters.category || ''}
-              onValueChange={(value) => setFilters(prev => ({ ...prev, category: value || undefined }))}
+              value={filters.category || 'all'}
+              onValueChange={(value) => setFilters(prev => ({ ...prev, category: value === 'all' ? undefined : value }))}
             >
               <SelectTrigger className="bg-[#001427] border-[#FF6B00]/30 text-white">
                 <SelectValue placeholder="Categoria" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todas as categorias</SelectItem>
+                <SelectItem value="all">Todas as categorias</SelectItem>
                 {getUniqueCategories().map(category => (
                   <SelectItem key={category} value={category}>
                     {category}
@@ -184,14 +184,14 @@ const TemplatesManager: React.FC = () => {
             </Select>
 
             <Select
-              value={filters.difficulty || ''}
-              onValueChange={(value) => setFilters(prev => ({ ...prev, difficulty: value || undefined }))}
+              value={filters.difficulty || 'all'}
+              onValueChange={(value) => setFilters(prev => ({ ...prev, difficulty: value === 'all' ? undefined : value }))}
             >
               <SelectTrigger className="bg-[#001427] border-[#FF6B00]/30 text-white">
                 <SelectValue placeholder="Dificuldade" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todas as dificuldades</SelectItem>
+                <SelectItem value="all">Todas as dificuldades</SelectItem>
                 <SelectItem value="facil">Fácil</SelectItem>
                 <SelectItem value="medio">Médio</SelectItem>
                 <SelectItem value="dificil">Difícil</SelectItem>
@@ -199,17 +199,17 @@ const TemplatesManager: React.FC = () => {
             </Select>
 
             <Select
-              value={filters.enabled?.toString() || ''}
+              value={filters.enabled?.toString() || 'all'}
               onValueChange={(value) => setFilters(prev => ({ 
                 ...prev, 
-                enabled: value === '' ? undefined : value === 'true' 
+                enabled: value === 'all' ? undefined : value === 'true' 
               }))}
             >
               <SelectTrigger className="bg-[#001427] border-[#FF6B00]/30 text-white">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os status</SelectItem>
+                <SelectItem value="all">Todos os status</SelectItem>
                 <SelectItem value="true">Ativados</SelectItem>
                 <SelectItem value="false">Desativados</SelectItem>
               </SelectContent>
