@@ -29,8 +29,8 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
 
       if (data.user) {
         toast({
-          title: "Login realizado com sucesso!",
-          description: "Bem-vindo à administração do School Power.",
+          title: "Acesso autorizado!",
+          description: "Bem-vindo à área administrativa do School Power.",
         });
         onLoginSuccess();
       }
@@ -50,10 +50,10 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
       <Card className="w-full max-w-md bg-[#0A2540] border-[#FF6B00]/20">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold text-white">
-            Administração
+            Área Administrativa
           </CardTitle>
           <CardDescription className="text-gray-300">
-            Acesso exclusivo - School Power (Ponto. School)
+            Use suas credenciais da Ponto. School para acessar
           </CardDescription>
         </CardHeader>
         <CardContent>

@@ -11,6 +11,18 @@ const AdminMatrizPage: React.FC = () => {
 
   useEffect(() => {
     checkAuthStatus();
+    
+    // Listener para mudanças de autenticação
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setIsAuthenticated(!!session);
+        if (event === 'SIGNED_OUT') {
+          setIsAuthenticated(false);
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const checkAuthStatus = async () => {

@@ -161,6 +161,7 @@ function App() {
     "/reset-password",
     "/select-plan",
     "/admin/db-console",
+    "/adimin/matriz",
   ].some((route) => location.pathname.startsWith(route));
 
   const navigate = useNavigate();
@@ -197,6 +198,7 @@ function App() {
           "/forgot-password",
           "/reset-password",
           "/select-plan",
+          "/adimin/matriz",
         ].some((route) => location.pathname.startsWith(route));
 
         if (isAuthRoute) {
@@ -331,12 +333,8 @@ function App() {
                   </ProtectedRoute>
                 } />
 
-                 {/* Admin Route - Protegida */}
-                 <Route path="/admin/matriz" element={
-                  <ProtectedRoute>
-                    <AdminMatrizPage />
-                  </ProtectedRoute>
-                } />
+                 {/* Admin Route - Com autenticação própria */}
+                 <Route path="/adimin/matriz" element={<AdminMatrizPage />} />
 
                 {/* Fallback Route - Redireciona para login */}
                 <Route path="*" element={<Navigate to="/login" />} />
