@@ -1,0 +1,158 @@
+Título: Criação completa da Página de Administração de Templates do School Power (Ponto. School)
+
+🎯 Objetivo
+Construir a página de administração interna da Ponto. School com acesso exclusivo via URL:
+
+bash
+Copiar
+Editar
+(Link padrão da plataforma)/adimin/matriz
+Ao acessar este link no navegador:
+✅ Aparece página de login integrada ao Supabase Auth (já conectado na plataforma).
+✅ O login será feito usando as credenciais existentes dos usuários já cadastrados na plataforma.
+✅ Após login, o usuário é redirecionado automaticamente para a interface da seção de Administração, NÃO exibindo o restante da plataforma.
+
+A página servirá exclusivamente para:
+
+✅ Gerenciar templates de atividades por ID (já definidos em src/features/schoolpower/data/schoolPowerActivities.json).
+✅ Editar, publicar e versionar templates.
+✅ Selecionar a IA que será utilizada em cada template (Gemini ou outra).
+✅ Visualizar atividades geradas automaticamente a partir dos templates.
+✅ Gerar atividades automaticamente usando a IA Gemini, preenchendo os campos necessários.
+✅ Publicar atividades geradas na interface de “Construção de Atividades” do School Power automaticamente.
+✅ Controlar a visualização do progresso e status de publicação.
+
+🗂️ Estrutura e Organização
+1️⃣ Acesso Protegido:
+A página estará disponível em:
+
+bash
+Copiar
+Editar
+(link padrão da Ponto. School)/adimin/matriz
+Ao acessar:
+
+Exibir página de login integrada ao Supabase.
+
+Login utilizando os mesmos usuários cadastrados na Ponto. School.
+
+Após login, renderizar apenas a interface de administração, sem carregar outros componentes da Ponto. School.
+
+Se não autenticado, redirecionar para login.
+
+2️⃣ Organização no Banco (Supabase)
+✅ Todos os IDs e nomes presentes em schoolPowerActivities.json já estarão armazenados no Supabase na tabela:
+
+nginx
+Copiar
+Editar
+school_power_templates
+com os campos:
+
+id: string (ID do template, conforme o JSON).
+
+name: string (nome da atividade).
+
+status: string (“draft”, “published”).
+
+ia_provider: string (“Gemini”, “OpenAI”, etc.).
+
+fields: jsonb (campos configuráveis de cada template).
+
+last_generated_preview: jsonb (atividade gerada por último).
+
+created_at / updated_at.
+
+✅ Caso um novo ID seja adicionado ao JSON, será automaticamente inserido no Supabase.
+✅ Se um ID for removido do JSON, será removido do Supabase.
+✅ Sincronização bidirecional ativa permanentemente.
+
+3️⃣ Interface Visual
+✅ Design consistente com o branding da Ponto. School (tema dark com laranja como cor de ação).
+✅ Layout responsivo para desktop e tablet.
+✅ Menu lateral fixo com apenas 1 item: “Templates”.
+
+Área Principal:
+Exibir grid de mini-cards, cada card representando um template de atividade vinculado ao ID do JSON.
+
+Cada mini-card exibe:
+
+Nome da Atividade.
+
+ID.
+
+Status (Draft/Published).
+
+IA configurada.
+
+Botão “Editar Template”.
+
+4️⃣ Interface de Edição do Template (ao clicar no card)
+✅ Tela dividida em duas colunas:
+
+Coluna Esquerda: Configuração
+
+Campos dinâmicos, específicos para cada tipo de atividade (ex: número de questões, tópicos, instruções, nível de dificuldade).
+
+Seleção da IA que irá gerar a atividade.
+
+Botão “Gerar Atividade” (envia os dados para a IA Gemini).
+
+Coluna Direita: Preview
+
+Visualização ao vivo da atividade gerada pela IA Gemini.
+
+Status de carregamento com loader enquanto gera.
+
+Botão “Publicar Atividade”.
+
+5️⃣ Funcionalidades Funcionais e Integradas
+✅ Autenticação (Supabase Auth).
+✅ Leitura e sincronização automática de schoolPowerActivities.json.
+✅ Armazenamento de configurações de cada template no Supabase.
+✅ Integração com IA Gemini para geração automática das atividades usando os campos configurados.
+✅ Publicação automática na interface de “Construção de Atividades” do School Power.
+✅ Visualização do progresso e status de geração.
+
+🛠️ Arquivos e Estrutura Técnica a serem criados/modificados
+swift
+Copiar
+Editar
+/src/pages/adimin/matriz.tsx                      -> Página principal de administração.
+/src/features/admin/templates/index.tsx           -> Grade de mini-cards.
+/src/features/admin/templates/TemplateCard.tsx    -> Componente do mini-card.
+/src/features/admin/templates/TemplateEditor.tsx  -> Editor individual de template.
+/src/features/admin/templates/hooks/useTemplates.ts -> Hook de controle.
+/src/features/admin/templates/api/                -> API interna Next para operações nos templates.
+/src/features/schoolpower/data/schoolPowerActivities.json -> Já existente, conectado.
+/src/features/schoolpower/construction/ConstructionInterface.tsx -> Para receber atividades geradas.
+⚡ Fluxo Real do Sistema
+1️⃣ Admin acessa: (site)/adimin/matriz.
+2️⃣ Login via Supabase.
+3️⃣ Página de administração carrega:
+
+Mostra todos os templates vinculados ao JSON.
+
+Permite editar configurações.
+
+Permite gerar atividades via IA Gemini.
+
+Permite publicar diretamente no School Power.
+4️⃣ As atividades geradas aparecem automaticamente para os usuários na interface de “Construção de Atividades”, já personalizadas e prontas para interação.
+5️⃣ Se o admin adicionar um novo ID no JSON, o sistema cria automaticamente um mini-card na administração.
+6️⃣ Se o admin remover um ID no JSON, o card correspondente é removido.
+7️⃣ Todos os dados ficam persistidos no Supabase de forma consistente.
+
+🛡️ Segurança
+✅ Acesso restrito a usuários autenticados Supabase.
+✅ Não acessível publicamente sem login.
+✅ Página de administração é única para todos os usuários (não individualizada), sendo a central de controle da plataforma.
+
+🚀 Pronto para produção
+✅ Página leve e otimizada.
+✅ Sem dados fictícios; os administradores criarão e publicarão os templates reais.
+✅ Integração 100% funcional com School Power e Supabase.
+✅ IA Gemini conectada para geração automática de atividades.
+
+✅ Ação imediata
+Comece imediatamente a construção completa dessa página de administração de templates, criando toda a estrutura, interfaces, lógica de sincronização, APIs e integrações solicitadas neste prompt, sem dependências externas, pronta para funcionamento real.
