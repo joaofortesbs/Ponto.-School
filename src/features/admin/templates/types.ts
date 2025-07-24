@@ -1,12 +1,22 @@
 export interface Template {
   id: string;
   name: string;
-  status: 'draft' | 'published';
-  ia_provider: string;
-  fields: Record<string, any>;
-  last_generated_preview?: Record<string, any>;
-  created_at: string;
-  updated_at: string;
+  description: string;
+  category: string;
+  tags: string[];
+  difficulty: 'facil' | 'medio' | 'dificil';
+  apiType: 'gemini' | 'openai' | 'claude';
+  enabled: boolean;
+  prompt: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface TemplateFilters {
+  category?: string;
+  difficulty?: string;
+  enabled?: boolean;
+  search?: string;
 }
 
 export interface TemplateFormData {
