@@ -1,4 +1,9 @@
 import { Template, GeneratedActivity } from '../types';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+// Configurar Gemini AI
+const genAI = new GoogleGenerativeAI(process.env.VITE_GEMINI_API_KEY || '');
+const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
 export const generateActivityWithGemini = async (template: Template): Promise<GeneratedActivity> => {
   try {
@@ -69,22 +74,13 @@ A atividade deve ser educacionalmente relevante, bem estruturada e adequada para
 
 Retorne apenas o conteúdo da atividade em formato texto limpo e bem estruturado.`;
 
-  try {
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    return response.text();
-  } catch (error) {
-    console.error('Erro ao gerar conteúdo do template:', error);
-    throw new Error('Falha ao gerar conteúdo com a IA');
-  }
+  return prompt;
 };
 
 export const generateTemplateContent = async (
   template: Template,
   formData: Record<string, string>
 ): Promise<string> => {
-  const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-
   let prompt = `Gere uma atividade educacional completa baseada no template "${template.name}".
 
 Descrição do template: ${template.description}
@@ -117,7 +113,14 @@ FORMATAÇÃO:
 
 Gere um conteúdo completo, detalhado e pronto para uso:`;
 
-  return prompt;
+  try {
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text();
+  } catch (error) {
+    console.error('Erro ao gerar conteúdo do template:', error);
+    throw new Error('Falha ao gerar conteúdo com a IA');
+  }
 };
 
 // Simular resposta do Gemini para desenvolvimento/teste
