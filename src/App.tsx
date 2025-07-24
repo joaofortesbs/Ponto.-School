@@ -330,6 +330,13 @@ function App() {
                   </ProtectedRoute>
                 } />
 
+                 {/* Admin Route - Protegida */}
+                 <Route path="/admin/matriz" element={
+                  <ProtectedRoute>
+                    <AdminMatrizPage />
+                  </ProtectedRoute>
+                } />
+
                 {/* Fallback Route - Redireciona para login */}
                 <Route path="*" element={<Navigate to="/login" />} />
               </Routes>
