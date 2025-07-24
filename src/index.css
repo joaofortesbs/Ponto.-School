@@ -2,14 +2,6 @@
 @import "./styles/animations.css";
 @import "./styles/hide-scrollbar.css";
 @import "./styles/typewriter-loader.css";
-
-/* Estilo para tópicos selecionados - apenas borda laranja (sem animação) */
-.topic-selected {
-  border: 2px solid #FF6B00;
-  position: relative;
-  box-shadow: 0 0 10px rgba(255, 107, 0, 0.4);
-}
-
 @import "./styles/notebook.css";
 @import "./styles/header-animations.css";
 @import "./styles/carousel-effects.css";
@@ -17,6 +9,13 @@
 @import "./styles/rotina-calendar.css";
 @import "./styles/groups-header-transitions.css";
 @import "./styles/chat-responsive.css";
+
+/* Estilo para tópicos selecionados - apenas borda laranja (sem animação) */
+.topic-selected {
+  border: 2px solid #FF6B00;
+  position: relative;
+  box-shadow: 0 0 10px rgba(255, 107, 0, 0.4);
+}
 
 @tailwind base;
 @tailwind components;

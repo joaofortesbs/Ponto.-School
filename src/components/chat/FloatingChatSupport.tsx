@@ -3178,7 +3178,7 @@ Exemplo de formato da resposta:
                                   // Versão com processamento de IA avançado (comentada por enquanto)
                                   /*
                                   // Gerar prompt para conversão para formato de apresentação
-                                  constpicos": ["Conceitos principais", "Importância do tema", "Aplicações práticas"],
+                                  const topicos = ["Conceitos principais", "Importância do tema", "Aplicações práticas"];
                                       "explicacao": "Esta apresentação aborda os principais aspectos do tema discutido, destacando sua relevância no contexto educacional e aplicações no dia a dia. Vamos explorar juntos os conceitos fundamentais e como eles se relacionam.",
                                       "imagemOpcional": ""
                                     },

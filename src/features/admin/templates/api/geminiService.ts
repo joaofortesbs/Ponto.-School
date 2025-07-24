@@ -1,4 +1,3 @@
-
 import { Template, GeneratedActivity } from '../types';
 
 export const generateActivityWithGemini = async (template: Template): Promise<GeneratedActivity> => {
@@ -135,3 +134,44 @@ export const mockGeminiResponse = (template: Template): GeneratedActivity => {
     type: templateType
   };
 };
+
+export interface GeminiServiceConfig {
+  apiKey?: string;
+  model?: string;
+}
+
+export class GeminiService {
+  private apiKey: string;
+  private model: string;
+
+  constructor(config: GeminiServiceConfig = {}) {
+    this.apiKey = config.apiKey || process.env.GEMINI_API_KEY || '';
+    this.model = config.model || 'gemini-pro';
+  }
+
+  async generateActivity(template: any, context: any): Promise<any> {
+    try {
+      // Simulação da geração de atividade
+      return {
+        success: true,
+        activity: {
+          title: `Atividade gerada para ${template.name}`,
+          content: 'Conteúdo da atividade...',
+          questions: [],
+          metadata: {
+            template_id: template.id,
+            generated_at: new Date().toISOString()
+          }
+        }
+      };
+    } catch (error) {
+      console.error('Erro ao gerar atividade:', error);
+      return {
+        success: false,
+        error: 'Erro na geração da atividade'
+      };
+    }
+  }
+}
+
+export const geminiService = new GeminiService();

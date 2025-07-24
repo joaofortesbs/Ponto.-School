@@ -1,89 +1,59 @@
-
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../../lib/supabase';
-import { User } from '@supabase/supabase-js';
-import AdminLogin from '../../features/admin/auth/AdminLogin';
-import AdminDashboard from '../../features/admin/dashboard/AdminDashboard';
-import { Loader2 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import AdminLogin from '@/features/admin/auth/AdminLogin';
+import AdminDashboard from '@/features/admin/dashboard/AdminDashboard';
 
-const AdminMatrizPage = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+const AdminMatrizPage: React.FC = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Verificar se há usuário autenticado
-    const checkUser = async () => {
-      try {
-        const { data: { user }, error } = await supabase.auth.getUser();
-        if (error) {
-          console.error('Error checking user:', error);
-        }
-        setUser(user);
-      } catch (error) {
-        console.error('Error:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    checkUser();
-
-    // Escutar mudanças de autenticação
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setUser(session?.user ?? null);
-        setLoading(false);
-      }
-    );
-
-    return () => subscription.unsubscribe();
+    checkAuthStatus();
   }, []);
 
-  const handleLogin = async (email: string, password: string) => {
+  const checkAuthStatus = async () => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      setUser(data.user);
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsAuthenticated(!!session);
     } catch (error) {
-      console.error('Login error:', error);
-      throw error;
+      console.error('Erro ao verificar autenticação:', error);
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  const handleLoginSuccess = () => {
+    setIsAuthenticated(true);
   };
 
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
-      setUser(null);
+      setIsAuthenticated(false);
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error('Erro ao fazer logout:', error);
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#0A1628] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-[#FF6B00]" />
-          <p className="text-white/60">Carregando administração...</p>
-        </div>
+      <div className="min-h-screen bg-[#001427] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#FF6B00]"></div>
       </div>
     );
   }
 
-  if (!user) {
-    return <AdminLogin onLogin={handleLogin} />;
-  }
-
-  return <AdminDashboard user={user} onLogout={handleLogout} />;
+  return (
+    <div className="min-h-screen bg-[#001427]">
+      {!isAuthenticated ? (
+        <AdminLogin onLoginSuccess={handleLoginSuccess} />
+      ) : (
+        <AdminDashboard onLogout={handleLogout} />
+      )}
+    </div>
+  );
 };
 
 export default AdminMatrizPage;

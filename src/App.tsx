@@ -55,6 +55,7 @@ import BlankPage from "@/pages/BlankPage";
 import EpictusIAPage from "./pages/epictus-ia";
 import SchoolPowerPageIndex from "./pages/school-power";
 import MentorIAPage from "./pages/mentor-ia";
+import AdminMatrizPage from "./pages/adimin/matriz";
 
 // Componente para proteger rotas
 function ProtectedRoute({ children }) {

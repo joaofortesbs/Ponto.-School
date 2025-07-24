@@ -1,39 +1,32 @@
 
 import React from 'react';
-import { FileText, BarChart3 } from 'lucide-react';
-import { cn } from '../../../lib/utils';
+import { FileText } from 'lucide-react';
 
-const AdminSidebar = () => {
-  const menuItems = [
-    {
-      id: 'templates',
-      label: 'Templates',
-      icon: FileText,
-      active: true,
-    },
-  ];
-
+const AdminSidebar: React.FC = () => {
   return (
-    <aside className="fixed left-0 top-[73px] h-[calc(100vh-73px)] w-64 bg-[#1E293B] border-r border-white/10 overflow-y-auto">
-      <nav className="p-4 space-y-2">
-        {menuItems.map((item) => {
-          const Icon = item.icon;
-          return (
-            <button
-              key={item.id}
-              className={cn(
-                "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors",
-                item.active
-                  ? "bg-[#FF6B00]/10 text-[#FF6B00] border border-[#FF6B00]/20"
-                  : "text-white/60 hover:text-white hover:bg-white/5"
-              )}
-            >
-              <Icon className="h-5 w-5" />
-              <span className="font-medium">{item.label}</span>
-            </button>
-          );
-        })}
-      </nav>
+    <aside className="w-64 bg-[#0A2540] border-r border-[#FF6B00]/20">
+      <div className="p-6">
+        <div className="flex items-center gap-3 mb-8">
+          <div className="w-10 h-10 bg-[#FF6B00] rounded-lg flex items-center justify-center">
+            <FileText className="w-6 h-6 text-white" />
+          </div>
+          <span className="text-white font-semibold">Ponto. School</span>
+        </div>
+        
+        <nav>
+          <ul className="space-y-2">
+            <li>
+              <a
+                href="#templates"
+                className="flex items-center gap-3 px-4 py-3 text-white bg-[#FF6B00]/20 rounded-lg border-l-4 border-[#FF6B00]"
+              >
+                <FileText className="w-5 h-5" />
+                Templates
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </div>
     </aside>
   );
 };

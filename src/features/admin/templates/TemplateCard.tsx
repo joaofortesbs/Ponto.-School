@@ -1,9 +1,8 @@
-
 import React from 'react';
-import { Button } from '../../../components/ui/button';
-import { Badge } from '../../../components/ui/badge';
-import { Card, CardContent, CardFooter, CardHeader } from '../../../components/ui/card';
-import { Edit3, Brain, CheckCircle, Clock } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Edit } from 'lucide-react';
 import { Template } from './types';
 
 interface TemplateCardProps {
@@ -13,96 +12,38 @@ interface TemplateCardProps {
 
 const TemplateCard: React.FC<TemplateCardProps> = ({ template, onEdit }) => {
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'published':
-        return 'bg-green-500/10 text-green-400 border-green-500/20';
-      case 'draft':
-        return 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20';
-      default:
-        return 'bg-gray-500/10 text-gray-400 border-gray-500/20';
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'published':
-        return <CheckCircle className="h-3 w-3" />;
-      case 'draft':
-        return <Clock className="h-3 w-3" />;
-      default:
-        return <Clock className="h-3 w-3" />;
-    }
-  };
-
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'published':
-        return 'Publicado';
-      case 'draft':
-        return 'Rascunho';
-      default:
-        return 'Rascunho';
-    }
-  };
-
-  const getIAProviderColor = (provider: string) => {
-    switch (provider) {
-      case 'Gemini':
-        return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
-      case 'OpenAI':
-        return 'bg-purple-500/10 text-purple-400 border-purple-500/20';
-      case 'Claude':
-        return 'bg-orange-500/10 text-orange-400 border-orange-500/20';
-      default:
-        return 'bg-gray-500/10 text-gray-400 border-gray-500/20';
-    }
+    return status === 'published' ? 'bg-green-500' : 'bg-yellow-500';
   };
 
   return (
-    <Card className="bg-white/5 border-white/10 hover:border-[#FF6B00]/30 transition-all duration-200">
+    <Card className="bg-[#0A2540] border-[#FF6B00]/20 hover:border-[#FF6B00]/40 transition-colors">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <h3 className="font-semibold text-white text-sm leading-tight">
-              {template.name}
-            </h3>
-            <p className="text-xs text-white/60 mt-1">
-              ID: {template.id}
-            </p>
+          <div>
+            <CardTitle className="text-white text-lg">{template.name}</CardTitle>
+            <p className="text-gray-400 text-sm mt-1">ID: {template.id}</p>
           </div>
+          <Badge className={`${getStatusColor(template.status)} text-white`}>
+            {template.status === 'published' ? 'Publicado' : 'Rascunho'}
+          </Badge>
         </div>
       </CardHeader>
-
-      <CardContent className="py-3">
-        <div className="flex flex-wrap gap-2">
-          <Badge 
-            variant="outline" 
-            className={`${getStatusColor(template.status)} border text-xs`}
+      <CardContent>
+        <div className="space-y-3">
+          <div>
+            <p className="text-gray-300 text-sm">
+              <span className="font-medium">IA:</span> {template.ia_provider}
+            </p>
+          </div>
+          <Button
+            onClick={() => onEdit(template)}
+            className="w-full bg-[#FF6B00] hover:bg-[#FF8C40] text-white"
           >
-            {getStatusIcon(template.status)}
-            <span className="ml-1">{getStatusLabel(template.status)}</span>
-          </Badge>
-          
-          <Badge 
-            variant="outline" 
-            className={`${getIAProviderColor(template.ia_provider)} border text-xs`}
-          >
-            <Brain className="h-3 w-3 mr-1" />
-            {template.ia_provider}
-          </Badge>
+            <Edit className="w-4 h-4 mr-2" />
+            Editar Template
+          </Button>
         </div>
       </CardContent>
-
-      <CardFooter className="pt-3">
-        <Button
-          onClick={() => onEdit(template)}
-          size="sm"
-          className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white"
-        >
-          <Edit3 className="h-3 w-3 mr-2" />
-          Editar Template
-        </Button>
-      </CardFooter>
     </Card>
   );
 };
