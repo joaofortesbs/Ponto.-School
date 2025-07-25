@@ -647,8 +647,8 @@ export function CardDeConstrucao({
           radial-gradient(circle at 20% 20%, rgba(255,107,0,0.08) 0%, transparent 50%),
           radial-gradient(circle at 80% 80%, rgba(255,146,72,0.06) 0%, transparent 50%)
         `,
-        ...(typeof window !== "undefined"```python
-&&
+```javascript
+        ...(typeof window !== "undefined" &&
         window.matchMedia("(prefers-color-scheme: dark)").matches
           ? {
               background: `
