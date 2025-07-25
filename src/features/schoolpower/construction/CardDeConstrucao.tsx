@@ -595,6 +595,34 @@ export function CardDeConstrucao({
     setSelectedTrilhasCount(selectedTrilhas.length);
   }, [selectedActivities]);
 
+  const [filteredActivities, setFilteredActivities] = useState<ActionPlanItem[]>([]);
+
+  useEffect(() => {
+    const combinedActivities = getCombinedActivities();
+    let filtered = combinedActivities;
+
+    if (filterState === 'selected') {
+      filtered = selectedActivities;
+    }
+
+    setFilteredActivities(filtered);
+  }, [actionPlan, manualActivities, filterState, selectedActivities]);
+
+  const getActivityIcon = (activityTitle: string) => {
+    // Placeholder function to return the correct icon component based on the activity title
+    return <BookOpen className="w-5 h-5 text-white" />; // Default icon
+  };
+
+  const toggleActivitySelection = (activity: ActionPlanItem) => {
+    // Function to toggle the selection of an activity
+    const isSelected = selectedActivities.some(selected => selected.id === activity.id);
+    if (isSelected) {
+      setSelectedActivities(selectedActivities.filter(selected => selected.id !== activity.id));
+    } else {
+      setSelectedActivities([...selectedActivities, activity]);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.8, y: 50 }}
@@ -619,7 +647,8 @@ export function CardDeConstrucao({
           radial-gradient(circle at 20% 20%, rgba(255,107,0,0.08) 0%, transparent 50%),
           radial-gradient(circle at 80% 80%, rgba(255,146,72,0.06) 0%, transparent 50%)
         `,
-        ...(typeof window !== "undefined" &&
+        ...(typeof window !== "undefined"```python
+&&
         window.matchMedia("(prefers-color-scheme: dark)").matches
           ? {
               background: `
@@ -1265,44 +1294,44 @@ export function CardDeConstrucao({
               )}
             </motion.div>
           )}
-        </motion.div>
-      )}
 
-      {/* Interface de Construção de Atividades */}
-      {(step === 'construction' || showConstruction) && approvedActivitiesForConstruction.length > 0 && (
-        <motion.div
-          key="construction-interface"
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-          className="flex flex-col h-full"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF6B00] to-[#D65A00] flex items-center justify-center">
-                <Wrench className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
-                  Construção de Atividades
-                </h2>
-                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                  {approvedActivitiesForConstruction.length} {approvedActivitiesForConstruction.length === 1 ? 'atividade aprovada' : 'atividades aprovadas'} para construção
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={onResetFlow}
-              className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
+          {/* Construction View */}
+          {step === 'construction' && approvedActivitiesForConstruction.length > 0 && (
+            <motion.div
+              key="construction-view"
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5 }}
+              className="space-y-4"
             >
-              Voltar ao início
-            </button>
-          </div>
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF6B00] to-[#D65A00] flex items-center justify-center">
+                    <Wrench className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
+                      Construção de Atividades
+                    </h2>
+                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                      {approvedActivitiesForConstruction.length} {approvedActivitiesForConstruction.length === 1 ? 'atividade aprovada' : 'atividades aprovadas'} para construção
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={onResetFlow}
+                  className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
+                >
+                  Voltar ao início
+                </button>
+              </div>
 
-          {/* Interface de Construção */}
-          <div className="flex-1 overflow-hidden">
-            <ConstructionInterface approvedActivities={approvedActivitiesForConstruction} />
-          </div>
+              {/* Construction Interface */}
+              <div className="flex-1 overflow-hidden">
+                <ConstructionInterface approvedActivities={approvedActivitiesForConstruction} />
+              </div>
+            </motion.div>
+          )}
         </motion.div>
       )}
 
