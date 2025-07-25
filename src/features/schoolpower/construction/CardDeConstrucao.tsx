@@ -595,34 +595,6 @@ export function CardDeConstrucao({
     setSelectedTrilhasCount(selectedTrilhas.length);
   }, [selectedActivities]);
 
-  const [filteredActivities, setFilteredActivities] = useState<ActionPlanItem[]>([]);
-
-  useEffect(() => {
-    const combinedActivities = getCombinedActivities();
-    let filtered = combinedActivities;
-
-    if (filterState === 'selected') {
-      filtered = selectedActivities;
-    }
-
-    setFilteredActivities(filtered);
-  }, [actionPlan, manualActivities, filterState, selectedActivities]);
-
-  const getActivityIcon = (activityTitle: string) => {
-    // Placeholder function to return the correct icon component based on the activity title
-    return <BookOpen className="w-5 h-5 text-white" />; // Default icon
-  };
-
-  const toggleActivitySelection = (activity: ActionPlanItem) => {
-    // Function to toggle the selection of an activity
-    const isSelected = selectedActivities.some(selected => selected.id === activity.id);
-    if (isSelected) {
-      setSelectedActivities(selectedActivities.filter(selected => selected.id !== activity.id));
-    } else {
-      setSelectedActivities([...selectedActivities, activity]);
-    }
-  };
-
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.8, y: 50 }}
@@ -1000,62 +972,100 @@ export function CardDeConstrucao({
 
               {showAddActivityInterface ? (
                 // Interface para adicionar atividade manual
-                
-                  
+                <motion.div
+                  className="flex-1 overflow-y-auto mb-3 sm:mb-4 pr-1 sm:pr-2"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className="space-y-4">
                     {/* Campo Título da Atividade */}
-                    
-                      📝 Título da Atividade *
-                      
-                      
-                        
-                      
-                    
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-800 dark:text-white mb-2">
+                        📝 Título da Atividade *
+                      </label>
+                      <input
+                        type="text"
+                        value={manualActivityForm.title}
+                        onChange={(e) => handleManualFormChange('title', e.target.value)}
+                        className="w-full p-3 border-2 border-[#FF6B00]/30 bg-white/80 dark:bg-gray-800/50 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400"
+                        placeholder="Ex: Lista de Exercícios sobre Funções"
+                        maxLength={100}
+                      />
+                    </div>
 
                     {/* Campo Tipo de Atividade */}
-                    
-                      🎯 Tipo de Atividade *
-                      
-                      
-                        Selecione o tipo de atividade...
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-800 dark:text-white mb-2">
+                        🎯 Tipo de Atividade *
+                      </label>
+                      <select
+                        value={manualActivityForm.typeId}
+                        onChange={(e) => handleManualFormChange('typeId', e.target.value)}
+                        className="w-full p-3 border-2 border-[#FF6B00]/30 bg-white/80 dark:bg-gray-800/50 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm"
+                      >
+                        <option value="">Selecione o tipo de atividade...</option>
                         {schoolPowerActivities.map((activity) => (
-                          
+                          <option key={activity.id} value={activity.id}>
                             {activity.name}
-                          
+                          </option>
                         ))}
-                      
-                    
+                      </select>
+                    </div>
 
                     {/* Campo Descrição da Atividade */}
-                    
-                      📋 Descrição da Atividade *
-                      
-                      
-                        
-                        Descreva detalhadamente o que você quer que seja feito nesta atividade...
-                        
-                      
-                      
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-800 dark:text-white mb-2">
+                        📋 Descrição da Atividade *
+                      </label>
+                      <textarea
+                        value={manualActivityForm.description}
+                        onChange={(e) => handleManualFormChange('description', e.target.value)}
+                        className="w-full p-3 border-2 border-[#FF6B00]/30 bg-white/80 dark:bg-gray-800/50 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400"
+                        rows={4}
+                        placeholder="Descreva detalhadamente o que você quer que seja feito nesta atividade..."
+                        maxLength={500}
+                      />
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                         {manualActivityForm.description.length}/500 caracteres
-                      
-                    
+                      </div>
+                    </div>
 
                     {/* Botões de ação */}
-                    
-                      
+                    <div className="flex gap-3 pt-4">
+                      <button
+                        onClick={() => setShowAddActivityInterface(false)}
+                        className="flex-1 px-4 py-3 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white border border-gray-400 dark:border-gray-600 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
+                      >
                         Cancelar
-                      
-                      
-                        
-                          
-                          Adicionar Atividade
-                        
-                      
-                    
-                  
-                
+                      </button>
+                      <button
+                        onClick={handleAddManualActivity}
+                        disabled={!manualActivityForm.title.trim() || !manualActivityForm.typeId || !manualActivityForm.description.trim()}
+                        className="flex-1 px-4 py-3 bg-[#FF6B00] hover:bg-[#D65A00] text-white font-semibold rounded-xl transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Adicionar Atividade
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
               ) : (
                 // Interface normal do Plano de Ação
-                
+                <div
+                  className={`flex-1 overflow-y-auto mb-3 sm:mb-4 pr-1 sm:pr-2 ${
+                    viewMode === 'grid' 
+                      ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 auto-rows-min' 
+                      : 'space-y-2 sm:space-y-3'
+                  }`}
+                  style={{
+                    maxHeight: "calc(100% - 80px)",
+                    scrollbarWidth: "thin",
+                    scrollbarColor: "#FF6B00 rgba(255,107,0,0.1)",
+                  }}
+                >
                   {(filterState === 'selected' 
                     ? selectedActivities 
                     : getCombinedActivities()
@@ -1067,41 +1077,89 @@ export function CardDeConstrucao({
                     const badgeProps = getTrilhasBadgeProps(activity.id);
 
                     return (
-                      
+                      <motion.div
+                        key={activity.id}
+                        className={`relative p-6 border-2 transition-all duration-300 cursor-pointer ${
+                          viewMode === 'grid' ? 'rounded-[32px]' : 'rounded-[32px] mb-4'
+                        } ${
+                          isSelected
+                            ? 'border-[#FF6B00] bg-[#FF6B00]/5 dark:bg-[#FF6B00]/10 shadow-lg transform scale-[1.02]'
+                            : 'border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 hover:border-[#FF6B00]/50 hover:shadow-md'
+                        }`}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: index * 0.05 }}
+                        onClick={() => handleActivityToggle(activity)}
+                      >
                         {/* Badge Manual - para atividades manuais */}
                         {activity.isManual && (
-                          
-                            
-                              
-                                
-                                  
-                                
+                          <div className={`absolute top-4 z-20 ${badgeProps.showBadge ? 'right-[131px]' : 'right-4'}`}>
+                            <div className="flex items-center gap-3 px-4 py-2 border-2 border-purple-500 rounded-full bg-purple-500/10 hover:bg-purple-500/15 hover:border-purple-600 transition-all duration-300 cursor-default hover:scale-105">
+                              <div className="w-2 h-6 min-w-2 min-h-6 flex items-center justify-center relative flex-shrink-0">
+                                <svg className="w-5 h-5 text-purple-600 transition-all duration-300 relative z-10" fill="currentColor" viewBox="0 0 20 20">
+                                  <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                                </svg>
+                              </div>
+                              <span className="text-sm font-bold text-purple-600 whitespace-nowrap transition-all duration-300">
                                 Manual
-                              
-                            
-                          
+                              </span>
+                            </div>
+                          </div>
                         )}
 
                         {/* Badge Trilhas - POSICIONADO NO CANTO SUPERIOR DIREITO */}
                         {badgeProps.showBadge && (
-                          
-                            
-                          
+                          <div className="absolute top-4 right-4 z-20">
+                            <TrilhasBadge />
+                          </div>
                         )}
 
-                        
+                        <div className="flex items-start gap-4">
                           {/* Conteúdo da atividade */}
-                          
-                            
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
                               {/* Ícone animado da atividade - CLICÁVEL PARA SELEÇÃO */}
-                              
+                              <div 
+                                className={`icon-container ${isSelected ? 'active' : ''}`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleActivityToggle(activity);
+                                }}
+                                style={{
+                                  width: '40px',
+                                  height: '40px',
+                                  minWidth: '40px',
+                                  minHeight: '40px',
+                                  borderRadius: '14px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  background: isSelected 
+                                    ? 'linear-gradient(135deg, #FF6E06, #FF8A39)' 
+                                    : 'rgba(255, 110, 6, 0.1)',
+                                  transition: 'all 0.3s ease',
+                                  position: 'relative',
+                                  overflow: 'hidden',
+                                  cursor: 'pointer',
+                                  boxShadow: isSelected 
+                                    ? '0 6px 12px rgba(255, 110, 6, 0.3)' 
+                                    : 'none',
+                                  transform: isSelected ? 'scale(1.05)' : 'scale(1)'
+                                }}
+                              >
                                 {isSelected ? (
                                   // Mostra ícone de check quando selecionado
-                                  
-                                    
-                                      
-                                    
-                                  
+                                  <svg 
+                                    className="w-5 h-5 text-white transition-all duration-300 relative z-10" 
+                                    fill="currentColor" 
+                                    viewBox="0 0 20 20"
+                                  >
+                                    <path 
+                                      fillRule="evenodd" 
+                                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
+                                      clipRule="evenodd" 
+                                    />
+                                  </svg>
                                 ) : (
                                   // Mostra ícone original quando não selecionado
                                   React.createElement(getIconByActivityId(activity.id), {
@@ -1111,136 +1169,163 @@ export function CardDeConstrucao({
                                     }
                                   })
                                 )}
-                                
-                              
+                                <div 
+                                  className="icon-glow"
+                                  style={{
+                                    position: 'absolute',
+                                    top: '50%',
+                                    left: '50%',
+                                    width: '20px',
+                                    height: '20px',
+                                    background: 'radial-gradient(circle, rgba(255, 110, 6, 0.5), transparent)',
+                                    borderRadius: '50%',
+                                    transform: isSelected 
+                                      ? 'translate(-50%, -50%) scale(2.2)' 
+                                      : 'translate(-50%, -50%) scale(0)',
+                                    transition: 'transform 0.3s ease'
+                                  }}
+                                />
+                              </div>
 
                               {/* Título da atividade */}
-                              
+                              <h3 className="text-lg font-semibold text-gray-900 dark:text-white line-clamp-2 flex-1 pr-8">
                                 {activity.title}
-                              
-                            
+                              </h3>
+                            </div>
 
-                            
+                            <p className="text-gray-600 dark:text-gray-400 leading-relaxed line-clamp-3 mb-3">
                               {activity.description}
-                            
+                            </p>
 
                             {/* ID da atividade (para debug) */}
-                            
-                              
+                            <div className="mt-2">
+                              <span className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded">
                                 ID: {activity.id}
-                              
-                            
-                          
-                        
+                              </span>
+
+                            </div>
+                          </div>
+                        </div>
 
                         {/* Borda animada para item selecionado */}
                         {isSelected && (
-                          
+                          <div className="absolute inset-0 rounded-[32px] border-2 border-[#FF6B00] animate-pulse opacity-50 pointer-events-none"></div>
                         )}The code includes the ConstructionInterface conditionally after action plan approval.
-                      
+                      </motion.div>
                     );
                   })}
 
                   {filterState === 'selected' && selectedActivities.length === 0 && (
-                    
-                      
-                        
-                          
-                        
-                      
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
+                        <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                         Nenhuma atividade selecionada
-                      
-                      
+                      </h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xs">
                         Selecione algumas atividades primeiro para vê-las aqui
-                      
-                    
+                      </p>
+                    </div>
                   )}
 
                   {getCombinedActivities().length === 0 && (
-                    
-                      
-                        
-                          
-                        
-                      
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
+                        <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                         Nenhuma atividade disponível
-                      
-                      
+                      </h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xs">
                         Adicione atividades manuais ou aguarde as sugestões da IA
-                      
-                    
+                      </p>
+                    </div>
                   )}
-                
+                </div>
               )}
 
               {!showAddActivityInterface && (
-                
-                  
-                    
-                      
-                        
-                          Processando...
-                          Aprovar Plano ({selectedActivities.length})
-                        
-                      
-                    
-                  
-                
+                <div className="flex justify-end pt-3 sm:pt-4 border-t border-gray-300 dark:border-gray-700">
+                  <button
+                    onClick={handleApproveActionPlan}
+                    disabled={selectedActivities.length === 0 || isLoading}
+                    className="px-4 sm:px-6 py-2 sm:py-3 bg-[#FF6B00] hover:bg-[#D65A00] text-white font-semibold rounded-xl transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm sm:text-base"
+                  >
+                    <Target className="w-4 h-4 sm:w-5 sm:h-5" />
+                    {isLoading
+                      ? "Processando..."
+                      : `Aprovar Plano (${selectedActivities.length})`}
+                  </button>
+                </div>
               )}
-            
+            </motion.div>
           )}
+        </motion.div>
+      )}
 
-          {/* Construction View */}
-          {step === 'construction' && approvedActivitiesForConstruction.length > 0 && (
-            
-              
-                
-                  
-                    
-                      
-                        
-                          Construção de Atividades
-                        
-                        
-                          {approvedActivitiesForConstruction.length} {approvedActivitiesForConstruction.length === 1 ? 'atividade aprovada' : 'atividades aprovadas'} para construção
-                        
-                      
-                    
-                    
-                      Voltar ao início
-                    
-                  
-                
+      {/* Interface de Construção de Atividades */}
+      {(step === 'construction' || showConstruction) && approvedActivitiesForConstruction.length > 0 && (
+        <motion.div
+          key="construction-interface"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="flex flex-col h-full"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF6B00] to-[#D65A00] flex items-center justify-center">
+                <Wrench className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
+                  Construção de Atividades
+                </h2>
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                  {approvedActivitiesForConstruction.length} {approvedActivitiesForConstruction.length === 1 ? 'atividade aprovada' : 'atividades aprovadas'} para construção
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={onResetFlow}
+              className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
+            >
+              Voltar ao início
+            </button>
+          </div>
 
-                {/* Construction Interface */}
-                
-                  
-                
-              
-            
-          )}
-        
+          {/* Interface de Construção */}
+          <div className="flex-1 overflow-hidden">
+            <ConstructionInterface approvedActivities={approvedActivitiesForConstruction} />
+          </div>
+        </motion.div>
       )}
 
       {/* Debug Panel para verificar sistema de Trilhas */}
       {actionPlan && (
-        
-          
-            
-              id: activity.id, 
-              title: activity.title 
-            
-          
+        <TrilhasDebugPanel 
+          activities={actionPlan.map(activity => ({ 
+            id: activity.id, 
+            title: activity.title 
+          }))}
           isVisible={showTrilhasDebug}
-        
+        />
       )}
 
       {/* Botão para toggle do debug (só visível em desenvolvimento) */}
       {process.env.NODE_ENV === 'development' && actionPlan && (
-        
+        <button
+          onClick={() => setShowTrilhasDebug(!showTrilhasDebug)}
+          className="fixed bottom-4 left-4 z-40 bg-blue-500 text-white px-3 py-2 rounded-lg text-xs font-medium shadow-lg hover:bg-blue-600 transition-colors"
+        >
           {showTrilhasDebug ? '🔍 Fechar Debug' : '🔍 Debug Trilhas'}
-        
+        </button>
       )}
-    
+    </motion.div>
   );
 }
