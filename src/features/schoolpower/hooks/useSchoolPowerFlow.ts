@@ -226,10 +226,6 @@ export function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
       return;
     }
 
-    // Primeiro, transicionar para estado de geração
-    setFlowState('generatingActivities');
-    setIsLoading(true);
-
     const updatedData: SchoolPowerFlowData = {
       ...flowData,
       actionPlan: approvedItems.map(item => ({
@@ -242,13 +238,10 @@ export function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
     setFlowData(updatedData);
     saveData(updatedData);
 
-    // Simular processamento e depois transicionar para construção
-    setTimeout(() => {
-      setFlowState('construction');
-      setIsLoading(false);
-      console.log('✅ Hook: ActionPlan aprovado, transitioning para construction');
-    }, 2000);
+    // Transicionar para estado de construção
+    setFlowState('construction');
 
+    console.log('✅ Hook: ActionPlan aprovado, transitioning para construction');
   }, [flowData, saveData]);
 
   // Reset do fluxo
