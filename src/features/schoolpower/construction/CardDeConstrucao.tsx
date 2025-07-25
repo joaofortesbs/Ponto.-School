@@ -18,6 +18,7 @@ import { isActivityEligibleForTrilhas, getTrilhasBadgeProps } from "../data/tril
 import { TrilhasDebugPanel } from "../components/TrilhasDebugPanel";
 import { TrilhasBadge } from "../components/TrilhasBadge";
 import schoolPowerActivitiesData from '../data/schoolPowerActivities.json';
+import { ConstructionInterface } from './index';
 import atividadesTrilhas from '../data/atividadesTrilhas.json';
 
 // Convert to proper format with name field
@@ -1179,7 +1180,7 @@ export function CardDeConstrucao({
                         {/* Borda animada para item selecionado */}
                         {isSelected && (
                           <div className="absolute inset-0 rounded-[32px] border-2 border-[#FF6B00] animate-pulse opacity-50 pointer-events-none"></div>
-                        )}
+                        )}The code includes the ConstructionInterface conditionally after action plan approval.
                       </motion.div>
                     );
                   })}
@@ -1203,7 +1204,7 @@ export function CardDeConstrucao({
                   {getCombinedActivities().length === 0 && (
                     <div className="flex flex-col items-center justify-center py-12 text-center">
                       <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
-                        <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
                         </svg>
                       </div>

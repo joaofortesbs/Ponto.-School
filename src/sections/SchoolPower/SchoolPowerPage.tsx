@@ -64,6 +64,7 @@ export function SchoolPowerPage() {
   // Determina se os componentes padrão devem estar visíveis
   const componentsVisible = flowState === 'idle';
   console.log('👁️ Componentes padrão visíveis:', componentsVisible);
+  console.log('🏗️ Estado atual do fluxo:', flowState);
 
   return (
     <div

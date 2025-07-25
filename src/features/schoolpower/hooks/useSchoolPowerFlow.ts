@@ -212,38 +212,31 @@ export function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
     }
   }, [flowData, saveData]);
 
-  // Aprova action plan e inicia geração das atividades
   const approveActionPlan = useCallback((approvedItems: ActionPlanItem[]) => {
-    console.log('✅ Aprovando action plan:', approvedItems);
+    console.log('🎯 Hook: approveActionPlan chamado com items:', approvedItems);
 
-    if (approvedItems.length === 0) {
-      console.warn('⚠️ Nenhum item aprovado no action plan');
+    if (!flowData.actionPlan) {
+      console.error('❌ Hook: Tentativa de aprovar sem actionPlan válido');
       return;
     }
 
+    const updatedData: SchoolPowerFlowData = {
+      ...flowData,
+      actionPlan: approvedItems.map(item => ({
+        ...item,
+        approved: true
+      })),
+      timestamp: Date.now()
+    };
+
+    setFlowData(updatedData);
+    saveData(updatedData);
+
+    // Transicionar para estado de construção
     setFlowState('generatingActivities');
 
-    console.log('🎯 Iniciando geração de atividades com itens aprovados...');
-
-    // Simular processo de geração (aqui seria implementada a lógica real de geração de atividades)
-    setTimeout(() => {
-      console.log('🎉 Atividades geradas com sucesso!');
-
-      // Reset do fluxo após sucesso
-      const resetData: SchoolPowerFlowData = {
-        initialMessage: null,
-        contextualizationData: null,
-        actionPlan: null,
-        timestamp: Date.now()
-      };
-
-      setFlowData(resetData);
-      saveData(resetData);
-      setFlowState('idle');
-
-      console.log('🔄 Flow resetado para idle após sucesso');
-    }, 3000);
-  }, [saveData]);
+    console.log('✅ Hook: ActionPlan aprovado, transitioning para construção');
+  }, [flowData, saveData]);
 
   // Reset do fluxo
   const resetFlow = useCallback(() => {
