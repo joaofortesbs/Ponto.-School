@@ -129,7 +129,7 @@ export function SchoolPowerPage() {
       )}
 
       {/* Card de Construção unificado - aparece baseado no flowState e nunca some */}
-      {(flowState === 'contextualizing' || flowState === 'actionplan' || flowState === 'generating' || flowState === 'generatingActivities' || flowState === 'activities' || flowState === 'construction') && (
+      {(flowState === 'contextualizing' || flowState === 'actionplan' || flowState === 'generating' || flowState === 'generatingActivities' || flowState === 'activities') && (
         <motion.div 
           className="absolute inset-0 flex items-center justify-center z-40"
           initial={{ opacity: 0 }}
@@ -144,7 +144,7 @@ export function SchoolPowerPage() {
                 flowState === 'actionplan' ? 'actionPlan' :
                 flowState === 'generating' ? 'generating' :
                 flowState === 'generatingActivities' ? 'generatingActivities' :
-                flowState === 'activities' ? 'activities' : 'construction'
+                flowState === 'activities' ? 'activities' : 'contextualization'
               }
               contextualizationData={flowData.contextualizationData}
               actionPlan={flowData.actionPlan}

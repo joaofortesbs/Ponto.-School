@@ -4,7 +4,7 @@ import { ActionPlanItem } from '../actionplan/ActionPlanCard';
 import { generatePersonalizedPlan } from '../services/generatePersonalizedPlan';
 import { isActivityEligibleForTrilhas } from '../data/trilhasActivitiesConfig';
 
-export type FlowState = 'idle' | 'contextualizing' | 'actionplan' | 'generating' | 'generatingActivities' | 'construction' | 'activities';
+export type FlowState = 'idle' | 'contextualizing' | 'actionplan' | 'generating' | 'generatingActivities' | 'activities';
 
 interface SchoolPowerFlowData {
   initialMessage: string | null;
