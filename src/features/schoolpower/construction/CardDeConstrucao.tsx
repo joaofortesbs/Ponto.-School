@@ -47,7 +47,7 @@ export interface ActionPlanItem {
 }
 
 interface CardDeConstrucaoProps {
-  step: 'contextualization' | 'actionPlan' | 'generating' | 'generatingActivities' | 'construction';
+  step: 'contextualization' | 'actionPlan' | 'generating' | 'generatingActivities' | 'construction' | 'activities';
   contextualizationData?: ContextualizationData | null;
   actionPlan?: ActionPlanItem[] | null;
   onSubmitContextualization: (data: ContextualizationData) => void;
@@ -92,9 +92,14 @@ export function CardDeConstrucao({
   const [showAddActivityInterface, setShowAddActivityInterface] = useState(false);
   const [, setActionPlan] = useState<ActionPlanItem[]>([]);
 
-  // Estados para controlar a transição para construção
+  // Estado para controlar quando mostrar interface de construção
   const [showConstruction, setShowConstruction] = useState(false);
   const [approvedActivitiesForConstruction, setApprovedActivitiesForConstruction] = useState<ActionPlanItem[]>([]);
+
+  // Função para transicionar para construção
+  const handleProceedToConstruction = () => {
+    setShowConstruction(true);
+  };
 
   // Manual activity addition state
   const [manualActivities, setManualActivities] = useState<ActionPlanItem[]>([]);
@@ -1178,7 +1183,7 @@ export function CardDeConstrucao({
                                     width: '20px',
                                     height: '20px',
                                     background: 'radial-gradient(circle, rgba(255, 110, 6, 0.5), transparent)',
-                                    borderRadius: '50%',
+                                    borderRadius:'50%',
                                     transform: isSelected 
                                       ? 'translate(-50%, -50%) scale(2.2)' 
                                       : 'translate(-50%, -50%) scale(0)',

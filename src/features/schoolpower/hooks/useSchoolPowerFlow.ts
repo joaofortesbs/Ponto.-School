@@ -4,7 +4,7 @@ import { ActionPlanItem } from '../actionplan/ActionPlanCard';
 import { generatePersonalizedPlan } from '../services/generatePersonalizedPlan';
 import { isActivityEligibleForTrilhas } from '../data/trilhasActivitiesConfig';
 
-export type FlowState = 'idle' | 'contextualizing' | 'actionplan' | 'generating' | 'generatingActivities' | 'construction';
+export type FlowState = 'idle' | 'contextualizing' | 'actionplan' | 'generating' | 'generatingActivities' | 'construction' | 'activities';
 
 interface SchoolPowerFlowData {
   initialMessage: string | null;
@@ -87,7 +87,7 @@ export function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
         // Verificar se temos atividades aprovadas
         const hasApprovedActivities = storedData.actionPlan.some(item => item.approved);
         if (hasApprovedActivities) {
-          setFlowState('construction');
+          setFlowState('activities');
         } else {
           setFlowState('actionplan');
         }
@@ -238,10 +238,10 @@ export function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
     setFlowData(updatedData);
     saveData(updatedData);
 
-    // Transicionar para estado de construção
-    setFlowState('construction');
+    // Transicionar para estado de activities
+    console.log('✅ Hook: ActionPlan aprovado, transitioning para activities');
+    setFlowState('activities');
 
-    console.log('✅ Hook: ActionPlan aprovado, transitioning para construction');
   }, [flowData, saveData]);
 
   // Reset do fluxo
