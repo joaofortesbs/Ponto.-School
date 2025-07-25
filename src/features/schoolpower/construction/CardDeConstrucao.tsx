@@ -1210,7 +1210,12 @@ export function CardDeConstrucao({
                         {/* Borda animada para item selecionado */}
                         {isSelected && (
                           <div className="absolute inset-0 rounded-[32px] border-2 border-[#FF6B00] animate-pulse opacity-50 pointer-events-none"></div>
-                        )}The code includes the ConstructionInterface conditionally after action plan approval.
+                        )}
+
+                        {/* Borda animada para item selecionado */}
+                        {isSelected && (
+                          <div className="absolute inset-0 rounded-[32px] border-2 border-[#FF6B00] animate-pulse opacity-50 pointer-events-none"></div>
+                        )}
                       </motion.div>
                     );
                   })}
@@ -1309,8 +1314,6 @@ export function CardDeConstrucao({
           )}
         </motion.div>
       )}
-
-      
 
       {/* Debug Panel para verificar sistema de Trilhas */}
       {actionPlan && (
