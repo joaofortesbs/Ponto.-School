@@ -1,0 +1,120 @@
+Construir a Interface de Construção de Atividades (School Power) com sistema de visualização de mini-cards funcionais
+
+✅ Contexto (decorado e mapeado)
+Esta interface aparece após o usuário aprovar o Plano de Ação dentro do School Power.
+
+Devem ser carregadas somente as atividades aprovadas pelo usuário, puxadas via seus IDs gerados e armazenados no actionPlan.approvedActivities.
+
+Cada atividade possui um ID único, título e descrição gerados pela IA Gemini, e será exibida no mini-card.
+
+Cada atividade, no futuro, terá um sistema de construção único e independente.
+
+Interface escalável, permitindo edição futura de cada atividade.
+
+Permitir fácil personalização, modularização e escalabilidade para integração posterior com APIs de IA e templates de construção.
+
+🪄 Objetivo desta entrega:
+✅ Criar a interface visual de Construção de Atividades, exibindo mini-cards responsivos:
+
+Cada card exibirá:
+
+65%: pré-visualização de construção (placeholder com loading progress circular).
+
+Progresso de construção (% fake para UI inicialmente).
+
+35%:
+
+Título da atividade.
+
+Botões:
+
+Editar (futuro: abrir a tela de construção por atividade).
+
+Visualizar (futuro).
+
+Compartilhar (futuro).
+
+Cards organizados em grade responsiva e suave, dentro do componente CardDeConstrucao.
+
+Usar arquitetura desacoplada (hooks, stores, componentes reutilizáveis) para manter escalabilidade.
+
+Puxar dinamicamente os dados das atividades aprovadas armazenados (mockar approvedActivities se necessário).
+
+Inserir na seção School Power > CardDeConstrucao, com todos os arquivos separados corretamente.
+
+🗂️ Estrutura de arquivos solicitada:
+1️⃣ src/features/schoolpower/construction/ConstructionGrid.tsx
+
+Componente principal da grade responsiva dos mini-cards de construção.
+
+2️⃣ src/features/schoolpower/construction/ConstructionCard.tsx
+
+Componente de cada mini-card de atividade, recebendo props:
+
+id, title, description, progress, type, status.
+
+3️⃣ src/features/schoolpower/construction/useConstructionActivities.ts
+
+Hook para puxar os dados das atividades aprovadas do plano de ação (mock inicial ou integração se já existir store).
+
+4️⃣ src/features/schoolpower/construction/ProgressCircle.tsx
+
+Componente circular de progresso animado, reutilizável em todos os cards.
+
+5️⃣ src/features/schoolpower/construction/index.tsx
+
+Entrada da interface de Construção de Atividades, renderizando ConstructionGrid dentro de CardDeConstrucao.
+
+6️⃣ Tailwind + Shadcn para estilos consistentes, seguindo UI atual do School Power.
+
+7️⃣ Optionally: types.ts para tipagem consistente das atividades.
+
+🖥️ Detalhes de UI e UX:
+✅ Grid fluida e responsiva, 3 colunas em desktop, 2 em tablet, 1 em mobile.
+✅ Placeholder animado na pré-visualização para mostrar progresso de construção.
+✅ Progresso circular centralizado sobre a pré-visualização, exibindo % (fake loading inicialmente).
+✅ Título e botões alinhados à direita, claros e intuitivos.
+✅ Botões com cores consistentes:
+
+Editar: cor primária (laranja).
+
+Visualizar: cor secundária (azul claro).
+
+Compartilhar: cor neutra (cinza).
+
+✅ Skeleton ou shimmer para carregamento.
+✅ Animações suaves ao carregar, com transições ao abrir/fechar.
+✅ Tooltip ao passar o mouse nos botões.
+
+⚙️ Back-end/API management (primeira fase):
+Os dados serão puxados de:
+
+store.schoolPower.approvedActivities ou
+
+localStorage como fallback para mock
+
+ou GET /api/schoolpower/actionplan/approved (caso já esteja pronto).
+
+Cada atividade retornada terá:
+
+json
+Copiar
+Editar
+{
+  "id": "prova",
+  "title": "Prova Bimestral Multidisciplinar",
+  "description": "Elabore uma prova bimestral que avalie o conhecimento dos alunos...",
+  "status": "pending", // pending | in_progress | completed
+  "progress": 0 // inicia em 0, incrementa para 100 futuramente
+}
+Nenhuma geração de atividade será feita ainda, foco apenas na exibição organizada e escalável.
+
+🛠️ Requisitos técnicos específicos:
+✅ Next.js + React + Typescript + Tailwind + Zustand/Context API.
+✅ Respeitar estrutura modular clara para facilitar manutenção.
+✅ Preparado para integração futura com o sistema de construção e APIs específicas por atividade.
+✅ Código limpo, nomeação clara, seguindo boas práticas do projeto Ponto. School.
+
+🪄 Prompt final para Vibe Code:
+“Construa a interface de Construção de Atividades do School Power conforme descrito, criando todos os arquivos listados, garantindo que os mini-cards sejam exibidos corretamente a partir dos dados das atividades aprovadas, com pré-visualização de construção e barra de progresso, utilizando Tailwind para responsividade, e preparando a estrutura para futuras integrações de edição e construção dinâmica.”
+
