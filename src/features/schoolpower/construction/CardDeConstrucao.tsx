@@ -47,16 +47,12 @@ export interface ActionPlanItem {
 }
 
 interface CardDeConstrucaoProps {
-  step:
-    | "contextualization"
-    | "actionPlan"
-    | "generating"
-    | "generatingActivities";
+  step: 'contextualization' | 'actionPlan' | 'generating' | 'generatingActivities' | 'construction';
   contextualizationData?: ContextualizationData | null;
   actionPlan?: ActionPlanItem[] | null;
-  onSubmitContextualization?: (data: ContextualizationData) => void;
-  onApproveActionPlan?: (approvedItems: ActionPlanItem[]) => void;
-  onResetFlow?: () => void;
+  onSubmitContextualization: (data: ContextualizationData) => void;
+  onApproveActionPlan: (approvedItems: ActionPlanItem[]) => void;
+  onResetFlow: () => void;
   isLoading?: boolean;
 }
 
@@ -92,8 +88,15 @@ export function CardDeConstrucao({
   // Debug state for trilhas system
   const [showTrilhasDebug, setShowTrilhasDebug] = useState<boolean>(false);
 
+  // Estado para mostrar a interface de adicionar atividade manual
+  const [showAddActivityInterface, setShowAddActivityInterface] = useState(false);
+  const [, setActionPlan] = useState<ActionPlanItem[]>([]);
+
+  // Estados para controlar a transição para construção
+  const [showConstruction, setShowConstruction] = useState(false);
+  const [approvedActivitiesForConstruction, setApprovedActivitiesForConstruction] = useState<ActionPlanItem[]>([]);
+
   // Manual activity addition state
-  const [showAddActivityInterface, setShowAddActivityInterface] = useState<boolean>(false);
   const [manualActivities, setManualActivities] = useState<ActionPlanItem[]>([]);
 
   // Manual activity form state
@@ -140,11 +143,38 @@ export function CardDeConstrucao({
     });
   };
 
-  // Handle action plan approval
-  const handleApproveActionPlan = () => {
-    if (onApproveActionPlan && selectedActivities.length > 0) {
-      onApproveActionPlan(selectedActivities);
+  useEffect(() => {
+    if (actionPlan) {
+      console.log('🎯 ActionPlan recebido no CardDeConstrucao:', actionPlan);
+      const approved = actionPlan.filter(item => item.approved);
+      setSelectedActivities(approved);
+
+      // Se temos atividades aprovadas e o step é construction, mostrar interface
+      if (step === 'construction' && approved.length > 0) {
+        setApprovedActivitiesForConstruction(approved);
+        setShowConstruction(true);
+      }
     }
+  }, [actionPlan, step]);
+
+  const handleApproveActionPlan = () => {
+    console.log('🎯 CardDeConstrucao: Aprovando plano com atividades:', selectedActivities);
+
+    if (selectedActivities.length === 0) {
+      console.warn('⚠️ Nenhuma atividade selecionada para aprovação');
+      return;
+    }
+
+    // Preparar para transição para construção
+    setApprovedActivitiesForConstruction(selectedActivities);
+
+    // Chamar a função de aprovação passada como prop
+    onApproveActionPlan(selectedActivities);
+
+    // Após aprovação, definir para mostrar construção
+    setTimeout(() => {
+      setShowConstruction(true);
+    }, 1000);
   };
 
   // Handle manual activity form submission
@@ -1235,6 +1265,44 @@ export function CardDeConstrucao({
               )}
             </motion.div>
           )}
+        </motion.div>
+      )}
+
+      {/* Interface de Construção de Atividades */}
+      {(step === 'construction' || showConstruction) && approvedActivitiesForConstruction.length > 0 && (
+        <motion.div
+          key="construction-interface"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="flex flex-col h-full"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF6B00] to-[#D65A00] flex items-center justify-center">
+                <Wrench className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
+                  Construção de Atividades
+                </h2>
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                  {approvedActivitiesForConstruction.length} {approvedActivitiesForConstruction.length === 1 ? 'atividade aprovada' : 'atividades aprovadas'} para construção
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={onResetFlow}
+              className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
+            >
+              Voltar ao início
+            </button>
+          </div>
+
+          {/* Interface de Construção */}
+          <div className="flex-1 overflow-hidden">
+            <ConstructionInterface approvedActivities={approvedActivitiesForConstruction} />
+          </div>
         </motion.div>
       )}
 
