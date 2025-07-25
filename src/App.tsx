@@ -55,7 +55,6 @@ import BlankPage from "@/pages/BlankPage";
 import EpictusIAPage from "./pages/epictus-ia";
 import SchoolPowerPageIndex from "./pages/school-power";
 import MentorIAPage from "./pages/mentor-ia";
-import AdminMatrizPage from "./pages/adimin/matriz";
 
 // Componente para proteger rotas
 function ProtectedRoute({ children }) {
@@ -160,8 +159,6 @@ function App() {
     "/forgot-password",
     "/reset-password",
     "/select-plan",
-    "/admin/db-console",
-    "/adimin/matriz",
   ].some((route) => location.pathname.startsWith(route));
 
   const navigate = useNavigate();
@@ -198,7 +195,6 @@ function App() {
           "/forgot-password",
           "/reset-password",
           "/select-plan",
-          "/adimin/matriz",
         ].some((route) => location.pathname.startsWith(route));
 
         if (isAuthRoute) {
@@ -332,9 +328,6 @@ function App() {
                     <Agenda />
                   </ProtectedRoute>
                 } />
-
-                 {/* Admin Route - Com autenticação própria */}
-                 <Route path="/adimin/matriz" element={<AdminMatrizPage />} />
 
                 {/* Fallback Route - Redireciona para login */}
                 <Route path="*" element={<Navigate to="/login" />} />
