@@ -1,3 +1,4 @@
+
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
@@ -75,9 +76,7 @@ export function CardDeConstrucao({
   });
 
   // Selected activities for action plan
-  const [selectedActivities, setSelectedActivities] = useState<
-    ActionPlanItem[]
-  >([]);
+  const [selectedActivities, setSelectedActivities] = useState<ActionPlanItem[]>([]);
 
   // Filter state for action plan
   const [filterState, setFilterState] = useState<'all' | 'selected'>('all');
@@ -90,16 +89,6 @@ export function CardDeConstrucao({
 
   // Estado para mostrar a interface de adicionar atividade manual
   const [showAddActivityInterface, setShowAddActivityInterface] = useState(false);
-  const [, setActionPlan] = useState<ActionPlanItem[]>([]);
-
-  // Estado para controlar quando mostrar interface de construção
-  const [showConstruction, setShowConstruction] = useState(false);
-  const [approvedActivitiesForConstruction, setApprovedActivitiesForConstruction] = useState<ActionPlanItem[]>([]);
-
-  // Função para transicionar para construção
-  const handleProceedToConstruction = () => {
-    setShowConstruction(true);
-  };
 
   // Manual activity addition state
   const [manualActivities, setManualActivities] = useState<ActionPlanItem[]>([]);
@@ -153,12 +142,6 @@ export function CardDeConstrucao({
       console.log('🎯 ActionPlan recebido no CardDeConstrucao:', actionPlan);
       const approved = actionPlan.filter(item => item.approved);
       setSelectedActivities(approved);
-
-      // Se temos atividades aprovadas e o step é construction, mostrar interface
-      if (step === 'construction' && approved.length > 0) {
-        setApprovedActivitiesForConstruction(approved);
-        setShowConstruction(true);
-      }
     }
   }, [actionPlan, step]);
 
@@ -170,16 +153,8 @@ export function CardDeConstrucao({
       return;
     }
 
-    // Preparar para transição para construção
-    setApprovedActivitiesForConstruction(selectedActivities);
-
     // Chamar a função de aprovação passada como prop
     onApproveActionPlan(selectedActivities);
-
-    // Após aprovação, definir para mostrar construção
-    setTimeout(() => {
-      setShowConstruction(true);
-    }, 1000);
   };
 
   // Handle manual activity form submission
@@ -192,7 +167,7 @@ export function CardDeConstrucao({
     const activityType = schoolPowerActivities.find(activity => activity.id === manualActivityForm.typeId);
 
     const newManualActivity: ActionPlanItem = {
-      id: manualActivityForm.typeId, // Use the actual ID from the selected activity type
+      id: manualActivityForm.typeId,
       title: manualActivityForm.title,
       description: manualActivityForm.description,
       duration: "Personalizado",
@@ -431,7 +406,6 @@ export function CardDeConstrucao({
   const getIconByActivityId = (activityId: string) => {
     // Sistema de mapeamento 100% único - cada ID tem seu próprio ícone específico
     const uniqueIconMapping: { [key: string]: any } = {
-      // === AVALIAÇÕES E TESTES (cada tipo único) ==="acessibilidade-texto": PenTool,
       "atividade-adaptada": Heart,
       "atividades-contos-infantis": BookOpen,
       "atividades-ia": Brain,
@@ -521,17 +495,15 @@ export function CardDeConstrucao({
     }
 
     // Sistema de fallback com hash consistente para IDs não mapeados
-    // Isso garante que IDs novos sempre tenham o mesmo ícone
     const fallbackIcons = [
-      // Ícones organizados por categoria para melhor representação
-      BookOpen, FileText, PenTool, Search, Brain, // Acadêmico/Intelectual
-      Users, MessageSquare, Presentation, ThumbsUp, Heart, // Social/Comunicação  
-      Settings, Wrench, Target, Compass, Trophy, // Técnico/Objetivos
-      Calendar, Clock, CheckSquare, Star, Award, // Organização/Conquistas
-      Microscope, Calculator, Eye, Globe, MapPin, // Científico/Análise
-      Music, Palette, Camera, Video, Headphones, // Criativo/Multimídia
-      Lightbulb, Zap, Flag, Key, Shield, // Inovação/Segurança
-      TreePine, Sun, Cloud, Home, Car // Ambiente/Contexto
+      BookOpen, FileText, PenTool, Search, Brain,
+      Users, MessageSquare, Presentation, ThumbsUp, Heart,
+      Settings, Wrench, Target, Compass, Trophy,
+      Calendar, Clock, CheckSquare, Star, Award,
+      Microscope, Calculator, Eye, Globe, MapPin,
+      Music, Palette, Camera, Video, Headphones,
+      Lightbulb, Zap, Flag, Key, Shield,
+      TreePine, Sun, Cloud, Home, Car
     ];
 
     // Gera hash consistente baseado no ID
@@ -539,38 +511,16 @@ export function CardDeConstrucao({
     for (let i = 0; i < activityId.length; i++) {
       const char = activityId.charCodeAt(i);
       hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Converte para 32-bit integer
+      hash = hash & hash;
     }
 
-    // Usa o hash para selecionar um ícone de forma consistente
     const iconIndex = Math.abs(hash) % fallbackIcons.length;
-
     return fallbackIcons[iconIndex];
-  };
-
-  // Função para verificar se atividade é elegível para Trilhas School
-  const isEligibleForTrilhas = (activityId: string, activityName: string) => {
-    // Verifica se o ID da atividade está na lista de atividades Trilhas
-    const isInTrilhasList = atividadesTrilhas.atividadesTrilhas.includes(activityId);
-
-    if (isInTrilhasList) {
-      return true;
-    }
-
-    // Verificação adicional por nome/palavras-chave caso o ID não seja encontrado
-    const name = activityName.toLowerCase();
-    const trilhasKeywords = [
-      'prova', 'exercicios', 'lista', 'questoes', 'atividade', 'jogo', 'projeto',
-      'plano', 'resumo', 'simulado', 'avaliacao', 'teste', 'correcao', 'analise'
-    ];
-
-    return trilhasKeywords.some(keyword => name.includes(keyword));
   };
 
   const [selectedTrilhasCount, setSelectedTrilhasCount] = useState(0);
 
   useEffect(() => {
-    // IDs das atividades que são consideradas "trilhas"
     const trilhasActivityIds = [
       'projeto-pesquisa',
       'projeto-cientifico',
@@ -591,12 +541,10 @@ export function CardDeConstrucao({
       'projeto-final',
     ];
 
-    // Filtra as atividades selecionadas que são "trilhas"
     const selectedTrilhas = selectedActivities.filter(activity =>
       trilhasActivityIds.includes(activity.id)
     );
 
-    // Atualiza o estado com a contagem de "trilhas" selecionadas
     setSelectedTrilhasCount(selectedTrilhas.length);
   }, [selectedActivities]);
 
@@ -693,7 +641,9 @@ export function CardDeConstrucao({
                   ? "Plano de Ação"
                   : step === "generating"
                     ? "Gerando Conteúdo..."
-                    : "School Power"}
+                    : step === "activities"
+                      ? "Construção de Atividades"
+                      : "School Power"}
             </h1>
           </div>
         </div>
@@ -712,7 +662,7 @@ export function CardDeConstrucao({
                 width: `${
                   step === "contextualization" ? "0%" :
                   step === "actionPlan" ? "50%" :
-                  (step === "generating" || step === "generatingActivities") ? "100%" : "0%"
+                  (step === "generating" || step === "generatingActivities" || step === "activities") ? "100%" : "0%"
                 }`
               }}
             ></div>
@@ -732,12 +682,12 @@ export function CardDeConstrucao({
 
             <div className={`relative z-10 w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
               step === "actionPlan" ? 'bg-white border-white text-[#FF6B00]' :
-              (step === "generating" || step === "generatingActivities") ? 'bg-[#FF6B00] border-white text-white' :
+              (step === "generating" || step === "generatingActivities" || step === "activities") ? 'bg-[#FF6B00] border-white text-white' :
               'bg-white/20 border-white/30 text-white'
             }`}>
               {step === "actionPlan" ? (
                 <span className="text-sm font-semibold">2</span>
-              ) : (step === "generating" || step === "generatingActivities") ? (
+              ) : (step === "generating" || step === "generatingActivities" || step === "activities") ? (
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
@@ -747,7 +697,7 @@ export function CardDeConstrucao({
             </div>
 
             <div className={`relative z-10 w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
-              (step === "generating" || step === "generatingActivities") ? 'bg-white border-white text-[#FF6B00]' : 'bg-white/20 border-white/30 text-white'
+              (step === "generating" || step === "generatingActivities" || step === "activities") ? 'bg-white border-white text-[#FF6B00]' : 'bg-white/20 border-white/30 text-white'
             }`}>
               <span className="text-sm font-semibold">3</span>
             </div>
@@ -819,6 +769,41 @@ export function CardDeConstrucao({
             )}
           </div>
         </motion.div>
+      ) : step === "activities" ? (
+        <motion.div
+          key="activities-content"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.3 }}
+          className="relative z-10 h-full flex flex-col pt-16"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF6B00] to-[#D65A00] flex items-center justify-center">
+                <Wrench className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
+                  Construção de Atividades
+                </h2>
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                  {selectedActivities.length} {selectedActivities.length === 1 ? 'atividade aprovada' : 'atividades aprovadas'} para construção
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={onResetFlow}
+              className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
+            >
+              Voltar ao início
+            </button>
+          </div>
+
+          {/* Interface de Construção */}
+          <div className="flex-1 overflow-hidden">
+            <ConstructionInterface approvedActivities={selectedActivities} />
+          </div>
+        </motion.div>
       ) : (
         <motion.div
           className="relative z-10 h-full flex flex-col pt-16"
@@ -826,7 +811,7 @@ export function CardDeConstrucao({
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2, duration: 0.5 }}
         >
-<div className="text-center mb-4 sm:mb-6"></div>
+          <div className="text-center mb-4 sm:mb-6"></div>
 
           {step === "contextualization" ? (
             <motion.div
@@ -954,14 +939,14 @@ export function CardDeConstrucao({
                       </svg>
                     </button>
                     <div className="bg-[#FF6B00]/10 text-[#FF6B00] px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium">
-                    {selectedActivities.length} selecionada
-                    {selectedActivities.length !== 1 ? "s" : ""}
-                    {selectedTrilhasCount > 0 && (
-                      <span className="ml-1 text-orange-600">
-                        ({selectedTrilhasCount} trilha{selectedTrilhasCount !== 1 ? "s" : ""})
-                      </span>
-                    )}
-                  </div>
+                      {selectedActivities.length} selecionada
+                      {selectedActivities.length !== 1 ? "s" : ""}
+                      {selectedTrilhasCount > 0 && (
+                        <span className="ml-1 text-orange-600">
+                          ({selectedTrilhasCount} trilha{selectedTrilhasCount !== 1 ? "s" : ""})
+                        </span>
+                      )}
+                    </div>
                     <GridToggleComponent 
                       viewMode={viewMode}
                       onToggle={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
@@ -976,7 +961,6 @@ export function CardDeConstrucao({
               </div>
 
               {showAddActivityInterface ? (
-                // Interface para adicionar atividade manual
                 <motion.div
                   className="flex-1 overflow-y-auto mb-3 sm:mb-4 pr-1 sm:pr-2"
                   initial={{ opacity: 0, x: 20 }}
@@ -984,7 +968,6 @@ export function CardDeConstrucao({
                   transition={{ duration: 0.3 }}
                 >
                   <div className="space-y-4">
-                    {/* Campo Título da Atividade */}
                     <div>
                       <label className="block text-sm font-semibold text-gray-800 dark:text-white mb-2">
                         📝 Título da Atividade *
@@ -999,7 +982,6 @@ export function CardDeConstrucao({
                       />
                     </div>
 
-                    {/* Campo Tipo de Atividade */}
                     <div>
                       <label className="block text-sm font-semibold text-gray-800 dark:text-white mb-2">
                         🎯 Tipo de Atividade *
@@ -1018,7 +1000,6 @@ export function CardDeConstrucao({
                       </select>
                     </div>
 
-                    {/* Campo Descrição da Atividade */}
                     <div>
                       <label className="block text-sm font-semibold text-gray-800 dark:text-white mb-2">
                         📋 Descrição da Atividade *
@@ -1036,7 +1017,6 @@ export function CardDeConstrucao({
                       </div>
                     </div>
 
-                    {/* Botões de ação */}
                     <div className="flex gap-3 pt-4">
                       <button
                         onClick={() => setShowAddActivityInterface(false)}
@@ -1058,7 +1038,6 @@ export function CardDeConstrucao({
                   </div>
                 </motion.div>
               ) : (
-                // Interface normal do Plano de Ação
                 <div
                   className={`flex-1 overflow-y-auto mb-3 sm:mb-4 pr-1 sm:pr-2 ${
                     viewMode === 'grid' 
@@ -1112,7 +1091,7 @@ export function CardDeConstrucao({
                           </div>
                         )}
 
-                        {/* Badge Trilhas - POSICIONADO NO CANTO SUPERIOR DIREITO */}
+                        {/* Badge Trilhas */}
                         {badgeProps.showBadge && (
                           <div className="absolute top-4 right-4 z-20">
                             <TrilhasBadge />
@@ -1120,10 +1099,8 @@ export function CardDeConstrucao({
                         )}
 
                         <div className="flex items-start gap-4">
-                          {/* Conteúdo da atividade */}
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
-                              {/* Ícone animado da atividade - CLICÁVEL PARA SELEÇÃO */}
                               <div 
                                 className={`icon-container ${isSelected ? 'active' : ''}`}
                                 onClick={(e) => {
@@ -1153,7 +1130,6 @@ export function CardDeConstrucao({
                                 }}
                               >
                                 {isSelected ? (
-                                  // Mostra ícone de check quando selecionado
                                   <svg 
                                     className="w-5 h-5 text-white transition-all duration-300 relative z-10" 
                                     fill="currentColor" 
@@ -1166,7 +1142,6 @@ export function CardDeConstrucao({
                                     />
                                   </svg>
                                 ) : (
-                                  // Mostra ícone original quando não selecionado
                                   React.createElement(getIconByActivityId(activity.id), {
                                     className: `w-5 h-5 transition-all duration-300 relative z-10`,
                                     style: {
@@ -1183,7 +1158,7 @@ export function CardDeConstrucao({
                                     width: '20px',
                                     height: '20px',
                                     background: 'radial-gradient(circle, rgba(255, 110, 6, 0.5), transparent)',
-                                                                   borderRadius:'50%',
+                                    borderRadius: '50%',
                                     transform: isSelected 
                                       ? 'translate(-50%, -50%) scale(2.2)' 
                                       : 'translate(-50%, -50%) scale(0)',
@@ -1192,7 +1167,6 @@ export function CardDeConstrucao({
                                 />
                               </div>
 
-                              {/* Título da atividade */}
                               <h3 className="text-lg font-semibold text-gray-900 dark:text-white line-clamp-2 flex-1 pr-8">
                                 {activity.title}
                               </h3>
@@ -1202,20 +1176,17 @@ export function CardDeConstrucao({
                               {activity.description}
                             </p>
 
-                            {/* ID da atividade (para debug) */}
                             <div className="mt-2">
                               <span className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded">
                                 ID: {activity.id}
                               </span>
-
                             </div>
                           </div>
                         </div>
 
-                        {/* Borda animada para item selecionado */}
                         {isSelected && (
                           <div className="absolute inset-0 rounded-[32px] border-2 border-[#FF6B00] animate-pulse opacity-50 pointer-events-none"></div>
-                        )}The code includes the ConstructionInterface conditionally after action plan approval.
+                        )}
                       </motion.div>
                     );
                   })}
@@ -1269,80 +1240,7 @@ export function CardDeConstrucao({
                 </div>
               )}
             </motion.div>
-          ) : step === "activities" ? (
-            <motion.div
-              key="activities-content"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3 }}
-              className="flex-1 flex flex-col overflow-hidden"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF6B00] to-[#D65A00] flex items-center justify-center">
-                    <Wrench className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
-                      Construção de Atividades
-                    </h2>
-                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                      {selectedActivities.length} {selectedActivities.length === 1 ? 'atividade aprovada' : 'atividades aprovadas'} para construção
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={onResetFlow}
-                  className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
-                >
-                  Voltar ao início
-                </button>
-              </div>
-
-              {/* Interface de Construção */}
-              <div className="flex-1 overflow-hidden">
-                <ConstructionInterface approvedActivities={selectedActivities} />
-              </div>
-            </motion.div>
           )}
-        </motion.div>
-      )}
-
-      {/* Interface de Construção de Atividades */}
-      {(step === 'construction' || showConstruction) && approvedActivitiesForConstruction.length > 0 && (
-        <motion.div
-          key="construction-interface"
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-          className="flex flex-col h-full"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF6B00] to-[#D65A00] flex items-center justify-center">
-                <Wrench className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
-                  Construção de Atividades
-                </h2>
-                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                  {approvedActivitiesForConstruction.length} {approvedActivitiesForConstruction.length === 1 ? 'atividade aprovada' : 'atividades aprovadas'} para construção
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={onResetFlow}
-              className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
-            >
-              Voltar ao início
-            </button>
-          </div>
-
-          {/* Interface de Construção */}
-          <div className="flex-1 overflow-hidden">
-            <ConstructionInterface approvedActivities={approvedActivitiesForConstruction} />
-          </div>
         </motion.div>
       )}
 
