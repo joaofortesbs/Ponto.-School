@@ -1264,47 +1264,53 @@ export function CardDeConstrucao({
                 </div>
               )}
             </motion.div>
+          ) : step === "construction" ? (
+            <motion.div
+              key="construction-content"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3 }}
+              className="flex-1 flex flex-col overflow-hidden"
+            >
+              <div className="flex items-center justify-between mb-3 sm:mb-4">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#FF6B00] to-[#D65A00] flex items-center justify-center">
+                    <Wrench className="w-4 h-4 text-white" />
+                  </div>
+                  Construção de Atividades
+                </h3>
+                <div className="bg-[#FF6B00]/10 text-[#FF6B00] px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium">
+                  {approvedActivitiesForConstruction.length} {approvedActivitiesForConstruction.length === 1 ? 'atividade aprovada' : 'atividades aprovadas'}
+                </div>
+              </div>
+
+              {/* Interface de Construção */}
+              <div className="flex-1 overflow-hidden">
+                <ConstructionInterface approvedActivities={approvedActivitiesForConstruction} />
+              </div>
+
+              <div className="flex justify-between pt-3 sm:pt-4 border-t border-gray-300 dark:border-gray-700">
+                <button
+                  onClick={onResetFlow}
+                  className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white border border-gray-400 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
+                >
+                  Voltar ao início
+                </button>
+                <button
+                  className="px-4 sm:px-6 py-2 sm:py-3 bg-[#FF6B00] hover:bg-[#D65A00] text-white font-semibold rounded-xl transition-colors duration-200 flex items-center gap-2 text-sm sm:text-base"
+                >
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  Baixar Atividades
+                </button>
+              </div>
+            </motion.div>
           )}
         </motion.div>
       )}
 
-      {/* Interface de Construção de Atividades */}
-      {(step === 'construction' || showConstruction) && approvedActivitiesForConstruction.length > 0 && (
-        <motion.div
-          key="construction-interface"
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-          className="flex flex-col h-full"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF6B00] to-[#D65A00] flex items-center justify-center">
-                <Wrench className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
-                  Construção de Atividades
-                </h2>
-                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                  {approvedActivitiesForConstruction.length} {approvedActivitiesForConstruction.length === 1 ? 'atividade aprovada' : 'atividades aprovadas'} para construção
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={onResetFlow}
-              className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
-            >
-              Voltar ao início
-            </button>
-          </div>
-
-          {/* Interface de Construção */}
-          <div className="flex-1 overflow-hidden">
-            <ConstructionInterface approvedActivities={approvedActivitiesForConstruction} />
-          </div>
-        </motion.div>
-      )}
+      
 
       {/* Debug Panel para verificar sistema de Trilhas */}
       {actionPlan && (
