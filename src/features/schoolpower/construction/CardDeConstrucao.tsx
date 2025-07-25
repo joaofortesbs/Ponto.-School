@@ -777,20 +777,7 @@ export function CardDeConstrucao({
           transition={{ duration: 0.3 }}
           className="relative z-10 h-full flex flex-col pt-16"
         >
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF6B00] to-[#D65A00] flex items-center justify-center">
-                <Wrench className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
-                  Construção de Atividades
-                </h2>
-                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                  {selectedActivities.length} {selectedActivities.length === 1 ? 'atividade aprovada' : 'atividades aprovadas'} para construção
-                </p>
-              </div>
-            </div>
+          <div className="flex items-center justify-end mb-4">
             <button
               onClick={onResetFlow}
               className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"

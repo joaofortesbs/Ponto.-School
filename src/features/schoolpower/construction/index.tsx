@@ -8,7 +8,7 @@ interface ConstructionInterfaceProps {
 
 export function ConstructionInterface({ approvedActivities }: ConstructionInterfaceProps) {
   return (
-    <div className="w-full">
+    <div className="w-full h-full overflow-y-auto" style={{ maxHeight: 'calc(100vh - 200px)' }}>
       <ConstructionGrid approvedActivities={approvedActivities} />
     </div>
   );
