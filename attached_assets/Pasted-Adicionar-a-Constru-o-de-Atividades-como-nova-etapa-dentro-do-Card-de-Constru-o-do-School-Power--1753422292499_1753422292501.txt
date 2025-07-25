@@ -1,0 +1,91 @@
+Adicionar a Construção de Atividades como nova etapa dentro do Card de Construção do School Power
+
+✅ Resumo do que precisa ser feito:
+Atualmente, a interface de Construção de Atividades está sendo exibida abaixo do Card de Construção dentro da mesma etapa do Plano de Ação.
+
+Deve-se alterar o fluxo para:
+
+1️⃣ Aparecer como uma nova etapa (Step 3) dentro do Card de Construção.
+2️⃣ Somente após o usuário aprovar o Plano de Ação (Step 2), o sistema avança para a etapa de Construção de Atividades (Step 3).
+3️⃣ A interface de Construção de Atividades aparecerá dentro desta nova etapa, mantendo todas as funcionalidades implementadas.
+
+🛠️ Alterações detalhadas (passo a passo):
+1️⃣ Gerenciamento de etapas:
+Arquivo:
+
+src/features/schoolpower/construction/CardDeConstrucao.tsx
+
+Adicionar uma nova etapa no sistema de steps do Card:
+
+ts
+Copiar
+Editar
+const [step, setStep] = useState(1); // se já existir, manter
+
+// Step 1 = Mensagem Inicial
+// Step 2 = Plano de Ação
+// Step 3 = Construção de Atividades
+Alterar o botão de aprovação do Plano de Ação para:
+
+ts
+Copiar
+Editar
+<button onClick={() => setStep(3)}>Aprovar Plano</button>
+ou, se estiver utilizando Zustand ou Context para gerenciamento global, criar:
+
+ts
+Copiar
+Editar
+schoolPowerStore.setStep(3);
+2️⃣ Renderização condicional:
+No CardDeConstrucao.tsx, usar renderização clara:
+
+tsx
+Copiar
+Editar
+{step === 1 && <MensagemInicialComponent />}
+{step === 2 && <PlanoDeAcaoComponent />}
+{step === 3 && <ConstrucaoDeAtividadesComponent />}
+3️⃣ Inserir a interface da Construção de Atividades na nova etapa:
+Garantir que ConstrucaoDeAtividadesComponent (ou ConstructionActivities.tsx) esteja importado e renderizando corretamente.
+
+Ele já deve estar puxando os dados de approvedActivities ou store.schoolPower.approvedActivities que foram definidos ao aprovar o plano de ação.
+
+4️⃣ Verificar dados para garantir consistência:
+✅ Conferir que os dados das atividades selecionadas continuam armazenados ao mudar de etapa, sem serem apagados.
+✅ Se estiver usando Zustand:
+
+Validar que approvedActivities não seja resetado ao trocar de etapa.
+
+✅ Se estiver usando localStorage/sessionStorage:
+
+Conferir que o carregamento funcione ao recarregar a página.
+
+5️⃣ Ajustes visuais (opcional para UX):
+Atualizar o Header de etapas do School Power para exibir visualmente:
+
+Etapa 1: Mensagem Inicial ✅
+
+Etapa 2: Plano de Ação ✅
+
+Etapa 3: Construção de Atividades 🚀
+
+Caso utilize componente de progresso (StepsProgress), atualizar para incluir o novo step.
+
+🗂️ Arquivos afetados:
+✅ src/features/schoolpower/construction/CardDeConstrucao.tsx (principal alteração)
+✅ src/features/schoolpower/construction/ConstructionActivities.tsx (apenas realocado na nova etapa, sem alteração interna)
+✅ Se necessário:
+
+src/store/schoolPowerStore.ts
+
+src/components/StepsProgress.tsx
+
+🖥️ Resumo técnico:
+✅ Adiciona uma nova etapa simples e limpa no fluxo do Card de Construção do School Power.
+✅ Utiliza renderização condicional para alternar interfaces sem perder dados.
+✅ Garante modularidade, escalabilidade e não gera conflitos com as funcionalidades já construídas.
+✅ Deixa a plataforma pronta para a fase 3 de geração automatizada sem retrabalho.
+
+✅ Prompt para enviar ao Vibe Code:
+“Realize a alteração no School Power para que a interface de Construção de Atividades seja exibida como uma nova etapa (Step 3) dentro do fluxo do Card de Construção, após o usuário aprovar o Plano de Ação (Step 2). Utilize renderização condicional de steps, mantendo todos os dados das atividades selecionadas ao trocar de etapa, garantindo que a interface de construção não apareça abaixo do Plano de Ação, mas sim em uma etapa separada e limpa. Mantenha a responsividade, estilos e integração com o restante do sistema, sem gerar bugs ou perda de dados.”
