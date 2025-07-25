@@ -664,8 +664,6 @@ export function CardDeConstrucao({
                   d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
                 />
               </svg>
-            ) : step === "construction" ? (
-              <Wrench className="w-7 h-7 text-white" />
             ) : (
               <svg
                 className="w-7 h-7 text-white animate-spin"
@@ -688,8 +686,6 @@ export function CardDeConstrucao({
                 ? "Quiz de Contextualização"
                 : step === "actionPlan"
                   ? "Plano de Ação"
-                  : step === "construction"
-                    ? "Construção de Atividades"
                   : step === "generating"
                     ? "Gerando Conteúdo..."
                     : "School Power"}
@@ -710,8 +706,7 @@ export function CardDeConstrucao({
                 left: '16px',
                 width: `${
                   step === "contextualization" ? "0%" :
-                  step === "actionPlan" ? "33%" :
-                  step === "construction" ? "66%" :
+                  step === "actionPlan" ? "50%" :
                   (step === "generating" || step === "generatingActivities") ? "100%" : "0%"
                 }`
               }}
@@ -732,40 +727,24 @@ export function CardDeConstrucao({
 
             <div className={`relative z-10 w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
               step === "actionPlan" ? 'bg-white border-white text-[#FF6B00]' :
-              (step === "construction" || step === "generating" || step === "generatingActivities") ? 'bg-[#FF6B00] border-white text-white' :
+              (step === "generating" || step === "generatingActivities") ? 'bg-[#FF6B00] border-white text-white' :
               'bg-white/20 border-white/30 text-white'
             }`}>
               {step === "actionPlan" ? (
                 <span className="text-sm font-semibold">2</span>
-              ) : (step === "construction" || step === "generating" || step === "generatingActivities") ? (
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-              ) : (
-                <span className="text-sm font-semibold">2</span>
-              )}
-            </div>
-
-            <div className={`relative z-10 w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
-              step === "construction" ? 'bg-white border-white text-[#FF6B00]' :
-              (step === "generating" || step === "generatingActivities") ? 'bg-[#FF6B00] border-white text-white' :
-              'bg-white/20 border-white/30 text-white'
-            }`}>
-              {step === "construction" ? (
-                <span className="text-sm font-semibold">3</span>
               ) : (step === "generating" || step === "generatingActivities") ? (
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
               ) : (
-                <span className="text-sm font-semibold">3</span>
+                <span className="text-sm font-semibold">2</span>
               )}
             </div>
 
             <div className={`relative z-10 w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
               (step === "generating" || step === "generatingActivities") ? 'bg-white border-white text-[#FF6B00]' : 'bg-white/20 border-white/30 text-white'
             }`}>
-              <span className="text-sm font-semibold">4</span>
+              <span className="text-sm font-semibold">3</span>
             </div>
           </div>
         </div>
@@ -1231,7 +1210,7 @@ export function CardDeConstrucao({
                         {/* Borda animada para item selecionado */}
                         {isSelected && (
                           <div className="absolute inset-0 rounded-[32px] border-2 border-[#FF6B00] animate-pulse opacity-50 pointer-events-none"></div>
-                        )}
+                        )}The code includes the ConstructionInterface conditionally after action plan approval.
                       </motion.div>
                     );
                   })}
@@ -1285,36 +1264,45 @@ export function CardDeConstrucao({
                 </div>
               )}
             </motion.div>
-          ) : step === 'construction' ? (
-            <motion.div
-              key="construction-content"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3 }}
-              className="flex-1 flex flex-col overflow-hidden"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF6B00] to-[#D65A00] flex items-center justify-center">
-                    <Wrench className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
-                      Construção de Atividades
-                    </h2>
-                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                      {approvedActivitiesForConstruction.length} {approvedActivitiesForConstruction.length === 1 ? 'atividade aprovada' : 'atividades aprovadas'} para construção
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Interface de Construção */}
-              <div className="flex-1 overflow-hidden">
-                <ConstructionInterface approvedActivities={approvedActivitiesForConstruction} />
-              </div>
-            </motion.div>
           )}
+        </motion.div>
+      )}
+
+      {/* Interface de Construção de Atividades */}
+      {(step === 'construction' || showConstruction) && approvedActivitiesForConstruction.length > 0 && (
+        <motion.div
+          key="construction-interface"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="flex flex-col h-full"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF6B00] to-[#D65A00] flex items-center justify-center">
+                <Wrench className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
+                  Construção de Atividades
+                </h2>
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                  {approvedActivitiesForConstruction.length} {approvedActivitiesForConstruction.length === 1 ? 'atividade aprovada' : 'atividades aprovadas'} para construção
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={onResetFlow}
+              className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
+            >
+              Voltar ao início
+            </button>
+          </div>
+
+          {/* Interface de Construção */}
+          <div className="flex-1 overflow-hidden">
+            <ConstructionInterface approvedActivities={approvedActivitiesForConstruction} />
+          </div>
         </motion.div>
       )}
 
