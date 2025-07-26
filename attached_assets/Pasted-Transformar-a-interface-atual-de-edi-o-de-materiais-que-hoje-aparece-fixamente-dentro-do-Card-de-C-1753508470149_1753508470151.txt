@@ -1,0 +1,91 @@
+Transformar a interface atual de edição de materiais, que hoje aparece fixamente dentro do Card de Construção, em uma visualização flutuante via Modal, garantindo que tudo funcione exatamente como antes, sem modificar nenhuma funcionalidade já existente.
+
+📦 Instruções Técnicas para Implementação:
+Contexto Geral:
+
+Este sistema faz parte da seção de School Power, mais especificamente dentro do Card de Construção, na etapa chamada Construção de Atividades.
+
+Atualmente, cada atividade aparece como um mini-card horizontal, com os dados da atividade (nome, descrição, prévia, etc.) e botões de ação (como “Editar Materiais”).
+
+Alteração solicitada:
+
+A funcionalidade de “Editar” atualmente leva o usuário a uma nova interface fixa.
+
+A partir de agora, ao clicar em Editar, o conteúdo de edição da atividade deve aparecer em um modal flutuante centralizado, com animação suave e visual limpo.
+
+🧩 Especificações detalhadas do novo Modal:
+📍1. Abertura do Modal:
+O modal será aberto ao clicar no botão de “Editar” no mini-card da atividade.
+
+A transição deve ter uma animação suave (fade + scale).
+
+O modal deve ser centralizado na tela, acima do Card de Construção, com overlay escuro semi-transparente ao fundo.
+
+📍2. Conteúdo do Modal:
+Todo o conteúdo que já era exibido na interface fixa de edição da atividade (formulário + preview ao vivo) agora deve ser renderizado dentro do modal.
+
+Garantir que:
+
+Todos os campos fiquem visíveis e responsivos dentro do modal.
+
+Nada do conteúdo fique para fora da área do modal, mesmo em telas menores.
+
+A responsividade seja preservada em desktop e tablet (mínimo de 768px).
+
+📍3. Design do Modal:
+Largura: 90% da viewport (máximo de 960px).
+
+Altura: auto, com scroll interno se necessário.
+
+Header do Modal:
+
+Título da Atividade (ex: “Editar: Prova Bimestral - Funções do 1º Grau”)
+
+Botão de fechar (X), no canto superior direito.
+
+Rodapé do Modal:
+
+Botões: “Salvar”, “Cancelar”, “Visualizar em Tela Cheia” (se aplicável).
+
+📍4. Comportamento:
+O botão “Salvar” mantém a mesma lógica atual (salva os dados da atividade no mesmo local).
+
+O botão “Cancelar” ou “Fechar” apenas fecha o modal, sem salvar alterações.
+
+O sistema de preview da atividade (lado direito do editor) também deve estar embutido no modal.
+
+⚠️ Regras Importantes:
+❌ Não modificar o design visual ou estrutura dos mini-cards que aparecem na interface da etapa “Construção de Atividades”.
+
+✅ O que está sendo alterado é apenas a forma de visualização da interface de edição da atividade.
+
+✅ Todos os dados devem continuar fluindo pelo mesmo sistema atual de IDs das atividades aprovadas, que foram puxadas do Plano de Ação.
+
+✅ As informações da atividade devem continuar sendo salvas no mesmo store/contexto/API já configurado.
+
+🧠 Organização sugerida de arquivos:
+lua
+Copiar
+Editar
+src/features/schoolpower/activities/
+  ModalEditActivity.tsx        <-- Novo componente de modal
+  ActivityEditForm.tsx         <-- (já existente) conteúdo do formulário
+  ActivityPreview.tsx          <-- (já existente) preview ao vivo
+  useActivityModalStore.ts     <-- (novo hook opcional para controlar estado do modal)
+✨ Extra (opcional):
+Caso queira usar biblioteca de UI pronta, recomendamos:
+
+Modal: @radix-ui/react-dialog, shadcn/ui, ou headlessui
+
+Transições: framer-motion ou tailwind-animate
+
+✅ Resultado esperado:
+Ao clicar em “Editar” no mini-card de qualquer atividade dentro da interface de Construção de Atividades:
+
+Abre um modal flutuante centralizado com o editor completo da atividade.
+
+Todas as funcionalidades atuais são preservadas.
+
+Visual limpo, fluido e profissional.
+
+Fechamento suave e sem recarregamentos.
