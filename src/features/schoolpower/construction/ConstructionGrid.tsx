@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ConstructionCard } from './ConstructionCard';
@@ -129,12 +130,13 @@ export function ConstructionGrid({ approvedActivities }: ConstructionGridProps) 
       {/* Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {activities.map((activity) => (
-        <ConstructionCard
-          key={activity.id}
-          activity={activity}
-          onEdit={openModal}
-        />
-      ))}
+          <ConstructionCard
+            key={activity.id}
+            activity={activity}
+            onEdit={openModal}
+          />
+        ))}
+      </div>
 
       {selectedActivity && (
         <EditActivityModal
