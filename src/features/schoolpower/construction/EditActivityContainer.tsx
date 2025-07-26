@@ -284,13 +284,13 @@ export function EditActivityContainer({
           </div>
 
           <div className="flex-1 overflow-y-auto p-6 space-y-6 min-h-0">
-              {/* Informações Básicas */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-                className="w-full"
-              >
+            {/* Informações Básicas */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="w-full"
+            >
                 <Card className="border-0 shadow-xl bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm hover:shadow-2xl transition-all duration-300">
                   <CardHeader className="pb-4 bg-gradient-to-r from-[#FF6B00]/10 to-[#FF8C40]/10 rounded-t-lg">
                     <CardTitle className="flex items-center text-lg">
@@ -380,12 +380,12 @@ export function EditActivityContainer({
               </motion.div>
 
               {/* Configurações Específicas */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: 0.1 }}
-                className="w-full"
-              >
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.1 }}
+              className="w-full"
+            >
                 <Card className="border-0 shadow-xl bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm hover:shadow-2xl transition-all duration-300">
                   <CardHeader className="pb-4 bg-gradient-to-r from-blue-500/10 to-blue-600/10 rounded-t-lg">
                     <CardTitle className="flex items-center text-lg">
@@ -441,12 +441,12 @@ export function EditActivityContainer({
               </motion.div>
 
               {/* Materiais e Recursos */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: 0.2 }}
-                className="w-full"
-              >
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.2 }}
+              className="w-full"
+            >
                 <Card className="border-0 shadow-xl bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm hover:shadow-2xl transition-all duration-300">
                   <CardHeader className="pb-4 bg-gradient-to-r from-green-500/10 to-green-600/10 rounded-t-lg">
                     <CardTitle className="flex items-center text-lg">
@@ -531,13 +531,13 @@ export function EditActivityContainer({
               </motion.div>
 
               {/* Componente específico da atividade */}
-              {ActivityEditor && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: 0.3 }}
-                  className="w-full"
-                >
+            {ActivityEditor && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.3 }}
+                className="w-full"
+              >
                   <Card className="border-0 shadow-xl bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm hover:shadow-2xl transition-all duration-300">
                     <CardHeader className="pb-4 bg-gradient-to-r from-purple-500/10 to-purple-600/10 rounded-t-lg">
                       <CardTitle className="flex items-center text-lg">
@@ -556,8 +556,7 @@ export function EditActivityContainer({
                     </CardContent>
                   </Card>
                 </motion.div>
-              )}
-            </div>
+            )}
           </div>
         </div>
 
