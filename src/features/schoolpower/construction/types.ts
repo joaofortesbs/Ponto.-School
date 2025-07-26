@@ -22,3 +22,9 @@ export interface ConstructionActivityProps {
   onShare?: (id: string) => void;
   onEdit?: (id: string) => void;
 }
+
+export interface EditActivityModalState {
+  isOpen: boolean;
+  activityId: string | null;
+  activityTitle: string;
+}
