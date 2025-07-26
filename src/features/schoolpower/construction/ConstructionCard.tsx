@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Edit3, Eye, Share2, Clock, CheckCircle2 } from 'lucide-react';
@@ -98,7 +97,11 @@ export function ConstructionCard({
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => onEdit?.(id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      console.log('🎯 Edit button clicked for:', id);
+                      onEdit?.(id);
+                    }}
                     className="h-7 px-2 text-xs bg-[#FF6B00] hover:bg-[#D65A00] text-white border-[#FF6B00] hover:border-[#D65A00]"
                   >
                     <Edit3 className="w-3 h-3" />

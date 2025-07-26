@@ -1,4 +1,3 @@
-
 import React, { useState, Suspense, lazy } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Save, Eye, Edit3 } from 'lucide-react';
@@ -6,9 +5,11 @@ import { Button } from '@/components/ui/button';
 
 interface EditActivityContainerProps {
   activityId: string;
-  activityData: any;
-  onBack: () => void;
+  activityData?: any;
+  initialData?: any;
   onSave: (data: any) => void;
+  onCancel?: () => void;
+  onBack?: () => void;
 }
 
 // Cache para componentes carregados dinamicamente
@@ -33,7 +34,7 @@ export function EditActivityContainer({
       import(`../activities/${id}/EditActivity.tsx`)
         .catch(() => import('../activities/default/EditActivity.tsx'))
     );
-    
+
     const ActivityPreview = lazy(() => 
       import(`../activities/${id}/ActivityPreview.tsx`)
         .catch(() => import('../activities/default/ActivityPreview.tsx'))
@@ -125,7 +126,7 @@ export function EditActivityContainer({
                 Configurar Atividade
               </h2>
             </div>
-            
+
             <Suspense fallback={
               <div className="flex items-center justify-center py-12">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF6B00]"></div>
@@ -148,7 +149,7 @@ export function EditActivityContainer({
                 Visualização ao Vivo
               </h2>
             </div>
-            
+
             <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6 min-h-96">
               <Suspense fallback={
                 <div className="flex items-center justify-center py-12">

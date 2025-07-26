@@ -6,6 +6,7 @@ export interface ConstructionActivity {
   status: 'pending' | 'in_progress' | 'completed';
   progress: number; // 0-100
   type: string;
+  originalData?: any; // Dados originais da atividade
 }
 
 export interface ConstructionActivityProps {
