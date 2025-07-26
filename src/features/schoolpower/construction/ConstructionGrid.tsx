@@ -7,17 +7,18 @@ import { AlertCircle, Building2 } from 'lucide-react';
 
 interface ConstructionGridProps {
   approvedActivities: any[];
-  onEditActivity?: (activityId: string, activityData: any) => void;
+  onEdit?: (activityId: string, activityData?: any) => void;
 }
 
-export function ConstructionGrid({ approvedActivities, onEditActivity }: ConstructionGridProps) {
+export function ConstructionGrid({ approvedActivities, onEdit }: ConstructionGridProps) {
   const { activities, loading } = useConstructionActivities(approvedActivities);
 
   const handleEdit = (id: string) => {
-    console.log('Editando atividade:', id);
+    console.log('🎯 ConstructionGrid: Editando atividade ID:', id);
     const activity = activities.find(act => act.id === id);
-    if (activity && onEditActivity) {
-      onEditActivity(id, activity);
+    console.log('🎯 ConstructionGrid: Atividade encontrada:', activity);
+    if (onEdit) {
+      onEdit(id, activity);
     }
   };
 

@@ -39,6 +39,12 @@ export function ConstructionCard({
     }
   };
 
+    const handleEditClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        console.log('🎯 Edit button clicked for:', id);
+        onEdit?.(id);
+    };
+
   return (
     <TooltipProvider>
       <motion.div
