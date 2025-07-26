@@ -17,17 +17,17 @@ export const useEditActivityModal = () => {
     setSelectedActivity(null);
   }, []);
 
-  const handleSave = useCallback((updatedActivity: ConstructionActivity) => {
+  const handleSaveActivity = useCallback((updatedActivity: ConstructionActivity) => {
     console.log('Saving activity:', updatedActivity);
     // TODO: Implement save logic here
     closeModal();
   }, [closeModal]);
 
   return {
-    isOpen,
+    isModalOpen: isOpen,
     selectedActivity,
     openModal,
     closeModal,
-    handleSave,
+    handleSaveActivity,
   };
 };

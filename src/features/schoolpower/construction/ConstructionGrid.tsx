@@ -19,6 +19,8 @@ export function ConstructionGrid({ approvedActivities }: ConstructionGridProps) 
   const { activities, loading } = useConstructionActivities(approvedActivities);
   const { isModalOpen, selectedActivity, openModal, closeModal, handleSaveActivity } = useEditActivityModal();
 
+  console.log('🎯 Estado do modal:', { isModalOpen, selectedActivity: selectedActivity?.title });
+
   const handleEditActivity = (activity: ConstructionActivity) => {
     console.log('🔧 Abrindo modal para editar atividade:', activity);
     openModal(activity);
@@ -138,7 +140,11 @@ export function ConstructionGrid({ approvedActivities }: ConstructionGridProps) 
             progress={activity.progress}
             type={activity.type}
             status={activity.status}
-            onEdit={() => openModal(activity)}
+            onEdit={() => {
+              console.log('🎯 Abrindo modal para atividade:', activity.title);
+              console.log('🎯 Dados da atividade:', activity);
+              openModal(activity);
+            }}
             onView={handleView}
             onShare={handleShare}
           />

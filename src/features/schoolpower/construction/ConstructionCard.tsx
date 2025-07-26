@@ -42,8 +42,15 @@ export function ConstructionCard({
   const handleEditClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('🔧 Clique no botão Editar Materiais detectado!');
-    onEdit?.();
+    console.log('🔧 Clique no botão Editar Materiais detectado para atividade:', title);
+    console.log('🔧 ID da atividade:', id);
+    console.log('🔧 Função onEdit disponível:', typeof onEdit);
+    if (onEdit) {
+      onEdit();
+      console.log('🔧 Função onEdit executada com sucesso!');
+    } else {
+      console.error('🔧 Função onEdit não disponível!');
+    }
   };
 
 
