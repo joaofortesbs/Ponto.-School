@@ -34,4 +34,4 @@ export { EditActivityModal } from './EditActivityModal';
 export { ProgressCircle } from './ProgressCircle';
 export { useConstructionActivities } from './useConstructionActivities';
 export { useEditActivityModal } from './useEditActivityModal';
-export type { ConstructionActivity, ConstructionInterfaceProps } from './index';dex';
+export type { ConstructionActivity, ConstructionInterfaceProps } from './index';
