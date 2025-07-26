@@ -1,4 +1,6 @@
 
+import React from 'react';
+
 export interface ConstructionActivity {
   id: string;
   title: string;
