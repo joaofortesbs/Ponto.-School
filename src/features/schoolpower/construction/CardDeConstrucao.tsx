@@ -1,4 +1,3 @@
-
 "use client";
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,7 +19,9 @@ import {
   FileText,
   Edit3,
   Eye,
-  Play
+  Play,
+  ChevronLeft,
+  Plus
 } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -51,7 +52,7 @@ import { ConstructionInterface } from './index';
 import atividadesTrilhas from '../data/atividadesTrilhas.json';
 
 // Convert to proper format with name field
-const schoolPowerActivities = schoolPowerActivitiesData.map(activity => ({
+const schoolPowerActivitiesDataFixed = schoolPowerActivitiesData.map(activity => ({
   ...activity,
   name: activity.name || activity.title || activity.description
 }));
@@ -77,6 +78,11 @@ export interface ActionPlanItem {
 }
 
 interface CardDeConstrucaoProps {
+  flowData: {
+    actionPlan: ActionPlanItem[] | null;
+    contextualizationData: ContextualizationData | null;
+  };
+  onBack: () => void;
   step: 'contextualization' | 'actionPlan' | 'generating' | 'generatingActivities' | 'construction' | 'activities';
   contextualizationData?: ContextualizationData | null;
   actionPlan?: ActionPlanItem[] | null;
@@ -86,7 +92,18 @@ interface CardDeConstrucaoProps {
   isLoading?: boolean;
 }
 
+interface ManualActivityForm {
+  title: string;
+  description: string;
+  typeId: string;
+  duration: string;
+  difficulty: string;
+  category: string;
+}
+
 export function CardDeConstrucao({ 
+  flowData, 
+  onBack,
   step, 
   contextualizationData, 
   actionPlan, 
@@ -105,7 +122,8 @@ export function CardDeConstrucao({
 
   const [actionPlanItems, setActionPlanItems] = useState<ActionPlanItem[]>([]);
   const [selectedActivities, setSelectedActivities] = useState<ActionPlanItem[]>([]);
-  const [editingActivity, setEditingActivity] = useState<{id: string, data: any} | null>(null);
+  const [editingActivity, setEditingActivity] = useState<string | null>(null);
+  const [showManualForm, setShowManualForm] = useState(false);
 
   // Form data for contextualization
   const [formData, setFormData] = useState<ContextualizationData>({
@@ -134,11 +152,13 @@ export function CardDeConstrucao({
   // Manual activity addition state
   const [manualActivities, setManualActivities] = useState<ActionPlanItem[]>([]);
 
-  // Manual activity form state
-  const [manualActivityForm, setManualActivityForm] = useState({
+  const [manualActivityForm, setManualActivityForm] = useState<ManualActivityForm>({
     title: '',
+    description: '',
     typeId: '',
-    description: ''
+    duration: '',
+    difficulty: '',
+    category: ''
   });
 
   // Load existing data when component mounts
@@ -199,13 +219,13 @@ export function CardDeConstrucao({
   };
 
   // Handle manual activity form submission
-  const handleAddManualActivity = () => {
+  const handleAddManualActivityOld = () => {
     if (!manualActivityForm.title.trim() || !manualActivityForm.typeId || !manualActivityForm.description.trim()) {
       return;
     }
 
     // Find the activity type from schoolPowerActivities
-    const activityType = schoolPowerActivities.find(activity => activity.id === manualActivityForm.typeId);
+    const activityType = schoolPowerActivitiesDataFixed.find(activity => activity.id === manualActivityForm.typeId);
 
     const newManualActivity: ActionPlanItem = {
       id: manualActivityForm.typeId,
@@ -224,8 +244,11 @@ export function CardDeConstrucao({
     // Clear form
     setManualActivityForm({
       title: '',
+      description: '',
       typeId: '',
-      description: ''
+      duration: '',
+      difficulty: '',
+      category: ''
     });
 
     // Return to action plan interface
@@ -233,7 +256,7 @@ export function CardDeConstrucao({
   };
 
   // Handle manual activity form changes
-  const handleManualFormChange = (field: string, value: string) => {
+  const handleManualFormChangeOld = (field: string, value: string) => {
     setManualActivityForm(prev => ({
       ...prev,
       [field]: value
@@ -589,19 +612,137 @@ export function CardDeConstrucao({
     setSelectedTrilhasCount(selectedTrilhas.length);
   }, [selectedActivities2]);
 
-  const handleEditActivity = (id: string, data: any) => {
+  const handleEditActivityOld = (id: string, data: any) => {
     setEditingActivity({ id, data });
   };
 
-  const handleCancelEdit = () => {
+  const handleCancelEditOld = () => {
     setEditingActivity(null);
   };
 
-  const handleSaveActivity = (id: string, newData: any) => {
+  const handleSaveActivityOld = (id: string, newData: any) => {
     // Lógica para salvar a atividade editada
     console.log(`Salvando atividade ${id} com os dados:`, newData);
     setEditingActivity(null);
   };
+  
+  const schoolPowerActivities = schoolPowerActivitiesData.filter(activity => activity.enabled);
+  const approvedActivities = flowData.actionPlan || [];
+  const allActivities = [...approvedActivities, ...manualActivities];
+
+  console.log('🏗️ CardDeConstrucao renderizado:', {
+    approvedActivities: approvedActivities.length,
+    manualActivities: manualActivities.length,
+    editingActivity,
+    showManualForm
+  });
+
+  const handleManualFormChange = (field: keyof ManualActivityForm, value: string) => {
+    setManualActivityForm(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleAddManualActivity = () => {
+    if (!manualActivityForm.title || !manualActivityForm.typeId) {
+      alert('Por favor, preencha pelo menos o título e o tipo de atividade.');
+      return;
+    }
+
+    const selectedActivity = schoolPowerActivities.find(activity => activity.id === manualActivityForm.typeId);
+    if (!selectedActivity) {
+      alert('Tipo de atividade inválido.');
+      return;
+    }
+
+    const newActivity: ActionPlanItem = {
+      id: `manual-${Date.now()}`,
+      title: manualActivityForm.title,
+      description: manualActivityForm.description,
+      approved: true,
+      isManual: true,
+      duration: manualActivityForm.duration,
+      difficulty: manualActivityForm.difficulty,
+      category: manualActivityForm.category,
+      type: selectedActivity.name || selectedActivity.title
+    };
+
+    setManualActivities(prev => [...prev, newActivity]);
+    setManualActivityForm({
+      title: '',
+      description: '',
+      typeId: '',
+      duration: '',
+      difficulty: '',
+      category: ''
+    });
+    setShowManualForm(false);
+
+    console.log('📝 Nova atividade manual adicionada:', newActivity);
+  };
+
+  const handleEdit = (activityId: string) => {
+    console.log('✏️ Editando atividade:', activityId);
+    setEditingActivity(activityId);
+    setShowManualForm(false);
+  };
+
+  const handleView = (activityId: string) => {
+    console.log('👁️ Visualizando atividade:', activityId);
+  };
+
+  const handleShare = (activityId: string) => {
+    console.log('📤 Compartilhando atividade:', activityId);
+  };
+
+  const handleSaveEdit = (activityId: string, updatedData: any) => {
+    console.log('💾 Salvando edição da atividade:', activityId, updatedData);
+
+    // Atualizar atividades manuais se for uma atividade manual
+    if (activityId.startsWith('manual-')) {
+      setManualActivities(prev => 
+        prev.map(activity => 
+          activity.id === activityId 
+            ? { ...activity, ...updatedData }
+            : activity
+        )
+      );
+    }
+
+    setEditingActivity(null);
+  };
+
+  const handleCancelEdit = () => {
+    console.log('❌ Cancelando edição');
+    setEditingActivity(null);
+  };
+
+  // Se estiver editando uma atividade, mostrar a interface de edição
+  if (editingActivity) {
+    const activityToEdit = allActivities.find(activity => activity.id === editingActivity);
+
+    if (!activityToEdit) {
+      console.error('❌ Atividade para edição não encontrada:', editingActivity);
+      setEditingActivity(null);
+      return null;
+    }
+
+    return (
+      <motion.div
+        initial={{ opacity: 0, x: 50 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -50 }}
+        className="flex flex-col h-full bg-gray-900/95 backdrop-blur-sm border border-gray-700/50 rounded-2xl overflow-hidden"
+      >
+        <EditActivityContainer
+          activity={activityToEdit}
+          onSave={(updatedData) => handleSaveEdit(editingActivity, updatedData)}
+          onCancel={handleCancelEdit}
+        />
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
@@ -643,6 +784,13 @@ export function CardDeConstrucao({
       {/* Cabeçalho Persistente Fixo */}
       <div className="absolute top-0 left-0 right-0 h-20 bg-gradient-to-r from-[#FF6B00] to-[#FF9248] rounded-t-2xl flex items-center justify-between px-6 z-20">
         <div className="flex items-center gap-4">
+          <button
+            onClick={onBack}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-800/50 hover:bg-gray-700/50 text-white rounded-xl transition-all duration-200 border border-gray-600/30"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            Voltar ao início
+          </button>
           <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
             {step === "contextualization" ? (
               <svg
@@ -1017,7 +1165,7 @@ export function CardDeConstrucao({
                       <input
                         type="text"
                         value={manualActivityForm.title}
-                        onChange={(e) => handleManualFormChange('title', e.target.value)}
+                        onChange={(e) => handleManualFormChangeOld('title', e.target.value)}
                         className="w-full p-3 border-2 border-[#FF6B00]/30 bg-white/80 dark:bg-gray-800/50 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400"
                         placeholder="Ex: Lista de Exercícios sobre Funções"
                         maxLength={100}
@@ -1030,11 +1178,11 @@ export function CardDeConstrucao({
                       </label>
                       <select
                         value={manualActivityForm.typeId}
-                        onChange={(e) => handleManualFormChange('typeId', e.target.value)}
+                        onChange={(e) => handleManualFormChangeOld('typeId', e.target.value)}
                         className="w-full p-3 border-2 border-[#FF6B00]/30 bg-white/80 dark:bg-gray-800/50 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm"
                       >
                         <option value="">Selecione o tipo de atividade...</option>
-                        {schoolPowerActivities.map((activity) => (
+                        {schoolPowerActivitiesDataFixed.map((activity) => (
                           <option key={activity.id} value={activity.id}>
                             {activity.name}
                           </option>
@@ -1048,7 +1196,7 @@ export function CardDeConstrucao({
                       </label>
                       <textarea
                         value={manualActivityForm.description}
-                        onChange={(e) => handleManualFormChange('description', e.target.value)}
+                        onChange={(e) => handleManualFormChangeOld('description', e.target.value)}
                         className="w-full p-3 border-2 border-[#FF6B00]/30 bg-white/80 dark:bg-gray-800/50 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400"
                         rows={4}
                         placeholder="Descreva detalhadamente o que você quer que seja feito nesta atividade..."
@@ -1067,7 +1215,7 @@ export function CardDeConstrucao({
                         Cancelar
                       </button>
                       <button
-                        onClick={handleAddManualActivity}
+                        onClick={handleAddManualActivityOld}
                         disabled={!manualActivityForm.title.trim() || !manualActivityForm.typeId || !manualActivityForm.description.trim()}
                         className="flex-1 px-4 py-3 bg-[#FF6B00] hover:bg-[#D65A00] text-white font-semibold rounded-xl transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                       >
@@ -1287,15 +1435,7 @@ export function CardDeConstrucao({
       )}
 
       {/* Edit Activity Interface */}
-      {editingActivity && (
-        <EditActivityContainer
-          activityId={editingActivity.id}
-          initialData={editingActivity.data}
-          onSave={handleSaveActivity}
-          onCancel={handleCancelEdit}
-        />
-      )}
-
+      
       {/* Debug Panel para verificar sistema de Trilhas */}
       {actionPlan && (
         <TrilhasDebugPanel 
