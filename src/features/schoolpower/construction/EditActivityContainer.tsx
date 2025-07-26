@@ -1,8 +1,7 @@
-import React, { useState, Suspense, useEffect } from 'react';
+import React, { useState, Suspense, lazy, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Save, Eye, Edit3, AlertCircle, FileX } from 'lucide-react';
+import { ArrowLeft, Save, Eye, Edit3, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getActivityComponents, isActivitySupported } from '../activities/activityRegistry';
 
 interface EditActivityContainerProps {
   activityId: string;
@@ -13,6 +12,25 @@ interface EditActivityContainerProps {
   onBack?: () => void;
 }
 
+// Cache para componentes carregados dinamicamente
+const componentCache = new Map();
+
+const schoolPowerActivities = [
+  {
+    id: 'listening',
+    name: 'Listening Activity',
+    description: 'An activity to test listening skills.',
+    // ... other properties
+  },
+  {
+    id: 'reading',
+    name: 'Reading Activity',
+    description: 'An activity to improve reading comprehension.',
+    // ... other properties
+  },
+  // ... more activities
+];
+
 export function EditActivityContainer({ 
   activityId, 
   activity: propActivity,
@@ -22,28 +40,50 @@ export function EditActivityContainer({
 }: EditActivityContainerProps) {
   const [formData, setFormData] = useState(activityData || {});
   const [isDraft, setIsDraft] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Verificar se a atividade é suportada
-  const activityComponents = getActivityComponents(activityId);
-  const isSupported = isActivitySupported(activityId);
+  const [activity, setActivity] = useState<any>(propActivity || null);
+  const [loading, setLoading] = useState(!propActivity);
 
   useEffect(() => {
-    console.log('🔍 Verificando atividade:', activityId);
-    console.log('✅ Atividade suportada:', isSupported);
-    console.log('📦 Componentes disponíveis:', !!activityComponents);
-
-    if (!isSupported) {
-      setError(`Atividade "${activityId}" não está registrada no sistema.`);
-    } else if (!activityComponents) {
-      setError(`Componentes para a atividade "${activityId}" não foram encontrados.`);
+    // Se a atividade não foi passada como prop, buscar pelo ID
+    if (!propActivity) {
+      console.log('🔍 Buscando atividade pelo ID:', activityId);
+      const foundActivity = schoolPowerActivities.find(a => a.id === activityId);
+      if (foundActivity) {
+        console.log('✅ Atividade encontrada:', foundActivity);
+        setActivity(foundActivity);
+      } else {
+        console.error('❌ Atividade não encontrada:', activityId);
+      }
+      setLoading(false);
     } else {
-      setError(null);
+      console.log('✅ Atividade recebida via prop:', propActivity);
+      setActivity(propActivity);
+      setLoading(false);
+    }
+  }, [activityId, propActivity]);
+
+  // Função para carregar componentes dinamicamente
+  const loadActivityComponents = (id: string) => {
+    if (componentCache.has(id)) {
+      return componentCache.get(id);
     }
 
-    setLoading(false);
-  }, [activityId, isSupported, activityComponents]);
+    const EditActivity = lazy(() => 
+      import(`../activities/${id}/EditActivity.tsx`)
+        .catch(() => import('../activities/default/EditActivity.tsx'))
+    );
+
+    const ActivityPreview = lazy(() => 
+      import(`../activities/${id}/ActivityPreview.tsx`)
+        .catch(() => import('../activities/default/ActivityPreview.tsx'))
+    );
+
+    const components = { EditActivity, ActivityPreview };
+    componentCache.set(id, components);
+    return components;
+  };
+
+  const { EditActivity, ActivityPreview } = loadActivityComponents(activityId);
 
   const handleFormChange = (newData: any) => {
     setFormData({ ...formData, ...newData });
@@ -56,6 +96,7 @@ export function EditActivityContainer({
   };
 
   const handleSaveDraft = () => {
+    // Implementar salvamento de rascunho no localStorage ou backend
     localStorage.setItem(`activity_draft_${activityId}`, JSON.stringify(formData));
     setIsDraft(false);
   };
@@ -71,32 +112,22 @@ export function EditActivityContainer({
     );
   }
 
-  if (error || !activityComponents) {
+  if (!activity) {
     return (
       <div className="w-full h-full min-h-[400px] flex items-center justify-center">
-        <div className="text-center max-w-md">
-          <FileX className="h-16 w-16 text-red-500 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-red-600 dark:text-red-400 mb-2">
-            Atividade não encontrada
-          </h3>
-          <p className="text-sm text-red-600 dark:text-red-400 mb-4">
-            {error || `A atividade "${activityId}" não está disponível para edição.`}
+        <div className="text-center">
+          <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-4" />
+          <p className="text-sm text-red-600 dark:text-red-400">
+            Atividade não encontrada (ID: {activityId})
           </p>
-          <div className="space-y-2 text-xs text-gray-500 mb-6">
-            <p><strong>ID da atividade:</strong> {activityId}</p>
-            <p><strong>Suportada:</strong> {isSupported ? 'Sim' : 'Não'}</p>
-            <p><strong>Componentes:</strong> {activityComponents ? 'Disponíveis' : 'Não encontrados'}</p>
-          </div>
-          <Button variant="outline" onClick={onBack} className="w-full">
+          <Button variant="outline" onClick={onBack} className="mt-4">
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar para Construção
+            Voltar
           </Button>
         </div>
       </div>
     );
   }
-
-  const { editor: EditActivity, preview: ActivityPreview } = activityComponents;
 
   return (
     <motion.div

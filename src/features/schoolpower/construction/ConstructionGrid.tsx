@@ -17,9 +17,8 @@ export function ConstructionGrid({ approvedActivities, onEdit }: ConstructionGri
     console.log('🎯 ConstructionGrid: Editando atividade ID:', id);
     const activity = activities.find(act => act.id === id);
     console.log('🎯 ConstructionGrid: Atividade encontrada:', activity);
-    console.log('🎯 ConstructionGrid: Dados da atividade:', activity?.originalData);
     if (onEdit) {
-      onEdit(id, activity?.originalData || activity);
+      onEdit(id, activity);
     }
   };
 
