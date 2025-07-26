@@ -155,9 +155,9 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
           </div>
 
           {/* Content */}
-          <div className="flex flex-col p-4 h-[calc(800px-140px)]">
-            {/* Formulário */}
-            <div className="flex flex-col space-y-3 overflow-y-auto max-h-full pr-2">
+          <div className="flex p-4 h-[calc(800px-140px)] gap-4">
+            {/* Formulário (50%) */}
+            <div className="flex flex-col space-y-3 overflow-y-auto flex-1 pr-2">
               <Card>
                 <CardContent className="p-4">
                   <h3 className="font-semibold text-lg mb-4 flex items-center">
@@ -315,6 +315,89 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                   </>
                 )}
               </Button>
+            </div>
+
+            {/* Pré-visualização (50%) */}
+            <div className="flex flex-col flex-1 pl-2">
+              <Card className="h-full">
+                <CardContent className="p-4 h-full">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-semibold text-lg flex items-center">
+                      <Eye className="h-5 w-5 mr-2 text-[#FF6B00]" />
+                      Pré-visualização da Atividade
+                    </h3>
+                    <div className="flex space-x-2">
+                      <Button
+                        size="sm"
+                        variant={previewMode === 'preview' ? 'default' : 'outline'}
+                        onClick={() => setPreviewMode('preview')}
+                        className="text-xs"
+                      >
+                        <Eye className="h-3 w-3 mr-1" />
+                        Preview
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={previewMode === 'code' ? 'default' : 'outline'}
+                        onClick={() => setPreviewMode('code')}
+                        className="text-xs"
+                      >
+                        <FileText className="h-3 w-3 mr-1" />
+                        Código
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="border rounded-lg p-4 h-[calc(100%-60px)] overflow-y-auto bg-gray-50 dark:bg-gray-900">
+                    {generatedActivity ? (
+                      <div className="space-y-4">
+                        {previewMode === 'preview' ? (
+                          <div className="prose prose-sm max-w-none dark:prose-invert">
+                            <div dangerouslySetInnerHTML={{ __html: generatedActivity.replace(/\n/g, '<br/>') }} />
+                          </div>
+                        ) : (
+                          <div className="bg-black text-green-400 p-4 rounded-lg font-mono text-xs">
+                            <pre className="whitespace-pre-wrap">{generatedActivity}</pre>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center h-full text-center">
+                        <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
+                          <Eye className="h-8 w-8 text-gray-400" />
+                        </div>
+                        <h4 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Nenhuma atividade gerada
+                        </h4>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xs">
+                          Preencha os campos do formulário e clique em "Construir Atividade" para ver a pré-visualização aqui.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {generatedActivity && (
+                    <div className="mt-3 flex space-x-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 text-xs"
+                      >
+                        <Download className="h-3 w-3 mr-1" />
+                        Baixar PDF
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 text-xs"
+                      >
+                        <Download className="h-3 w-3 mr-1" />
+                        Exportar
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </div>
           </div>
 
