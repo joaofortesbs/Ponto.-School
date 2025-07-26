@@ -1,0 +1,93 @@
+[plugin:vite:react-swc] × the name `EditActivityModal` is defined multiple times
+    ╭─[/home/runner/workspace/src/features/schoolpower/construction/EditActivityModal.tsx:10:1]
+ 10 │   onSave: (activity: ConstructionActivity) => void;
+ 11 │ }
+ 12 │ 
+ 13 │ export function EditActivityModal({ isOpen, onClose, activity, onSave }: EditActivityModalProps) {
+    ·                 ────────┬────────
+    ·                         ╰── previous definition of `EditActivityModal` here
+ 14 │   if (!activity) return null;
+ 15 │ 
+ 16 │   const handleSave = () => {
+ 17 │     console.log('💾 Salvando alterações da atividade:', activity.title);
+ 18 │     onSave(activity);
+ 19 │   };
+ 20 │ 
+ 21 │   return (
+ 22 │     <Dialog open={isOpen} onOpenChange={onClose}>
+ 23 │       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+ 24 │         <DialogHeader>
+ 25 │           <DialogTitle className="text-lg font-semibold text-[#001427] dark:text-white">
+ 26 │             Editar Materiais - {activity.title}
+ 27 │           </DialogTitle>
+ 28 │         </DialogHeader>
+ 29 │ 
+ 30 │         <div className="space-y-6 py-4">
+ 31 │           {/* Informações da Atividade */}
+ 32 │           <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+ 33 │             <h3 className="font-medium mb-2 text-[#001427] dark:text-white">
+ 34 │               Informações da Atividade
+ 35 │             </h3>
+ 36 │             <div className="space-y-2 text-sm">
+ 37 │               <p><span className="font-medium">Título:</span> {activity.title}</p>
+ 38 │               <p><span className="font-medium">Descrição:</span> {activity.description}</p>
+ 39 │               <p><span className="font-medium">Progresso:</span> {activity.progress}%</p>
+ 40 │               <p><span className="font-medium">Status:</span> {
+ 41 │                 activity.status === 'completed' ? 'Concluída' :
+ 42 │                 activity.status === 'in_progress' ? 'Em andamento' : 'Pendente'
+ 43 │               }</p>
+ 44 │             </div>
+ 45 │           </div>
+ 46 │ 
+ 47 │           {/* Área de Edição de Materiais */}
+ 48 │           <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+ 49 │             <h3 className="font-semibold mb-2 text-[#001427] dark:text-white">
+ 50 │               Edição de Materiais
+ 51 │             </h3>
+ 52 │             <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+ 53 │               Esta funcionalidade permite editar os materiais associados à atividade.
+ 54 │               Em breve, você poderá adicionar, remover e modificar recursos educacionais.
+ 55 │             </p>
+ 56 │ 
+ 57 │             <div className="flex gap-2">
+ 58 │               <Button
+ 59 │                 onClick={handleSave}
+ 60 │                 className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
+ 61 │               >
+ 62 │                 Salvar Alterações
+ 63 │               </Button>
+ 64 │               <Button
+ 65 │                 variant="outline"
+ 66 │                 onClick={onClose}
+ 67 │               >
+ 68 │                 Cancelar
+ 69 │               </Button>
+ 70 │             </div>
+ 71 │           </div>
+ 72 │         </div>
+ 73 │       </DialogContent>
+ 74 │     </Dialog>
+ 75 │   );
+ 76 │ }
+ 77 │ 
+ 78 │ interface EditActivityModalProps {
+ 79 │   isOpen: boolean;
+ 80 │   onClose: () => void;
+ 81 │   activity: ConstructionActivity | null;
+ 82 │   onSave: (activity: ConstructionActivity) => void;
+ 83 │ }
+ 84 │ 
+ 85 │ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
+    ·              ────────┬────────
+    ·                      ╰── `EditActivityModal` redefined here
+ 86 │   isOpen,
+ 87 │   onClose,
+ 88 │   activity,
+    ╰────
+/home/runner/workspace/src/features/schoolpower/construction/EditActivityModal.tsx:10:1
+97 |    return (
+98 |      <Dialog open={isOpen} onOpenChange={onClose}>
+99 |        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+   |                      ^
+100|          <DialogHeader>
+101|            <DialogTitle className="text-xl font-bold">
