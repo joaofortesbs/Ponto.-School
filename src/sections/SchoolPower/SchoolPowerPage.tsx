@@ -139,15 +139,19 @@ export function SchoolPowerPage() {
         >
           <div className="flex items-center justify-center w-full h-full">
             <CardDeConstrucao
-              step={
-                flowState === 'contextualizing' ? 'contextualization' :
-                flowState === 'actionplan' ? 'actionPlan' :
-                flowState === 'generating' ? 'generating' :
-                flowState === 'generatingActivities' ? 'generatingActivities' :
-                flowState === 'activities' ? 'activities' : 'contextualization'
-              }
-              contextualizationData={flowData.contextualizationData}
-              actionPlan={flowData.actionPlan}
+              flowData={{
+                ...flowData,
+                actionPlan: (flowData?.actionPlan && Array.isArray(flowData.actionPlan)) ? flowData.actionPlan : [],
+                contextualizationData: flowData?.contextualizationData || null,
+                manualActivities: flowData?.manualActivities || []
+              }}
+              onBack={handleBack}
+              step={flowState === 'contextualizing' ? 'contextualization' : 
+                    flowState === 'actionplan' ? 'actionPlan' : 
+                    flowState === 'generating' ? 'generating' : 
+                    flowState === 'generatingActivities' ? 'generatingActivities' : 'activities'}
+              contextualizationData={flowData?.contextualizationData || null}
+              actionPlan={(flowData?.actionPlan && Array.isArray(flowData.actionPlan)) ? flowData.actionPlan : []}
               onSubmitContextualization={handleSubmitContextualization}
               onApproveActionPlan={handleApproveActionPlan}
               onResetFlow={handleResetFlow}

@@ -199,9 +199,9 @@ export function CardDeConstrucao({
   };
 
   useEffect(() => {
-    if (actionPlan) {
+    if (actionPlan && Array.isArray(actionPlan)) {
       console.log('🎯 ActionPlan recebido no CardDeConstrucao:', actionPlan);
-      const approved = actionPlan.filter(item => item.approved);
+      const approved = actionPlan.filter(item => item?.approved);
       setSelectedActivities2(approved);
     }
   }, [actionPlan, step]);
@@ -265,7 +265,7 @@ export function CardDeConstrucao({
 
   // Get combined activities (AI suggestions + manual)
   const getCombinedActivities = () => {
-    const aiActivities = actionPlan || [];
+    const aiActivities = (actionPlan && Array.isArray(actionPlan)) ? actionPlan : [];
     const allActivities = [...aiActivities, ...manualActivities];
     return allActivities;
   };
@@ -627,7 +627,7 @@ export function CardDeConstrucao({
   };
   
   const schoolPowerActivities = schoolPowerActivitiesData.filter(activity => activity.enabled);
-  const approvedActivities = flowData.actionPlan || [];
+  const approvedActivities = (flowData?.actionPlan && Array.isArray(flowData.actionPlan)) ? flowData.actionPlan : [];
   const allActivities = [...approvedActivities, ...manualActivities];
 
   console.log('🏗️ CardDeConstrucao renderizado:', {

@@ -26,17 +26,15 @@ interface UseSchoolPowerFlowReturn {
 
 const STORAGE_KEY = 'schoolpower_flow_data';
 
-export function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
-  // Estado centralizado sem dependência de cache defasado
+export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
+  const [flowState, setFlowState] = useState<FlowState>('idle');
   const [flowData, setFlowData] = useState<SchoolPowerFlowData>({
     initialMessage: null,
     contextualizationData: null,
-    actionPlan: null,
-    manualActivities: null,
+    actionPlan: [],
+    manualActivities: [],
     timestamp: Date.now()
   });
-
-  const [flowState, setFlowState] = useState<FlowState>('idle');
   const [isLoading, setIsLoading] = useState(false);
 
   // Salva dados no localStorage de forma sincronizada
