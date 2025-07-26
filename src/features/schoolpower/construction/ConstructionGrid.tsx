@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ConstructionCard } from './ConstructionCard';
@@ -157,6 +158,6 @@ export function ConstructionGrid({ approvedActivities }: ConstructionGridProps) 
         activity={selectedActivity}
         onSave={handleSaveActivity}
       />
-    </div>
+    </motion.div>
   );
 }
