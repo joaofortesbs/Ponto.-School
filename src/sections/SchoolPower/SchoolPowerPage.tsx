@@ -13,7 +13,6 @@ import {
 import useSchoolPowerFlow from "../../features/schoolpower/hooks/useSchoolPowerFlow";
 import { ContextualizationCard } from "../../features/schoolpower/contextualization/ContextualizationCard";
 import { ActionPlanCard } from "../../features/schoolpower/actionplan/ActionPlanCard";
-import React from 'react';
 import { CardDeConstrucao } from "../../features/schoolpower/construction/CardDeConstrucao";
 
 export function SchoolPowerPage() {
