@@ -600,28 +600,11 @@ export function CardDeConstrucao({
         stiffness: 100,
         damping: 15,
       }}
-      className="relative backdrop-blur-xl rounded-2xl p-6 shadow-2xl border border-[#FF6B00]/30 dark:border-[#FF6B00]/30"
+      className="relative rounded-2xl p-6 shadow-2xl border border-[#FF6B00]/30 dark:border-[#FF6B00]/30"
       style={{
         width: "1153px",
         height: "700px",
-        background: `
-          linear-gradient(135deg, 
-            rgba(255, 255, 255, 0.95) 0%, 
-            rgba(248, 250, 252, 0.98) 100%
-          ),
-          radial-gradient(circle at 20% 20%, rgba(255,107,0,0.08) 0%, transparent 50%),
-          radial-gradient(circle at 80% 80%, rgba(255,146,72,0.06) 0%, transparent 50%)
-        `,
-        ...(typeof window !== "undefined" &&
-        window.matchMedia("(prefers-color-scheme: dark)").matches
-          ? {
-              background: `
-            linear-gradient(135deg, rgba(10,10,23,0.90) 0%, rgba(15,15,30,0.95) 100%),
-            radial-gradient(circle at 20% 20%, rgba(255,107,0,0.15) 0%, transparent 50%),
-            radial-gradient(circle at 80% 80%, rgba(255,146,72,0.10) 0%, transparent 50%)
-          `,
-            }
-          : {}),
+        backgroundColor: "#000000"
       }}
       data-theme="adaptive"
     >
@@ -745,11 +728,7 @@ export function CardDeConstrucao({
         </div>
       </div>
 
-      {/* Background decorativo */}
-      <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none">
-        <div className="absolute -top-24 -right-24 w-48 h-48 bg-gradient-to-br from-[#FF6B00]/10 to-[#FF9248]/5 dark:from-[#FF6B00]/20 dark:to-[#FF9248]/10 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-gradient-to-tr from-[#FF9248]/10 to-[#FF6B00]/5 dark:from-[#FF9248]/20 dark:to-[#FF6B00]/10 rounded-full blur-3xl"></div>
-      </div>
+      
 
       {/* Renderização condicional baseada no step */}
       {step === "generating" || step === "generatingActivities" ? (
