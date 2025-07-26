@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ConstructionCard } from './ConstructionCard';
@@ -12,7 +11,7 @@ interface ConstructionGridProps {
 
 export function ConstructionGrid({ approvedActivities }: ConstructionGridProps) {
   console.log('🎯 ConstructionGrid renderizado com atividades aprovadas:', approvedActivities);
-  
+
   const { activities, loading } = useConstructionActivities(approvedActivities);
 
   const handleView = (id: string) => {
@@ -23,6 +22,11 @@ export function ConstructionGrid({ approvedActivities }: ConstructionGridProps) 
   const handleShare = (id: string) => {
     console.log('📤 Compartilhando atividade:', id);
     // TODO: Implementar funcionalidade de compartilhamento
+  };
+
+  const handleEdit = (activityId: string) => {
+    console.log('Editar materiais da atividade:', activityId);
+    // TODO: Implementar lógica de edição de materiais
   };
 
   if (loading) {
@@ -131,6 +135,7 @@ export function ConstructionGrid({ approvedActivities }: ConstructionGridProps) 
               status={activity.status}
               onView={handleView}
               onShare={handleShare}
+              onEdit={handleEdit}
             />
           </motion.div>
         ))}

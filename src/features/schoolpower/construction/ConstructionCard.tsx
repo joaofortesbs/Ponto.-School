@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Eye, Share2, Clock, CheckCircle2 } from 'lucide-react';
+import { Eye, Share2, Clock, CheckCircle2, PenTool } from 'lucide-react';
 import { ProgressCircle } from './ProgressCircle';
 import { ConstructionActivityProps } from './types';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,8 @@ export function ConstructionCard({
   type,
   status,
   onView,
-  onShare
+  onShare,
+  onEdit
 }: ConstructionActivityProps) {
   const getStatusIcon = () => {
     switch (status) {
@@ -93,6 +94,22 @@ export function ConstructionCard({
           {/* Action Buttons */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => onEdit?.(id)}
+                    className="h-7 px-2 text-xs bg-orange-500 hover:bg-orange-600 text-white border-orange-500 hover:border-orange-600"
+                  >
+                    <PenTool className="w-3 h-3" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Editar materiais</p>
+                </TooltipContent>
+              </Tooltip>
+
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
