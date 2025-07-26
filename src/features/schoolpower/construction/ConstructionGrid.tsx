@@ -1,4 +1,5 @@
-import React, { useCallback } from 'react';
+
+import React from 'react';
 import { motion } from 'framer-motion';
 import { ConstructionCard } from './ConstructionCard';
 import { useConstructionActivities } from './useConstructionActivities';
@@ -7,30 +8,34 @@ import { AlertCircle, Building2 } from 'lucide-react';
 
 interface ConstructionGridProps {
   approvedActivities: any[];
-  onView?: (id: string, activityData?: any) => void;
-  onShare?: (id: string) => void;
+  onEdit?: (activityId: string, activityData?: any) => void;
 }
 
-export function ConstructionGrid({ approvedActivities, onView, onShare }: ConstructionGridProps) {
+export function ConstructionGrid({ approvedActivities, onEdit }: ConstructionGridProps) {
   console.log('🎯 ConstructionGrid renderizado com atividades aprovadas:', approvedActivities);
-
+  
   const { activities, loading } = useConstructionActivities(approvedActivities);
 
   console.log('🎯 ConstructionGrid - atividades carregadas:', activities);
   console.log('🎯 ConstructionGrid - loading:', loading);
 
+  const handleEdit = (id: string) => {
+    console.log('🎯 ConstructionGrid: Editando atividade ID:', id);
+    const activity = activities.find(act => act.id === id);
+    console.log('🎯 ConstructionGrid: Atividade encontrada:', activity);
+    if (onEdit) {
+      onEdit(id, activity);
+    }
+  };
+
   const handleView = (id: string) => {
     console.log('👁️ Visualizando atividade:', id);
-    if (onView) {
-      onView(id);
-    }
+    // TODO: Implementar visualização da atividade
   };
 
   const handleShare = (id: string) => {
     console.log('📤 Compartilhando atividade:', id);
-    if (onShare) {
-      onShare(id);
-    }
+    // TODO: Implementar funcionalidade de compartilhamento
   };
 
   if (loading) {
@@ -137,6 +142,10 @@ export function ConstructionGrid({ approvedActivities, onView, onShare }: Constr
               progress={activity.progress}
               type={activity.type}
               status={activity.status}
+              onEdit={(id) => {
+                console.log('🎯 ConstructionGrid: Card solicitou edição para:', id);
+                handleEdit(id);
+              }}
               onView={handleView}
               onShare={handleShare}
             />

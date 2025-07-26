@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Eye, Share2, Clock, CheckCircle2 } from 'lucide-react';
+import { Edit3, Eye, Share2, Clock, CheckCircle2 } from 'lucide-react';
 import { ProgressCircle } from './ProgressCircle';
 import { ConstructionActivityProps } from './types';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ export function ConstructionCard({
   progress,
   type,
   status,
+  onEdit,
   onView,
   onShare
 }: ConstructionActivityProps) {
@@ -38,6 +39,12 @@ export function ConstructionCard({
     }
   };
 
+    const handleEditClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        console.log('🎯 Edit button clicked for:', id);
+        onEdit?.(id);
+    };
+
   return (
     <TooltipProvider>
       <motion.div
@@ -57,7 +64,7 @@ export function ConstructionCard({
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
               <div className="w-12 h-12 mx-auto mb-2 rounded-lg bg-gradient-to-br from-[#FF6B00]/20 to-[#D65A00]/20 flex items-center justify-center">
-                <Eye className="w-6 h-6 text-[#FF6B00]" />
+                <Edit3 className="w-6 h-6 text-[#FF6B00]" />
               </div>
               <p className="text-xs text-gray-600 dark:text-gray-400">
                 Pré-visualização
@@ -91,6 +98,26 @@ export function ConstructionCard({
           {/* Action Buttons */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      console.log('🎯 Edit button clicked for:', id);
+                      onEdit?.(id);
+                    }}
+                    className="h-7 px-2 text-xs bg-[#FF6B00] hover:bg-[#D65A00] text-white border-[#FF6B00] hover:border-[#D65A00]"
+                  >
+                    <Edit3 className="w-3 h-3" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Editar atividade</p>
+                </TooltipContent>
+              </Tooltip>
+
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
