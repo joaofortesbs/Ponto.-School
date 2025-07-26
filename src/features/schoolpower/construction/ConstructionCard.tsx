@@ -44,7 +44,6 @@ export function ConstructionCard({
         console.log('🎯 Edit button clicked for:', id);
         onEdit?.(id);
     };
-    };
 
   return (
     <TooltipProvider>

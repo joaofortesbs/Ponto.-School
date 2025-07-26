@@ -14,8 +14,8 @@ export interface ActivityRegistryType {
 export const activityRegistry: ActivityRegistryType = {
   // Atividades de Funções do 1º Grau
   "prova-funcao-1grau": {
-    editor: lazy(() => import("./funcao-1grau_prova/EditActivity")),
-    preview: lazy(() => import("./funcao-1grau_prova/ActivityPreview")),
+    editor: lazy(() => import("./default/EditActivity")),
+    preview: lazy(() => import("./default/ActivityPreview")),
   },
   "lista-exercicios-funcao-1grau": {
     editor: lazy(() => import("./funcao-1grau_lista/EditActivity")),
@@ -26,12 +26,12 @@ export const activityRegistry: ActivityRegistryType = {
     preview: lazy(() => import("./funcao-1grau_jogo/ActivityPreview")),
   },
   "atividade-contextualizada-funcao-1grau": {
-    editor: lazy(() => import("./funcao-1grau_contextualizada/EditActivity")),
-    preview: lazy(() => import("./funcao-1grau_contextualizada/ActivityPreview")),
+    editor: lazy(() => import("./default/EditActivity")),
+    preview: lazy(() => import("./default/ActivityPreview")),
   },
   "funcoes-primeiro-grau": {
-    editor: lazy(() => import("./funcao-1grau_atividade/EditActivity")),
-    preview: lazy(() => import("./funcao-1grau_atividade/ActivityPreview")),
+    editor: lazy(() => import("./default/EditActivity")),
+    preview: lazy(() => import("./default/ActivityPreview")),
   },
 
   // Atividades Genéricas do School Power
