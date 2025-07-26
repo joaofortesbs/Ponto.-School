@@ -118,7 +118,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/50 backdrop-blur-sm"
+        className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/50 dark:bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       >
         <motion.div
@@ -126,7 +126,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
           transition={{ duration: 0.3 }}
-          className="w-[1400px] h-[800px] bg-gray-900 text-white rounded-2xl shadow-2xl overflow-hidden border border-gray-700"
+          className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-700"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
