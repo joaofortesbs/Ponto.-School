@@ -39,7 +39,7 @@ export function ConstructionCard({
     }
   };
 
-    
+
 
   return (
     <TooltipProvider>

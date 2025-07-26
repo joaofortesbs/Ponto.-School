@@ -1,42 +1,39 @@
-
 import { useState, useCallback } from 'react';
-import { EditActivityModalState } from './types';
+import { ConstructionActivity } from '../../api/models/constructionTypes';
 
-export function useEditActivityModal() {
-  const [modalState, setModalState] = useState<EditActivityModalState>({
-    isOpen: false,
-    activityId: null,
-    activityTitle: ''
-  });
+interface UseEditActivityModal {
+  isModalOpen: boolean;
+  selectedActivity: ConstructionActivity | null;
+  openModal: (activity: ConstructionActivity) => void;
+  closeModal: () => void;
+  handleSaveActivity: (updatedActivity: ConstructionActivity) => void;
+}
 
-  const openModal = useCallback((activityId: string, activityTitle: string) => {
-    setModalState({
-      isOpen: true,
-      activityId,
-      activityTitle
-    });
-  }, []);
+export function useEditActivityModal(): UseEditActivityModal {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedActivity, setSelectedActivity] = useState<ConstructionActivity | null>(null);
 
-  const closeModal = useCallback(() => {
-    setModalState({
-      isOpen: false,
-      activityId: null,
-      activityTitle: ''
-    });
-  }, []);
+  const openModal = (activity: ConstructionActivity) => {
+    setSelectedActivity(activity);
+    setIsModalOpen(true);
+  };
 
-  const saveAndClose = useCallback((activityId: string, data: any) => {
-    // Aqui pode ser implementada a lógica de salvamento
-    console.log('Salvando dados da atividade:', activityId, data);
-    
-    // Fechar modal após salvar
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedActivity(null);
+  };
+
+  const handleSaveActivity = (updatedActivity: ConstructionActivity) => {
+    console.log('💾 Salvando atividade editada:', updatedActivity);
+    // Aqui você pode adicionar lógica para salvar a atividade
     closeModal();
-  }, [closeModal]);
+  };
 
   return {
-    modalState,
+    isModalOpen,
+    selectedActivity,
     openModal,
     closeModal,
-    saveAndClose
+    handleSaveActivity,
   };
 }

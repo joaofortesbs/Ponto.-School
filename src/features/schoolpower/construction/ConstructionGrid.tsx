@@ -1,7 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ConstructionCard } from './ConstructionCard';
+import { EditActivityModal } from './EditActivityModal';
 import { useConstructionActivities } from './useConstructionActivities';
+import { useEditActivityModal } from './useEditActivityModal';
+import { ConstructionActivity } from './types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertCircle, Building2 } from 'lucide-react';
 
@@ -13,6 +16,12 @@ export function ConstructionGrid({ approvedActivities }: ConstructionGridProps) 
   console.log('🎯 ConstructionGrid renderizado com atividades aprovadas:', approvedActivities);
 
   const { activities, loading } = useConstructionActivities(approvedActivities);
+  const { isModalOpen, selectedActivity, openModal, closeModal, handleSaveActivity } = useEditActivityModal();
+
+  const handleEditActivity = (activity: ConstructionActivity) => {
+    console.log('🔧 Abrindo modal para editar atividade:', activity);
+    openModal(activity);
+  };
 
   const handleView = (id: string) => {
     console.log('👁️ Visualizando atividade:', id);
@@ -136,10 +145,18 @@ export function ConstructionGrid({ approvedActivities }: ConstructionGridProps) 
               onView={handleView}
               onShare={handleShare}
               onEdit={handleEdit}
+              onEditActivity={handleEditActivity}
             />
           </motion.div>
         ))}
       </div>
-    </motion.div>
+
+      <EditActivityModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        activity={selectedActivity}
+        onSave={handleSaveActivity}
+      />
+    </div>
   );
 }
