@@ -118,7 +118,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+        className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       >
         <motion.div
@@ -126,7 +126,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
           transition={{ duration: 0.3 }}
-          className="w-[95%] max-w-7xl h-[90vh] bg-white rounded-2xl shadow-2xl overflow-hidden"
+          className="w-[400px] h-[800px] bg-white rounded-2xl shadow-2xl overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
@@ -155,9 +155,9 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
           </div>
 
           {/* Content */}
-          <div className="grid grid-cols-2 gap-6 p-6 h-[calc(90vh-80px)]">
-            {/* Painel Esquerdo - Formulário */}
-            <div className="flex flex-col space-y-4 overflow-y-auto max-h-full pr-2">
+          <div className="flex flex-col p-4 h-[calc(800px-140px)]">
+            {/* Formulário */}
+            <div className="flex flex-col space-y-3 overflow-y-auto max-h-full pr-2">
               <Card>
                 <CardContent className="p-4">
                   <h3 className="font-semibold text-lg mb-4 flex items-center">
@@ -165,34 +165,34 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                     Informações da Atividade
                   </h3>
 
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     <div>
-                      <Label htmlFor="title">Título da Atividade</Label>
+                      <Label htmlFor="title" className="text-sm">Título da Atividade</Label>
                       <Input
                         id="title"
                         value={formData.title}
                         onChange={(e) => handleInputChange('title', e.target.value)}
                         placeholder="Digite o título da atividade"
-                        className="mt-1"
+                        className="mt-1 text-sm"
                       />
                     </div>
 
                     <div>
-                      <Label htmlFor="description">Descrição</Label>
+                      <Label htmlFor="description" className="text-sm">Descrição</Label>
                       <Textarea
                         id="description"
                         value={formData.description}
                         onChange={(e) => handleInputChange('description', e.target.value)}
                         placeholder="Descreva a atividade..."
-                        className="mt-1 min-h-[80px]"
+                        className="mt-1 min-h-[60px] text-sm"
                       />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-3">
                       <div>
-                        <Label htmlFor="subject">Disciplina</Label>
+                        <Label htmlFor="subject" className="text-sm">Disciplina</Label>
                         <Select value={formData.subject} onValueChange={(value) => handleInputChange('subject', value)}>
-                          <SelectTrigger className="mt-1">
+                          <SelectTrigger className="mt-1 text-sm">
                             <SelectValue placeholder="Selecione a disciplina" />
                           </SelectTrigger>
                           <SelectContent>
@@ -206,9 +206,9 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                       </div>
 
                       <div>
-                        <Label htmlFor="difficulty">Dificuldade</Label>
+                        <Label htmlFor="difficulty" className="text-sm">Dificuldade</Label>
                         <Select value={formData.difficulty} onValueChange={(value) => handleInputChange('difficulty', value)}>
-                          <SelectTrigger className="mt-1">
+                          <SelectTrigger className="mt-1 text-sm">
                             <SelectValue placeholder="Selecione a dificuldade" />
                           </SelectTrigger>
                           <SelectContent>
@@ -220,80 +220,78 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="format">Formato de Entrega</Label>
-                        <Select value={formData.format} onValueChange={(value) => handleInputChange('format', value)}>
-                          <SelectTrigger className="mt-1">
-                            <SelectValue placeholder="Selecione o formato" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="PDF">PDF Imprimível</SelectItem>
-                            <SelectItem value="Interativo">Interativo</SelectItem>
-                            <SelectItem value="Vídeo">Vídeo Explicativo</SelectItem>
-                            <SelectItem value="Apresentação">Apresentação</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div>
-                        <Label htmlFor="duration">Duração Estimada</Label>
-                        <Select value={formData.duration} onValueChange={(value) => handleInputChange('duration', value)}>
-                          <SelectTrigger className="mt-1">
-                            <SelectValue placeholder="Selecione a duração" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="15 minutos">15 minutos</SelectItem>
-                            <SelectItem value="30 minutos">30 minutos</SelectItem>
-                            <SelectItem value="45 minutos">45 minutos</SelectItem>
-                            <SelectItem value="1 hora">1 hora</SelectItem>
-                            <SelectItem value="2 horas">2 horas</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
+                    <div>
+                      <Label htmlFor="format" className="text-sm">Formato de Entrega</Label>
+                      <Select value={formData.format} onValueChange={(value) => handleInputChange('format', value)}>
+                        <SelectTrigger className="mt-1 text-sm">
+                          <SelectValue placeholder="Selecione o formato" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="PDF">PDF Imprimível</SelectItem>
+                          <SelectItem value="Interativo">Interativo</SelectItem>
+                          <SelectItem value="Vídeo">Vídeo Explicativo</SelectItem>
+                          <SelectItem value="Apresentação">Apresentação</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     <div>
-                      <Label htmlFor="objectives">Objetivos de Aprendizagem</Label>
+                      <Label htmlFor="duration" className="text-sm">Duração Estimada</Label>
+                      <Select value={formData.duration} onValueChange={(value) => handleInputChange('duration', value)}>
+                        <SelectTrigger className="mt-1 text-sm">
+                          <SelectValue placeholder="Selecione a duração" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="15 minutos">15 minutos</SelectItem>
+                          <SelectItem value="30 minutos">30 minutos</SelectItem>
+                          <SelectItem value="45 minutos">45 minutos</SelectItem>
+                          <SelectItem value="1 hora">1 hora</SelectItem>
+                          <SelectItem value="2 horas">2 horas</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="objectives" className="text-sm">Objetivos de Aprendizagem</Label>
                       <Textarea
                         id="objectives"
                         value={formData.objectives}
                         onChange={(e) => handleInputChange('objectives', e.target.value)}
                         placeholder="Descreva os objetivos que os alunos devem alcançar..."
-                        className="mt-1 min-h-[60px]"
+                        className="mt-1 min-h-[50px] text-sm"
                       />
                     </div>
 
                     <div>
-                      <Label htmlFor="materials">Materiais Necessários</Label>
+                      <Label htmlFor="materials" className="text-sm">Materiais Necessários</Label>
                       <Textarea
                         id="materials"
                         value={formData.materials}
                         onChange={(e) => handleInputChange('materials', e.target.value)}
                         placeholder="Liste os materiais necessários para a atividade..."
-                        className="mt-1 min-h-[60px]"
+                        className="mt-1 min-h-[50px] text-sm"
                       />
                     </div>
 
                     <div>
-                      <Label htmlFor="instructions">Instruções da Atividade</Label>
+                      <Label htmlFor="instructions" className="text-sm">Instruções da Atividade</Label>
                       <Textarea
                         id="instructions"
                         value={formData.instructions}
                         onChange={(e) => handleInputChange('instructions', e.target.value)}
                         placeholder="Descreva como a atividade deve ser executada..."
-                        className="mt-1 min-h-[80px]"
+                        className="mt-1 min-h-[60px] text-sm"
                       />
                     </div>
 
                     <div>
-                      <Label htmlFor="evaluation">Critérios de Avaliação</Label>
+                      <Label htmlFor="evaluation" className="text-sm">Critérios de Avaliação</Label>
                       <Textarea
                         id="evaluation"
                         value={formData.evaluation}
                         onChange={(e) => handleInputChange('evaluation', e.target.value)}
                         placeholder="Como a atividade será avaliada..."
-                        className="mt-1 min-h-[60px]"
+                        className="mt-1 min-h-[50px] text-sm"
                       />
                     </div>
                   </div>
@@ -303,12 +301,12 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
               <Button
                 onClick={handleBuildActivity}
                 disabled={isGenerating}
-                className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-semibold py-3"
+                className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-semibold py-2 mt-3"
               >
                 {isGenerating ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Gerando Atividade...
+                    Gerando...
                   </>
                 ) : (
                   <>
@@ -318,92 +316,27 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                 )}
               </Button>
             </div>
-
-            {/* Painel Direito - Pré-visualização */}
-            <div className="bg-gray-50 rounded-xl shadow-inner overflow-hidden flex flex-col">
-              <div className="flex items-center justify-between p-4 bg-white border-b">
-                <h3 className="font-semibold text-lg flex items-center">
-                  <Eye className="h-5 w-5 mr-2 text-[#FF6B00]" />
-                  Pré-visualização da Atividade
-                </h3>
-                <div className="flex items-center space-x-2">
-                  <Button
-                    variant={previewMode === 'preview' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setPreviewMode('preview')}
-                  >
-                    Visualizar
-                  </Button>
-                  <Button
-                    variant={previewMode === 'code' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setPreviewMode('code')}
-                  >
-                    Código
-                  </Button>
-                  {generatedActivity && (
-                    <Button variant="outline" size="sm">
-                      <Download className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex-1 overflow-y-auto p-4">
-                {!generatedActivity ? (
-                  <div className="h-full flex items-center justify-center text-gray-500">
-                    <div className="text-center">
-                      <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                      <p className="text-lg font-medium">Nenhuma atividade gerada</p>
-                      <p className="text-sm">Clique em "Construir Atividade" para gerar o conteúdo</p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {previewMode === 'preview' ? (
-                      <div className="prose max-w-none">
-                        <div 
-                          className="bg-white rounded-lg p-6 shadow-sm"
-                          dangerouslySetInnerHTML={{ 
-                            __html: generatedActivity
-                              .replace(/\n/g, '<br>')
-                              .replace(/#{3}\s(.+)/g, '<h3 class="text-lg font-semibold mt-4 mb-2 text-gray-800">$1</h3>')
-                              .replace(/#{2}\s(.+)/g, '<h2 class="text-xl font-bold mt-6 mb-3 text-gray-900">$1</h2>')
-                              .replace(/#{1}\s(.+)/g, '<h1 class="text-2xl font-bold mb-4 text-[#FF6B00]">$1</h1>')
-                              .replace(/\*\*(.+?)\*\*/g, '<strong class="font-semibold text-gray-800">$1</strong>')
-                              .replace(/•/g, '•')
-                          }}
-                        />
-                      </div>
-                    ) : (
-                      <div className="bg-gray-900 rounded-lg p-4 text-green-400 font-mono text-sm overflow-x-auto">
-                        <pre>{generatedActivity}</pre>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-between p-6 border-t bg-gray-50">
-            <div className="flex items-center space-x-2">
-              <Badge variant="outline">Status: {activity?.status || 'Pendente'}</Badge>
-              <Badge variant="outline">Progresso: {activity?.progress || 0}%</Badge>
+          <div className="flex flex-col space-y-2 p-4 border-t bg-gray-50">
+            <div className="flex flex-col space-y-1">
+              <Badge variant="outline" className="self-start text-xs">Status: {activity?.status || 'Pendente'}</Badge>
+              <Badge variant="outline" className="self-start text-xs">Progresso: {activity?.progress || 0}%</Badge>
             </div>
-            <div className="flex space-x-3">
+            <div className="flex space-x-2">
               <Button
                 variant="outline"
                 onClick={onClose}
+                className="flex-1 text-sm"
               >
                 Cancelar
               </Button>
               <Button
                 onClick={handleSaveChanges}
-                className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white"
+                className="flex-1 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white text-sm"
               >
-                Salvar Alterações
+                Salvar
               </Button>
             </div>
           </div>
