@@ -1,0 +1,136 @@
+[plugin:vite:react-swc] × Return statement is not allowed here
+     ╭─[/home/runner/workspace/src/features/schoolpower/construction/ConstructionCard.tsx:46:1]
+  46 │         };
+  47 │         };
+  48 │     
+  49 │ ╭─▶   return (
+  50 │ │       <TooltipProvider>
+  51 │ │         <motion.div
+  52 │ │           initial={{ opacity: 0, y: 20 }}
+  53 │ │           animate={{ opacity: 1, y: 0 }}
+  54 │ │           transition={{ duration: 0.3 }}
+  55 │ │           className={`rounded-xl border-2 p-4 transition-all duration-200 hover:shadow-lg ${getStatusColor()}`}
+  56 │ │         >
+  57 │ │           {/* Preview Area (65%) */}
+  58 │ │           <div className="relative mb-4 h-32 rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 overflow-hidden">
+  59 │ │             {/* Status Icon */}
+  60 │ │             <div className="absolute top-2 right-2 z-10">
+  61 │ │               {getStatusIcon()}
+  62 │ │             </div>
+  63 │ │   
+  64 │ │             {/* Construction Preview Placeholder */}
+  65 │ │             <div className="absolute inset-0 flex items-center justify-center">
+  66 │ │               <div className="text-center">
+  67 │ │                 <div className="w-12 h-12 mx-auto mb-2 rounded-lg bg-gradient-to-br from-[#FF6B00]/20 to-[#D65A00]/20 flex items-center justify-center">
+  68 │ │                   <Edit3 className="w-6 h-6 text-[#FF6B00]" />
+  69 │ │                 </div>
+  70 │ │                 <p className="text-xs text-gray-600 dark:text-gray-400">
+  71 │ │                   Pré-visualização
+  72 │ │                 </p>
+  73 │ │               </div>
+  74 │ │             </div>
+  75 │ │   
+  76 │ │             {/* Progress Circle Overlay */}
+  77 │ │             <div className="absolute inset-0 flex items-center justify-center bg-black/5 dark:bg-black/20">
+  78 │ │               <ProgressCircle progress={progress} size={50} />
+  79 │ │             </div>
+  80 │ │   
+  81 │ │             {/* Shimmer Effect for Loading */}
+  82 │ │             {progress < 100 && (
+  83 │ │               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-x-12 animate-pulse" />
+  84 │ │             )}
+  85 │ │           </div>
+  86 │ │   
+  87 │ │           {/* Content Area (35%) */}
+  88 │ │           <div className="space-y-3">
+  89 │ │             {/* Title */}
+  90 │ │             <div>
+  91 │ │               <h3 className="font-semibold text-sm text-gray-900 dark:text-white line-clamp-1">
+  92 │ │                 {title}
+  93 │ │               </h3>
+  94 │ │               <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 mt-1">
+  95 │ │                 {description}
+  96 │ │               </p>
+  97 │ │             </div>
+  98 │ │   
+  99 │ │             {/* Action Buttons */}
+ 100 │ │             <div className="flex items-center justify-between">
+ 101 │ │               <div className="flex items-center gap-1">
+ 102 │ │                 <Tooltip>
+ 103 │ │                   <TooltipTrigger asChild>
+ 104 │ │                     <Button
+ 105 │ │                       size="sm"
+ 106 │ │                       variant="outline"
+ 107 │ │                       onClick={(e) => {
+ 108 │ │                         e.stopPropagation();
+ 109 │ │                         console.log('🎯 Edit button clicked for:', id);
+ 110 │ │                         onEdit?.(id);
+ 111 │ │                       }}
+ 112 │ │                       className="h-7 px-2 text-xs bg-[#FF6B00] hover:bg-[#D65A00] text-white border-[#FF6B00] hover:border-[#D65A00]"
+ 113 │ │                     >
+ 114 │ │                       <Edit3 className="w-3 h-3" />
+ 115 │ │                     </Button>
+ 116 │ │                   </TooltipTrigger>
+ 117 │ │                   <TooltipContent>
+ 118 │ │                     <p>Editar atividade</p>
+ 119 │ │                   </TooltipContent>
+ 120 │ │                 </Tooltip>
+ 121 │ │   
+ 122 │ │                 <Tooltip>
+ 123 │ │                   <TooltipTrigger asChild>
+ 124 │ │                     <Button
+ 125 │ │                       size="sm"
+ 126 │ │                       variant="outline"
+ 127 │ │                       onClick={() => onView?.(id)}
+ 128 │ │                       className="h-7 px-2 text-xs bg-blue-500 hover:bg-blue-600 text-white border-blue-500 hover:border-blue-600"
+ 129 │ │                     >
+ 130 │ │                       <Eye className="w-3 h-3" />
+ 131 │ │                     </Button>
+ 132 │ │                   </TooltipTrigger>
+ 133 │ │                   <TooltipContent>
+ 134 │ │                     <p>Visualizar atividade</p>
+ 135 │ │                   </TooltipContent>
+ 136 │ │                 </Tooltip>
+ 137 │ │   
+ 138 │ │                 <Tooltip>
+ 139 │ │                   <TooltipTrigger asChild>
+ 140 │ │                     <Button
+ 141 │ │                       size="sm"
+ 142 │ │                       variant="outline"
+ 143 │ │                       onClick={() => onShare?.(id)}
+ 144 │ │                       className="h-7 px-2 text-xs text-gray-600 hover:text-gray-800 border-gray-300 hover:border-gray-400"
+ 145 │ │                     >
+ 146 │ │                       <Share2 className="w-3 h-3" />
+ 147 │ │                     </Button>
+ 148 │ │                   </TooltipTrigger>
+ 149 │ │                   <TooltipContent>
+ 150 │ │                     <p>Compartilhar atividade</p>
+ 151 │ │                   </TooltipContent>
+ 152 │ │                 </Tooltip>
+ 153 │ │               </div>
+ 154 │ │   
+ 155 │ │               {/* Progress Badge */}
+ 156 │ │               <div className="text-xs px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
+ 157 │ │                 {progress === 0 ? 'Pendente' : progress === 100 ? 'Concluída' : 'Em andamento'}
+ 158 │ │               </div>
+ 159 │ │             </div>
+ 160 │ │           </div>
+ 161 │ │         </motion.div>
+ 162 │ │       </TooltipProvider>
+ 163 │ ╰─▶   );
+ 164 │     }
+     ╰────
+
+  × Expression expected
+     ╭─[/home/runner/workspace/src/features/schoolpower/construction/ConstructionCard.tsx:161:1]
+ 161 │       </motion.div>
+ 162 │     </TooltipProvider>
+ 163 │   );
+ 164 │ }
+     · ─
+     ╰────
+
+
+Caused by:
+    Syntax Error
+/home/runner/workspace/src/features/schoolpower/construction/ConstructionCard.tsx:46:1
