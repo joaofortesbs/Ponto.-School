@@ -1,0 +1,575 @@
+[plugin:vite:react-swc] × the name `DebugPanel` is defined multiple times
+     ╭─[/home/runner/workspace/src/sections/SchoolPower/components/DebugPanel.tsx:3:1]
+   3 │ import React, { useState, useEffect } from 'react';
+   4 │ import useSchoolPowerFlow from '../../../features/schoolpower/hooks/useSchoolPowerFlow';
+   5 │ 
+   6 │ export default function DebugPanel() {
+     ·                         ─────┬────
+     ·                              ╰── previous definition of `DebugPanel` here
+   7 │   const [isVisible, setIsVisible] = useState(false);
+   8 │   const [debugData, setDebugData] = useState<any>({});
+   9 │   
+  10 │   const {
+  11 │     flowState,
+  12 │     flowData,
+  13 │     isLoading
+  14 │   } = useSchoolPowerFlow();
+  15 │ 
+  16 │   useEffect(() => {
+  17 │     const updateDebugData = () => {
+  18 │       setDebugData({
+  19 │         flowState,
+  20 │         flowData,
+  21 │         isLoading,
+  22 │         timestamp: new Date().toLocaleTimeString()
+  23 │       });
+  24 │     };
+  25 │ 
+  26 │     updateDebugData();
+  27 │     const interval = setInterval(updateDebugData, 2000);
+  28 │ 
+  29 │     return () => clearInterval(interval);
+  30 │   }, [flowState, flowData, isLoading]);
+  31 │ 
+  32 │   if (process.env.NODE_ENV !== 'development') {
+  33 │     return null;
+  34 │   }
+  35 │ 
+  36 │   return (
+  37 │     <div className="fixed top-4 right-4 z-50">
+  38 │       <button
+  39 │         onClick={() => setIsVisible(!isVisible)}
+  40 │         className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-xs font-medium shadow-lg transition-colors duration-200"
+  41 │       >
+  42 │         🐛 Debug {isVisible ? '❌' : '🔍'}
+  43 │       </button>
+  44 │ 
+  45 │       {isVisible && (
+  46 │         <div className="mt-2 bg-black/90 backdrop-blur-sm text-white rounded-lg p-4 w-80 max-h-96 overflow-y-auto border border-blue-500/50 shadow-2xl">
+  47 │           <h3 className="text-blue-400 font-bold mb-3 text-sm">🔍 School Power Debug Panel</h3>
+  48 │           
+  49 │           <div className="space-y-3 text-xs">
+  50 │             <div>
+  51 │               <span className="text-blue-300 font-semibold">Flow State:</span>
+  52 │               <div className="bg-blue-900/30 rounded px-2 py-1 mt-1">
+  53 │                 <span className={`font-mono ${
+  54 │                   debugData.flowState === 'idle' ? 'text-gray-400' :
+  55 │                   debugData.flowState === 'contextualizing' ? 'text-yellow-400' :
+  56 │                   debugData.flowState === 'actionplan' ? 'text-orange-400' :
+  57 │                   debugData.flowState === 'generating' ? 'text-blue-400' :
+  58 │                   debugData.flowState === 'activities' ? 'text-green-400' : 'text-white'
+  59 │                 }`}>
+  60 │                   {debugData.flowState || 'undefined'}
+  61 │                 </span>
+  62 │               </div>
+  63 │             </div>
+  64 │ 
+  65 │             <div>
+  66 │               <span className="text-blue-300 font-semibold">Loading:</span>
+  67 │               <span className={`ml-2 font-mono ${debugData.isLoading ? 'text-yellow-400' : 'text-green-400'}`}>
+  68 │                 {debugData.isLoading ? 'true' : 'false'}
+  69 │               </span>
+  70 │             </div>
+  71 │ 
+  72 │             <div>
+  73 │               <span className="text-blue-300 font-semibold">Flow Data:</span>
+  74 │               <div className="bg-gray-800/50 rounded px-2 py-1 mt-1 max-h-32 overflow-y-auto">
+  75 │                 <pre className="text-xs text-gray-300">
+  76 │                   {JSON.stringify(debugData.flowData, null, 2)}
+  77 │                 </pre>
+  78 │               </div>
+  79 │             </div>
+  80 │           </div>
+  81 │ 
+  82 │           {/* Ações de Debug */}
+  83 │           <div className="flex gap-2 pt-2 border-t border-blue-500/30">
+  84 │             <button
+  85 │               onClick={() => {
+  86 │                 console.log('🔍 School Power Debug Data:', debugData);
+  87 │                 alert('Dados enviados para o console!');
+  88 │               }}
+  89 │               className="px-2 py-1 bg-blue-600 hover:bg-blue-700 rounded text-xs transition-colors duration-200"
+  90 │             >
+  91 │               📋 Log Console
+  92 │             </button>
+  93 │             <button
+  94 │               onClick={() => {
+  95 │                 localStorage.removeItem('schoolpower_flow_data');
+  96 │                 alert('LocalStorage limpo!');
+  97 │               }}
+  98 │               className="px-2 py-1 bg-red-600 hover:bg-red-700 rounded text-xs transition-colors duration-200"
+  99 │             >
+ 100 │               🗑️ Limpar Cache
+ 101 │             </button>
+ 102 │           </div>
+ 103 │ 
+ 104 │           {/* Indicador de Atualização Automática */}
+ 105 │           <div className="mt-3 pt-2 border-t border-blue-500/30 text-center">
+ 106 │             <span className="text-gray-400 text-xs">
+ 107 │               🔄 Atualizando a cada 2s
+ 108 │             </span>
+ 109 │           </div>
+ 110 │         </div>
+ 111 │       )}
+ 112 │     </div>
+ 113 │   );
+ 114 │ }
+ 115 │ 
+ 116 │ interface DebugData {
+ 117 │   timestamp: string;
+ 118 │   flowState: string;
+ 119 │   flowData: any;
+ 120 │   isLoading: boolean;
+ 121 │   localStorage: any;
+ 122 │   errors: string[];
+ 123 │   apiStatus: {
+ 124 │     gemini: 'loading' | 'active' | 'error' | 'idle';
+ 125 │     supabase: 'loading' | 'active' | 'error' | 'idle';
+ 126 │   };
+ 127 │   systemChecks: {
+ 128 │     reactImported: boolean;
+ 129 │     hooksLoaded: boolean;
+ 130 │     componentsLoaded: boolean;
+ 131 │     servicesLoaded: boolean;
+ 132 │     dataValidated: boolean;
+ 133 │   };
+ 134 │ }
+ 135 │ 
+ 136 │ export default function DebugPanel() {
+     ·                         ─────┬────
+     ·                              ╰── `DebugPanel` redefined here
+ 137 │   const [isExpanded, setIsExpanded] = useState(false);
+ 138 │   const [debugData, setDebugData] = useState<DebugData>({
+ 139 │     timestamp: '',
+     ╰────
+
+  × the name `default` is exported multiple times
+     ╭─[/home/runner/workspace/src/sections/SchoolPower/components/DebugPanel.tsx:3:1]
+   3 │     import React, { useState, useEffect } from 'react';
+   4 │     import useSchoolPowerFlow from '../../../features/schoolpower/hooks/useSchoolPowerFlow';
+   5 │     
+   6 │ ╭─▶ export default function DebugPanel() {
+   7 │ │     const [isVisible, setIsVisible] = useState(false);
+   8 │ │     const [debugData, setDebugData] = useState<any>({});
+   9 │ │     
+  10 │ │     const {
+  11 │ │       flowState,
+  12 │ │       flowData,
+  13 │ │       isLoading
+  14 │ │     } = useSchoolPowerFlow();
+  15 │ │   
+  16 │ │     useEffect(() => {
+  17 │ │       const updateDebugData = () => {
+  18 │ │         setDebugData({
+  19 │ │           flowState,
+  20 │ │           flowData,
+  21 │ │           isLoading,
+  22 │ │           timestamp: new Date().toLocaleTimeString()
+  23 │ │         });
+  24 │ │       };
+  25 │ │   
+  26 │ │       updateDebugData();
+  27 │ │       const interval = setInterval(updateDebugData, 2000);
+  28 │ │   
+  29 │ │       return () => clearInterval(interval);
+  30 │ │     }, [flowState, flowData, isLoading]);
+  31 │ │   
+  32 │ │     if (process.env.NODE_ENV !== 'development') {
+  33 │ │       return null;
+  34 │ │     }
+  35 │ │   
+  36 │ │     return (
+  37 │ │       <div className="fixed top-4 right-4 z-50">
+  38 │ │         <button
+  39 │ │           onClick={() => setIsVisible(!isVisible)}
+  40 │ │           className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-xs font-medium shadow-lg transition-colors duration-200"
+  41 │ │         >
+  42 │ │           🐛 Debug {isVisible ? '❌' : '🔍'}
+  43 │ │         </button>
+  44 │ │   
+  45 │ │         {isVisible && (
+  46 │ │           <div className="mt-2 bg-black/90 backdrop-blur-sm text-white rounded-lg p-4 w-80 max-h-96 overflow-y-auto border border-blue-500/50 shadow-2xl">
+  47 │ │             <h3 className="text-blue-400 font-bold mb-3 text-sm">🔍 School Power Debug Panel</h3>
+  48 │ │             
+  49 │ │             <div className="space-y-3 text-xs">
+  50 │ │               <div>
+  51 │ │                 <span className="text-blue-300 font-semibold">Flow State:</span>
+  52 │ │                 <div className="bg-blue-900/30 rounded px-2 py-1 mt-1">
+  53 │ │                   <span className={`font-mono ${
+  54 │ │                     debugData.flowState === 'idle' ? 'text-gray-400' :
+  55 │ │                     debugData.flowState === 'contextualizing' ? 'text-yellow-400' :
+  56 │ │                     debugData.flowState === 'actionplan' ? 'text-orange-400' :
+  57 │ │                     debugData.flowState === 'generating' ? 'text-blue-400' :
+  58 │ │                     debugData.flowState === 'activities' ? 'text-green-400' : 'text-white'
+  59 │ │                   }`}>
+  60 │ │                     {debugData.flowState || 'undefined'}
+  61 │ │                   </span>
+  62 │ │                 </div>
+  63 │ │               </div>
+  64 │ │   
+  65 │ │               <div>
+  66 │ │                 <span className="text-blue-300 font-semibold">Loading:</span>
+  67 │ │                 <span className={`ml-2 font-mono ${debugData.isLoading ? 'text-yellow-400' : 'text-green-400'}`}>
+  68 │ │                   {debugData.isLoading ? 'true' : 'false'}
+  69 │ │                 </span>
+  70 │ │               </div>
+  71 │ │   
+  72 │ │               <div>
+  73 │ │                 <span className="text-blue-300 font-semibold">Flow Data:</span>
+  74 │ │                 <div className="bg-gray-800/50 rounded px-2 py-1 mt-1 max-h-32 overflow-y-auto">
+  75 │ │                   <pre className="text-xs text-gray-300">
+  76 │ │                     {JSON.stringify(debugData.flowData, null, 2)}
+  77 │ │                   </pre>
+  78 │ │                 </div>
+  79 │ │               </div>
+  80 │ │             </div>
+  81 │ │   
+  82 │ │             {/* Ações de Debug */}
+  83 │ │             <div className="flex gap-2 pt-2 border-t border-blue-500/30">
+  84 │ │               <button
+  85 │ │                 onClick={() => {
+  86 │ │                   console.log('🔍 School Power Debug Data:', debugData);
+  87 │ │                   alert('Dados enviados para o console!');
+  88 │ │                 }}
+  89 │ │                 className="px-2 py-1 bg-blue-600 hover:bg-blue-700 rounded text-xs transition-colors duration-200"
+  90 │ │               >
+  91 │ │                 📋 Log Console
+  92 │ │               </button>
+  93 │ │               <button
+  94 │ │                 onClick={() => {
+  95 │ │                   localStorage.removeItem('schoolpower_flow_data');
+  96 │ │                   alert('LocalStorage limpo!');
+  97 │ │                 }}
+  98 │ │                 className="px-2 py-1 bg-red-600 hover:bg-red-700 rounded text-xs transition-colors duration-200"
+  99 │ │               >
+ 100 │ │                 🗑️ Limpar Cache
+ 101 │ │               </button>
+ 102 │ │             </div>
+ 103 │ │   
+ 104 │ │             {/* Indicador de Atualização Automática */}
+ 105 │ │             <div className="mt-3 pt-2 border-t border-blue-500/30 text-center">
+ 106 │ │               <span className="text-gray-400 text-xs">
+ 107 │ │                 🔄 Atualizando a cada 2s
+ 108 │ │               </span>
+ 109 │ │             </div>
+ 110 │ │           </div>
+ 111 │ │         )}
+ 112 │ │       </div>
+ 113 │ │     );
+ 114 │ ├─▶ }
+     · ╰──── previous exported here
+ 115 │     
+ 116 │     interface DebugData {
+ 117 │       timestamp: string;
+ 118 │       flowState: string;
+ 119 │       flowData: any;
+ 120 │       isLoading: boolean;
+ 121 │       localStorage: any;
+ 122 │       errors: string[];
+ 123 │       apiStatus: {
+ 124 │         gemini: 'loading' | 'active' | 'error' | 'idle';
+ 125 │         supabase: 'loading' | 'active' | 'error' | 'idle';
+ 126 │       };
+ 127 │       systemChecks: {
+ 128 │         reactImported: boolean;
+ 129 │         hooksLoaded: boolean;
+ 130 │         componentsLoaded: boolean;
+ 131 │         servicesLoaded: boolean;
+ 132 │         dataValidated: boolean;
+ 133 │       };
+ 134 │     }
+ 135 │     
+ 136 │ ╭─▶ export default function DebugPanel() {
+ 137 │ │     const [isExpanded, setIsExpanded] = useState(false);
+ 138 │ │     const [debugData, setDebugData] = useState<DebugData>({
+ 139 │ │       timestamp: '',
+ 140 │ │       flowState: '',
+ 141 │ │       flowData: null,
+ 142 │ │       isLoading: false,
+ 143 │ │       localStorage: null,
+ 144 │ │       errors: [],
+ 145 │ │       apiStatus: {
+ 146 │ │         gemini: 'idle',
+ 147 │ │         supabase: 'idle'
+ 148 │ │       },
+ 149 │ │       systemChecks: {
+ 150 │ │         reactImported: false,
+ 151 │ │         hooksLoaded: false,
+ 152 │ │         componentsLoaded: false,
+ 153 │ │         servicesLoaded: false,
+ 154 │ │         dataValidated: false
+ 155 │ │       }
+ 156 │ │     });
+ 157 │ │   
+ 158 │ │     const { flowState, flowData, isLoading } = useSchoolPowerFlow();
+ 159 │ │   
+ 160 │ │     // Verificações do sistema
+ 161 │ │     const performSystemChecks = () => {
+ 162 │ │       const checks = {
+ 163 │ │         reactImported: typeof React !== 'undefined',
+ 164 │ │         hooksLoaded: typeof useSchoolPowerFlow === 'function',
+ 165 │ │         componentsLoaded: true, // Se chegou até aqui, os componentes carregaram
+ 166 │ │         servicesLoaded: true, // Verificar se os serviços estão disponíveis
+ 167 │ │         dataValidated: flowData !== null
+ 168 │ │       };
+ 169 │ │   
+ 170 │ │       return checks;
+ 171 │ │     };
+ 172 │ │   
+ 173 │ │     // Capturar erros do console
+ 174 │ │     const captureConsoleErrors = () => {
+ 175 │ │       const errors: string[] = [];
+ 176 │ │       
+ 177 │ │       // Override console.error para capturar erros
+ 178 │ │       const originalError = console.error;
+ 179 │ │       console.error = (...args) => {
+ 180 │ │         const errorMessage = args.map(arg => 
+ 181 │ │           typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
+ 182 │ │         ).join(' ');
+ 183 │ │         
+ 184 │ │         if (errorMessage.toLowerCase().includes('school power') || 
+ 185 │ │             errorMessage.toLowerCase().includes('gemini') ||
+ 186 │ │             errorMessage.toLowerCase().includes('react is not defined')) {
+ 187 │ │           errors.push(`${new Date().toLocaleTimeString()}: ${errorMessage}`);
+ 188 │ │         }
+ 189 │ │         
+ 190 │ │         originalError.apply(console, args);
+ 191 │ │       };
+ 192 │ │   
+ 193 │ │       return errors;
+ 194 │ │     };
+ 195 │ │   
+ 196 │ │     // Verificar status das APIs
+ 197 │ │     const checkAPIStatus = async () => {
+ 198 │ │       const status = {
+ 199 │ │         gemini: 'idle' as const,
+ 200 │ │         supabase: 'idle' as const
+ 201 │ │       };
+ 202 │ │   
+ 203 │ │       try {
+ 204 │ │         // Verificar se a chave da API Gemini está disponível
+ 205 │ │         const geminiKey = 'AIzaSyD-Sso0SdyYKoA4M3tQhcWjQ1AoddB7Wo4';
+ 206 │ │         if (geminiKey) {
+ 207 │ │           status.gemini = 'active';
+ 208 │ │         } else {
+ 209 │ │           status.gemini = 'error';
+ 210 │ │         }
+ 211 │ │       } catch (error) {
+ 212 │ │         status.gemini = 'error';
+ 213 │ │       }
+ 214 │ │   
+ 215 │ │       try {
+ 216 │ │         // Verificar Supabase
+ 217 │ │         const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+ 218 │ │         if (supabaseUrl) {
+ 219 │ │           status.supabase = 'active';
+ 220 │ │         } else {
+ 221 │ │           status.supabase = 'error';
+ 222 │ │         }
+ 223 │ │       } catch (error) {
+ 224 │ │         status.supabase = 'error';
+ 225 │ │       }
+ 226 │ │   
+ 227 │ │       return status;
+ 228 │ │     };
+ 229 │ │   
+ 230 │ │     // Atualizar dados de debug
+ 231 │ │     useEffect(() => {
+ 232 │ │       const updateDebugData = async () => {
+ 233 │ │         const errors = captureConsoleErrors();
+ 234 │ │         const systemChecks = performSystemChecks();
+ 235 │ │         const apiStatus = await checkAPIStatus();
+ 236 │ │         
+ 237 │ │         let localStorage_data = null;
+ 238 │ │         try {
+ 239 │ │           localStorage_data = JSON.parse(localStorage.getItem('schoolpower_flow_data') || 'null');
+ 240 │ │         } catch (error) {
+ 241 │ │           errors.push(`LocalStorage Error: ${error}`);
+ 242 │ │         }
+ 243 │ │   
+ 244 │ │         setDebugData({
+ 245 │ │           timestamp: new Date().toLocaleTimeString(),
+ 246 │ │           flowState: flowState || 'undefined',
+ 247 │ │           flowData: flowData || null,
+ 248 │ │           isLoading: isLoading || false,
+ 249 │ │           localStorage: localStorage_data,
+ 250 │ │           errors: errors.slice(-10), // Manter apenas os últimos 10 erros
+ 251 │ │           apiStatus,
+ 252 │ │           systemChecks
+ 253 │ │         });
+ 254 │ │       };
+ 255 │ │   
+ 256 │ │       updateDebugData();
+ 257 │ │       const interval = setInterval(updateDebugData, 2000); // Atualizar a cada 2 segundos
+ 258 │ │   
+ 259 │ │       return () => clearInterval(interval);
+ 260 │ │     }, [flowState, flowData, isLoading]);
+ 261 │ │   
+ 262 │ │     const getStatusColor = (status: string | boolean) => {
+ 263 │ │       if (typeof status === 'boolean') {
+ 264 │ │         return status ? 'text-green-400' : 'text-red-400';
+ 265 │ │       }
+ 266 │ │       switch (status) {
+ 267 │ │         case 'active': return 'text-green-400';
+ 268 │ │         case 'loading': return 'text-yellow-400';
+ 269 │ │         case 'error': return 'text-red-400';
+ 270 │ │         default: return 'text-gray-400';
+ 271 │ │       }
+ 272 │ │     };
+ 273 │ │   
+ 274 │ │     const getStatusIcon = (status: string | boolean) => {
+ 275 │ │       if (typeof status === 'boolean') {
+ 276 │ │         return status ? '✅' : '❌';
+ 277 │ │       }
+ 278 │ │       switch (status) {
+ 279 │ │         case 'active': return '🟢';
+ 280 │ │         case 'loading': return '🟡';
+ 281 │ │         case 'error': return '🔴';
+ 282 │ │         default: return '⚪';
+ 283 │ │       }
+ 284 │ │     };
+ 285 │ │   
+ 286 │ │     return (
+ 287 │ │       <div className="fixed top-4 right-4 z-[9999] max-w-sm">
+ 288 │ │         {/* Botão de Toggle */}
+ 289 │ │         <button
+ 290 │ │           onClick={() => setIsExpanded(!isExpanded)}
+ 291 │ │           className="mb-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-lg shadow-lg transition-colors duration-200 font-mono"
+ 292 │ │         >
+ 293 │ │           🔍 Debug School Power {isExpanded ? '▼' : '▶'}
+ 294 │ │         </button>
+ 295 │ │   
+ 296 │ │         {/* Painel de Debug */}
+ 297 │ │         {isExpanded && (
+ 298 │ │           <div className="bg-black/95 border border-blue-500/30 rounded-lg p-4 text-xs font-mono text-white shadow-2xl backdrop-blur-sm max-h-[80vh] overflow-y-auto">
+ 299 │ │             {/* Header */}
+ 300 │ │             <div className="flex items-center justify-between mb-3 pb-2 border-b border-blue-500/30">
+ 301 │ │               <h3 className="text-blue-300 font-bold">🚀 School Power Debug</h3>
+ 302 │ │               <span className="text-gray-400">{debugData.timestamp}</span>
+ 303 │ │             </div>
+ 304 │ │   
+ 305 │ │             {/* Status Geral */}
+ 306 │ │             <div className="mb-4">
+ 307 │ │               <h4 className="text-green-300 font-semibold mb-2">📊 Status Geral</h4>
+ 308 │ │               <div className="space-y-1 text-xs">
+ 309 │ │                 <div>Estado do Flow: <span className="text-cyan-300">{debugData.flowState}</span></div>
+ 310 │ │                 <div>Carregando: <span className={getStatusColor(debugData.isLoading)}>{debugData.isLoading ? 'SIM' : 'NÃO'}</span></div>
+ 311 │ │                 <div>Dados Válidos: <span className={getStatusColor(!!debugData.flowData)}>{debugData.flowData ? 'SIM' : 'NÃO'}</span></div>
+ 312 │ │               </div>
+ 313 │ │             </div>
+ 314 │ │   
+ 315 │ │             {/* Verificações do Sistema */}
+ 316 │ │             <div className="mb-4">
+ 317 │ │               <h4 className="text-green-300 font-semibold mb-2">🔧 Sistema</h4>
+ 318 │ │               <div className="space-y-1 text-xs">
+ 319 │ │                 {Object.entries(debugData.systemChecks).map(([key, status]) => (
+ 320 │ │                   <div key={key} className="flex justify-between">
+ 321 │ │                     <span>{key}:</span>
+ 322 │ │                     <span className={getStatusColor(status)}>
+ 323 │ │                       {getStatusIcon(status)} {status ? 'OK' : 'ERRO'}
+ 324 │ │                     </span>
+ 325 │ │                   </div>
+ 326 │ │                 ))}
+ 327 │ │               </div>
+ 328 │ │             </div>
+ 329 │ │   
+ 330 │ │             {/* Status das APIs */}
+ 331 │ │             <div className="mb-4">
+ 332 │ │               <h4 className="text-green-300 font-semibold mb-2">🌐 APIs</h4>
+ 333 │ │               <div className="space-y-1 text-xs">
+ 334 │ │                 {Object.entries(debugData.apiStatus).map(([api, status]) => (
+ 335 │ │                   <div key={api} className="flex justify-between">
+ 336 │ │                     <span>{api.toUpperCase()}:</span>
+ 337 │ │                     <span className={getStatusColor(status)}>
+ 338 │ │                       {getStatusIcon(status)} {status.toUpperCase()}
+ 339 │ │                     </span>
+ 340 │ │                   </div>
+ 341 │ │                 ))}
+ 342 │ │               </div>
+ 343 │ │             </div>
+ 344 │ │   
+ 345 │ │             {/* Dados do Flow */}
+ 346 │ │             <div className="mb-4">
+ 347 │ │               <h4 className="text-green-300 font-semibold mb-2">💾 Dados do Flow</h4>
+ 348 │ │               <div className="bg-gray-900/50 p-2 rounded text-xs overflow-x-auto">
+ 349 │ │                 <div>Mensagem: <span className="text-yellow-300">{debugData.flowData?.initialMessage || 'null'}</span></div>
+ 350 │ │                 <div>Contexto: <span className="text-yellow-300">{debugData.flowData?.contextualizationData ? 'Definido' : 'null'}</span></div>
+ 351 │ │                 <div>Plano: <span className="text-yellow-300">{debugData.flowData?.actionPlan?.length || 0} itens</span></div>
+ 352 │ │               </div>
+ 353 │ │             </div>
+ 354 │ │   
+ 355 │ │             {/* LocalStorage */}
+ 356 │ │             <div className="mb-4">
+ 357 │ │               <h4 className="text-green-300 font-semibold mb-2">💽 LocalStorage</h4>
+ 358 │ │               <div className="bg-gray-900/50 p-2 rounded text-xs overflow-x-auto">
+ 359 │ │                 {debugData.localStorage ? (
+ 360 │ │                   <pre className="text-yellow-300 whitespace-pre-wrap">
+ 361 │ │                     {JSON.stringify(debugData.localStorage, null, 2)}
+ 362 │ │                   </pre>
+ 363 │ │                 ) : (
+ 364 │ │                   <span className="text-red-300">Nenhum dado encontrado</span>
+ 365 │ │                 )}
+ 366 │ │               </div>
+ 367 │ │             </div>
+ 368 │ │   
+ 369 │ │             {/* Erros Recentes */}
+ 370 │ │             <div className="mb-4">
+ 371 │ │               <h4 className="text-red-300 font-semibold mb-2">🚨 Erros Recentes</h4>
+ 372 │ │               <div className="bg-red-900/20 border border-red-500/30 p-2 rounded text-xs max-h-32 overflow-y-auto">
+ 373 │ │                 {debugData.errors.length > 0 ? (
+ 374 │ │                   debugData.errors.map((error, index) => (
+ 375 │ │                     <div key={index} className="text-red-300 mb-1 break-words">
+ 376 │ │                       {error}
+ 377 │ │                     </div>
+ 378 │ │                   ))
+ 379 │ │                 ) : (
+ 380 │ │                   <span className="text-green-300">✅ Nenhum erro detectado</span>
+ 381 │ │                 )}
+ 382 │ │               </div>
+ 383 │ │             </div>
+ 384 │ │   
+ 385 │ │             {/* Ações de Debug */}
+ 386 │ │             <div className="flex gap-2 pt-2 border-t border-blue-500/30">
+ 387 │ │               <button
+ 388 │ │                 onClick={() => {
+ 389 │ │                   console.log('🔍 School Power Debug Data:', debugData);
+ 390 │ │                   alert('Dados enviados para o console!');
+ 391 │ │                 }}
+ 392 │ │                 className="px-2 py-1 bg-blue-600 hover:bg-blue-700 rounded text-xs transition-colors duration-200"
+ 393 │ │               >
+ 394 │ │                 📋 Log Console
+ 395 │ │               </button>
+ 396 │ │               <button
+ 397 │ │                 onClick={() => {
+ 398 │ │                   localStorage.removeItem('schoolpower_flow_data');
+ 399 │ │                   alert('LocalStorage limpo!');
+ 400 │ │                 }}
+ 401 │ │                 className="px-2 py-1 bg-red-600 hover:bg-red-700 rounded text-xs transition-colors duration-200"
+ 402 │ │               >
+ 403 │ │                 🗑️ Limpar Cache
+ 404 │ │               </button>
+ 405 │ │             </div>
+ 406 │ │   
+ 407 │ │             {/* Indicador de Atualização Automática */}
+ 408 │ │             <div className="mt-3 pt-2 border-t border-blue-500/30 text-center">
+ 409 │ │               <span className="text-gray-400 text-xs">
+ 410 │ │                 🔄 Atualizando a cada 2s
+ 411 │ │               </span>
+ 412 │ │             </div>
+ 413 │ │           </div>
+ 414 │ │         )}
+ 415 │ │       </div>
+ 416 │ │     );
+ 417 │ ├─▶ }
+     · ╰──── exported more than once
+     ╰────
+
+Error: 
+  ☞ Exported identifiers must be unique
+/home/runner/workspace/src/sections/SchoolPower/components/DebugPanel.tsx:3:1
+2  |  "use client";
+3  |  import React, { useState, useEffect } from 'react';
+4  |  import useSchoolPowerFlow from '../../../features/schoolpower/hooks/useSchoolPowerFlow';
+   |                                                                                      ^
+5  |  
+6  |  export default function DebugPanel() {
