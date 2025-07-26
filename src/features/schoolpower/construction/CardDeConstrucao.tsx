@@ -859,6 +859,7 @@ export function CardDeConstrucao({
 
           {/* Interface de Construção */}
           <div className="flex-1 overflow-hidden">
+            {console.log('🎯 CardDeConstrucao: Passando atividades para ConstructionInterface:', selectedActivities2)}
             <ConstructionInterface approvedActivities={selectedActivities2} />
           </div>
         </motion.div>

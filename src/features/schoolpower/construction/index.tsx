@@ -13,25 +13,27 @@ export interface ConstructionActivity {
   description: string;
   progress: number;
   type: string;
-  status: 'draft' | 'in_progress' | 'completed' | 'pending';
+  status: 'draft' | 'in-progress' | 'completed' | 'pending';
   originalData?: any;
 }
 
 export function ConstructionInterface({ approvedActivities }: ConstructionInterfaceProps) {
+  console.log('🏗️ ConstructionInterface renderizada com atividades:', approvedActivities);
+
   const [editingActivity, setEditingActivity] = useState<{id: string, data: any} | null>(null);
-  const constructionActivities = convertToConstructionActivities(approvedActivities);
 
   const handleEdit = (id: string, data: any) => {
-    console.log('🎯 Editing activity:', id, data);
+    console.log('🎯 ConstructionInterface: Editando atividade:', id, data);
     setEditingActivity({ id, data });
   };
 
   const handleCancelEdit = () => {
+    console.log('❌ ConstructionInterface: Cancelando edição');
     setEditingActivity(null);
   };
 
   const handleSaveEdit = (activityData: any) => {
-    console.log('💾 Saving activity:', editingActivity?.id, activityData);
+    console.log('💾 ConstructionInterface: Salvando atividade:', editingActivity?.id, activityData);
     // Aqui você pode implementar a lógica de salvamento
     setEditingActivity(null);
   };
@@ -43,6 +45,7 @@ export function ConstructionInterface({ approvedActivities }: ConstructionInterf
         activityData={editingActivity.data}
         onBack={handleCancelEdit}
         onSave={handleSaveEdit}
+        onClose={handleCancelEdit}
       />
     );
   }
@@ -50,31 +53,15 @@ export function ConstructionInterface({ approvedActivities }: ConstructionInterf
   return (
     <div className="w-full h-full overflow-y-auto" style={{ maxHeight: 'calc(100vh - 200px)' }}>
       <ConstructionGrid 
-        approvedActivities={constructionActivities}
+        approvedActivities={approvedActivities}
         onEdit={handleEdit}
       />
     </div>
   );
 }
 
-const convertToConstructionActivities = (activities: any[]): ConstructionActivity[] => {
-  if (!activities || !Array.isArray(activities)) {
-    return [];
-  }
-  
-  return activities.map(activity => ({
-    id: activity.id || '',
-    title: activity.title || '',
-    description: activity.description || '',
-    status: 'pending' as const,
-    progress: 0,
-    type: activity.type || 'default',
-    originalData: activity
-  }));
-};
-
 export { ConstructionGrid } from './ConstructionGrid';
 export { ConstructionCard } from './ConstructionCard';
 export { ProgressCircle } from './ProgressCircle';
 export { useConstructionActivities } from './useConstructionActivities';
-export type { ConstructionActivity, ConstructionActivityProps } from './types';
+export type { ConstructionActivity, ConstructionInterfaceProps } from './index';

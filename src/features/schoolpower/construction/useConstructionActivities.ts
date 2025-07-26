@@ -11,41 +11,49 @@ export interface ConstructionActivity {
   status: 'draft' | 'in-progress' | 'completed';
 }
 
-export const useConstructionActivities = (actionPlan?: ActionPlanItem[]) => {
+export const useConstructionActivities = (approvedActivities?: any[]) => {
   const [activities, setActivities] = useState<ConstructionActivity[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadActivities = async () => {
-      console.log('📚 Carregando atividades para construção...');
-      setIsLoading(true);
+      console.log('📚 useConstructionActivities: Carregando atividades para construção...', approvedActivities);
+      setLoading(true);
 
       try {
-        // Filtrar apenas as atividades aprovadas do actionPlan
-        const approvedActivities = actionPlan?.filter(item => item.approved) || [];
-        
-        // Converter ActionPlanItems para ConstructionActivities
-        const constructionActivities: ConstructionActivity[] = approvedActivities.map(item => ({
-          id: item.id,
-          title: item.title,
-          description: item.description,
-          progress: 0, // Progresso inicial sempre 0
-          type: item.type || 'Atividade', // Usar o tipo se disponível, senão usar 'Atividade'
-          status: 'draft' as const // Status inicial sempre 'draft'
-        }));
+        if (!approvedActivities || approvedActivities.length === 0) {
+          console.log('⚠️ Nenhuma atividade aprovada encontrada');
+          setActivities([]);
+          setLoading(false);
+          return;
+        }
 
-        console.log('✅ Atividades carregadas:', constructionActivities);
+        // Converter as atividades aprovadas para o formato de construção
+        const constructionActivities: ConstructionActivity[] = approvedActivities.map(activity => {
+          console.log('🔄 Convertendo atividade:', activity);
+          
+          return {
+            id: activity.id,
+            title: activity.title || 'Atividade',
+            description: activity.description || 'Descrição da atividade',
+            progress: 0, // Progresso inicial sempre 0
+            type: activity.type || 'Atividade', // Usar o tipo se disponível
+            status: 'draft' as const // Status inicial sempre 'draft'
+          };
+        });
+
+        console.log('✅ Atividades de construção criadas:', constructionActivities);
         setActivities(constructionActivities);
       } catch (error) {
-        console.error('❌ Erro ao carregar atividades:', error);
+        console.error('❌ Erro ao carregar atividades de construção:', error);
         setActivities([]);
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
 
     loadActivities();
-  }, [actionPlan]);
+  }, [approvedActivities]);
 
   const updateActivityProgress = (id: string, progress: number) => {
     setActivities(prev => 
@@ -69,7 +77,7 @@ export const useConstructionActivities = (actionPlan?: ActionPlanItem[]) => {
 
   return {
     activities,
-    isLoading,
+    loading,
     updateActivityProgress,
     updateActivityStatus
   };

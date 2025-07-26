@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ConstructionCard } from './ConstructionCard';
@@ -11,7 +12,12 @@ interface ConstructionGridProps {
 }
 
 export function ConstructionGrid({ approvedActivities, onEdit }: ConstructionGridProps) {
+  console.log('🎯 ConstructionGrid renderizado com atividades aprovadas:', approvedActivities);
+  
   const { activities, loading } = useConstructionActivities(approvedActivities);
+
+  console.log('🎯 ConstructionGrid - atividades carregadas:', activities);
+  console.log('🎯 ConstructionGrid - loading:', loading);
 
   const handleEdit = (id: string) => {
     console.log('🎯 ConstructionGrid: Editando atividade ID:', id);
@@ -23,12 +29,12 @@ export function ConstructionGrid({ approvedActivities, onEdit }: ConstructionGri
   };
 
   const handleView = (id: string) => {
-    console.log('Visualizando atividade:', id);
+    console.log('👁️ Visualizando atividade:', id);
     // TODO: Implementar visualização da atividade
   };
 
   const handleShare = (id: string) => {
-    console.log('Compartilhando atividade:', id);
+    console.log('📤 Compartilhando atividade:', id);
     // TODO: Implementar funcionalidade de compartilhamento
   };
 
@@ -69,7 +75,7 @@ export function ConstructionGrid({ approvedActivities, onEdit }: ConstructionGri
     );
   }
 
-  if (activities.length === 0) {
+  if (!approvedActivities || approvedActivities.length === 0) {
     return (
       <div className="text-center py-12">
         <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
@@ -80,6 +86,22 @@ export function ConstructionGrid({ approvedActivities, onEdit }: ConstructionGri
         </h3>
         <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
           Aprove algumas atividades no Plano de Ação para começar a construí-las aqui.
+        </p>
+      </div>
+    );
+  }
+
+  if (activities.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+          <AlertCircle className="w-8 h-8 text-gray-400" />
+        </div>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+          Processando atividades...
+        </h3>
+        <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
+          As atividades aprovadas estão sendo preparadas para construção.
         </p>
       </div>
     );
@@ -121,7 +143,7 @@ export function ConstructionGrid({ approvedActivities, onEdit }: ConstructionGri
               type={activity.type}
               status={activity.status}
               onEdit={(id) => {
-                console.log('🎯 ConstructionGrid: Editando atividade ID:', id);
+                console.log('🎯 ConstructionGrid: Card solicitou edição para:', id);
                 handleEdit(id);
               }}
               onView={handleView}
