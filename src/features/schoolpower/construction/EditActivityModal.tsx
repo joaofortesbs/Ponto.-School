@@ -118,7 +118,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="absolute inset-0 z-[99999] flex items-center justify-center bg-black/50 backdrop-blur-sm rounded-2xl"
+        className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       >
         <motion.div
@@ -126,11 +126,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
           transition={{ duration: 0.3 }}
-          className="bg-gray-900 text-white rounded-2xl shadow-2xl overflow-hidden border border-gray-700"
-          style={{
-            width: "1153px",
-            height: "700px"
-          }}
+          className="w-[1400px] h-[800px] bg-gray-900 text-white rounded-2xl shadow-2xl overflow-hidden border border-gray-700"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
@@ -159,7 +155,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
           </div>
 
           {/* Content */}
-          <div className="flex p-4 h-[calc(100%-120px)] gap-4">
+          <div className="flex p-4 h-[calc(800px-120px)] gap-4">
             {/* Formulário (50%) */}
             <div className="flex flex-col space-y-3 overflow-y-auto flex-1 pr-2">
               <Card>
