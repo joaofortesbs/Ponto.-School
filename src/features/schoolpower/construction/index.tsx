@@ -1,28 +1,78 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { ConstructionGrid } from './ConstructionGrid';
+import { EditActivityContainer } from './EditActivityContainer';
 import { ActionPlanItem } from '../actionplan/ActionPlanCard';
 
-interface ConstructionInterfaceProps {
-  approvedActivities: ActionPlanItem[];
+export interface ConstructionInterface {
+  activities: ConstructionActivity[];
+  onEdit: (activityId: string) => void;
+  onView: (activityId: string) => void;
+  onShare: (activityId: string) => void;
 }
 
-export const ConstructionInterface: React.FC<ConstructionInterfaceProps> = ({ 
-  approvedActivities 
-}) => {
+export interface ConstructionActivity {
+  id: string;
+  title: string;
+  description: string;
+  progress: number;
+  type: string;
+  status: 'draft' | 'in_progress' | 'completed';
+}
+
+export function ConstructionInterface({ approvedActivities }: ConstructionInterfaceProps) {
+  const [editingActivity, setEditingActivity] = useState<{id: string, data: any} | null>(null);
+  const constructionActivities = convertToConstructionActivities(approvedActivities);
+
+  const handleEdit = (id: string, data: any) => {
+    console.log('🎯 Editing activity:', id, data);
+    setEditingActivity({ id, data });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingActivity(null);
+  };
+
+  const handleSaveEdit = (activityData: any) => {
+    console.log('💾 Saving activity:', editingActivity?.id, activityData);
+    // Aqui você pode implementar a lógica de salvamento
+    setEditingActivity(null);
+  };
+
+  if (editingActivity) {
+    return (
+      <EditActivityContainer
+        activityId={editingActivity.id}
+        activityData={editingActivity.data}
+        onBack={handleCancelEdit}
+        onSave={handleSaveEdit}
+      />
+    );
+  }
+
   return (
-    <div className="w-full h-full flex items-center justify-center">
-      <div className="text-center p-8">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-          🚧 Interface de Construção
-        </h2>
-        <p className="text-gray-600 dark:text-gray-400 mb-6">
-          Esta seção está sendo desenvolvida para construir as atividades aprovadas.
-        </p>
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-          <p className="text-sm text-blue-800 dark:text-blue-200">
-            {approvedActivities.length} atividade{approvedActivities.length !== 1 ? 's' : ''} aprovada{approvedActivities.length !== 1 ? 's' : ''} para construção
-          </p>
-        </div>
-      </div>
+    <div className="w-full h-full overflow-y-auto" style={{ maxHeight: 'calc(100vh - 200px)' }}>
+      <ConstructionGrid 
+        approvedActivities={constructionActivities}
+        onEdit={handleEdit}
+      />
     </div>
   );
+}
+
+const convertToConstructionActivities = (activities: ActionPlanItem[]): ConstructionActivity[] => {
+  return activities.map(activity => ({
+    id: activity.id,
+    title: activity.title,
+    description: activity.description,
+    status: 'pending' as const,
+    progress: 0,
+    type: activity.type || 'default',
+    originalData: activity // Preserva os dados originais
+  }));
 };
+
+export { ConstructionGrid } from './ConstructionGrid';
+export { ConstructionCard } from './ConstructionCard';
+export { ProgressCircle } from './ProgressCircle';
+export { useConstructionActivities } from './useConstructionActivities';
+export type { ConstructionActivity, ConstructionActivityProps } from './types';

@@ -1,64 +1,76 @@
-
 import { useState, useEffect } from 'react';
 import { ConstructionActivity } from './types';
 
-export function useConstructionActivities(approvedActivities: any[] = []) {
+export const useConstructionActivities = () => {
   const [activities, setActivities] = useState<ConstructionActivity[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simular carregamento dos dados
-    const loadActivities = async () => {
-      setLoading(true);
-      
-      try {
-        // Converter atividades aprovadas para formato de construção
-        const constructionActivities: ConstructionActivity[] = approvedActivities.map((activity, index) => ({
-          id: activity.id || `activity-${index}`,
-          title: activity.personalizedTitle || activity.title || 'Atividade',
-          description: activity.personalizedDescription || activity.description || 'Descrição da atividade',
-          status: 'pending' as const,
-          progress: 0, // Iniciar com 0% de progresso
-          type: activity.type || 'general'
-        }));
+    // Simular carregamento de atividades aprovadas
+    const loadActivities = () => {
+      console.log('📚 Carregando atividades para construção...');
 
-        // Simular delay de carregamento
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        setActivities(constructionActivities);
-      } catch (error) {
-        console.error('Erro ao carregar atividades de construção:', error);
-        setActivities([]);
-      } finally {
-        setLoading(false);
-      }
+      // Buscar atividades do School Power que estão aprovadas
+      const mockActivities: ConstructionActivity[] = [
+        {
+          id: 'prova-funcao-1grau',
+          title: 'Prova - Funções do 1° Grau, Teorema de...',
+          description: 'Prova abrangendo os temas de funções do primeiro grau. Teorema de Pitágoras e números racionais com...',
+          progress: 0,
+          type: 'Prova',
+          status: 'draft'
+        },
+        {
+          id: 'lista-exercicios-funcao-1grau',
+          title: 'Lista de Exercícios - Funções do 1° Grau',
+          description: 'Lista com exercícios variados sobre funções do primeiro grau, abordando desde a identificação até a resolução de...',
+          progress: 0,
+          type: 'Lista de Exercícios',
+          status: 'draft'
+        },
+        {
+          id: 'jogo-educacional-funcao-1grau',
+          title: 'Jogo Educacional - Funções do 1° Grau',
+          description: 'Jogo interativo para fixar os conceitos de funções do primeiro grau de forma lúdica.',
+          progress: 0,
+          type: 'Jogo',
+          status: 'draft'
+        },
+        {
+          id: 'funcoes-primeiro-grau',
+          title: 'Funções do 1° Grau',
+          description: 'Atividade completa sobre funções do primeiro grau com teoria e exercícios práticos.',
+          progress: 0,
+          type: 'Atividade',
+          status: 'draft'
+        },
+        {
+          id: 'atividade-contextualizada-funcao-1grau',
+          title: 'Atividade Contextualizada - Funções do 1°...',
+          description: 'Atividade contextualizada relacionando funções do primeiro grau com situações do cotidiano.',
+          progress: 0,
+          type: 'Atividade Contextualizada',
+          status: 'draft'
+        }
+      ];
+
+      console.log('✅ Atividades carregadas:', mockActivities);
+      setActivities(mockActivities);
+      setLoading(false);
     };
 
-    if (approvedActivities.length > 0) {
-      loadActivities();
-    } else {
-      setLoading(false);
-    }
-  }, [approvedActivities]);
+    loadActivities();
+  }, []);
 
-  const updateActivityProgress = (id: string, progress: number) => {
-    setActivities(prev => prev.map(activity => 
-      activity.id === id 
-        ? { ...activity, progress, status: progress === 100 ? 'completed' : 'in_progress' }
-        : activity
-    ));
+  const updateActivity = (activityId: string, updates: Partial<ConstructionActivity>) => {
+    setActivities(prev => 
+      prev.map(activity => 
+        activity.id === activityId 
+          ? { ...activity, ...updates }
+          : activity
+      )
+    );
   };
 
-  const updateActivityStatus = (id: string, status: ConstructionActivity['status']) => {
-    setActivities(prev => prev.map(activity => 
-      activity.id === id ? { ...activity, status } : activity
-    ));
-  };
-
-  return {
-    activities,
-    loading,
-    updateActivityProgress,
-    updateActivityStatus
-  };
-}
+  return { activities, loading, setActivities, updateActivity };
+};

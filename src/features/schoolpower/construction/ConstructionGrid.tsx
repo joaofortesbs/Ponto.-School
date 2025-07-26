@@ -1,37 +1,84 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ConstructionCard } from './ConstructionCard';
-
-interface Activity {
-  id: string;
-  title: string;
-  description: string;
-  progress: number;
-  type: string;
-  status: 'draft' | 'in-progress' | 'completed';
-}
+import { useConstructionActivities } from './useConstructionActivities';
+import { Skeleton } from '@/components/ui/skeleton';
+import { AlertCircle, Building2 } from 'lucide-react';
 
 interface ConstructionGridProps {
-  activities: Activity[];
-  onEdit: (activityId: string) => void;
-  onView: (activityId: string) => void;
-  onShare: (activityId: string) => void;
+  approvedActivities: any[];
+  onEditActivity?: (activityId: string, activityData: any) => void;
 }
 
-export function ConstructionGrid({ activities, onEdit, onView, onShare }: ConstructionGridProps) {
-  console.log('🏗️ ConstructionGrid renderizado com atividades:', activities.length);
+export function ConstructionGrid({ approvedActivities, onEditActivity }: ConstructionGridProps) {
+  const { activities, loading } = useConstructionActivities(approvedActivities);
+
+  const handleEdit = (id: string) => {
+    console.log('Editando atividade:', id);
+    const activity = activities.find(act => act.id === id);
+    if (activity && onEditActivity) {
+      onEditActivity(id, activity);
+    }
+  };
+
+  const handleView = (id: string) => {
+    console.log('Visualizando atividade:', id);
+    // TODO: Implementar visualização da atividade
+  };
+
+  const handleShare = (id: string) => {
+    console.log('Compartilhando atividade:', id);
+    // TODO: Implementar funcionalidade de compartilhamento
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        {/* Header Skeleton */}
+        <div className="flex items-center gap-3 mb-6">
+          <Skeleton className="w-8 h-8 rounded-lg" />
+          <div className="space-y-2">
+            <Skeleton className="h-6 w-48" />
+            <Skeleton className="h-4 w-72" />
+          </div>
+        </div>
+
+        {/* Grid Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[...Array(6)].map((_, index) => (
+            <div key={index} className="rounded-xl border-2 border-gray-200 dark:border-gray-700 p-4 space-y-4">
+              <Skeleton className="h-32 w-full rounded-lg" />
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-3 w-full" />
+                <Skeleton className="h-3 w-2/3" />
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex gap-1">
+                  <Skeleton className="h-7 w-8" />
+                  <Skeleton className="h-7 w-8" />
+                  <Skeleton className="h-7 w-8" />
+                </div>
+                <Skeleton className="h-6 w-16 rounded-full" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (activities.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full p-8 text-center">
-        <div className="w-16 h-16 bg-gray-700/50 rounded-2xl flex items-center justify-center mb-4">
-          <span className="text-2xl">📋</span>
+      <div className="text-center py-12">
+        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+          <AlertCircle className="w-8 h-8 text-gray-400" />
         </div>
-        <h3 className="text-xl font-semibold text-white mb-2">
-          Nenhuma atividade para construção
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+          Nenhuma atividade para construir
         </h3>
-        <p className="text-gray-400 max-w-md">
-          Complete o fluxo de contextualização e plano de ação para ter atividades aprovadas para construção.
+        <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
+          Aprove algumas atividades no Plano de Ação para começar a construí-las aqui.
         </p>
       </div>
     );
@@ -41,15 +88,19 @@ export function ConstructionGrid({ activities, onEdit, onView, onShare }: Constr
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="p-6"
+      transition={{ duration: 0.3 }}
+      className="space-y-6"
     >
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold text-white mb-2">
-          Atividades Aprovadas para Construção
-        </h3>
-        <p className="text-gray-400">
-          {activities.length} atividade{activities.length !== 1 ? 's' : ''} disponível{activities.length !== 1 ? 'eis' : ''} para edição e personalização
-        </p>
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#FF6B00] to-[#D65A00] flex items-center justify-center">
+          <Building2 className="w-5 h-5 text-white" />
+        </div>
+        <div>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            {activities.length} {activities.length === 1 ? 'atividade aprovada' : 'atividades aprovadas'} para construção
+          </p>
+        </div>
       </div>
 
       {/* Grid */}
@@ -68,18 +119,12 @@ export function ConstructionGrid({ activities, onEdit, onView, onShare }: Constr
               progress={activity.progress}
               type={activity.type}
               status={activity.status}
-              onEdit={() => {
-                console.log('🎯 ConstructionGrid: Botão Edit clicado para atividade:', activity.id);
-                onEdit(activity.id);
+              onEdit={(id) => {
+                console.log('🎯 ConstructionGrid: Editando atividade ID:', id);
+                handleEdit(id);
               }}
-              onView={() => {
-                console.log('👁️ ConstructionGrid: Botão View clicado para atividade:', activity.id);
-                onView(activity.id);
-              }}
-              onShare={() => {
-                console.log('📤 ConstructionGrid: Botão Share clicado para atividade:', activity.id);
-                onShare(activity.id);
-              }}
+              onView={handleView}
+              onShare={handleShare}
             />
           </motion.div>
         ))}
