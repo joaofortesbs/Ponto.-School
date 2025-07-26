@@ -834,7 +834,7 @@ export function CardDeConstrucao({
         </motion.div>
       ) : (
         <motion.div
-          className="relative z-10 h-full flex flex-col pt-16"
+          className="relative z-10 h-full flex flex-col pt-16 bg-white dark:bg-gray-900"
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2, duration: 0.5 }}
