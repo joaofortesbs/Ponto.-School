@@ -8,15 +8,25 @@ import { AlertCircle, Building2 } from 'lucide-react';
 
 interface ConstructionGridProps {
   approvedActivities: any[];
+  onEdit?: (activityId: string, activityData?: any) => void;
 }
 
-export function ConstructionGrid({ approvedActivities }: ConstructionGridProps) {
+export function ConstructionGrid({ approvedActivities, onEdit }: ConstructionGridProps) {
   console.log('🎯 ConstructionGrid renderizado com atividades aprovadas:', approvedActivities);
   
   const { activities, loading } = useConstructionActivities(approvedActivities);
 
   console.log('🎯 ConstructionGrid - atividades carregadas:', activities);
   console.log('🎯 ConstructionGrid - loading:', loading);
+
+  const handleEdit = (id: string) => {
+    console.log('🎯 ConstructionGrid: Editando atividade ID:', id);
+    const activity = activities.find(act => act.id === id);
+    console.log('🎯 ConstructionGrid: Atividade encontrada:', activity);
+    if (onEdit) {
+      onEdit(id, activity);
+    }
+  };
 
   const handleView = (id: string) => {
     console.log('👁️ Visualizando atividade:', id);
@@ -52,6 +62,7 @@ export function ConstructionGrid({ approvedActivities }: ConstructionGridProps) 
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex gap-1">
+                  <Skeleton className="h-7 w-8" />
                   <Skeleton className="h-7 w-8" />
                   <Skeleton className="h-7 w-8" />
                 </div>
@@ -131,6 +142,10 @@ export function ConstructionGrid({ approvedActivities }: ConstructionGridProps) 
               progress={activity.progress}
               type={activity.type}
               status={activity.status}
+              onEdit={(id) => {
+                console.log('🎯 ConstructionGrid: Card solicitou edição para:', id);
+                handleEdit(id);
+              }}
               onView={handleView}
               onShare={handleShare}
             />
