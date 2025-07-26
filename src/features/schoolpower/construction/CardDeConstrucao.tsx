@@ -81,6 +81,7 @@ interface CardDeConstrucaoProps {
   flowData: {
     actionPlan: ActionPlanItem[] | null;
     contextualizationData: ContextualizationData | null;
+    manualActivities?: ActionPlanItem[] | null;
   };
   onBack: () => void;
   step: 'contextualization' | 'actionPlan' | 'generating' | 'generatingActivities' | 'construction' | 'activities';

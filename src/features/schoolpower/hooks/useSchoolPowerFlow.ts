@@ -100,7 +100,7 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
     const newData: SchoolPowerFlowData = {
       initialMessage: message,
       contextualizationData: null,
-      actionPlan: null,
+      actionPlan: [],
       timestamp: Date.now()
     };
 
@@ -146,7 +146,7 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
     const dataWithContext = {
       initialMessage: currentMessage, // Garantir que a mensagem está presente
       contextualizationData: contextData,
-      actionPlan: null,
+      actionPlan: [],
       timestamp: Date.now()
     };
 
@@ -249,7 +249,7 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
     const resetData: SchoolPowerFlowData = {
       initialMessage: null,
       contextualizationData: null,
-      actionPlan: null,
+      actionPlan: [],
       timestamp: Date.now()
     };
 

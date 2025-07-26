@@ -1,7 +1,117 @@
 
 "use client";
 import React, { useState, useEffect } from 'react';
-import { useSchoolPowerFlow } from '../../../features/schoolpower/hooks/useSchoolPowerFlow';
+import useSchoolPowerFlow from '../../../features/schoolpower/hooks/useSchoolPowerFlow';
+
+export default function DebugPanel() {
+  const [isVisible, setIsVisible] = useState(false);
+  const [debugData, setDebugData] = useState<any>({});
+  
+  const {
+    flowState,
+    flowData,
+    isLoading
+  } = useSchoolPowerFlow();
+
+  useEffect(() => {
+    const updateDebugData = () => {
+      setDebugData({
+        flowState,
+        flowData,
+        isLoading,
+        timestamp: new Date().toLocaleTimeString()
+      });
+    };
+
+    updateDebugData();
+    const interval = setInterval(updateDebugData, 2000);
+
+    return () => clearInterval(interval);
+  }, [flowState, flowData, isLoading]);
+
+  if (process.env.NODE_ENV !== 'development') {
+    return null;
+  }
+
+  return (
+    <div className="fixed top-4 right-4 z-50">
+      <button
+        onClick={() => setIsVisible(!isVisible)}
+        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-xs font-medium shadow-lg transition-colors duration-200"
+      >
+        🐛 Debug {isVisible ? '❌' : '🔍'}
+      </button>
+
+      {isVisible && (
+        <div className="mt-2 bg-black/90 backdrop-blur-sm text-white rounded-lg p-4 w-80 max-h-96 overflow-y-auto border border-blue-500/50 shadow-2xl">
+          <h3 className="text-blue-400 font-bold mb-3 text-sm">🔍 School Power Debug Panel</h3>
+          
+          <div className="space-y-3 text-xs">
+            <div>
+              <span className="text-blue-300 font-semibold">Flow State:</span>
+              <div className="bg-blue-900/30 rounded px-2 py-1 mt-1">
+                <span className={`font-mono ${
+                  debugData.flowState === 'idle' ? 'text-gray-400' :
+                  debugData.flowState === 'contextualizing' ? 'text-yellow-400' :
+                  debugData.flowState === 'actionplan' ? 'text-orange-400' :
+                  debugData.flowState === 'generating' ? 'text-blue-400' :
+                  debugData.flowState === 'activities' ? 'text-green-400' : 'text-white'
+                }`}>
+                  {debugData.flowState || 'undefined'}
+                </span>
+              </div>
+            </div>
+
+            <div>
+              <span className="text-blue-300 font-semibold">Loading:</span>
+              <span className={`ml-2 font-mono ${debugData.isLoading ? 'text-yellow-400' : 'text-green-400'}`}>
+                {debugData.isLoading ? 'true' : 'false'}
+              </span>
+            </div>
+
+            <div>
+              <span className="text-blue-300 font-semibold">Flow Data:</span>
+              <div className="bg-gray-800/50 rounded px-2 py-1 mt-1 max-h-32 overflow-y-auto">
+                <pre className="text-xs text-gray-300">
+                  {JSON.stringify(debugData.flowData, null, 2)}
+                </pre>
+              </div>
+            </div>
+          </div>
+
+          {/* Ações de Debug */}
+          <div className="flex gap-2 pt-2 border-t border-blue-500/30">
+            <button
+              onClick={() => {
+                console.log('🔍 School Power Debug Data:', debugData);
+                alert('Dados enviados para o console!');
+              }}
+              className="px-2 py-1 bg-blue-600 hover:bg-blue-700 rounded text-xs transition-colors duration-200"
+            >
+              📋 Log Console
+            </button>
+            <button
+              onClick={() => {
+                localStorage.removeItem('schoolpower_flow_data');
+                alert('LocalStorage limpo!');
+              }}
+              className="px-2 py-1 bg-red-600 hover:bg-red-700 rounded text-xs transition-colors duration-200"
+            >
+              🗑️ Limpar Cache
+            </button>
+          </div>
+
+          {/* Indicador de Atualização Automática */}
+          <div className="mt-3 pt-2 border-t border-blue-500/30 text-center">
+            <span className="text-gray-400 text-xs">
+              🔄 Atualizando a cada 2s
+            </span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 interface DebugData {
   timestamp: string;

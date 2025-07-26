@@ -10,7 +10,7 @@ import {
   ParticlesBackground,
   DebugPanel,
 } from "./components";
-import { useSchoolPowerFlow } from "../../features/schoolpower/hooks/useSchoolPowerFlow";
+import useSchoolPowerFlow from "../../features/schoolpower/hooks/useSchoolPowerFlow";
 import { ContextualizationCard } from "../../features/schoolpower/contextualization/ContextualizationCard";
 import { ActionPlanCard } from "../../features/schoolpower/actionplan/ActionPlanCard";
 import { CardDeConstrucao } from "../../features/schoolpower/construction/CardDeConstrucao";
@@ -23,10 +23,10 @@ export function SchoolPowerPage() {
   const {
     flowState,
     flowData,
-    sendInitialMessage,
-    submitContextualization,
-    approveActionPlan,
-    resetFlow,
+    sendInitialMessage: handleSendInitialMessage,
+    submitContextualization: handleSubmitContextualizationHook,
+    approveActionPlan: handleApproveActionPlanHook,
+    resetFlow: handleResetFlowHook,
     isLoading
   } = useSchoolPowerFlow();
 
@@ -40,25 +40,31 @@ export function SchoolPowerPage() {
   // Função para enviar mensagem inicial
   const handleSendMessage = (message: string) => {
     console.log("📤 Enviando mensagem inicial do SchoolPowerPage:", message);
-    sendInitialMessage(message);
+    handleSendInitialMessage(message);
   };
 
   // Função para submeter contextualização
   const handleSubmitContextualization = (data: any) => {
     console.log("📝 Submetendo contextualização do SchoolPowerPage:", data);
-    submitContextualization(data);
+    handleSubmitContextualizationHook(data);
   };
 
   // Função para aprovar action plan
   const handleApproveActionPlan = (approvedItems: any) => {
     console.log("✅ Aprovando action plan do SchoolPowerPage:", approvedItems);
-    approveActionPlan(approvedItems);
+    handleApproveActionPlanHook(approvedItems);
   };
 
   // Função para resetar o fluxo
   const handleResetFlow = () => {
     console.log("🔄 Resetando fluxo do SchoolPowerPage");
-    resetFlow();
+    handleResetFlowHook();
+  };
+
+  // Função para voltar
+  const handleBack = () => {
+    console.log("🔄 Voltando ao início");
+    handleResetFlowHook();
   };
 
   // Determina se os componentes padrão devem estar visíveis
