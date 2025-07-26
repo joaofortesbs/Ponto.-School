@@ -1,0 +1,45 @@
+Corrija os seguintes erros de dentro da plataforma, sem cometer ou deixar novos erros ou bugs dentro da plataforma, e sem comprometer negativamente as funcionalidades de dentro da plataforma, seja extremamente cuidadoso e eficiente! Analise e pense o porque esses erros acontecem, analise todas as alternativas e age como se você fosse o seu melhor modelo, na versão mais poderosa, e mais estratégica! Analise todas as possibilidades, e altere os arquivos com a absoluta precisão:
+
+[plugin:vite:react-swc] × Unexpected token div. Expected jsx identifier
+╭─[/home/runner/workspace/src/features/schoolpower/construction/EditActivityContainer.tsx:220:1]
+220 │ }
+221 │
+222 │ return (
+223 │ <div className="fixed inset-0 bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 z-50">
+· ───
+224 │ {/* Header moderno */}
+225 │ <div className="sticky top-0 z-60 bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 shadow-lg">
+226 │ <div className="flex items-center justify-between px-6 py-4">
+╰────
+
+Caused by:
+Syntax Error
+/home/runner/workspace/src/features/schoolpower/construction/EditActivityContainer.tsx:220:1[plugin:vite:react-swc] × Unexpected token div. Expected jsx identifier
+╭─[/home/runner/workspace/src/features/schoolpower/construction/EditActivityContainer.tsx:220:1]
+220 │ }
+221 │
+222 │ return (
+223 │ <div className="fixed inset-0 bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 z-50">
+· ───
+224 │ {/* Header moderno */}
+225 │ <div className="sticky top-0 z-60 bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 shadow-lg">
+226 │ <div className="flex items-center justify-between px-6 py-4">
+╰────
+
+Caused by:
+Syntax Error
+/home/runner/workspace/src/features/schoolpower/construction/EditActivityContainer.tsx:220:1[plugin:vite:react-swc] × Unexpected token div. Expected jsx identifier
+╭─[/home/runner/workspace/src/features/schoolpower/construction/EditActivityContainer.tsx:220:1]
+220 │ }
+221 │
+222 │ return (
+223 │ <div className="fixed inset-0 bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 z-50">
+· ───
+224 │ {/* Header moderno */}
+225 │ <div className="sticky top-0 z-60 bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 shadow-lg">
+226 │ <div className="flex items-center justify-between px-6 py-4">
+╰────
+
+Caused by:
+Syntax Error
+/home/runner/workspace/src/features/schoolpower/construction/EditActivityContainer.tsx:220:1
