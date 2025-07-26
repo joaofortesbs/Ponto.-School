@@ -1,71 +1,122 @@
-import React, { useState, useEffect, Suspense } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { 
-  activityRegistry, 
-  isActivityRegistered, 
-  getActivityComponents 
-} from '../activities/activityRegistry';
+  ArrowLeft, 
+  Save, 
+  Eye, 
+  Settings, 
+  FileText, 
+  Clock, 
+  Target,
+  BookOpen,
+  User,
+  Calendar,
+  Edit3,
+  ChevronLeft,
+  ChevronRight
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { isActivityRegistered, getActivityComponents } from '../activities/activityRegistry';
 
 interface EditActivityContainerProps {
   activityId: string;
   activityData?: any;
-  onBack?: () => void;
+  onBack: () => void;
   onSave?: (data: any) => void;
-  onClose?: () => void;
+  onClose: () => void;
 }
 
-export function EditActivityContainer({
-  activityId,
-  activityData,
-  onBack,
-  onSave,
-  onClose
+interface ActivityFormData {
+  title: string;
+  description: string;
+  difficulty: 'Fácil' | 'Médio' | 'Difícil';
+  duration: string;
+  type: string;
+  objective: string;
+  targetAudience: string;
+  instructions: string;
+  materials: string[];
+  evaluation: string;
+  additionalNotes: string;
+}
+
+export function EditActivityContainer({ 
+  activityId, 
+  activityData, 
+  onBack, 
+  onSave, 
+  onClose 
 }: EditActivityContainerProps) {
-  const [ActivityEditor, setActivityEditor] = useState<React.ComponentType<any> | null>(null);
-  const [ActivityPreview, setActivityPreview] = useState<React.ComponentType<any> | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [previewData, setPreviewData] = useState(activityData || {});
+  const [activeTab, setActiveTab] = useState('editor');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [formData, setFormData] = useState<ActivityFormData>({
+    title: '',
+    description: '',
+    difficulty: 'Médio',
+    duration: '',
+    type: '',
+    objective: '',
+    targetAudience: '',
+    instructions: '',
+    materials: [],
+    evaluation: '',
+    additionalNotes: ''
+  });
 
-  console.log('🔍 Buscando atividade pelo ID:', activityId);
-  console.log('📋 Atividades registradas:', Object.keys(activityRegistry));
+  const [ActivityEditor, setActivityEditor] = useState<React.ComponentType<any> | null>(null);
+  const [ActivityPreview, setActivityPreview] = useState<React.ComponentType<any> | null>(null);
 
   useEffect(() => {
-    const loadActivityComponents = async () => {
-      setLoading(true);
-      setError(null);
+    console.log('🔍 EditActivityContainer: Carregando componentes para:', activityId);
+    console.log('🔍 EditActivityContainer: Dados da atividade:', activityData);
 
+    const loadActivityComponents = async () => {
       try {
+        setLoading(true);
+        setError(null);
+
+        // Inicializar dados do formulário com dados da atividade se disponíveis
+        if (activityData) {
+          setFormData(prev => ({
+            ...prev,
+            title: activityData.title || '',
+            description: activityData.description || '',
+            type: activityData.type || '',
+            duration: activityData.duration?.toString() || '30',
+            ...activityData
+          }));
+        }
+
         // Verificar se a atividade está registrada
         if (!isActivityRegistered(activityId)) {
-          console.log('⚠️ Atividade não registrada, usando componentes padrão para:', activityId);
-
-          // Tentar carregar componentes padrão
-          try {
-            const defaultEditor = await import('../activities/default/EditActivity');
-            const defaultPreview = await import('../activities/default/ActivityPreview');
-
-            setActivityEditor(() => defaultEditor.default);
-            setActivityPreview(() => defaultPreview.default);
-            console.log('✅ Componentes padrão carregados com sucesso');
-          } catch (defaultError) {
-            console.error('❌ Erro ao carregar componentes padrão:', defaultError);
-            setError(`Atividade "${activityId}" não encontrada e componentes padrão indisponíveis.`);
-            return;
-          }
+          console.log('⚠️ Atividade não registrada, usando componentes padrão');
+          
+          // Importar componentes padrão
+          const { default: DefaultEditor } = await import('../activities/default/EditActivity');
+          const { default: DefaultPreview } = await import('../activities/default/ActivityPreview');
+          
+          setActivityEditor(() => DefaultEditor);
+          setActivityPreview(() => DefaultPreview);
         } else {
-          console.log('✅ Atividade registrada encontrada:', activityId);
-
-          const components = getActivityComponents(activityId);
-          if (!components) {
-            setError(`Erro interno: componentes não encontrados para "${activityId}".`);
-            return;
-          }
-
-          // Carregar componentes específicos da atividade
+          console.log('✅ Atividade registrada, carregando componentes específicos');
+          
           try {
+            const components = getActivityComponents(activityId);
+            if (!components) {
+              throw new Error('Componentes não encontrados');
+            }
+
             const EditorComponent = components.editor;
             const PreviewComponent = components.preview;
 
@@ -74,8 +125,13 @@ export function EditActivityContainer({
             console.log('✅ Componentes específicos carregados com sucesso');
           } catch (componentError) {
             console.error('❌ Erro ao carregar componentes específicos:', componentError);
-            setError(`Erro ao carregar componentes da atividade "${activityId}".`);
-            return;
+            
+            // Fallback para componentes padrão
+            const { default: DefaultEditor } = await import('../activities/default/EditActivity');
+            const { default: DefaultPreview } = await import('../activities/default/ActivityPreview');
+            
+            setActivityEditor(() => DefaultEditor);
+            setActivityPreview(() => DefaultPreview);
           }
         }
       } catch (generalError) {
@@ -92,161 +148,442 @@ export function EditActivityContainer({
       setError('ID da atividade não fornecido.');
       setLoading(false);
     }
-  }, [activityId]);
+  }, [activityId, activityData]);
 
-  const handleSave = (data: any) => {
-    console.log('💾 Salvando dados da atividade:', activityId, data);
-    setPreviewData({ ...previewData, ...data });
-    onSave?.(data);
+  const handleSave = () => {
+    console.log('💾 Salvando dados da atividade:', activityId, formData);
+    onSave?.(formData);
   };
 
-  const handlePreview = () => {
-    console.log('👁️ Atualizando preview com dados:', previewData);
+  const handleFormChange = (field: keyof ActivityFormData, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const addMaterial = () => {
+    setFormData(prev => ({
+      ...prev,
+      materials: [...prev.materials, '']
+    }));
+  };
+
+  const updateMaterial = (index: number, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      materials: prev.materials.map((material, i) => i === index ? value : material)
+    }));
+  };
+
+  const removeMaterial = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      materials: prev.materials.filter((_, i) => i !== index)
+    }));
   };
 
   if (loading) {
     return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center"
-      >
-        <div className="bg-white dark:bg-gray-900 rounded-xl p-8 shadow-2xl">
-          <div className="flex items-center gap-3">
-            <Loader2 className="w-6 h-6 animate-spin text-[#FF6B00]" />
-            <span className="text-lg font-medium">Carregando interface de edição...</span>
-          </div>
-          <p className="text-sm text-gray-500 mt-2">Preparando componentes para: {activityId}</p>
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF6B00] mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Carregando editor da atividade...</p>
         </div>
-      </motion.div>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center"
-      >
-        <div className="bg-white dark:bg-gray-900 rounded-xl p-8 shadow-2xl max-w-md">
-          <div className="flex items-center gap-3 mb-4">
-            <AlertCircle className="w-6 h-6 text-red-500" />
-            <span className="text-lg font-medium text-red-600">Erro ao carregar atividade</span>
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <FileText className="w-8 h-8 text-red-500" />
           </div>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Erro ao Carregar</h3>
           <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
-          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 mb-6">
-            <p className="text-xs text-gray-500 mb-1">ID solicitado:</p>
-            <code className="text-sm font-mono">{activityId}</code>
-          </div>
-          <div className="flex gap-3">
-            <Button variant="outline" onClick={onClose || onBack}>
-              Voltar
-            </Button>
-          </div>
-        </div>
-      </motion.div>
-    );
-  }
-
-  if (!ActivityEditor || !ActivityPreview) {
-    return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center"
-      >
-        <div className="bg-white dark:bg-gray-900 rounded-xl p-8 shadow-2xl max-w-md">
-          <div className="flex items-center gap-3 mb-4">
-            <AlertCircle className="w-6 h-6 text-yellow-500" />
-            <span className="text-lg font-medium">Componentes indisponíveis</span>
-          </div>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
-            Os componentes de edição e visualização não puderam ser carregados para a atividade {activityId}.
-          </p>
-          <Button variant="outline" onClick={onClose || onBack}>
+          <Button onClick={onBack} variant="outline">
+            <ArrowLeft className="w-4 h-4 mr-2" />
             Voltar
           </Button>
         </div>
-      </motion.div>
+      </div>
     );
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 overflow-hidden"
-    >
-      <div className="h-full bg-white dark:bg-gray-900">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-[#FF6B00] to-[#FF9248]">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onBack || onClose}
-              className="text-white hover:bg-white/20"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Voltar
-            </Button>
-            <div className="text-white">
-              <h1 className="text-lg font-semibold">Editando Atividade</h1>
-              <div className="flex items-center gap-2 text-sm opacity-90">
-                <span>ID: {activityId}</span>
-                {isActivityRegistered(activityId) && (
-                  <span className="px-2 py-1 bg-white/20 rounded text-xs">Registrada</span>
-                )}
+    <div className="flex h-full bg-gray-50 dark:bg-gray-900">
+      {/* Sidebar */}
+      <motion.div
+        initial={{ width: sidebarCollapsed ? 60 : 280 }}
+        animate={{ width: sidebarCollapsed ? 60 : 280 }}
+        transition={{ duration: 0.3 }}
+        className="bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex-shrink-0"
+      >
+        {/* Sidebar Header */}
+        <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200 dark:border-gray-700">
+          {!sidebarCollapsed && (
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Editor
+            </h2>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            className="p-1 h-8 w-8"
+          >
+            {sidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+          </Button>
+        </div>
+
+        {/* Sidebar Navigation */}
+        <div className="p-2 space-y-1">
+          <Button
+            variant={activeTab === 'editor' ? 'default' : 'ghost'}
+            className={`w-full justify-start ${sidebarCollapsed ? 'px-2' : 'px-3'}`}
+            onClick={() => setActiveTab('editor')}
+          >
+            <Edit3 className="w-4 h-4" />
+            {!sidebarCollapsed && <span className="ml-2">Editor</span>}
+          </Button>
+          
+          <Button
+            variant={activeTab === 'preview' ? 'default' : 'ghost'}
+            className={`w-full justify-start ${sidebarCollapsed ? 'px-2' : 'px-3'}`}
+            onClick={() => setActiveTab('preview')}
+          >
+            <Eye className="w-4 h-4" />
+            {!sidebarCollapsed && <span className="ml-2">Visualização</span>}
+          </Button>
+
+          <Button
+            variant={activeTab === 'settings' ? 'default' : 'ghost'}
+            className={`w-full justify-start ${sidebarCollapsed ? 'px-2' : 'px-3'}`}
+            onClick={() => setActiveTab('settings')}
+          >
+            <Settings className="w-4 h-4" />
+            {!sidebarCollapsed && <span className="ml-2">Configurações</span>}
+          </Button>
+        </div>
+
+        {!sidebarCollapsed && (
+          <>
+            <Separator className="my-4" />
+            
+            {/* Activity Info */}
+            <div className="px-4 space-y-3">
+              <div>
+                <Label className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                  ATIVIDADE
+                </Label>
+                <p className="text-sm font-medium text-gray-900 dark:text-white mt-1">
+                  {formData.title || 'Nova Atividade'}
+                </p>
+              </div>
+              
+              <div>
+                <Label className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                  TIPO
+                </Label>
+                <Badge variant="secondary" className="mt-1">
+                  {formData.type || 'Não definido'}
+                </Badge>
+              </div>
+
+              <div>
+                <Label className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                  DURAÇÃO
+                </Label>
+                <div className="flex items-center mt-1">
+                  <Clock className="w-3 h-3 text-gray-400 mr-1" />
+                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                    {formData.duration || '30'} min
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <Label className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                  DIFICULDADE
+                </Label>
+                <Badge 
+                  variant={formData.difficulty === 'Fácil' ? 'default' : formData.difficulty === 'Médio' ? 'secondary' : 'destructive'}
+                  className="mt-1"
+                >
+                  {formData.difficulty}
+                </Badge>
               </div>
             </div>
+          </>
+        )}
+      </motion.div>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col">
+        {/* Header */}
+        <div className="h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-6">
+          <div className="flex items-center space-x-4">
+            <Button variant="ghost" onClick={onBack} className="p-2">
+              <ArrowLeft className="w-4 h-4" />
+            </Button>
+            <div>
+              <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
+                Construção de Atividades
+              </h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Editando: {formData.title || activityId}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Button variant="outline" onClick={onClose}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSave} className="bg-[#FF6B00] hover:bg-[#D65A00]">
+              <Save className="w-4 h-4 mr-2" />
+              Salvar
+            </Button>
           </div>
         </div>
 
-        {/* Content */}
-        <div className="flex h-[calc(100vh-80px)]">
-          {/* Editor Panel */}
-          <div className="w-1/2 border-r border-gray-200 dark:border-gray-700 overflow-y-auto">
-            <div className="p-4">
-              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                ✏️ Editor
-              </h2>
-              <Suspense fallback={
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="w-6 h-6 animate-spin" />
-                  <span className="ml-2 text-sm text-gray-500">Carregando editor...</span>
-                </div>
-              }>
-                <ActivityEditor 
-                  activityData={previewData}
-                  onSave={handleSave}
-                  onPreview={handlePreview}
-                />
-              </Suspense>
-            </div>
-          </div>
+        {/* Content Area */}
+        <div className="flex-1 overflow-hidden">
+          {activeTab === 'editor' && (
+            <div className="h-full overflow-y-auto p-6">
+              <div className="max-w-4xl mx-auto space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <FileText className="w-5 h-5 mr-2" />
+                      Informações Básicas
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <Label htmlFor="title">Título da Atividade</Label>
+                      <Input
+                        id="title"
+                        value={formData.title}
+                        onChange={(e) => handleFormChange('title', e.target.value)}
+                        placeholder="Digite o título da atividade"
+                      />
+                    </div>
 
-          {/* Preview Panel */}
-          <div className="w-1/2 overflow-y-auto bg-gray-50 dark:bg-gray-800/50">
-            <div className="p-4">
-              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                👁️ Visualização
-              </h2>
-              <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-                <Suspense fallback={
-                  <div className="flex items-center justify-center py-8">
-                    <Loader2 className="w-6 h-6 animate-spin" />
-                    <span className="ml-2 text-sm text-gray-500">Carregando visualização...</span>
-                  </div>
-                }>
-                  <ActivityPreview activityData={previewData} />
-                </Suspense>
+                    <div>
+                      <Label htmlFor="description">Descrição</Label>
+                      <Textarea
+                        id="description"
+                        value={formData.description}
+                        onChange={(e) => handleFormChange('description', e.target.value)}
+                        placeholder="Descreva a atividade"
+                        rows={3}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <Label htmlFor="difficulty">Nível de Dificuldade</Label>
+                        <Select
+                          value={formData.difficulty}
+                          onValueChange={(value) => handleFormChange('difficulty', value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Fácil">Fácil</SelectItem>
+                            <SelectItem value="Médio">Médio</SelectItem>
+                            <SelectItem value="Difícil">Difícil</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="duration">Duração Estimada (minutos)</Label>
+                        <Input
+                          id="duration"
+                          type="number"
+                          value={formData.duration}
+                          onChange={(e) => handleFormChange('duration', e.target.value)}
+                          placeholder="30"
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="type">Tipo de Atividade</Label>
+                        <Input
+                          id="type"
+                          value={formData.type}
+                          onChange={(e) => handleFormChange('type', e.target.value)}
+                          placeholder="Ex: Exercício, Prova, Jogo"
+                        />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Target className="w-5 h-5 mr-2" />
+                      Configurações Específicas
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <Label htmlFor="objective">Objetivo da Atividade</Label>
+                      <Textarea
+                        id="objective"
+                        value={formData.objective}
+                        onChange={(e) => handleFormChange('objective', e.target.value)}
+                        placeholder="Descreva o objetivo pedagógico"
+                        rows={2}
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="targetAudience">Público-Alvo</Label>
+                      <Input
+                        id="targetAudience"
+                        value={formData.targetAudience}
+                        onChange={(e) => handleFormChange('targetAudience', e.target.value)}
+                        placeholder="Ex: 8º ano, Ensino Médio"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="instructions">Instruções para o Aluno</Label>
+                      <Textarea
+                        id="instructions"
+                        value={formData.instructions}
+                        onChange={(e) => handleFormChange('instructions', e.target.value)}
+                        placeholder="Instruções detalhadas para realização da atividade"
+                        rows={4}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <BookOpen className="w-5 h-5 mr-2" />
+                      Materiais e Recursos
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <Label>Materiais Necessários</Label>
+                        <Button variant="outline" size="sm" onClick={addMaterial}>
+                          Adicionar Material
+                        </Button>
+                      </div>
+                      <div className="space-y-2">
+                        {formData.materials.map((material, index) => (
+                          <div key={index} className="flex items-center space-x-2">
+                            <Input
+                              value={material}
+                              onChange={(e) => updateMaterial(index, e.target.value)}
+                              placeholder="Ex: Calculadora, Régua, etc."
+                            />
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => removeMaterial(index)}
+                            >
+                              Remover
+                            </Button>
+                          </div>
+                        ))}
+                        {formData.materials.length === 0 && (
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            Nenhum material adicionado
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="evaluation">Critérios de Avaliação</Label>
+                      <Textarea
+                        id="evaluation"
+                        value={formData.evaluation}
+                        onChange={(e) => handleFormChange('evaluation', e.target.value)}
+                        placeholder="Como a atividade será avaliada"
+                        rows={3}
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="additionalNotes">Observações Adicionais</Label>
+                      <Textarea
+                        id="additionalNotes"
+                        value={formData.additionalNotes}
+                        onChange={(e) => handleFormChange('additionalNotes', e.target.value)}
+                        placeholder="Informações extras, dicas para o professor, etc."
+                        rows={2}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             </div>
-          </div>
+          )}
+
+          {activeTab === 'preview' && (
+            <div className="h-full overflow-y-auto p-6">
+              <div className="max-w-4xl mx-auto">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Eye className="w-5 h-5 mr-2" />
+                      Visualização da Atividade
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {ActivityPreview && (
+                      <ActivityPreview 
+                        activityData={formData}
+                        activityId={activityId}
+                      />
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'settings' && (
+            <div className="h-full overflow-y-auto p-6">
+              <div className="max-w-2xl mx-auto">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Settings className="w-5 h-5 mr-2" />
+                      Configurações da Atividade
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                      <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
+                        Configurações Avançadas
+                      </h4>
+                      <p className="text-sm text-blue-700 dark:text-blue-300">
+                        Configurações específicas do tipo de atividade "{activityId}" serão exibidas aqui.
+                        Cada tipo de atividade pode ter configurações únicas.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          )}
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
