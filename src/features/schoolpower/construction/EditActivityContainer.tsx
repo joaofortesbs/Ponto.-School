@@ -220,27 +220,27 @@ export function EditActivityContainer({
   }
 
   return (
-    <div className="h-full bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="fixed inset-0 bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 z-50">
       {/* Header moderno */}
-      <div className="sticky top-0 z-50 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50">
-        <div className="flex items-center justify-between px-8 py-4">
-          <div className="flex items-center space-x-6">
+      <div className="sticky top-0 z-60 bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 shadow-lg">
+        <div className="flex items-center justify-between px-6 py-4">
+          <div className="flex items-center space-x-4">
             <Button 
               variant="ghost" 
               onClick={onBack} 
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-all duration-200"
+              className="p-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-all duration-200 shadow-md"
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div className="flex flex-col">
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white">
                 Construção de Atividades
               </h1>
               <div className="flex items-center space-x-3 mt-1">
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm text-gray-500 dark:text-gray-400 truncate max-w-[300px]">
                   Editando: {formData.title || activityId}
                 </p>
-                <Badge className={getDifficultyColor(formData.difficulty)}>
+                <Badge className={getDifficultyColor(formData.difficulty)} variant="secondary">
                   {formData.difficulty}
                 </Badge>
                 {formData.duration && (
@@ -254,10 +254,14 @@ export function EditActivityContainer({
           </div>
 
           <div className="flex items-center space-x-3">
-            <Button variant="outline" onClick={onClose} size="lg">
+            <Button variant="outline" onClick={onClose} size="sm" className="shadow-md">
               Cancelar
             </Button>
-            <Button onClick={handleSave} className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#D65A00] hover:to-[#FF6B00] text-white shadow-lg" size="lg">
+            <Button 
+              onClick={handleSave} 
+              className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#D65A00] hover:to-[#FF6B00] text-white shadow-lg transition-all duration-200" 
+              size="sm"
+            >
               <Save className="w-4 h-4 mr-2" />
               Salvar
             </Button>
@@ -266,29 +270,33 @@ export function EditActivityContainer({
       </div>
 
       {/* Content Container */}
-      <div className="flex h-[calc(100vh-80px)]">
+      <div className="flex h-[calc(100vh-88px)] overflow-hidden">
         {/* Left Side - Editor */}
-        <div className="w-1/2 overflow-hidden">
-          <div className="h-full flex flex-col">
-            {/* Editor Header */}
-            <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-8 py-4">
-              <div className="flex items-center space-x-2">
-                <Edit3 className="w-5 h-5 text-[#FF6B00]" />
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Editor</h2>
+        <div className="w-1/2 flex flex-col border-r border-gray-200 dark:border-gray-700">
+          {/* Editor Header */}
+          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 px-6 py-3 flex-shrink-0">
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-lg flex items-center justify-center">
+                <Edit3 className="w-4 h-4 text-white" />
               </div>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Editor</h2>
             </div>
+          </div>
 
-            <div className="flex-1 overflow-y-auto p-8 space-y-8">
+          <div className="flex-1 overflow-y-auto p-6 space-y-6 min-h-0">
               {/* Informações Básicas */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
+                className="w-full"
               >
-                <Card className="border-0 shadow-lg bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm">
-                  <CardHeader className="pb-4">
+                <Card className="border-0 shadow-xl bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm hover:shadow-2xl transition-all duration-300">
+                  <CardHeader className="pb-4 bg-gradient-to-r from-[#FF6B00]/10 to-[#FF8C40]/10 rounded-t-lg">
                     <CardTitle className="flex items-center text-lg">
-                      <FileText className="w-5 h-5 mr-3 text-[#FF6B00]" />
+                      <div className="w-8 h-8 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-lg flex items-center justify-center mr-3">
+                        <FileText className="w-4 h-4 text-white" />
+                      </div>
                       Informações Básicas
                     </CardTitle>
                   </CardHeader>
@@ -302,7 +310,7 @@ export function EditActivityContainer({
                         value={formData.title}
                         onChange={(e) => handleFormChange('title', e.target.value)}
                         placeholder="Digite o título da atividade"
-                        className="mt-2 border-gray-200 dark:border-gray-600 focus:border-[#FF6B00] focus:ring-[#FF6B00]"
+                        className="mt-2 border-gray-200 dark:border-gray-600 focus:border-[#FF6B00] focus:ring-[#FF6B00] focus:ring-2 transition-all duration-200 rounded-lg bg-white/80 dark:bg-gray-900/50"
                       />
                     </div>
 
@@ -316,7 +324,7 @@ export function EditActivityContainer({
                         onChange={(e) => handleFormChange('description', e.target.value)}
                         placeholder="Descreva a atividade"
                         rows={3}
-                        className="mt-2 border-gray-200 dark:border-gray-600 focus:border-[#FF6B00] focus:ring-[#FF6B00]"
+                        className="mt-2 border-gray-200 dark:border-gray-600 focus:border-[#FF6B00] focus:ring-[#FF6B00] focus:ring-2 transition-all duration-200 rounded-lg bg-white/80 dark:bg-gray-900/50 resize-none"
                       />
                     </div>
 
@@ -329,7 +337,7 @@ export function EditActivityContainer({
                           value={formData.difficulty}
                           onValueChange={(value) => handleFormChange('difficulty', value)}
                         >
-                          <SelectTrigger className="mt-2 border-gray-200 dark:border-gray-600 focus:border-[#FF6B00] focus:ring-[#FF6B00]">
+                          <SelectTrigger className="mt-2 border-gray-200 dark:border-gray-600 focus:border-[#FF6B00] focus:ring-[#FF6B00] focus:ring-2 transition-all duration-200 rounded-lg bg-white/80 dark:bg-gray-900/50">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -376,11 +384,14 @@ export function EditActivityContainer({
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: 0.1 }}
+                className="w-full"
               >
-                <Card className="border-0 shadow-lg bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm">
-                  <CardHeader className="pb-4">
+                <Card className="border-0 shadow-xl bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm hover:shadow-2xl transition-all duration-300">
+                  <CardHeader className="pb-4 bg-gradient-to-r from-blue-500/10 to-blue-600/10 rounded-t-lg">
                     <CardTitle className="flex items-center text-lg">
-                      <Target className="w-5 h-5 mr-3 text-[#FF6B00]" />
+                      <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mr-3">
+                        <Target className="w-4 h-4 text-white" />
+                      </div>
                       Configurações Específicas
                     </CardTitle>
                   </CardHeader>
@@ -434,11 +445,14 @@ export function EditActivityContainer({
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: 0.2 }}
+                className="w-full"
               >
-                <Card className="border-0 shadow-lg bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm">
-                  <CardHeader className="pb-4">
+                <Card className="border-0 shadow-xl bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm hover:shadow-2xl transition-all duration-300">
+                  <CardHeader className="pb-4 bg-gradient-to-r from-green-500/10 to-green-600/10 rounded-t-lg">
                     <CardTitle className="flex items-center text-lg">
-                      <BookOpen className="w-5 h-5 mr-3 text-[#FF6B00]" />
+                      <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-green-600 rounded-lg flex items-center justify-center mr-3">
+                        <BookOpen className="w-4 h-4 text-white" />
+                      </div>
                       Materiais e Recursos
                     </CardTitle>
                   </CardHeader>
@@ -522,11 +536,14 @@ export function EditActivityContainer({
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: 0.3 }}
+                  className="w-full"
                 >
-                  <Card className="border-0 shadow-lg bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm">
-                    <CardHeader className="pb-4">
+                  <Card className="border-0 shadow-xl bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm hover:shadow-2xl transition-all duration-300">
+                    <CardHeader className="pb-4 bg-gradient-to-r from-purple-500/10 to-purple-600/10 rounded-t-lg">
                       <CardTitle className="flex items-center text-lg">
-                        <Settings className="w-5 h-5 mr-3 text-[#FF6B00]" />
+                        <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg flex items-center justify-center mr-3">
+                          <Settings className="w-4 h-4 text-white" />
+                        </div>
                         Configurações Específicas da Atividade
                       </CardTitle>
                     </CardHeader>
@@ -545,36 +562,37 @@ export function EditActivityContainer({
         </div>
 
         {/* Right Side - Preview */}
-        <div className="w-1/2 border-l border-gray-200 dark:border-gray-700">
-          <div className="h-full flex flex-col">
-            {/* Preview Header */}
-            <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-8 py-4">
-              <div className="flex items-center space-x-2">
-                <Eye className="w-5 h-5 text-[#FF6B00]" />
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                  Visualização
-                </h2>
+        <div className="w-1/2 flex flex-col">
+          {/* Preview Header */}
+          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 px-6 py-3 flex-shrink-0">
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                <Eye className="w-4 h-4 text-white" />
               </div>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Visualização
+              </h2>
             </div>
-            
-            <div className="flex-1 overflow-y-auto p-8">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Card className="border-0 shadow-xl bg-white dark:bg-gray-800 min-h-[600px]">
-                  <CardContent className="p-8">
-                    {ActivityPreview && (
-                      <ActivityPreview 
-                        activityData={formData}
-                        activityId={activityId}
-                      />
-                    )}
-                  </CardContent>
-                </Card>
-              </motion.div>
-            </div>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto p-6 min-h-0">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3 }}
+              className="h-full"
+            >
+              <Card className="border-0 shadow-xl bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm h-full">
+                <CardContent className="p-6 h-full overflow-y-auto">
+                  {ActivityPreview && (
+                    <ActivityPreview 
+                      activityData={formData}
+                      activityId={activityId}
+                    />
+                  )}
+                </CardContent>
+              </Card>
+            </motion.div>
           </div>
         </div>
       </div>
