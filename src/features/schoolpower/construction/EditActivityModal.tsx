@@ -173,7 +173,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                         value={formData.title}
                         onChange={(e) => handleInputChange('title', e.target.value)}
                         placeholder="Digite o título da atividade"
-                        className="mt-1 text-sm"
+                        className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                       />
                     </div>
 
@@ -184,7 +184,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                         value={formData.description}
                         onChange={(e) => handleInputChange('description', e.target.value)}
                         placeholder="Descreva a atividade..."
-                        className="mt-1 min-h-[60px] text-sm"
+                        className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                       />
                     </div>
 
@@ -192,10 +192,10 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                       <div>
                         <Label htmlFor="subject" className="text-sm">Disciplina</Label>
                         <Select value={formData.subject} onValueChange={(value) => handleInputChange('subject', value)}>
-                          <SelectTrigger className="mt-1 text-sm">
+                          <SelectTrigger className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
                             <SelectValue placeholder="Selecione a disciplina" />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600">
                             <SelectItem value="Português">Português</SelectItem>
                             <SelectItem value="Matemática">Matemática</SelectItem>
                             <SelectItem value="História">História</SelectItem>
@@ -208,10 +208,10 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                       <div>
                         <Label htmlFor="difficulty" className="text-sm">Dificuldade</Label>
                         <Select value={formData.difficulty} onValueChange={(value) => handleInputChange('difficulty', value)}>
-                          <SelectTrigger className="mt-1 text-sm">
+                          <SelectTrigger className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
                             <SelectValue placeholder="Selecione a dificuldade" />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600">
                             <SelectItem value="Fácil">Fácil</SelectItem>
                             <SelectItem value="Médio">Médio</SelectItem>
                             <SelectItem value="Difícil">Difícil</SelectItem>
@@ -223,10 +223,10 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                     <div>
                       <Label htmlFor="format" className="text-sm">Formato de Entrega</Label>
                       <Select value={formData.format} onValueChange={(value) => handleInputChange('format', value)}>
-                        <SelectTrigger className="mt-1 text-sm">
+                        <SelectTrigger className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
                           <SelectValue placeholder="Selecione o formato" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600">
                           <SelectItem value="PDF">PDF Imprimível</SelectItem>
                           <SelectItem value="Interativo">Interativo</SelectItem>
                           <SelectItem value="Vídeo">Vídeo Explicativo</SelectItem>
@@ -238,10 +238,10 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                     <div>
                       <Label htmlFor="duration" className="text-sm">Duração Estimada</Label>
                       <Select value={formData.duration} onValueChange={(value) => handleInputChange('duration', value)}>
-                        <SelectTrigger className="mt-1 text-sm">
+                        <SelectTrigger className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
                           <SelectValue placeholder="Selecione a duração" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600">
                           <SelectItem value="15 minutos">15 minutos</SelectItem>
                           <SelectItem value="30 minutos">30 minutos</SelectItem>
                           <SelectItem value="45 minutos">45 minutos</SelectItem>
@@ -258,7 +258,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                         value={formData.objectives}
                         onChange={(e) => handleInputChange('objectives', e.target.value)}
                         placeholder="Descreva os objetivos que os alunos devem alcançar..."
-                        className="mt-1 min-h-[50px] text-sm"
+                        className="mt-1 min-h-[50px] text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                       />
                     </div>
 
@@ -269,7 +269,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                         value={formData.materials}
                         onChange={(e) => handleInputChange('materials', e.target.value)}
                         placeholder="Liste os materiais necessários para a atividade..."
-                        className="mt-1 min-h-[50px] text-sm"
+                        className="mt-1 min-h-[50px] text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                       />
                     </div>
 
@@ -280,7 +280,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                         value={formData.instructions}
                         onChange={(e) => handleInputChange('instructions', e.target.value)}
                         placeholder="Descreva como a atividade deve ser executada..."
-                        className="mt-1 min-h-[60px] text-sm"
+                        className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                       />
                     </div>
 
@@ -291,7 +291,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                         value={formData.evaluation}
                         onChange={(e) => handleInputChange('evaluation', e.target.value)}
                         placeholder="Como a atividade será avaliada..."
-                        className="mt-1 min-h-[50px] text-sm"
+                        className="mt-1 min-h-[50px] text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                       />
                     </div>
                   </div>
@@ -381,7 +381,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                       <Button
                         size="sm"
                         variant="outline"
-                        className="flex-1 text-xs"
+                        className="flex-1 text-xs bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
                       >
                         <Download className="h-3 w-3 mr-1" />
                         Baixar PDF
@@ -389,7 +389,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                       <Button
                         size="sm"
                         variant="outline"
-                        className="flex-1 text-xs"
+                        className="flex-1 text-xs bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
                       >
                         <Download className="h-3 w-3 mr-1" />
                         Exportar
