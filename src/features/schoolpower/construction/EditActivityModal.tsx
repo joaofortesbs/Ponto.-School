@@ -126,11 +126,11 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
           transition={{ duration: 0.3 }}
-          className="w-[1400px] h-[717px] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden"
+          className="w-[1400px] h-[800px] bg-white rounded-2xl shadow-2xl overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40]">
+          <div className="flex items-center justify-between p-6 border-b bg-gradient-to-r from-[#FF6B00] to-[#FF8C40]">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
                 <Settings className="h-5 w-5 text-white" />
@@ -158,16 +158,16 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
           <div className="flex p-4 h-[calc(800px-120px)] gap-4">
             {/* Formulário (50%) */}
             <div className="flex flex-col space-y-3 overflow-y-auto flex-1 pr-2">
-              <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+              <Card>
                 <CardContent className="p-4">
-                  <h3 className="font-semibold text-lg mb-4 flex items-center text-gray-900 dark:text-white">
+                  <h3 className="font-semibold text-lg mb-4 flex items-center">
                     <FileText className="h-5 w-5 mr-2 text-[#FF6B00]" />
                     Informações da Atividade
                   </h3>
 
                   <div className="space-y-3">
                     <div>
-                      <Label htmlFor="title" className="text-sm text-gray-900 dark:text-white">Título da Atividade</Label>
+                      <Label htmlFor="title" className="text-sm">Título da Atividade</Label>
                       <Input
                         id="title"
                         value={formData.title}
@@ -178,7 +178,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                     </div>
 
                     <div>
-                      <Label htmlFor="description" className="text-sm text-gray-900 dark:text-white">Descrição</Label>
+                      <Label htmlFor="description" className="text-sm">Descrição</Label>
                       <Textarea
                         id="description"
                         value={formData.description}
@@ -190,7 +190,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
 
                     <div className="grid grid-cols-1 gap-3">
                       <div>
-                        <Label htmlFor="subject" className="text-sm text-gray-900 dark:text-white">Disciplina</Label>
+                        <Label htmlFor="subject" className="text-sm">Disciplina</Label>
                         <Select value={formData.subject} onValueChange={(value) => handleInputChange('subject', value)}>
                           <SelectTrigger className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
                             <SelectValue placeholder="Selecione a disciplina" />
@@ -206,7 +206,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                       </div>
 
                       <div>
-                        <Label htmlFor="difficulty" className="text-sm text-gray-900 dark:text-white">Dificuldade</Label>
+                        <Label htmlFor="difficulty" className="text-sm">Dificuldade</Label>
                         <Select value={formData.difficulty} onValueChange={(value) => handleInputChange('difficulty', value)}>
                           <SelectTrigger className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
                             <SelectValue placeholder="Selecione a dificuldade" />
@@ -221,7 +221,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                     </div>
 
                     <div>
-                      <Label htmlFor="format" className="text-sm text-gray-900 dark:text-white">Formato de Entrega</Label>
+                      <Label htmlFor="format" className="text-sm">Formato de Entrega</Label>
                       <Select value={formData.format} onValueChange={(value) => handleInputChange('format', value)}>
                         <SelectTrigger className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
                           <SelectValue placeholder="Selecione o formato" />
@@ -236,7 +236,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                     </div>
 
                     <div>
-                      <Label htmlFor="duration" className="text-sm text-gray-900 dark:text-white">Duração Estimada</Label>
+                      <Label htmlFor="duration" className="text-sm">Duração Estimada</Label>
                       <Select value={formData.duration} onValueChange={(value) => handleInputChange('duration', value)}>
                         <SelectTrigger className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
                           <SelectValue placeholder="Selecione a duração" />
@@ -252,7 +252,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                     </div>
 
                     <div>
-                      <Label htmlFor="objectives" className="text-sm text-gray-900 dark:text-white">Objetivos de Aprendizagem</Label>
+                      <Label htmlFor="objectives" className="text-sm">Objetivos de Aprendizagem</Label>
                       <Textarea
                         id="objectives"
                         value={formData.objectives}
@@ -263,7 +263,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                     </div>
 
                     <div>
-                      <Label htmlFor="materials" className="text-sm text-gray-900 dark:text-white">Materiais Necessários</Label>
+                      <Label htmlFor="materials" className="text-sm">Materiais Necessários</Label>
                       <Textarea
                         id="materials"
                         value={formData.materials}
@@ -274,7 +274,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                     </div>
 
                     <div>
-                      <Label htmlFor="instructions" className="text-sm text-gray-900 dark:text-white">Instruções da Atividade</Label>
+                      <Label htmlFor="instructions" className="text-sm">Instruções da Atividade</Label>
                       <Textarea
                         id="instructions"
                         value={formData.instructions}
@@ -285,7 +285,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                     </div>
 
                     <div>
-                      <Label htmlFor="evaluation" className="text-sm text-gray-900 dark:text-white">Critérios de Avaliação</Label>
+                      <Label htmlFor="evaluation" className="text-sm">Critérios de Avaliação</Label>
                       <Textarea
                         id="evaluation"
                         value={formData.evaluation}
@@ -319,10 +319,10 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
 
             {/* Pré-visualização (50%) */}
             <div className="flex flex-col flex-1 pl-2">
-              <Card className="h-full bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+              <Card className="h-full">
                 <CardContent className="p-4 h-full">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold text-lg flex items-center text-gray-900 dark:text-white">
+                    <h3 className="font-semibold text-lg flex items-center">
                       <Eye className="h-5 w-5 mr-2 text-[#FF6B00]" />
                       Pré-visualização da Atividade
                     </h3>
@@ -402,7 +402,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
           </div>
 
           {/* Footer */}
-          <div className="flex flex-col space-y-2 p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+          <div className="flex flex-col space-y-2 p-4 border-t bg-gray-50">
             <div className="flex flex-col space-y-1">
               <Badge variant="outline" className="self-start text-xs">Status: {activity?.status || 'Pendente'}</Badge>
               <Badge variant="outline" className="self-start text-xs">Progresso: {activity?.progress || 0}%</Badge>

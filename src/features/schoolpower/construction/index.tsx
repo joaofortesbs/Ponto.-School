@@ -20,7 +20,7 @@ export function ConstructionInterface({ approvedActivities }: ConstructionInterf
   console.log('🏗️ ConstructionInterface renderizada com atividades:', approvedActivities);
 
   return (
-    <div className="w-full h-full overflow-y-auto bg-white dark:bg-gray-900" style={{ maxHeight: 'calc(100vh - 200px)' }}>
+    <div className="w-full h-full overflow-y-auto" style={{ maxHeight: 'calc(100vh - 200px)' }}>
       <ConstructionGrid 
         approvedActivities={approvedActivities}
       />

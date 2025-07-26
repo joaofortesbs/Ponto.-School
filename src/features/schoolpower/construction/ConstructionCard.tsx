@@ -60,7 +60,7 @@ export function ConstructionCard({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className={`rounded-xl border-2 p-4 transition-all duration-200 hover:shadow-lg ${getStatusColor()} bg-white dark:bg-gray-800`}
+        className={`rounded-xl border-2 p-4 transition-all duration-200 hover:shadow-lg ${getStatusColor()}`}
       >
         {/* Preview Area (65%) */}
         <div className="relative mb-4 h-32 rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 overflow-hidden">
