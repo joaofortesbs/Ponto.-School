@@ -126,7 +126,11 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
           transition={{ duration: 0.3 }}
-          className="w-[95%] max-w-[1900px] h-[90%] max-h-[1100px] bg-gray-900 text-white rounded-2xl shadow-2xl overflow-hidden border border-gray-700"
+          className="bg-gray-900 text-white rounded-2xl shadow-2xl overflow-hidden border border-gray-700"
+          style={{
+            width: "1153px",
+            height: "700px"
+          }}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
