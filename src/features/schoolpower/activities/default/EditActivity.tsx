@@ -74,7 +74,7 @@ export default function EditActivity({ activityData, activityId, onChange }: Edi
   };
 
   return (
-    <div className="space-y-6 max-w-full overflow-hidden">
+    <div className="space-y-6 overflow-hidden">
       {/* Informações Básicas */}
       <Card className="overflow-hidden">
         <CardHeader>
@@ -83,19 +83,18 @@ export default function EditActivity({ activityData, activityId, onChange }: Edi
             Informações da Atividade
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4 overflow-hidden max-w-full">
-          <div className="w-full">
+        <CardContent className="space-y-4 overflow-hidden">{/* Container bounds enforced */}
+          <div>
             <Label htmlFor="activity-title">Título</Label>
             <Input
               id="activity-title"
               value={formData.title}
               onChange={(e) => handleChange('title', e.target.value)}
               placeholder="Digite o título da atividade"
-              className="w-full max-w-full"
             />
           </div>
 
-          <div className="w-full">
+          <div>
             <Label htmlFor="activity-description">Descrição</Label>
             <Textarea
               id="activity-description"
@@ -103,18 +102,18 @@ export default function EditActivity({ activityData, activityId, onChange }: Edi
               onChange={(e) => handleChange('description', e.target.value)}
               placeholder="Descreva brevemente a atividade"
               rows={3}
-              className="w-full max-w-full resize-none"
+              className="resize-none"
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-            <div className="w-full">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
               <Label htmlFor="difficulty">Dificuldade</Label>
               <Select
                 value={formData.difficulty}
                 onValueChange={(value) => handleChange('difficulty', value)}
               >
-                <SelectTrigger className="w-full max-w-full">
+                <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -125,7 +124,7 @@ export default function EditActivity({ activityData, activityId, onChange }: Edi
               </Select>
             </div>
 
-            <div className="w-full">
+            <div>
               <Label htmlFor="time-limit">Tempo Limite (minutos)</Label>
               <Input
                 id="time-limit"
@@ -133,12 +132,11 @@ export default function EditActivity({ activityData, activityId, onChange }: Edi
                 value={formData.timeLimit}
                 onChange={(e) => handleChange('timeLimit', e.target.value)}
                 placeholder="Ex: 60"
-                className="w-full max-w-full"
               />
             </div>
           </div>
 
-          <div className="w-full">
+          <div>
             <Label htmlFor="instructions">Instruções</Label>
             <Textarea
               id="instructions"
@@ -146,7 +144,7 @@ export default function EditActivity({ activityData, activityId, onChange }: Edi
               onChange={(e) => handleChange('instructions', e.target.value)}
               placeholder="Instruções detalhadas para os alunos"
               rows={4}
-              className="w-full max-w-full resize-none"
+              className="resize-none"
             />
           </div>
         </CardContent>
@@ -157,13 +155,13 @@ export default function EditActivity({ activityData, activityId, onChange }: Edi
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span>Materiais Necessários</span>
-            <Button variant="outline" size="sm" onClick={addMaterial}>
+            <Button variant="outline" size="sm" onClick={addMaterial} className="flex-shrink-0">
               <Plus className="w-4 h-4 mr-1" />
               Adicionar
             </Button>
           </CardTitle>
         </CardHeader>
-        <CardContent className="overflow-hidden max-w-full">
+        <CardContent className="overflow-hidden">
           <div className="space-y-2">
             {formData.materials.map((material: string, index: number) => (
               <div key={index} className="flex items-center space-x-2">
@@ -171,7 +169,7 @@ export default function EditActivity({ activityData, activityId, onChange }: Edi
                   value={material}
                   onChange={(e) => updateMaterial(index, e.target.value)}
                   placeholder="Nome do material"
-                  className="flex-1 max-w-full"
+                  className="flex-1"
                 />
                 <Button
                   variant="outline"
@@ -225,7 +223,7 @@ export default function EditActivity({ activityData, activityId, onChange }: Edi
                       onChange={(e) => updateQuestion(index, 'text', e.target.value)}
                       placeholder="Digite o enunciado da questão"
                       rows={2}
-                      className="w-full max-w-full resize-none"
+                      className="resize-none"
                     />
                   </div>
 
@@ -235,7 +233,7 @@ export default function EditActivity({ activityData, activityId, onChange }: Edi
                       value={question.type}
                       onValueChange={(value) => updateQuestion(index, 'type', value)}
                     >
-                      <SelectTrigger className="w-full max-w-full">
+                      <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -261,7 +259,7 @@ export default function EditActivity({ activityData, activityId, onChange }: Edi
                                 updateQuestion(index, 'options', newOptions);
                               }}
                               placeholder={`Alternativa ${String.fromCharCode(65 + optIndex)}`}
-                              className="flex-1 max-w-full"
+                              className="flex-1"
                             />
                             <Checkbox
                               checked={question.correctAnswer === optIndex}
@@ -285,7 +283,7 @@ export default function EditActivity({ activityData, activityId, onChange }: Edi
                       onChange={(e) => updateQuestion(index, 'explanation', e.target.value)}
                       placeholder="Explicação da resposta correta"
                       rows={2}
-                      className="w-full max-w-full resize-none"
+                      className="resize-none"
                     />
                   </div>
                 </CardContent>
@@ -310,13 +308,13 @@ export default function EditActivity({ activityData, activityId, onChange }: Edi
         <CardHeader>
           <CardTitle>Critérios de Avaliação</CardTitle>
         </CardHeader>
-        <CardContent className="overflow-hidden max-w-full">
+        <CardContent className="overflow-hidden">
           <Textarea
             value={formData.rubric}
             onChange={(e) => handleChange('rubric', e.target.value)}
             placeholder="Descreva como a atividade será avaliada..."
             rows={4}
-            className="w-full max-w-full resize-none"
+            className="resize-none"
           />
         </CardContent>
       </Card>

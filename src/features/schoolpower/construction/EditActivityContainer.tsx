@@ -271,7 +271,7 @@ export function EditActivityContainer({
       {/* Content Container */}
       <div className="flex h-[calc(100vh-88px)] overflow-hidden">
         {/* Left Side - Editor */}
-        <div className="w-1/2 flex flex-col border-r border-orange-200 dark:border-orange-700/30">
+        <div className="w-1/2 flex flex-col border-r border-orange-200 dark:border-orange-700/30 min-h-0">
           {/* Editor Header */}
           <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-orange-200 dark:border-orange-700/30 px-6 py-3 flex-shrink-0">
             <div className="flex items-center space-x-2">
@@ -282,13 +282,13 @@ export function EditActivityContainer({
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-4 min-h-0">
             {/* Informações Básicas */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
-              className="w-full max-w-full"
+              className="w-full"
             >
               <Card className="border border-orange-200 dark:border-orange-700/30 shadow-lg bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm hover:shadow-xl transition-all duration-300 overflow-hidden">
                 <CardHeader className="pb-3 bg-gradient-to-r from-[#FF6B00]/10 to-[#FF8C40]/10 rounded-t-lg">
@@ -299,79 +299,81 @@ export function EditActivityContainer({
                     Informações Básicas
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4 p-4 overflow-hidden">
-                  <div className="w-full">
-                    <Label htmlFor="title" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Título da Atividade
-                    </Label>
-                    <Input
-                      id="title"
-                      value={formData.title}
-                      onChange={(e) => handleFormChange('title', e.target.value)}
-                      placeholder="Digite o título da atividade"
-                      className="mt-2 w-full max-w-full border-orange-200 dark:border-orange-600/30 focus:border-[#FF6B00] focus:ring-[#FF6B00] focus:ring-2 transition-all duration-200 rounded-lg bg-white/80 dark:bg-gray-900/50"
-                    />
-                  </div>
-
-                  <div className="w-full">
-                    <Label htmlFor="description" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Descrição
-                    </Label>
-                    <Textarea
-                      id="description"
-                      value={formData.description}
-                      onChange={(e) => handleFormChange('description', e.target.value)}
-                      placeholder="Descreva a atividade"
-                      rows={3}
-                      className="mt-2 w-full max-w-full border-orange-200 dark:border-orange-600/30 focus:border-[#FF6B00] focus:ring-[#FF6B00] focus:ring-2 transition-all duration-200 rounded-lg bg-white/80 dark:bg-gray-900/50 resize-none"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-4 w-full">
-                    <div className="w-full">
-                      <Label htmlFor="difficulty" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Nível de Dificuldade
-                      </Label>
-                      <Select
-                        value={formData.difficulty}
-                        onValueChange={(value) => handleFormChange('difficulty', value)}
-                      >
-                        <SelectTrigger className="mt-2 w-full max-w-full border-orange-200 dark:border-orange-600/30 focus:border-[#FF6B00] focus:ring-[#FF6B00] focus:ring-2 transition-all duration-200 rounded-lg bg-white/80 dark:bg-gray-900/50">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Fácil">Fácil</SelectItem>
-                          <SelectItem value="Médio">Médio</SelectItem>
-                          <SelectItem value="Difícil">Difícil</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="w-full">
-                      <Label htmlFor="duration" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Duração (minutos)
+                <CardContent className="space-y-4 p-4 overflow-hidden">{/* Force container bounds */}
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="title" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Título da Atividade
                       </Label>
                       <Input
-                        id="duration"
-                        type="number"
-                        value={formData.duration}
-                        onChange={(e) => handleFormChange('duration', e.target.value)}
-                        placeholder="30"
-                        className="mt-2 w-full max-w-full border-orange-200 dark:border-orange-600/30 focus:border-[#FF6B00] focus:ring-[#FF6B00] focus:ring-2"
+                        id="title"
+                        value={formData.title}
+                        onChange={(e) => handleFormChange('title', e.target.value)}
+                        placeholder="Digite o título da atividade"
+                        className="mt-2 border-orange-200 dark:border-orange-600/30 focus:border-[#FF6B00] focus:ring-[#FF6B00] focus:ring-2 transition-all duration-200 rounded-lg bg-white/80 dark:bg-gray-900/50"
                       />
                     </div>
 
-                    <div className="w-full">
-                      <Label htmlFor="type" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Tipo de Atividade
+                    <div>
+                      <Label htmlFor="description" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Descrição
                       </Label>
-                      <Input
-                        id="type"
-                        value={formData.type}
-                        onChange={(e) => handleFormChange('type', e.target.value)}
-                        placeholder="Ex: Exercício, Prova, Jogo"
-                        className="mt-2 w-full max-w-full border-orange-200 dark:border-orange-600/30 focus:border-[#FF6B00] focus:ring-[#FF6B00] focus:ring-2"
+                      <Textarea
+                        id="description"
+                        value={formData.description}
+                        onChange={(e) => handleFormChange('description', e.target.value)}
+                        placeholder="Descreva a atividade"
+                        rows={3}
+                        className="mt-2 border-orange-200 dark:border-orange-600/30 focus:border-[#FF6B00] focus:ring-[#FF6B00] focus:ring-2 transition-all duration-200 rounded-lg bg-white/80 dark:bg-gray-900/50 resize-none"
                       />
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4">
+                      <div>
+                        <Label htmlFor="difficulty" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Nível de Dificuldade
+                        </Label>
+                        <Select
+                          value={formData.difficulty}
+                          onValueChange={(value) => handleFormChange('difficulty', value)}
+                        >
+                          <SelectTrigger className="mt-2 border-orange-200 dark:border-orange-600/30 focus:border-[#FF6B00] focus:ring-[#FF6B00] focus:ring-2 transition-all duration-200 rounded-lg bg-white/80 dark:bg-gray-900/50">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Fácil">Fácil</SelectItem>
+                            <SelectItem value="Médio">Médio</SelectItem>
+                            <SelectItem value="Difícil">Difícil</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="duration" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Duração (minutos)
+                        </Label>
+                        <Input
+                          id="duration"
+                          type="number"
+                          value={formData.duration}
+                          onChange={(e) => handleFormChange('duration', e.target.value)}
+                          placeholder="30"
+                          className="mt-2 border-orange-200 dark:border-orange-600/30 focus:border-[#FF6B00] focus:ring-[#FF6B00] focus:ring-2"
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="type" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Tipo de Atividade
+                        </Label>
+                        <Input
+                          id="type"
+                          value={formData.type}
+                          onChange={(e) => handleFormChange('type', e.target.value)}
+                          placeholder="Ex: Exercício, Prova, Jogo"
+                          className="mt-2 border-orange-200 dark:border-orange-600/30 focus:border-[#FF6B00] focus:ring-[#FF6B00] focus:ring-2"
+                        />
+                      </div>
                     </div>
                   </div>
                 </CardContent>
@@ -383,7 +385,7 @@ export function EditActivityContainer({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: 0.1 }}
-              className="w-full max-w-full"
+              className="w-full"
             >
               <Card className="border border-orange-200 dark:border-orange-700/30 shadow-lg bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm hover:shadow-xl transition-all duration-300 overflow-hidden">
                 <CardHeader className="pb-3 bg-gradient-to-r from-[#FF6B00]/10 to-[#FF8C40]/10 rounded-t-lg">
@@ -395,7 +397,7 @@ export function EditActivityContainer({
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4 p-4 overflow-hidden">
-                  <div className="w-full">
+                  <div>
                     <Label htmlFor="objective" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                       Objetivo da Atividade
                     </Label>
@@ -405,11 +407,11 @@ export function EditActivityContainer({
                       onChange={(e) => handleFormChange('objective', e.target.value)}
                       placeholder="Descreva o objetivo pedagógico"
                       rows={2}
-                      className="mt-2 w-full max-w-full border-orange-200 dark:border-orange-600/30 focus:border-[#FF6B00] focus:ring-[#FF6B00] focus:ring-2 resize-none"
+                      className="mt-2 border-orange-200 dark:border-orange-600/30 focus:border-[#FF6B00] focus:ring-[#FF6B00] focus:ring-2 resize-none"
                     />
                   </div>
 
-                  <div className="w-full">
+                  <div>
                     <Label htmlFor="targetAudience" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                       Público-Alvo
                     </Label>
@@ -418,11 +420,11 @@ export function EditActivityContainer({
                       value={formData.targetAudience}
                       onChange={(e) => handleFormChange('targetAudience', e.target.value)}
                       placeholder="Ex: 8º ano, Ensino Médio"
-                      className="mt-2 w-full max-w-full border-orange-200 dark:border-orange-600/30 focus:border-[#FF6B00] focus:ring-[#FF6B00] focus:ring-2"
+                      className="mt-2 border-orange-200 dark:border-orange-600/30 focus:border-[#FF6B00] focus:ring-[#FF6B00] focus:ring-2"
                     />
                   </div>
 
-                  <div className="w-full">
+                  <div>
                     <Label htmlFor="instructions" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                       Instruções para o Aluno
                     </Label>
@@ -432,7 +434,7 @@ export function EditActivityContainer({
                       onChange={(e) => handleFormChange('instructions', e.target.value)}
                       placeholder="Instruções detalhadas para realização da atividade"
                       rows={3}
-                      className="mt-2 w-full max-w-full border-orange-200 dark:border-orange-600/30 focus:border-[#FF6B00] focus:ring-[#FF6B00] focus:ring-2 resize-none"
+                      className="mt-2 border-orange-200 dark:border-orange-600/30 focus:border-[#FF6B00] focus:ring-[#FF6B00] focus:ring-2 resize-none"
                     />
                   </div>
                 </CardContent>
@@ -444,7 +446,7 @@ export function EditActivityContainer({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: 0.2 }}
-              className="w-full max-w-full"
+              className="w-full"
             >
               <Card className="border border-orange-200 dark:border-orange-700/30 shadow-lg bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm hover:shadow-xl transition-all duration-300 overflow-hidden">
                 <CardHeader className="pb-3 bg-gradient-to-r from-[#FF6B00]/10 to-[#FF8C40]/10 rounded-t-lg">
@@ -465,7 +467,7 @@ export function EditActivityContainer({
                         variant="outline" 
                         size="sm" 
                         onClick={addMaterial}
-                        className="border-[#FF6B00] text-[#FF6B00] hover:bg-[#FF6B00] hover:text-white transition-all duration-200"
+                        className="border-[#FF6B00] text-[#FF6B00] hover:bg-[#FF6B00] hover:text-white transition-all duration-200 flex-shrink-0"
                       >
                         <Plus className="w-3 h-3 mr-1" />
                         Adicionar
@@ -478,7 +480,7 @@ export function EditActivityContainer({
                             value={material}
                             onChange={(e) => updateMaterial(index, e.target.value)}
                             placeholder="Ex: Calculadora, Régua, etc."
-                            className="flex-1 max-w-full border-orange-200 dark:border-orange-600/30 focus:border-[#FF6B00] focus:ring-[#FF6B00] text-sm"
+                            className="flex-1 border-orange-200 dark:border-orange-600/30 focus:border-[#FF6B00] focus:ring-[#FF6B00] text-sm"
                           />
                           <Button
                             variant="outline"
@@ -498,7 +500,7 @@ export function EditActivityContainer({
                     </div>
                   </div>
 
-                  <div className="w-full">
+                  <div>
                     <Label htmlFor="evaluation" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                       Critérios de Avaliação
                     </Label>
@@ -508,11 +510,11 @@ export function EditActivityContainer({
                       onChange={(e) => handleFormChange('evaluation', e.target.value)}
                       placeholder="Como a atividade será avaliada"
                       rows={2}
-                      className="mt-2 w-full max-w-full border-orange-200 dark:border-orange-600/30 focus:border-[#FF6B00] focus:ring-[#FF6B00] focus:ring-2 resize-none"
+                      className="mt-2 border-orange-200 dark:border-orange-600/30 focus:border-[#FF6B00] focus:ring-[#FF6B00] focus:ring-2 resize-none"
                     />
                   </div>
 
-                  <div className="w-full">
+                  <div>
                     <Label htmlFor="additionalNotes" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                       Observações Adicionais
                     </Label>
@@ -522,7 +524,7 @@ export function EditActivityContainer({
                       onChange={(e) => handleFormChange('additionalNotes', e.target.value)}
                       placeholder="Informações extras, dicas para o professor, etc."
                       rows={2}
-                      className="mt-2 w-full max-w-full border-orange-200 dark:border-orange-600/30 focus:border-[#FF6B00] focus:ring-[#FF6B00] focus:ring-2 resize-none"
+                      className="mt-2 border-orange-200 dark:border-orange-600/30 focus:border-[#FF6B00] focus:ring-[#FF6B00] focus:ring-2 resize-none"
                     />
                   </div>
                 </CardContent>
@@ -535,7 +537,7 @@ export function EditActivityContainer({
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: 0.3 }}
-                className="w-full max-w-full"
+                className="w-full"
               >
                 <Card className="border border-orange-200 dark:border-orange-700/30 shadow-lg bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm hover:shadow-xl transition-all duration-300 overflow-hidden">
                   <CardHeader className="pb-3 bg-gradient-to-r from-[#FF6B00]/10 to-[#FF8C40]/10 rounded-t-lg">
@@ -547,11 +549,13 @@ export function EditActivityContainer({
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-4 overflow-hidden">
-                    <ActivityEditor 
-                      activityData={formData}
-                      activityId={activityId}
-                      onChange={(data) => setFormData(prev => ({ ...prev, ...data }))}
-                    />
+                    <div className="overflow-hidden">
+                      <ActivityEditor 
+                        activityData={formData}
+                        activityId={activityId}
+                        onChange={(data) => setFormData(prev => ({ ...prev, ...data }))}
+                      />
+                    </div>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -560,7 +564,7 @@ export function EditActivityContainer({
         </div>
 
         {/* Right Side - Preview */}
-        <div className="w-1/2 flex flex-col">
+        <div className="w-1/2 flex flex-col min-h-0">
           {/* Preview Header */}
           <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-orange-200 dark:border-orange-700/30 px-6 py-3 flex-shrink-0">
             <div className="flex items-center space-x-2">
@@ -573,20 +577,22 @@ export function EditActivityContainer({
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4">
+          <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 min-h-0">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.3 }}
-              className="h-full max-w-full"
+              className="h-full"
             >
               <Card className="border border-orange-200 dark:border-orange-700/30 shadow-lg bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm h-full overflow-hidden">
                 <CardContent className="p-4 h-full overflow-y-auto overflow-x-hidden">
                   {ActivityPreview && (
-                    <ActivityPreview 
-                      activityData={formData}
-                      activityId={activityId}
-                    />
+                    <div className="overflow-hidden">
+                      <ActivityPreview 
+                        activityData={formData}
+                        activityId={activityId}
+                      />
+                    </div>
                   )}
                 </CardContent>
               </Card>
