@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Edit3, Eye, Share2, Clock, CheckCircle2 } from 'lucide-react';
+import { Edit3, Eye, Share2, Clock, CheckCircle2, X, Save } from 'lucide-react';
 import { ProgressCircle } from './ProgressCircle';
 import { ConstructionActivityProps } from './types';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { getActivityEditor, getActivityPreview } from '../activities/activityRegistry';
 
 export function ConstructionCard({
   id,
@@ -17,6 +18,55 @@ export function ConstructionCard({
   onView,
   onShare
 }: ConstructionActivityProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [ActivityEditor, setActivityEditor] = useState<React.ComponentType<any> | null>(null);
+  const [ActivityPreview, setActivityPreview] = useState<React.ComponentType<any> | null>(null);
+  const [formData, setFormData] = useState<any>(null);
+
+  useEffect(() => {
+    const loadComponents = async () => {
+      try {
+        const editor = await getActivityEditor(id);
+        const preview = await getActivityPreview(id);
+        setActivityEditor(() => editor);
+        setActivityPreview(() => preview);
+      } catch (error) {
+        console.log('⚠️ Componentes não encontrados para atividade:', id);
+      }
+    };
+
+    if (isEditing) {
+      loadComponents();
+    }
+  }, [id, isEditing]);
+
+  const handleEditClick = () => {
+    console.log('🎯 Iniciando edição da atividade:', id);
+    setIsEditing(true);
+    setFormData({
+      id,
+      title,
+      description,
+      type,
+      status
+    });
+  };
+
+  const handleCancelEdit = () => {
+    console.log('❌ Cancelando edição da atividade:', id);
+    setIsEditing(false);
+    setFormData(null);
+  };
+
+  const handleSaveEdit = () => {
+    console.log('💾 Salvando edição da atividade:', id, formData);
+    setIsEditing(false);
+    onEdit?.(id);
+  };
+
+  const handleDataChange = (newData: any) => {
+    setFormData(newData);
+  };
   const getStatusIcon = () => {
     switch (status) {
       case 'completed':
@@ -39,11 +89,66 @@ export function ConstructionCard({
     }
   };
 
-    const handleEditClick = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        console.log('🎯 Edit button clicked for:', id);
-        onEdit?.(id);
-    };
+  // Se estiver em modo de edição, renderizar a interface de edição dentro do card
+  if (isEditing) {
+    return (
+      <TooltipProvider>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3 }}
+          className="rounded-xl border-2 border-orange-200 dark:border-orange-700/30 bg-white dark:bg-gray-800 shadow-lg overflow-hidden"
+        >
+          {/* Header da Edição */}
+          <div className="bg-gradient-to-r from-[#FF6B00]/10 to-[#FF8C40]/10 px-4 py-3 border-b border-orange-200 dark:border-orange-700/30">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Edit3 className="w-4 h-4 text-[#FF6B00]" />
+                <h3 className="font-semibold text-sm text-gray-900 dark:text-white">
+                  Editando: {title}
+                </h3>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCancelEdit}
+                  className="h-7 px-2 text-xs"
+                >
+                  <X className="w-3 h-3 mr-1" />
+                  Cancelar
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleSaveEdit}
+                  className="h-7 px-2 text-xs bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#D65A00] hover:to-[#FF6B00]"
+                >
+                  <Save className="w-3 h-3 mr-1" />
+                  Salvar
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Área de Edição */}
+          <div className="p-4 max-h-96 overflow-y-auto">
+            {ActivityEditor ? (
+              <ActivityEditor
+                activityData={formData}
+                activityId={id}
+                onChange={handleDataChange}
+              />
+            ) : (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#FF6B00]"></div>
+                <span className="ml-2 text-sm text-gray-500">Carregando editor...</span>
+              </div>
+            )}
+          </div>
+        </motion.div>
+      </TooltipProvider>
+    );
+  }
 
   return (
     <TooltipProvider>
@@ -105,8 +210,7 @@ export function ConstructionCard({
                     variant="outline"
                     onClick={(e) => {
                       e.stopPropagation();
-                      console.log('🎯 Edit button clicked for:', id);
-                      onEdit?.(id);
+                      handleEditClick();
                     }}
                     className="h-7 px-2 text-xs bg-[#FF6B00] hover:bg-[#D65A00] text-white border-[#FF6B00] hover:border-[#D65A00]"
                   >

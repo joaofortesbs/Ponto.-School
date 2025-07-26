@@ -20,35 +20,10 @@ export interface ConstructionActivity {
 export function ConstructionInterface({ approvedActivities }: ConstructionInterfaceProps) {
   console.log('🏗️ ConstructionInterface renderizada com atividades:', approvedActivities);
 
-  const [editingActivity, setEditingActivity] = useState<{id: string, data: any} | null>(null);
-
-  const handleEdit = (id: string, data: any) => {
-    console.log('🎯 ConstructionInterface: Editando atividade:', id, data);
-    setEditingActivity({ id, data });
+  const handleEdit = (id: string) => {
+    console.log('🎯 ConstructionInterface: Edição solicitada para atividade:', id);
+    // A edição agora acontece dentro dos próprios cards
   };
-
-  const handleCancelEdit = () => {
-    console.log('❌ ConstructionInterface: Cancelando edição');
-    setEditingActivity(null);
-  };
-
-  const handleSaveEdit = (activityData: any) => {
-    console.log('💾 ConstructionInterface: Salvando atividade:', editingActivity?.id, activityData);
-    // Aqui você pode implementar a lógica de salvamento
-    setEditingActivity(null);
-  };
-
-  if (editingActivity) {
-    return (
-      <EditActivityContainer
-        activityId={editingActivity.id}
-        activityData={editingActivity.data}
-        onBack={handleCancelEdit}
-        onSave={handleSaveEdit}
-        onClose={handleCancelEdit}
-      />
-    );
-  }
 
   return (
     <div className="w-full h-full overflow-y-auto" style={{ maxHeight: 'calc(100vh - 200px)' }}>

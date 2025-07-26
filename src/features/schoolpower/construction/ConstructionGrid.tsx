@@ -20,12 +20,8 @@ export function ConstructionGrid({ approvedActivities, onEdit }: ConstructionGri
   console.log('🎯 ConstructionGrid - loading:', loading);
 
   const handleEdit = (id: string) => {
-    console.log('🎯 ConstructionGrid: Editando atividade ID:', id);
-    const activity = activities.find(act => act.id === id);
-    console.log('🎯 ConstructionGrid: Atividade encontrada:', activity);
-    if (onEdit) {
-      onEdit(id, activity);
-    }
+    console.log('🎯 ConstructionGrid: Botão de edição clicado para:', id);
+    // A edição agora acontece dentro do próprio card
   };
 
   const handleView = (id: string) => {
@@ -142,10 +138,7 @@ export function ConstructionGrid({ approvedActivities, onEdit }: ConstructionGri
               progress={activity.progress}
               type={activity.type}
               status={activity.status}
-              onEdit={(id) => {
-                console.log('🎯 ConstructionGrid: Card solicitou edição para:', id);
-                handleEdit(id);
-              }}
+              onEdit={handleEdit}
               onView={handleView}
               onShare={handleShare}
             />
