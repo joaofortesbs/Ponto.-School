@@ -74,7 +74,7 @@ export default function EditActivity({ activityData, activityId, onChange }: Edi
   };
 
   return (
-    <div className="space-y-3 overflow-hidden max-h-[400px]">
+    <div className="space-y-3 overflow-hidden" style={{ height: '450px', maxHeight: '450px', minHeight: '450px' }}>
       {/* Informações Básicas - Compacto */}
       <div className="space-y-2 p-3 border rounded-lg bg-white/50 dark:bg-gray-800/50">
         <h3 className="text-sm font-medium flex items-center">

@@ -539,8 +539,8 @@ export function EditActivityContainer({
                 transition={{ duration: 0.3, delay: 0.3 }}
                 className="w-full"
               >
-                <Card className="border border-orange-200 dark:border-orange-700/30 shadow-lg bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm hover:shadow-xl transition-all duration-300 overflow-hidden max-h-[500px]">
-                  <CardHeader className="pb-2 bg-gradient-to-r from-[#FF6B00]/10 to-[#FF8C40]/10 rounded-t-lg">
+                <Card className="border border-orange-200 dark:border-orange-700/30 shadow-lg bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm hover:shadow-xl transition-all duration-300 overflow-hidden" style={{ height: '500px', maxHeight: '500px', minHeight: '500px' }}>
+                  <CardHeader className="pb-2 bg-gradient-to-r from-[#FF6B00]/10 to-[#FF8C40]/10 rounded-t-lg" style={{ height: '50px', minHeight: '50px', maxHeight: '50px' }}>
                     <CardTitle className="flex items-center text-sm">
                       <div className="w-6 h-6 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-lg flex items-center justify-center mr-2">
                         <Settings className="w-3 h-3 text-white" />
@@ -548,7 +548,7 @@ export function EditActivityContainer({
                       Editor da Atividade
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="p-3 overflow-hidden max-h-[450px]">
+                  <CardContent className="p-3 overflow-hidden" style={{ height: '450px', maxHeight: '450px', minHeight: '450px' }}>
                     <div className="overflow-hidden h-full">
                       <ActivityEditor 
                         activityData={formData}
