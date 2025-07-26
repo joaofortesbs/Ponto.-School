@@ -6,9 +6,41 @@ export const useConstructionActivities = (approvedActivities?: any[]) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simular carregamento de atividades aprovadas
-    const loadActivities = () => {
-      console.log('📚 Carregando atividades para construção...');
+    if (approvedActivities && approvedActivities.length > 0) {
+      console.log('🔄 Convertendo atividades aprovadas:', approvedActivities);
+
+      const convertedActivities = approvedActivities.map((activity, index) => {
+        // Garantir que o ID seja compatível com o registro de atividades
+        let activityId = activity.id;
+
+        // Mapear IDs genéricos para IDs específicos se necessário
+        if (!activityId || activityId === 'generic') {
+          if (activity.title?.toLowerCase().includes('prova') && activity.title?.toLowerCase().includes('função')) {
+            activityId = 'prova-funcao-1grau';
+          } else if (activity.title?.toLowerCase().includes('lista') && activity.title?.toLowerCase().includes('exercício')) {
+            activityId = 'lista-exercicios-funcao-1grau';
+          } else if (activity.title?.toLowerCase().includes('jogo') && activity.title?.toLowerCase().includes('função')) {
+            activityId = 'jogo-educacional-funcao-1grau';
+          } else {
+            activityId = `activity-${index}`;
+          }
+        }
+
+        return {
+          id: activityId,
+          title: activity.title || activity.personalizedTitle || 'Atividade sem título',
+          description: activity.description || activity.personalizedDescription || 'Descrição não disponível',
+          progress: 0,
+          type: activity.type || 'Atividade',
+          status: 'draft' as const,
+          originalData: activity
+        };
+      });
+
+      setActivities(convertedActivities);
+      setLoading(false);
+    } else {
+      console.log('📝 Usando atividades mock padrão');
 
       // Buscar atividades do School Power que estão aprovadas
       const mockActivities: ConstructionActivity[] = [
@@ -57,10 +89,8 @@ export const useConstructionActivities = (approvedActivities?: any[]) => {
       console.log('✅ Atividades carregadas:', mockActivities);
       setActivities(mockActivities);
       setLoading(false);
-    };
-
-    loadActivities();
-  }, []);
+    }
+  }, [approvedActivities]);
 
   const updateActivity = (activityId: string, updates: Partial<ConstructionActivity>) => {
     setActivities(prev => 
