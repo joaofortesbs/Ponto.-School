@@ -600,11 +600,10 @@ export function CardDeConstrucao({
         stiffness: 100,
         damping: 15,
       }}
-      className="relative rounded-2xl p-6 shadow-2xl border border-[#FF6B00]/30 dark:border-[#FF6B00]/30"
+      className="relative rounded-2xl p-6 shadow-2xl border border-[#FF6B00]/30 dark:border-[#FF6B00]/30 bg-white dark:bg-[#021321]"
       style={{
         width: "1153px",
-        height: "700px",
-        backgroundColor: "#000000"
+        height: "700px"
       }}
       data-theme="adaptive"
     >
