@@ -58,7 +58,6 @@ export function EditActivityContainer({
 }: EditActivityContainerProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('editor');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [formData, setFormData] = useState<ActivityFormData>({
     title: '',
@@ -214,146 +213,128 @@ export function EditActivityContainer({
 
   return (
     <div className="flex h-full bg-gray-50 dark:bg-gray-900">
-      {/* Sidebar */}
-      <motion.div
-        initial={{ width: sidebarCollapsed ? 60 : 280 }}
-        animate={{ width: sidebarCollapsed ? 60 : 280 }}
-        transition={{ duration: 0.3 }}
-        className="bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex-shrink-0"
-      >
-        {/* Sidebar Header */}
-        <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200 dark:border-gray-700">
-          {!sidebarCollapsed && (
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Editor
-            </h2>
-          )}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="p-1 h-8 w-8"
-          >
-            {sidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+      {/* Main Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-6">
+        <div className="flex items-center space-x-4">
+          <Button variant="ghost" onClick={onBack} className="p-2">
+            <ArrowLeft className="w-4 h-4" />
           </Button>
+          <div>
+            <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
+              Construção de Atividades
+            </h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Editando: {formData.title || activityId}
+            </p>
+          </div>
         </div>
 
-        {/* Sidebar Navigation */}
-        <div className="p-2 space-y-1">
-          <Button
-            variant={activeTab === 'editor' ? 'default' : 'ghost'}
-            className={`w-full justify-start ${sidebarCollapsed ? 'px-2' : 'px-3'}`}
-            onClick={() => setActiveTab('editor')}
-          >
-            <Edit3 className="w-4 h-4" />
-            {!sidebarCollapsed && <span className="ml-2">Editor</span>}
+        <div className="flex items-center space-x-2">
+          <Button variant="outline" onClick={onClose}>
+            Cancelar
           </Button>
-          
-          <Button
-            variant={activeTab === 'preview' ? 'default' : 'ghost'}
-            className={`w-full justify-start ${sidebarCollapsed ? 'px-2' : 'px-3'}`}
-            onClick={() => setActiveTab('preview')}
-          >
-            <Eye className="w-4 h-4" />
-            {!sidebarCollapsed && <span className="ml-2">Visualização</span>}
-          </Button>
-
-          <Button
-            variant={activeTab === 'settings' ? 'default' : 'ghost'}
-            className={`w-full justify-start ${sidebarCollapsed ? 'px-2' : 'px-3'}`}
-            onClick={() => setActiveTab('settings')}
-          >
-            <Settings className="w-4 h-4" />
-            {!sidebarCollapsed && <span className="ml-2">Configurações</span>}
+          <Button onClick={handleSave} className="bg-[#FF6B00] hover:bg-[#D65A00]">
+            <Save className="w-4 h-4 mr-2" />
+            Salvar
           </Button>
         </div>
+      </div>
 
-        {!sidebarCollapsed && (
-          <>
-            <Separator className="my-4" />
-            
-            {/* Activity Info */}
-            <div className="px-4 space-y-3">
-              <div>
-                <Label className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                  ATIVIDADE
-                </Label>
-                <p className="text-sm font-medium text-gray-900 dark:text-white mt-1">
-                  {formData.title || 'Nova Atividade'}
-                </p>
-              </div>
-              
-              <div>
-                <Label className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                  TIPO
-                </Label>
-                <Badge variant="secondary" className="mt-1">
-                  {formData.type || 'Não definido'}
-                </Badge>
-              </div>
+      {/* Content Container with fixed header offset */}
+      <div className="flex w-full pt-16">
+        {/* Left Side - Editor with Sidebar */}
+        <div className="w-1/2 flex bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
+          {/* Sidebar dentro da área de edição */}
+          <motion.div
+            initial={{ width: sidebarCollapsed ? 60 : 280 }}
+            animate={{ width: sidebarCollapsed ? 60 : 280 }}
+            transition={{ duration: 0.3 }}
+            className="bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 flex-shrink-0"
+          >
+            {/* Sidebar Header */}
+            <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200 dark:border-gray-700">
+              {!sidebarCollapsed && (
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Editor
+                </h2>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                className="p-1 h-8 w-8"
+              >
+                {sidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+              </Button>
+            </div>
 
-              <div>
-                <Label className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                  DURAÇÃO
-                </Label>
-                <div className="flex items-center mt-1">
-                  <Clock className="w-3 h-3 text-gray-400 mr-1" />
-                  <span className="text-sm text-gray-700 dark:text-gray-300">
-                    {formData.duration || '30'} min
-                  </span>
+            {/* Sidebar Navigation */}
+            <div className="p-2 space-y-1">
+              <Button
+                variant="default"
+                className={`w-full justify-start ${sidebarCollapsed ? 'px-2' : 'px-3'}`}
+              >
+                <Edit3 className="w-4 h-4" />
+                {!sidebarCollapsed && <span className="ml-2">Editor</span>}
+              </Button>
+            </div>
+
+            {!sidebarCollapsed && (
+              <>
+                <Separator className="my-4" />
+                
+                {/* Activity Info */}
+                <div className="px-4 space-y-3">
+                  <div>
+                    <Label className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                      ATIVIDADE
+                    </Label>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white mt-1">
+                      {formData.title || 'Nova Atividade'}
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <Label className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                      TIPO
+                    </Label>
+                    <Badge variant="secondary" className="mt-1">
+                      {formData.type || 'Não definido'}
+                    </Badge>
+                  </div>
+
+                  <div>
+                    <Label className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                      DURAÇÃO
+                    </Label>
+                    <div className="flex items-center mt-1">
+                      <Clock className="w-3 h-3 text-gray-400 mr-1" />
+                      <span className="text-sm text-gray-700 dark:text-gray-300">
+                        {formData.duration || '30'} min
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                      DIFICULDADE
+                    </Label>
+                    <Badge 
+                      variant={formData.difficulty === 'Fácil' ? 'default' : formData.difficulty === 'Médio' ? 'secondary' : 'destructive'}
+                      className="mt-1"
+                    >
+                      {formData.difficulty}
+                    </Badge>
+                  </div>
                 </div>
-              </div>
+              </>
+            )}
+          </motion.div>
 
-              <div>
-                <Label className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                  DIFICULDADE
-                </Label>
-                <Badge 
-                  variant={formData.difficulty === 'Fácil' ? 'default' : formData.difficulty === 'Médio' ? 'secondary' : 'destructive'}
-                  className="mt-1"
-                >
-                  {formData.difficulty}
-                </Badge>
-              </div>
-            </div>
-          </>
-        )}
-      </motion.div>
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <div className="h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-6">
-          <div className="flex items-center space-x-4">
-            <Button variant="ghost" onClick={onBack} className="p-2">
-              <ArrowLeft className="w-4 h-4" />
-            </Button>
-            <div>
-              <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-                Construção de Atividades
-              </h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Editando: {formData.title || activityId}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Button variant="outline" onClick={onClose}>
-              Cancelar
-            </Button>
-            <Button onClick={handleSave} className="bg-[#FF6B00] hover:bg-[#D65A00]">
-              <Save className="w-4 h-4 mr-2" />
-              Salvar
-            </Button>
-          </div>
-        </div>
-
-        {/* Content Area */}
-        <div className="flex-1 overflow-hidden">
-          {activeTab === 'editor' && (
-            <div className="h-full overflow-y-auto p-6">
-              <div className="max-w-4xl mx-auto space-y-6">
+          {/* Editor Content */}
+          <div className="flex-1 flex flex-col">
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="space-y-6">
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center">
@@ -530,58 +511,48 @@ export function EditActivityContainer({
                     </div>
                   </CardContent>
                 </Card>
-              </div>
-            </div>
-          )}
 
-          {activeTab === 'preview' && (
-            <div className="h-full overflow-y-auto p-6">
-              <div className="max-w-4xl mx-auto">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <Eye className="w-5 h-5 mr-2" />
-                      Visualização da Atividade
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {ActivityPreview && (
-                      <ActivityPreview 
+                {/* Componente específico da atividade */}
+                {ActivityEditor && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Configurações Específicas da Atividade</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ActivityEditor 
                         activityData={formData}
                         activityId={activityId}
+                        onChange={(data) => setFormData(prev => ({ ...prev, ...data }))}
                       />
-                    )}
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             </div>
-          )}
+          </div>
+        </div>
 
-          {activeTab === 'settings' && (
-            <div className="h-full overflow-y-auto p-6">
-              <div className="max-w-2xl mx-auto">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <Settings className="w-5 h-5 mr-2" />
-                      Configurações da Atividade
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                      <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
-                        Configurações Avançadas
-                      </h4>
-                      <p className="text-sm text-blue-700 dark:text-blue-300">
-                        Configurações específicas do tipo de atividade "{activityId}" serão exibidas aqui.
-                        Cada tipo de atividade pode ter configurações únicas.
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          )}
+        {/* Right Side - Preview */}
+        <div className="w-1/2 bg-gray-50 dark:bg-gray-900">
+          <div className="h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center px-6">
+            <Eye className="w-5 h-5 mr-2 text-gray-500" />
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Visualização
+            </h2>
+          </div>
+          
+          <div className="h-full overflow-y-auto p-6">
+            <Card>
+              <CardContent className="p-6">
+                {ActivityPreview && (
+                  <ActivityPreview 
+                    activityData={formData}
+                    activityId={activityId}
+                  />
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </div>
