@@ -1,0 +1,126 @@
+Construir a funcionalidade completa de edição de atividades, ativada via botão “Editar Materiais” em cada mini-card da interface de Construção de Atividades, usando um modal centralizado, elegante, funcional, com visualização em tempo real alimentada por IA.
+
+📍 Local de implementação:
+Esta funcionalidade será implementada exclusivamente dentro da seção de:
+School Power > Construção de Atividades > Mini-cards de atividades
+
+📌 O que deve acontecer ao clicar em "Editar Materiais":
+Ao clicar no botão "Editar Materiais" de um mini-card de atividade:
+
+Abrir um modal centralizado no Card de Construção
+
+O modal deve ter animação suave de entrada, com fade + scale (por exemplo: opacity + scaleY).
+
+O modal deve conter:
+
+Painel Esquerdo (45%): Formulário dinâmico com campos de preenchimento.
+
+Painel Direito (55%): Pré-visualização da atividade construída, atualizada em tempo real via API de IA.
+
+Botão “Construir Atividade” ao final do painel esquerdo.
+
+O modal deve:
+
+Ter largura máxima de 95% da tela e altura 90vh.
+
+Ter botão de “Fechar Modal” no canto superior direito.
+
+Ter rolagem interna nos painéis caso o conteúdo ultrapasse a altura visível.
+
+🧱 Estrutura interna do Modal:
+tsx
+Copiar
+Editar
+<Modal>
+  <div className="modal-content grid grid-cols-2 gap-4 p-6 rounded-2xl shadow-xl bg-white max-w-6xl mx-auto">
+    
+    {/* Painel Esquerdo - Campos */}
+    <div className="flex flex-col space-y-4 overflow-y-auto max-h-[75vh] pr-2">
+      {/* Campos personalizados, gerados a partir do schema da atividade */}
+      <Input label="Título da Atividade" value={...} onChange={...} />
+      <Textarea label="Descrição" value={...} onChange={...} />
+      <Select label="Formato de Entrega" options={["PDF", "Vídeo", "Interativo"]} />
+      {/* + outros campos relevantes... */}
+      <Button onClick={handleBuildActivity}>Construir Atividade</Button>
+    </div>
+
+    {/* Painel Direito - Pré-visualização em tempo real */}
+    <div className="bg-gray-50 rounded-xl p-4 shadow-inner overflow-y-auto max-h-[75vh]">
+      {/* Visualização da atividade atual, construída via IA */}
+      <ActivityPreview content={generatedActivity} />
+    </div>
+  </div>
+</Modal>
+🤖 Integração com IA (API):
+Ao clicar em “Construir Atividade”, os dados do formulário (painel esquerdo) devem ser enviados via API:
+
+ts
+Copiar
+Editar
+const response = await fetch("/api/generate-activity", {
+  method: "POST",
+  body: JSON.stringify(formValues),
+});
+setGeneratedActivity(await response.text());
+O conteúdo retornado da IA deve ser renderizado no painel direito do modal como uma prévia da atividade.
+
+🎨 Estilo do Modal:
+Fundo com leve desfoque (backdrop-blur-sm) e escurecimento (bg-black/30)
+
+Modal com rounded-2xl, sombra shadow-2xl, padding generoso.
+
+Animação de entrada suave com Tailwind + Framer Motion:
+
+tsx
+Copiar
+Editar
+<motion.div
+  initial={{ opacity: 0, scale: 0.95 }}
+  animate={{ opacity: 1, scale: 1 }}
+  exit={{ opacity: 0, scale: 0.95 }}
+  transition={{ duration: 0.3 }}
+>
+  ...
+</motion.div>
+🧠 Regras de funcionalidade:
+Os campos exibidos no painel esquerdo devem ser carregados dinamicamente conforme o tipo de atividade (usando seu ID).
+
+O conteúdo do painel direito deve ser reconstruído a cada nova geração.
+
+Nenhum conteúdo pode ultrapassar os limites do modal.
+
+A interface base dos mini-cards NÃO DEVE SER MODIFICADA.
+
+📁 Organização de arquivos sugerida:
+mathematica
+Copiar
+Editar
+src/features/schoolpower/
+  activities/
+    ActivityModal.tsx               ← Modal principal
+    useActivityBuilder.ts           ← Hook para campos + integração IA
+    ActivityPreview.tsx             ← Renderização do conteúdo da IA
+    ActivityFormFields.tsx          ← Campos dinâmicos por tipo de atividade
+  ui/
+    Modal.tsx
+    Button.tsx
+    Input.tsx
+    Textarea.tsx
+    Select.tsx
+✅ Checklist para Vibe Code:
+ Criar componente <ActivityModal /> com painéis laterais
+
+ Integrar botão “Editar Materiais” nos mini-cards
+
+ Adicionar animação suave com Framer Motion
+
+ Garantir que os campos fiquem dentro do modal com scroll
+
+ Conectar API de IA para construção da atividade
+
+ Renderizar pré-visualização em tempo real à direita
+
+ Manter estilo dos mini-cards atual inalterado
+
+ Fechar modal ao clicar fora ou no X superior
+
