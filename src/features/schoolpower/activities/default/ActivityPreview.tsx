@@ -243,3 +243,25 @@ export default function ActivityPreview({ activityData, activityId }: ActivityPr
     </div>
   );
 }
+import React from 'react';
+
+interface ActivityPreviewProps {
+  [key: string]: any;
+}
+
+const ActivityPreview: React.FC<ActivityPreviewProps> = (props) => {
+  return (
+    <div className="flex items-center justify-center min-h-[400px] bg-gray-50 rounded-lg">
+      <div className="text-center">
+        <h3 className="text-lg font-semibold text-gray-700 mb-2">
+          Pré-visualização da Atividade
+        </h3>
+        <p className="text-gray-500">
+          Este componente está em desenvolvimento
+        </p>
+      </div>
+    </div>
+  );
+};
+
+export default ActivityPreview;
