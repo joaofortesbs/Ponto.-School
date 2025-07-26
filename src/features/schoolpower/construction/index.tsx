@@ -38,17 +38,7 @@ export function ConstructionInterface({ approvedActivities }: ConstructionInterf
     setEditingActivity(null);
   };
 
-  if (editingActivity) {
-    return (
-      <EditActivityContainer
-        activityId={editingActivity.id}
-        activityData={editingActivity.data}
-        onBack={handleCancelEdit}
-        onSave={handleSaveEdit}
-        onClose={handleCancelEdit}
-      />
-    );
-  }
+  // A edição agora acontece dentro dos próprios cards
 
   return (
     <div className="w-full h-full overflow-y-auto" style={{ maxHeight: 'calc(100vh - 200px)' }}>
