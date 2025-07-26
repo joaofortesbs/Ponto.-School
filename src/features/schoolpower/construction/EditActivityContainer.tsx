@@ -1,4 +1,4 @@
-import React, { useState, Suspense, lazy, useEffect } from 'react';
+import React, { useState, Suspense, lazy, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Save, Eye, Edit3, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 interface EditActivityContainerProps {
   activityId: string;
   activity?: any;
-  initialData?: any;
+  activityData?: any;
   onSave: (data: any) => void;
   onCancel?: () => void;
   onBack?: () => void;

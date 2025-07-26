@@ -3,11 +3,8 @@ import { ConstructionGrid } from './ConstructionGrid';
 import { EditActivityContainer } from './EditActivityContainer';
 import { ActionPlanItem } from '../actionplan/ActionPlanCard';
 
-export interface ConstructionInterface {
-  activities: ConstructionActivity[];
-  onEdit: (activityId: string) => void;
-  onView: (activityId: string) => void;
-  onShare: (activityId: string) => void;
+export interface ConstructionInterfaceProps {
+  approvedActivities: any[];
 }
 
 export interface ConstructionActivity {
@@ -16,7 +13,8 @@ export interface ConstructionActivity {
   description: string;
   progress: number;
   type: string;
-  status: 'draft' | 'in_progress' | 'completed';
+  status: 'draft' | 'in_progress' | 'completed' | 'pending';
+  originalData?: any;
 }
 
 export function ConstructionInterface({ approvedActivities }: ConstructionInterfaceProps) {
@@ -59,15 +57,19 @@ export function ConstructionInterface({ approvedActivities }: ConstructionInterf
   );
 }
 
-const convertToConstructionActivities = (activities: ActionPlanItem[]): ConstructionActivity[] => {
+const convertToConstructionActivities = (activities: any[]): ConstructionActivity[] => {
+  if (!activities || !Array.isArray(activities)) {
+    return [];
+  }
+  
   return activities.map(activity => ({
-    id: activity.id,
-    title: activity.title,
-    description: activity.description,
+    id: activity.id || '',
+    title: activity.title || '',
+    description: activity.description || '',
     status: 'pending' as const,
     progress: 0,
     type: activity.type || 'default',
-    originalData: activity // Preserva os dados originais
+    originalData: activity
   }));
 };
 

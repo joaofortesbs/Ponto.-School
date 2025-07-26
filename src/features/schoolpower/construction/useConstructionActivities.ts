@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ConstructionActivity } from './types';
 
-export const useConstructionActivities = () => {
+export const useConstructionActivities = (approvedActivities?: any[]) => {
   const [activities, setActivities] = useState<ConstructionActivity[]>([]);
   const [loading, setLoading] = useState(true);
 
